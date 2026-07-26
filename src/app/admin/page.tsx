@@ -27,20 +27,49 @@ type OddsPreview = {
   events: OddsEvent[];
 };
 
+type ImportGame = {
+  externalGameId: string;
+  kickoff: string;
+  awayTeam: string;
+  homeTeam: string;
+  spread: Array<{
+    team: string;
+    point: number | null;
+  }>;
+};
+
+type ImportPreview = {
+  commissioner: string;
+  requestsRemaining: string | null;
+  games: ImportGame[];
+  note: string;
+};
+
 export default function AdminPage() {
   const [preview, setPreview] = useState<OddsPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function previewOdds() {
-    setErrorMessage("");
-    setIsLoading(true);
+  const [importPreview, setImportPreview] =
+    useState<ImportPreview | null>(null);
+  const [importErrorMessage, setImportErrorMessage] = useState("");
+  const [isImportLoading, setIsImportLoading] = useState(false);
 
+  async function getSessionToken() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    if (!session) {
+    return session?.access_token ?? null;
+  }
+
+  async function previewOdds() {
+    setErrorMessage("");
+    setIsLoading(true);
+
+    const accessToken = await getSessionToken();
+
+    if (!accessToken) {
       setErrorMessage("Please sign in before checking the odds feed.");
       setIsLoading(false);
       return;
@@ -48,7 +77,7 @@ export default function AdminPage() {
 
     const response = await fetch("/api/admin/odds-preview", {
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
@@ -62,6 +91,38 @@ export default function AdminPage() {
 
     setPreview(data);
     setIsLoading(false);
+  }
+
+  async function previewImport() {
+    setImportErrorMessage("");
+    setIsImportLoading(true);
+
+    const accessToken = await getSessionToken();
+
+    if (!accessToken) {
+      setImportErrorMessage("Please sign in before previewing an import.");
+      setIsImportLoading(false);
+      return;
+    }
+
+    const response = await fetch("/api/admin/import-preview", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setImportErrorMessage(
+        data.error ?? "The import preview could not load.",
+      );
+      setIsImportLoading(false);
+      return;
+    }
+
+    setImportPreview(data);
+    setIsImportLoading(false);
   }
 
   return (
@@ -156,7 +217,7 @@ export default function AdminPage() {
 
                                 return `${outcome.team} ${sign}${outcome.spread}`;
                               })
-                              .join(" · ")}
+                              .join(" / ")}
                           </p>
                         ) : (
                           <p className="mt-2 text-sm text-zinc-600">
@@ -166,6 +227,92 @@ export default function AdminPage() {
                       </article>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="border-b-2 border-zinc-900 py-8">
+          <h2 className="font-serif text-2xl font-bold">Import Preview</h2>
+
+          <p className="mt-2 text-zinc-700">
+            Review the exact games and DraftKings spreads the automated importer
+            will use. This still does not write anything to the database.
+          </p>
+
+          <button
+            className="mt-5 bg-zinc-900 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={isImportLoading}
+            onClick={previewImport}
+          >
+            {isImportLoading
+              ? "Preparing preview..."
+              : "Preview game import"}
+          </button>
+
+          {importErrorMessage ? (
+            <p className="mt-4 font-semibold text-red-700">
+              {importErrorMessage}
+            </p>
+          ) : null}
+
+          {importPreview ? (
+            <div className="mt-8">
+              <p className="text-zinc-700">
+                Signed in as Commissioner {importPreview.commissioner}.{" "}
+                {importPreview.note}
+              </p>
+
+              <p className="mt-2 text-sm text-zinc-600">
+                Live games found:{" "}
+                <span className="font-bold">{importPreview.games.length}</span>
+                {" · "}API requests remaining:{" "}
+                <span className="font-bold">
+                  {importPreview.requestsRemaining ?? "Not reported"}
+                </span>
+              </p>
+
+              {importPreview.games.length === 0 ? (
+                <p className="mt-4 text-zinc-700">
+                  No NFL games are currently available to preview.
+                </p>
+              ) : (
+                <div className="mt-5 space-y-4">
+                  {importPreview.games.map((game) => (
+                    <article
+                      className="border border-zinc-400 bg-white p-4"
+                      key={game.externalGameId}
+                    >
+                      <p className="text-sm text-zinc-600">
+                        {new Date(game.kickoff).toLocaleString()}
+                      </p>
+
+                      <h3 className="mt-1 font-serif text-xl font-bold">
+                        {game.awayTeam} at {game.homeTeam}
+                      </h3>
+
+                      {game.spread.length === 2 ? (
+                        <p className="mt-2 text-sm">
+                          DraftKings:{" "}
+                          {game.spread
+                            .map((outcome) => {
+                              const sign =
+                                outcome.point !== null && outcome.point > 0
+                                  ? "+"
+                                  : "";
+
+                              return `${outcome.team} ${sign}${outcome.point}`;
+                            })
+                            .join(" / ")}
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-sm text-zinc-600">
+                          DraftKings has not posted a spread for this game yet.
+                        </p>
+                      )}
+                    </article>
+                  ))}
                 </div>
               )}
             </div>
