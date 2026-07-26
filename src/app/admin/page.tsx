@@ -45,6 +45,14 @@ type ImportPreview = {
   note: string;
 };
 
+type ImportResult = {
+  message: string;
+  importedGames: number;
+  preliminarySpreadsSaved: number;
+  weeksUpdated: number;
+  requestsRemaining: string | null;
+};
+
 export default function AdminPage() {
   const [preview, setPreview] = useState<OddsPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,6 +62,8 @@ export default function AdminPage() {
     useState<ImportPreview | null>(null);
   const [importErrorMessage, setImportErrorMessage] = useState("");
   const [isImportLoading, setIsImportLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   async function getSessionToken() {
     const {
@@ -95,6 +105,7 @@ export default function AdminPage() {
 
   async function previewImport() {
     setImportErrorMessage("");
+    setImportResult(null);
     setIsImportLoading(true);
 
     const accessToken = await getSessionToken();
@@ -123,6 +134,51 @@ export default function AdminPage() {
 
     setImportPreview(data);
     setIsImportLoading(false);
+  }
+
+  async function importGames() {
+    if (!importPreview) {
+      setImportErrorMessage("Preview the game import before importing.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Import ${importPreview.games.length} scheduled games into the 2026 pool?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setImportErrorMessage("");
+    setImportResult(null);
+    setIsImporting(true);
+
+    const accessToken = await getSessionToken();
+
+    if (!accessToken) {
+      setImportErrorMessage("Please sign in before importing games.");
+      setIsImporting(false);
+      return;
+    }
+
+    const response = await fetch("/api/admin/import-games", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setImportErrorMessage(data.error ?? "The game import could not run.");
+      setIsImporting(false);
+      return;
+    }
+
+    setImportResult(data);
+    setIsImporting(false);
   }
 
   return (
@@ -234,16 +290,16 @@ export default function AdminPage() {
         </section>
 
         <section className="border-b-2 border-zinc-900 py-8">
-          <h2 className="font-serif text-2xl font-bold">Import Preview</h2>
+          <h2 className="font-serif text-2xl font-bold">Import Games</h2>
 
           <p className="mt-2 text-zinc-700">
-            Review the exact games and DraftKings spreads the automated importer
-            will use. This still does not write anything to the database.
+            Preview the live schedule first. Importing adds scheduled games and
+            preliminary DraftKings line history, but never locks official lines.
           </p>
 
           <button
             className="mt-5 bg-zinc-900 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={isImportLoading}
+            disabled={isImportLoading || isImporting}
             onClick={previewImport}
           >
             {isImportLoading
@@ -273,48 +329,64 @@ export default function AdminPage() {
                 </span>
               </p>
 
-              {importPreview.games.length === 0 ? (
-                <p className="mt-4 text-zinc-700">
-                  No NFL games are currently available to preview.
-                </p>
-              ) : (
-                <div className="mt-5 space-y-4">
-                  {importPreview.games.map((game) => (
-                    <article
-                      className="border border-zinc-400 bg-white p-4"
-                      key={game.externalGameId}
-                    >
-                      <p className="text-sm text-zinc-600">
-                        {new Date(game.kickoff).toLocaleString()}
-                      </p>
+              <button
+                className="mt-5 bg-red-800 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={isImporting}
+                onClick={importGames}
+              >
+                {isImporting
+                  ? "Importing games..."
+                  : `Import ${importPreview.games.length} games`}
+              </button>
 
-                      <h3 className="mt-1 font-serif text-xl font-bold">
-                        {game.awayTeam} at {game.homeTeam}
-                      </h3>
-
-                      {game.spread.length === 2 ? (
-                        <p className="mt-2 text-sm">
-                          DraftKings:{" "}
-                          {game.spread
-                            .map((outcome) => {
-                              const sign =
-                                outcome.point !== null && outcome.point > 0
-                                  ? "+"
-                                  : "";
-
-                              return `${outcome.team} ${sign}${outcome.point}`;
-                            })
-                            .join(" / ")}
-                        </p>
-                      ) : (
-                        <p className="mt-2 text-sm text-zinc-600">
-                          DraftKings has not posted a spread for this game yet.
-                        </p>
-                      )}
-                    </article>
-                  ))}
+              {importResult ? (
+                <div className="mt-5 border border-green-800 bg-green-50 p-4 text-green-950">
+                  <p className="font-bold">{importResult.message}</p>
+                  <p className="mt-1 text-sm">
+                    Games saved: {importResult.importedGames}
+                    {" · "}Preliminary spreads saved:{" "}
+                    {importResult.preliminarySpreadsSaved}
+                    {" · "}Weeks updated: {importResult.weeksUpdated}
+                  </p>
                 </div>
-              )}
+              ) : null}
+
+              <div className="mt-5 space-y-4">
+                {importPreview.games.map((game) => (
+                  <article
+                    className="border border-zinc-400 bg-white p-4"
+                    key={game.externalGameId}
+                  >
+                    <p className="text-sm text-zinc-600">
+                      {new Date(game.kickoff).toLocaleString()}
+                    </p>
+
+                    <h3 className="mt-1 font-serif text-xl font-bold">
+                      {game.awayTeam} at {game.homeTeam}
+                    </h3>
+
+                    {game.spread.length === 2 ? (
+                      <p className="mt-2 text-sm">
+                        DraftKings:{" "}
+                        {game.spread
+                          .map((outcome) => {
+                            const sign =
+                              outcome.point !== null && outcome.point > 0
+                                ? "+"
+                                : "";
+
+                            return `${outcome.team} ${sign}${outcome.point}`;
+                          })
+                          .join(" / ")}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm text-zinc-600">
+                        DraftKings has not posted a spread for this game yet.
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
             </div>
           ) : null}
         </section>
