@@ -1,0 +1,45 @@
+insert into public.teams (
+  abbreviation,
+  city,
+  mascot,
+  full_name
+)
+values
+  ('ARI', 'Arizona', 'Cardinals', 'Arizona Cardinals'),
+  ('ATL', 'Atlanta', 'Falcons', 'Atlanta Falcons'),
+  ('BAL', 'Baltimore', 'Ravens', 'Baltimore Ravens'),
+  ('BUF', 'Buffalo', 'Bills', 'Buffalo Bills'),
+  ('CAR', 'Carolina', 'Panthers', 'Carolina Panthers'),
+  ('CHI', 'Chicago', 'Bears', 'Chicago Bears'),
+  ('CIN', 'Cincinnati', 'Bengals', 'Cincinnati Bengals'),
+  ('CLE', 'Cleveland', 'Browns', 'Cleveland Browns'),
+  ('DAL', 'Dallas', 'Cowboys', 'Dallas Cowboys'),
+  ('DEN', 'Denver', 'Broncos', 'Denver Broncos'),
+  ('DET', 'Detroit', 'Lions', 'Detroit Lions'),
+  ('GB', 'Green Bay', 'Packers', 'Green Bay Packers'),
+  ('HOU', 'Houston', 'Texans', 'Houston Texans'),
+  ('IND', 'Indianapolis', 'Colts', 'Indianapolis Colts'),
+  ('JAX', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'),
+  ('KC', 'Kansas City', 'Chiefs', 'Kansas City Chiefs'),
+  ('LV', 'Las Vegas', 'Raiders', 'Las Vegas Raiders'),
+  ('LAC', 'Los Angeles', 'Chargers', 'Los Angeles Chargers'),
+  ('LAR', 'Los Angeles', 'Rams', 'Los Angeles Rams'),
+  ('MIA', 'Miami', 'Dolphins', 'Miami Dolphins'),
+  ('MIN', 'Minnesota', 'Vikings', 'Minnesota Vikings'),
+  ('NE', 'New England', 'Patriots', 'New England Patriots'),
+  ('NO', 'New Orleans', 'Saints', 'New Orleans Saints'),
+  ('NYG', 'New York', 'Giants', 'New York Giants'),
+  ('NYJ', 'New York', 'Jets', 'New York Jets'),
+  ('PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles'),
+  ('PIT', 'Pittsburgh', 'Steelers', 'Pittsburgh Steelers'),
+  ('SEA', 'Seattle', 'Seahawks', 'Seattle Seahawks'),
+  ('SF', 'San Francisco', '49ers', 'San Francisco 49ers'),
+  ('TB', 'Tampa Bay', 'Buccaneers', 'Tampa Bay Buccaneers'),
+  ('TEN', 'Tennessee', 'Titans', 'Tennessee Titans'),
+  ('WAS', 'Washington', 'Commanders', 'Washington Commanders')
+on conflict (abbreviation)
+do update set
+  city = excluded.city,
+  mascot = excluded.mascot,
+  full_name = excluded.full_name,
+  active = true;
