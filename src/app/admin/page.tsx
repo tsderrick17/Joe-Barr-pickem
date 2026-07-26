@@ -30,6 +30,7 @@ type OddsPreview = {
 type ImportGame = {
   externalGameId: string;
   kickoff: string;
+  poolWeek: string;
   awayTeam: string;
   homeTeam: string;
   spread: Array<{
@@ -360,6 +361,9 @@ export default function AdminPage() {
                     <p className="text-sm text-zinc-600">
                       {new Date(game.kickoff).toLocaleString()}
                     </p>
+                    <p className="mt-1 text-sm font-bold uppercase tracking-wide text-zinc-600">
+  {game.poolWeek}
+</p>
 
                     <h3 className="mt-1 font-serif text-xl font-bold">
                       {game.awayTeam} at {game.homeTeam}

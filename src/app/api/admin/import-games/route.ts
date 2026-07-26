@@ -28,20 +28,20 @@ type TeamRow = {
 
 type PeriodRow = {
   id: string;
-  display_name: string;
   display_order: number;
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
-type EasternParts = {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
+type WeekAssignment = {
+  weekStartKey: string;
+  period: PeriodRow;
+  isNew: boolean;
 };
 
 const easternTimeZone = "America/New_York";
 
-function getEasternParts(date: Date): EasternParts {
+function getEasternParts(date: Date) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: easternTimeZone,
     year: "numeric",
@@ -64,13 +64,13 @@ function getEasternParts(date: Date): EasternParts {
 }
 
 function getEasternOffsetMilliseconds(date: Date) {
-  const parts = getEasternParts(date);
+  const eastern = getEasternParts(date);
 
   const easternClockReadAsUtc = Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
+    eastern.year,
+    eastern.month - 1,
+    eastern.day,
+    eastern.hour,
   );
 
   return easternClockReadAsUtc - date.getTime();
@@ -123,8 +123,6 @@ function getWeekWindow(weekStartKey: string) {
 
 function getLineLock(kickoff: Date) {
   const eastern = getEasternParts(kickoff);
-
-  // Early Sunday-morning games are treated as international games.
   const isEarlyInternationalGame = eastern.hour < 12;
 
   if (isEarlyInternationalGame) {
@@ -251,7 +249,7 @@ export async function POST(request: NextRequest) {
 
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, display_name, display_order")
+    .select("id, display_order, starts_at, ends_at")
     .eq("season_id", season.id)
     .eq("period_type", "regular")
     .order("display_order");
@@ -303,62 +301,113 @@ export async function POST(request: NextRequest) {
     first.localeCompare(second),
   );
 
-  if (groupedWeeks.length > periods.length) {
+  const regularPeriods = periods as PeriodRow[];
+
+  const periodsByWeekStart = new Map<string, PeriodRow>();
+  const emptyPeriods: PeriodRow[] = [];
+
+  for (const period of regularPeriods) {
+    if (period.starts_at && period.ends_at) {
+      const savedWeekStartKey = getWeekStartKey(
+        new Date(period.starts_at),
+      );
+
+      periodsByWeekStart.set(savedWeekStartKey, period);
+    } else {
+      emptyPeriods.push(period);
+    }
+  }
+
+  const assignments: WeekAssignment[] = [];
+  let nextEmptyPeriodIndex = 0;
+
+  for (const [weekStartKey] of groupedWeeks) {
+    const savedPeriod = periodsByWeekStart.get(weekStartKey);
+
+    if (savedPeriod) {
+      assignments.push({
+        weekStartKey,
+        period: savedPeriod,
+        isNew: false,
+      });
+
+      continue;
+    }
+
+    const nextEmptyPeriod = emptyPeriods[nextEmptyPeriodIndex];
+
+    if (!nextEmptyPeriod) {
+      return NextResponse.json(
+        {
+          error:
+            "Import stopped because there is no unused regular-season week available for this schedule group.",
+        },
+        { status: 409 },
+      );
+    }
+
+    assignments.push({
+      weekStartKey,
+      period: nextEmptyPeriod,
+      isNew: true,
+    });
+
+    nextEmptyPeriodIndex += 1;
+  }
+
+  const periodForWeek = new Map(
+    assignments.map((assignment) => [
+      assignment.weekStartKey,
+      assignment.period,
+    ]),
+  );
+
+  const externalGameIds = events.map((event) => event.id);
+
+  const { data: existingGames, error: existingGamesError } =
+    await supabaseAdmin
+      .from("games")
+      .select("external_game_id")
+      .in("external_game_id", externalGameIds);
+
+  if (existingGamesError) {
     return NextResponse.json(
-      { error: "The odds feed contains more weeks than the season setup." },
+      { error: "Existing games could not be checked." },
       { status: 500 },
     );
   }
 
-  const periodForWeek = new Map<string, PeriodRow>();
+  const existingExternalGameIds = new Set(
+    existingGames?.map((game) => game.external_game_id) ?? [],
+  );
 
-  for (const [index, [weekStartKey]] of groupedWeeks.entries()) {
-    periodForWeek.set(weekStartKey, periods[index] as PeriodRow);
-  }
+  const gamesToUpsert = [];
 
-  const periodDateUpdates = groupedWeeks.map(([weekStartKey]) => {
-    const period = periodForWeek.get(weekStartKey);
-    const window = getWeekWindow(weekStartKey);
-
-    return supabaseAdmin
-      .from("scoring_periods")
-      .update({
-        starts_at: window.startsAt,
-        ends_at: window.endsAt,
-      })
-      .eq("id", period?.id);
-  });
-
-  const periodUpdateResults = await Promise.all(periodDateUpdates);
-
-  const periodUpdateError = periodUpdateResults.find(
-    (result) => result.error,
-  )?.error;
-
-  if (periodUpdateError) {
-    return NextResponse.json(
-      { error: "The weekly date windows could not be saved." },
-      { status: 500 },
-    );
-  }
-
-  const gamesToUpsert = events.map((event) => {
+  for (const event of events) {
     const kickoff = new Date(event.commence_time);
     const weekStartKey = getWeekStartKey(kickoff);
     const period = periodForWeek.get(weekStartKey);
+
+    if (!period) {
+      return NextResponse.json(
+        { error: "A schedule group could not be matched to a pool week." },
+        { status: 500 },
+      );
+    }
+
     const lineLock = getLineLock(kickoff);
 
-    return {
+    gamesToUpsert.push({
       external_game_id: event.id,
-      scoring_period_id: period?.id,
+      scoring_period_id: period.id,
       away_team_id: teamIdByName.get(event.away_team),
       home_team_id: teamIdByName.get(event.home_team),
       kickoff_at: event.commence_time,
       line_lock_at: lineLock.lineLockAt,
       is_international: lineLock.isInternational,
       status: "scheduled",
-    };
-  });
+    });
+  }
 
   const { data: savedGames, error: gameError } = await supabaseAdmin
     .from("games")
@@ -367,9 +416,38 @@ export async function POST(request: NextRequest) {
 
   if (gameError || !savedGames) {
     return NextResponse.json(
-      { error: "The games could not be saved." },
+      {
+        error:
+          "The games could not be saved. Existing week assignments remain protected.",
+      },
       { status: 500 },
     );
+  }
+
+  const newPeriodAssignments = assignments.filter(
+    (assignment) => assignment.isNew,
+  );
+
+  for (const assignment of newPeriodAssignments) {
+    const window = getWeekWindow(assignment.weekStartKey);
+
+    const { error: periodDateError } = await supabaseAdmin
+      .from("scoring_periods")
+      .update({
+        starts_at: window.startsAt,
+        ends_at: window.endsAt,
+      })
+      .eq("id", assignment.period.id);
+
+    if (periodDateError) {
+      return NextResponse.json(
+        {
+          error:
+            "Games were saved, but a new scoring period could not be dated.",
+        },
+        { status: 500 },
+      );
+    }
   }
 
   const gameIdByExternalId = new Map(
@@ -377,6 +455,10 @@ export async function POST(request: NextRequest) {
   );
 
   const spreadHistoryRows = events.flatMap((event) => {
+    if (existingExternalGameIds.has(event.id)) {
+      return [];
+    }
+
     const draftKings = event.bookmakers?.find(
       (bookmaker) => bookmaker.key === "draftkings",
     );
@@ -420,10 +502,11 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    message: "Games imported successfully. No official lines were locked.",
+    message:
+      "Schedule import completed. Existing week assignments were preserved and no official lines were locked.",
     importedGames: savedGames.length,
     preliminarySpreadsSaved: spreadHistoryRows.length,
-    weeksUpdated: groupedWeeks.length,
+    newWeeksAssigned: newPeriodAssignments.length,
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ?? "unknown",
   });

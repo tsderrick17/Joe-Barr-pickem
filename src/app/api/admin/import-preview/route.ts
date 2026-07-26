@@ -21,6 +21,47 @@ type OddsEvent = {
   }>;
 };
 
+type PeriodRow = {
+  id: string;
+  display_name: string;
+  display_order: number;
+  starts_at: string | null;
+  ends_at: string | null;
+};
+
+const easternTimeZone = "America/New_York";
+
+function getEasternParts(date: Date) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: easternTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const value = (type: string) =>
+    Number(parts.find((part) => part.type === type)?.value);
+
+  return {
+    year: value("year"),
+    month: value("month"),
+    day: value("day"),
+  };
+}
+
+function getWeekStartKey(kickoff: Date) {
+  const eastern = getEasternParts(kickoff);
+  const date = new Date(
+    Date.UTC(eastern.year, eastern.month - 1, eastern.day),
+  );
+
+  const daysSinceTuesday = (date.getUTCDay() - 2 + 7) % 7;
+  date.setUTCDate(date.getUTCDate() - daysSinceTuesday);
+
+  return date.toISOString().slice(0, 10);
+}
+
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
@@ -62,18 +103,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: player, error: playerError } = await supabaseAdmin
+  const { data: player } = await supabaseAdmin
     .from("players")
     .select("first_name, is_commissioner, active")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (
-    playerError ||
-    !player ||
-    !player.active ||
-    !player.is_commissioner
-  ) {
+  if (!player || !player.active || !player.is_commissioner) {
     return NextResponse.json(
       { error: "Commissioner access is required." },
       { status: 403 },
@@ -94,7 +130,72 @@ export async function GET(request: NextRequest) {
 
   const events = (await oddsResponse.json()) as OddsEvent[];
 
-  const preview = events.map((event) => {
+  const { data: season } = await supabaseAdmin
+    .from("seasons")
+    .select("id")
+    .eq("year", 2026)
+    .maybeSingle();
+
+  if (!season) {
+    return NextResponse.json(
+      { error: "The 2026 season has not been set up yet." },
+      { status: 500 },
+    );
+  }
+
+  const { data: periods, error: periodsError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id, display_name, display_order, starts_at, ends_at")
+    .eq("season_id", season.id)
+    .eq("period_type", "regular")
+    .order("display_order");
+
+  if (periodsError || !periods) {
+    return NextResponse.json(
+      { error: "The 2026 pool weeks could not be loaded." },
+      { status: 500 },
+    );
+  }
+
+  const savedWeekMap = new Map<string, PeriodRow>();
+  const emptyPeriods: PeriodRow[] = [];
+
+  for (const period of periods as PeriodRow[]) {
+    if (period.starts_at && period.ends_at) {
+      savedWeekMap.set(
+        getWeekStartKey(new Date(period.starts_at)),
+        period,
+      );
+    } else {
+      emptyPeriods.push(period);
+    }
+  }
+
+  const newWeekMap = new Map<string, PeriodRow>();
+  let nextEmptyPeriod = 0;
+
+  const sortedWeekKeys = [...new Set(
+    events.map((event) => getWeekStartKey(new Date(event.commence_time))),
+  )].sort();
+
+  for (const weekStartKey of sortedWeekKeys) {
+    if (savedWeekMap.has(weekStartKey)) {
+      continue;
+    }
+
+    const period = emptyPeriods[nextEmptyPeriod];
+
+    if (period) {
+      newWeekMap.set(weekStartKey, period);
+      nextEmptyPeriod += 1;
+    }
+  }
+
+  const games = events.map((event) => {
+    const weekStartKey = getWeekStartKey(new Date(event.commence_time));
+    const period =
+      savedWeekMap.get(weekStartKey) ?? newWeekMap.get(weekStartKey);
+
     const draftKings = event.bookmakers?.find(
       (bookmaker) => bookmaker.key === "draftkings",
     );
@@ -106,6 +207,7 @@ export async function GET(request: NextRequest) {
     return {
       externalGameId: event.id,
       kickoff: event.commence_time,
+      poolWeek: period?.display_name ?? "Needs review",
       awayTeam: event.away_team,
       homeTeam: event.home_team,
       spread:
@@ -120,7 +222,8 @@ export async function GET(request: NextRequest) {
     commissioner: player.first_name,
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ?? "unknown",
-    games: preview,
-    note: "Preview only. Nothing has been added to the pool.",
+    games,
+    note:
+      "Preview only. Existing week assignments are preserved; no games have been added or moved.",
   });
 }
