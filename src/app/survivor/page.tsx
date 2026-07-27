@@ -28,15 +28,12 @@ const helmetColors: Record<string, string> = {
 
 function Helmet({ team, faces, unavailable }: { team: Team; faces: "left" | "right"; unavailable?: boolean }) {
   const flipped = faces === "left";
-  const mask = "url(/helmet-newspaper-template.png)";
   const logoScale = team.abbreviation === "BUF" ? "scale-110" : "";
 
-  return <span aria-hidden="true" className={`relative block h-12 w-16 shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale opacity-55" : ""}`}>
-    <span className="absolute inset-0" style={{ backgroundColor: helmetColors[team.abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
-    <span className="absolute inset-0" style={{ backgroundColor: "#fff", clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
-    <span className="absolute inset-0" style={{ backgroundColor: "#fff", clipPath: "polygon(53% 29%, 100% 29%, 100% 62%, 69% 62%, 59% 53%, 52% 48%)", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
-    <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={48} src="/helmet-newspaper-template.png" width={64} />
-    <span className={`absolute left-[15%] top-[18%] h-[42%] w-[40%] ${flipped ? "-scale-x-100" : ""}`}><Image alt="" className={`h-full w-full object-contain ${logoScale}`} height={28} src={`/team-logos/${team.abbreviation}.png`} width={28} /></span>
+  return <span aria-hidden="true" className={`relative block h-14 w-20 shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale opacity-55" : ""}`}>
+    <span className="absolute inset-[5%]" style={{ backgroundColor: helmetColors[team.abbreviation] ?? "#fff", clipPath: "polygon(18% 86%, 13% 76%, 10% 59%, 11% 40%, 18% 24%, 31% 13%, 47% 8%, 62% 11%, 74% 20%, 82% 32%, 84% 45%, 76% 47%, 69% 42%, 66% 59%, 59% 71%, 49% 80%, 34% 83%)" }} />
+    <Image alt="" className="absolute inset-0 h-full w-full scale-[1.55] object-contain mix-blend-multiply" height={56} src="/survivor-helmet-master.png" width={80} />
+    <span className={`absolute left-[27%] top-[28%] h-[29%] w-[31%] ${flipped ? "-scale-x-100" : ""}`}><Image alt="" className={`h-full w-full object-contain ${logoScale}`} height={28} src={`/team-logos/${team.abbreviation}.png`} width={28} /></span>
   </span>;
 }
 
