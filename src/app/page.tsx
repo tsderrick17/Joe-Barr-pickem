@@ -106,7 +106,7 @@ export default function HomePage() {
           </p>
 
           <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-            Lead Pipe Locks 🚬
+            Lead Pipe Locks 🔧
           </h1>
         </header>
 
@@ -151,18 +151,10 @@ export default function HomePage() {
 
         <section className="py-7">
           <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
-                STANDINGS
-              </p>
-
-              <h2 className="mt-2 font-serif text-3xl font-bold">
-                The Ledger
-              </h2>
-            </div>
+            <h2 className="font-serif text-3xl font-bold">Scoreboard</h2>
 
             <p className="text-right text-xs text-slate-600">
-              Picks appear when each game begins.
+              Picks unhidden at kickoff.
             </p>
           </div>
 
