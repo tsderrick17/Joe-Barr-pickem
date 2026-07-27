@@ -7,7 +7,7 @@ begin
     raise exception 'A completed scoring period is rubber-stamped and cannot be changed.';
   end if;
 
-  return new;
+  return coalesce(new, old);
 end;
 $$;
 
@@ -40,7 +40,7 @@ begin
     raise exception 'Games in a completed scoring period are rubber-stamped and cannot be changed.';
   end if;
 
-  return new;
+  return coalesce(new, old);
 end;
 $$;
 
@@ -73,7 +73,7 @@ begin
     raise exception 'Picks in a completed scoring period are rubber-stamped and cannot be changed.';
   end if;
 
-  return new;
+  return coalesce(new, old);
 end;
 $$;
 
@@ -108,7 +108,7 @@ begin
     raise exception 'Official lines in a completed scoring period are rubber-stamped and cannot be changed.';
   end if;
 
-  return new;
+  return coalesce(new, old);
 end;
 $$;
 
