@@ -636,27 +636,20 @@ export default function BoardPage() {
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
-              <div className="grid gap-4 md:grid-cols-2 md:gap-5">
+              <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
+              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-2 sm:gap-5">
                 <div>
-                  <p className="font-bold tracking-[0.12em] text-[#171719]">
-                    HOW TO PLAY
-                  </p>
-                  <div className="mt-1.5">
-                    <p>Lines lock at 8 AM ET</p>
-                    <p>on game day. Lines may move</p>
-                    <p>
-                      before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
-                    </p>
-                  </div>
+                  <p>Lines lock at 8 AM ET on game day.</p>
+                  <p className="mt-1">They may move before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.</p>
                 </div>
-                <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-5 md:pt-0">
-                  <p>Favorites listed left; home team ALL CAPS.</p>
-                  <p className="mt-0.5">
+                <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+                  <p>Favorites left; home team ALL CAPS.</p>
+                  <p className="mt-1">
                     {week.period_type === "playoff"
-                      ? "Select every team and hit Save below."
-                      : "Select TWO teams and hit Save below."}
+                      ? "Choose every team; save below."
+                      : "Choose TWO teams; save below."}
                   </p>
-                  <p className="mt-0.5">Picks may be changed until listed kickoff.</p>
+                  <p className="mt-1">Changes allowed until kickoff.</p>
                 </div>
               </div>
               {hasEarlyGame ? (
