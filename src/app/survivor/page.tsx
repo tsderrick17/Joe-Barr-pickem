@@ -25,14 +25,23 @@ const helmetColors: Record<string, string> = {
   ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff", CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00", DAL: "#b0b7bc", DEN: "#0a2343", DET: "#b0b7bc", GB: "#ffb612", HOU: "#03202f", IND: "#ffffff", JAX: "#111111", KC: "#e31837", LV: "#a5acaf", LAC: "#ffffff", LAR: "#003594", MIA: "#ffffff", MIN: "#4f2683", NE: "#c5c9cc", NO: "#d3bc8d", NYG: "#0b2265", NYJ: "#125740", PHI: "#004c54", PIT: "#111111", SEA: "#002244", SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414",
 };
 
+// These marks contain readable lettering or initials. Real helmets use an
+// approved opposite-side decal where needed; with one source file, preserve
+// legibility rather than rendering reversed text.
+const readableDecalTeams = new Set([
+  "ATL", "CHI", "CIN", "GB", "KC", "LV", "NE", "NYG", "NYJ", "SF", "TEN", "WAS",
+]);
+
 function Helmet({ team, faces, unavailable }: { team: Team; faces: "left" | "right"; unavailable?: boolean }) {
   const flipped = faces === "left";
+  const preserveDecalOrientation = readableDecalTeams.has(team.abbreviation);
+  const hideDecal = team.abbreviation === "PIT" && faces === "right";
   const mask = "url(/helmet-newspaper-template.png)";
   return <span aria-hidden="true" className={`relative block h-16 w-20 shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale" : ""}`}>
     <span className="absolute inset-0" style={{ backgroundColor: helmetColors[team.abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <span className="absolute inset-0" style={{ backgroundColor: "#fff", clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={64} src="/helmet-newspaper-template.png" width={80} />
-    <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} />
+    {!hideDecal ? <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped && preserveDecalOrientation ? "-scale-x-100" : ""}`} height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} /> : null}
   </span>;
 }
 
