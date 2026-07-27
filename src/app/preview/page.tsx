@@ -264,7 +264,7 @@ export default function PreviewPage() {
   const isEditable = !["live", "final", "eliminated", "archived"].includes(scenarioKey);
   const isFinalState = ["final", "eliminated", "archived"].includes(scenarioKey);
   const demoStandings = [
-    { name: "Tyler", wins: isFinalState ? 2 : 0, picks: ["Chiefs -2.5", "Bears +3.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
+    { name: "Tyler", wins: isFinalState ? 1 : 0, picks: ["Chiefs -2.5", "Bears +3.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
     { name: "Zac", wins: isFinalState ? 1 : 0, picks: ["Bills +2.5", "Packers -3.0"], marks: isFinalState ? ["L", "W"] : ["", ""] },
     { name: "Gary", wins: isFinalState ? 1 : 0, picks: ["Steelers +2.5", "Eagles -4.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
   ];
@@ -276,7 +276,7 @@ export default function PreviewPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-700">
-                Dummy data · Safe preview
+                Demo Week 1 · Safe preview
               </p>
               <h1 className="mt-1 font-serif text-3xl font-black leading-none sm:text-4xl">
                 The Slate
