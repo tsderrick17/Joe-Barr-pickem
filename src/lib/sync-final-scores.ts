@@ -1,4 +1,5 @@
 import { gradeAtsPick } from "@/lib/ats-grading";
+import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type Score = { name: string; score: string | number | null };
@@ -12,6 +13,8 @@ type GameRow = {
   external_game_id: string;
   away_team_id: string;
   home_team_id: string;
+  kickoff_at: string;
+  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
 };
 type TeamRow = { id: string; full_name: string };
 type LockedLineRow = {
@@ -23,6 +26,8 @@ type PickRow = { id: string; game_id: string; selected_team_id: string };
 
 export type ScoreSyncResult = {
   checkedAt: string;
+  eligibleGames: number;
+  providerChecked: boolean;
   completedGamesFound: number;
   finalScoresImported: number;
   picksGraded: number;
@@ -44,6 +49,44 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   }
 
   const checkedAt = new Date().toISOString();
+  const now = new Date(checkedAt);
+  const providerLookbackStart = new Date(
+    now.getTime() - 3 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const { data: unfinishedGames, error: unfinishedGamesError } =
+    await supabaseAdmin
+      .from("games")
+      .select(
+        "id, external_game_id, away_team_id, home_team_id, kickoff_at, status",
+      )
+      .in("status", ["scheduled", "live"])
+      .lte("kickoff_at", checkedAt)
+      .gte("kickoff_at", providerLookbackStart);
+
+  if (unfinishedGamesError || !unfinishedGames) {
+    throw new Error("Games awaiting final scores could not be loaded.");
+  }
+
+  const eligibleGames = (unfinishedGames as GameRow[]).filter((game) =>
+    isDueForFinalScoreCheck(
+      { kickoffAt: game.kickoff_at, status: game.status },
+      now,
+    ),
+  );
+
+  if (eligibleGames.length === 0) {
+    return {
+      checkedAt,
+      eligibleGames: 0,
+      providerChecked: false,
+      completedGamesFound: 0,
+      finalScoresImported: 0,
+      picksGraded: 0,
+      picksAwaitingLine: 0,
+      requestsRemaining: null,
+    };
+  }
+
   const run = await supabaseAdmin
     .from("sync_runs")
     .insert({ provider: "The Odds API", job_type: "scores", status: "started" })
@@ -66,13 +109,21 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       throw new Error("The NFL score feed could not be reached right now.");
     }
 
+    const eligibleGameByExternalId = new Map(
+      eligibleGames.map((game) => [game.external_game_id, game]),
+    );
     const completedEvents = ((await response.json()) as ScoreEvent[]).filter(
-      (event) => event.completed && event.scores?.length === 2,
+      (event) =>
+        eligibleGameByExternalId.has(event.id) &&
+        event.completed &&
+        event.scores?.length === 2,
     );
 
     if (completedEvents.length === 0) {
       const result = {
         checkedAt,
+        eligibleGames: eligibleGames.length,
+        providerChecked: true,
         completedGamesFound: 0,
         finalScoresImported: 0,
         picksGraded: 0,
@@ -86,17 +137,10 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       return result;
     }
 
-    const eventByExternalId = new Map(
-      completedEvents.map((event) => [event.id, event]),
+    const eventByExternalId = new Map(completedEvents.map((event) => [event.id, event]));
+    const savedGames = eligibleGames.filter((game) =>
+      eventByExternalId.has(game.external_game_id),
     );
-    const { data: games, error: gamesError } = await supabaseAdmin
-      .from("games")
-      .select("id, external_game_id, away_team_id, home_team_id")
-      .in("external_game_id", [...eventByExternalId.keys()]);
-
-    if (gamesError || !games) throw new Error("Saved games could not be loaded.");
-
-    const savedGames = games as GameRow[];
     const teamIds = [...new Set(savedGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
     const { data: teams, error: teamsError } = teamIds.length
       ? await supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
@@ -168,6 +212,8 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
 
     const result = {
       checkedAt,
+      eligibleGames: eligibleGames.length,
+      providerChecked: true,
       completedGamesFound: completedEvents.length,
       finalScoresImported: finalizedGames.length,
       picksGraded: gradeUpdates.length,

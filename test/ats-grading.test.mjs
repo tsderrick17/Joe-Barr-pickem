@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { gradeAtsPick } from "../src/lib/ats-grading.js";
+import { isDueForFinalScoreCheck } from "../src/lib/score-window.js";
 
 const game = {
   favoriteTeamId: "away",
@@ -29,4 +30,21 @@ test("records ATS pushes as losses", () => {
 
 test("does not grade without a usable official line", () => {
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", favoriteTeamId: null }), "pending");
+});
+
+test("begins final-score checks three hours after kickoff", () => {
+  const game = { kickoffAt: "2026-09-13T17:00:00.000Z", status: "scheduled" };
+
+  assert.equal(
+    isDueForFinalScoreCheck(game, new Date("2026-09-13T19:59:59.000Z")),
+    false,
+  );
+  assert.equal(
+    isDueForFinalScoreCheck(game, new Date("2026-09-13T20:00:00.000Z")),
+    true,
+  );
+  assert.equal(
+    isDueForFinalScoreCheck({ ...game, status: "final" }),
+    false,
+  );
 });
