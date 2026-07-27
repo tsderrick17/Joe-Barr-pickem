@@ -1,212 +1,228 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+export const dynamic = "force-dynamic";
 
-type LedgerPick = {
-  label: string | null;
-  resultMark: string;
+type PickRow = {
+  player_id: string;
+  game_id: string;
+  selected_team_id: string;
+  scoring_period_id: string;
+  submitted_at: string;
+  result: string;
 };
 
-type LedgerRow = {
+type GameRow = {
   id: string;
-  firstName: string;
-  wins: number;
-  picks: LedgerPick[];
+  kickoff_at: string;
 };
 
-type HomeData = {
-  viewerPlayerId: string;
-  week: string;
-  rows: LedgerRow[];
-  error?: string;
-};
+export async function GET(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const authorization = request.headers.get("authorization");
 
-export default function HomePage() {
-  const [data, setData] = useState<HomeData | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function loadHome() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        window.location.href = "/login";
-        return;
-      }
-
-      const response = await fetch("/api/home", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      const result = (await response.json()) as HomeData;
-
-      if (!response.ok) {
-        setErrorMessage(result.error ?? "The pool could not be loaded.");
-        return;
-      }
-
-      setData(result);
-    }
-
-    void loadHome();
-  }, []);
-
-  if (errorMessage) {
-    return (
-      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
-        <p className="font-semibold text-red-700">{errorMessage}</p>
-      </main>
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return NextResponse.json(
+      { error: "The server is missing required configuration." },
+      { status: 500 },
     );
   }
 
-  if (!data) {
-    return (
-      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
-        Loading the pool…
-      </main>
+  if (!authorization?.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "You must be signed in to view the pool." },
+      { status: 401 },
     );
   }
 
-  return (
-    <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
-      <div className="mx-auto max-w-5xl px-5 py-9 md:px-10">
-        <header className="border-b-2 border-[#1d1d1f] pb-7">
-          <div className="flex items-start justify-between gap-5">
-            <div>
-              <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
-                JOE BARR MEMORIAL
-              </p>
+  const authClient = createClient(supabaseUrl, supabasePublishableKey, {
+    global: {
+      headers: {
+        Authorization: authorization,
+      },
+    },
+  });
 
-              <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-                Best Bets Pick&apos;em
-              </h1>
+  const {
+    data: { user },
+  } = await authClient.auth.getUser();
 
-              <p className="mt-3 text-lg">
-                Honor the tradition. Eliminate the paperwork.
-              </p>
-            </div>
+  if (!user) {
+    return NextResponse.json(
+      { error: "Your sign-in session could not be verified." },
+      { status: 401 },
+    );
+  }
 
-            <Link className="pt-2 font-bold underline" href="/admin">
-              Commissioner
-            </Link>
-          </div>
-        </header>
+  const { data: viewer } = await supabaseAdmin
+    .from("players")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .eq("active", true)
+    .maybeSingle();
 
-        <section className="border-b-2 border-[#1d1d1f] py-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
-                THIS WEEK
-              </p>
+  if (!viewer) {
+    return NextResponse.json(
+      { error: "Your player profile is not active in this pool." },
+      { status: 403 },
+    );
+  }
 
-              <h2 className="mt-2 font-serif text-3xl font-bold">
-                {data.week}
-              </h2>
+  const { data: season } = await supabaseAdmin
+    .from("seasons")
+    .select("id")
+    .eq("year", 2026)
+    .maybeSingle();
 
-              <p className="mt-3 text-slate-700">
-                Make one pick now or save both at once.
-              </p>
-            </div>
+  if (!season) {
+    return NextResponse.json(
+      { error: "The 2026 season has not been set up." },
+      { status: 404 },
+    );
+  }
 
-            <Link
-              className="inline-block bg-[#1d1d1f] px-6 py-3 text-center font-bold text-white"
-              href="/board"
-            >
-              Go to The Board
-            </Link>
-          </div>
-        </section>
+  const { data: periods, error: periodsError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id, display_name, display_order, status")
+    .eq("season_id", season.id)
+    .eq("period_type", "regular")
+    .order("display_order");
 
-        <section className="py-8">
-          <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
-            STANDINGS
-          </p>
+  if (periodsError || !periods?.length) {
+    return NextResponse.json(
+      { error: "The weekly schedule could not be loaded." },
+      { status: 500 },
+    );
+  }
 
-          <h2 className="mt-2 font-serif text-3xl font-bold">
-            {data.week} ledger
-          </h2>
+  const currentWeek =
+    periods.find((period) => period.status === "active") ??
+    periods.find((period) => period.status === "upcoming") ??
+    periods[0];
 
-          <p className="mt-3 text-sm text-slate-700">
-            Picks stay private until each game begins. Your own picks are always
-            visible to you.
-          </p>
+  const periodIds = periods.map((period) => period.id);
 
-          <div className="mt-6 overflow-x-auto border border-slate-400 bg-white">
-            <table className="w-full min-w-[650px] border-collapse text-left">
-              <thead className="border-b border-slate-400 text-xs tracking-[0.14em] text-slate-700">
-                <tr>
-                  <th className="w-20 px-4 py-3">WINS</th>
-                  <th className="min-w-36 px-4 py-3">PLAYER</th>
-                  <th className="min-w-48 px-4 py-3">PICK 1</th>
-                  <th className="min-w-48 px-4 py-3">PICK 2</th>
-                </tr>
-              </thead>
+  const { data: players, error: playersError } = await supabaseAdmin
+    .from("players")
+    .select("id, first_name")
+    .eq("active", true)
+    .order("first_name");
 
-              <tbody>
-                {data.rows.map((row) => (
-                  <tr
-                    className={`border-b border-slate-200 last:border-b-0 ${
-                      row.id === data.viewerPlayerId ? "bg-[#fbf6e8]" : ""
-                    }`}
-                    key={row.id}
-                  >
-                    <td className="px-4 py-4 font-serif text-2xl">
-                      {row.wins}
-                    </td>
+  if (playersError || !players) {
+    return NextResponse.json(
+      { error: "The player list could not be loaded." },
+      { status: 500 },
+    );
+  }
 
-                    <td className="px-4 py-4 font-serif text-xl">
-                      {row.firstName}
-                    </td>
+  const { data: picks, error: picksError } = await supabaseAdmin
+    .from("picks")
+    .select(
+      "player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result",
+    )
+    .in("scoring_period_id", periodIds);
 
-                    {[0, 1].map((pickNumber) => {
-                      const pick = row.picks[pickNumber];
+  if (picksError) {
+    return NextResponse.json(
+      { error: "The pool picks could not be loaded." },
+      { status: 500 },
+    );
+  }
 
-                      return (
-                        <td className="px-4 py-4" key={pickNumber}>
-                          {pick?.label ? (
-                            <span>
-                              {pick.label}{" "}
-                              {pick.resultMark ? (
-                                <strong
-                                  className={
-                                    pick.resultMark === "✓"
-                                      ? "text-green-700"
-                                      : "text-red-700"
-                                  }
-                                >
-                                  {pick.resultMark}
-                                </strong>
-                              ) : null}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+  const allPicks = (picks ?? []) as PickRow[];
 
-        <section className="border-t-2 border-[#1d1d1f] py-8">
-          <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
-            SURVIVOR
-          </p>
+  const currentWeekPicks = allPicks
+    .filter((pick) => pick.scoring_period_id === currentWeek.id)
+    .sort(
+      (first, second) =>
+        new Date(first.submitted_at).getTime() -
+        new Date(second.submitted_at).getTime(),
+    );
 
-          <p className="mt-3 text-slate-700">
-            Survivor will join the ledger once Pick&apos;em is fully tested.
-          </p>
-        </section>
-      </div>
-    </main>
+  const gameIds = [
+    ...new Set(currentWeekPicks.map((pick) => pick.game_id)),
+  ];
+
+  const teamIds = [
+    ...new Set(currentWeekPicks.map((pick) => pick.selected_team_id)),
+  ];
+
+  const { data: games } = gameIds.length
+    ? await supabaseAdmin
+        .from("games")
+        .select("id, kickoff_at")
+        .in("id", gameIds)
+    : { data: [] };
+
+  const { data: teams } = teamIds.length
+    ? await supabaseAdmin
+        .from("teams")
+        .select("id, full_name")
+        .in("id", teamIds)
+    : { data: [] };
+
+  const gameById = new Map(
+    ((games ?? []) as GameRow[]).map((game) => [game.id, game]),
   );
+
+  const teamNameById = new Map(
+    (teams ?? []).map((team) => [team.id, team.full_name]),
+  );
+
+  const rows = players
+    .map((player) => {
+      const wins = allPicks.filter(
+        (pick) =>
+          pick.player_id === player.id && pick.result === "win",
+      ).length;
+
+      const weeklyPicks = currentWeekPicks
+        .filter((pick) => pick.player_id === player.id)
+        .map((pick) => {
+          const game = gameById.get(pick.game_id);
+
+          const visible =
+            player.id === viewer.id ||
+            (game ? new Date(game.kickoff_at) <= new Date() : false);
+
+          let resultMark = "";
+
+          if (pick.result === "win") {
+            resultMark = "W";
+          }
+
+          if (pick.result === "loss") {
+            resultMark = "L";
+          }
+
+return {
+  label: visible
+    ? teamNameById.get(pick.selected_team_id) ?? "Unknown team"
+    : null,
+  isHidden: !visible,
+  resultMark: visible ? resultMark : "",
+};
+        });
+
+      return {
+        id: player.id,
+        firstName: player.first_name,
+        wins,
+        picks: weeklyPicks,
+      };
+    })
+    .sort(
+      (first, second) =>
+        second.wins - first.wins ||
+        first.firstName.localeCompare(second.firstName),
+    );
+
+  return NextResponse.json({
+    viewerPlayerId: viewer.id,
+    week: currentWeek.display_name,
+    rows,
+  });
 }
