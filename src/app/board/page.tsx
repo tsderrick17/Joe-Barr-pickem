@@ -598,7 +598,7 @@ export default function BoardPage() {
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_28rem] md:gap-8">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_31rem] md:gap-8">
             <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
@@ -629,15 +629,15 @@ export default function BoardPage() {
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
               <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-2 sm:gap-5">
                 <div>
-                  <p>Lines lock at 8 AM ET on game day.</p>
+                  <p className="whitespace-nowrap">Lines lock at 8 AM ET on game day.</p>
                   <p className="mt-1">They may move before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
                   <p className="mt-1">
                     {week.period_type === "playoff"
-                      ? "Choose every team; save below."
-                      : "Choose TWO teams; save below."}
+                      ? "Choose every team and click Save below."
+                      : "Choose TWO teams and click Save below."}
                   </p>
                   <p className="mt-1">Changes allowed until kickoff.</p>
                 </div>
