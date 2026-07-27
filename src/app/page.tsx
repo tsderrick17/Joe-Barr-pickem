@@ -14,11 +14,8 @@ type ScoreboardPick = {
   resultMark: string;
 };
 
-const helmetColors: Record<string, string> = { ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff", CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00", DAL: "#b0b7bc", DEN: "#0a2343", DET: "#b0b7bc", GB: "#ffb612", HOU: "#03202f", IND: "#ffffff", JAX: "#111111", KC: "#e31837", LV: "#a5acaf", LAC: "#ffffff", LAR: "#003594", MIA: "#ffffff", MIN: "#4f2683", NE: "#c5c9cc", NO: "#d3bc8d", NYG: "#0b2265", NYJ: "#125740", PHI: "#004c54", PIT: "#111111", SEA: "#002244", SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414" };
-
-function MiniHelmet({ abbreviation, muted }: { abbreviation: string; muted?: boolean }) {
-  const mask = "url(/helmet-newspaper-template.png)";
-  return <span title={abbreviation} className={`relative inline-block h-8 w-10 shrink-0 ${muted ? "grayscale opacity-60" : ""}`}><span className="absolute inset-0" style={{ backgroundColor: helmetColors[abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat" }} /><Image alt={abbreviation} className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={32} src="/helmet-newspaper-template.png" width={40} /><Image alt="" className="absolute left-[16%] top-[20%] h-[38%] w-[36%] object-contain" height={16} src={`/team-logos/${abbreviation}.png`} width={16} /></span>;
+function MiniLogo({ abbreviation, muted }: { abbreviation: string; muted?: boolean }) {
+  return <span title={abbreviation} className={`inline-flex h-7 w-7 items-center justify-center ${muted ? "grayscale opacity-60" : ""}`}><Image alt={abbreviation} className="h-full w-full object-contain" height={28} src={`/team-logos/${abbreviation}.png`} width={28} /></span>;
 }
 
 type ScoreboardRow = {
@@ -368,7 +365,7 @@ export default function HomePage() {
                     <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}</span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
-                      return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniHelmet abbreviation={pick.abbreviation} muted={row.status !== "active"} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
+                      return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active"} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
                     })}
                     <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                   </div>
