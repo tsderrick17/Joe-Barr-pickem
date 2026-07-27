@@ -262,6 +262,12 @@ return {
       isHidden: boolean;
       resultMark: string;
     } | null;
+    picks: Array<{
+      abbreviation: string | null;
+      label: string | null;
+      isHidden: boolean;
+      resultMark: string;
+    } | null>;
   }> = [];
   let survivorGames: GameRow[] = [];
 
@@ -287,8 +293,8 @@ return {
         .eq("season_id", season.id),
       supabaseAdmin
         .from("survivor_picks")
-        .select("survivor_entry_id, game_id, selected_team_id, result")
-        .eq("scoring_period_id", currentWeek.id),
+        .select("survivor_entry_id, game_id, selected_team_id, scoring_period_id, result")
+        .in("scoring_period_id", periodIds),
     ]);
 
     if (survivorEntriesError || survivorPicksError) {
@@ -319,7 +325,7 @@ return {
         survivorTeamIds.length
           ? supabaseAdmin
               .from("teams")
-              .select("id, full_name")
+              .select("id, full_name, abbreviation")
               .in("id", survivorTeamIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
@@ -338,16 +344,15 @@ return {
           survivorGames.map((game) => [game.id, game]),
         );
         const survivorTeamById = new Map(
-          (survivorTeams ?? []).map((team) => [team.id, team.full_name]),
+          (survivorTeams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]),
         );
         const playerNameById = new Map(
           players.map((player) => [player.id, player.first_name]),
         );
         survivorRows = (survivorEntries ?? [])
           .map((entry) => {
-            const pick = (survivorPicks ?? []).find(
-              (item) => item.survivor_entry_id === entry.id,
-            );
+            const entryPicks = (survivorPicks ?? []).filter((item) => item.survivor_entry_id === entry.id);
+            const pick = entryPicks.find((item) => item.scoring_period_id === currentWeek.id);
             const game = pick ? survivorGameById.get(pick.game_id) : null;
             const visible = pick
               ? shouldRevealPick(
@@ -368,7 +373,7 @@ return {
               pick: pick
                 ? {
                     label: visible
-                      ? survivorTeamById.get(pick.selected_team_id) ??
+                      ? survivorTeamById.get(pick.selected_team_id)?.name ??
                         "Unknown team"
                       : null,
                     isHidden: !visible,
@@ -380,6 +385,14 @@ return {
                           : "",
                   }
                 : null,
+              picks: periods.map((period) => {
+                const periodPick = entryPicks.find((item) => item.scoring_period_id === period.id);
+                if (!periodPick) return null;
+                const periodGame = survivorGameById.get(periodPick.game_id);
+                const visible = shouldRevealPick({ viewerPlayerId: viewer.id, pickPlayerId: entry.player_id, kickoffAt: periodGame?.kickoff_at }, currentTime);
+                const team = survivorTeamById.get(periodPick.selected_team_id);
+                return { abbreviation: visible ? team?.abbreviation ?? null : null, label: visible ? team?.name ?? "Unknown team" : null, isHidden: !visible, resultMark: visible && periodPick.result === "win" ? "W" : visible && periodPick.result === "loss" ? "L" : "" };
+              }),
             };
           })
           .sort((first, second) =>

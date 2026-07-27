@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   fetchWithSession,
@@ -12,6 +13,13 @@ type ScoreboardPick = {
   isHidden: boolean;
   resultMark: string;
 };
+
+const helmetColors: Record<string, string> = { ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff", CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00", DAL: "#b0b7bc", DEN: "#0a2343", DET: "#b0b7bc", GB: "#ffb612", HOU: "#03202f", IND: "#ffffff", JAX: "#111111", KC: "#e31837", LV: "#a5acaf", LAC: "#ffffff", LAR: "#003594", MIA: "#ffffff", MIN: "#4f2683", NE: "#c5c9cc", NO: "#d3bc8d", NYG: "#0b2265", NYJ: "#125740", PHI: "#004c54", PIT: "#111111", SEA: "#002244", SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414" };
+
+function MiniHelmet({ abbreviation, muted }: { abbreviation: string; muted?: boolean }) {
+  const mask = "url(/helmet-newspaper-template.png)";
+  return <span title={abbreviation} className={`relative inline-block h-8 w-10 shrink-0 ${muted ? "grayscale opacity-60" : ""}`}><span className="absolute inset-0" style={{ backgroundColor: helmetColors[abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat" }} /><Image alt={abbreviation} className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={32} src="/helmet-newspaper-template.png" width={40} /><Image alt="" className="absolute left-[16%] top-[20%] h-[38%] w-[36%] object-contain" height={16} src={`/team-logos/${abbreviation}.png`} width={16} /></span>;
+}
 
 type ScoreboardRow = {
   id: string;
@@ -33,6 +41,7 @@ type HomeData = {
     firstName: string;
     status: "active" | "eliminated" | "complete";
     pick: ScoreboardPick | null;
+    picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
   }[];
   error?: string;
 };
@@ -347,19 +356,24 @@ export default function HomePage() {
           </p>
 
           {data.survivorAvailable ? (
-            <div className="mt-4 divide-y border-y-2 border-[#1d1d1f]">
-              {data.survivorRows.map((row) => (
-                <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3 sm:grid-cols-[1fr_8rem]" key={row.id}>
-                  <div>
-                    <p className={row.status === "active" ? "font-serif text-lg font-bold" : "font-serif text-lg text-slate-500 line-through"}>{row.firstName}</p>
-                    <p className="mt-0.5 text-sm font-semibold text-slate-700">
-                    {row.pick?.label ?? (row.pick?.isHidden ? "Pick locked" : "No pick")}
-                    {row.pick?.resultMark ? <strong className={`ml-2 ${row.pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{row.pick.resultMark}</strong> : null}
-                    </p>
-                  </div>
-                  <p className={`text-right text-xs font-black tracking-[0.12em] ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "ACTIVE" : "OUT"}</p>
+            <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f] bg-[#f1ead7]">
+              <div className="min-w-[54rem]">
+                <div className="grid grid-cols-[7rem_repeat(18,2.5rem)_4rem] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+                  <span className="px-2 py-2 text-left">PLAYER</span>
+                  {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
+                  <span className="py-2">STATUS</span>
                 </div>
-              ))}
+                {data.survivorRows.map((row) => (
+                  <div className="grid grid-cols-[7rem_repeat(18,2.5rem)_4rem] items-center border-b border-[#b9b09d] last:border-b-0" key={row.id}>
+                    <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}</span>
+                    {Array.from({ length: 18 }, (_, index) => {
+                      const pick = row.picks[index];
+                      return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniHelmet abbreviation={pick.abbreviation} muted={row.status !== "active"} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
+                    })}
+                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="mt-4 border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
