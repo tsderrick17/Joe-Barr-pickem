@@ -70,6 +70,8 @@ build succeeds.
    - `supabase/035_restore_mode_specific_audits.sql`
    - `supabase/036_harden_scoring_period_continuity.sql`
    - `supabase/037_add_automation_execution_leases.sql`
+   - `supabase/038_finalize_games_atomically.sql`
+   - `supabase/039_add_automation_preflight.sql`
 
 ## Weekly dress rehearsal
 
