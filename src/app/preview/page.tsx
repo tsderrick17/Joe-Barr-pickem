@@ -189,7 +189,7 @@ export default function PreviewPage() {
             const started = scenario.activeGames.includes(index);
             const leftResult = resultFor(game, "left", scenario.final);
             const rightResult = resultFor(game, "right", scenario.final);
-            return <article className="grid grid-cols-[4.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-3 sm:grid-cols-[7rem_minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4" key={game.id}>
+            return <article className={`grid grid-cols-[4.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-3 sm:grid-cols-[7rem_minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`} key={game.id}>
               <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{scenario.final ? game.finalDate : index === 0 ? <><p>Sun 9:30 AM ET</p><p>📍 London</p></> : game.kickoff}</div>
               <TeamCell team={game.left} score={scenario.final ? game.score.left : null} result={leftResult} pickers={started ? game.pickers.left : []} align="left" />
               <div className={`text-center font-mono text-sm font-black sm:text-base ${started ? "text-teal-700" : "text-zinc-900"}`}><p>{game.line}</p>{index === 0 && !scenario.final ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS 9/26 · 6 PM ET</p> : null}</div>
