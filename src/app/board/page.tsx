@@ -727,7 +727,7 @@ export default function BoardPage() {
                   </div>
 
                   <div>
-                    {dayGames.map((game) => {
+                    {dayGames.map((game, index) => {
                       const favoriteIsHome =
                         game.favoriteTeamId === game.homeTeamId;
 
@@ -760,7 +760,7 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:gap-3"
+                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_3.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:gap-3 ${index % 2 === 1 ? "bg-[#fcfaf5]" : "bg-[#fffdf8]"}`}
                           key={game.id}
                         >
                           <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
