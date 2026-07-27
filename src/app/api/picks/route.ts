@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
   const survivorGame = existingSurvivorGame ?? survivorGameOutsideSelections;
   const survivorLocked = Boolean(survivorGame && new Date() >= new Date(survivorGame.kickoff_at));
   const survivorMatchesLocked = survivorSelection?.gameId === existingSurvivor?.game_id && survivorSelection?.teamId === existingSurvivor?.selected_team_id;
+  const survivorChanged = survivorSelection?.gameId !== existingSurvivor?.game_id || survivorSelection?.teamId !== existingSurvivor?.selected_team_id;
   if (survivorLocked && !survivorMatchesLocked) return NextResponse.json({ error: "Your Survivor pick has already started and cannot be changed or removed." }, { status: 400 });
 
   let survivorPickToInsert: { game_id: string; selected_team_id: string } | null = null;
@@ -95,8 +96,10 @@ export async function POST(request: NextRequest) {
     replacement_survivor_pick: survivorPickToInsert,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!survivorChanged) return NextResponse.json({ message: pickSaveMessage(selections.length) });
+
   const survivorMessage = survivorSelection
     ? "Your straight-up Survivor pick has been saved."
-    : "Your Survivor pick is cleared.";
+    : "Your Survivor pick has been cleared.";
   return NextResponse.json({ message: `${pickSaveMessage(selections.length)} ${survivorMessage}` });
 }
