@@ -582,40 +582,40 @@ export default function BoardPage() {
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-8">
+          <div className="grid gap-5 md:grid-cols-[9rem_minmax(0,1fr)_18rem] md:gap-8">
             <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
-              <div className="mt-4 grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-end sm:gap-5">
-                <div>
-                  <label
-                    className="block text-xs font-bold tracking-[0.16em] text-slate-600"
-                    htmlFor="week-selector"
-                  >
-                    VIEW WEEK
-                  </label>
+              <label
+                className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
+                htmlFor="week-selector"
+              >
+                VIEW WEEK
+              </label>
 
-                  <select
-                    className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]"
-                    id="week-selector"
-                    onChange={chooseWeek}
-                    value={week.id}
-                  >
-                    {availableWeeks.map((period) => (
-                      <option key={period.id} value={period.id}>
-                        {period.display_name}
-                        {period.status === "complete" ? " — Final" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <p className="max-w-md pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
-                  Lines lock at 8 AM ET on game day unless otherwise noted. Lines may move before lock; <span className="font-semibold text-teal-700">teal lines</span> are official for grading.
-                </p>
-              </div>
+              <select
+                className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]"
+                id="week-selector"
+                onChange={chooseWeek}
+                value={week.id}
+              >
+                {availableWeeks.map((period) => (
+                  <option key={period.id} value={period.id}>
+                    {period.display_name}
+                    {period.status === "complete" ? " — Final" : ""}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <p className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
+              <span>Lines lock at 8 AM ET</span>
+              <span>on game day. Lines may move</span>
+              <span>
+                before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
+              </span>
+            </p>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">
@@ -636,35 +636,6 @@ export default function BoardPage() {
             </aside>
           </div>
 
-          <div className="hidden">
-            <div>
-              <label
-                className="block text-xs font-bold tracking-[0.16em] text-slate-600"
-                htmlFor="week-selector"
-              >
-                VIEW WEEK
-              </label>
-
-              <select
-                className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold sm:mt-2 sm:py-2"
-                id="week-selector"
-                onChange={chooseWeek}
-                value={week.id}
-              >
-                {availableWeeks.map((period) => (
-                  <option key={period.id} value={period.id}>
-                    {period.display_name}
-                    {period.status === "complete" ? " — Final" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-          </div>
-
-          <p className="hidden">
-            Official spreads post at 8 AM ET on game day unless otherwise noted.
-          </p>
         </header>
 
         {errorMessage ? (
