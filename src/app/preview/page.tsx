@@ -99,17 +99,17 @@ const scenarios: Record<string, Scenario> = {
     survivorResult: null,
   },
   partial: {
-    title: "Early game locked",
+    title: "Sunday 3:00 PM ET",
     explanation:
-      "The 1:00 PM matchup is frozen after kickoff while the 4:25 PM matchup remains editable.",
+      "The early Sunday window is in progress and read-only; late afternoon and prime-time games remain available.",
     instruction:
-      "Try the early game, then the late game. Only the late ATS pick should respond.",
+      "Early picks stay visible and fixed. Later games remain editable until their listed kickoff.",
     survivorStamp: "KC locked",
     survivorDeck:
       "The early Survivor selection is preserved. It cannot be replaced after kickoff.",
     boardStatus: "1 locked · 1 open",
-    lockedGames: [0],
-    startedGames: [0],
+    lockedGames: [0, 1, 2],
+    startedGames: [0, 1, 2],
     initialAtsPicks: ["left", "right"],
     initialSurvivorPick: "kc-buf-left",
     atsResults: [null, null],
@@ -133,7 +133,7 @@ const scenarios: Record<string, Scenario> = {
     survivorResult: null,
   },
   final: {
-    title: "Final scores posted",
+    title: "Week final — scored",
     explanation:
       "ATS results and the straight-up Survivor result are judged separately and shown explicitly.",
     instruction:
@@ -185,6 +185,16 @@ const scenarios: Record<string, Scenario> = {
   },
 };
 
+const rehearsalGames: PreviewGame[] = [
+  ...games,
+  { id: "pit-bal", kickoff: "Sunday 1:00 PM ET", leftAbbreviation: "PIT", leftTeam: "Steelers", rightAbbreviation: "BAL", rightTeam: "Ravens", line: "BAL -2.5" },
+  { id: "sf-lar", kickoff: "Sunday 4:25 PM ET", leftAbbreviation: "SF", leftTeam: "49ers", rightAbbreviation: "LAR", rightTeam: "Rams", line: "SF -3.5" },
+  { id: "dal-phi", kickoff: "Sunday 4:25 PM ET", leftAbbreviation: "PHI", leftTeam: "Eagles", rightAbbreviation: "DAL", rightTeam: "Cowboys", line: "PHI -4.0" },
+  { id: "den-sea", kickoff: "Sunday 4:25 PM ET", leftAbbreviation: "DEN", leftTeam: "Broncos", rightAbbreviation: "SEA", rightTeam: "Seahawks", line: "DEN -1.5" },
+  { id: "nyj-mia", kickoff: "Sunday 8:20 PM ET", leftAbbreviation: "MIA", leftTeam: "Dolphins", rightAbbreviation: "NYJ", rightTeam: "Jets", line: "MIA -2.0" },
+  { id: "det-min", kickoff: "Monday 8:15 PM ET", leftAbbreviation: "DET", leftTeam: "Lions", rightAbbreviation: "MIN", rightTeam: "Vikings", line: "DET -2.5" },
+];
+
 function ResultMarker({ result }: { result: AtsResult }) {
   if (!result) return null;
 
@@ -203,7 +213,7 @@ function ResultMarker({ result }: { result: AtsResult }) {
 export default function PreviewPage() {
   const [scenarioKey, setScenarioKey] = useState("pending");
   const [atsPicks, setAtsPicks] = useState<Array<Side | null>>(
-    scenarios.pending.initialAtsPicks,
+    () => rehearsalGames.map((_, index) => scenarios.pending.initialAtsPicks[index] ?? null),
   );
   const [survivorPick, setSurvivorPick] = useState<string | null>(
     scenarios.pending.initialSurvivorPick,
@@ -213,7 +223,7 @@ export default function PreviewPage() {
   function chooseScenario(nextKey: string) {
     const nextScenario = scenarios[nextKey];
     setScenarioKey(nextKey);
-    setAtsPicks([...nextScenario.initialAtsPicks]);
+    setAtsPicks(rehearsalGames.map((_, index) => nextScenario.initialAtsPicks[index] ?? null));
     setSurvivorPick(nextScenario.initialSurvivorPick);
   }
 
@@ -234,7 +244,13 @@ export default function PreviewPage() {
   }
 
   const selectedAtsCount = atsPicks.filter(Boolean).length;
-  const isEditable = scenario.lockedGames.length < games.length;
+  const isEditable = !["live", "final", "eliminated", "archived"].includes(scenarioKey);
+  const isFinalState = ["final", "eliminated", "archived"].includes(scenarioKey);
+  const demoStandings = [
+    { name: "Tyler", wins: isFinalState ? 2 : 0, picks: ["Chiefs -2.5", "Bears +3.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
+    { name: "Zac", wins: isFinalState ? 1 : 0, picks: ["Bills +2.5", "Packers -3.0"], marks: isFinalState ? ["L", "W"] : ["", ""] },
+    { name: "Gary", wins: isFinalState ? 1 : 0, picks: ["Steelers +2.5", "Eagles -4.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
+  ];
 
   return (
     <main className="min-h-screen bg-[#f5f0e6] px-4 py-6 text-[#171719] sm:px-8 sm:py-10">
@@ -309,7 +325,7 @@ export default function PreviewPage() {
             </div>
 
             <div className="mt-2 divide-y divide-[#1d1d1f] border-y border-[#1d1d1f]">
-              {games.map((game, index) => {
+              {rehearsalGames.map((game, index) => {
                 const leftSelection = `${game.id}-left`;
                 const rightSelection = `${game.id}-right`;
                 const leftSelected = survivorPick === leftSelection;
@@ -394,8 +410,8 @@ export default function PreviewPage() {
             </div>
 
             <div>
-              {games.map((game, index) => {
-                const locked = scenario.lockedGames.includes(index);
+              {rehearsalGames.map((game, index) => {
+                const locked = scenario.lockedGames.includes(index) || !isEditable;
                 const started = scenario.startedGames.includes(index);
                 const displayedLine =
                   scenarioKey === "pending"
@@ -457,6 +473,16 @@ export default function PreviewPage() {
             </div>
           </section>
 
+          <section aria-labelledby="preview-standings-heading">
+            <p className="mb-3 text-xs font-black tracking-[0.2em] text-slate-600" id="preview-standings-heading">PICK&apos;EM THIS WEEK</p>
+            <div className="border-y-2 border-[#1d1d1f]">
+              <table className="w-full table-fixed border-collapse text-left">
+                <thead><tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]"><th className="w-12 px-2 py-3 sm:w-20 sm:px-3">WINS</th><th className="w-20 px-2 py-3 sm:w-40 sm:px-3"><span className="sr-only">Player</span></th><th className="px-2 py-3 sm:px-3">PICK 1</th><th className="px-2 py-3 sm:px-3">PICK 2</th></tr></thead>
+                <tbody>{demoStandings.map((row) => <tr className={`border-b border-[#91afd0] last:border-b-0 ${row.name === "Tyler" ? "bg-[#fffaf0]" : ""}`} key={row.name}><td className="px-2 py-3 font-serif text-xl sm:px-3 sm:py-4 sm:text-2xl">{row.wins}</td><td className="px-2 py-3 font-serif text-base sm:px-3 sm:py-4 sm:text-xl">{row.name}</td>{row.picks.map((pick, index) => <td className="break-words px-2 py-3 text-sm leading-tight sm:px-3 sm:py-4 sm:text-base" key={pick}>{scenarioKey === "pending" || (scenarioKey === "partial" && row.name !== "Tyler") ? <span title="Pick submitted and hidden until kickoff">🔒</span> : <><span>{pick.split(" ").slice(0, -1).join(" ")} <strong className={isFinalState ? "font-mono text-teal-700" : "font-mono text-slate-700"}>{pick.split(" ").at(-1)}</strong></span>{row.marks[index] ? <strong className={`ml-2 ${row.marks[index] === "W" ? "text-green-800" : "text-red-700"}`}>{row.marks[index]}</strong> : null}</>}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+          </section>
+
           <section
             aria-live="polite"
             className="rounded-xl border border-slate-300 bg-white p-4 shadow-sm"
@@ -475,7 +501,7 @@ export default function PreviewPage() {
                 className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-400"
                 disabled={
                   !isEditable ||
-                  selectedAtsCount !== games.length
+                  selectedAtsCount !== rehearsalGames.length
                 }
                 onClick={() =>
                   window.alert(
