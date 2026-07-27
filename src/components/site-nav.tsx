@@ -68,7 +68,7 @@ export default function SiteNav() {
 
   return (
     <nav className="border-b-2 border-black bg-[#171719] text-[#f5f0e6]">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 py-4 md:px-10">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:px-5 sm:py-4 md:px-10">
         <Link
           className="font-serif leading-none text-[#f5f0e6]"
           href="/"
@@ -81,7 +81,7 @@ export default function SiteNav() {
           </span>
         </Link>
 
-        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-3 text-sm md:gap-x-7 md:text-base">
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:gap-x-7 md:text-base">
           <Link className={linkStyle("/")} href="/">
             Standings
           </Link>
@@ -97,9 +97,9 @@ export default function SiteNav() {
           ) : null}
 
           {playerName ? (
-            <div className="flex items-center gap-3 border-l border-zinc-500 pl-4 text-sm">
+            <div className="flex items-center gap-2 border-l border-zinc-500 pl-3 text-sm sm:gap-3 sm:pl-4">
               <span className="text-[#e4ded2]">
-                Signed in as{" "}
+                <span className="hidden sm:inline">Signed in as </span>
                 <strong className="text-white">{playerName}</strong>
               </span>
 

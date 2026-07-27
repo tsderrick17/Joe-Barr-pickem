@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
     ((games ?? []) as GameRow[]).map((game) => [game.id, game]),
   );
   const currentTime = new Date();
-  const nextRevealAt = nextPickRevealAt(
+  const atsNextRevealAt = nextPickRevealAt(
     ((games ?? []) as GameRow[]).map((game) => game.kickoff_at),
     currentTime,
   );
@@ -251,11 +251,55 @@ return {
         first.firstName.localeCompare(second.firstName),
     );
 
+  const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
+    target_season_id: season.id,
+  });
+  if (ensuredEntries.error) {
+    return NextResponse.json({ error: "Survivor standings could not be prepared." }, { status: 500 });
+  }
+
+  const [{ data: survivorEntries, error: survivorEntriesError }, { data: survivorPicks, error: survivorPicksError }] = await Promise.all([
+    supabaseAdmin.from("survivor_entries").select("id, player_id, status").eq("season_id", season.id),
+    supabaseAdmin.from("survivor_picks").select("survivor_entry_id, game_id, selected_team_id, result").eq("scoring_period_id", currentWeek.id),
+  ]);
+  if (survivorEntriesError || survivorPicksError) {
+    return NextResponse.json({ error: "Survivor standings could not be loaded." }, { status: 500 });
+  }
+
+  const survivorGameIds = [...new Set((survivorPicks ?? []).map((pick) => pick.game_id))];
+  const survivorTeamIds = [...new Set((survivorPicks ?? []).map((pick) => pick.selected_team_id))];
+  const [{ data: survivorGames }, { data: survivorTeams }] = await Promise.all([
+    survivorGameIds.length ? supabaseAdmin.from("games").select("id, kickoff_at").in("id", survivorGameIds) : Promise.resolve({ data: [] }),
+    survivorTeamIds.length ? supabaseAdmin.from("teams").select("id, full_name").in("id", survivorTeamIds) : Promise.resolve({ data: [] }),
+  ]);
+  const survivorGameById = new Map((survivorGames ?? []).map((game) => [game.id, game]));
+  const survivorTeamById = new Map((survivorTeams ?? []).map((team) => [team.id, team.full_name]));
+  const playerNameById = new Map(players.map((player) => [player.id, player.first_name]));
+  const survivorRows = (survivorEntries ?? []).map((entry) => {
+    const pick = (survivorPicks ?? []).find((item) => item.survivor_entry_id === entry.id);
+    const game = pick ? survivorGameById.get(pick.game_id) : null;
+    const visible = pick ? shouldRevealPick({ viewerPlayerId: viewer.id, pickPlayerId: entry.player_id, kickoffAt: game?.kickoff_at }, currentTime) : false;
+    return {
+      id: entry.id,
+      firstName: playerNameById.get(entry.player_id) ?? "Unknown player",
+      status: entry.status,
+      pick: pick ? {
+        label: visible ? survivorTeamById.get(pick.selected_team_id) ?? "Unknown team" : null,
+        isHidden: !visible,
+        resultMark: visible && pick.result === "win" ? "W" : visible && pick.result === "loss" ? "L" : "",
+      } : null,
+    };
+  }).sort((first, second) => first.status === second.status ? first.firstName.localeCompare(second.firstName) : first.status === "active" ? -1 : 1);
+
   return NextResponse.json({
     viewerPlayerId: viewer.id,
     week: currentWeek.display_name,
     maxPicks: currentWeek.max_picks,
-    nextRevealAt,
+    nextRevealAt: nextPickRevealAt(
+      [...((games ?? []) as GameRow[]).map((game) => game.kickoff_at), ...(survivorGames ?? []).map((game) => game.kickoff_at)],
+      currentTime,
+    ) ?? atsNextRevealAt,
     rows,
+    survivorRows,
   });
 }

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type Selection = { gameId: string; teamId: string };
@@ -46,19 +47,12 @@ export async function POST(request: NextRequest) {
   if (gamesError || !games) return NextResponse.json({ error: "The selected games could not be loaded." }, { status: 500 });
   const gameById = new Map((games as GameRow[]).map((game) => [game.id, game]));
 
-  for (const selection of selections) {
-    const game = gameById.get(selection.gameId);
-    if (!game || game.scoring_period_id !== scoringPeriodId) return NextResponse.json({ error: "One of your selected games does not belong to this week." }, { status: 400 });
-    if (selection.teamId !== game.away_team_id && selection.teamId !== game.home_team_id) return NextResponse.json({ error: "One of your selected teams does not belong to that game." }, { status: 400 });
-    if (new Date() >= new Date(game.kickoff_at)) return NextResponse.json({ error: "One of your selected games has already started." }, { status: 400 });
+  if (selections.some((selection) => gameById.get(selection.gameId)?.scoring_period_id !== scoringPeriodId)) {
+    return NextResponse.json({ error: "One of your selected games does not belong to this week." }, { status: 400 });
   }
-
-  const lockedPicks = (existingPicks ?? []).filter((pick) => {
-    const game = gameById.get(pick.game_id);
-    return game && new Date() >= new Date(game.kickoff_at);
-  });
-  if (lockedPicks.some((pick) => !selections.some((selection) => selection.gameId === pick.game_id && selection.teamId === pick.selected_team_id))) return NextResponse.json({ error: "One of your existing picks has already started and cannot be changed or removed." }, { status: 400 });
-  const picksToInsert = selections.filter((selection) => !lockedPicks.some((pick) => pick.game_id === selection.gameId && pick.selected_team_id === selection.teamId)).map((selection) => ({ game_id: selection.gameId, selected_team_id: selection.teamId }));
+  const preparedPicks = prepareAtsReplacements({ selections, existingPicks: existingPicks ?? [], games: games as GameRow[] });
+  if (preparedPicks.error) return NextResponse.json({ error: preparedPicks.error }, { status: 400 });
+  const picksToInsert = preparedPicks.replacements ?? [];
 
   if (!includesSurvivor) {
     const { error } = await supabaseAdmin.rpc("replace_unlocked_picks", { target_player_id: player.id, target_scoring_period_id: scoringPeriodId, replacement_picks: picksToInsert });

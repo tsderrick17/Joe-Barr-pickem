@@ -23,6 +23,12 @@ type HomeData = {
   maxPicks: number;
   nextRevealAt: string | null;
   rows: ScoreboardRow[];
+  survivorRows: {
+    id: string;
+    firstName: string;
+    status: "active" | "eliminated" | "complete";
+    pick: ScoreboardPick | null;
+  }[];
   error?: string;
 };
 
@@ -328,8 +334,21 @@ export default function HomePage() {
             SURVIVOR
           </p>
 
-          <p className="mt-3 text-slate-700">Choose and manage your Survivor pick alongside your ATS picks on The Slate.</p>
-          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/board">Open The Slate</Link>
+          <div className="mt-4 divide-y border-y-2 border-[#1d1d1f]">
+            {data.survivorRows.map((row) => (
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3 sm:grid-cols-[1fr_8rem]" key={row.id}>
+                <div>
+                  <p className={row.status === "active" ? "font-serif text-lg font-bold" : "font-serif text-lg text-slate-500 line-through"}>{row.firstName}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-700">
+                  {row.pick?.label ?? (row.pick?.isHidden ? "Pick locked" : "No pick")}
+                  {row.pick?.resultMark ? <strong className={`ml-2 ${row.pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{row.pick.resultMark}</strong> : null}
+                  </p>
+                </div>
+                <p className={`text-right text-xs font-black tracking-[0.12em] ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "ACTIVE" : "OUT"}</p>
+              </div>
+            ))}
+          </div>
+          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/board">Manage picks on The Slate</Link>
         </section>
       </div>
     </main>
