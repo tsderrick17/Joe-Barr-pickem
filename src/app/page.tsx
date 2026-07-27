@@ -16,8 +16,8 @@ type ScoreboardPick = {
   isLineLocked?: boolean;
 };
 
-function MiniLogo({ abbreviation, muted }: { abbreviation: string; muted?: boolean }) {
-  return <span title={abbreviation} className={`inline-flex h-7 w-7 items-center justify-center ${muted ? "grayscale opacity-60" : ""}`}><Image alt={abbreviation} className="h-full w-full object-contain" height={28} src={`/team-logos/${abbreviation}.png`} width={28} /></span>;
+function MiniLogo({ abbreviation, muted, resultMark }: { abbreviation: string; muted?: boolean; resultMark?: string }) {
+  return <span title={`${abbreviation}${resultMark ? ` ${resultMark}` : ""}`} className={`relative inline-flex h-7 w-7 items-center justify-center ${muted ? "grayscale opacity-60" : ""}`}><Image alt={abbreviation} className="h-full w-full object-contain" height={28} src={`/team-logos/${abbreviation}.png`} width={28} />{resultMark === "W" ? <span aria-label="Survivor win" className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-700 text-[10px] font-black leading-none text-white">✓</span> : null}{resultMark === "L" ? <span aria-label="Survivor loss" className="absolute inset-0 flex items-center justify-center text-4xl font-black leading-none text-red-700 drop-shadow-[0_0_1px_white]">×</span> : null}</span>;
 }
 
 type ScoreboardRow = {
@@ -328,8 +328,8 @@ export default function HomePage() {
 
           {data.survivorAvailable ? (
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
-              <div className="min-w-[54rem]">
-                <div className="grid grid-cols-[7rem_repeat(18,2.5rem)_4rem] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+              <div className="min-w-[57.5rem]">
+                <div className="grid grid-cols-[7rem_repeat(18,2.5rem)_5.5rem] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
                   <span className="px-2 py-2 text-left">PLAYER</span>
                   {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
                   <span className="py-2">STATUS</span>
@@ -338,11 +338,11 @@ export default function HomePage() {
                   const isViewer = row.playerId === data.viewerPlayerId;
 
                   return (
-                  <div className={`grid grid-cols-[7rem_repeat(18,2.5rem)_4rem] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "bg-[#fffaf0]" : ""}`} key={row.id}>
+                  <div className={`grid grid-cols-[7rem_repeat(18,2.5rem)_5.5rem] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "bg-[#fffaf0]" : ""}`} key={row.id}>
                     <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}</span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
-                      return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active"} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
+                      return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
                     })}
                     <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                   </div>
