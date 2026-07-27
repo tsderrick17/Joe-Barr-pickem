@@ -24,6 +24,7 @@ type Scenario = {
   explanation: string;
   activeGames: number[];
   lockedGames: number[];
+  finalGames: number[];
   final: boolean;
 };
 
@@ -104,15 +105,17 @@ const scenarios: Record<string, Scenario> = {
       "Three weeks are in the books. Week 4 is open, with the London kickoff clearly called out before the regular Sunday slate.",
     activeGames: [],
     lockedGames: [],
+    finalGames: [],
     final: false,
   },
   sunday: {
     title: "Week 4 · Sunday afternoon",
     timing: "Sunday · 3:00 PM ET",
     explanation:
-      "All Sunday lines locked at 8 AM ET and are teal. London and the 1 PM games have started, so only their selections are public receipts; late games remain open.",
+      "All Sunday lines locked at 8 AM ET and are teal. London is final, the 1 PM games are live, and late games remain open.",
     activeGames: [0, 1, 2],
     lockedGames: [0, 1, 2, 3, 4],
+    finalGames: [0],
     final: false,
   },
   final: {
@@ -122,6 +125,7 @@ const scenarios: Record<string, Scenario> = {
       "Every game is final. Scores, ATS W/L marks, and the names behind each selection remain visible for a clean audit.",
     activeGames: [0, 1, 2, 3, 4, 5],
     lockedGames: [0, 1, 2, 3, 4, 5],
+    finalGames: [0, 1, 2, 3, 4, 5],
     final: true,
   },
 };
@@ -133,8 +137,8 @@ const playerSelections: Record<string, Side[]> = {
   Gary: ["left", "right", "right", "left", "left", "right"],
 };
 
-function resultFor(game: RehearsalGame, side: Side, showFinal: boolean): Result {
-  if (!showFinal) return null;
+function resultFor(game: RehearsalGame, side: Side, gameFinal: boolean): Result {
+  if (!gameFinal) return null;
   return game.atsWinner === side ? "win" : "loss";
 }
 
@@ -192,13 +196,14 @@ export default function PreviewPage() {
           <div>{games.map((game, index) => {
             const gameStarted = scenario.activeGames.includes(index);
             const started = scenario.lockedGames.includes(index);
-            const leftResult = resultFor(game, "left", scenario.final);
-            const rightResult = resultFor(game, "right", scenario.final);
+            const gameFinal = scenario.finalGames.includes(index);
+            const leftResult = resultFor(game, "left", gameFinal);
+            const rightResult = resultFor(game, "right", gameFinal);
             return <article className={`grid grid-cols-[4.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-3 pl-1 pr-3 sm:grid-cols-[7rem_minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4 sm:pl-2 sm:pr-4 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`} key={game.id}>
-              <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{scenario.final ? game.finalDate : index === 0 ? <><p>Sun 9:30 AM ET</p><p>📍 London</p>{gameStarted ? <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-red-700">LIVE</p> : null}</> : <><p>{game.kickoff}</p>{gameStarted ? <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-red-700">LIVE</p> : null}</>}</div>
-              <TeamCell team={game.left} score={scenario.final ? game.score.left : null} result={leftResult} pickers={gameStarted ? game.pickers.left : []} align="left" />
+              <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{gameFinal ? <p className="font-mono font-bold text-slate-700">{game.finalDate}</p> : index === 0 ? <><p>Sun 9:30 AM ET</p><p>📍 London</p>{gameStarted ? <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-red-700">LIVE</p> : null}</> : <><p>{game.kickoff}</p>{gameStarted ? <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-red-700">LIVE</p> : null}</>}</div>
+              <TeamCell team={game.left} score={gameFinal ? game.score.left : null} result={leftResult} pickers={gameStarted ? game.pickers.left : []} align="left" />
               <div className={`text-center font-mono text-sm font-black sm:text-base ${started ? "text-teal-700" : "text-zinc-900"}`}><p>{game.line}</p>{index === 0 && !scenario.final ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS 9/26 · 6 PM ET</p> : null}</div>
-              <TeamCell team={game.right} score={scenario.final ? game.score.right : null} result={rightResult} pickers={gameStarted ? game.pickers.right : []} align="right" />
+              <TeamCell team={game.right} score={gameFinal ? game.score.right : null} result={rightResult} pickers={gameStarted ? game.pickers.right : []} align="right" />
             </article>;
           })}</div>
         </section></div> : <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-labelledby="standings-heading">
