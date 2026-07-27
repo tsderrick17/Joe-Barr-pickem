@@ -607,22 +607,30 @@ export default function BoardPage() {
                 <div className="mt-3 divide-y divide-dashed divide-[#6f685a] border-y border-[#29251d]">
                   {games.map((game) => {
                     const gameHasStarted = new Date(game.kickoffAt) <= new Date();
-                    const awaySelected = survivorPick?.teamId === game.awayTeamId;
-                    const homeSelected = survivorPick?.teamId === game.homeTeamId;
-                    const awayUsed = survivorUsedTeamIds.includes(game.awayTeamId) && !awaySelected;
-                    const homeUsed = survivorUsedTeamIds.includes(game.homeTeamId) && !homeSelected;
+                    const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
+                    const hasFavorite = game.favoriteTeamId !== null;
+                    const leftTeamId = favoriteIsHome ? game.homeTeamId : game.awayTeamId;
+                    const leftTeamName = favoriteIsHome ? game.homeTeam : game.awayTeam;
+                    const leftTeamAbbreviation = favoriteIsHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation;
+                    const rightTeamId = favoriteIsHome ? game.awayTeamId : game.homeTeamId;
+                    const rightTeamName = favoriteIsHome ? game.awayTeam : game.homeTeam;
+                    const rightTeamAbbreviation = favoriteIsHome ? game.awayTeamAbbreviation : game.homeTeamAbbreviation;
+                    const leftSelected = survivorPick?.teamId === leftTeamId;
+                    const rightSelected = survivorPick?.teamId === rightTeamId;
+                    const leftUsed = survivorUsedTeamIds.includes(leftTeamId) && !leftSelected;
+                    const rightUsed = survivorUsedTeamIds.includes(rightTeamId) && !rightSelected;
                     return (
                       <article className="py-2.5" key={game.id}>
                         <p className="mb-1 text-center font-serif text-[10px] font-black uppercase tracking-[0.08em] text-[#554f43]">{easternTime(game.kickoffAt)}</p>
                         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
-                          <button aria-label={`Choose ${game.awayTeam} as your straight-up Survivor winner`} aria-pressed={awaySelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${awaySelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={awayUsed || gameHasStarted} onClick={() => setSurvivorPick(awaySelected ? null : { gameId: game.id, teamId: game.awayTeamId })} type="button">
-                            <HelmetIcon abbreviation={game.awayTeamAbbreviation} faces="right" />
-                            <span><span className="block">{game.awayTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{awayUsed ? "USED" : gameHasStarted ? "STARTED" : "AWAY"}</span></span>
+                          <button aria-label={`Choose ${leftTeamName} as your straight-up Survivor winner`} aria-pressed={leftSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${leftSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={leftUsed || gameHasStarted} onClick={() => setSurvivorPick(leftSelected ? null : { gameId: game.id, teamId: leftTeamId })} type="button">
+                            <HelmetIcon abbreviation={leftTeamAbbreviation} faces="right" />
+                            <span><span className="block">{leftTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{leftUsed ? "USED" : gameHasStarted ? "STARTED" : hasFavorite ? "FAVORITE" : "AWAY"}</span></span>
                           </button>
                           <span className="font-serif text-[10px] font-black text-[#554f43]">VS</span>
-                          <button aria-label={`Choose ${game.homeTeam} as your straight-up Survivor winner`} aria-pressed={homeSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${homeSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={homeUsed || gameHasStarted} onClick={() => setSurvivorPick(homeSelected ? null : { gameId: game.id, teamId: game.homeTeamId })} type="button">
-                            <span><span className="block">{game.homeTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{homeUsed ? "USED" : gameHasStarted ? "STARTED" : "HOME"}</span></span>
-                            <HelmetIcon abbreviation={game.homeTeamAbbreviation} faces="left" />
+                          <button aria-label={`Choose ${rightTeamName} as your straight-up Survivor winner`} aria-pressed={rightSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${rightSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={rightUsed || gameHasStarted} onClick={() => setSurvivorPick(rightSelected ? null : { gameId: game.id, teamId: rightTeamId })} type="button">
+                            <span><span className="block">{rightTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{rightUsed ? "USED" : gameHasStarted ? "STARTED" : hasFavorite ? "UNDERDOG" : "HOME"}</span></span>
+                            <HelmetIcon abbreviation={rightTeamAbbreviation} faces="left" />
                           </button>
                         </div>
                       </article>
