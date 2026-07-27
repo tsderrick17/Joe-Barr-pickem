@@ -568,10 +568,38 @@ export default function BoardPage() {
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
           <div className="flex items-start justify-between gap-5">
-            <div>
+            <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
+              <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2 sm:mt-4">
+                <div>
+                  <label
+                    className="block text-xs font-bold tracking-[0.16em] text-slate-600"
+                    htmlFor="week-selector"
+                  >
+                    VIEW WEEK
+                  </label>
+
+                  <select
+                    className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold"
+                    id="week-selector"
+                    onChange={chooseWeek}
+                    value={week.id}
+                  >
+                    {availableWeeks.map((period) => (
+                      <option key={period.id} value={period.id}>
+                        {period.display_name}
+                        {period.status === "complete" ? " — Final" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
+                  Official spreads post at 8 AM ET on game day unless otherwise noted.
+                </p>
+              </div>
             </div>
 
             <aside className="max-w-[13rem] border-l border-slate-400 pl-3 text-right text-[11px] leading-4 text-slate-700 sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
@@ -593,7 +621,7 @@ export default function BoardPage() {
             </aside>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="hidden">
             <div>
               <label
                 className="block text-xs font-bold tracking-[0.16em] text-slate-600"
@@ -619,7 +647,7 @@ export default function BoardPage() {
 
           </div>
 
-          <p className="mt-4 text-xs leading-5 text-slate-700 sm:mt-5 sm:text-sm">
+          <p className="hidden">
             Official spreads post at 8 AM ET on game day unless otherwise noted.
           </p>
         </header>
