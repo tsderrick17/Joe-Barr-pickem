@@ -56,6 +56,23 @@ export default function HomePage() {
     }
 
     void loadHome();
+
+    const refreshInterval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void loadHome();
+      }
+    }, 60_000);
+
+    const refreshOnFocus = () => {
+      void loadHome();
+    };
+
+    window.addEventListener("focus", refreshOnFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", refreshOnFocus);
+    };
   }, []);
 
   const viewerRow = useMemo(() => {
