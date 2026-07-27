@@ -200,9 +200,15 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <Link className="font-semibold underline" href="/">
-            Back to pool
-          </Link>
+<div className="flex flex-col items-end gap-2">
+  <Link className="font-semibold underline" href="/admin/players">
+    Player setup
+  </Link>
+
+  <Link className="font-semibold underline" href="/">
+    Back to pool
+  </Link>
+</div>
         </header>
 
         <section className="mt-8 border-y-2 border-zinc-900 py-8">
