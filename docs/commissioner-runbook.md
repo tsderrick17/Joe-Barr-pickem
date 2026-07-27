@@ -29,6 +29,7 @@
    - `supabase/024_add_runtime_query_indexes.sql`
    - `supabase/025_store_game_finalization_times.sql`
    - `supabase/026_replace_unlocked_picks_atomically.sql`
+   - `supabase/027_add_survivor_pick_integrity.sql`
 
 ## Weekly dress rehearsal
 
@@ -61,3 +62,11 @@ If a final score appears missing:
 - Do not manually change a final score unless the provider is wrong and the correction is documented.
 - Postponed and cancelled-game replacement policy is not implemented yet. They appear in **Game Exceptions** for manual commissioner review and are never graded automatically.
 - Once a week is rubber-stamped, its period, games, picks, and official lines are database-locked. Complete any correction process before the automated handoff.
+
+## Survivor
+
+- Every active player is entered automatically when Survivor is opened for the season.
+- A player selects one straight-up winner per scoring period and cannot reuse a team.
+- A Survivor pick can be changed or cleared until its game's kickoff.
+- Final scores are evaluated by the existing final-score job. A loss or tie eliminates the entry.
+- Run `supabase/027_add_survivor_pick_integrity.sql` before publishing Survivor. It adds the server-side safeguards and automatic enrollment function.

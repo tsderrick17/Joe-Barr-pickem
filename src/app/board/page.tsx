@@ -460,11 +460,7 @@ export default function BoardPage() {
         <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
           <div className="flex items-start justify-between gap-5">
             <div>
-              <p className="text-xs font-bold tracking-[0.24em] text-slate-600 sm:text-sm sm:tracking-[0.28em]">
-                JOE BARR MEMORIAL
-              </p>
-
-              <h1 className="mt-1 font-serif text-3xl font-bold sm:mt-2 sm:text-4xl">
+              <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
             </div>

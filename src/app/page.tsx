@@ -170,11 +170,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
       <div className="mx-auto max-w-5xl px-5 py-8 md:px-10">
         <header className="border-b-2 border-[#1d1d1f] pb-6">
-          <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
-            JOE BARR MEMORIAL
-          </p>
-
-          <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
+          <h1 className="font-serif text-4xl font-bold md:text-5xl">
             Lead Pipe Locks
           </h1>
         </header>
@@ -241,11 +237,9 @@ export default function HomePage() {
 
         <section className="py-7">
           <div className="flex items-end justify-between gap-4">
-            <h2 className="font-serif text-3xl font-bold">Scoreboard</h2>
-
-            <p className="text-right text-xs text-slate-600">
-              Others&apos; picks revealed at kickoff.
-            </p>
+            <h2 className="font-serif text-2xl font-bold sm:text-3xl">
+              Picks revealed to others at Kickoff
+            </h2>
           </div>
 
           <div className="mt-5 overflow-x-auto border-y-2 border-[#1d1d1f]">
