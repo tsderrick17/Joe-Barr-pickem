@@ -600,7 +600,7 @@ export default function BoardPage() {
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-8">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_28rem] md:gap-8">
             <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
@@ -627,26 +627,32 @@ export default function BoardPage() {
               </select>
             </div>
 
-            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
-              <p className="font-bold tracking-[0.12em] text-[#171719]">
-                HOW TO PLAY
-              </p>
-              <p className="mt-1.5">Favorites listed left; home team ALL CAPS.</p>
-              <p className="mt-0.5">
-                {week.period_type === "playoff"
-                  ? "Select every team and hit Save below."
-                  : "Select TWO teams and hit Save below."}
-              </p>
-              <p className="mt-0.5">Picks may be changed until listed kickoff.</p>
-              <div className="mt-3 border-t border-[#b7aea0] pt-3">
-                <p>Lines lock at 8 AM ET</p>
-                <p>on game day. Lines may move</p>
-                <p>
-                  before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
-                </p>
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-5">
+                <div>
+                  <p className="font-bold tracking-[0.12em] text-[#171719]">
+                    HOW TO PLAY
+                  </p>
+                  <div className="mt-1.5">
+                    <p>Lines lock at 8 AM ET</p>
+                    <p>on game day. Lines may move</p>
+                    <p>
+                      before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
+                    </p>
+                  </div>
+                </div>
+                <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                  <p>Favorites listed left; home team ALL CAPS.</p>
+                  <p className="mt-0.5">
+                    {week.period_type === "playoff"
+                      ? "Select every team and hit Save below."
+                      : "Select TWO teams and hit Save below."}
+                  </p>
+                  <p className="mt-0.5">Picks may be changed until listed kickoff.</p>
+                </div>
               </div>
               {hasEarlyGame ? (
-                <p className="mt-2 font-semibold">
+                <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold">
                   EARLY GAME: spreads post at 6 PM ET the night before.
                 </p>
               ) : null}
