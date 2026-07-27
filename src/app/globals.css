@@ -29,35 +29,25 @@ body {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid #29251d;
-  background-color: #f1ead7;
+  border: 1px solid #332d25;
+  background-color: #ece5d5;
   background-image:
-    radial-gradient(circle at 18% 24%, rgba(35, 31, 24, 0.08) 0 0.7px, transparent 0.9px),
-    radial-gradient(circle at 72% 68%, rgba(35, 31, 24, 0.06) 0 0.6px, transparent 0.8px),
-    repeating-linear-gradient(0deg, rgba(76, 69, 56, 0.025) 0 1px, transparent 1px 4px);
-  background-size: 7px 7px, 9px 9px, auto;
+    linear-gradient(90deg, rgba(66, 55, 41, 0.025), transparent 20%, transparent 80%, rgba(66, 55, 41, 0.025)),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(66, 55, 41, 0.04) 3px 4px);
   box-shadow:
-    3px 4px 0 rgba(45, 40, 31, 0.18),
-    0 10px 22px rgba(45, 40, 31, 0.09);
+    2px 3px 0 rgba(51, 45, 37, 0.32),
+    0 8px 16px rgba(51, 45, 37, 0.1);
 }
 
 .newspaper-clipping::after {
   position: absolute;
-  inset: 0;
+  inset: 5px;
   z-index: -1;
-  border: 5px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(51, 45, 37, 0.18);
   content: "";
   pointer-events: none;
 }
 
 .survivor-clipping {
-  background-color: #f1ead7;
-  background-image:
-    radial-gradient(circle at 18% 24%, rgba(35, 31, 24, 0.08) 0 0.7px, transparent 0.9px),
-    radial-gradient(circle at 72% 68%, rgba(35, 31, 24, 0.06) 0 0.6px, transparent 0.8px),
-    repeating-linear-gradient(0deg, rgba(76, 69, 56, 0.045) 0 1px, transparent 1px 4px);
-  background-size: 7px 7px, 9px 9px, auto;
-  box-shadow:
-    2px 3px 0 rgba(0, 0, 0, 0.18),
-    0 7px 16px rgba(0, 0, 0, 0.08);
+  background-color: #ece5d5;
 }
