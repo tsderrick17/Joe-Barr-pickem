@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       .from("survivor_picks")
       .select("survivor_entry_id, game_id, selected_team_id, result")
       .eq("scoring_period_id", context.period.id),
-    supabaseAdmin.from("teams").select("id, full_name, abbreviation"),
+    supabaseAdmin.from("teams").select("id, full_name, abbreviation").eq("active", true),
     supabaseAdmin
       .from("survivor_entries")
       .select("id, status, player_id")
@@ -101,11 +101,19 @@ export async function GET(request: NextRequest) {
   const nameByPlayerId = new Map((players ?? []).map((player) => [player.id, player.first_name]));
   const teamById = new Map((teams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]));
   const myPick = (picks ?? []).find((pick) => pick.survivor_entry_id === context.entry.id) ?? null;
+  const scheduledTeamIds = new Set(
+    (games ?? []).flatMap((game) => [game.away_team_id, game.home_team_id]),
+  );
+  const byeTeams = (teams ?? [])
+    .filter((team) => !scheduledTeamIds.has(team.id))
+    .map((team) => team.abbreviation)
+    .sort();
 
   return NextResponse.json({
     week: { id: context.period.id, name: context.period.display_name, status: context.period.status },
     entry: { status: context.entry.status, pick: myPick },
     usedTeamIds: [...new Set((usedPicks ?? []).map((pick) => pick.selected_team_id))],
+    byeTeams,
     games: (games ?? []).map((game) => ({
       id: game.id,
       kickoffAt: game.kickoff_at,
