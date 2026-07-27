@@ -141,9 +141,8 @@ function ResultMark({ result }: { result: Result }) {
 
 export default function PreviewPage() {
   const [scenarioKey, setScenarioKey] = useState("open");
+  const [showStandings, setShowStandings] = useState(false);
   const scenario = scenarios[scenarioKey];
-  const allLocked = scenario.activeGames.length === games.length;
-
   const standings = Object.keys(priorWins).map((name) => {
     const weeklyPicks = playerSelections[name];
     const weekWins = countPickemWins(
@@ -153,36 +152,37 @@ export default function PreviewPage() {
   }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
 
   return (
-    <main className="min-h-screen bg-[#f5f0e6] px-4 py-6 text-[#171719] sm:px-8 sm:py-10">
-      <div className="mx-auto w-full max-w-5xl">
-        <header className="border-y-2 border-[#1d1d1f] py-5 sm:py-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-600">Commissioner rehearsal · safe sample data</p>
-              <h1 className="mt-2 font-serif text-4xl font-black leading-none sm:text-5xl">Week 4: London to Monday</h1>
-              <p className="mt-3 max-w-2xl text-base leading-6 text-slate-700">A full Week 4 Slate after three simulated weeks. It never reads from or writes to the real pool.</p>
-            </div>
-            <label className="block sm:w-72">
-              <span className="mb-1 block text-[11px] font-black uppercase tracking-[0.14em] text-slate-600">View the moment</span>
-              <select className="w-full border border-zinc-900 bg-white px-3 py-3 text-sm font-bold" onChange={(event) => setScenarioKey(event.target.value)} value={scenarioKey}>
-                <option value="open">1 · Saturday before Week 4</option>
-                <option value="sunday">2 · Sunday at 3 PM ET</option>
-                <option value="final">3 · Final scores posted</option>
+    <main className="min-h-screen bg-[#e9e2d3] pb-8 text-[#171719]">
+      <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_28rem] md:gap-8">
+            <div className="min-w-0">
+              <h1 className="font-serif text-3xl font-bold sm:text-4xl">{showStandings ? "Lead Pipe Locks" : "The Slate"}</h1>
+              <label className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600" htmlFor="rehearsal-scenario">VIEW REHEARSAL</label>
+              <select className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]" id="rehearsal-scenario" onChange={(event) => setScenarioKey(event.target.value)} value={scenarioKey}>
+                <option value="open">Week 4 · Saturday before kickoff</option>
+                <option value="sunday">Week 4 · Sunday 3 PM ET</option>
+                <option value="final">Week 4 · Final scores posted</option>
               </select>
-            </label>
-          </div>
-          <div className="mt-5 grid gap-4 border-t border-[#b9b09d] pt-4 sm:grid-cols-[11rem_1fr]">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-700">{scenario.timing}</p>
-            <p className="text-sm leading-5 text-slate-700">{scenario.explanation}</p>
+              <button className="ml-3 text-sm font-semibold underline" onClick={() => setShowStandings((current) => !current)} type="button">{showStandings ? "View rehearsal Slate" : "View rehearsal Standings"}</button>
+            </div>
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-5">
+                <div><p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p><div className="mt-1.5"><p>Lines lock at 8 AM ET</p><p>on game day. Lines may move</p><p>before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.</p></div></div>
+                <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-5 md:pt-0"><p>Favorites listed left; home team ALL CAPS.</p><p className="mt-0.5">Select TWO teams and hit Save below.</p><p className="mt-0.5">Picks may be changed until listed kickoff.</p></div>
+              </div>
+              <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold">EARLY GAME: London kickoff is Sunday at 9:30 AM ET.</p>
+            </aside>
           </div>
         </header>
 
-        <section className="mt-7" aria-labelledby="slate-heading">
-          <div className="flex items-end justify-between gap-3 border-y-2 border-[#1d1d1f] px-1 py-3 sm:px-3">
-            <div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">The Slate</p><h2 className="font-serif text-3xl font-black" id="slate-heading">Week 4 matchups</h2></div>
-            <p className="text-right text-[11px] font-black uppercase tracking-[0.14em] text-slate-600">{allLocked ? "Final · scored" : `${scenario.activeGames.length} started · ${games.length - scenario.activeGames.length} open`}</p>
-          </div>
-          <p className="border-b border-[#c8c1b5] px-1 py-2 text-xs text-slate-600 sm:px-3">Favorites are listed left. <span className="font-bold text-teal-700">Teal lines</span> are official after kickoff. Once a game starts, the players who selected each side are shown beneath it.</p>
+        <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950">
+          <p className="font-bold">Rehearsal only · no live records are involved.</p>
+          <p className="mt-1 text-sm">{scenario.timing} — {scenario.explanation}</p>
+        </section>
+
+        {!showStandings ? <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9"><section aria-labelledby="slate-heading">
+          <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center"><h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm" id="slate-heading">SUNDAY · WEEK 4 ATS SLATE</h2></div>
 
           <div>{games.map((game, index) => {
             const started = scenario.activeGames.includes(index);
@@ -195,14 +195,12 @@ export default function PreviewPage() {
               <TeamCell team={game.right} score={scenario.final ? game.score.right : null} result={rightResult} pickers={started ? game.pickers.right : []} align="right" />
             </article>;
           })}</div>
-        </section>
-
-        <section className="mt-8" aria-labelledby="standings-heading">
+        </section></div> : <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-labelledby="standings-heading">
           <div className="flex items-end justify-between border-y-2 border-[#1d1d1f] px-1 py-3 sm:px-3"><div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">Lead Pipe Locks</p><h2 className="font-serif text-3xl font-black" id="standings-heading">Through Week {scenario.final ? "4" : "3"}</h2></div><p className="text-right text-xs text-slate-600">Weeks 1–3 are simulated.<br />Week 4 adds only when final.</p></div>
           <div className="overflow-x-auto"><table className="w-full min-w-[38rem] border-collapse text-left"><thead><tr className="border-b-2 border-[#1d1d1f] text-[11px] font-black uppercase tracking-[0.14em] text-slate-600"><th className="px-3 py-3">Rank</th><th className="px-3 py-3">Player</th><th className="px-3 py-3 text-center">Wk 1–3</th><th className="px-3 py-3 text-center">Wk 4</th><th className="px-3 py-3 text-center">Total wins</th><th className="px-3 py-3">Week 4 receipt</th></tr></thead><tbody>{standings.map((row, index) => <tr className={`border-b border-[#c8c1b5] ${row.name === "Tyler" ? "bg-[#fffaf0]" : index % 2 ? "bg-[#f0eadc]" : ""}`} key={row.name}><td className="px-3 py-4 font-serif text-xl">{index + 1}</td><td className="px-3 py-4 font-serif text-xl">{row.name}</td><td className="px-3 py-4 text-center font-bold">{row.priorWins}</td><td className="px-3 py-4 text-center font-bold">{scenario.final ? row.weekWins : "—"}</td><td className="px-3 py-4 text-center font-serif text-xl font-bold">{row.total}</td><td className="px-3 py-4 text-sm">{scenario.final ? <WeekReceipt name={row.name} /> : <span className="text-slate-500">Picks reveal at each kickoff</span>}</td></tr>)}</tbody></table></div>
-        </section>
+        </section>}
 
-        <p className="mt-7 border-t border-[#b9b09d] pt-4 text-xs leading-5 text-slate-600">Rehearsal integrity check: Week 4 totals are calculated from only the displayed final W marks—never from the number of submitted picks. This page is sample data only.</p>
+        <p className="mx-auto mt-7 max-w-4xl border-t border-[#b9b09d] pt-4 text-xs leading-5 text-slate-600">Rehearsal integrity check: Week 4 totals are calculated from only the displayed final W marks—never from the number of submitted picks. This page is sample data only.</p>
       </div>
     </main>
   );
