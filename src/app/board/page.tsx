@@ -561,28 +561,29 @@ export default function BoardPage() {
 
   return (
     <main
-      className={`min-h-screen bg-[#f5f0e6] text-[#171719] ${
+      className={`min-h-screen bg-[#d9c8a4] text-[#171719] ${
         isReadOnly ? "pb-8" : "pb-48 sm:pb-56"
       }`}
     >
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
-        <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
+      <div className="mx-auto max-w-5xl border-x-2 border-[#2d231c] bg-[#fffaf0] px-4 py-5 shadow-[5px_7px_0_rgba(45,35,28,0.28)] sm:px-5 sm:py-8 md:px-10">
+        <header className="-mx-4 border-b-4 border-[#c59a49] bg-[#2d231c] px-4 py-4 text-[#fff6df] sm:-mx-5 sm:px-5 md:-mx-10 md:px-10">
           <div className="flex items-start justify-between gap-5">
             <div className="min-w-0">
-              <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+              <p className="text-[10px] font-black tracking-[0.22em] text-[#d8c18b]">JOE BARR MEMORIAL PICK&apos;EM</p>
+              <h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
               <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2 sm:mt-4">
                 <div>
                   <label
-                    className="block text-xs font-bold tracking-[0.16em] text-slate-600"
+                    className="block text-xs font-bold tracking-[0.16em] text-[#d8c18b]"
                     htmlFor="week-selector"
                   >
                     VIEW WEEK
                   </label>
 
                   <select
-                    className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold"
+                    className="mt-1 border border-[#c59a49] bg-[#fffaf0] px-3 py-1.5 text-sm font-semibold text-[#2d231c]"
                     id="week-selector"
                     onChange={chooseWeek}
                     value={week.id}
@@ -596,14 +597,14 @@ export default function BoardPage() {
                   </select>
                 </div>
 
-                <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
+                <p className="max-w-sm pb-1 text-xs leading-5 text-[#f0e2bd] sm:text-sm">
                   Official spreads post at 8 AM ET on game day unless otherwise noted.
                 </p>
               </div>
             </div>
 
-            <aside className="max-w-[13rem] border-l border-slate-400 pl-3 text-right text-[11px] leading-4 text-slate-700 sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
-              <p className="font-bold tracking-[0.12em] text-slate-800">
+            <aside className="max-w-[13rem] border-l border-[#8d784e] pl-3 text-right text-[11px] leading-4 text-[#f0e2bd] sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
+              <p className="font-bold tracking-[0.12em] text-[#fff6df]">
                 HOW TO PLAY
               </p>
               <p className="mt-1">Favorites listed left; home team ALL CAPS.</p>
@@ -720,8 +721,8 @@ export default function BoardPage() {
             {gamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
-                  <div className="flex flex-col gap-1 border-b border-slate-400 pb-2 sm:flex-row sm:items-end sm:justify-between">
-                    <h2 className="text-sm font-bold tracking-[0.1em] sm:text-base sm:tracking-[0.17em]">
+                  <div className="border-b-2 border-[#2d231c] bg-[#eadfc8] px-3 py-2">
+                    <h2 className="text-sm font-black tracking-[0.1em] text-[#2d231c] sm:text-base sm:tracking-[0.17em]">
                       {day.toUpperCase()}
                     </h2>
                   </div>
