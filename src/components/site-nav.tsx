@@ -73,16 +73,16 @@ export default function SiteNav() {
           className="font-serif text-lg font-bold leading-none text-[#f5f0e6] md:text-xl"
           href="/"
         >
-          Best Bets Pick&apos;em
+          Pick&apos;em
         </Link>
 
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-3 text-sm md:gap-x-7 md:text-base">
           <Link className={linkStyle("/")} href="/">
-            Pool
+            Standings
           </Link>
 
           <Link className={linkStyle("/board")} href="/board">
-            The Board
+            The Slate
           </Link>
 
           {isCommissioner ? (

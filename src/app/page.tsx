@@ -106,12 +106,8 @@ export default function HomePage() {
           </p>
 
           <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-            Best Bets Pick&apos;em
+            Lead Pipe Locks 🚬
           </h1>
-
-          <p className="mt-3 text-lg">
-            Honor the tradition. Eliminate the paperwork.
-          </p>
         </header>
 
         <section className="border-b-2 border-[#1d1d1f] py-6">
@@ -148,7 +144,7 @@ export default function HomePage() {
               className="inline-block bg-[#1d1d1f] px-6 py-3 text-center font-bold text-white"
               href="/board"
             >
-              Go to The Board
+              Go to The Slate
             </Link>
           </div>
         </section>

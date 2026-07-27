@@ -44,7 +44,7 @@ setErrorMessage("That PIN was not recognized. Please try again.");
         </p>
 
         <h1 className="mt-2 font-serif text-4xl font-bold leading-tight">
-          Best Bets Pick&apos;em
+          Lead Pipe Locks 🚬
         </h1>
 
         <p className="mt-3 text-zinc-700">
@@ -93,9 +93,6 @@ setErrorMessage("That PIN was not recognized. Please try again.");
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-zinc-600">
-          Honor the tradition. Eliminate the paperwork.
-        </p>
       </div>
     </main>
   );

@@ -121,7 +121,7 @@ export default function BoardPage() {
     const data = (await response.json()) as BoardResponse;
 
     if (!response.ok) {
-      setErrorMessage(data.error ?? "The Board could not be loaded.");
+      setErrorMessage(data.error ?? "The Slate could not be loaded.");
       setIsLoading(false);
       return;
     }
@@ -340,7 +340,7 @@ export default function BoardPage() {
   if (isLoading && !week) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
-        Loading The Board…
+        Loading The Slate…
       </main>
     );
   }
@@ -368,7 +368,7 @@ export default function BoardPage() {
               </p>
 
               <h1 className="mt-1 font-serif text-3xl font-bold sm:mt-2 sm:text-4xl">
-                The Board
+                The Slate
               </h1>
             </div>
 

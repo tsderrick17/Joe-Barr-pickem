@@ -3,8 +3,8 @@ import "./globals.css";
 import SiteNav from "@/components/site-nav";
 
 export const metadata: Metadata = {
-  title: "Joe Barr Memorial Best Bets Pick'em",
-  description: "Honor the tradition. Eliminate the paperwork.",
+  title: "Lead Pipe Locks",
+  description: "Joe Barr Memorial Pick'em",
 };
 
 export default function RootLayout({
@@ -21,4 +21,3 @@ export default function RootLayout({
     </html>
   );
 }
-
