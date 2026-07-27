@@ -812,7 +812,7 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}
+                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 pl-1 pr-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}
                           key={game.id}
                         >
                           <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
