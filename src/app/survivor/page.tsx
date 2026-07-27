@@ -32,16 +32,21 @@ const readableDecalTeams = new Set([
   "ATL", "CHI", "CIN", "GB", "KC", "LV", "NE", "NYG", "NYJ", "SF", "TEN", "WAS",
 ]);
 
+// The supplied Eagles artwork is a left-facing source mark. Counter-flip it
+// inside either helmet side so the finished decal faces the facemask.
+const leftFacingSourceDecals = new Set(["PHI"]);
+
 function Helmet({ team, faces, unavailable }: { team: Team; faces: "left" | "right"; unavailable?: boolean }) {
   const flipped = faces === "left";
   const preserveDecalOrientation = readableDecalTeams.has(team.abbreviation);
+  const flipSourceDecal = leftFacingSourceDecals.has(team.abbreviation);
   const hideDecal = team.abbreviation === "PIT" && faces === "right";
   const mask = "url(/helmet-newspaper-template.png)";
   return <span aria-hidden="true" className={`relative block h-16 w-20 shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale" : ""}`}>
     <span className="absolute inset-0" style={{ backgroundColor: helmetColors[team.abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <span className="absolute inset-0" style={{ backgroundColor: "#fff", clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={64} src="/helmet-newspaper-template.png" width={80} />
-    {!hideDecal ? <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped && preserveDecalOrientation ? "-scale-x-100" : ""}`} height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} /> : null}
+    {!hideDecal ? <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipSourceDecal || (flipped && preserveDecalOrientation) ? "-scale-x-100" : ""}`} height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} /> : null}
   </span>;
 }
 
