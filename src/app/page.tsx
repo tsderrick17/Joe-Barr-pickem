@@ -429,7 +429,7 @@ export default function HomePage() {
                       const pick = row.picks[index];
                       return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active"} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
                     })}
-                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
+                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                   </div>
                 ))}
               </div>
