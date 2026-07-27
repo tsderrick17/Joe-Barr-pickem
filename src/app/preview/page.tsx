@@ -443,8 +443,7 @@ export default function PreviewPage() {
                     key={game.id}
                   >
                     <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
-                      <p>{game.kickoff.replace("Sunday · ", "")}</p>
-                      <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>
+                      {isFinalState ? <p className="font-mono font-bold text-slate-700">{game.kickoff.startsWith("Monday") ? "9/14" : "9/13"}</p> : <><p>{game.kickoff.replace("Sunday · ", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
                     </div>
                     <button
                       className={`min-w-0 text-left text-sm font-bold leading-tight tracking-tight sm:text-base ${
@@ -467,7 +466,6 @@ export default function PreviewPage() {
                       <strong className={`block font-mono text-sm sm:text-base ${lineLocked ? "text-teal-700" : "text-zinc-900"}`}>
                         {displayedLine}
                       </strong>
-                      <span>{game.kickoff}</span>
                     </div>
                     <button
                       className={`min-w-0 text-right text-sm font-bold leading-tight tracking-tight sm:text-base ${

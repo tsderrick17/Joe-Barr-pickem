@@ -96,6 +96,14 @@ function officialSpreadLabel(spread: number | null) {
   return `-${Number.isInteger(spread) ? spread : spread.toFixed(1)}`;
 }
 
+function easternShortDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "numeric",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
 function resultMarker(result: "win" | "loss" | null) {
   if (!result) return null;
 
@@ -769,8 +777,11 @@ export default function BoardPage() {
                           key={game.id}
                         >
                           <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
-                            <p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p>
-                            <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>
+                            {isReadOnly ? (
+                              <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p>
+                            ) : (
+                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>
+                            )}
                           </div>
                           <button
                             className={`text-left text-sm font-bold leading-tight tracking-tight sm:text-base ${
