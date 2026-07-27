@@ -151,6 +151,8 @@ export default function HomePage() {
     viewerRow?.picks
       .map((pick) => pick.label)
       .filter((label): label is string => Boolean(label)) ?? [];
+  const viewerSurvivor =
+    data?.survivorRows.find((row) => row.id === data.viewerPlayerId) ?? null;
 
   const pickWord = (count: number) => (count === 1 ? "pick" : "picks");
 
@@ -258,6 +260,65 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+
+        {data.survivorAvailable ? (
+          <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
+                  SURVIVOR THIS WEEK
+                </p>
+                {viewerSurvivor?.status === "eliminated" ? (
+                  <>
+                    <h2 className="mt-1 font-serif text-2xl font-bold text-slate-600">
+                      Eliminated
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Follow the remaining pool on The Survivor Wire.
+                    </p>
+                  </>
+                ) : viewerSurvivor?.pick?.label ? (
+                  <>
+                    <h2 className="mt-1 font-serif text-2xl font-bold text-green-800">
+                      Pick made: {viewerSurvivor.pick.label}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-700">
+                      You can change it until that game begins.
+                    </p>
+                  </>
+                ) : viewerSurvivor?.pick?.isHidden ? (
+                  <>
+                    <h2 className="mt-1 font-serif text-2xl font-bold text-green-800">
+                      Pick made
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Your Survivor selection is submitted.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="mt-1 font-serif text-2xl font-bold">
+                      Survivor pick due
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Choose one straight-up winner before kickoff.
+                    </p>
+                  </>
+                )}
+              </div>
+              <Link
+                className="inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white"
+                href="/survivor"
+              >
+                {viewerSurvivor?.status === "eliminated"
+                  ? "View The Survivor Wire"
+                  : viewerSurvivor?.pick
+                    ? "Change Survivor pick"
+                    : "Make Survivor pick"}
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section className="py-6 sm:py-7">
           <div className="flex items-end justify-between gap-4">
