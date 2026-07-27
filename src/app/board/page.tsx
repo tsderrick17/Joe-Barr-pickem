@@ -820,7 +820,7 @@ export default function BoardPage() {
                             {isReadOnly ? (
                               <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p>
                             ) : (
-                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>{game.isInternational ? <p className="mt-1 text-[8px] font-black leading-3 tracking-[0.06em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}</>
+                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>
                             )}
                           </div>
                           <button
@@ -863,6 +863,7 @@ export default function BoardPage() {
                                 AWAITING LINE
                               </p>
                             )}
+                            {game.isInternational ? <p className="mt-1 text-[8px] font-black leading-3 tracking-[0.06em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
 
                           </div>
 

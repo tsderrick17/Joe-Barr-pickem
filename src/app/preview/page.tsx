@@ -189,9 +189,9 @@ export default function PreviewPage() {
             const leftResult = resultFor(game, "left", scenario.final);
             const rightResult = resultFor(game, "right", scenario.final);
             return <article className="grid grid-cols-[4.25rem_minmax(0,1fr)_5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-3 sm:grid-cols-[7rem_minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4" key={game.id}>
-              <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{scenario.final ? game.finalDate : index === 0 ? <><p>Sun 9:30 AM ET</p><p>London</p><p className="mt-1 text-[8px] font-black leading-3 tracking-[0.05em] text-teal-700">LOCKS SAT 6 PM ET</p></> : game.kickoff}</div>
+              <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{scenario.final ? game.finalDate : index === 0 ? <><p>Sun 9:30 AM ET</p><p>📍 London</p></> : game.kickoff}</div>
               <TeamCell team={game.left} score={scenario.final ? game.score.left : null} result={leftResult} pickers={started ? game.pickers.left : []} align="left" />
-              <div className={`text-center font-mono text-sm font-black sm:text-base ${started ? "text-teal-700" : "text-zinc-900"}`}>{game.line}</div>
+              <div className={`text-center font-mono text-sm font-black sm:text-base ${started ? "text-teal-700" : "text-zinc-900"}`}><p>{game.line}</p>{index === 0 && !scenario.final ? <p className="mt-1 text-[8px] font-black leading-3 tracking-[0.05em] text-teal-700">LOCKS SAT 6 PM ET</p> : null}</div>
               <TeamCell team={game.right} score={scenario.final ? game.score.right : null} result={rightResult} pickers={started ? game.pickers.right : []} align="right" />
             </article>;
           })}</div>
