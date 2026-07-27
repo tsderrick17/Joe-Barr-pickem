@@ -115,7 +115,7 @@ function resultMarker(result: "win" | "loss" | null) {
   return (
     <strong
       aria-label={`Against the spread: ${result}`}
-      className={`absolute right-0 -top-1 text-sm font-black leading-none sm:text-base ${
+      className={`ml-1 inline-block text-sm font-black leading-none sm:text-base ${
         result === "win" ? "text-green-700" : "text-red-700"
       }`}
     >
@@ -831,7 +831,7 @@ export default function BoardPage() {
                             onClick={() => chooseTeam(game.id, leftTeamId)}
                             type="button"
                           >
-                            <span className="relative inline-block pr-3">
+                            <span className="inline-block">
                               {teamLabel(leftTeamName, favoriteIsHome)}
                               {gameIsFinal && leftTeamScore !== null ? (
                                 <span className="ml-1 font-mono font-black tabular-nums">
@@ -874,7 +874,7 @@ export default function BoardPage() {
                             onClick={() => chooseTeam(game.id, rightTeamId)}
                             type="button"
                           >
-                            <span className="relative inline-block pr-3">
+                            <span className="inline-block">
                               {teamLabel(rightTeamName, !favoriteIsHome)}
                               {gameIsFinal && rightTeamScore !== null ? (
                                 <span className="ml-1 font-mono font-black tabular-nums">
