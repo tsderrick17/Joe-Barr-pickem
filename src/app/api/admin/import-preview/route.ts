@@ -116,10 +116,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const oddsResponse = await fetch(
-    `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
-    { cache: "no-store" },
-  );
+  let oddsResponse: Response;
+
+  try {
+    oddsResponse = await fetch(
+      `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
+      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "The NFL odds feed could not be reached right now." },
+      { status: 502 },
+    );
+  }
 
   if (!oddsResponse.ok) {
     return NextResponse.json(
@@ -152,7 +161,7 @@ export async function GET(request: NextRequest) {
 
   if (periodsError || !periods) {
     return NextResponse.json(
-      { error: "The 2026 pool weeks could not be loaded." },
+      { error: "The 2026 season weeks could not be loaded." },
       { status: 500 },
     );
   }
@@ -207,7 +216,7 @@ export async function GET(request: NextRequest) {
     return {
       externalGameId: event.id,
       kickoff: event.commence_time,
-      poolWeek: period?.display_name ?? "Needs review",
+      scoringWeek: period?.display_name ?? "Needs review",
       awayTeam: event.away_team,
       homeTeam: event.home_team,
       spread:

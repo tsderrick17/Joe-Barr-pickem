@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     !/^[A-Za-z][A-Za-z'. -]*$/.test(firstName)
   ) {
     return NextResponse.json(
-      { error: "Enter the name as it should appear in the pool." },
+      { error: "Enter the name as it should appear in the Standings." },
       { status: 400 },
     );
   }

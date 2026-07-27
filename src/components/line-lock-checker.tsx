@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type LockResult = {
@@ -16,10 +16,20 @@ type LockResult = {
   warnings: string[];
 };
 
+type LatestLockRun = {
+  status: "success" | "failed" | "started";
+  started_at: string;
+  completed_at: string | null;
+  details: Omit<LockResult, "message"> | null;
+  error_message: string | null;
+};
+
 export default function LineLockChecker() {
   const [result, setResult] = useState<LockResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isChecking, setIsChecking] = useState(false);
+  const [latestRun, setLatestRun] = useState<LatestLockRun | null>(null);
+  const [isLoadingLatest, setIsLoadingLatest] = useState(true);
 
   async function checkOfficialLines() {
     setResult(null);
@@ -59,6 +69,78 @@ export default function LineLockChecker() {
     setResult(data);
   }
 
+  async function requestLatestLock() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("Please sign in before viewing official line history.");
+    }
+
+    const response = await fetch("/api/admin/lock-lines", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ?? "The latest official line lock could not be loaded.",
+      );
+    }
+
+    return data.latestRun as LatestLockRun | null;
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitialLock() {
+      try {
+        const latestLock = await requestLatestLock();
+
+        if (!cancelled) {
+          setLatestRun(latestLock);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "The latest official line lock could not be loaded.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingLatest(false);
+        }
+      }
+    }
+
+    void loadInitialLock();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function loadLatestLock() {
+    setErrorMessage("");
+    setIsLoadingLatest(true);
+
+    try {
+      setLatestRun(await requestLatestLock());
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "The latest official line lock could not be loaded.",
+      );
+    } finally {
+      setIsLoadingLatest(false);
+    }
+  }
+
   return (
     <section className="mt-8 border-y-2 border-zinc-900 py-8">
       <h2 className="font-serif text-2xl font-bold">
@@ -79,6 +161,14 @@ export default function LineLockChecker() {
         {isChecking
           ? "Checking official spreads..."
           : "Check official spread locks"}
+      </button>
+      <button
+        className="ml-3 mt-6 border border-zinc-900 bg-white px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={isLoadingLatest}
+        onClick={loadLatestLock}
+        type="button"
+      >
+        {isLoadingLatest ? "Loading lock history..." : "Refresh lock history"}
       </button>
 
       {errorMessage ? (
@@ -133,6 +223,44 @@ export default function LineLockChecker() {
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {latestRun ? (
+        <div
+          className={`mt-6 border bg-white p-5 ${
+            latestRun.status === "failed"
+              ? "border-red-700"
+              : "border-zinc-400"
+          }`}
+        >
+          <p className="font-bold">Most recent official line lock</p>
+          <p className="mt-1 text-sm text-zinc-700">
+            Status: {latestRun.status === "failed" ? "Needs attention" : "Completed"}
+            {" · "}
+            Started {new Date(latestRun.started_at).toLocaleString()}
+            {latestRun.completed_at
+              ? ` · Finished ${new Date(latestRun.completed_at).toLocaleString()}`
+              : ""}
+          </p>
+          {latestRun.details ? (
+            <p className="mt-2 text-sm text-zinc-700">
+              Games due: {latestRun.details.dueGames} · Lines locked:{" "}
+              {latestRun.details.lockedGames} · Fallbacks used:{" "}
+              {latestRun.details.fallbackLocks}
+            </p>
+          ) : null}
+          {latestRun.error_message ? (
+            <p className="mt-2 text-sm font-semibold text-red-700">
+              {latestRun.error_message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {!isLoadingLatest && !latestRun && !errorMessage ? (
+        <p className="mt-6 text-sm text-zinc-600">
+          No official line locks have been recorded yet.
+        </p>
       ) : null}
     </section>
   );

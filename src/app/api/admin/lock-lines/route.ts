@@ -3,24 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export async function POST(request: NextRequest) {
+async function requireCommissioner(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authorization = request.headers.get("authorization");
 
-  if (!supabaseUrl || !publishableKey) {
-    return NextResponse.json(
-      { error: "The server is missing required configuration." },
-      { status: 500 },
-    );
-  }
-
-  if (!authorization?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "You must be signed in." },
-      { status: 401 },
-    );
+  if (!supabaseUrl || !publishableKey || !authorization?.startsWith("Bearer ")) {
+    return false;
   }
 
   const authClient = createClient(supabaseUrl, publishableKey, {
@@ -33,15 +23,9 @@ export async function POST(request: NextRequest) {
 
   const {
     data: { user },
-    error: userError,
   } = await authClient.auth.getUser();
 
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "Your sign-in session could not be verified." },
-      { status: 401 },
-    );
-  }
+  if (!user) return false;
 
   const { data: commissioner } = await supabaseAdmin
     .from("players")
@@ -49,11 +33,28 @@ export async function POST(request: NextRequest) {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (
-    !commissioner ||
-    !commissioner.active ||
-    !commissioner.is_commissioner
-  ) {
+  return Boolean(
+    commissioner?.active && commissioner.is_commissioner,
+  );
+}
+
+export async function POST(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !publishableKey) {
+    return NextResponse.json(
+      { error: "The server is missing required configuration." },
+      { status: 500 },
+    );
+  }
+
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "You must be signed in." }, { status: 401 });
+  }
+
+  if (!(await requireCommissioner(request))) {
     return NextResponse.json(
       { error: "Commissioner access is required." },
       { status: 403 },
@@ -85,4 +86,30 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  if (!(await requireCommissioner(request))) {
+    return NextResponse.json(
+      { error: "Commissioner access is required." },
+      { status: 403 },
+    );
+  }
+
+  const { data: latestRun, error } = await supabaseAdmin
+    .from("sync_runs")
+    .select("status, started_at, completed_at, details, error_message")
+    .eq("job_type", "line_locks")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json(
+      { error: "The latest official line lock could not be loaded." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ latestRun });
 }

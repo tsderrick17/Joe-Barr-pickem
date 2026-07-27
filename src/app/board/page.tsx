@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 
 type ScoringPeriod = {
   id: string;
@@ -104,31 +105,54 @@ export default function BoardPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
+  const activeBoardRequest = useRef<AbortController | null>(null);
+  const boardRequestId = useRef(0);
 
   async function loadWeek(period: ScoringPeriod, accessToken: string) {
+    const requestId = boardRequestId.current + 1;
+    boardRequestId.current = requestId;
+    activeBoardRequest.current?.abort();
+
+    const request = new AbortController();
+    activeBoardRequest.current = request;
+    const requestTimer = window.setTimeout(() => request.abort(), 15_000);
+
     setIsLoading(true);
     setErrorMessage("");
     setSelectionWarning("");
     setSubmissionMessage("");
     setWeek(period);
 
-    const response = await fetch(`/api/board?scoringPeriodId=${period.id}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    try {
+      const response = await fetch(`/api/board?scoringPeriodId=${period.id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal: request.signal,
+      });
 
-    const data = (await response.json()) as BoardResponse;
+      const data = (await response.json()) as BoardResponse;
 
-    if (!response.ok) {
-      setErrorMessage(data.error ?? "The Slate could not be loaded.");
-      setIsLoading(false);
-      return;
+      if (requestId !== boardRequestId.current) return;
+
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The Slate could not be loaded.");
+        return;
+      }
+
+      setGames(data.games);
+      setSelectedPicks(data.myPicks);
+    } catch {
+      if (requestId === boardRequestId.current) {
+        setErrorMessage("The Slate is taking too long to load. Please try again.");
+      }
+    } finally {
+      window.clearTimeout(requestTimer);
+      if (requestId === boardRequestId.current) {
+        activeBoardRequest.current = null;
+        setIsLoading(false);
+      }
     }
-
-    setGames(data.games);
-    setSelectedPicks(data.myPicks);
-    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -171,10 +195,13 @@ export default function BoardPage() {
       const loadedWeeks = periods as ScoringPeriod[];
       setWeeks(loadedWeeks);
 
-      const initialWeek =
-        loadedWeeks.find((period) => period.status === "active") ??
-        loadedWeeks.find((period) => period.status === "upcoming") ??
-        loadedWeeks[0];
+      const initialWeek = selectDefaultScoringPeriod(loadedWeeks);
+
+      if (!initialWeek) {
+        setErrorMessage("The weekly schedule could not be loaded.");
+        setIsLoading(false);
+        return;
+      }
 
       await loadWeek(initialWeek, session.access_token);
     }
@@ -183,9 +210,7 @@ export default function BoardPage() {
   }, []);
 
   const availableWeeks = useMemo(() => {
-    const currentWeek =
-      weeks.find((period) => period.status === "active") ??
-      weeks.find((period) => period.status === "upcoming");
+    const currentWeek = selectDefaultScoringPeriod(weeks);
 
     return weeks.filter(
       (period) =>
@@ -349,6 +374,13 @@ export default function BoardPage() {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
         <p className="font-semibold text-red-700">{errorMessage}</p>
+        <button
+          className="mt-5 bg-[#1d1d1f] px-5 py-3 font-bold text-white"
+          onClick={() => window.location.reload()}
+          type="button"
+        >
+          Try again
+        </button>
       </main>
     );
   }
@@ -358,7 +390,11 @@ export default function BoardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f0e6] pb-48 text-[#171719] sm:pb-56">
+    <main
+      className={`min-h-screen bg-[#f5f0e6] text-[#171719] ${
+        isReadOnly ? "pb-8" : "pb-48 sm:pb-56"
+      }`}
+    >
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
           <div className="flex items-start justify-between gap-5">
@@ -422,7 +458,18 @@ export default function BoardPage() {
           </p>
         </header>
 
-        {isLoading ? (
+        {errorMessage ? (
+          <div className="mt-8">
+            <p className="font-semibold text-red-700">{errorMessage}</p>
+            <button
+              className="mt-4 bg-[#1d1d1f] px-5 py-3 font-bold text-white"
+              onClick={() => window.location.reload()}
+              type="button"
+            >
+              Try again
+            </button>
+          </div>
+        ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
           <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
@@ -588,13 +635,7 @@ export default function BoardPage() {
             </div>
           </div>
         </aside>
-      ) : (
-        <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6]">
-          <div className="mx-auto max-w-5xl px-5 py-4 text-sm font-semibold md:px-10">
-            This week is final and is shown for review only.
-          </div>
-        </aside>
-      )}
+      ) : null}
     </main>
   );
 }

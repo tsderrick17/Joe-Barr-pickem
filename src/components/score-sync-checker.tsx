@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type ScoreSyncResult = {
@@ -10,13 +10,23 @@ type ScoreSyncResult = {
   finalScoresImported: number;
   picksGraded: number;
   picksAwaitingLine: number;
+  warnings: string[];
+  weekRollover?: {
+    action: "activated" | "waiting" | "completed" | "blocked" | "none";
+    currentWeek: string | null;
+    nextWeek: string | null;
+    rolloverAt: string | null;
+    reason: string | null;
+  };
 };
+
+type ScoreSyncDetails = Omit<ScoreSyncResult, "message">;
 
 type LatestRun = {
   status: "success" | "failed" | "started";
   started_at: string;
   completed_at: string | null;
-  details: ScoreSyncResult | null;
+  details: ScoreSyncDetails | null;
   error_message: string | null;
 };
 
@@ -25,7 +35,7 @@ export default function ScoreSyncChecker() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [latestRun, setLatestRun] = useState<LatestRun | null>(null);
-  const [isLoadingLatest, setIsLoadingLatest] = useState(false);
+  const [isLoadingLatest, setIsLoadingLatest] = useState(true);
 
   async function checkFinalScores() {
     setErrorMessage("");
@@ -55,30 +65,74 @@ export default function ScoreSyncChecker() {
     setResult(data);
   }
 
-  async function loadLatestCheck() {
-    setErrorMessage("");
-    setIsLoadingLatest(true);
-
+  async function requestLatestCheck() {
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
-      setErrorMessage("Please sign in before viewing score-check history.");
-      setIsLoadingLatest(false);
-      return;
+      throw new Error("Please sign in before viewing score-check history.");
     }
 
     const response = await fetch("/api/admin/sync-scores", {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     const data = await response.json();
-    setIsLoadingLatest(false);
 
     if (!response.ok) {
-      setErrorMessage(data.error ?? "The latest score check could not be loaded.");
-      return;
+      throw new Error(
+        data.error ?? "The latest score check could not be loaded.",
+      );
     }
 
-    setLatestRun(data.latestRun);
+    return data.latestRun as LatestRun | null;
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitialCheck() {
+      try {
+        const latestCheck = await requestLatestCheck();
+
+        if (!cancelled) {
+          setLatestRun(latestCheck);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "The latest score check could not be loaded.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingLatest(false);
+        }
+      }
+    }
+
+    void loadInitialCheck();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function loadLatestCheck() {
+    setErrorMessage("");
+    setIsLoadingLatest(true);
+
+    try {
+      setLatestRun(await requestLatestCheck());
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "The latest score check could not be loaded.",
+      );
+    } finally {
+      setIsLoadingLatest(false);
+    }
   }
 
   return (
@@ -119,6 +173,35 @@ export default function ScoreSyncChecker() {
               ? ` · Picks awaiting an official line: ${result.picksAwaitingLine}`
               : ""}
           </p>
+          {result.warnings.length > 0 ? (
+            <div className="mt-3 text-sm font-semibold text-amber-900">
+              {result.warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {result?.weekRollover && result.weekRollover.action !== "none" ? (
+        <div className="mt-5 border border-zinc-400 bg-white p-4 text-zinc-900">
+          <p className="font-bold">Weekly handoff</p>
+          <p className="mt-1 text-sm">
+            {result.weekRollover.action === "completed"
+              ? `${result.weekRollover.currentWeek} was rubber-stamped${
+                  result.weekRollover.nextWeek
+                    ? ` and ${result.weekRollover.nextWeek} is now active.`
+                    : "."
+                }`
+              : result.weekRollover.action === "activated"
+                ? `${result.weekRollover.currentWeek} is now active.`
+              : result.weekRollover.reason}
+          </p>
+          {result.weekRollover.rolloverAt ? (
+            <p className="mt-1 text-sm text-zinc-700">
+              Scheduled handoff: {new Date(result.weekRollover.rolloverAt).toLocaleString()}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -131,8 +214,35 @@ export default function ScoreSyncChecker() {
             Started {new Date(latestRun.started_at).toLocaleString()}
             {latestRun.completed_at ? ` · Finished ${new Date(latestRun.completed_at).toLocaleString()}` : ""}
           </p>
+          {latestRun.details ? (
+            <p className="mt-2 text-sm">
+              Eligible games: {latestRun.details.eligibleGames} · Finals
+              saved: {latestRun.details.finalScoresImported} · Picks graded:{" "}
+              {latestRun.details.picksGraded}
+              {latestRun.details.picksAwaitingLine > 0
+                ? ` · Picks awaiting an official line: ${latestRun.details.picksAwaitingLine}`
+                : ""}
+            </p>
+          ) : null}
+          {latestRun.details?.weekRollover &&
+          latestRun.details.weekRollover.action !== "none" ? (
+            <p className="mt-2 text-sm">
+              Weekly handoff: {latestRun.details.weekRollover.reason ?? "completed"}
+            </p>
+          ) : null}
+          {latestRun.details?.warnings?.map((warning) => (
+            <p className="mt-2 text-sm font-semibold text-amber-900" key={warning}>
+              {warning}
+            </p>
+          ))}
           {latestRun.error_message ? <p className="mt-1 text-sm font-semibold">{latestRun.error_message}</p> : null}
         </div>
+      ) : null}
+
+      {!isLoadingLatest && !latestRun && !errorMessage ? (
+        <p className="mt-5 text-sm text-zinc-600">
+          No final score checks have been recorded yet.
+        </p>
       ) : null}
     </section>
   );

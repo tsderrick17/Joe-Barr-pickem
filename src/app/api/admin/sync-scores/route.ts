@@ -36,9 +36,14 @@ export async function POST(request: NextRequest) {
   try {
     const result = await syncFinalScores();
     return NextResponse.json({
-      message: result.providerChecked
-        ? "Final score check completed."
-        : "No games are ready for a final score check yet.",
+      message:
+        result.weekRollover.action === "completed"
+          ? "Weekly handoff completed."
+          : result.weekRollover.action === "activated"
+            ? `${result.weekRollover.currentWeek} is now active.`
+            : result.providerChecked
+              ? "Final score check completed."
+              : "No games are ready for a final score check yet.",
       ...result,
     });
   } catch (error) {

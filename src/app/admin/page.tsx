@@ -33,7 +33,7 @@ type OddsPreview = {
 type ImportGame = {
   externalGameId: string;
   kickoff: string;
-  poolWeek: string;
+  scoringWeek: string;
   awayTeam: string;
   homeTeam: string;
   spread: Array<{
@@ -147,7 +147,7 @@ export default function AdminPage() {
     }
 
     const confirmed = window.confirm(
-      `Import ${importPreview.games.length} scheduled games into the 2026 pool?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
+      `Import ${importPreview.games.length} scheduled games into the 2026 season?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
     );
 
     if (!confirmed) {
@@ -209,7 +209,7 @@ export default function AdminPage() {
   </Link>
 
   <Link className="font-semibold underline" href="/">
-    Back to pool
+    Back to Standings
   </Link>
 </div>
         </header>
@@ -374,7 +374,7 @@ export default function AdminPage() {
                       {new Date(game.kickoff).toLocaleString()}
                     </p>
                     <p className="mt-1 text-sm font-bold uppercase tracking-wide text-zinc-600">
-  {game.poolWeek}
+  {game.scoringWeek}
 </p>
 
                     <h3 className="mt-1 font-serif text-xl font-bold">

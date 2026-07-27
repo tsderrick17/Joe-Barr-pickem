@@ -102,18 +102,28 @@ export async function GET(request: NextRequest) {
 
   if (!player || !player.active) {
     return NextResponse.json(
-      { error: "Your player profile is not active in this pool." },
+      { error: "Your player profile is not active in this Pick'em." },
       { status: 403 },
     );
   }
 
-  const { data: games, error: gamesError } = await supabaseAdmin
-    .from("games")
-    .select(
-      "id, away_team_id, home_team_id, kickoff_at, line_lock_at, status, away_score, home_score",
-    )
-    .eq("scoring_period_id", scoringPeriodId)
-    .order("kickoff_at");
+  const [gamesResult, picksResult] = await Promise.all([
+    supabaseAdmin
+      .from("games")
+      .select(
+        "id, away_team_id, home_team_id, kickoff_at, line_lock_at, status, away_score, home_score",
+      )
+      .eq("scoring_period_id", scoringPeriodId)
+      .order("kickoff_at"),
+    supabaseAdmin
+      .from("picks")
+      .select("game_id, selected_team_id")
+      .eq("player_id", player.id)
+      .eq("scoring_period_id", scoringPeriodId),
+  ]);
+
+  const { data: games, error: gamesError } = gamesResult;
+  const { data: myPicks, error: picksError } = picksResult;
 
   if (gamesError || !games) {
     return NextResponse.json(
@@ -121,12 +131,6 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-
-  const { data: myPicks, error: picksError } = await supabaseAdmin
-    .from("picks")
-    .select("game_id, selected_team_id")
-    .eq("player_id", player.id)
-    .eq("scoring_period_id", scoringPeriodId);
 
   if (picksError) {
     return NextResponse.json(
@@ -144,10 +148,33 @@ export async function GET(request: NextRequest) {
     ),
   ];
 
-  const { data: teams, error: teamsError } = await supabaseAdmin
-    .from("teams")
-    .select("id, full_name")
-    .in("id", teamIds);
+  const gameIds = games.map((game) => game.id);
+
+  const [teamsResult, historyResult, lockedLinesResult] = await Promise.all([
+    supabaseAdmin
+      .from("teams")
+      .select("id, full_name")
+      .in("id", teamIds),
+    gameIds.length > 0
+      ? supabaseAdmin
+          .from("spread_history")
+          .select("game_id, favorite_team_id, captured_at")
+          .in("game_id", gameIds)
+          .order("captured_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    gameIds.length > 0
+      ? supabaseAdmin
+          .from("game_lines")
+          .select(
+            "game_id, favorite_team_id, locked_spread, source, locked_at",
+          )
+          .in("game_id", gameIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const { data: teams, error: teamsError } = teamsResult;
+  const { data: history, error: historyError } = historyResult;
+  const { data: lockedLines, error: lockedLinesError } = lockedLinesResult;
 
   if (teamsError || !teams) {
     return NextResponse.json(
@@ -156,33 +183,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const gameIds = games.map((game) => game.id);
-
-  const { data: history, error: historyError } =
-    gameIds.length > 0
-      ? await supabaseAdmin
-          .from("spread_history")
-          .select("game_id, favorite_team_id, captured_at")
-          .in("game_id", gameIds)
-          .order("captured_at", { ascending: false })
-      : { data: [], error: null };
-
   if (historyError) {
     return NextResponse.json(
       { error: "The preliminary team order could not be loaded." },
       { status: 500 },
     );
   }
-
-  const { data: lockedLines, error: lockedLinesError } =
-    gameIds.length > 0
-      ? await supabaseAdmin
-          .from("game_lines")
-          .select(
-            "game_id, favorite_team_id, locked_spread, source, locked_at",
-          )
-          .in("game_id", gameIds)
-      : { data: [], error: null };
 
   if (lockedLinesError) {
     return NextResponse.json(

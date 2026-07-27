@@ -76,6 +76,27 @@ function deterministicTeamId(game: DueGame) {
 export async function lockDueLines(
   currentTime = new Date(),
 ): Promise<LockLinesResult> {
+  try {
+    return await lockDueLinesInternal(currentTime);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "The official line check failed.";
+
+    await supabaseAdmin.from("sync_runs").insert({
+      provider: "The Odds API",
+      job_type: "line_locks",
+      status: "failed",
+      completed_at: new Date().toISOString(),
+      error_message: message,
+    });
+
+    throw error;
+  }
+}
+
+async function lockDueLinesInternal(
+  currentTime = new Date(),
+): Promise<LockLinesResult> {
   const oddsApiKey = process.env.ODDS_API_KEY;
   const checkedAt = currentTime.toISOString();
   const warnings: string[] = [];
@@ -219,7 +240,7 @@ export async function lockDueLines(
 
     const response = await fetch(
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?${query}`,
-      { cache: "no-store" },
+      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
     );
 
     requestsRemaining =
@@ -417,7 +438,7 @@ export async function lockDueLines(
     }
   }
 
-  return {
+  const result = {
     checkedAt,
     dueGames: dueGames.length,
     lockedGames: decisions.length,
@@ -432,4 +453,22 @@ export async function lockDueLines(
     requestsRemaining,
     warnings,
   };
+
+  const { error: runError } = await supabaseAdmin
+    .from("sync_runs")
+    .insert({
+      provider: "The Odds API",
+      job_type: "line_locks",
+      status: "success",
+      completed_at: new Date().toISOString(),
+      details: result,
+    });
+
+  if (runError) {
+    warnings.push(
+      "Official lines were locked, but the run history could not be recorded.",
+    );
+  }
+
+  return result;
 }

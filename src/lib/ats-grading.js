@@ -1,5 +1,5 @@
 /**
- * Grades one ATS pick. A zero adjusted margin is a push, and pool rules
+ * Grades one ATS pick. A zero adjusted margin is a push, and Pick'em rules
  * intentionally record pushes as losses.
  */
 export function gradeAtsPick({
@@ -34,6 +34,6 @@ export function gradeAtsPick({
       ? selectedScore - opponentScore - lockedSpread
       : selectedScore - opponentScore + lockedSpread;
 
-  // A push (adjustedMargin === 0) is a loss under this pool's rules.
+  // A push (adjustedMargin === 0) is a loss under Pick'em rules.
   return adjustedMargin > 0 ? "win" : "loss";
 }

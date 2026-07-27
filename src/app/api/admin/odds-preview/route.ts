@@ -88,10 +88,19 @@ const supabase = createClient(supabaseUrl, supabasePublishableKey, {
     oddsFormat: "american",
   });
 
-  const response = await fetch(
-    `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?${query}`,
-    { cache: "no-store" },
-  );
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?${query}`,
+      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "The odds provider could not be reached." },
+      { status: 502 },
+    );
+  }
 
   if (!response.ok) {
     return NextResponse.json(

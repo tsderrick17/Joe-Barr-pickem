@@ -48,7 +48,7 @@ setErrorMessage("That PIN was not recognized. Please try again.");
         </h1>
 
         <p className="mt-3 text-zinc-700">
-          Enter your four-digit PIN to make picks and check the pool.
+          Enter your four-digit PIN to make picks and check the Standings.
         </p>
 
         <form
@@ -89,7 +89,7 @@ setErrorMessage("That PIN was not recognized. Please try again.");
             disabled={pin.length !== 4 || isSubmitting}
             className="mt-6 w-full bg-zinc-900 px-4 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isSubmitting ? "Signing in..." : "Enter the Pool"}
+            {isSubmitting ? "Signing in..." : "Enter Pick'em"}
           </button>
         </form>
 

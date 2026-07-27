@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
+import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,14 @@ type GameRow = {
   kickoff_at: string;
 };
 
+type ScoringPeriodRow = {
+  id: string;
+  display_name: string;
+  display_order: number;
+  status: "upcoming" | "active" | "complete";
+  max_picks: number;
+};
+
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
@@ -34,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   if (!authorization?.startsWith("Bearer ")) {
     return NextResponse.json(
-      { error: "You must be signed in to view the pool." },
+      { error: "You must be signed in to view the Standings." },
       { status: 401 },
     );
   }
@@ -58,25 +67,35 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: viewer } = await supabaseAdmin
-    .from("players")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .eq("active", true)
-    .maybeSingle();
+  const [viewerResult, seasonResult, playersResult] = await Promise.all([
+    supabaseAdmin
+      .from("players")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .eq("active", true)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("seasons")
+      .select("id")
+      .eq("year", 2026)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("players")
+      .select("id, first_name")
+      .eq("active", true)
+      .order("first_name"),
+  ]);
+
+  const viewer = viewerResult.data;
 
   if (!viewer) {
     return NextResponse.json(
-      { error: "Your player profile is not active in this pool." },
+      { error: "Your player profile is not active in this Pick'em." },
       { status: 403 },
     );
   }
 
-  const { data: season } = await supabaseAdmin
-    .from("seasons")
-    .select("id")
-    .eq("year", 2026)
-    .maybeSingle();
+  const season = seasonResult.data;
 
   if (!season) {
     return NextResponse.json(
@@ -87,7 +106,7 @@ export async function GET(request: NextRequest) {
 
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, display_name, display_order, status")
+    .select("id, display_name, display_order, status, max_picks")
     .eq("season_id", season.id)
     .eq("period_type", "regular")
     .order("display_order");
@@ -99,18 +118,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const currentWeek =
-    periods.find((period) => period.status === "active") ??
-    periods.find((period) => period.status === "upcoming") ??
-    periods[0];
+  const currentWeek = selectDefaultScoringPeriod(
+    periods as ScoringPeriodRow[],
+  );
+
+  if (!currentWeek) {
+    return NextResponse.json(
+      { error: "The weekly schedule could not be loaded." },
+      { status: 500 },
+    );
+  }
 
   const periodIds = periods.map((period) => period.id);
 
-  const { data: players, error: playersError } = await supabaseAdmin
-    .from("players")
-    .select("id, first_name")
-    .eq("active", true)
-    .order("first_name");
+  const { data: players, error: playersError } = playersResult;
 
   if (playersError || !players) {
     return NextResponse.json(
@@ -128,7 +149,7 @@ export async function GET(request: NextRequest) {
 
   if (picksError) {
     return NextResponse.json(
-      { error: "The pool picks could not be loaded." },
+      { error: "The Standings picks could not be loaded." },
       { status: 500 },
     );
   }
@@ -234,6 +255,7 @@ return {
   return NextResponse.json({
     viewerPlayerId: viewer.id,
     week: currentWeek.display_name,
+    maxPicks: currentWeek.max_picks,
     nextRevealAt,
     rows,
   });

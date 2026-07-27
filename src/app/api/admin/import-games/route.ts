@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { buildScheduleGame } from "@/lib/schedule-game";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -219,10 +220,19 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const oddsResponse = await fetch(
-    `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
-    { cache: "no-store" },
-  );
+  let oddsResponse: Response;
+
+  try {
+    oddsResponse = await fetch(
+      `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
+      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "The NFL odds feed could not be reached right now." },
+      { status: 502 },
+    );
+  }
 
   if (!oddsResponse.ok) {
     return NextResponse.json(
@@ -390,7 +400,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "A schedule group could not be matched to a pool week.",
+            "A schedule group could not be matched to a scoring week.",
         },
         { status: 500 },
       );
@@ -398,15 +408,17 @@ export async function POST(request: NextRequest) {
 
     const lineLock = getLineLock(kickoff);
 
-    gamesToUpsert.push({
-      external_game_id: event.id,
-      scoring_period_id: period.id,
-      away_team_id: teamIdByName.get(event.away_team),
-      home_team_id: teamIdByName.get(event.home_team),
-      kickoff_at: event.commence_time,
-      line_lock_at: lineLock.lineLockAt,
-      is_international: lineLock.isInternational,
-    });
+    gamesToUpsert.push(
+      buildScheduleGame({
+        externalGameId: event.id,
+        scoringPeriodId: period.id,
+        awayTeamId: teamIdByName.get(event.away_team),
+        homeTeamId: teamIdByName.get(event.home_team),
+        kickoffAt: event.commence_time,
+        lineLockAt: lineLock.lineLockAt,
+        isInternational: lineLock.isInternational,
+      }),
+    );
   }
 
   const { data: savedGames, error: gameError } =

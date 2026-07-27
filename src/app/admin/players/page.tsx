@@ -170,7 +170,7 @@ export default function PlayerManagementPage() {
               </h1>
 
               <p className="mt-3 text-lg text-zinc-700">
-                Add each pool member and assign their private PIN. Use a last initial only when two players share a first name.
+                Add each player and assign their private PIN. Use a last initial only when two players share a first name.
             
               </p>
             </div>
@@ -203,7 +203,7 @@ export default function PlayerManagementPage() {
                 className="block text-sm font-bold tracking-wide"
                 htmlFor="firstName"
               >
-                NAME SHOWN IN POOL
+                NAME SHOWN IN STANDINGS
               </label>
 
               <input
@@ -275,7 +275,7 @@ PINs are unique login identifiers and may be viewed here at any time.
           <section>
             <div className="flex items-end justify-between gap-4">
               <h2 className="font-serif text-3xl font-bold">
-                Pool Members
+                Players
               </h2>
 
               <p className="text-sm font-bold text-slate-600">

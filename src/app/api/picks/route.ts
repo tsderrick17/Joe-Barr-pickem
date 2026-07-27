@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
   if (!player?.active) {
     return NextResponse.json(
-      { error: "Your player profile is not active in this pool." },
+      { error: "Your player profile is not active in this Pick'em." },
       { status: 403 },
     );
   }

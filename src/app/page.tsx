@@ -4,24 +4,25 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type LedgerPick = {
+type ScoreboardPick = {
   label: string | null;
   isHidden: boolean;
   resultMark: string;
 };
 
-type LedgerRow = {
+type ScoreboardRow = {
   id: string;
   firstName: string;
   wins: number;
-  picks: LedgerPick[];
+  picks: ScoreboardPick[];
 };
 
 type HomeData = {
   viewerPlayerId: string;
   week: string;
+  maxPicks: number;
   nextRevealAt: string | null;
-  rows: LedgerRow[];
+  rows: ScoreboardRow[];
   error?: string;
 };
 
@@ -31,45 +32,77 @@ export default function HomePage() {
 
   useEffect(() => {
     let revealTimer: number | null = null;
+    let activeRequest: AbortController | null = null;
+    let hasLoaded = false;
 
     async function loadHome() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const request = new AbortController();
+      let requestTimedOut = false;
+      const requestTimer = window.setTimeout(() => {
+        requestTimedOut = true;
+        request.abort();
+      }, 15_000);
 
-      if (!session) {
-        window.location.href = "/login";
-        return;
-      }
+      try {
+        activeRequest?.abort();
+        activeRequest = request;
 
-      const response = await fetch("/api/home", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      const result = (await response.json()) as HomeData;
+        if (!session) {
+          window.location.href = "/login";
+          return;
+        }
 
-      if (!response.ok) {
-        setErrorMessage(result.error ?? "The pool could not be loaded.");
-        return;
-      }
+        const response = await fetch("/api/home", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          signal: request.signal,
+        });
 
-      setData(result);
+        const result = (await response.json()) as HomeData;
 
-      if (revealTimer !== null) {
-        window.clearTimeout(revealTimer);
-      }
+        if (!response.ok) {
+          setErrorMessage(result.error ?? "The Standings could not be loaded.");
+          return;
+        }
 
-      if (result.nextRevealAt) {
-        const refreshDelay = Math.max(
-          250,
-          new Date(result.nextRevealAt).getTime() - Date.now() + 250,
-        );
+        setErrorMessage("");
+        setData(result);
+        hasLoaded = true;
 
-        revealTimer = window.setTimeout(() => {
-          void loadHome();
-        }, refreshDelay);
+        if (revealTimer !== null) {
+          window.clearTimeout(revealTimer);
+        }
+
+        if (result.nextRevealAt) {
+          const refreshDelay = Math.max(
+            250,
+            new Date(result.nextRevealAt).getTime() - Date.now() + 250,
+          );
+
+          revealTimer = window.setTimeout(() => {
+            void loadHome();
+          }, refreshDelay);
+        }
+      } catch {
+        if (request.signal.aborted && !requestTimedOut) {
+          return;
+        }
+
+        if (!hasLoaded) {
+          setErrorMessage(
+            "The Standings are taking too long to load. Please try again.",
+          );
+        }
+      } finally {
+        window.clearTimeout(requestTimer);
+        if (activeRequest === request) {
+          activeRequest = null;
+        }
       }
     }
 
@@ -92,6 +125,7 @@ export default function HomePage() {
       if (revealTimer !== null) {
         window.clearTimeout(revealTimer);
       }
+      activeRequest?.abort();
       window.removeEventListener("focus", refreshOnFocus);
     };
   }, []);
@@ -100,16 +134,26 @@ export default function HomePage() {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
   }, [data]);
 
-  const picksOwed = Math.max(0, 2 - (viewerRow?.picks.length ?? 0));
+  const maxPicks = data?.maxPicks ?? 2;
+  const picksOwed = Math.max(0, maxPicks - (viewerRow?.picks.length ?? 0));
   const viewerPicks =
     viewerRow?.picks
       .map((pick) => pick.label)
       .filter((label): label is string => Boolean(label)) ?? [];
 
+  const pickWord = (count: number) => (count === 1 ? "pick" : "picks");
+
   if (errorMessage) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
         <p className="font-semibold text-red-700">{errorMessage}</p>
+        <button
+          className="mt-5 bg-[#1d1d1f] px-5 py-3 font-bold text-white"
+          onClick={() => window.location.reload()}
+          type="button"
+        >
+          Try again
+        </button>
       </main>
     );
   }
@@ -117,7 +161,7 @@ export default function HomePage() {
   if (!data) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
-        Loading the pool...
+        Loading the Standings...
       </main>
     );
   }
@@ -158,9 +202,15 @@ export default function HomePage() {
                 </p>
               ) : null}
 
+              {picksOwed > 2 ? (
+                <p className="mt-2 text-slate-700">
+                  You still owe {picksOwed} {pickWord(picksOwed)} this week.
+                </p>
+              ) : null}
+
               {picksOwed === 0 ? (
                 <p className="mt-2 font-semibold text-green-800">
-                  Your two picks are submitted.
+                  Your {data.maxPicks} {pickWord(data.maxPicks)} {data.maxPicks === 1 ? "is" : "are"} submitted.
                 </p>
               ) : null}
 
@@ -199,13 +249,19 @@ export default function HomePage() {
           </div>
 
           <div className="mt-5 overflow-x-auto border-y-2 border-[#1d1d1f]">
-            <table className="w-full min-w-[650px] border-collapse text-left">
+            <table
+              className="w-full border-collapse text-left"
+              style={{ minWidth: `${Math.max(650, 240 + data.maxPicks * 140)}px` }}
+            >
               <thead>
                 <tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]">
                   <th className="w-20 px-3 py-3">WINS</th>
                   <th className="w-40 px-3 py-3">PLAYER</th>
-                  <th className="px-3 py-3">PICK 1</th>
-                  <th className="px-3 py-3">PICK 2</th>
+                  {Array.from({ length: data.maxPicks }, (_, index) => (
+                    <th className="px-3 py-3" key={index}>
+                      PICK {index + 1}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
@@ -232,7 +288,7 @@ export default function HomePage() {
 
                       </td>
 
-                      {[0, 1].map((pickNumber) => {
+                      {Array.from({ length: data.maxPicks }, (_, pickNumber) => {
                         const pick = row.picks[pickNumber];
 
                         return (
