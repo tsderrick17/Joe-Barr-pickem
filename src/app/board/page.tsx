@@ -585,14 +585,26 @@ export default function BoardPage() {
         ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
+          <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9">
             {survivorStatus === "active" && !isReadOnly ? (
-              <section className="border-2 border-[#1d1d1f] bg-white p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div><p className="text-[10px] font-black tracking-[0.14em] text-slate-600">SURVIVOR · STRAIGHT UP</p><h2 className="font-serif text-xl font-bold">Choose one outright winner</h2><p className="mt-1 text-xs font-semibold text-slate-600">Spreads do not apply. Tap a helmet.</p></div>
-                  <p className="text-right text-xs font-semibold text-slate-700">{survivorPick ? "Pick selected" : "No pick yet"}</p>
+              <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping p-3 sm:p-5">
+                <div className="border-b-4 border-double border-[#29251d] pb-2">
+                  <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:gap-3">
+                    <div>
+                      <p className="text-[9px] font-black tracking-[0.18em] text-[#554f43] sm:text-[10px]">JOE BARR MEMORIAL · SPORTS DESK</p>
+                      <h2 className="font-serif text-2xl font-black leading-none sm:text-3xl" id="survivor-wire-heading">The Survivor Wire</h2>
+                    </div>
+                    <p className="border border-[#29251d] px-2 py-1 text-right text-[9px] font-black uppercase tracking-[0.08em]">
+                      {survivorPick ? "Pick selected" : "No pick yet"}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex flex-col gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#554f43] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
+                    <p>Straight-up edition · {week.display_name}</p>
+                    <p>Spreads do not apply</p>
+                  </div>
+                  <p className="mt-2 font-serif text-base font-bold italic">Choose one outright winner. Tap a helmet to make the call.</p>
                 </div>
-                <div className="mt-3 divide-y border-y border-slate-400">
+                <div className="mt-3 divide-y divide-dashed divide-[#6f685a] border-y border-[#29251d]">
                   {games.map((game) => {
                     const gameHasStarted = new Date(game.kickoffAt) <= new Date();
                     const awaySelected = survivorPick?.teamId === game.awayTeamId;
@@ -601,14 +613,14 @@ export default function BoardPage() {
                     const homeUsed = survivorUsedTeamIds.includes(game.homeTeamId) && !homeSelected;
                     return (
                       <article className="py-2.5" key={game.id}>
-                        <p className="mb-1 text-center text-[10px] font-bold text-slate-500">{easternTime(game.kickoffAt)}</p>
+                        <p className="mb-1 text-center font-serif text-[10px] font-black uppercase tracking-[0.08em] text-[#554f43]">{easternTime(game.kickoffAt)}</p>
                         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
-                          <button aria-label={`Choose ${game.awayTeam} as your straight-up Survivor winner`} aria-pressed={awaySelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 text-xs font-bold sm:gap-2 sm:px-1.5 sm:text-sm ${awaySelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={awayUsed || gameHasStarted} onClick={() => setSurvivorPick(awaySelected ? null : { gameId: game.id, teamId: game.awayTeamId })} type="button">
+                          <button aria-label={`Choose ${game.awayTeam} as your straight-up Survivor winner`} aria-pressed={awaySelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${awaySelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={awayUsed || gameHasStarted} onClick={() => setSurvivorPick(awaySelected ? null : { gameId: game.id, teamId: game.awayTeamId })} type="button">
                             <HelmetIcon abbreviation={game.awayTeamAbbreviation} faces="right" />
                             <span><span className="block">{game.awayTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{awayUsed ? "USED" : gameHasStarted ? "STARTED" : "AWAY"}</span></span>
                           </button>
-                          <span className="text-[10px] font-black text-slate-500">VS</span>
-                          <button aria-label={`Choose ${game.homeTeam} as your straight-up Survivor winner`} aria-pressed={homeSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 text-xs font-bold sm:gap-2 sm:px-1.5 sm:text-sm ${homeSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={homeUsed || gameHasStarted} onClick={() => setSurvivorPick(homeSelected ? null : { gameId: game.id, teamId: game.homeTeamId })} type="button">
+                          <span className="font-serif text-[10px] font-black text-[#554f43]">VS</span>
+                          <button aria-label={`Choose ${game.homeTeam} as your straight-up Survivor winner`} aria-pressed={homeSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${homeSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={homeUsed || gameHasStarted} onClick={() => setSurvivorPick(homeSelected ? null : { gameId: game.id, teamId: game.homeTeamId })} type="button">
                             <span><span className="block">{game.homeTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{homeUsed ? "USED" : gameHasStarted ? "STARTED" : "HOME"}</span></span>
                             <HelmetIcon abbreviation={game.homeTeamAbbreviation} faces="left" />
                           </button>
@@ -623,7 +635,7 @@ export default function BoardPage() {
               return (
                 <section key={day}>
                   <div className="flex flex-col gap-1 border-b border-slate-400 pb-2 sm:flex-row sm:items-end sm:justify-between">
-                    <h2 className="font-bold tracking-[0.17em]">
+                    <h2 className="text-sm font-bold tracking-[0.1em] sm:text-base sm:tracking-[0.17em]">
                       {day.toUpperCase()}
                     </h2>
                   </div>

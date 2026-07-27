@@ -24,3 +24,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.newspaper-clipping {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid #29251d;
+  background-color: #f1ead7;
+  background-image:
+    radial-gradient(circle at 18% 24%, rgba(35, 31, 24, 0.08) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle at 72% 68%, rgba(35, 31, 24, 0.06) 0 0.6px, transparent 0.8px),
+    repeating-linear-gradient(0deg, rgba(76, 69, 56, 0.025) 0 1px, transparent 1px 4px);
+  background-size: 7px 7px, 9px 9px, auto;
+  box-shadow:
+    3px 4px 0 rgba(45, 40, 31, 0.18),
+    0 10px 22px rgba(45, 40, 31, 0.09);
+}
+
+.newspaper-clipping::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 5px solid rgba(255, 255, 255, 0.22);
+  content: "";
+  pointer-events: none;
+}
