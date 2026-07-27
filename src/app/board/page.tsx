@@ -126,11 +126,19 @@ const defaultHomeHelmetColors: Record<string, string> = {
   SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414",
 };
 
-function HelmetIcon({ abbreviation, faces }: { abbreviation: string; faces: "left" | "right" }) {
+function HelmetIcon({
+  abbreviation,
+  faces,
+  unavailable = false,
+}: {
+  abbreviation: string;
+  faces: "left" | "right";
+  unavailable?: boolean;
+}) {
   const flipped = faces === "left";
   const shellColor = defaultHomeHelmetColors[abbreviation] ?? "#ffffff";
   return (
-    <span aria-hidden="true" className={`relative block h-14 w-[4.5rem] shrink-0 ${flipped ? "-scale-x-100" : ""}`}>
+    <span aria-hidden="true" className={`relative block h-12 w-[3.9rem] shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale" : ""}`}>
       <span
         className="absolute inset-0"
         style={{
@@ -145,8 +153,38 @@ function HelmetIcon({ abbreviation, faces }: { abbreviation: string; faces: "lef
           WebkitMaskSize: "contain",
         }}
       />
-      <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={56} src="/helmet-newspaper-template.png" width={72} />
-      <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={28} src={teamLogoUrl(abbreviation)} width={28} />
+      <span
+        className="absolute inset-0"
+        style={{
+          backgroundColor: "#ffffff",
+          clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)",
+          maskImage: "url(/helmet-newspaper-template.png)",
+          maskPosition: "center",
+          maskRepeat: "no-repeat",
+          maskSize: "contain",
+          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
+          WebkitMaskPosition: "center",
+          WebkitMaskRepeat: "no-repeat",
+          WebkitMaskSize: "contain",
+        }}
+      />
+      <span
+        className="absolute inset-0"
+        style={{
+          backgroundColor: "#ffffff",
+          clipPath: "polygon(53% 29%, 100% 29%, 100% 62%, 69% 62%, 59% 53%, 52% 48%)",
+          maskImage: "url(/helmet-newspaper-template.png)",
+          maskPosition: "center",
+          maskRepeat: "no-repeat",
+          maskSize: "contain",
+          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
+          WebkitMaskPosition: "center",
+          WebkitMaskRepeat: "no-repeat",
+          WebkitMaskSize: "contain",
+        }}
+      />
+      <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={48} src="/helmet-newspaper-template.png" width={63} />
+      <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={24} src={teamLogoUrl(abbreviation)} width={24} />
     </span>
   );
 }
@@ -614,28 +652,15 @@ export default function BoardPage() {
                 </p>
               </section>
             ) : survivorStatus === "active" && !isReadOnly ? (
-              <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping p-3 sm:p-5">
-                <div className="border-b-4 border-double border-[#29251d] pb-2">
-                  <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:gap-3">
-                    <div>
-                      <p className="text-[9px] font-black tracking-[0.18em] text-[#554f43] sm:text-[10px]">JOE BARR MEMORIAL · SPORTS DESK</p>
-                      <h2 className="font-serif text-2xl font-black leading-none sm:text-3xl" id="survivor-wire-heading">The Survivor Wire</h2>
-                    </div>
-                    <p className="border border-[#29251d] px-2 py-1 text-right text-[9px] font-black uppercase tracking-[0.08em]">
-                      {survivorPick ? "Pick selected" : "No pick yet"}
-                    </p>
-                  </div>
-                  <div className="mt-2 flex flex-col gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#554f43] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
-                    <p>Straight-up edition · {week.display_name}</p>
-                    <p>Spreads do not apply</p>
-                  </div>
-                  <p className="mt-2 font-serif text-base font-bold italic">Choose one outright winner. Tap a helmet to make the call.</p>
+              <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping survivor-clipping p-2.5 sm:p-3">
+                <div className="flex items-center justify-between gap-3 border-b-2 border-[#1d1d1f] pb-1.5">
+                  <h2 className="font-serif text-xl font-black leading-none sm:text-2xl" id="survivor-wire-heading">The Survivor Wire</h2>
+                  <p className="text-right text-[9px] font-black uppercase tracking-[0.1em] text-[#29251d] sm:text-[10px]">Straight-up · {week.display_name}</p>
                 </div>
-                <div className="mt-3 divide-y divide-dashed divide-[#6f685a] border-y border-[#29251d]">
+                <div className="mt-2 divide-y divide-[#1d1d1f] border-y border-[#1d1d1f]">
                   {games.map((game) => {
                     const gameHasStarted = new Date(game.kickoffAt) <= new Date();
                     const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
-                    const hasFavorite = game.favoriteTeamId !== null;
                     const leftTeamId = favoriteIsHome ? game.homeTeamId : game.awayTeamId;
                     const leftTeamName = favoriteIsHome ? game.homeTeam : game.awayTeam;
                     const leftTeamAbbreviation = favoriteIsHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation;
@@ -646,18 +671,18 @@ export default function BoardPage() {
                     const rightSelected = survivorPick?.teamId === rightTeamId;
                     const leftUsed = survivorUsedTeamIds.includes(leftTeamId) && !leftSelected;
                     const rightUsed = survivorUsedTeamIds.includes(rightTeamId) && !rightSelected;
+                    const leftUnavailable = leftUsed || gameHasStarted;
+                    const rightUnavailable = rightUsed || gameHasStarted;
                     return (
-                      <article className="py-2.5" key={game.id}>
-                        <p className="mb-1 text-center font-serif text-[10px] font-black uppercase tracking-[0.08em] text-[#554f43]">{easternTime(game.kickoffAt)}</p>
-                        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
-                          <button aria-label={`Choose ${leftTeamName} as your straight-up Survivor winner`} aria-pressed={leftSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${leftSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={leftUsed || gameHasStarted} onClick={() => setSurvivorPick(leftSelected ? null : { gameId: game.id, teamId: leftTeamId })} type="button">
-                            <HelmetIcon abbreviation={leftTeamAbbreviation} faces="right" />
-                            <span><span className="block">{leftTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{leftUsed ? "USED" : gameHasStarted ? "STARTED" : hasFavorite ? "FAVORITE" : "AWAY"}</span></span>
+                      <article className="relative py-1" key={game.id}>
+                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${defaultHomeHelmetColors[leftTeamAbbreviation] ?? "#111111"} 0 50%, ${defaultHomeHelmetColors[rightTeamAbbreviation] ?? "#111111"} 50% 100%)` }} />
+                        <p className="sr-only">{easternTime(game.kickoffAt)}</p>
+                        <div className="grid grid-cols-2 divide-x divide-[#1d1d1f]">
+                          <button aria-label={`Choose ${leftTeamName} as your straight-up Survivor winner`} aria-pressed={leftSelected} className={`flex min-h-14 items-center justify-center px-2 py-1.5 transition ${leftSelected ? "bg-[#1d1d1f]" : "bg-white hover:bg-zinc-100"} disabled:cursor-not-allowed`} disabled={leftUnavailable} onClick={() => setSurvivorPick(leftSelected ? null : { gameId: game.id, teamId: leftTeamId })} title={leftUnavailable ? `${leftTeamName} is unavailable` : `Choose ${leftTeamName}`} type="button">
+                            <HelmetIcon abbreviation={leftTeamAbbreviation} faces="right" unavailable={leftUnavailable} />
                           </button>
-                          <span className="font-serif text-[10px] font-black text-[#554f43]">VS</span>
-                          <button aria-label={`Choose ${rightTeamName} as your straight-up Survivor winner`} aria-pressed={rightSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 font-serif text-xs font-black sm:gap-2 sm:px-1.5 sm:text-sm ${rightSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-[#6f685a] bg-[#eee7d2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]"}`} disabled={rightUsed || gameHasStarted} onClick={() => setSurvivorPick(rightSelected ? null : { gameId: game.id, teamId: rightTeamId })} type="button">
-                            <span><span className="block">{rightTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{rightUsed ? "USED" : gameHasStarted ? "STARTED" : hasFavorite ? "UNDERDOG" : "HOME"}</span></span>
-                            <HelmetIcon abbreviation={rightTeamAbbreviation} faces="left" />
+                          <button aria-label={`Choose ${rightTeamName} as your straight-up Survivor winner`} aria-pressed={rightSelected} className={`flex min-h-14 items-center justify-center px-2 py-1.5 transition ${rightSelected ? "bg-[#1d1d1f]" : "bg-white hover:bg-zinc-100"} disabled:cursor-not-allowed`} disabled={rightUnavailable} onClick={() => setSurvivorPick(rightSelected ? null : { gameId: game.id, teamId: rightTeamId })} title={rightUnavailable ? `${rightTeamName} is unavailable` : `Choose ${rightTeamName}`} type="button">
+                            <HelmetIcon abbreviation={rightTeamAbbreviation} faces="left" unavailable={rightUnavailable} />
                           </button>
                         </div>
                       </article>

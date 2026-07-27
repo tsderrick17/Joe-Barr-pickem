@@ -49,3 +49,12 @@ body {
   content: "";
   pointer-events: none;
 }
+
+.survivor-clipping {
+  background-color: #fafafa;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 4px);
+  box-shadow:
+    2px 3px 0 rgba(0, 0, 0, 0.18),
+    0 7px 16px rgba(0, 0, 0, 0.08);
+}
