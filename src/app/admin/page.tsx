@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import LineLockChecker from "@/components/line-lock-checker";
+import ScoreSyncChecker from "@/components/score-sync-checker";
 
 type Spread = {
   team: string;
@@ -212,6 +213,7 @@ export default function AdminPage() {
 </div>
         </header>
         <LineLockChecker />
+        <ScoreSyncChecker />
 
         <section className="mt-8 border-y-2 border-zinc-900 py-8">
           <h2 className="font-serif text-2xl font-bold">Odds Feed</h2>
