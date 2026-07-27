@@ -381,6 +381,21 @@ export default function BoardPage() {
       .filter(Boolean) as { gameId: string; name: string; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
+  const savedPickNames = useMemo(() => {
+    return savedPicks
+      .map((pick) => {
+        const game = games.find((item) => item.id === pick.gameId);
+        if (!game) return null;
+
+        return pick.teamId === game.homeTeamId
+          ? game.homeTeam
+          : pick.teamId === game.awayTeamId
+            ? game.awayTeam
+            : null;
+      })
+      .filter(Boolean) as string[];
+  }, [games, savedPicks]);
+
   const hasUnsavedChanges = useMemo(() => {
     const survivorChanged =
       survivorAvailable &&
@@ -637,6 +652,30 @@ export default function BoardPage() {
           </div>
 
         </header>
+
+        {savedPickNames.length ? (
+          <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950">
+            <p className="font-bold">
+              {isReadOnly
+                ? `Your ${week.display_name} picks`
+                : savedPickNames.length >= selectionLimit
+                  ? `Your ${week.display_name} picks are submitted.`
+                  : `Your ${week.display_name} pick is saved.`}
+            </p>
+            <p className="mt-1 text-sm font-semibold">
+              {savedPickNames.join(" · ")}
+            </p>
+            <p className="mt-1 text-sm">
+              {isReadOnly
+                ? "This week is final."
+                : hasUnsavedChanges
+                  ? "You have unsaved changes below."
+                  : savedPickNames.length >= selectionLimit
+                    ? "You may change them until their listed kickoff."
+                    : `Select and save ${selectionLimit - savedPickNames.length} more ${selectionLimit - savedPickNames.length === 1 ? "pick" : "picks"} to complete your entry.`}
+            </p>
+          </section>
+        ) : null}
 
         {errorMessage ? (
           <div className="mt-8">
