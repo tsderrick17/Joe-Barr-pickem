@@ -341,16 +341,16 @@ export default function BoardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f0e6] pb-56 text-[#171719]">
-      <div className="mx-auto max-w-5xl px-5 py-8 md:px-10">
-        <header className="border-b-2 border-[#1d1d1f] pb-6">
+    <main className="min-h-screen bg-[#f5f0e6] pb-48 text-[#171719] sm:pb-56">
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+        <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
 <div className="flex items-start justify-between gap-5">
   <div>
-    <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
+    <p className="text-xs font-bold tracking-[0.24em] text-slate-600 sm:text-sm sm:tracking-[0.28em]">
       JOE BARR MEMORIAL
     </p>
 
-    <h1 className="mt-2 font-serif text-4xl font-bold">
+    <h1 className="mt-1 font-serif text-3xl font-bold sm:mt-2 sm:text-4xl">
       The Board
     </h1>
   </div>
@@ -367,7 +367,7 @@ export default function BoardPage() {
   </div>
 </div>
 
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <label
                 className="block text-xs font-bold tracking-[0.16em] text-slate-600"
@@ -377,7 +377,7 @@ export default function BoardPage() {
               </label>
 
               <select
-                className="mt-2 border border-[#1d1d1f] bg-white px-3 py-2 font-semibold"
+                className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold sm:mt-2 sm:py-2"
                 id="week-selector"
                 onChange={chooseWeek}
                 value={week.id}
@@ -398,7 +398,7 @@ export default function BoardPage() {
             </p>
           </div>
 
-<div className="mt-5 text-sm leading-6 text-slate-700">
+<div className="mt-4 text-xs leading-5 text-slate-700 sm:mt-5 sm:text-sm sm:leading-6">
 <p>Official spreads posted at 8 AM on game day unless otherwise noted.</p>
 <p>Favorites are on the left. Home teams are in ALL CAPS.</p>
 <p>
@@ -411,7 +411,7 @@ export default function BoardPage() {
         {isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mt-8 space-y-9">
+          <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
             {gamesByDay.map(([day, dayGames]) => {
 
               return (
@@ -451,13 +451,13 @@ const gameHasStarted =
 
 return (
   <article                
-                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-400 py-4"
+                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-slate-400 py-2.5 sm:gap-3 sm:py-4"
                           key={game.id}
                         >
                           <button
-                            className={`text-left font-serif text-lg leading-tight md:text-xl ${
+                            className={`text-left font-serif text-base leading-tight sm:text-lg md:text-xl ${
                               isSelected(game.id, leftTeamId)
-                                ? "bg-[#1d1d1f] px-3 py-2 text-white"
+                                ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
                             }`}
                             disabled={isReadOnly || gameHasStarted}
@@ -467,9 +467,9 @@ return (
                             {teamLabel(leftTeamName, favoriteIsHome)}
                           </button>
 
-<div className="min-w-24 text-center text-xs font-bold leading-5 text-slate-700 md:min-w-36">
+<div className="min-w-20 text-center text-[11px] font-bold leading-4 text-slate-700 sm:min-w-24 sm:text-xs sm:leading-5 md:min-w-36">
   {game.officialSpread !== null ? (
-    <p className="font-serif text-xl font-bold text-zinc-900">
+    <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
       {officialSpreadLabel(game.officialSpread)}
     </p>
   ) : null}
@@ -485,9 +485,9 @@ return (
 </div>
 
                           <button
-                            className={`text-right font-serif text-lg leading-tight md:text-xl ${
+                            className={`text-right font-serif text-base leading-tight sm:text-lg md:text-xl ${
                               isSelected(game.id, rightTeamId)
-                                ? "bg-[#1d1d1f] px-3 py-2 text-white"
+                                ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
                             }`}
                             disabled={isReadOnly || gameHasStarted}
@@ -509,14 +509,14 @@ return (
 
       {!isReadOnly ? (
         <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
-          <div className="mx-auto max-w-5xl px-5 py-4 md:px-10">
+          <div className="mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="font-bold">
                   YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
                 </p>
 
-                <ol className="mt-2 space-y-1 text-sm text-slate-700">
+                <ol className="mt-1 space-y-0.5 text-xs text-slate-700 sm:mt-2 sm:space-y-1 sm:text-sm">
                   {selectedTeamNames.length ? (
                     selectedTeamNames.map((teamName, index) => (
                       <li key={`${teamName}-${index}`}>
@@ -550,7 +550,7 @@ return (
               </div>
 
               <button
-                className="min-h-12 bg-[#1d1d1f] px-6 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="min-h-10 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
                 disabled={selectedPicks.length < 1 || isSubmitting}
                 onClick={submitPicks}
                 type="button"
