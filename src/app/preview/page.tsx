@@ -191,7 +191,7 @@ function ResultMarker({ result }: { result: AtsResult }) {
   return (
     <strong
       aria-label={`Against the spread: ${result}`}
-      className={`ml-1 text-base font-black ${
+      className={`absolute right-0 -top-3 text-sm font-black leading-none sm:text-base ${
         result === "win" ? "text-green-700" : "text-red-700"
       }`}
     >
@@ -421,10 +421,12 @@ export default function PreviewPage() {
                       onClick={() => chooseAts(index, "left")}
                       type="button"
                     >
-                      {game.leftTeam}
-                      {atsPicks[index] === "left" ? (
-                        <ResultMarker result={scenario.atsResults[index]} />
-                      ) : null}
+                      <span className="relative inline-block pr-3">
+                        {game.leftTeam}
+                        {atsPicks[index] === "left" ? (
+                          <ResultMarker result={scenario.atsResults[index]} />
+                        ) : null}
+                      </span>
                     </button>
                     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
                       <strong className={`block font-mono text-sm sm:text-base ${scenarioKey === "pending" ? "text-zinc-900" : "text-teal-700"}`}>
@@ -442,10 +444,12 @@ export default function PreviewPage() {
                       onClick={() => chooseAts(index, "right")}
                       type="button"
                     >
-                      {game.rightTeam}
-                      {atsPicks[index] === "right" ? (
-                        <ResultMarker result={scenario.atsResults[index]} />
-                      ) : null}
+                      <span className="relative inline-block pr-3">
+                        {game.rightTeam}
+                        {atsPicks[index] === "right" ? (
+                          <ResultMarker result={scenario.atsResults[index]} />
+                        ) : null}
+                      </span>
                     </button>
                   </article>
                 );
@@ -460,7 +464,7 @@ export default function PreviewPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.12em]">
-                  {isEditable ? "Shared save preview" : "Read-only receipt"}
+                  {isEditable ? "Shared save preview" : "Full slate · read only"}
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   {selectedAtsCount} of {games.length} ATS picks ·{" "}
