@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { shouldRevealPick } from "@/lib/pick-visibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -184,9 +185,13 @@ export async function GET(request: NextRequest) {
         .map((pick) => {
           const game = gameById.get(pick.game_id);
 
-          const visible =
-            player.id === viewer.id ||
-            (game ? new Date(game.kickoff_at) <= new Date() : false);
+          const visible = shouldRevealPick(
+            {
+              viewerPlayerId: viewer.id,
+              pickPlayerId: player.id,
+              kickoffAt: game?.kickoff_at,
+            },
+          );
 
           let resultMark = "";
 
