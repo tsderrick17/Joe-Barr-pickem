@@ -117,7 +117,7 @@ function resultMarker(result: "win" | "loss" | null) {
   return (
     <strong
       aria-label={`Against the spread: ${result}`}
-      className={`ml-1 inline-block text-sm font-black leading-none sm:text-base ${
+      className={`relative -top-px ml-0.5 inline-block text-sm font-black leading-none sm:text-base ${
         result === "win" ? "text-green-700" : "text-red-700"
       }`}
     >
@@ -835,12 +835,12 @@ export default function BoardPage() {
                           >
                             <span className="inline-block">
                               {teamLabel(leftTeamName, favoriteIsHome)}
+                              {gameIsFinal ? resultMarker(leftTeamResult) : null}
                               {gameIsFinal && leftTeamScore !== null ? (
                                 <span className="ml-1 font-mono font-black tabular-nums">
                                   {leftTeamScore}
                                 </span>
                               ) : null}
-                              {gameIsFinal ? resultMarker(leftTeamResult) : null}
                             </span>
                             {gameHasStarted && leftPickers.length ? (
                               <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, leftTeamId) ? "text-slate-200" : "text-slate-600"}`}>
@@ -878,12 +878,12 @@ export default function BoardPage() {
                           >
                             <span className="inline-block">
                               {teamLabel(rightTeamName, !favoriteIsHome)}
+                              {gameIsFinal ? resultMarker(rightTeamResult) : null}
                               {gameIsFinal && rightTeamScore !== null ? (
                                 <span className="ml-1 font-mono font-black tabular-nums">
                                   {rightTeamScore}
                                 </span>
                               ) : null}
-                              {gameIsFinal ? resultMarker(rightTeamResult) : null}
                             </span>
                             {gameHasStarted && rightPickers.length ? (
                               <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, rightTeamId) ? "text-slate-200" : "text-slate-600"}`}>

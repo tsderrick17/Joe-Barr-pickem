@@ -136,7 +136,7 @@ function resultFor(game: RehearsalGame, side: Side, showFinal: boolean): Result 
 
 function ResultMark({ result }: { result: Result }) {
   if (!result) return null;
-  return <strong className={result === "win" ? "ml-1 text-green-700" : "ml-1 text-red-700"}>{result === "win" ? "W" : "L"}</strong>;
+  return <strong className={`relative -top-px ml-0.5 inline-block ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
 }
 
 export default function PreviewPage() {
@@ -207,7 +207,7 @@ export default function PreviewPage() {
 }
 
 function TeamCell({ team, score, result, pickers, align }: { team: string; score: number | null; result: Result; pickers: string[]; align: "left" | "right" }) {
-  return <div className={`min-w-0 ${align === "right" ? "text-right" : "text-left"}`}><p className="text-sm font-bold leading-tight sm:text-base">{team}{score !== null ? <span className="ml-2 font-mono">{score}</span> : null}<ResultMark result={result} /></p>{pickers.length ? <p className="mt-1 text-[11px] leading-4 text-slate-600">Picked by {pickers.join(", ")}</p> : null}</div>;
+  return <div className={`min-w-0 ${align === "right" ? "text-right" : "text-left"}`}><p className="text-sm font-bold leading-tight sm:text-base">{team}<ResultMark result={result} />{score !== null ? <span className="ml-1 font-mono">{score}</span> : null}</p>{pickers.length ? <p className="mt-1 text-[11px] leading-4 text-slate-600">Picked by {pickers.join(", ")}</p> : null}</div>;
 }
 
 function WeekReceipt({ name }: { name: string }) {
