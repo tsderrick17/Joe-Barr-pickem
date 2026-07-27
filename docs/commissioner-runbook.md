@@ -30,6 +30,7 @@
    - `supabase/025_store_game_finalization_times.sql`
    - `supabase/026_replace_unlocked_picks_atomically.sql`
    - `supabase/027_add_survivor_pick_integrity.sql`
+   - `supabase/028_save_slate_selections_atomically.sql`
 
 ## Weekly dress rehearsal
 
@@ -69,4 +70,4 @@ If a final score appears missing:
 - A player selects one straight-up winner per scoring period and cannot reuse a team.
 - A Survivor pick can be changed or cleared until its game's kickoff.
 - Final scores are evaluated by the existing final-score job. A loss or tie eliminates the entry.
-- Run `supabase/027_add_survivor_pick_integrity.sql` before publishing Survivor. It adds the server-side safeguards and automatic enrollment function.
+- Run `supabase/027_add_survivor_pick_integrity.sql` and `supabase/028_save_slate_selections_atomically.sql` before publishing Survivor. Together they add server-side safeguards, automatic enrollment, atomic Slate saves, and a submission audit trail.

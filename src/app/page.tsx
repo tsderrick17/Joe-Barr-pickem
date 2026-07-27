@@ -168,14 +168,14 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
-      <div className="mx-auto max-w-5xl px-5 py-8 md:px-10">
-        <header className="border-b-2 border-[#1d1d1f] pb-6">
-          <h1 className="font-serif text-4xl font-bold md:text-5xl">
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+        <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
+          <h1 className="font-serif text-3xl font-bold sm:text-4xl md:text-5xl">
             Lead Pipe Locks
           </h1>
         </header>
 
-        <section className="border-b-2 border-[#1d1d1f] py-6">
+        <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
@@ -227,7 +227,7 @@ export default function HomePage() {
             </div>
 
             <Link
-              className="inline-block bg-[#1d1d1f] px-6 py-3 text-center font-bold text-white"
+              className="inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white sm:px-6"
               href="/board"
             >
               Go to The Slate
@@ -235,7 +235,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-7">
+        <section className="py-6 sm:py-7">
           <div className="flex items-end justify-between gap-4">
             <h2 className="font-serif text-2xl font-bold sm:text-3xl">
               Picks revealed to others at Kickoff
@@ -323,14 +323,13 @@ export default function HomePage() {
 
         </section>
 
-        <section className="border-t-2 border-[#1d1d1f] py-7">
+        <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
           <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
             SURVIVOR
           </p>
 
-          <p className="mt-3 text-slate-700">
-            Survivor standings will appear here when Survivor is activated.
-          </p>
+          <p className="mt-3 text-slate-700">Choose and manage your Survivor pick alongside your ATS picks on The Slate.</p>
+          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/board">Open The Slate</Link>
         </section>
       </div>
     </main>

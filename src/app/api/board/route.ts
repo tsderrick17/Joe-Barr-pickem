@@ -34,6 +34,8 @@ type GameRow = {
   home_score: number | null;
 };
 
+type SurvivorPickRow = { game_id: string; selected_team_id: string };
+
 function atsResultForTeam(
   game: GameRow,
   lockedLine: LockedLineRow | undefined,
@@ -108,7 +110,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const [gamesResult, picksResult] = await Promise.all([
+  const [gamesResult, picksResult, periodResult] = await Promise.all([
     supabaseAdmin
       .from("games")
       .select(
@@ -122,10 +124,16 @@ export async function GET(request: NextRequest) {
       .eq("player_id", player.id)
       .eq("scoring_period_id", scoringPeriodId)
       .order("submitted_at"),
+    supabaseAdmin
+      .from("scoring_periods")
+      .select("season_id")
+      .eq("id", scoringPeriodId)
+      .maybeSingle(),
   ]);
 
   const { data: games, error: gamesError } = gamesResult;
   const { data: myPicks, error: picksError } = picksResult;
+  const { data: period, error: periodError } = periodResult;
 
   if (gamesError || !games) {
     return NextResponse.json(
@@ -134,11 +142,36 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (picksError) {
+  if (picksError || periodError || !period) {
     return NextResponse.json(
       { error: "Your submitted picks could not be loaded." },
       { status: 500 },
     );
+  }
+
+  const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
+    target_season_id: period.season_id,
+  });
+  if (ensuredEntries.error) {
+    return NextResponse.json({ error: "Survivor entries could not be prepared." }, { status: 500 });
+  }
+
+  const { data: survivorEntry, error: survivorEntryError } = await supabaseAdmin
+    .from("survivor_entries")
+    .select("id, status")
+    .eq("player_id", player.id)
+    .eq("season_id", period.season_id)
+    .maybeSingle();
+  if (survivorEntryError || !survivorEntry) {
+    return NextResponse.json({ error: "Your Survivor entry could not be loaded." }, { status: 500 });
+  }
+
+  const [{ data: survivorPicks, error: survivorPicksError }, { data: usedSurvivorPicks, error: usedSurvivorPicksError }] = await Promise.all([
+    supabaseAdmin.from("survivor_picks").select("game_id, selected_team_id").eq("survivor_entry_id", survivorEntry.id).eq("scoring_period_id", scoringPeriodId).maybeSingle(),
+    supabaseAdmin.from("survivor_picks").select("selected_team_id").eq("survivor_entry_id", survivorEntry.id),
+  ]);
+  if (survivorPicksError || usedSurvivorPicksError) {
+    return NextResponse.json({ error: "Your Survivor selection could not be loaded." }, { status: 500 });
   }
 
   const teamIds = [
@@ -257,5 +290,10 @@ export async function GET(request: NextRequest) {
       gameId: pick.game_id,
       teamId: pick.selected_team_id,
     })),
+    survivor: {
+      status: survivorEntry.status,
+      pick: survivorPicks as SurvivorPickRow | null,
+      usedTeamIds: (usedSurvivorPicks ?? []).map((pick) => pick.selected_team_id),
+    },
   });
 }

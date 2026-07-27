@@ -38,6 +38,7 @@ type SelectedPick = {
 type BoardResponse = {
   games: BoardGame[];
   myPicks: SelectedPick[];
+  survivor: { status: "active" | "eliminated" | "complete"; pick: { game_id: string; selected_team_id: string } | null; usedTeamIds: string[] };
   error?: string;
 };
 
@@ -102,6 +103,10 @@ export default function BoardPage() {
   const [games, setGames] = useState<BoardGame[]>([]);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
+  const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
+  const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
+  const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
+  const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -145,6 +150,10 @@ export default function BoardPage() {
       setGames(data.games);
       setSelectedPicks(data.myPicks);
       setSavedPicks(data.myPicks);
+      setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
+      setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
+      setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
+      setSurvivorStatus(data.survivor.status);
     } catch {
       if (requestId === boardRequestId.current) {
         setErrorMessage("The Slate is taking too long to load. Please try again.");
@@ -252,6 +261,8 @@ export default function BoardPage() {
   }, [games, selectedPicks]);
 
   const hasUnsavedChanges = useMemo(() => {
+    const survivorChanged = survivorPick?.gameId !== savedSurvivorPick?.gameId || survivorPick?.teamId !== savedSurvivorPick?.teamId;
+    if (survivorChanged) return true;
     if (selectedPicks.length !== savedPicks.length) return true;
 
     return selectedPicks.some(
@@ -261,7 +272,7 @@ export default function BoardPage() {
             savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
         ),
     );
-  }, [savedPicks, selectedPicks]);
+  }, [savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -395,6 +406,7 @@ export default function BoardPage() {
         body: JSON.stringify({
           scoringPeriodId: week.id,
           selections: selectedPicks,
+          survivorSelection: survivorPick,
         }),
         signal: request.signal,
       });
@@ -413,6 +425,7 @@ export default function BoardPage() {
 
       setSubmissionMessage(data.message ?? "Your picks have been saved.");
       setSavedPicks(selectedPicks);
+      setSavedSurvivorPick(survivorPick);
     } catch {
       setSelectionWarning(
         "Your picks are taking too long to save. Please try again.",
@@ -530,6 +543,25 @@ export default function BoardPage() {
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
           <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
+            {survivorStatus === "active" && !isReadOnly ? (
+              <section className="border-2 border-[#1d1d1f] bg-white p-3 sm:p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div><p className="text-[10px] font-black tracking-[0.14em] text-slate-600">SURVIVOR</p><h2 className="font-serif text-xl font-bold">Choose one outright winner</h2></div>
+                  <p className="text-right text-xs font-semibold text-slate-700">{survivorPick ? "Pick selected" : "No pick yet"}</p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {games.flatMap((game) => [
+                    { gameId: game.id, teamId: game.awayTeamId, name: game.awayTeam },
+                    { gameId: game.id, teamId: game.homeTeamId, name: game.homeTeam },
+                  ]).map((team) => {
+                    const selected = survivorPick?.teamId === team.teamId;
+                    const used = survivorUsedTeamIds.includes(team.teamId) && !selected;
+                    const gameHasStarted = new Date(games.find((game) => game.id === team.gameId)?.kickoffAt ?? 0) <= new Date();
+                    return <button aria-pressed={selected} className={`min-h-11 border px-2 text-sm font-bold disabled:opacity-40 ${selected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={used || gameHasStarted} key={`${team.gameId}-${team.teamId}`} onClick={() => setSurvivorPick(selected ? null : { gameId: team.gameId, teamId: team.teamId })} type="button">◖ {team.name} {used ? "USED" : gameHasStarted ? "STARTED" : ""}</button>;
+                  })}
+                </div>
+              </section>
+            ) : null}
             {gamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
@@ -573,7 +605,7 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-slate-400 py-2.5 sm:gap-3 sm:py-4"
+                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-slate-400 py-2 sm:gap-3 sm:py-3"
                           key={game.id}
                         >
                           <button
@@ -592,32 +624,32 @@ export default function BoardPage() {
                             </span>
                           </button>
 
-                          <div className="min-w-20 text-center text-[11px] font-bold leading-4 text-slate-700 sm:min-w-24 sm:text-xs sm:leading-5 md:min-w-36">
+                          <div className="min-w-20 text-center text-[10px] font-bold leading-4 text-slate-700 sm:min-w-28 sm:text-xs md:min-w-36">
                             {game.officialSpread !== null ? (
-                              <div>
-                                <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
+                              <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
+                                <span className="font-serif text-base font-bold text-zinc-900 sm:text-lg">
                                   {officialSpreadLabel(game.officialSpread)}
-                                </p>
-                                <p className="text-[9px] font-black tracking-[0.12em] text-green-800 sm:text-[10px]">
-                                  OFFICIAL
-                                </p>
+                                </span>
+                                <span className="text-[8px] font-black tracking-[0.08em] text-green-800 sm:text-[9px]">
+                                  FINAL
+                                </span>
                               </div>
                             ) : game.preliminarySpread !== null ? (
-                              <div>
-                                <p className="font-serif text-lg font-bold text-amber-900 sm:text-xl">
+                              <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
+                                <span className="font-serif text-base font-bold text-amber-900 sm:text-lg">
                                   {officialSpreadLabel(game.preliminarySpread)}
-                                </p>
-                                <p className="text-[9px] font-black tracking-[0.12em] text-amber-800 sm:text-[10px]">
-                                  PRELIMINARY
-                                </p>
+                                </span>
+                                <span className="text-[8px] font-black tracking-[0.08em] text-amber-800 sm:text-[9px]">
+                                  PRELIM
+                                </span>
                               </div>
                             ) : (
-                              <p className="text-[9px] font-black tracking-[0.12em] text-slate-500 sm:text-[10px]">
+                              <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">
                                 LINE PENDING
                               </p>
                             )}
 
-                            <p>{easternTime(game.kickoffAt)}</p>
+                            <p className="whitespace-nowrap">{easternTime(game.kickoffAt)}</p>
 
                             {isEarlyGame(game) && !isReadOnly ? (
                               <p className="mt-1">
@@ -657,20 +689,20 @@ export default function BoardPage() {
         <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
           <div className="mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="font-bold">
+              <div className="min-w-0">
+                <p className="text-[11px] font-black tracking-[0.14em] text-slate-600">
                   YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
                 </p>
 
-                <ol className="mt-1 space-y-0.5 text-xs text-slate-700 sm:mt-2 sm:space-y-1 sm:text-sm">
+                <ol className="mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm">
                   {selectedTeamNames.length ? (
                     selectedTeamNames.map((teamName, index) => (
-                      <li key={`${teamName}-${index}`}>
+                      <li className="border border-slate-400 bg-white px-2 py-1" key={`${teamName}-${index}`}>
                         {index + 1}. {teamName}
                       </li>
                     ))
                   ) : (
-                    <li>Click a team above to make a selection.</li>
+                    <li>Tap teams above to make your selections.</li>
                   )}
                 </ol>
 
@@ -695,10 +727,10 @@ export default function BoardPage() {
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 {undoablePicks.length > 0 ? (
                   <button
-                    className="min-h-10 border-2 border-red-800 bg-red-700 px-5 text-sm font-bold text-white hover:bg-red-800 sm:min-h-12 sm:px-6 sm:text-base"
+                    className="min-h-11 border-2 border-red-800 bg-red-700 px-4 text-sm font-bold text-white hover:bg-red-800 sm:min-h-12 sm:px-6 sm:text-base"
                     onClick={clearLastSelection}
                     type="button"
                   >
@@ -707,13 +739,13 @@ export default function BoardPage() {
                 ) : null}
 
                 {hasUnsavedChanges ? (
-                  <p className="mt-2 text-sm font-bold text-amber-800">
+                  <p className="text-xs font-bold text-amber-800 sm:text-sm">
                     Unsaved changes
                   </p>
                 ) : null}
 
                 <button
-                  className="min-h-10 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
+                  className="min-h-11 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
                   disabled={isSubmitting}
                   onClick={submitPicks}
                   type="button"
