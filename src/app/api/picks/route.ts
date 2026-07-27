@@ -254,10 +254,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const message =
-    selections.length === 1
-      ? "Your first pick has been saved. You still owe one pick this week."
-      : "Your two picks have been saved.";
+const message =
+  selections.length === 1
+    ? "Your first pick has been saved."
+    : "Your two picks have been saved.";
 
   return NextResponse.json({ message });
 }

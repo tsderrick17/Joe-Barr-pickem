@@ -9,6 +9,7 @@ type ScoringPeriod = {
   display_name: string;
   display_order: number;
   status: "upcoming" | "active" | "complete";
+  period_type: "regular" | "playoff";
 };
 
 type BoardGame = {
@@ -102,7 +103,7 @@ export default function BoardPage() {
 
       const { data: periods, error: periodsError } = await supabase
         .from("scoring_periods")
-        .select("id, display_name, display_order, status")
+.select("id, display_name, display_order, status, period_type")
         .eq("season_id", season.id)
         .eq("period_type", "regular")
         .order("display_order");
@@ -289,7 +290,10 @@ export default function BoardPage() {
                 The Board
               </h1>
               <p className="mt-3 text-lg">
-                {week.display_name} · Choose up to two teams.
+{week.display_name} ·{" "}
+{week.period_type === "playoff"
+  ? "Choose every game."
+  : "Choose 2 teams."}
               </p>
             </div>
 
@@ -413,11 +417,19 @@ export default function BoardPage() {
                 </p>
               ) : null}
 
-              {submissionMessage ? (
-                <p className="mt-2 font-semibold text-green-800">
-                  {submissionMessage}
-                </p>
-              ) : null}
+{submissionMessage ? (
+  <div className="mt-2">
+    <p className="font-semibold text-green-800">
+      {submissionMessage}
+    </p>
+
+    {selectedPicks.length === 1 ? (
+      <p className="mt-1 text-sm font-semibold text-slate-700">
+        You still owe one pick this week.
+      </p>
+    ) : null}
+  </div>
+) : null}
             </div>
 
             <button

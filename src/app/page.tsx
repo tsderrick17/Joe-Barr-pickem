@@ -9,90 +9,148 @@ type Player = {
   is_commissioner: boolean;
 };
 
-export default function Home() {
+type ScoringPeriod = {
+  display_name: string;
+  status: "upcoming" | "active" | "complete";
+};
+
+export default function HomePage() {
   const [player, setPlayer] = useState<Player | null>(null);
+  const [week, setWeek] = useState<ScoringPeriod | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadPlayer() {
+    async function loadHome() {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!user) {
-        setIsLoading(false);
+      if (!session) {
+        window.location.href = "/login";
         return;
       }
 
-      const { data } = await supabase
+      const { data: profile } = await supabase
         .from("players")
         .select("first_name, is_commissioner")
-        .eq("auth_user_id", user.id)
+        .eq("auth_user_id", session.user.id)
         .maybeSingle();
 
-      setPlayer(data);
+      setPlayer(profile);
+
+      const { data: season } = await supabase
+        .from("seasons")
+        .select("id")
+        .eq("year", 2026)
+        .maybeSingle();
+
+      if (season) {
+        const { data: periods } = await supabase
+          .from("scoring_periods")
+          .select("display_name, status, display_order")
+          .eq("season_id", season.id)
+          .eq("period_type", "regular")
+          .order("display_order");
+
+        const currentWeek =
+          periods?.find((period) => period.status === "active") ??
+          periods?.find((period) => period.status === "upcoming") ??
+          null;
+
+        setWeek(currentWeek ?? null);
+      }
+
       setIsLoading(false);
     }
 
-    loadPlayer();
+    void loadHome();
   }, []);
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    setPlayer(null);
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
+        Loading the pool…
+      </main>
+    );
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3e8] px-6 py-10 text-zinc-900">
-      <div className="mx-auto max-w-4xl">
-        <header className="flex items-start justify-between gap-4 border-b-2 border-zinc-900 pb-6">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.2em] text-zinc-600">
-              JOE BARR MEMORIAL
-            </p>
+    <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
+      <div className="mx-auto max-w-5xl px-6 py-10 md:px-10 md:py-14">
+        <header className="border-b-2 border-[#1d1d1f] pb-8">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
+                JOE BARR MEMORIAL
+              </p>
 
-            <h1 className="mt-2 font-serif text-4xl font-bold">
-              Best Bets Pick&apos;em
-            </h1>
+              <h1 className="mt-3 font-serif text-4xl font-bold md:text-5xl">
+                Best Bets Pick&apos;em
+              </h1>
 
-            <p className="mt-2 text-zinc-700">
-              Honor the tradition. Eliminate the paperwork.
-            </p>
-          </div>
-
-          {!isLoading && player ? (
-            <div className="text-right">
-              <p className="font-bold">{player.first_name}</p>
-              {player.is_commissioner && (
-                <p className="text-sm text-zinc-600">Commissioner</p>
-              )}
-              <button
-                className="mt-2 text-sm font-semibold underline"
-                onClick={signOut}
-              >
-                Sign out
-              </button>
+              <p className="mt-4 text-lg">
+                Honor the tradition. Eliminate the paperwork.
+              </p>
             </div>
-          ) : !isLoading ? (
-            <Link className="font-semibold underline" href="/login">
-              Sign in
-            </Link>
-          ) : null}
+
+            {player?.is_commissioner ? (
+              <Link className="pt-2 font-bold underline" href="/admin">
+                Commissioner
+              </Link>
+            ) : null}
+          </div>
         </header>
 
-        <section className="mt-8">
-          <h2 className="font-serif text-2xl font-bold">Standings</h2>
-          <p className="mt-2 text-zinc-600">No season loaded.</p>
+        <section className="border-b-2 border-[#1d1d1f] py-8">
+          <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
+            YOUR WEEK
+          </p>
+
+          <h2 className="mt-2 font-serif text-3xl font-bold">
+            {week?.display_name ?? "Current Week"}
+          </h2>
+
+          <p className="mt-3 text-lg">
+            {player?.first_name
+              ? `${player.first_name}, make one pick now or save both at once.`
+              : "Make your picks for the week."}
+          </p>
+
+          <Link
+            className="mt-6 inline-block bg-[#1d1d1f] px-6 py-3 font-bold text-white"
+            href="/board"
+          >
+            Go to The Board
+          </Link>
         </section>
 
-        <section className="mt-8">
-          <h2 className="font-serif text-2xl font-bold">Current Week Picks</h2>
-          <p className="mt-2 text-zinc-600">No games available.</p>
+        <section className="border-b-2 border-[#1d1d1f] py-8">
+          <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
+            STANDINGS
+          </p>
+
+          <h2 className="mt-2 font-serif text-3xl font-bold">
+            Season standings
+          </h2>
+
+          <p className="mt-3 text-lg text-slate-700">
+            Standings will update automatically as games become final.
+          </p>
         </section>
 
-        <section className="mt-8 border-t-2 border-zinc-900 pt-8">
-          <h2 className="font-serif text-2xl font-bold">Survivor</h2>
-          <p className="mt-2 text-zinc-600">No survivor entries.</p>
+        <section className="py-8">
+          <p className="text-sm font-bold tracking-[0.2em] text-slate-600">
+            SURVIVOR
+          </p>
+
+          <h2 className="mt-2 font-serif text-3xl font-bold">
+            Regular-season Survivor
+          </h2>
+
+          <p className="mt-3 text-lg text-slate-700">
+            Survivor will be added after the weekly Pick&apos;em flow is fully
+            tested.
+          </p>
         </section>
       </div>
     </main>

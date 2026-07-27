@@ -48,6 +48,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { data: player } = await supabaseAdmin
+    .from("players")
+    .select("id, active")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (!player || !player.active) {
+    return NextResponse.json(
+      { error: "Your player profile is not active in this pool." },
+      { status: 403 },
+    );
+  }
+
   const { data: games, error: gamesError } = await supabaseAdmin
     .from("games")
     .select(
@@ -59,6 +72,19 @@ export async function GET(request: NextRequest) {
   if (gamesError || !games) {
     return NextResponse.json(
       { error: "The games for this week could not be loaded." },
+      { status: 500 },
+    );
+  }
+
+  const { data: myPicks, error: picksError } = await supabaseAdmin
+    .from("picks")
+    .select("game_id, selected_team_id")
+    .eq("player_id", player.id)
+    .eq("scoring_period_id", scoringPeriodId);
+
+  if (picksError) {
+    return NextResponse.json(
+      { error: "Your submitted picks could not be loaded." },
       { status: 500 },
     );
   }
@@ -119,6 +145,10 @@ export async function GET(request: NextRequest) {
       favoriteTeamId: favoriteTeamByGameId.get(game.id) ?? null,
       awayTeamId: game.away_team_id,
       homeTeamId: game.home_team_id,
+    })),
+    myPicks: (myPicks ?? []).map((pick) => ({
+      gameId: pick.game_id,
+      teamId: pick.selected_team_id,
     })),
   });
 }
