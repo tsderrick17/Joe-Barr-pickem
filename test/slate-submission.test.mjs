@@ -46,3 +46,25 @@ test("rejects a team that is not in its selected game", () => {
   });
   assert.match(result.error, /does not belong/);
 });
+
+test("treats kickoff as locked and never replaces the existing selection", () => {
+  const result = prepareAtsReplacements({
+    selections: [{ gameId: "early", teamId: "a" }],
+    existingPicks: [{ game_id: "early", selected_team_id: "a" }],
+    games,
+    now: new Date("2026-09-13T17:00:00Z"),
+  });
+
+  assert.deepEqual(result, { replacements: [] });
+});
+
+test("rejects adding a selection once that game reaches kickoff", () => {
+  const result = prepareAtsReplacements({
+    selections: [{ gameId: "early", teamId: "a" }],
+    existingPicks: [],
+    games,
+    now: new Date("2026-09-13T17:00:00Z"),
+  });
+
+  assert.match(result.error, /already started/);
+});

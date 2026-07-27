@@ -136,7 +136,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
-  const body = (await request.json()) as { gameId?: string; teamId?: string };
+  let body: { gameId?: string; teamId?: string };
+
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json(
+      { error: "Your Survivor submission was incomplete." },
+      { status: 400 },
+    );
+  }
   const replacementPick = body.gameId && body.teamId
     ? { game_id: body.gameId, selected_team_id: body.teamId }
     : null;

@@ -19,7 +19,20 @@ export async function POST(request: NextRequest) {
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
 
-  const body = (await request.json()) as { scoringPeriodId?: string; selections?: Selection[]; survivorSelection?: Selection | null };
+  let body: {
+    scoringPeriodId?: string;
+    selections?: Selection[];
+    survivorSelection?: Selection | null;
+  };
+
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json(
+      { error: "Your pick submission was incomplete." },
+      { status: 400 },
+    );
+  }
   const scoringPeriodId = body.scoringPeriodId;
   const selections = body.selections;
   const includesSurvivor = Object.hasOwn(body, "survivorSelection");
