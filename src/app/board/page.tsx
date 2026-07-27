@@ -105,7 +105,6 @@ function easternShortDate(value: string) {
 function easternLockLabel(value: string) {
   const date = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
-    weekday: "short",
     month: "numeric",
     day: "numeric",
   }).format(new Date(value));
@@ -820,7 +819,7 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_3.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:gap-3 ${index % 2 === 1 ? "bg-[#fcfaf5]" : "bg-[#fffdf8]"}`}
+                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 ${index % 2 === 1 ? "bg-[#fcfaf5]" : "bg-[#fffdf8]"}`}
                           key={game.id}
                         >
                           <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
@@ -870,7 +869,7 @@ export default function BoardPage() {
                                 AWAITING LINE
                               </p>
                             )}
-                            {game.isInternational ? <p className="mt-1 text-[8px] font-black leading-3 tracking-[0.06em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
+                            {game.isInternational ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
 
                           </div>
 
