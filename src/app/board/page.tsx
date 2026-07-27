@@ -104,15 +104,38 @@ function teamLogoUrl(abbreviation: string) {
   return `/team-logos/${abbreviation}.png`;
 }
 
+const defaultHomeHelmetColors: Record<string, string> = {
+  ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff",
+  CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00",
+  DAL: "#b0b7bc", DEN: "#0a2343", DET: "#b0b7bc", GB: "#ffb612",
+  HOU: "#03202f", IND: "#ffffff", JAX: "#111111", KC: "#e31837",
+  LV: "#a5acaf", LAC: "#ffffff", LAR: "#003594", MIA: "#ffffff",
+  MIN: "#4f2683", NE: "#c5c9cc", NO: "#d3bc8d", NYG: "#0b2265",
+  NYJ: "#125740", PHI: "#004c54", PIT: "#111111", SEA: "#002244",
+  SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414",
+};
+
 function HelmetIcon({ abbreviation, faces }: { abbreviation: string; faces: "left" | "right" }) {
   const flipped = faces === "left";
+  const shellColor = defaultHomeHelmetColors[abbreviation] ?? "#ffffff";
   return (
-    <span aria-hidden="true" className={`relative block h-12 w-16 shrink-0 ${flipped ? "-scale-x-100" : ""}`}>
-      <span className="absolute left-1 top-0 h-10 w-12 rounded-bl-[45%] rounded-br-[20%] rounded-t-[55%] border-2 border-slate-600 bg-slate-100 shadow-sm">
-        <Image alt="" className={`h-full w-full object-contain p-1.5 ${flipped ? "-scale-x-100" : ""}`} height={48} src={teamLogoUrl(abbreviation)} width={48} />
-      </span>
-      <span className="absolute bottom-2 right-0 h-4 w-5 border-b-2 border-r-2 border-t-2 border-slate-600" />
-      <span className="absolute bottom-0 right-1 h-3 w-1 border-l-2 border-slate-600" />
+    <span aria-hidden="true" className={`relative block h-14 w-[4.5rem] shrink-0 ${flipped ? "-scale-x-100" : ""}`}>
+      <span
+        className="absolute inset-0"
+        style={{
+          backgroundColor: shellColor,
+          maskImage: "url(/helmet-newspaper-template.png)",
+          maskPosition: "center",
+          maskRepeat: "no-repeat",
+          maskSize: "contain",
+          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
+          WebkitMaskPosition: "center",
+          WebkitMaskRepeat: "no-repeat",
+          WebkitMaskSize: "contain",
+        }}
+      />
+      <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={56} src="/helmet-newspaper-template.png" width={72} />
+      <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={28} src={teamLogoUrl(abbreviation)} width={28} />
     </span>
   );
 }
