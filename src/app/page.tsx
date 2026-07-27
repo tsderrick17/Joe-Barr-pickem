@@ -200,6 +200,9 @@ export default function HomePage() {
           <h1 className="font-serif text-3xl font-bold sm:text-4xl md:text-5xl">
             Lead Pipe Locks
           </h1>
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 sm:text-sm">
+            Picks revealed to others at kickoff
+          </p>
         </header>
 
         <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
@@ -322,13 +325,7 @@ export default function HomePage() {
         ) : null}
 
         <section className="py-6 sm:py-7">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="font-serif text-2xl font-bold sm:text-3xl">
-              Picks revealed to others at Kickoff
-            </h2>
-          </div>
-
-          <div className="mt-5 overflow-x-auto border-y-2 border-[#1d1d1f]">
+          <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
             <table
               className="w-full border-collapse text-left"
               style={{ minWidth: `${Math.max(650, 240 + data.maxPicks * 140)}px` }}
