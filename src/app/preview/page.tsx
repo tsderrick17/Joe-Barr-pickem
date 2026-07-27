@@ -212,6 +212,19 @@ const rehearsalGames: PreviewGame[] = [
   { id: "det-min", kickoff: "Monday 8:15 PM ET", leftAbbreviation: "DET", leftTeam: "Lions", rightAbbreviation: "MIN", rightTeam: "Vikings", line: "DET -2.5" },
 ];
 
+// Final ATS results belong to the matchup, not to the people who selected it.
+// Every completed game therefore shows both a W and an L on the Slate.
+const rehearsalAtsWinners: Side[] = [
+  "left",
+  "right",
+  "right",
+  "left",
+  "left",
+  "right",
+  "left",
+  "right",
+];
+
 function ResultMarker({ result }: { result: AtsResult }) {
   if (!result) return null;
 
@@ -430,6 +443,12 @@ export default function PreviewPage() {
               {rehearsalGames.map((game, index) => {
                 const locked = scenario.lockedGames.includes(index) || !isEditable;
                 const lineLocked = scenarioKey !== "pending" && (scenarioKey !== "international" || index === 0);
+                const leftResult: AtsResult = isFinalState
+                  ? rehearsalAtsWinners[index] === "left" ? "win" : "loss"
+                  : null;
+                const rightResult: AtsResult = isFinalState
+                  ? rehearsalAtsWinners[index] === "right" ? "win" : "loss"
+                  : null;
                 const displayedLine =
                   scenarioKey === "pending"
                     ? game.line
@@ -457,9 +476,7 @@ export default function PreviewPage() {
                     >
                       <span className="relative inline-block pr-3">
                         {game.leftTeam}
-                        {atsPicks[index] === "left" ? (
-                          <ResultMarker result={scenario.atsResults[index]} />
-                        ) : null}
+                        <ResultMarker result={leftResult} />
                       </span>
                     </button>
                     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
@@ -479,9 +496,7 @@ export default function PreviewPage() {
                     >
                       <span className="relative inline-block pr-3">
                         {game.rightTeam}
-                        {atsPicks[index] === "right" ? (
-                          <ResultMarker result={scenario.atsResults[index]} />
-                        ) : null}
+                        <ResultMarker result={rightResult} />
                       </span>
                     </button>
                   </article>
