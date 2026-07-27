@@ -67,6 +67,7 @@ build succeeds.
    - `supabase/031_repair_ats_atomic_replacements.sql`
    - `supabase/033_repair_completed_change_delete_guards.sql`
    - `supabase/034_schedule_prelock_spread_refresh.sql`
+   - `supabase/035_restore_mode_specific_audits.sql`
 
 ## Weekly dress rehearsal
 
@@ -100,7 +101,7 @@ If a final score appears missing:
 - Postponed and cancelled-game replacement policy is not implemented yet. They appear in **Game Exceptions** for manual commissioner review and are never graded automatically.
 - Once a week is rubber-stamped, its period, games, picks, and official lines are database-locked. Complete any correction process before the automated handoff.
 - Audit records are append-only. Record a correction as a new audit event; never rewrite the original history.
-- ATS and Survivor submissions have separate audit events. ATS records use `against_spread`; Survivor records use `straight_up` with `spread_applied: false`.
+- Every ATS and Survivor save has a separate audit event. ATS records use `against_spread`; Survivor records use `straight_up` with `spread_applied: false`.
 
 ## Survivor
 
