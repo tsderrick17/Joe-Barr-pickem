@@ -117,7 +117,7 @@ function resultMarker(result: "win" | "loss" | null) {
   return (
     <strong
       aria-label={`Against the spread: ${result}`}
-      className={`relative -top-px ml-0.5 inline-block text-sm font-black leading-none sm:text-base ${
+      className={`relative -top-1 -ml-px inline-block -rotate-[15deg] text-sm font-black leading-none sm:text-base ${
         result === "win" ? "text-green-700" : "text-red-700"
       }`}
     >

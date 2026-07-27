@@ -136,7 +136,7 @@ function resultFor(game: RehearsalGame, side: Side, showFinal: boolean): Result 
 
 function ResultMark({ result }: { result: Result }) {
   if (!result) return null;
-  return <strong className={`relative -top-px ml-0.5 inline-block ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
+  return <strong className={`relative -top-1 -ml-px inline-block -rotate-[15deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
 }
 
 export default function PreviewPage() {
