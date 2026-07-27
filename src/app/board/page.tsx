@@ -800,6 +800,8 @@ export default function BoardPage() {
 
                       const gameHasStarted =
                         new Date(game.kickoffAt) <= new Date();
+                      const showSpecialLockNote =
+                        game.isInternational && new Date(game.lineLockAt) > new Date();
 
                       return (
                         <article
@@ -853,7 +855,7 @@ export default function BoardPage() {
                                 AWAITING LINE
                               </p>
                             )}
-                            {game.isInternational ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
+                            {showSpecialLockNote ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
 
                           </div>
 
