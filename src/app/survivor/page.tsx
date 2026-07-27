@@ -31,7 +31,7 @@ function Helmet({ team, faces, unavailable }: { team: Team; faces: "left" | "rig
     <span className="absolute inset-0" style={{ backgroundColor: helmetColors[team.abbreviation] ?? "#fff", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <span className="absolute inset-0" style={{ backgroundColor: "#fff", clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)", maskImage: mask, maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center", WebkitMaskImage: mask, WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center" }} />
     <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={64} src="/helmet-newspaper-template.png" width={80} />
-    <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} />
+    <Image alt="" className="absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain" height={30} src={`/team-logos/${team.abbreviation}.png`} width={30} />
   </span>;
 }
 

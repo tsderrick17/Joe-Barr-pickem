@@ -184,7 +184,7 @@ function HelmetIcon({
         }}
       />
       <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={48} src="/helmet-newspaper-template.png" width={63} />
-      <Image alt="" className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${flipped ? "-scale-x-100" : ""}`} height={24} src={teamLogoUrl(abbreviation)} width={24} />
+      <Image alt="" className="absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain" height={24} src={teamLogoUrl(abbreviation)} width={24} />
     </span>
   );
 }
@@ -198,7 +198,6 @@ export default function BoardPage() {
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
-  const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -247,7 +246,6 @@ export default function BoardPage() {
       setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
-      setSurvivorStatus(data.survivor.status);
       setSurvivorAvailable(data.survivor.available);
       setSurvivorNotice(data.survivor.notice);
     } catch (error) {
@@ -651,11 +649,11 @@ export default function BoardPage() {
                     "Your ATS slate is still available and can be saved safely."}
                 </p>
               </section>
-            ) : survivorStatus === "active" && !isReadOnly ? (
+            ) : false ? (
               <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping survivor-clipping p-2.5 sm:p-3">
                 <div className="flex items-center justify-between gap-3 border-b-2 border-[#1d1d1f] pb-1.5">
                   <h2 className="font-serif text-xl font-black leading-none sm:text-2xl" id="survivor-wire-heading">The Survivor Wire</h2>
-                  <p className="text-right text-[9px] font-black uppercase tracking-[0.1em] text-[#29251d] sm:text-[10px]">Straight-up · {week.display_name}</p>
+                  <p className="text-right text-[9px] font-black uppercase tracking-[0.1em] text-[#29251d] sm:text-[10px]">Straight-up · {week?.display_name}</p>
                 </div>
                 <div className="mt-2 divide-y divide-[#1d1d1f] border-y border-[#1d1d1f]">
                   {games.map((game) => {
