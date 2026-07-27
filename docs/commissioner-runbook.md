@@ -29,6 +29,7 @@ Use test player accounts before Week 1 to verify:
 5. The Commissioner page can run **Check final scores now**.
 6. The most recent score-check status is visible to the Commissioner.
 7. A favorite cover, underdog cover, and ATS push produce the expected result. A push must be a loss.
+8. Commissioner shows no unexpected entries in **Game Exceptions**.
 
 ## Score recovery
 
@@ -44,4 +45,4 @@ If a final score appears missing:
 
 - Do not edit a locked official line without recording the reason.
 - Do not manually change a final score unless the provider is wrong and the correction is documented.
-- Postponed and cancelled-game replacement policy is not implemented yet; resolve those cases manually until that dedicated workflow is added.
+- Postponed and cancelled-game replacement policy is not implemented yet. They appear in **Game Exceptions** for manual commissioner review and are never graded automatically.

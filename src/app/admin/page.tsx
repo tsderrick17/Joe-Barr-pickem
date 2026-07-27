@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import GameExceptions from "@/components/game-exceptions";
 import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
 
@@ -214,6 +215,7 @@ export default function AdminPage() {
         </header>
         <LineLockChecker />
         <ScoreSyncChecker />
+        <GameExceptions />
 
         <section className="mt-8 border-y-2 border-zinc-900 py-8">
           <h2 className="font-serif text-2xl font-bold">Odds Feed</h2>
