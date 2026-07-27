@@ -367,6 +367,7 @@ return {
 
             return {
               id: entry.id,
+              playerId: entry.player_id,
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
               status: entry.status,

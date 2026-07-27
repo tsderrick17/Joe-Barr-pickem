@@ -35,6 +35,7 @@ type HomeData = {
   survivorNotice: string | null;
   survivorRows: {
     id: string;
+    playerId: string;
     firstName: string;
     status: "active" | "eliminated" | "complete";
     pick: ScoreboardPick | null;
@@ -152,7 +153,7 @@ export default function HomePage() {
       .map((pick) => pick.label)
       .filter((label): label is string => Boolean(label)) ?? [];
   const viewerSurvivor =
-    data?.survivorRows.find((row) => row.id === data.viewerPlayerId) ?? null;
+    data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
 
   const pickWord = (count: number) => (count === 1 ? "pick" : "picks");
 
