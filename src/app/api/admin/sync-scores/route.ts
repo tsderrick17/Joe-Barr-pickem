@@ -48,3 +48,23 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  if (!(await requireCommissioner(request))) {
+    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  }
+
+  const { data: latestRun, error } = await supabaseAdmin
+    .from("sync_runs")
+    .select("status, started_at, completed_at, details, error_message")
+    .eq("job_type", "scores")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: "The latest score check could not be loaded." }, { status: 500 });
+  }
+
+  return NextResponse.json({ latestRun });
+}

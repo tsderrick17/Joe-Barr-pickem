@@ -210,6 +210,32 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       if (error) throw new Error("Final pick results could not be saved.");
     }
 
+    if (finalizedGames.length > 0) {
+      const { error: auditError } = await supabaseAdmin
+        .from("audit_logs")
+        .insert(
+          finalizedGames.map((game) => ({
+            actor_player_id: null,
+            action: "final_score_imported",
+            entity_type: "game",
+            entity_id: game.id,
+            details: {
+              away_score: game.awayScore,
+              home_score: game.homeScore,
+              picks_graded: gradeUpdates.filter(
+                (update) =>
+                  (picks ?? []).find((pick) => pick.id === update.id)
+                    ?.game_id === game.id,
+              ).length,
+            },
+          })),
+        );
+
+      if (auditError) {
+        throw new Error("Final scores were saved, but their audit entries could not be recorded.");
+      }
+    }
+
     const result = {
       checkedAt,
       eligibleGames: eligibleGames.length,
