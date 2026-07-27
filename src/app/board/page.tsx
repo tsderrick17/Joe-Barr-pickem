@@ -598,7 +598,7 @@ export default function BoardPage() {
                 </div>
 
                 <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
-                  LIVE lines may move. The line marked LOCKED is the official grading line.
+                  LIVE lines may move. Teal lines are LOCKED for official grading.
                 </p>
               </div>
             </div>
@@ -787,10 +787,10 @@ export default function BoardPage() {
                           <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
                             {game.officialSpread !== null ? (
                               <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
-                                <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
+                                <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">
                                   {officialSpreadLabel(game.officialSpread)}
                                 </span>
-                                <span className="border border-[#1d1d1f] px-1 text-[8px] font-black tracking-[0.08em] text-[#1d1d1f] sm:text-[9px]">
+                                <span className="border border-teal-700 px-1 text-[8px] font-black tracking-[0.08em] text-teal-700 sm:text-[9px]">
                                   LOCKED
                                 </span>
                               </div>
