@@ -48,6 +48,7 @@ function getEasternParts(date: Date) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    weekday: "short",
     hour: "2-digit",
     hourCycle: "h23",
   });
@@ -61,6 +62,7 @@ function getEasternParts(date: Date) {
     month: value("month"),
     day: value("day"),
     hour: value("hour"),
+    weekday: parts.find((part) => part.type === "weekday")?.value ?? "",
   };
 }
 
@@ -124,7 +126,11 @@ function getWeekWindow(weekStartKey: string) {
 
 function getLineLock(kickoff: Date) {
   const eastern = getEasternParts(kickoff);
-  const isEarlyInternationalGame = eastern.hour < 12;
+  // The provider does not expose venue country. NFL international games are
+  // the Sunday morning ET window; retaining this narrow rule avoids treating
+  // ordinary early domestic kickoffs as international exceptions.
+  const isEarlyInternationalGame =
+    eastern.weekday === "Sun" && eastern.hour < 12;
 
   if (isEarlyInternationalGame) {
     const priorDay = new Date(

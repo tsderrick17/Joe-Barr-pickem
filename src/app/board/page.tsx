@@ -23,6 +23,7 @@ type BoardGame = {
   id: string;
   kickoffAt: string;
   lineLockAt: string;
+  isInternational: boolean;
   awayTeam: string;
   homeTeam: string;
   awayTeamAbbreviation: string;
@@ -80,15 +81,7 @@ function easternTime(value: string) {
 }
 
 function isEarlyGame(game: BoardGame) {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/New_York",
-      hour: "numeric",
-      hourCycle: "h23",
-    }).format(new Date(game.kickoffAt)),
-  );
-
-  return hour < 12;
+  return game.isInternational;
 }
 
 function teamLabel(teamName: string, isHome: boolean) {
@@ -106,6 +99,15 @@ function easternShortDate(value: string) {
     timeZone: "America/New_York",
     month: "numeric",
     day: "numeric",
+  }).format(new Date(value));
+}
+
+function easternLockLabel(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(new Date(value));
 }
 
@@ -818,7 +820,7 @@ export default function BoardPage() {
                             {isReadOnly ? (
                               <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p>
                             ) : (
-                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>
+                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>{game.isInternational ? <p className="mt-1 text-[8px] font-black leading-3 tracking-[0.06em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}</>
                             )}
                           </div>
                           <button
