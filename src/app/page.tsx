@@ -20,6 +20,7 @@ type LedgerRow = {
 type HomeData = {
   viewerPlayerId: string;
   week: string;
+  nextRevealAt: string | null;
   rows: LedgerRow[];
   error?: string;
 };
@@ -29,6 +30,8 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    let revealTimer: number | null = null;
+
     async function loadHome() {
       const {
         data: { session },
@@ -53,6 +56,21 @@ export default function HomePage() {
       }
 
       setData(result);
+
+      if (revealTimer !== null) {
+        window.clearTimeout(revealTimer);
+      }
+
+      if (result.nextRevealAt) {
+        const refreshDelay = Math.max(
+          250,
+          new Date(result.nextRevealAt).getTime() - Date.now() + 250,
+        );
+
+        revealTimer = window.setTimeout(() => {
+          void loadHome();
+        }, refreshDelay);
+      }
     }
 
     void loadHome();
@@ -71,6 +89,9 @@ export default function HomePage() {
 
     return () => {
       window.clearInterval(refreshInterval);
+      if (revealTimer !== null) {
+        window.clearTimeout(revealTimer);
+      }
       window.removeEventListener("focus", refreshOnFocus);
     };
   }, []);

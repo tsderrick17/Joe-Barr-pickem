@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { shouldRevealPick } from "@/lib/pick-visibility";
+import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -168,6 +168,11 @@ export async function GET(request: NextRequest) {
   const gameById = new Map(
     ((games ?? []) as GameRow[]).map((game) => [game.id, game]),
   );
+  const currentTime = new Date();
+  const nextRevealAt = nextPickRevealAt(
+    ((games ?? []) as GameRow[]).map((game) => game.kickoff_at),
+    currentTime,
+  );
 
   const teamNameById = new Map(
     (teams ?? []).map((team) => [team.id, team.full_name]),
@@ -191,6 +196,7 @@ export async function GET(request: NextRequest) {
               pickPlayerId: player.id,
               kickoffAt: game?.kickoff_at,
             },
+            currentTime,
           );
 
           let resultMark = "";
@@ -228,6 +234,7 @@ return {
   return NextResponse.json({
     viewerPlayerId: viewer.id,
     week: currentWeek.display_name,
+    nextRevealAt,
     rows,
   });
 }

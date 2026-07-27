@@ -8,3 +8,12 @@ export function shouldRevealPick({ viewerPlayerId, pickPlayerId, kickoffAt }, no
 
   return new Date(kickoffAt).getTime() <= now.getTime();
 }
+
+export function nextPickRevealAt(kickoffTimes, now = new Date()) {
+  const nextKickoff = kickoffTimes
+    .map((kickoffAt) => new Date(kickoffAt))
+    .filter((kickoffAt) => !Number.isNaN(kickoffAt.getTime()) && kickoffAt > now)
+    .sort((first, second) => first.getTime() - second.getTime())[0];
+
+  return nextKickoff?.toISOString() ?? null;
+}
