@@ -23,6 +23,7 @@ type Scenario = {
   timing: string;
   explanation: string;
   activeGames: number[];
+  lockedGames: number[];
   final: boolean;
 };
 
@@ -102,14 +103,16 @@ const scenarios: Record<string, Scenario> = {
     explanation:
       "Three weeks are in the books. Week 4 is open, with the London kickoff clearly called out before the regular Sunday slate.",
     activeGames: [],
+    lockedGames: [],
     final: false,
   },
   sunday: {
     title: "Week 4 · Sunday afternoon",
     timing: "Sunday · 3:00 PM ET",
     explanation:
-      "The London and 1 PM games have started. Their lines are teal and selections are now public receipts; late games remain open.",
+      "All Sunday lines locked at 8 AM ET and are teal. London and the 1 PM games have started, so only their selections are public receipts; late games remain open.",
     activeGames: [0, 1, 2],
+    lockedGames: [0, 1, 2, 3, 4],
     final: false,
   },
   final: {
@@ -118,6 +121,7 @@ const scenarios: Record<string, Scenario> = {
     explanation:
       "Every game is final. Scores, ATS W/L marks, and the names behind each selection remain visible for a clean audit.",
     activeGames: [0, 1, 2, 3, 4, 5],
+    lockedGames: [0, 1, 2, 3, 4, 5],
     final: true,
   },
 };
@@ -186,14 +190,15 @@ export default function PreviewPage() {
           <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center"><h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm" id="slate-heading">SUNDAY · WEEK 4 ATS SLATE</h2></div>
 
           <div>{games.map((game, index) => {
-            const started = scenario.activeGames.includes(index);
+            const gameStarted = scenario.activeGames.includes(index);
+            const started = scenario.lockedGames.includes(index);
             const leftResult = resultFor(game, "left", scenario.final);
             const rightResult = resultFor(game, "right", scenario.final);
             return <article className={`grid grid-cols-[4.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-3 pl-1 pr-3 sm:grid-cols-[7rem_minmax(0,1fr)_7rem_minmax(0,1fr)] sm:gap-4 sm:pl-2 sm:pr-4 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`} key={game.id}>
               <div className="text-center text-[10px] font-bold leading-4 text-slate-600 sm:text-xs">{scenario.final ? game.finalDate : index === 0 ? <><p>Sun 9:30 AM ET</p><p>📍 London</p></> : game.kickoff}</div>
-              <TeamCell team={game.left} score={scenario.final ? game.score.left : null} result={leftResult} pickers={started ? game.pickers.left : []} align="left" />
+              <TeamCell team={game.left} score={scenario.final ? game.score.left : null} result={leftResult} pickers={gameStarted ? game.pickers.left : []} align="left" />
               <div className={`text-center font-mono text-sm font-black sm:text-base ${started ? "text-teal-700" : "text-zinc-900"}`}><p>{game.line}</p>{index === 0 && !scenario.final ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS 9/26 · 6 PM ET</p> : null}</div>
-              <TeamCell team={game.right} score={scenario.final ? game.score.right : null} result={rightResult} pickers={started ? game.pickers.right : []} align="right" />
+              <TeamCell team={game.right} score={scenario.final ? game.score.right : null} result={rightResult} pickers={gameStarted ? game.pickers.right : []} align="right" />
             </article>;
           })}</div>
         </section></div> : <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-labelledby="standings-heading">
