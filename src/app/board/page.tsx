@@ -788,6 +788,7 @@ export default function BoardPage() {
                         : game.homeScore;
 
                       const gameIsFinal = game.status === "final";
+                      const gameIsLive = game.status === "live";
 
                       const leftPickers = favoriteIsHome
                         ? game.homePickers
@@ -809,7 +810,7 @@ export default function BoardPage() {
                             {isReadOnly ? (
                               <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p>
                             ) : (
-                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>
+                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className={`mt-1 text-[8px] font-black tracking-[0.1em] ${gameIsLive ? "text-red-700" : "text-slate-500"}`}>{gameIsLive ? "LIVE" : "ET"}</p></>
                             )}
                           </div>
                           <button
