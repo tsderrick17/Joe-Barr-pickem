@@ -602,7 +602,7 @@ export default function BoardPage() {
                 </div>
 
                 <p className="max-w-md pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
-                  Lines lock at 8 AM ET on game day unless otherwise noted. LIVE lines may move; teal lines are LOCKED for official grading.
+                  Lines lock at 8 AM ET on game day unless otherwise noted. Lines may move before lock; teal lines are official for grading.
                 </p>
               </div>
             </div>
@@ -790,23 +790,13 @@ export default function BoardPage() {
 
                           <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
                             {game.officialSpread !== null ? (
-                              <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
-                                <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">
-                                  {officialSpreadLabel(game.officialSpread)}
-                                </span>
-                                <span className="border border-teal-700 px-1 text-[8px] font-black tracking-[0.08em] text-teal-700 sm:text-[9px]">
-                                  LOCKED
-                                </span>
-                              </div>
+                              <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">
+                                {officialSpreadLabel(game.officialSpread)}
+                              </span>
                             ) : game.preliminarySpread !== null ? (
-                              <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
-                                <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
-                                  {officialSpreadLabel(game.preliminarySpread)}
-                                </span>
-                                <span className="text-[8px] font-black tracking-[0.12em] text-slate-600 sm:text-[9px]">
-                                  LIVE
-                                </span>
-                              </div>
+                              <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
+                                {officialSpreadLabel(game.preliminarySpread)}
+                              </span>
                             ) : (
                               <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">
                                 AWAITING LINE

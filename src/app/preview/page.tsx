@@ -301,7 +301,6 @@ export default function PreviewPage() {
                 <option value="partial">3 · Early game locked</option>
                 <option value="live">4 · Games in progress</option>
                 <option value="final">5 · Final scores posted</option>
-                <option value="eliminated">6 · Survivor eliminated</option>
                 <option value="archived">7 · Completed week archive</option>
               </select>
             </label>
@@ -430,14 +429,13 @@ export default function PreviewPage() {
             <div>
               {rehearsalGames.map((game, index) => {
                 const locked = scenario.lockedGames.includes(index) || !isEditable;
-                const started = scenario.startedGames.includes(index);
                 const lineLocked = scenarioKey !== "pending" && (scenarioKey !== "international" || index === 0);
                 const displayedLine =
                   scenarioKey === "pending"
                     ? game.line
                     : scenarioKey === "international" && index === 0
-                      ? `${game.line} LOCKED`
-                    : `${game.line}${started ? scenarioKey === "live" ? " · LIVE" : " · LOCKED" : ""}`;
+                      ? game.line
+                    : game.line;
 
                 return (
                   <article
