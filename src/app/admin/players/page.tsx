@@ -63,8 +63,42 @@ export default function PlayerManagementPage() {
   }, [getAccessToken]);
 
   useEffect(() => {
-    void loadPlayers();
-  }, [loadPlayers]);
+    let isCurrent = true;
+
+    async function loadInitialPlayers() {
+      const accessToken = await getAccessToken();
+
+      if (!isCurrent) return;
+
+      if (!accessToken) {
+        setErrorMessage("Please sign in before managing players.");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch("/api/admin/players", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await response.json();
+
+      if (!isCurrent) return;
+
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The player list could not be loaded.");
+        setIsLoading(false);
+        return;
+      }
+
+      setPlayers(data.players ?? []);
+      setIsLoading(false);
+    }
+
+    void loadInitialPlayers();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [getAccessToken]);
 
   async function addPlayer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
