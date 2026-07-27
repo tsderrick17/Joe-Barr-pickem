@@ -760,11 +760,15 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-slate-400 py-2 sm:gap-3 sm:py-3"
+                          className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8bda8] py-2.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.5rem_minmax(0,1fr)] sm:gap-3"
                           key={game.id}
                         >
+                          <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
+                            <p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p>
+                            <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>
+                          </div>
                           <button
-                            className={`text-left font-serif text-base leading-tight sm:text-lg md:text-xl ${
+                            className={`border-b border-dotted border-slate-400 pb-0.5 text-left font-serif text-base leading-tight sm:text-lg md:text-xl ${
                               isSelected(game.id, leftTeamId)
                                 ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
@@ -779,7 +783,7 @@ export default function BoardPage() {
                             </span>
                           </button>
 
-                          <div className="min-w-20 text-center text-[10px] font-bold leading-4 text-slate-700 sm:min-w-28 sm:text-xs md:min-w-36">
+                          <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
                             {game.officialSpread !== null ? (
                               <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
                                 <span className="font-serif text-base font-bold text-zinc-900 sm:text-lg">
@@ -804,18 +808,10 @@ export default function BoardPage() {
                               </p>
                             )}
 
-                            <p className="whitespace-nowrap">{easternTime(game.kickoffAt)}</p>
-
-                            {isEarlyGame(game) && !isReadOnly ? (
-                              <p className="mt-1">
-                                EARLY GAME - SPREADS APPEAR{" "}
-                                {easternTime(game.lineLockAt)}
-                              </p>
-                            ) : null}
                           </div>
 
                           <button
-                            className={`text-right font-serif text-base leading-tight sm:text-lg md:text-xl ${
+                            className={`border-b border-dotted border-slate-400 pb-0.5 text-right font-serif text-base leading-tight sm:text-lg md:text-xl ${
                               isSelected(game.id, rightTeamId)
                                 ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
