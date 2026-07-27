@@ -24,6 +24,8 @@ type BoardGame = {
   officialSpread: number | null;
   spreadSource: string | null;
   spreadLockedAt: string | null;
+  awayResult: "win" | "loss" | null;
+  homeResult: "win" | "loss" | null;
 };
 
 type SelectedPick = {
@@ -75,6 +77,21 @@ function officialSpreadLabel(spread: number | null) {
   if (spread === 0) return "PK";
 
   return `-${Number.isInteger(spread) ? spread : spread.toFixed(1)}`;
+}
+
+function resultMarker(result: "win" | "loss" | null) {
+  if (!result) return null;
+
+  return (
+    <strong
+      aria-label={`Against the spread: ${result}`}
+      className={`absolute -right-1 -top-2 text-base font-black leading-none sm:text-lg ${
+        result === "win" ? "text-green-700" : "text-red-700"
+      }`}
+    >
+      {result === "win" ? "W" : "L"}
+    </strong>
+  );
 }
 
 export default function BoardPage() {
@@ -344,28 +361,35 @@ export default function BoardPage() {
     <main className="min-h-screen bg-[#f5f0e6] pb-48 text-[#171719] sm:pb-56">
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
-<div className="flex items-start justify-between gap-5">
-  <div>
-    <p className="text-xs font-bold tracking-[0.24em] text-slate-600 sm:text-sm sm:tracking-[0.28em]">
-      JOE BARR MEMORIAL
-    </p>
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-xs font-bold tracking-[0.24em] text-slate-600 sm:text-sm sm:tracking-[0.28em]">
+                JOE BARR MEMORIAL
+              </p>
 
-    <h1 className="mt-1 font-serif text-3xl font-bold sm:mt-2 sm:text-4xl">
-      The Board
-    </h1>
-  </div>
+              <h1 className="mt-1 font-serif text-3xl font-bold sm:mt-2 sm:text-4xl">
+                The Board
+              </h1>
+            </div>
 
-  <div className="max-w-xs text-right text-sm font-semibold text-slate-700">
-    {hasEarlyGame ? (
-      <>
-        <p>EARLY GAME</p>
-        <p className="mt-1 font-normal">
-          Official spreads posted at 6 PM ET the night before.
-        </p>
-      </>
-    ) : null}
-  </div>
-</div>
+            <aside className="max-w-[13rem] border-l border-slate-400 pl-3 text-right text-[11px] leading-4 text-slate-700 sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
+              <p className="font-bold tracking-[0.12em] text-slate-800">
+                HOW TO PLAY
+              </p>
+              <p className="mt-1">Favorites listed left; home team ALL CAPS.</p>
+              <p>
+                {week.period_type === "playoff"
+                  ? "Select every team and hit Save below."
+                  : "Select TWO teams and hit Save below."}
+              </p>
+              <p>Picks may be changed until listed kickoff.</p>
+              {hasEarlyGame ? (
+                <p className="mt-2 font-semibold">
+                  EARLY GAME: spreads post at 6 PM ET the night before.
+                </p>
+              ) : null}
+            </aside>
+          </div>
 
           <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -391,21 +415,11 @@ export default function BoardPage() {
               </select>
             </div>
 
-            <p className="text-sm text-slate-700">
-              {week.period_type === "playoff"
-                ? "Choose every game."
-                : "Choose 2 teams."}
-            </p>
           </div>
 
-<div className="mt-4 text-xs leading-5 text-slate-700 sm:mt-5 sm:text-sm sm:leading-6">
-<p>Official spreads posted at 8 AM on game day unless otherwise noted.</p>
-<p>Favorites are on the left. Home teams are in ALL CAPS.</p>
-<p>
-  Click a team to select it. Click the Save button after making selections.
-  Picks may be changed until official game time.
-</p>
-</div>
+          <p className="mt-4 text-xs leading-5 text-slate-700 sm:mt-5 sm:text-sm">
+            Official spreads post at 8 AM ET on game day unless otherwise noted.
+          </p>
         </header>
 
         {isLoading ? (
@@ -413,15 +427,12 @@ export default function BoardPage() {
         ) : (
           <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
             {gamesByDay.map(([day, dayGames]) => {
-
               return (
                 <section key={day}>
                   <div className="flex flex-col gap-1 border-b border-slate-400 pb-2 sm:flex-row sm:items-end sm:justify-between">
                     <h2 className="font-bold tracking-[0.17em]">
                       {day.toUpperCase()}
                     </h2>
-
-
                   </div>
 
                   <div>
@@ -437,20 +448,27 @@ export default function BoardPage() {
                         ? game.homeTeamId
                         : game.awayTeamId;
 
+                      const leftTeamResult = favoriteIsHome
+                        ? game.homeResult
+                        : game.awayResult;
+
                       const rightTeamName = favoriteIsHome
                         ? game.awayTeam
                         : game.homeTeam;
 
+                      const rightTeamId = favoriteIsHome
+                        ? game.awayTeamId
+                        : game.homeTeamId;
 
-        const rightTeamId = favoriteIsHome
-  ? game.awayTeamId
-  : game.homeTeamId;
+                      const rightTeamResult = favoriteIsHome
+                        ? game.awayResult
+                        : game.homeResult;
 
-const gameHasStarted =
-  new Date(game.kickoffAt) <= new Date();
+                      const gameHasStarted =
+                        new Date(game.kickoffAt) <= new Date();
 
-return (
-  <article                
+                      return (
+                        <article
                           className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-slate-400 py-2.5 sm:gap-3 sm:py-4"
                           key={game.id}
                         >
@@ -464,25 +482,28 @@ return (
                             onClick={() => chooseTeam(game.id, leftTeamId)}
                             type="button"
                           >
-                            {teamLabel(leftTeamName, favoriteIsHome)}
+                            <span className="relative inline-block pr-4">
+                              {teamLabel(leftTeamName, favoriteIsHome)}
+                              {isReadOnly ? resultMarker(leftTeamResult) : null}
+                            </span>
                           </button>
 
-<div className="min-w-20 text-center text-[11px] font-bold leading-4 text-slate-700 sm:min-w-24 sm:text-xs sm:leading-5 md:min-w-36">
-  {game.officialSpread !== null ? (
-    <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
-      {officialSpreadLabel(game.officialSpread)}
-    </p>
-  ) : null}
+                          <div className="min-w-20 text-center text-[11px] font-bold leading-4 text-slate-700 sm:min-w-24 sm:text-xs sm:leading-5 md:min-w-36">
+                            {game.officialSpread !== null ? (
+                              <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
+                                {officialSpreadLabel(game.officialSpread)}
+                              </p>
+                            ) : null}
 
-  <p>{easternTime(game.kickoffAt)}</p>
+                            <p>{easternTime(game.kickoffAt)}</p>
 
-  {isEarlyGame(game) ? (
-    <p className="mt-1">
-      EARLY GAME - SPREADS APPEAR{" "}
-      {easternTime(game.lineLockAt)}
-    </p>
-  ) : null}
-</div>
+                            {isEarlyGame(game) && !isReadOnly ? (
+                              <p className="mt-1">
+                                EARLY GAME - SPREADS APPEAR{" "}
+                                {easternTime(game.lineLockAt)}
+                              </p>
+                            ) : null}
+                          </div>
 
                           <button
                             className={`text-right font-serif text-base leading-tight sm:text-lg md:text-xl ${
@@ -494,7 +515,10 @@ return (
                             onClick={() => chooseTeam(game.id, rightTeamId)}
                             type="button"
                           >
-                            {teamLabel(rightTeamName, !favoriteIsHome)}
+                            <span className="relative inline-block pr-4">
+                              {teamLabel(rightTeamName, !favoriteIsHome)}
+                              {isReadOnly ? resultMarker(rightTeamResult) : null}
+                            </span>
                           </button>
                         </article>
                       );

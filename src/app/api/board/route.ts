@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type TeamRow = {
@@ -20,6 +21,37 @@ type LockedLineRow = {
   source: string;
   locked_at: string;
 };
+
+type GameRow = {
+  id: string;
+  away_team_id: string;
+  home_team_id: string;
+  kickoff_at: string;
+  line_lock_at: string;
+  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  away_score: number | null;
+  home_score: number | null;
+};
+
+function atsResultForTeam(
+  game: GameRow,
+  lockedLine: LockedLineRow | undefined,
+  teamId: string,
+) {
+  if (game.status !== "final" || !lockedLine) return null;
+
+  const result = gradeAtsPick({
+    selectedTeamId: teamId,
+    favoriteTeamId: lockedLine.favorite_team_id,
+    lockedSpread: Number(lockedLine.locked_spread),
+    awayTeamId: game.away_team_id,
+    homeTeamId: game.home_team_id,
+    awayScore: game.away_score,
+    homeScore: game.home_score,
+  });
+
+  return result === "pending" ? null : result;
+}
 
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -78,7 +110,7 @@ export async function GET(request: NextRequest) {
   const { data: games, error: gamesError } = await supabaseAdmin
     .from("games")
     .select(
-      "id, away_team_id, home_team_id, kickoff_at, line_lock_at",
+      "id, away_team_id, home_team_id, kickoff_at, line_lock_at, status, away_score, home_score",
     )
     .eq("scoring_period_id", scoringPeriodId)
     .order("kickoff_at");
@@ -189,7 +221,7 @@ export async function GET(request: NextRequest) {
   );
 
   return NextResponse.json({
-    games: games.map((game) => {
+    games: (games as GameRow[]).map((game) => {
       const lockedLine = lockedLineByGameId.get(game.id);
 
       return {
@@ -211,6 +243,8 @@ export async function GET(request: NextRequest) {
           : null,
         spreadSource: lockedLine?.source ?? null,
         spreadLockedAt: lockedLine?.locked_at ?? null,
+        awayResult: atsResultForTeam(game, lockedLine, game.away_team_id),
+        homeResult: atsResultForTeam(game, lockedLine, game.home_team_id),
       };
     }),
     myPicks: (myPicks ?? []).map((pick) => ({
