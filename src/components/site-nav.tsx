@@ -70,10 +70,15 @@ export default function SiteNav() {
     <nav className="border-b-2 border-black bg-[#171719] text-[#f5f0e6]">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 py-4 md:px-10">
         <Link
-          className="font-serif text-lg font-bold leading-none text-[#f5f0e6] md:text-xl"
+          className="font-serif leading-none text-[#f5f0e6]"
           href="/"
         >
-          Pick&apos;em
+          <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[#e4ded2] md:text-xs">
+            Joe Barr Memorial
+          </span>
+          <span className="mt-1 block text-lg font-bold md:text-xl">
+            Pick&apos;em
+          </span>
         </Link>
 
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-3 text-sm md:gap-x-7 md:text-base">

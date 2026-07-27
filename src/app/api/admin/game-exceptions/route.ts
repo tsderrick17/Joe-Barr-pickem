@@ -8,7 +8,7 @@ type GameRow = {
   home_team_id: string;
   scoring_period_id: string;
   kickoff_at: string;
-  status: "postponed" | "cancelled";
+  status: "postponed" | "cancelled" | "final";
 };
 
 async function requireCommissioner(request: NextRequest) {
@@ -46,39 +46,75 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: games, error: gamesError } = await supabaseAdmin
-    .from("games")
-    .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at, status")
-    .in("status", ["postponed", "cancelled"])
-    .order("kickoff_at");
+  const [exceptionResult, pendingPickResult] = await Promise.all([
+    supabaseAdmin
+      .from("games")
+      .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at, status")
+      .in("status", ["postponed", "cancelled"])
+      .order("kickoff_at"),
+    supabaseAdmin.from("picks").select("game_id").eq("result", "pending"),
+  ]);
 
-  if (gamesError || !games) {
+  if (
+    exceptionResult.error ||
+    pendingPickResult.error ||
+    !exceptionResult.data ||
+    !pendingPickResult.data
+  ) {
     return NextResponse.json(
       { error: "Game exceptions could not be loaded." },
       { status: 500 },
     );
   }
 
-  const exceptionGames = games as GameRow[];
-  const teamIds = [
-    ...new Set(exceptionGames.flatMap((game) => [game.away_team_id, game.home_team_id])),
+  const pendingGameIds = [
+    ...new Set(pendingPickResult.data.map((pick) => pick.game_id)),
   ];
-  const periodIds = [...new Set(exceptionGames.map((game) => game.scoring_period_id))];
+  const pendingGradeResult = pendingGameIds.length
+    ? await supabaseAdmin
+        .from("games")
+        .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at, status")
+        .in("id", pendingGameIds)
+        .eq("status", "final")
+        .order("kickoff_at")
+    : { data: [], error: null };
 
-  const [{ data: teams, error: teamsError }, { data: periods, error: periodsError }] =
-    await Promise.all([
-      teamIds.length
-        ? supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
-        : Promise.resolve({ data: [], error: null }),
-      periodIds.length
-        ? supabaseAdmin
-            .from("scoring_periods")
-            .select("id, display_name")
-            .in("id", periodIds)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
+  if (pendingGradeResult.error || !pendingGradeResult.data) {
+    return NextResponse.json(
+      { error: "Pending final-game grades could not be loaded." },
+      { status: 500 },
+    );
+  }
 
-  if (teamsError || periodsError) {
+  const exceptionGames = [
+    ...new Map(
+      ([...exceptionResult.data, ...pendingGradeResult.data] as GameRow[]).map(
+        (game) => [game.id, game],
+      ),
+    ).values(),
+  ];
+  const teamIds = [
+    ...new Set(
+      exceptionGames.flatMap((game) => [game.away_team_id, game.home_team_id]),
+    ),
+  ];
+  const periodIds = [
+    ...new Set(exceptionGames.map((game) => game.scoring_period_id)),
+  ];
+
+  const [teamResult, periodResult] = await Promise.all([
+    teamIds.length
+      ? supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
+      : Promise.resolve({ data: [], error: null }),
+    periodIds.length
+      ? supabaseAdmin
+          .from("scoring_periods")
+          .select("id, display_name")
+          .in("id", periodIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (teamResult.error || periodResult.error) {
     return NextResponse.json(
       { error: "Game exception details could not be loaded." },
       { status: 500 },
@@ -86,10 +122,10 @@ export async function GET(request: NextRequest) {
   }
 
   const teamNameById = new Map(
-    (teams ?? []).map((team) => [team.id, team.full_name]),
+    (teamResult.data ?? []).map((team) => [team.id, team.full_name]),
   );
   const periodNameById = new Map(
-    (periods ?? []).map((period) => [period.id, period.display_name]),
+    (periodResult.data ?? []).map((period) => [period.id, period.display_name]),
   );
 
   return NextResponse.json({
@@ -99,7 +135,7 @@ export async function GET(request: NextRequest) {
       homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
       week: periodNameById.get(game.scoring_period_id) ?? "Unknown week",
       kickoffAt: game.kickoff_at,
-      status: game.status,
+      status: game.status === "final" ? "pending_grade" : game.status,
     })),
   });
 }

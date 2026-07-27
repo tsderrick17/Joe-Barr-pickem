@@ -9,7 +9,7 @@ type GameException = {
   homeTeam: string;
   week: string;
   kickoffAt: string;
-  status: "postponed" | "cancelled";
+  status: "postponed" | "cancelled" | "pending_grade";
 };
 
 export default function GameExceptions() {
@@ -93,8 +93,8 @@ export default function GameExceptions() {
         <div>
           <h2 className="font-serif text-2xl font-bold">Game Exceptions</h2>
           <p className="mt-2 text-zinc-700">
-            Postponed and cancelled games are held for commissioner review and
-            are never graded automatically.
+            Postponed, cancelled, and unresolved final-game picks are held for
+            commissioner review.
           </p>
         </div>
 
@@ -121,7 +121,9 @@ export default function GameExceptions() {
           {exceptions.map((game) => (
             <li className="border border-amber-800 bg-amber-50 p-4" key={game.id}>
               <p className="font-bold uppercase tracking-wide text-amber-950">
-                {game.status}
+                {game.status === "pending_grade"
+                  ? "FINAL PICK AWAITING LINE OR GRADE"
+                  : game.status}
               </p>
               <p className="mt-1 font-serif text-lg font-bold">
                 {game.awayTeam} at {game.homeTeam}
