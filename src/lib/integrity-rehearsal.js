@@ -11,8 +11,9 @@ export function assessSeasonIntegrity({ periods, games, picks, survivorPicks, li
   let ungradedFinalSurvivorPicks = 0;
 
   for (const pick of picks) {
+    const isVoid = pick.result === "void";
     const key = `${pick.player_id}:${pick.scoring_period_id}`;
-    pickCounts.set(key, (pickCounts.get(key) ?? 0) + 1);
+    if (!isVoid) pickCounts.set(key, (pickCounts.get(key) ?? 0) + 1);
     const period = periodById.get(pick.scoring_period_id);
     const game = gameById.get(pick.game_id);
     if (!period || !game || game.scoring_period_id !== pick.scoring_period_id || ![game.away_team_id, game.home_team_id].includes(pick.selected_team_id)) invalidAtsPicks += 1;
@@ -28,8 +29,10 @@ export function assessSeasonIntegrity({ periods, games, picks, survivorPicks, li
   for (const pick of survivorPicks) {
     const game = gameById.get(pick.game_id);
     const key = `${pick.survivor_entry_id}:${pick.selected_team_id}`;
-    if (survivorTeams.has(key)) duplicateSurvivorTeams += 1;
-    survivorTeams.add(key);
+    if (pick.result !== "void") {
+      if (survivorTeams.has(key)) duplicateSurvivorTeams += 1;
+      survivorTeams.add(key);
+    }
     if (!game || game.scoring_period_id !== pick.scoring_period_id || ![game.away_team_id, game.home_team_id].includes(pick.selected_team_id)) invalidSurvivorPicks += 1;
     if (game?.status === "final" && pick.result === "pending") ungradedFinalSurvivorPicks += 1;
   }

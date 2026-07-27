@@ -6,6 +6,7 @@ import {
 } from "@/lib/advance-scoring-periods";
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
 type Score = { name: string; score: string | number | null };
 type ScoreEvent = {
@@ -151,6 +152,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   const checkedAt = new Date().toISOString();
   const now = new Date(checkedAt);
   const warnings: string[] = [];
+  await voidDisruptedPicks();
   const recoveredGrades = await recoverPendingFinalPickGrades();
   const weekRollover = await advanceScoringPeriods(now);
   const providerLookbackStart = new Date(

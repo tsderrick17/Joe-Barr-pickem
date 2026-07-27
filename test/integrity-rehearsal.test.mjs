@@ -36,3 +36,29 @@ test("finds over-limit, invalid, reused, and ungraded records", () => {
   assert.equal(result.checks.find((check) => check.id === "survivor-reuse")?.failed, 1);
   assert.equal(result.checks.find((check) => check.id === "survivor-finals")?.failed, 1);
 });
+
+test("keeps voided disrupted-game receipts out of active limits and Survivor reuse", () => {
+  const cancelledGame = {
+    id: "game-cancelled",
+    scoring_period_id: "week-1",
+    away_team_id: "away",
+    home_team_id: "home",
+    status: "cancelled",
+  };
+  const result = assessSeasonIntegrity({
+    periods: [period],
+    games: [finalGame, cancelledGame],
+    lineGameIds: new Set(["game-1"]),
+    picks: [
+      { player_id: "p1", scoring_period_id: "week-1", game_id: "game-cancelled", selected_team_id: "away", result: "void" },
+      { player_id: "p1", scoring_period_id: "week-1", game_id: "game-1", selected_team_id: "away", result: "win" },
+    ],
+    survivorPicks: [
+      { survivor_entry_id: "s1", scoring_period_id: "week-1", game_id: "game-cancelled", selected_team_id: "away", result: "void" },
+      { survivor_entry_id: "s1", scoring_period_id: "week-1", game_id: "game-1", selected_team_id: "away", result: "win" },
+    ],
+  });
+  assert.equal(result.status, "healthy");
+  assert.equal(result.checks.find((check) => check.id === "ats-limit")?.failed, 0);
+  assert.equal(result.checks.find((check) => check.id === "survivor-reuse")?.failed, 0);
+});

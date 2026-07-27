@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,11 @@ async function survivorContext(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    await voidDisruptedPicks();
+  } catch {
+    return NextResponse.json({ error: "Survivor disruption checks could not be completed." }, { status: 503 });
+  }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
 
@@ -91,7 +97,8 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("survivor_picks")
       .select("selected_team_id")
-      .eq("survivor_entry_id", context.entry.id),
+      .eq("survivor_entry_id", context.entry.id)
+      .neq("result", "void"),
   ]);
 
   const playerIds = [...new Set((entries ?? []).map((entry) => entry.player_id))];
@@ -100,7 +107,9 @@ export async function GET(request: NextRequest) {
     : { data: [] };
   const nameByPlayerId = new Map((players ?? []).map((player) => [player.id, player.first_name]));
   const teamById = new Map((teams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]));
-  const myPick = (picks ?? []).find((pick) => pick.survivor_entry_id === context.entry.id) ?? null;
+  const myPick = (picks ?? []).find(
+    (pick) => pick.survivor_entry_id === context.entry.id && pick.result !== "void",
+  ) ?? null;
   const scheduledTeamIds = new Set(
     (games ?? []).flatMap((game) => [game.away_team_id, game.home_team_id]),
   );
@@ -134,6 +143,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    await voidDisruptedPicks();
+  } catch {
+    return NextResponse.json({ error: "Survivor disruption checks could not be completed." }, { status: 503 });
+  }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
   let body: { gameId?: string; teamId?: string };

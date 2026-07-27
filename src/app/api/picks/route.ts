@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
 type Selection = { gameId: string; teamId: string };
 type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string };
@@ -18,6 +19,11 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
+  try {
+    await voidDisruptedPicks();
+  } catch {
+    return NextResponse.json({ error: "Disrupted-game checks could not be completed." }, { status: 503 });
+  }
 
   let body: {
     scoringPeriodId?: string;
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
   if (period.status === "complete") return NextResponse.json({ error: "This completed week is read-only." }, { status: 400 });
   if (selections.length > period.max_picks) return NextResponse.json({ error: `You cannot submit more than ${period.max_picks} picks for this scoring period.` }, { status: 400 });
 
-  const { data: existingPicks, error: existingError } = await supabaseAdmin.from("picks").select("id, game_id, selected_team_id").eq("player_id", player.id).eq("scoring_period_id", scoringPeriodId);
+  const { data: existingPicks, error: existingError } = await supabaseAdmin.from("picks").select("id, game_id, selected_team_id").eq("player_id", player.id).eq("scoring_period_id", scoringPeriodId).neq("result", "void");
   if (existingError) return NextResponse.json({ error: "Your existing picks could not be loaded." }, { status: 500 });
 
   const survivorSelection = body.survivorSelection;
@@ -79,7 +85,7 @@ export async function POST(request: NextRequest) {
   if (entryError || !entry) return NextResponse.json({ error: "Your Survivor entry could not be loaded." }, { status: 500 });
   if (survivorSelection && entry.status !== "active") return NextResponse.json({ error: "Your Survivor entry is no longer active." }, { status: 400 });
 
-  const { data: existingSurvivor, error: survivorError } = await supabaseAdmin.from("survivor_picks").select("game_id, selected_team_id").eq("survivor_entry_id", entry.id).eq("scoring_period_id", scoringPeriodId).maybeSingle();
+  const { data: existingSurvivor, error: survivorError } = await supabaseAdmin.from("survivor_picks").select("game_id, selected_team_id").eq("survivor_entry_id", entry.id).eq("scoring_period_id", scoringPeriodId).neq("result", "void").maybeSingle();
   if (survivorError) return NextResponse.json({ error: "Your existing Survivor pick could not be loaded." }, { status: 500 });
   const existingSurvivorGame = existingSurvivor ? gameById.get(existingSurvivor.game_id) : undefined;
   const { data: survivorGameOutsideSelections, error: survivorGameError } = existingSurvivor && !existingSurvivorGame

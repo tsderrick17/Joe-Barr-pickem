@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
 type TeamRow = {
   id: string;
@@ -60,6 +61,11 @@ function atsResultForTeam(
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    await voidDisruptedPicks();
+  } catch {
+    return NextResponse.json({ error: "Disrupted-game checks could not be completed." }, { status: 503 });
+  }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -126,6 +132,7 @@ export async function GET(request: NextRequest) {
       .select("game_id, selected_team_id, submitted_at")
       .eq("player_id", player.id)
       .eq("scoring_period_id", scoringPeriodId)
+      .neq("result", "void")
       .order("submitted_at"),
     supabaseAdmin
       .from("scoring_periods")
@@ -135,7 +142,8 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("picks")
       .select("player_id, game_id, selected_team_id")
-      .eq("scoring_period_id", scoringPeriodId),
+      .eq("scoring_period_id", scoringPeriodId)
+      .neq("result", "void"),
     supabaseAdmin
       .from("players")
       .select("id, first_name")
@@ -208,11 +216,13 @@ export async function GET(request: NextRequest) {
           .select("game_id, selected_team_id")
           .eq("survivor_entry_id", survivorEntry.id)
           .eq("scoring_period_id", scoringPeriodId)
+          .neq("result", "void")
           .maybeSingle(),
         supabaseAdmin
           .from("survivor_picks")
           .select("selected_team_id")
-          .eq("survivor_entry_id", survivorEntry.id),
+          .eq("survivor_entry_id", survivorEntry.id)
+          .neq("result", "void"),
       ]);
 
       if (survivorPickError || usedSurvivorPicksError) {

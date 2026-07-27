@@ -72,6 +72,7 @@ build succeeds.
    - `supabase/037_add_automation_execution_leases.sql`
    - `supabase/038_finalize_games_atomically.sql`
    - `supabase/039_add_automation_preflight.sql`
+   - `supabase/040_void_disrupted_game_picks.sql`
 
 ## Weekly dress rehearsal
 
@@ -103,7 +104,7 @@ If a final score appears missing:
 
 - Do not edit a locked official line without recording the reason.
 - Do not manually change a final score unless the provider is wrong and the correction is documented.
-- Postponed and cancelled-game replacement policy is not implemented yet. They appear in **Game Exceptions** for manual commissioner review and are never graded automatically.
+- A postponed or cancelled game automatically voids its pending ATS and Survivor picks. The original receipt remains in the audit log; it is not a loss and does not consume an ATS slot or Survivor team. Players may replace it only with a game that has not started. These games still block automatic weekly handoff for commissioner review.
 - Once a week is rubber-stamped, its period, games, picks, and official lines are database-locked. Complete any correction process before the automated handoff.
 - Audit records are append-only. Record a correction as a new audit event; never rewrite the original history.
 - Every ATS and Survivor save has a separate audit event. ATS records use `against_spread`; Survivor records use `straight_up` with `spread_applied: false`.

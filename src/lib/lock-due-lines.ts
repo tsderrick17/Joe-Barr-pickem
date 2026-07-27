@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
 type DueGame = {
   id: string;
@@ -100,6 +101,8 @@ async function lockDueLinesInternal(
   const oddsApiKey = process.env.ODDS_API_KEY;
   const checkedAt = currentTime.toISOString();
   const warnings: string[] = [];
+
+  await voidDisruptedPicks();
 
   if (!oddsApiKey) {
     throw new Error("The Odds API key is not configured.");

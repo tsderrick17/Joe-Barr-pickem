@@ -170,7 +170,8 @@ export async function GET(request: NextRequest) {
     .select(
       "player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result",
     )
-    .in("scoring_period_id", periodIds);
+    .in("scoring_period_id", periodIds)
+    .neq("result", "void");
 
   if (picksError) {
     return NextResponse.json(
@@ -341,7 +342,8 @@ return {
       supabaseAdmin
         .from("survivor_picks")
         .select("survivor_entry_id, game_id, selected_team_id, scoring_period_id, result")
-        .in("scoring_period_id", periodIds),
+        .in("scoring_period_id", periodIds)
+        .neq("result", "void"),
     ]);
 
     if (survivorEntriesError || survivorPicksError) {
