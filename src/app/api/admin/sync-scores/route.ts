@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
+import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function requireCommissioner(request: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await syncFinalScores();
+    const result = await runWithAutomationLease("scores", syncFinalScores);
     return NextResponse.json({
       message:
         result.weekRollover.action === "completed"
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
       ...result,
     });
   } catch (error) {
+    if (error instanceof AutomationAlreadyRunningError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "The final score check failed." },
       { status: 500 },

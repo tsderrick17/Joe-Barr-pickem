@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
+import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function requireCommissioner(request: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await lockDueLines();
+    const result = await runWithAutomationLease("line_locks", lockDueLines);
 
     const message =
       result.dueGames === 0
@@ -76,6 +77,9 @@ export async function POST(request: NextRequest) {
       ...result,
     });
   } catch (error) {
+    if (error instanceof AutomationAlreadyRunningError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     const message =
       error instanceof Error
         ? error.message

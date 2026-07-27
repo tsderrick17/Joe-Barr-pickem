@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
+import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await lockDueLines();
+    const result = await runWithAutomationLease("line_locks", lockDueLines);
 
     return NextResponse.json({
       success: true,
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
       ...result,
     });
   } catch (error) {
+    if (error instanceof AutomationAlreadyRunningError) {
+      return NextResponse.json({ success: true, skipped: true, message: error.message });
+    }
     const message =
       error instanceof Error
         ? error.message
