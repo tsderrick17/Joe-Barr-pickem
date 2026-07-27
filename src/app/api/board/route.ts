@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 type TeamRow = {
   id: string;
   full_name: string;
+  abbreviation: string;
 };
 
 type PreliminaryLineRow = {
@@ -188,7 +189,7 @@ export async function GET(request: NextRequest) {
   const [teamsResult, historyResult, lockedLinesResult] = await Promise.all([
     supabaseAdmin
       .from("teams")
-      .select("id, full_name")
+      .select("id, full_name, abbreviation")
       .in("id", teamIds),
     gameIds.length > 0
       ? supabaseAdmin
@@ -238,6 +239,9 @@ export async function GET(request: NextRequest) {
       team.full_name,
     ]),
   );
+  const teamAbbreviationById = new Map(
+    (teams as TeamRow[]).map((team) => [team.id, team.abbreviation]),
+  );
 
   const preliminaryLineByGameId = new Map<string, PreliminaryLineRow>();
 
@@ -266,6 +270,8 @@ export async function GET(request: NextRequest) {
           teamNameById.get(game.away_team_id) ?? "Unknown team",
         homeTeam:
           teamNameById.get(game.home_team_id) ?? "Unknown team",
+        awayTeamAbbreviation: teamAbbreviationById.get(game.away_team_id) ?? "NFL",
+        homeTeamAbbreviation: teamAbbreviationById.get(game.home_team_id) ?? "NFL",
         favoriteTeamId:
           lockedLine?.favorite_team_id ??
           preliminaryLineByGameId.get(game.id)?.favorite_team_id ??

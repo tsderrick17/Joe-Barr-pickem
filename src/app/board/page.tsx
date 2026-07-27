@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
@@ -19,6 +20,8 @@ type BoardGame = {
   lineLockAt: string;
   awayTeam: string;
   homeTeam: string;
+  awayTeamAbbreviation: string;
+  homeTeamAbbreviation: string;
   favoriteTeamId: string | null;
   awayTeamId: string;
   homeTeamId: string;
@@ -94,6 +97,23 @@ function resultMarker(result: "win" | "loss" | null) {
     >
       {result === "win" ? "W" : "L"}
     </strong>
+  );
+}
+
+function teamLogoUrl(abbreviation: string) {
+  return `/team-logos/${abbreviation}.png`;
+}
+
+function HelmetIcon({ abbreviation, faces }: { abbreviation: string; faces: "left" | "right" }) {
+  const flipped = faces === "left";
+  return (
+    <span aria-hidden="true" className={`relative block h-12 w-16 shrink-0 ${flipped ? "-scale-x-100" : ""}`}>
+      <span className="absolute left-1 top-0 h-10 w-12 rounded-bl-[45%] rounded-br-[20%] rounded-t-[55%] border-2 border-slate-600 bg-slate-100 shadow-sm">
+        <Image alt="" className={`h-full w-full object-contain p-1.5 ${flipped ? "-scale-x-100" : ""}`} height={48} src={teamLogoUrl(abbreviation)} width={48} />
+      </span>
+      <span className="absolute bottom-2 right-0 h-4 w-5 border-b-2 border-r-2 border-t-2 border-slate-600" />
+      <span className="absolute bottom-0 right-1 h-3 w-1 border-l-2 border-slate-600" />
+    </span>
   );
 }
 
@@ -545,19 +565,33 @@ export default function BoardPage() {
           <div className="mt-5 space-y-6 sm:mt-8 sm:space-y-9">
             {survivorStatus === "active" && !isReadOnly ? (
               <section className="border-2 border-[#1d1d1f] bg-white p-3 sm:p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <div><p className="text-[10px] font-black tracking-[0.14em] text-slate-600">SURVIVOR</p><h2 className="font-serif text-xl font-bold">Choose one outright winner</h2></div>
+                <div className="flex items-start justify-between gap-3">
+                  <div><p className="text-[10px] font-black tracking-[0.14em] text-slate-600">SURVIVOR · STRAIGHT UP</p><h2 className="font-serif text-xl font-bold">Choose one outright winner</h2><p className="mt-1 text-xs font-semibold text-slate-600">Spreads do not apply. Tap a helmet.</p></div>
                   <p className="text-right text-xs font-semibold text-slate-700">{survivorPick ? "Pick selected" : "No pick yet"}</p>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {games.flatMap((game) => [
-                    { gameId: game.id, teamId: game.awayTeamId, name: game.awayTeam },
-                    { gameId: game.id, teamId: game.homeTeamId, name: game.homeTeam },
-                  ]).map((team) => {
-                    const selected = survivorPick?.teamId === team.teamId;
-                    const used = survivorUsedTeamIds.includes(team.teamId) && !selected;
-                    const gameHasStarted = new Date(games.find((game) => game.id === team.gameId)?.kickoffAt ?? 0) <= new Date();
-                    return <button aria-pressed={selected} className={`min-h-11 border px-2 text-sm font-bold disabled:opacity-40 ${selected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={used || gameHasStarted} key={`${team.gameId}-${team.teamId}`} onClick={() => setSurvivorPick(selected ? null : { gameId: team.gameId, teamId: team.teamId })} type="button">◖ {team.name} {used ? "USED" : gameHasStarted ? "STARTED" : ""}</button>;
+                <div className="mt-3 divide-y border-y border-slate-400">
+                  {games.map((game) => {
+                    const gameHasStarted = new Date(game.kickoffAt) <= new Date();
+                    const awaySelected = survivorPick?.teamId === game.awayTeamId;
+                    const homeSelected = survivorPick?.teamId === game.homeTeamId;
+                    const awayUsed = survivorUsedTeamIds.includes(game.awayTeamId) && !awaySelected;
+                    const homeUsed = survivorUsedTeamIds.includes(game.homeTeamId) && !homeSelected;
+                    return (
+                      <article className="py-2.5" key={game.id}>
+                        <p className="mb-1 text-center text-[10px] font-bold text-slate-500">{easternTime(game.kickoffAt)}</p>
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
+                          <button aria-label={`Choose ${game.awayTeam} as your straight-up Survivor winner`} aria-pressed={awaySelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 text-xs font-bold sm:gap-2 sm:px-1.5 sm:text-sm ${awaySelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={awayUsed || gameHasStarted} onClick={() => setSurvivorPick(awaySelected ? null : { gameId: game.id, teamId: game.awayTeamId })} type="button">
+                            <HelmetIcon abbreviation={game.awayTeamAbbreviation} faces="right" />
+                            <span><span className="block">{game.awayTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{awayUsed ? "USED" : gameHasStarted ? "STARTED" : "AWAY"}</span></span>
+                          </button>
+                          <span className="text-[10px] font-black text-slate-500">VS</span>
+                          <button aria-label={`Choose ${game.homeTeam} as your straight-up Survivor winner`} aria-pressed={homeSelected} className={`flex min-h-16 min-w-0 items-center justify-center gap-0.5 overflow-hidden border px-1 py-1 text-xs font-bold sm:gap-2 sm:px-1.5 sm:text-sm ${homeSelected ? "border-[#1d1d1f] bg-[#1d1d1f] text-white" : "border-slate-400 bg-[#f5f0e6]"}`} disabled={homeUsed || gameHasStarted} onClick={() => setSurvivorPick(homeSelected ? null : { gameId: game.id, teamId: game.homeTeamId })} type="button">
+                            <span><span className="block">{game.homeTeamAbbreviation}</span><span className="block text-[9px] font-black tracking-wide opacity-70">{homeUsed ? "USED" : gameHasStarted ? "STARTED" : "HOME"}</span></span>
+                            <HelmetIcon abbreviation={game.homeTeamAbbreviation} faces="left" />
+                          </button>
+                        </div>
+                      </article>
+                    );
                   })}
                 </div>
               </section>

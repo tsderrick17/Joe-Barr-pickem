@@ -95,5 +95,8 @@ export async function POST(request: NextRequest) {
     replacement_survivor_pick: survivorPickToInsert,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ message: `${pickSaveMessage(selections.length)} Survivor selection saved together.` });
+  const survivorMessage = survivorSelection
+    ? "Your straight-up Survivor pick has been saved."
+    : "Your Survivor pick is cleared.";
+  return NextResponse.json({ message: `${pickSaveMessage(selections.length)} ${survivorMessage}` });
 }
