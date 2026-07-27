@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import LeadPipeIcon from "@/components/lead-pipe-icon";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -44,7 +45,10 @@ setErrorMessage("That PIN was not recognized. Please try again.");
         </p>
 
         <h1 className="mt-2 font-serif text-4xl font-bold leading-tight">
-          Lead Pipe Locks 🔧
+          <span className="inline-flex items-center gap-2">
+            Lead Pipe Locks
+            <LeadPipeIcon className="h-7 w-7 text-zinc-600" />
+          </span>
         </h1>
 
         <p className="mt-3 text-zinc-700">

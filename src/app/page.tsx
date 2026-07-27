@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import LeadPipeIcon from "@/components/lead-pipe-icon";
 import { supabase } from "@/lib/supabase";
 
 type LedgerPick = {
@@ -106,7 +107,10 @@ export default function HomePage() {
           </p>
 
           <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-            Lead Pipe Locks 🔧
+            <span className="inline-flex items-center gap-2">
+              Lead Pipe Locks
+              <LeadPipeIcon className="h-7 w-7 text-slate-600" />
+            </span>
           </h1>
         </header>
 
@@ -154,7 +158,7 @@ export default function HomePage() {
             <h2 className="font-serif text-3xl font-bold">Scoreboard</h2>
 
             <p className="text-right text-xs text-slate-600">
-              Picks unhidden at kickoff.
+              Others&apos; picks revealed at kickoff.
             </p>
           </div>
 
@@ -231,10 +235,6 @@ export default function HomePage() {
             </table>
           </div>
 
-          <p className="mt-3 text-sm text-slate-600">
-Your own picks remain visible to you. Everyone else&apos;s picks stay
-hidden until kickoff.
-          </p>
         </section>
 
         <section className="border-t-2 border-[#1d1d1f] py-7">
