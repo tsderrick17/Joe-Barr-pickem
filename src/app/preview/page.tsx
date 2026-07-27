@@ -49,7 +49,7 @@ const games: RehearsalGame[] = [
     line: "KC −3.0",
     score: { left: 20, right: 23 },
     atsWinner: "right",
-    pickers: { left: ["Tyler"], right: ["Zac", "Gary"] },
+    pickers: { left: ["Tyler"], right: [] },
   },
   {
     id: "pit-bal",
@@ -60,7 +60,7 @@ const games: RehearsalGame[] = [
     line: "BAL −4.5",
     score: { left: 27, right: 20 },
     atsWinner: "left",
-    pickers: { left: ["Zac"], right: ["Tyler", "Gary"] },
+    pickers: { left: [], right: ["Gary"] },
   },
   {
     id: "sf-lar",
@@ -71,7 +71,7 @@ const games: RehearsalGame[] = [
     line: "SF −2.5",
     score: { left: 21, right: 28 },
     atsWinner: "right",
-    pickers: { left: ["Gary"], right: ["Tyler", "Zac"] },
+    pickers: { left: [], right: [] },
   },
   {
     id: "dal-phi",
@@ -82,7 +82,7 @@ const games: RehearsalGame[] = [
     line: "PHI −3.5",
     score: { left: 30, right: 21 },
     atsWinner: "left",
-    pickers: { left: ["Tyler", "Gary"], right: ["Zac"] },
+    pickers: { left: ["Zac"], right: [] },
   },
   {
     id: "det-gb",
@@ -93,7 +93,7 @@ const games: RehearsalGame[] = [
     line: "DET −1.5",
     score: { left: 17, right: 24 },
     atsWinner: "right",
-    pickers: { left: ["Zac"], right: ["Tyler", "Gary"] },
+    pickers: { left: [], right: [] },
   },
 ];
 
@@ -131,10 +131,10 @@ const scenarios: Record<string, Scenario> = {
 };
 
 const priorWins: Record<string, number> = { Tyler: 4, Zac: 3, Gary: 3 };
-const playerSelections: Record<string, Side[]> = {
-  Tyler: ["left", "left", "right", "right", "left", "right"],
-  Zac: ["right", "right", "left", "right", "right", "left"],
-  Gary: ["left", "right", "right", "left", "left", "right"],
+const playerSelections: Record<string, Array<Side | null>> = {
+  Tyler: ["left", "left", null, null, null, null],
+  Zac: ["right", null, null, null, "left", null],
+  Gary: ["left", null, "right", null, null, null],
 };
 
 function resultFor(game: RehearsalGame, side: Side, gameFinal: boolean): Result {
@@ -154,7 +154,7 @@ export default function PreviewPage() {
   const standings = Object.keys(priorWins).map((name) => {
     const weeklyPicks = playerSelections[name];
     const weekWins = countPickemWins(
-      games.map((game, index) => ({ result: resultFor(game, weeklyPicks[index], scenario.final) })),
+      games.map((game, index) => ({ result: weeklyPicks[index] ? resultFor(game, weeklyPicks[index], scenario.final) : null })),
     );
     return { name, priorWins: priorWins[name], weekWins, total: priorWins[name] + weekWins };
   }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -223,5 +223,9 @@ function TeamCell({ team, score, result, pickers, align }: { team: string; score
 
 function WeekReceipt({ name }: { name: string }) {
   const selections = playerSelections[name];
-  return <span className="text-slate-700">{games.map((game, index) => <span className="mr-3 inline-block" key={game.id}>{selections[index] === "left" ? game.left : game.right}<ResultMark result={resultFor(game, selections[index], true)} /></span>)}</span>;
+  return <span className="text-slate-700">{games.map((game, index) => {
+    const selection = selections[index];
+    if (!selection) return null;
+    return <span className="mr-3 inline-block" key={game.id}>{selection === "left" ? game.left : game.right}<ResultMark result={resultFor(game, selection, true)} /></span>;
+  })}</span>;
 }
