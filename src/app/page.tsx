@@ -80,6 +80,10 @@ export default function HomePage() {
   }, [data]);
 
   const picksOwed = Math.max(0, 2 - (viewerRow?.picks.length ?? 0));
+  const viewerPicks =
+    viewerRow?.picks
+      .map((pick) => pick.label)
+      .filter((label): label is string => Boolean(label)) ?? [];
 
   if (errorMessage) {
     return (
@@ -137,6 +141,21 @@ export default function HomePage() {
                 <p className="mt-2 font-semibold text-green-800">
                   Your two picks are submitted.
                 </p>
+              ) : null}
+
+              {viewerPicks.length ? (
+                <div className="mt-4">
+                  <p className="text-xs font-bold tracking-[0.16em] text-slate-600">
+                    YOUR PICKS
+                  </p>
+                  <ol className="mt-1 space-y-1 font-serif text-lg">
+                    {viewerPicks.map((team, index) => (
+                      <li key={`${team}-${index}`}>
+                        {index + 1}. {team}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               ) : null}
             </div>
 
