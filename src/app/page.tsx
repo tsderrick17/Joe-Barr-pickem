@@ -212,20 +212,20 @@ export default function HomePage() {
               <h2 className="mt-1 font-serif text-3xl font-bold">{data.week}</h2>
             </div>
 
-            <div className="border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
+            <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM</p>
               {picksOwed === 2 ? <p className="mt-2 text-slate-700">You still owe two picks this week.</p> : null}
               {picksOwed === 1 ? <p className="mt-2 text-slate-700">You still owe one pick this week.</p> : null}
               {picksOwed > 2 ? <p className="mt-2 text-slate-700">You still owe {picksOwed} {pickWord(picksOwed)} this week.</p> : null}
               {picksOwed === 0 ? <p className="mt-2 font-semibold text-green-800">Your {data.maxPicks} {pickWord(data.maxPicks)} {data.maxPicks === 1 ? "is" : "are"} submitted.</p> : null}
               {viewerPicks.length ? <ol className="mt-2 space-y-1 font-serif text-lg">{viewerPicks.map((team, index) => <li key={`${team}-${index}`}>{index + 1}. {team}</li>)}</ol> : null}
-              <Link className="mt-4 inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white" href="/board">Go to The Slate</Link>
+              <Link className="mt-4 inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/board">View The Slate</Link>
             </div>
 
-            {data.survivorAvailable ? <div className="border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
+            {data.survivorAvailable ? <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p>
               {viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-2xl font-bold text-red-700">Eliminated</h3><p className="mt-1 text-sm text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <><h3 className="mt-1 font-serif text-2xl font-bold text-green-800">Pick made: {viewerSurvivor.pick.label}</h3><p className="mt-1 text-sm text-slate-700">You can change it until that game begins.</p></> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-2xl font-bold text-green-800">Pick made</h3><p className="mt-1 text-sm text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-2xl font-bold">Survivor pick due</h3><p className="mt-1 text-sm text-slate-700">Choose one straight-up winner before kickoff.</p></>}
-              <Link className="mt-4 inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white" href="/survivor">{viewerSurvivor?.status === "eliminated" ? "View The Survivor Wire" : viewerSurvivor?.pick ? "Change Survivor pick" : "Make Survivor pick"}</Link>
+              <Link className="mt-4 inline-block min-h-11 bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/survivor">View The Survivor Wire</Link>
             </div> : null}
           </div>
         </section>
