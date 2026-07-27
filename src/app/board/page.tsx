@@ -597,7 +597,7 @@ export default function BoardPage() {
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="grid gap-5 md:grid-cols-[9rem_minmax(0,1fr)_18rem] md:gap-8">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-8">
             <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
@@ -624,14 +624,6 @@ export default function BoardPage() {
               </select>
             </div>
 
-            <p className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
-              <span>Lines lock at 8 AM ET</span>
-              <span>on game day. Lines may move</span>
-              <span>
-                before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
-              </span>
-            </p>
-
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">
                 HOW TO PLAY
@@ -643,6 +635,13 @@ export default function BoardPage() {
                   : "Select TWO teams and hit Save below."}
               </p>
               <p className="mt-0.5">Picks may be changed until listed kickoff.</p>
+              <div className="mt-3 border-t border-[#b7aea0] pt-3">
+                <p>Lines lock at 8 AM ET</p>
+                <p>on game day. Lines may move</p>
+                <p>
+                  before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.
+                </p>
+              </div>
               {hasEarlyGame ? (
                 <p className="mt-2 font-semibold">
                   EARLY GAME: spreads post at 6 PM ET the night before.
