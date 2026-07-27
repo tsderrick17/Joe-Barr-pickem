@@ -290,6 +290,60 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       finalizedGames.push({ ...game, awayScore, homeScore });
     }
 
+    if (finalizedGames.length > 0) {
+      const { data: atomicRows, error: atomicError } = await supabaseAdmin.rpc(
+        "finalize_games_atomically",
+        {
+          final_games: finalizedGames.map((game) => ({
+            game_id: game.id,
+            away_score: game.awayScore,
+            home_score: game.homeScore,
+          })),
+          accepted_at: checkedAt,
+        },
+      );
+
+      if (atomicError || !atomicRows?.[0]) {
+        throw new Error("Final scores could not be finalized safely.");
+      }
+
+      const atomicResult = atomicRows[0] as {
+        final_scores_imported: number;
+        ats_picks_graded: number;
+        survivor_picks_graded: number;
+      };
+      const { count: pendingAfterFinalization, error: pendingError } =
+        await supabaseAdmin
+          .from("picks")
+          .select("id", { count: "exact", head: true })
+          .in("game_id", finalizedGames.map((game) => game.id))
+          .eq("result", "pending");
+
+      if (pendingError) {
+        throw new Error("Final pick grades could not be verified.");
+      }
+
+      const completedWeekRollover = await advanceScoringPeriods(now);
+      const result = {
+        checkedAt,
+        eligibleGames: eligibleGames.length,
+        providerChecked: true,
+        completedGamesFound: completedEvents.length,
+        finalScoresImported: atomicResult.final_scores_imported,
+        picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
+        picksAwaitingLine:
+          recoveredGrades.picksAwaitingLine + (pendingAfterFinalization ?? 0),
+        requestsRemaining,
+        warnings,
+        weekRollover: completedWeekRollover,
+      };
+      await supabaseAdmin
+        .from("sync_runs")
+        .update({ status: "success", completed_at: new Date().toISOString(), details: result })
+        .eq("id", run.data.id);
+      return result;
+    }
+
     for (const game of finalizedGames) {
       const { error } = await supabaseAdmin
         .from("games")
