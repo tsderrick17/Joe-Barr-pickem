@@ -209,24 +209,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const unlockedExistingPickIds = (existingPicks ?? [])
-    .filter((pick) => !lockedExistingPicks.some((locked) => locked.id === pick.id))
-    .map((pick) => pick.id);
-
-  if (unlockedExistingPickIds.length) {
-    const { error: deleteError } = await supabaseAdmin
-      .from("picks")
-      .delete()
-      .in("id", unlockedExistingPickIds);
-
-    if (deleteError) {
-      return NextResponse.json(
-        { error: "Your previous picks could not be updated." },
-        { status: 500 },
-      );
-    }
-  }
-
   const picksToInsert = selections
     .filter(
       (selection) =>
@@ -237,23 +219,24 @@ export async function POST(request: NextRequest) {
         ),
     )
     .map((selection) => ({
-      player_id: player.id,
-      scoring_period_id: scoringPeriodId,
       game_id: selection.gameId,
       selected_team_id: selection.teamId,
     }));
 
-  if (picksToInsert.length) {
-    const { error: insertError } = await supabaseAdmin
-      .from("picks")
-      .insert(picksToInsert);
+  const { error: replaceError } = await supabaseAdmin.rpc(
+    "replace_unlocked_picks",
+    {
+      target_player_id: player.id,
+      target_scoring_period_id: scoringPeriodId,
+      replacement_picks: picksToInsert,
+    },
+  );
 
-    if (insertError) {
-      return NextResponse.json(
-        { error: insertError.message },
-        { status: 400 },
-      );
-    }
+  if (replaceError) {
+    return NextResponse.json(
+      { error: replaceError.message },
+      { status: 400 },
+    );
   }
 
   const message =

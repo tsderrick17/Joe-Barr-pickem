@@ -28,6 +28,7 @@
    - `supabase/023_freeze_completed_scoring_periods.sql`
    - `supabase/024_add_runtime_query_indexes.sql`
    - `supabase/025_store_game_finalization_times.sql`
+   - `supabase/026_replace_unlocked_picks_atomically.sql`
 
 ## Weekly dress rehearsal
 
