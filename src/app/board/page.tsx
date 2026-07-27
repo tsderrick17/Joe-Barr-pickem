@@ -566,13 +566,13 @@ export default function BoardPage() {
       }`}
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
-        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-4 sm:-mx-5 sm:px-5 md:-mx-10 md:px-10">
-          <div className="flex items-start justify-between gap-5">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-8">
             <div className="min-w-0">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
-              <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2 sm:mt-4">
+              <div className="mt-4 grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-end sm:gap-5">
                 <div>
                   <label
                     className="block text-xs font-bold tracking-[0.16em] text-slate-600"
@@ -596,23 +596,23 @@ export default function BoardPage() {
                   </select>
                 </div>
 
-                <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
+                <p className="max-w-md pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
                   Lines lock at 8 AM ET on game day unless otherwise noted. LIVE lines may move; teal lines are LOCKED for official grading.
                 </p>
               </div>
             </div>
 
-            <aside className="max-w-[13rem] border-l border-[#b7aea0] pl-3 text-right text-[11px] leading-4 text-slate-700 sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:flex md:self-stretch md:flex-col md:justify-center md:border-l md:border-t-0 md:pl-6 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">
                 HOW TO PLAY
               </p>
-              <p className="mt-1">Favorites listed left; home team ALL CAPS.</p>
-              <p>
+              <p className="mt-1.5">Favorites listed left; home team ALL CAPS.</p>
+              <p className="mt-0.5">
                 {week.period_type === "playoff"
                   ? "Select every team and hit Save below."
                   : "Select TWO teams and hit Save below."}
               </p>
-              <p>Picks may be changed until listed kickoff.</p>
+              <p className="mt-0.5">Picks may be changed until listed kickoff.</p>
               {hasEarlyGame ? (
                 <p className="mt-2 font-semibold">
                   EARLY GAME: spreads post at 6 PM ET the night before.
