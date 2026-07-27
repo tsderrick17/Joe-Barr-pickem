@@ -8,6 +8,7 @@ import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
 import AutomationHealth from "@/components/automation-health";
 import IntegrityRehearsal from "@/components/integrity-rehearsal";
+import GameDayPlaybook from "@/components/game-day-playbook";
 
 type Spread = {
   team: string;
@@ -209,6 +210,7 @@ export default function AdminPage() {
   </Link>
 </div>
         </header>
+        <GameDayPlaybook />
         <AutomationHealth />
         <IntegrityRehearsal />
         <LineLockChecker />

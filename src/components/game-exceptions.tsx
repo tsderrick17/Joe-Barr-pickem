@@ -88,7 +88,7 @@ export default function GameExceptions() {
   }
 
   return (
-    <section className="border-b-2 border-zinc-900 py-8">
+    <section className="border-b-2 border-zinc-900 py-8" id="game-exceptions">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl font-bold">Game Exceptions</h2>

@@ -132,7 +132,7 @@ export default function LineLockChecker() {
   }
 
   return (
-    <section className="mt-8 border-y-2 border-zinc-900 py-8">
+    <section className="mt-8 border-y-2 border-zinc-900 py-8" id="official-spread-locks">
       <h2 className="font-serif text-2xl font-bold">
         Official Spread Locks
       </h2>

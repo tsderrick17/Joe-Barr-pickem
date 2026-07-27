@@ -138,7 +138,7 @@ export default function ScoreSyncChecker() {
   }
 
   return (
-    <section className="border-b-2 border-zinc-900 py-8">
+    <section className="border-b-2 border-zinc-900 py-8" id="final-score-check">
       <h2 className="font-serif text-2xl font-bold">Final Score Check</h2>
       <p className="mt-2 text-zinc-700">
         This follows the automatic rule: only games at least three hours past

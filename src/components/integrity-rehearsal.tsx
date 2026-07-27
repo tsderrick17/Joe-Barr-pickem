@@ -49,7 +49,7 @@ export default function IntegrityRehearsal() {
     return () => { cancelled = true; };
   }, []);
 
-  return <section className="border-b-2 border-zinc-900 py-8">
+  return <section className="border-b-2 border-zinc-900 py-8" id="integrity-rehearsal">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h2 className="font-serif text-2xl font-bold">Integrity Rehearsal</h2>
