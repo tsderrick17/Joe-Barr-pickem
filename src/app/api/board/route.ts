@@ -7,6 +7,20 @@ type TeamRow = {
   full_name: string;
 };
 
+type PreliminaryLineRow = {
+  game_id: string;
+  favorite_team_id: string | null;
+  captured_at: string;
+};
+
+type LockedLineRow = {
+  game_id: string;
+  favorite_team_id: string | null;
+  locked_spread: number | string;
+  source: string;
+  locked_at: string;
+};
+
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
@@ -91,7 +105,10 @@ export async function GET(request: NextRequest) {
 
   const teamIds = [
     ...new Set(
-      games.flatMap((game) => [game.away_team_id, game.home_team_id]),
+      games.flatMap((game) => [
+        game.away_team_id,
+        game.home_team_id,
+      ]),
     ),
   ];
 
@@ -107,14 +124,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: history, error: historyError } = await supabaseAdmin
-    .from("spread_history")
-    .select("game_id, favorite_team_id, captured_at")
-    .in(
-      "game_id",
-      games.map((game) => game.id),
-    )
-    .order("captured_at", { ascending: false });
+  const gameIds = games.map((game) => game.id);
+
+  const { data: history, error: historyError } =
+    gameIds.length > 0
+      ? await supabaseAdmin
+          .from("spread_history")
+          .select("game_id, favorite_team_id, captured_at")
+          .in("game_id", gameIds)
+          .order("captured_at", { ascending: false })
+      : { data: [], error: null };
 
   if (historyError) {
     return NextResponse.json(
@@ -123,29 +142,77 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { data: lockedLines, error: lockedLinesError } =
+    gameIds.length > 0
+      ? await supabaseAdmin
+          .from("game_lines")
+          .select(
+            "game_id, favorite_team_id, locked_spread, source, locked_at",
+          )
+          .in("game_id", gameIds)
+      : { data: [], error: null };
+
+  if (lockedLinesError) {
+    return NextResponse.json(
+      { error: "The official spreads could not be loaded." },
+      { status: 500 },
+    );
+  }
+
   const teamNameById = new Map(
-    (teams as TeamRow[]).map((team) => [team.id, team.full_name]),
+    (teams as TeamRow[]).map((team) => [
+      team.id,
+      team.full_name,
+    ]),
   );
 
-  const favoriteTeamByGameId = new Map<string, string>();
+  const preliminaryFavoriteByGameId =
+    new Map<string, string>();
 
-  for (const line of history ?? []) {
-    if (!favoriteTeamByGameId.has(line.game_id) && line.favorite_team_id) {
-      favoriteTeamByGameId.set(line.game_id, line.favorite_team_id);
+  for (const line of (history ?? []) as PreliminaryLineRow[]) {
+    if (
+      !preliminaryFavoriteByGameId.has(line.game_id) &&
+      line.favorite_team_id
+    ) {
+      preliminaryFavoriteByGameId.set(
+        line.game_id,
+        line.favorite_team_id,
+      );
     }
   }
 
+  const lockedLineByGameId = new Map(
+    ((lockedLines ?? []) as LockedLineRow[]).map((line) => [
+      line.game_id,
+      line,
+    ]),
+  );
+
   return NextResponse.json({
-    games: games.map((game) => ({
-      id: game.id,
-      kickoffAt: game.kickoff_at,
-      lineLockAt: game.line_lock_at,
-      awayTeam: teamNameById.get(game.away_team_id) ?? "Unknown team",
-      homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
-      favoriteTeamId: favoriteTeamByGameId.get(game.id) ?? null,
-      awayTeamId: game.away_team_id,
-      homeTeamId: game.home_team_id,
-    })),
+    games: games.map((game) => {
+      const lockedLine = lockedLineByGameId.get(game.id);
+
+      return {
+        id: game.id,
+        kickoffAt: game.kickoff_at,
+        lineLockAt: game.line_lock_at,
+        awayTeam:
+          teamNameById.get(game.away_team_id) ?? "Unknown team",
+        homeTeam:
+          teamNameById.get(game.home_team_id) ?? "Unknown team",
+        favoriteTeamId:
+          lockedLine?.favorite_team_id ??
+          preliminaryFavoriteByGameId.get(game.id) ??
+          null,
+        awayTeamId: game.away_team_id,
+        homeTeamId: game.home_team_id,
+        officialSpread: lockedLine
+          ? Number(lockedLine.locked_spread)
+          : null,
+        spreadSource: lockedLine?.source ?? null,
+        spreadLockedAt: lockedLine?.locked_at ?? null,
+      };
+    }),
     myPicks: (myPicks ?? []).map((pick) => ({
       gameId: pick.game_id,
       teamId: pick.selected_team_id,

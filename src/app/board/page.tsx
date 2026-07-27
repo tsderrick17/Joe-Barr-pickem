@@ -21,6 +21,9 @@ type BoardGame = {
   favoriteTeamId: string | null;
   awayTeamId: string;
   homeTeamId: string;
+  officialSpread: number | null;
+  spreadSource: string | null;
+  spreadLockedAt: string | null;
 };
 
 type SelectedPick = {
@@ -66,6 +69,12 @@ function isEarlyGame(game: BoardGame) {
 
 function teamLabel(teamName: string, isHome: boolean) {
   return isHome ? teamName.toUpperCase() : teamName;
+}
+function officialSpreadLabel(spread: number | null) {
+  if (spread === null) return null;
+  if (spread === 0) return "PK";
+
+  return `-${Number.isInteger(spread) ? spread : spread.toFixed(1)}`;
 }
 
 export default function BoardPage() {
@@ -458,16 +467,22 @@ return (
                             {teamLabel(leftTeamName, favoriteIsHome)}
                           </button>
 
-                          <div className="min-w-24 text-center text-xs font-bold leading-5 text-slate-700 md:min-w-36">
-                            <p>{easternTime(game.kickoffAt)}</p>
+<div className="min-w-24 text-center text-xs font-bold leading-5 text-slate-700 md:min-w-36">
+  {game.officialSpread !== null ? (
+    <p className="font-serif text-xl font-bold text-zinc-900">
+      {officialSpreadLabel(game.officialSpread)}
+    </p>
+  ) : null}
 
-                            {isEarlyGame(game) ? (
-                              <p className="mt-1">
-                                EARLY GAME · SPREADS APPEAR{" "}
-                                {easternTime(game.lineLockAt)}
-                              </p>
-                            ) : null}
-                          </div>
+  <p>{easternTime(game.kickoffAt)}</p>
+
+  {isEarlyGame(game) ? (
+    <p className="mt-1">
+      EARLY GAME - SPREADS APPEAR{" "}
+      {easternTime(game.lineLockAt)}
+    </p>
+  ) : null}
+</div>
 
                           <button
                             className={`text-right font-serif text-lg leading-tight md:text-xl ${
