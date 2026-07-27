@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
+import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 
 type ScoringPeriod = {
   id: string;
@@ -136,17 +137,6 @@ function teamLogoUrl(abbreviation: string) {
   return `/team-logos/${abbreviation}.png`;
 }
 
-const defaultHomeHelmetColors: Record<string, string> = {
-  ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff",
-  CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00",
-  DAL: "#b0b7bc", DEN: "#0a2343", DET: "#b0b7bc", GB: "#ffb612",
-  HOU: "#03202f", IND: "#ffffff", JAX: "#111111", KC: "#e31837",
-  LV: "#a5acaf", LAC: "#ffffff", LAR: "#003594", MIA: "#ffffff",
-  MIN: "#4f2683", NE: "#c5c9cc", NO: "#d3bc8d", NYG: "#0b2265",
-  NYJ: "#125740", PHI: "#004c54", PIT: "#111111", SEA: "#002244",
-  SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414",
-};
-
 function HelmetIcon({
   abbreviation,
   faces,
@@ -157,7 +147,7 @@ function HelmetIcon({
   unavailable?: boolean;
 }) {
   const flipped = faces === "left";
-  const shellColor = defaultHomeHelmetColors[abbreviation] ?? "#ffffff";
+  const shellColor = helmetShellColor(abbreviation, "#ffffff");
   return (
     <span aria-hidden="true" className={`relative block h-12 w-[3.9rem] shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale" : ""}`}>
       <span
@@ -735,7 +725,7 @@ export default function BoardPage() {
                     const rightUnavailable = rightUsed || gameHasStarted;
                     return (
                       <article className="relative py-1" key={game.id}>
-                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${defaultHomeHelmetColors[leftTeamAbbreviation] ?? "#111111"} 0 50%, ${defaultHomeHelmetColors[rightTeamAbbreviation] ?? "#111111"} 50% 100%)` }} />
+                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${helmetShellColor(leftTeamAbbreviation)} 0 50%, ${helmetShellColor(rightTeamAbbreviation)} 50% 100%)` }} />
                         <p className="sr-only">{easternTime(game.kickoffAt)}</p>
                         <div className="grid grid-cols-2 divide-x divide-[#1d1d1f]">
                           <button aria-label={`Choose ${leftTeamName} as your straight-up Survivor winner`} aria-pressed={leftSelected} className={`flex min-h-14 items-center justify-center px-2 py-1.5 transition ${leftSelected ? "bg-[#1d1d1f]" : "bg-white hover:bg-zinc-100"} disabled:cursor-not-allowed`} disabled={leftUnavailable} onClick={() => setSurvivorPick(leftSelected ? null : { gameId: game.id, teamId: leftTeamId })} title={leftUnavailable ? `${leftTeamName} is unavailable` : `Choose ${leftTeamName}`} type="button">
