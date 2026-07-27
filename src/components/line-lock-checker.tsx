@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type LockResult = {
   message: string;
@@ -24,6 +24,16 @@ type LatestLockRun = {
   error_message: string | null;
 };
 
+async function readResponse(response: Response) {
+  const text = await response.text();
+
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function LineLockChecker() {
   const [result, setResult] = useState<LockResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -36,52 +46,32 @@ export default function LineLockChecker() {
     setErrorMessage("");
     setIsChecking(true);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    try {
+      const response = await fetchWithSession("/api/admin/lock-lines", {
+        method: "POST",
+      });
+      const data = await readResponse(response);
 
-    if (!session) {
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The official spread check failed.");
+        return;
+      }
+
+      setResult(data);
+    } catch (error) {
       setErrorMessage(
-        "Please sign in before checking official spreads.",
+        error instanceof SessionUnavailableError
+          ? error.message
+          : "The official spread check failed. Please try again.",
       );
+    } finally {
       setIsChecking(false);
-      return;
     }
-
-    const response = await fetch("/api/admin/lock-lines", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-
-    const data = await response.json();
-
-    setIsChecking(false);
-
-    if (!response.ok) {
-      setErrorMessage(
-        data.error ?? "The official spread check failed.",
-      );
-      return;
-    }
-
-    setResult(data);
   }
 
   async function requestLatestLock() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new Error("Please sign in before viewing official line history.");
-    }
-
-    const response = await fetch("/api/admin/lock-lines", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const data = await response.json();
+    const response = await fetchWithSession("/api/admin/lock-lines");
+    const data = await readResponse(response);
 
     if (!response.ok) {
       throw new Error(

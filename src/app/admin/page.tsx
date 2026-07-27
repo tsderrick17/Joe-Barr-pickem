@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import GameExceptions from "@/components/game-exceptions";
 import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
@@ -69,42 +69,39 @@ export default function AdminPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
-  async function getSessionToken() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  async function readResponse(response: Response) {
+    const text = await response.text();
 
-    return session?.access_token ?? null;
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      return {};
+    }
   }
 
   async function previewOdds() {
     setErrorMessage("");
     setIsLoading(true);
 
-    const accessToken = await getSessionToken();
+    try {
+      const response = await fetchWithSession("/api/admin/odds-preview");
+      const data = await readResponse(response);
 
-    if (!accessToken) {
-      setErrorMessage("Please sign in before checking the odds feed.");
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The odds preview could not load.");
+        return;
+      }
+
+      setPreview(data);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof SessionUnavailableError
+          ? error.message
+          : "The odds preview could not load. Please try again.",
+      );
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    const response = await fetch("/api/admin/odds-preview", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setErrorMessage(data.error ?? "The odds preview could not load.");
-      setIsLoading(false);
-      return;
-    }
-
-    setPreview(data);
-    setIsLoading(false);
   }
 
   async function previewImport() {
@@ -112,32 +109,25 @@ export default function AdminPage() {
     setImportResult(null);
     setIsImportLoading(true);
 
-    const accessToken = await getSessionToken();
+    try {
+      const response = await fetchWithSession("/api/admin/import-preview");
+      const data = await readResponse(response);
 
-    if (!accessToken) {
-      setImportErrorMessage("Please sign in before previewing an import.");
-      setIsImportLoading(false);
-      return;
-    }
+      if (!response.ok) {
+        setImportErrorMessage(data.error ?? "The import preview could not load.");
+        return;
+      }
 
-    const response = await fetch("/api/admin/import-preview", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
+      setImportPreview(data);
+    } catch (error) {
       setImportErrorMessage(
-        data.error ?? "The import preview could not load.",
+        error instanceof SessionUnavailableError
+          ? error.message
+          : "The import preview could not load. Please try again.",
       );
+    } finally {
       setIsImportLoading(false);
-      return;
     }
-
-    setImportPreview(data);
-    setIsImportLoading(false);
   }
 
   async function importGames() {
@@ -158,31 +148,27 @@ export default function AdminPage() {
     setImportResult(null);
     setIsImporting(true);
 
-    const accessToken = await getSessionToken();
+    try {
+      const response = await fetchWithSession("/api/admin/import-games", {
+        method: "POST",
+      });
+      const data = await readResponse(response);
 
-    if (!accessToken) {
-      setImportErrorMessage("Please sign in before importing games.");
+      if (!response.ok) {
+        setImportErrorMessage(data.error ?? "The game import could not run.");
+        return;
+      }
+
+      setImportResult(data);
+    } catch (error) {
+      setImportErrorMessage(
+        error instanceof SessionUnavailableError
+          ? error.message
+          : "The game import could not run. Please try again.",
+      );
+    } finally {
       setIsImporting(false);
-      return;
     }
-
-    const response = await fetch("/api/admin/import-games", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setImportErrorMessage(data.error ?? "The game import could not run.");
-      setIsImporting(false);
-      return;
-    }
-
-    setImportResult(data);
-    setIsImporting(false);
   }
 
   return (
@@ -204,6 +190,10 @@ export default function AdminPage() {
           </div>
 
 <div className="flex flex-col items-end gap-2">
+  <Link className="font-semibold underline" href="/login">
+    Commissioner sign in
+  </Link>
+
   <Link className="font-semibold underline" href="/admin/players">
     Player setup
   </Link>

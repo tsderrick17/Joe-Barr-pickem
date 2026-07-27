@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type ScoreSyncResult = {
   message: string;
@@ -30,6 +30,16 @@ type LatestRun = {
   error_message: string | null;
 };
 
+async function readResponse(response: Response) {
+  const text = await response.text();
+
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function ScoreSyncChecker() {
   const [result, setResult] = useState<ScoreSyncResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -42,40 +52,32 @@ export default function ScoreSyncChecker() {
     setResult(null);
     setIsChecking(true);
 
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+      const response = await fetchWithSession("/api/admin/sync-scores", {
+        method: "POST",
+      });
+      const data = await readResponse(response);
 
-    if (!session) {
-      setErrorMessage("Please sign in before checking final scores.");
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The final score check failed.");
+        return;
+      }
+
+      setResult(data);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof SessionUnavailableError
+          ? error.message
+          : "The final score check failed. Please try again.",
+      );
+    } finally {
       setIsChecking(false);
-      return;
     }
-
-    const response = await fetch("/api/admin/sync-scores", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const data = await response.json();
-    setIsChecking(false);
-
-    if (!response.ok) {
-      setErrorMessage(data.error ?? "The final score check failed.");
-      return;
-    }
-
-    setResult(data);
   }
 
   async function requestLatestCheck() {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new Error("Please sign in before viewing score-check history.");
-    }
-
-    const response = await fetch("/api/admin/sync-scores", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const data = await response.json();
+    const response = await fetchWithSession("/api/admin/sync-scores");
+    const data = await readResponse(response);
 
     if (!response.ok) {
       throw new Error(
