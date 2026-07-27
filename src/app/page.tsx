@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchWithSession,
+  SessionUnavailableError,
+} from "@/lib/auth-session";
 
 type ScoreboardPick = {
   label: string | null;
@@ -23,6 +26,8 @@ type HomeData = {
   maxPicks: number;
   nextRevealAt: string | null;
   rows: ScoreboardRow[];
+  survivorAvailable: boolean;
+  survivorNotice: string | null;
   survivorRows: {
     id: string;
     firstName: string;
@@ -35,6 +40,7 @@ type HomeData = {
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let revealTimer: number | null = null;
@@ -53,19 +59,7 @@ export default function HomePage() {
         activeRequest?.abort();
         activeRequest = request;
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
-          window.location.href = "/login";
-          return;
-        }
-
-        const response = await fetch("/api/home", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+        const response = await fetchWithSession("/api/home", {
           signal: request.signal,
         });
 
@@ -94,8 +88,13 @@ export default function HomePage() {
             void loadHome();
           }, refreshDelay);
         }
-      } catch {
+      } catch (error) {
         if (request.signal.aborted && !requestTimedOut) {
+          return;
+        }
+
+        if (error instanceof SessionUnavailableError) {
+          window.location.replace("/login");
           return;
         }
 
@@ -134,7 +133,7 @@ export default function HomePage() {
       activeRequest?.abort();
       window.removeEventListener("focus", refreshOnFocus);
     };
-  }, []);
+  }, [retryNonce]);
 
   const viewerRow = useMemo(() => {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
@@ -149,13 +148,13 @@ export default function HomePage() {
 
   const pickWord = (count: number) => (count === 1 ? "pick" : "picks");
 
-  if (errorMessage) {
+  if (errorMessage && !data) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
         <p className="font-semibold text-red-700">{errorMessage}</p>
         <button
           className="mt-5 bg-[#1d1d1f] px-5 py-3 font-bold text-white"
-          onClick={() => window.location.reload()}
+          onClick={() => setRetryNonce((value) => value + 1)}
           type="button"
         >
           Try again
@@ -175,6 +174,19 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+        {errorMessage ? (
+          <div className="mb-5 flex flex-col gap-3 border-2 border-red-700 bg-red-50 p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-semibold">{errorMessage}</p>
+            <button
+              className="min-h-11 bg-red-800 px-4 py-2 font-bold text-white"
+              onClick={() => setRetryNonce((value) => value + 1)}
+              type="button"
+            >
+              Try again
+            </button>
+          </div>
+        ) : null}
+
         <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
           <h1 className="font-serif text-3xl font-bold sm:text-4xl md:text-5xl">
             Lead Pipe Locks
@@ -334,20 +346,29 @@ export default function HomePage() {
             SURVIVOR
           </p>
 
-          <div className="mt-4 divide-y border-y-2 border-[#1d1d1f]">
-            {data.survivorRows.map((row) => (
-              <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3 sm:grid-cols-[1fr_8rem]" key={row.id}>
-                <div>
-                  <p className={row.status === "active" ? "font-serif text-lg font-bold" : "font-serif text-lg text-slate-500 line-through"}>{row.firstName}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-700">
-                  {row.pick?.label ?? (row.pick?.isHidden ? "Pick locked" : "No pick")}
-                  {row.pick?.resultMark ? <strong className={`ml-2 ${row.pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{row.pick.resultMark}</strong> : null}
-                  </p>
+          {data.survivorAvailable ? (
+            <div className="mt-4 divide-y border-y-2 border-[#1d1d1f]">
+              {data.survivorRows.map((row) => (
+                <div className="grid grid-cols-[1fr_auto] items-center gap-3 py-3 sm:grid-cols-[1fr_8rem]" key={row.id}>
+                  <div>
+                    <p className={row.status === "active" ? "font-serif text-lg font-bold" : "font-serif text-lg text-slate-500 line-through"}>{row.firstName}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-700">
+                    {row.pick?.label ?? (row.pick?.isHidden ? "Pick locked" : "No pick")}
+                    {row.pick?.resultMark ? <strong className={`ml-2 ${row.pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{row.pick.resultMark}</strong> : null}
+                    </p>
+                  </div>
+                  <p className={`text-right text-xs font-black tracking-[0.12em] ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "ACTIVE" : "OUT"}</p>
                 </div>
-                <p className={`text-right text-xs font-black tracking-[0.12em] ${row.status === "active" ? "text-green-800" : "text-slate-500"}`}>{row.status === "active" ? "ACTIVE" : "OUT"}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
+              <p className="font-bold">
+                {data.survivorNotice ??
+                  "Survivor is temporarily unavailable. ATS standings remain current."}
+              </p>
+            </div>
+          )}
           <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/board">Manage picks on The Slate</Link>
         </section>
       </div>

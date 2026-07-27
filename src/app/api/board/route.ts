@@ -150,29 +150,76 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let survivor: {
+    available: boolean;
+    notice: string | null;
+    status: "active" | "eliminated" | "complete";
+    pick: SurvivorPickRow | null;
+    usedTeamIds: string[];
+  } = {
+    available: false,
+    notice:
+      "Survivor is temporarily unavailable. ATS picks remain available.",
+    status: "active",
+    pick: null,
+    usedTeamIds: [],
+  };
+
   const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
     target_season_id: period.season_id,
   });
+
   if (ensuredEntries.error) {
-    return NextResponse.json({ error: "Survivor entries could not be prepared." }, { status: 500 });
-  }
+    console.error("Survivor enrollment failed on The Slate.", {
+      code: ensuredEntries.error.code,
+    });
+  } else {
+    const { data: survivorEntry, error: survivorEntryError } =
+      await supabaseAdmin
+        .from("survivor_entries")
+        .select("id, status")
+        .eq("player_id", player.id)
+        .eq("season_id", period.season_id)
+        .maybeSingle();
 
-  const { data: survivorEntry, error: survivorEntryError } = await supabaseAdmin
-    .from("survivor_entries")
-    .select("id, status")
-    .eq("player_id", player.id)
-    .eq("season_id", period.season_id)
-    .maybeSingle();
-  if (survivorEntryError || !survivorEntry) {
-    return NextResponse.json({ error: "Your Survivor entry could not be loaded." }, { status: 500 });
-  }
+    if (survivorEntryError || !survivorEntry) {
+      console.error("Survivor entry query failed on The Slate.", {
+        code: survivorEntryError?.code,
+      });
+    } else {
+      const [
+        { data: survivorPick, error: survivorPickError },
+        { data: usedSurvivorPicks, error: usedSurvivorPicksError },
+      ] = await Promise.all([
+        supabaseAdmin
+          .from("survivor_picks")
+          .select("game_id, selected_team_id")
+          .eq("survivor_entry_id", survivorEntry.id)
+          .eq("scoring_period_id", scoringPeriodId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("survivor_picks")
+          .select("selected_team_id")
+          .eq("survivor_entry_id", survivorEntry.id),
+      ]);
 
-  const [{ data: survivorPicks, error: survivorPicksError }, { data: usedSurvivorPicks, error: usedSurvivorPicksError }] = await Promise.all([
-    supabaseAdmin.from("survivor_picks").select("game_id, selected_team_id").eq("survivor_entry_id", survivorEntry.id).eq("scoring_period_id", scoringPeriodId).maybeSingle(),
-    supabaseAdmin.from("survivor_picks").select("selected_team_id").eq("survivor_entry_id", survivorEntry.id),
-  ]);
-  if (survivorPicksError || usedSurvivorPicksError) {
-    return NextResponse.json({ error: "Your Survivor selection could not be loaded." }, { status: 500 });
+      if (survivorPickError || usedSurvivorPicksError) {
+        console.error("Survivor selection query failed on The Slate.", {
+          pickCode: survivorPickError?.code,
+          usedCode: usedSurvivorPicksError?.code,
+        });
+      } else {
+        survivor = {
+          available: true,
+          notice: null,
+          status: survivorEntry.status,
+          pick: survivorPick as SurvivorPickRow | null,
+          usedTeamIds: (usedSurvivorPicks ?? []).map(
+            (pick) => pick.selected_team_id,
+          ),
+        };
+      }
+    }
   }
 
   const teamIds = [
@@ -296,10 +343,6 @@ export async function GET(request: NextRequest) {
       gameId: pick.game_id,
       teamId: pick.selected_team_id,
     })),
-    survivor: {
-      status: survivorEntry.status,
-      pick: survivorPicks as SurvivorPickRow | null,
-      usedTeamIds: (usedSurvivorPicks ?? []).map((pick) => pick.selected_team_id),
-    },
+    survivor,
   });
 }

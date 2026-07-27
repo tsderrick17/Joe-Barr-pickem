@@ -1,14 +1,30 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { AuthApiError } from "@supabase/supabase-js";
+import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [pin, setPin] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function redirectSignedInPlayer() {
+      const session = await getFreshSession();
+      if (active && session) {
+        window.location.replace("/");
+      }
+    }
+
+    void redirectSignedInPlayer();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,20 +36,47 @@ export default function LoginPage() {
     setErrorMessage("");
     setIsSubmitting(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: `pin-${pin}@pickemjb.app`,
-      password: `pickem-${pin}`,
-    });
+    try {
+      await supabase.auth.signOut({ scope: "local" });
 
-    setIsSubmitting(false);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: `pin-${pin}@pickemjb.app`,
+        password: `pickem-${pin}`,
+      });
 
-    if (error) {
-      setErrorMessage("That PIN was not recognized. Please try again.");
-      return;
+      if (error) {
+        if (
+          error instanceof AuthApiError &&
+          (error.status === 400 || error.status === 401)
+        ) {
+          setErrorMessage("That PIN was not recognized. Please try again.");
+        } else if (error instanceof AuthApiError && error.status === 429) {
+          setErrorMessage(
+            "Too many attempts were made. Wait a minute, then try again.",
+          );
+        } else {
+          setErrorMessage(
+            "Sign-in is temporarily unavailable. Check your connection and try again.",
+          );
+        }
+        return;
+      }
+
+      if (!data.session) {
+        setErrorMessage(
+          "Your PIN was accepted, but the session did not finish. Please try once more.",
+        );
+        return;
+      }
+
+      window.location.assign("/");
+    } catch {
+      setErrorMessage(
+        "Sign-in could not reach the server. Check your connection and try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-
-    router.push("/");
-    router.refresh();
   }
 
   return (
@@ -69,7 +112,7 @@ export default function LoginPage() {
             maxLength={4}
             minLength={4}
             pattern="[0-9]*"
-            autoComplete="current-password"
+            autoComplete="one-time-code"
             placeholder="••••"
             value={pin}
             onChange={(event) =>

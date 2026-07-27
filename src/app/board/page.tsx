@@ -2,6 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  fetchWithSession,
+  getFreshSession,
+  SessionUnavailableError,
+} from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 
@@ -41,7 +46,13 @@ type SelectedPick = {
 type BoardResponse = {
   games: BoardGame[];
   myPicks: SelectedPick[];
-  survivor: { status: "active" | "eliminated" | "complete"; pick: { game_id: string; selected_team_id: string } | null; usedTeamIds: string[] };
+  survivor: {
+    available: boolean;
+    notice: string | null;
+    status: "active" | "eliminated" | "complete";
+    pick: { game_id: string; selected_team_id: string } | null;
+    usedTeamIds: string[];
+  };
   error?: string;
 };
 
@@ -150,6 +161,8 @@ export default function BoardPage() {
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
+  const [survivorAvailable, setSurvivorAvailable] = useState(true);
+  const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -158,7 +171,7 @@ export default function BoardPage() {
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
 
-  async function loadWeek(period: ScoringPeriod, accessToken: string) {
+  async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
     boardRequestId.current = requestId;
     activeBoardRequest.current?.abort();
@@ -174,12 +187,12 @@ export default function BoardPage() {
     setWeek(period);
 
     try {
-      const response = await fetch(`/api/board?scoringPeriodId=${period.id}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+      const response = await fetchWithSession(
+        `/api/board?scoringPeriodId=${period.id}`,
+        {
         signal: request.signal,
-      });
+        },
+      );
 
       const data = (await response.json()) as BoardResponse;
 
@@ -197,8 +210,15 @@ export default function BoardPage() {
       setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorStatus(data.survivor.status);
-    } catch {
+      setSurvivorAvailable(data.survivor.available);
+      setSurvivorNotice(data.survivor.notice);
+    } catch (error) {
       if (requestId === boardRequestId.current) {
+        if (error instanceof SessionUnavailableError) {
+          window.location.replace("/login");
+          return;
+        }
+
         setErrorMessage("The Slate is taking too long to load. Please try again.");
       }
     } finally {
@@ -212,12 +232,10 @@ export default function BoardPage() {
 
   useEffect(() => {
     async function loadBoard() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await getFreshSession();
 
       if (!session) {
-        window.location.href = "/login";
+        window.location.replace("/login");
         return;
       }
 
@@ -258,7 +276,7 @@ export default function BoardPage() {
         return;
       }
 
-      await loadWeek(initialWeek, session.access_token);
+      await loadWeek(initialWeek);
     }
 
     void loadBoard();
@@ -304,7 +322,10 @@ export default function BoardPage() {
   }, [games, selectedPicks]);
 
   const hasUnsavedChanges = useMemo(() => {
-    const survivorChanged = survivorPick?.gameId !== savedSurvivorPick?.gameId || survivorPick?.teamId !== savedSurvivorPick?.teamId;
+    const survivorChanged =
+      survivorAvailable &&
+      (survivorPick?.gameId !== savedSurvivorPick?.gameId ||
+        survivorPick?.teamId !== savedSurvivorPick?.teamId);
     if (survivorChanged) return true;
     if (selectedPicks.length !== savedPicks.length) return true;
 
@@ -315,7 +336,13 @@ export default function BoardPage() {
             savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
         ),
     );
-  }, [savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
+  }, [
+    savedPicks,
+    savedSurvivorPick,
+    selectedPicks,
+    survivorAvailable,
+    survivorPick,
+  ]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -406,16 +433,7 @@ export default function BoardPage() {
       return;
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      window.location.href = "/login";
-      return;
-    }
-
-    await loadWeek(selectedWeek, session.access_token);
+    await loadWeek(selectedWeek);
   }
 
   async function submitPicks() {
@@ -426,30 +444,22 @@ export default function BoardPage() {
       return;
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      window.location.href = "/login";
-      return;
-    }
-
     setIsSubmitting(true);
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), 15_000);
 
     try {
-      const response = await fetch("/api/picks", {
+      const response = await fetchWithSession("/api/picks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           scoringPeriodId: week.id,
           selections: selectedPicks,
-          survivorSelection: survivorPick,
+          ...(survivorAvailable
+            ? { survivorSelection: survivorPick }
+            : {}),
         }),
         signal: request.signal,
       });
@@ -468,8 +478,15 @@ export default function BoardPage() {
 
       setSubmissionMessage(data.message ?? "Your picks have been saved.");
       setSavedPicks(selectedPicks);
-      setSavedSurvivorPick(survivorPick);
-    } catch {
+      if (survivorAvailable) {
+        setSavedSurvivorPick(survivorPick);
+      }
+    } catch (error) {
+      if (error instanceof SessionUnavailableError) {
+        window.location.replace("/login");
+        return;
+      }
+
       setSelectionWarning(
         "Your picks are taking too long to save. Please try again.",
       );
@@ -586,7 +603,17 @@ export default function BoardPage() {
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
           <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9">
-            {survivorStatus === "active" && !isReadOnly ? (
+            {!survivorAvailable ? (
+              <section className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
+                <h2 className="font-serif text-xl font-bold">
+                  Survivor is temporarily unavailable
+                </h2>
+                <p className="mt-1 text-sm font-semibold">
+                  {survivorNotice ??
+                    "Your ATS slate is still available and can be saved safely."}
+                </p>
+              </section>
+            ) : survivorStatus === "active" && !isReadOnly ? (
               <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping p-3 sm:p-5">
                 <div className="border-b-4 border-double border-[#29251d] pb-2">
                   <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:gap-3">

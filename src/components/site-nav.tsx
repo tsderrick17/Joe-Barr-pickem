@@ -2,40 +2,59 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function SiteNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     async function loadNavigation() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await getFreshSession();
 
       if (!session) {
-        setPlayerName("");
-        setIsCommissioner(false);
+        if (active) {
+          setPlayerName("");
+          setIsCommissioner(false);
+        }
         return;
       }
 
-      const { data: player } = await supabase
+      const { data: player, error } = await supabase
         .from("players")
         .select("first_name, is_commissioner")
         .eq("auth_user_id", session.user.id)
         .maybeSingle();
 
-      setPlayerName(player?.first_name ?? "");
-      setIsCommissioner(player?.is_commissioner ?? false);
+      if (active) {
+        setPlayerName(error ? "" : player?.first_name ?? "");
+        setIsCommissioner(error ? false : player?.is_commissioner ?? false);
+      }
     }
 
     void loadNavigation();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      window.setTimeout(() => {
+        if (active) {
+          void loadNavigation();
+        }
+      }, 0);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [pathname]);
 
   if (pathname === "/login") {
@@ -56,14 +75,17 @@ export default function SiteNav() {
   async function signOut() {
     setIsSigningOut(true);
 
-    await supabase.auth.signOut();
-
-    setPlayerName("");
-    setIsCommissioner(false);
-    setIsSigningOut(false);
-
-    router.push("/login");
-    router.refresh();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        await supabase.auth.signOut({ scope: "local" });
+      }
+    } finally {
+      setPlayerName("");
+      setIsCommissioner(false);
+      setIsSigningOut(false);
+      window.location.assign("/login");
+    }
   }
 
   return (

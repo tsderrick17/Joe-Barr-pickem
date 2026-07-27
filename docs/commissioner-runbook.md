@@ -1,5 +1,35 @@
 # Commissioner Runbook
 
+## Release gate
+
+Do not publish application code that depends on a database function or trigger
+until the production database reports it as present. For the combined ATS and
+Survivor release, run this read-only check in the Supabase SQL Editor:
+
+```sql
+select
+  to_regprocedure('public.ensure_survivor_entries(uuid)') is not null
+    as ensure_entries_ready,
+  to_regprocedure(
+    'public.save_slate_selections(uuid,uuid,uuid,jsonb,jsonb)'
+  ) is not null as atomic_save_ready,
+  (
+    select count(*)
+    from information_schema.triggers
+    where trigger_schema = 'public'
+      and trigger_name in (
+        'validate_survivor_pick',
+        'prevent_completed_survivor_pick_changes',
+        'prevent_survivor_entry_reactivation',
+        'prevent_audit_log_changes'
+      )
+  ) as integrity_trigger_count;
+```
+
+Both readiness values must be `true`, and the trigger count must be at least
+four. A failed database check blocks the release even when the application
+build succeeds.
+
 ## Normal automated flow
 
 1. Supabase refreshes the NFL schedule and preliminary spreads daily during NFL months without changing final, postponed, or cancelled game statuses.
