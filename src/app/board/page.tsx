@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -10,6 +9,7 @@ type ScoringPeriod = {
   display_order: number;
   status: "upcoming" | "active" | "complete";
   period_type: "regular" | "playoff";
+  max_picks: number;
 };
 
 type BoardGame = {
@@ -69,6 +69,7 @@ function teamLabel(teamName: string, isHome: boolean) {
 }
 
 export default function BoardPage() {
+  const [weeks, setWeeks] = useState<ScoringPeriod[]>([]);
   const [week, setWeek] = useState<ScoringPeriod | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
@@ -77,6 +78,32 @@ export default function BoardPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
+
+  async function loadWeek(period: ScoringPeriod, accessToken: string) {
+    setIsLoading(true);
+    setErrorMessage("");
+    setSelectionWarning("");
+    setSubmissionMessage("");
+    setWeek(period);
+
+    const response = await fetch(`/api/board?scoringPeriodId=${period.id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = (await response.json()) as BoardResponse;
+
+    if (!response.ok) {
+      setErrorMessage(data.error ?? "The Board could not be loaded.");
+      setIsLoading(false);
+      return;
+    }
+
+    setGames(data.games);
+    setSelectedPicks(data.myPicks);
+    setIsLoading(false);
+  }
 
   useEffect(() => {
     async function loadBoard() {
@@ -103,9 +130,10 @@ export default function BoardPage() {
 
       const { data: periods, error: periodsError } = await supabase
         .from("scoring_periods")
-.select("id, display_name, display_order, status, period_type")
+        .select(
+          "id, display_name, display_order, status, period_type, max_picks",
+        )
         .eq("season_id", season.id)
-        .eq("period_type", "regular")
         .order("display_order");
 
       if (periodsError || !periods?.length) {
@@ -114,34 +142,30 @@ export default function BoardPage() {
         return;
       }
 
-      const currentWeek =
-        periods.find((period) => period.status === "active") ??
-        periods.find((period) => period.status === "upcoming") ??
-        periods[0];
+      const loadedWeeks = periods as ScoringPeriod[];
+      setWeeks(loadedWeeks);
 
-      setWeek(currentWeek);
+      const initialWeek =
+        loadedWeeks.find((period) => period.status === "active") ??
+        loadedWeeks.find((period) => period.status === "upcoming") ??
+        loadedWeeks[0];
 
-      const response = await fetch(`/api/board?scoringPeriodId=${currentWeek.id}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      const data = (await response.json()) as BoardResponse;
-
-      if (!response.ok) {
-        setErrorMessage(data.error ?? "The Board could not be loaded.");
-        setIsLoading(false);
-        return;
-      }
-
-      setGames(data.games);
-      setSelectedPicks(data.myPicks);
-      setIsLoading(false);
+      await loadWeek(initialWeek, session.access_token);
     }
 
     void loadBoard();
   }, []);
+
+  const availableWeeks = useMemo(() => {
+    const currentWeek =
+      weeks.find((period) => period.status === "active") ??
+      weeks.find((period) => period.status === "upcoming");
+
+    return weeks.filter(
+      (period) =>
+        period.status === "complete" || period.id === currentWeek?.id,
+    );
+  }, [weeks]);
 
   const gamesByDay = useMemo(() => {
     const grouped = new Map<string, BoardGame[]>();
@@ -173,6 +197,12 @@ export default function BoardPage() {
       .filter(Boolean) as string[];
   }, [games, selectedPicks]);
 
+  const selectionLimit =
+    week?.period_type === "playoff" ? games.length : week?.max_picks ?? 2;
+
+  const isReadOnly = week?.status === "complete";
+  const hasEarlyGame = games.some(isEarlyGame);
+
   function isSelected(gameId: string, teamId: string) {
     return selectedPicks.some(
       (pick) => pick.gameId === gameId && pick.teamId === teamId,
@@ -180,6 +210,8 @@ export default function BoardPage() {
   }
 
   function chooseTeam(gameId: string, teamId: string) {
+    if (isReadOnly) return;
+
     setSelectionWarning("");
     setSubmissionMessage("");
 
@@ -201,14 +233,33 @@ export default function BoardPage() {
       return;
     }
 
-    if (selectedPicks.length >= 2) {
+    if (selectedPicks.length >= selectionLimit) {
       setSelectionWarning(
-        "You already have two selections. Click a selected team again to remove it first.",
+        `You already have ${selectionLimit} selections. Click one again to remove it first.`,
       );
       return;
     }
 
     setSelectedPicks((current) => [...current, { gameId, teamId }]);
+  }
+
+  async function chooseWeek(event: React.ChangeEvent<HTMLSelectElement>) {
+    const selectedWeek = weeks.find(
+      (period) => period.id === event.target.value,
+    );
+
+    if (!selectedWeek) return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "/login";
+      return;
+    }
+
+    await loadWeek(selectedWeek, session.access_token);
   }
 
   async function submitPicks() {
@@ -257,108 +308,149 @@ export default function BoardPage() {
       return;
     }
 
-    setSubmissionMessage(data.message ?? "Your pick has been saved.");
+    setSubmissionMessage(data.message ?? "Your picks have been saved.");
   }
 
-  if (isLoading) {
+  if (isLoading && !week) {
     return (
-      <main className="min-h-screen bg-[#f5f0e6] p-6 text-[#171719]">
+      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
         Loading The Board…
       </main>
     );
   }
 
-  if (errorMessage || !week) {
+  if (errorMessage && !week) {
     return (
-      <main className="min-h-screen bg-[#f5f0e6] p-6 text-[#171719]">
-        <h1 className="font-serif text-4xl">The Board</h1>
-        <p className="mt-4 font-semibold text-red-700">{errorMessage}</p>
+      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
+        <p className="font-semibold text-red-700">{errorMessage}</p>
       </main>
     );
   }
 
+  if (!week) {
+    return null;
+  }
+
   return (
-    <main className="min-h-screen bg-[#f5f0e6] pb-52 text-[#171719]">
-      <div className="mx-auto max-w-6xl px-5 py-9 md:px-10">
-        <header className="border-b-2 border-[#1d1d1f] pb-7">
-          <div className="flex items-start justify-between gap-4">
+    <main className="min-h-screen bg-[#f5f0e6] pb-56 text-[#171719]">
+      <div className="mx-auto max-w-5xl px-5 py-8 md:px-10">
+        <header className="border-b-2 border-[#1d1d1f] pb-6">
+<div className="flex items-start justify-between gap-5">
+  <div>
+    <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
+      JOE BARR MEMORIAL
+    </p>
+
+    <h1 className="mt-2 font-serif text-4xl font-bold">
+      The Board
+    </h1>
+  </div>
+
+  <div className="max-w-xs text-right text-sm font-semibold text-slate-700">
+    {hasEarlyGame ? (
+      <>
+        <p>EARLY GAME</p>
+        <p className="mt-1 font-normal">
+          Official spreads posted at 6 PM ET the night before.
+        </p>
+      </>
+    ) : null}
+  </div>
+</div>
+
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-bold tracking-[0.28em] text-slate-600">
-                JOE BARR MEMORIAL
-              </p>
-              <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-                The Board
-              </h1>
-              <p className="mt-3 text-lg">
-{week.display_name} ·{" "}
-{week.period_type === "playoff"
-  ? "Choose every game."
-  : "Choose 2 teams."}
-              </p>
+              <label
+                className="block text-xs font-bold tracking-[0.16em] text-slate-600"
+                htmlFor="week-selector"
+              >
+                VIEW WEEK
+              </label>
+
+              <select
+                className="mt-2 border border-[#1d1d1f] bg-white px-3 py-2 font-semibold"
+                id="week-selector"
+                onChange={chooseWeek}
+                value={week.id}
+              >
+                {availableWeeks.map((period) => (
+                  <option key={period.id} value={period.id}>
+                    {period.display_name}
+                    {period.status === "complete" ? " — Final" : ""}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <Link className="pt-2 font-bold underline" href="/">
-              Standings
-            </Link>
+            <p className="text-sm text-slate-700">
+              {week.period_type === "playoff"
+                ? "Choose every game."
+                : "Choose 2 teams."}
+            </p>
           </div>
 
-          <div className="mt-5 text-sm leading-6 text-slate-700">
-            <p>Teams on the left are preliminary favorites. Home teams are in ALL CAPS.</p>
-            <p>Click a team to select it. Spreads appear at the stated lock time.</p>
-          </div>
+<div className="mt-5 text-sm leading-6 text-slate-700">
+<p>Official spreads posted at 8 AM on game day unless otherwise noted.</p>
+<p>Favorites are on the left. Home teams are in ALL CAPS.</p>
+<p>
+  Click a team to select it. Click the Save button after making selections.
+  Picks may be changed until official game time.
+</p>
+</div>
         </header>
 
-        <div className="mt-8 space-y-10">
-          {gamesByDay.map(([day, dayGames]) => {
-            const normalLock = dayGames.find((game) => !isEarlyGame(game));
+        {isLoading ? (
+          <p className="mt-8">Loading {week.display_name}…</p>
+        ) : (
+          <div className="mt-8 space-y-9">
+            {gamesByDay.map(([day, dayGames]) => {
+              const normalLock = dayGames.find((game) => !isEarlyGame(game));
 
-            return (
-              <section key={day}>
-                <div className="border-b border-slate-400 pb-3">
-                  <h2 className="font-bold tracking-[0.18em]">
-                    {day.toUpperCase()}
-                  </h2>
+              return (
+                <section key={day}>
+                  <div className="flex flex-col gap-1 border-b border-slate-400 pb-2 sm:flex-row sm:items-end sm:justify-between">
+                    <h2 className="font-bold tracking-[0.17em]">
+                      {day.toUpperCase()}
+                    </h2>
 
-                  {normalLock ? (
-                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                      SPREADS APPEAR {easternTime(normalLock.lineLockAt)}
-                    </p>
-                  ) : null}
-                </div>
 
-                <div className="mt-4 space-y-3">
-                  {dayGames.map((game) => {
-                    const favoriteIsHome =
-                      game.favoriteTeamId === game.homeTeamId;
+                  </div>
 
-                    const leftTeamName = favoriteIsHome
-                      ? game.homeTeam
-                      : game.awayTeam;
+                  <div>
+                    {dayGames.map((game) => {
+                      const favoriteIsHome =
+                        game.favoriteTeamId === game.homeTeamId;
 
-                    const leftTeamId = favoriteIsHome
-                      ? game.homeTeamId
-                      : game.awayTeamId;
+                      const leftTeamName = favoriteIsHome
+                        ? game.homeTeam
+                        : game.awayTeam;
 
-                    const rightTeamName = favoriteIsHome
-                      ? game.awayTeam
-                      : game.homeTeam;
+                      const leftTeamId = favoriteIsHome
+                        ? game.homeTeamId
+                        : game.awayTeamId;
 
-                    const rightTeamId = favoriteIsHome
-                      ? game.awayTeamId
-                      : game.homeTeamId;
+                      const rightTeamName = favoriteIsHome
+                        ? game.awayTeam
+                        : game.homeTeam;
 
-                    return (
-                      <article
-                        className="border border-slate-400 bg-white"
-                        key={game.id}
-                      >
-                        <div className="grid min-h-24 grid-cols-[1fr_auto_1fr] items-center gap-3 p-4 md:px-7">
+                      const rightTeamId = favoriteIsHome
+                        ? game.awayTeamId
+                        : game.homeTeamId;
+
+ const gameHasStarted = new Date(game.kickoffAt) <= new Date();
+
+return (
+  <article
+                          className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-400 py-4"
+                          key={game.id}
+                        >
                           <button
-                            className={`text-left font-serif text-lg leading-tight md:text-2xl ${
+                            className={`text-left font-serif text-lg leading-tight md:text-xl ${
                               isSelected(game.id, leftTeamId)
                                 ? "bg-[#1d1d1f] px-3 py-2 text-white"
-                                : "hover:underline"
+                                : "hover:underline disabled:hover:no-underline"
                             }`}
+                            disabled={isReadOnly || gameHasStarted}
                             onClick={() => chooseTeam(game.id, leftTeamId)}
                             type="button"
                           >
@@ -367,6 +459,7 @@ export default function BoardPage() {
 
                           <div className="min-w-24 text-center text-xs font-bold leading-5 text-slate-700 md:min-w-36">
                             <p>{easternTime(game.kickoffAt)}</p>
+
                             {isEarlyGame(game) ? (
                               <p className="mt-1">
                                 EARLY GAME · SPREADS APPEAR{" "}
@@ -376,77 +469,92 @@ export default function BoardPage() {
                           </div>
 
                           <button
-                            className={`text-right font-serif text-lg leading-tight md:text-2xl ${
+                            className={`text-right font-serif text-lg leading-tight md:text-xl ${
                               isSelected(game.id, rightTeamId)
                                 ? "bg-[#1d1d1f] px-3 py-2 text-white"
-                                : "hover:underline"
+                                : "hover:underline disabled:hover:no-underline"
                             }`}
+                            disabled={isReadOnly || gameHasStarted}
                             onClick={() => chooseTeam(game.id, rightTeamId)}
                             type="button"
                           >
                             {teamLabel(rightTeamName, !favoriteIsHome)}
                           </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.12)]">
-        <div className="mx-auto max-w-6xl px-5 py-4 md:px-10">
-          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-            <div>
-              <p className="font-bold">
-                {selectedPicks.length} of 2 picks selected
-              </p>
-
-              <p className="mt-1 text-sm text-slate-700">
-                {selectedTeamNames.length
-                  ? selectedTeamNames.join(" · ")
-                  : "Click a team above to make a selection."}
-              </p>
-
-              {selectionWarning ? (
-                <p className="mt-2 font-semibold text-red-700">
-                  {selectionWarning}
+      {!isReadOnly ? (
+        <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
+          <div className="mx-auto max-w-5xl px-5 py-4 md:px-10">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="font-bold">
+                  YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
                 </p>
-              ) : null}
 
-{submissionMessage ? (
-  <div className="mt-2">
-    <p className="font-semibold text-green-800">
-      {submissionMessage}
-    </p>
+                <ol className="mt-2 space-y-1 text-sm text-slate-700">
+                  {selectedTeamNames.length ? (
+                    selectedTeamNames.map((teamName, index) => (
+                      <li key={`${teamName}-${index}`}>
+                        {index + 1}. {teamName}
+                      </li>
+                    ))
+                  ) : (
+                    <li>Click a team above to make a selection.</li>
+                  )}
+                </ol>
 
-    {selectedPicks.length === 1 ? (
-      <p className="mt-1 text-sm font-semibold text-slate-700">
-        You still owe one pick this week.
-      </p>
-    ) : null}
-  </div>
-) : null}
+                {selectionWarning ? (
+                  <p className="mt-2 font-semibold text-red-700">
+                    {selectionWarning}
+                  </p>
+                ) : null}
+
+                {submissionMessage ? (
+                  <div className="mt-2">
+                    <p className="font-semibold text-green-800">
+                      {submissionMessage}
+                    </p>
+
+                    {selectedPicks.length === 1 ? (
+                      <p className="mt-1 text-sm font-semibold text-slate-700">
+                        You still owe one pick this week.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              <button
+                className="min-h-12 bg-[#1d1d1f] px-6 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                disabled={selectedPicks.length < 1 || isSubmitting}
+                onClick={submitPicks}
+                type="button"
+              >
+                {isSubmitting
+                  ? "Saving…"
+                  : selectedPicks.length === 1
+                    ? "Save 1 pick"
+                    : `Save ${selectedPicks.length} picks`}
+              </button>
             </div>
-
-            <button
-              className="min-h-12 bg-[#1d1d1f] px-6 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-              disabled={selectedPicks.length < 1 || isSubmitting}
-              onClick={submitPicks}
-              type="button"
-            >
-              {isSubmitting
-                ? "Saving…"
-                : selectedPicks.length === 1
-                  ? "Save 1 pick"
-                  : "Save 2 picks"}
-            </button>
           </div>
-        </div>
-      </aside>
+        </aside>
+      ) : (
+        <aside className="fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6]">
+          <div className="mx-auto max-w-5xl px-5 py-4 text-sm font-semibold md:px-10">
+            This week is final and is shown for review only.
+          </div>
+        </aside>
+      )}
     </main>
   );
 }

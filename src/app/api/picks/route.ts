@@ -12,7 +12,7 @@ type GameRow = {
   scoring_period_id: string;
   away_team_id: string;
   home_team_id: string;
-  line_lock_at: string;
+  kickoff_at: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
   const { data: games, error: gamesError } = await supabaseAdmin
     .from("games")
     .select(
-      "id, scoring_period_id, away_team_id, home_team_id, line_lock_at",
+      "id, scoring_period_id, away_team_id, home_team_id, kickoff_at",
     )
     .in("id", allGameIds);
 
@@ -176,9 +176,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (new Date() >= new Date(game.line_lock_at)) {
+    if (new Date() >= new Date(game.kickoff_at)) {
       return NextResponse.json(
-        { error: "One of your selected games is already locked." },
+        { error: "One of your selected games has already started." },
         { status: 400 },
       );
     }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
 
   const lockedExistingPicks = (existingPicks ?? []).filter((pick) => {
     const game = gameById.get(pick.game_id);
-    return game && new Date() >= new Date(game.line_lock_at);
+    return game && new Date() >= new Date(game.kickoff_at);
   });
 
   for (const lockedPick of lockedExistingPicks) {
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "One of your existing picks is already locked and cannot be changed or removed.",
+            "One of your existing picks has already started and cannot be changed or removed.",
         },
         { status: 400 },
       );
