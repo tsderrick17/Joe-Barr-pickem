@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import LeadPipeIcon from "@/components/lead-pipe-icon";
 import { supabase } from "@/lib/supabase";
 
 type LedgerPick = {
@@ -107,10 +106,7 @@ export default function HomePage() {
           </p>
 
           <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-            <span className="inline-flex items-center gap-2">
-              Lead Pipe Locks
-              <LeadPipeIcon className="h-7 w-7 text-slate-600" />
-            </span>
+            Lead Pipe Locks
           </h1>
         </header>
 
