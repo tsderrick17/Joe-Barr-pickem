@@ -225,6 +225,17 @@ const rehearsalAtsWinners: Side[] = [
   "right",
 ];
 
+const rehearsalFinalScores = [
+  { left: 27, right: 20 },
+  { left: 17, right: 24 },
+  { left: 16, right: 23 },
+  { left: 31, right: 20 },
+  { left: 28, right: 17 },
+  { left: 14, right: 21 },
+  { left: 24, right: 27 },
+  { left: 20, right: 27 },
+];
+
 function ResultMarker({ result }: { result: AtsResult }) {
   if (!result) return null;
 
@@ -449,6 +460,7 @@ export default function PreviewPage() {
                 const rightResult: AtsResult = isFinalState
                   ? rehearsalAtsWinners[index] === "right" ? "win" : "loss"
                   : null;
+                const finalScore = rehearsalFinalScores[index];
                 const displayedLine =
                   scenarioKey === "pending"
                     ? game.line
@@ -476,6 +488,11 @@ export default function PreviewPage() {
                     >
                       <span className="relative inline-block pr-3">
                         {game.leftTeam}
+                        {isFinalState ? (
+                          <span className="ml-1 font-mono font-black tabular-nums">
+                            {finalScore.left}
+                          </span>
+                        ) : null}
                         <ResultMarker result={leftResult} />
                       </span>
                     </button>
@@ -496,6 +513,11 @@ export default function PreviewPage() {
                     >
                       <span className="relative inline-block pr-3">
                         {game.rightTeam}
+                        {isFinalState ? (
+                          <span className="ml-1 font-mono font-black tabular-nums">
+                            {finalScore.right}
+                          </span>
+                        ) : null}
                         <ResultMarker result={rightResult} />
                       </span>
                     </button>

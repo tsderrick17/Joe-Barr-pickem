@@ -356,6 +356,9 @@ export async function GET(request: NextRequest) {
             : null,
         spreadSource: lockedLine?.source ?? null,
         spreadLockedAt: lockedLine?.locked_at ?? null,
+        status: game.status,
+        awayScore: game.away_score,
+        homeScore: game.home_score,
         awayResult: atsResultForTeam(game, lockedLine, game.away_team_id),
         homeResult: atsResultForTeam(game, lockedLine, game.home_team_id),
         awayPickers: new Date(game.kickoff_at) <= currentTime

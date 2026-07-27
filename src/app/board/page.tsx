@@ -34,6 +34,9 @@ type BoardGame = {
   preliminarySpread: number | null;
   spreadSource: string | null;
   spreadLockedAt: string | null;
+  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  awayScore: number | null;
+  homeScore: number | null;
   awayResult: "win" | "loss" | null;
   homeResult: "win" | "loss" | null;
   awayPickers: string[];
@@ -767,6 +770,10 @@ export default function BoardPage() {
                         ? game.homeResult
                         : game.awayResult;
 
+                      const leftTeamScore = favoriteIsHome
+                        ? game.homeScore
+                        : game.awayScore;
+
                       const rightTeamName = favoriteIsHome
                         ? game.awayTeam
                         : game.homeTeam;
@@ -778,6 +785,12 @@ export default function BoardPage() {
                       const rightTeamResult = favoriteIsHome
                         ? game.awayResult
                         : game.homeResult;
+
+                      const rightTeamScore = favoriteIsHome
+                        ? game.awayScore
+                        : game.homeScore;
+
+                      const gameIsFinal = game.status === "final";
 
                       const leftPickers = favoriteIsHome
                         ? game.homePickers
@@ -814,7 +827,12 @@ export default function BoardPage() {
                           >
                             <span className="relative inline-block pr-3">
                               {teamLabel(leftTeamName, favoriteIsHome)}
-                              {isReadOnly ? resultMarker(leftTeamResult) : null}
+                              {gameIsFinal && leftTeamScore !== null ? (
+                                <span className="ml-1 font-mono font-black tabular-nums">
+                                  {leftTeamScore}
+                                </span>
+                              ) : null}
+                              {gameIsFinal ? resultMarker(leftTeamResult) : null}
                             </span>
                             {gameHasStarted && leftPickers.length ? (
                               <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, leftTeamId) ? "text-slate-200" : "text-slate-600"}`}>
@@ -852,7 +870,12 @@ export default function BoardPage() {
                           >
                             <span className="relative inline-block pr-3">
                               {teamLabel(rightTeamName, !favoriteIsHome)}
-                              {isReadOnly ? resultMarker(rightTeamResult) : null}
+                              {gameIsFinal && rightTeamScore !== null ? (
+                                <span className="ml-1 font-mono font-black tabular-nums">
+                                  {rightTeamScore}
+                                </span>
+                              ) : null}
+                              {gameIsFinal ? resultMarker(rightTeamResult) : null}
                             </span>
                             {gameHasStarted && rightPickers.length ? (
                               <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, rightTeamId) ? "text-slate-200" : "text-slate-600"}`}>
