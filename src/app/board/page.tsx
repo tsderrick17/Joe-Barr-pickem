@@ -612,7 +612,7 @@ export default function BoardPage() {
                 </div>
 
                 <p className="max-w-md pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
-                  Lines lock at 8 AM ET on game day unless otherwise noted. Lines may move before lock; teal lines are official for grading.
+                  Lines lock at 8 AM ET on game day unless otherwise noted. Lines may move before lock; <span className="font-semibold text-teal-700">teal lines</span> are official for grading.
                 </p>
               </div>
             </div>
