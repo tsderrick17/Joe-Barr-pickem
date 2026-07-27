@@ -561,29 +561,29 @@ export default function BoardPage() {
 
   return (
     <main
-      className={`min-h-screen bg-[#d9c8a4] text-[#171719] ${
+      className={`min-h-screen bg-[#e9e2d3] text-[#171719] ${
         isReadOnly ? "pb-8" : "pb-48 sm:pb-56"
       }`}
     >
-      <div className="mx-auto max-w-5xl border-x-2 border-[#2d231c] bg-[#fffaf0] px-4 py-5 shadow-[5px_7px_0_rgba(45,35,28,0.28)] sm:px-5 sm:py-8 md:px-10">
-        <header className="-mx-4 border-b-4 border-[#c59a49] bg-[#2d231c] px-4 py-4 text-[#fff6df] sm:-mx-5 sm:px-5 md:-mx-10 md:px-10">
+      <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-4 sm:-mx-5 sm:px-5 md:-mx-10 md:px-10">
           <div className="flex items-start justify-between gap-5">
             <div className="min-w-0">
-              <p className="text-[10px] font-black tracking-[0.22em] text-[#d8c18b]">JOE BARR MEMORIAL PICK&apos;EM</p>
+              <p className="text-[10px] font-black tracking-[0.22em] text-slate-600">JOE BARR MEMORIAL PICK&apos;EM</p>
               <h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
               <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2 sm:mt-4">
                 <div>
                   <label
-                    className="block text-xs font-bold tracking-[0.16em] text-[#d8c18b]"
+                    className="block text-xs font-bold tracking-[0.16em] text-slate-600"
                     htmlFor="week-selector"
                   >
                     VIEW WEEK
                   </label>
 
                   <select
-                    className="mt-1 border border-[#c59a49] bg-[#fffaf0] px-3 py-1.5 text-sm font-semibold text-[#2d231c]"
+                    className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]"
                     id="week-selector"
                     onChange={chooseWeek}
                     value={week.id}
@@ -597,14 +597,14 @@ export default function BoardPage() {
                   </select>
                 </div>
 
-                <p className="max-w-sm pb-1 text-xs leading-5 text-[#f0e2bd] sm:text-sm">
-                  Official spreads post at 8 AM ET on game day unless otherwise noted.
+                <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
+                  LIVE lines may move. The line marked LOCKED is the official grading line.
                 </p>
               </div>
             </div>
 
-            <aside className="max-w-[13rem] border-l border-[#8d784e] pl-3 text-right text-[11px] leading-4 text-[#f0e2bd] sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
-              <p className="font-bold tracking-[0.12em] text-[#fff6df]">
+            <aside className="max-w-[13rem] border-l border-[#b7aea0] pl-3 text-right text-[11px] leading-4 text-slate-700 sm:max-w-xs sm:pl-4 sm:text-xs sm:leading-5">
+              <p className="font-bold tracking-[0.12em] text-[#171719]">
                 HOW TO PLAY
               </p>
               <p className="mt-1">Favorites listed left; home team ALL CAPS.</p>
@@ -721,8 +721,8 @@ export default function BoardPage() {
             {gamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
-                  <div className="border-b-2 border-[#2d231c] bg-[#eadfc8] px-3 py-2">
-                    <h2 className="text-sm font-black tracking-[0.1em] text-[#2d231c] sm:text-base sm:tracking-[0.17em]">
+                  <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center">
+                    <h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm">
                       {day.toUpperCase()}
                     </h2>
                   </div>
@@ -761,7 +761,7 @@ export default function BoardPage() {
 
                       return (
                         <article
-                          className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8bda8] py-2.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.5rem_minmax(0,1fr)] sm:gap-3"
+                          className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:gap-3"
                           key={game.id}
                         >
                           <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
@@ -769,7 +769,7 @@ export default function BoardPage() {
                             <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>
                           </div>
                           <button
-                            className={`border-b border-dotted border-slate-400 pb-0.5 text-left font-serif text-base leading-tight sm:text-lg md:text-xl ${
+                            className={`text-left text-sm font-bold leading-tight tracking-tight sm:text-base ${
                               isSelected(game.id, leftTeamId)
                                 ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
@@ -787,32 +787,32 @@ export default function BoardPage() {
                           <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
                             {game.officialSpread !== null ? (
                               <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
-                                <span className="font-serif text-base font-bold text-zinc-900 sm:text-lg">
+                                <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
                                   {officialSpreadLabel(game.officialSpread)}
                                 </span>
-                                <span className="text-[8px] font-black tracking-[0.08em] text-green-800 sm:text-[9px]">
-                                  FINAL
+                                <span className="border border-[#1d1d1f] px-1 text-[8px] font-black tracking-[0.08em] text-[#1d1d1f] sm:text-[9px]">
+                                  LOCKED
                                 </span>
                               </div>
                             ) : game.preliminarySpread !== null ? (
                               <div className="flex items-baseline justify-center gap-1 whitespace-nowrap">
-                                <span className="font-serif text-base font-bold text-amber-900 sm:text-lg">
+                                <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
                                   {officialSpreadLabel(game.preliminarySpread)}
                                 </span>
-                                <span className="text-[8px] font-black tracking-[0.08em] text-amber-800 sm:text-[9px]">
-                                  PRELIM
+                                <span className="text-[8px] font-black tracking-[0.12em] text-slate-600 sm:text-[9px]">
+                                  LIVE
                                 </span>
                               </div>
                             ) : (
                               <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">
-                                LINE PENDING
+                                AWAITING LINE
                               </p>
                             )}
 
                           </div>
 
                           <button
-                            className={`border-b border-dotted border-slate-400 pb-0.5 text-right font-serif text-base leading-tight sm:text-lg md:text-xl ${
+                            className={`text-right text-sm font-bold leading-tight tracking-tight sm:text-base ${
                               isSelected(game.id, rightTeamId)
                                 ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
                                 : "hover:underline disabled:hover:no-underline"
