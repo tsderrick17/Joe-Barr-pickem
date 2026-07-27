@@ -51,9 +51,12 @@ body {
 }
 
 .survivor-clipping {
-  background-color: #fafafa;
+  background-color: #f1ead7;
   background-image:
-    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 4px);
+    radial-gradient(circle at 18% 24%, rgba(35, 31, 24, 0.08) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle at 72% 68%, rgba(35, 31, 24, 0.06) 0 0.6px, transparent 0.8px),
+    repeating-linear-gradient(0deg, rgba(76, 69, 56, 0.045) 0 1px, transparent 1px 4px);
+  background-size: 7px 7px, 9px 9px, auto;
   box-shadow:
     2px 3px 0 rgba(0, 0, 0, 0.18),
     0 7px 16px rgba(0, 0, 0, 0.08);
