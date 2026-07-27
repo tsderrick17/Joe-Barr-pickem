@@ -404,7 +404,6 @@ export default function BoardPage() {
         ) : (
           <div className="mt-8 space-y-9">
             {gamesByDay.map(([day, dayGames]) => {
-              const normalLock = dayGames.find((game) => !isEarlyGame(game));
 
               return (
                 <section key={day}>
@@ -433,14 +432,16 @@ export default function BoardPage() {
                         ? game.awayTeam
                         : game.homeTeam;
 
-                      const rightTeamId = favoriteIsHome
-                        ? game.awayTeamId
-                        : game.homeTeamId;
 
- const gameHasStarted = new Date(game.kickoffAt) <= new Date();
+        const rightTeamId = favoriteIsHome
+  ? game.awayTeamId
+  : game.homeTeamId;
+
+const gameHasStarted =
+  new Date(game.kickoffAt) <= new Date();
 
 return (
-  <article
+  <article                
                           className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-400 py-4"
                           key={game.id}
                         >

@@ -227,8 +227,8 @@ export default function HomePage() {
           </div>
 
           <p className="mt-3 text-sm text-slate-600">
-            Your own picks remain visible to you. Everyone else&apos;s picks stay
-            blank until the selected game begins.
+Your own picks remain visible to you. Everyone else&apos;s picks stay
+hidden until kickoff.
           </p>
         </section>
 
