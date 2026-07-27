@@ -39,6 +39,24 @@ test("grades an underdog cover and a favorite ATS loss", () => {
   );
 });
 
+test("grades a home favorite and its opponent from the same final score", () => {
+  const homeFavorite = {
+    selectedTeamId: "home",
+    favoriteTeamId: "home",
+    lockedSpread: 4.5,
+    awayTeamId: "away",
+    homeTeamId: "home",
+    awayScore: 17,
+    homeScore: 24,
+  };
+
+  assert.equal(gradeAtsPick(homeFavorite), "win");
+  assert.equal(
+    gradeAtsPick({ ...homeFavorite, selectedTeamId: "away" }),
+    "loss",
+  );
+});
+
 test("grades a pick-em winner and records a tie as a loss", () => {
   assert.equal(
     gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: 0, awayScore: 20, homeScore: 17 }),
@@ -54,6 +72,7 @@ test("does not grade without a usable official line", () => {
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", favoriteTeamId: null }), "pending");
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: Number.NaN }), "pending");
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "other" }), "pending");
+  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", homeScore: null }), "pending");
 });
 
 test("begins final-score checks three hours after kickoff", () => {

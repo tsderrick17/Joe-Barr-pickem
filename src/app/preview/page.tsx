@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { countPickemWins } from "@/lib/standings";
 
 type Side = "left" | "right";
 type AtsResult = "win" | "loss" | null;
@@ -288,10 +289,15 @@ export default function PreviewPage() {
   const isEditable = !["live", "final", "eliminated", "archived"].includes(scenarioKey);
   const isFinalState = ["final", "eliminated", "archived"].includes(scenarioKey);
   const demoStandings = [
-    { name: "Tyler", wins: isFinalState ? 1 : 0, picks: ["Chiefs -2.5", "Bears +3.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
-    { name: "Zac", wins: isFinalState ? 1 : 0, picks: ["Bills +2.5", "Packers -3.0"], marks: isFinalState ? ["L", "W"] : ["", ""] },
-    { name: "Gary", wins: isFinalState ? 1 : 0, picks: ["Steelers +2.5", "Eagles -4.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
-  ];
+    { name: "Tyler", picks: ["Chiefs -2.5", "Bears +3.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
+    { name: "Zac", picks: ["Bills +2.5", "Packers -3.0"], marks: isFinalState ? ["L", "W"] : ["", ""] },
+    { name: "Gary", picks: ["Steelers +2.5", "Eagles -4.0"], marks: isFinalState ? ["W", "L"] : ["", ""] },
+  ].map((row) => ({
+    ...row,
+    wins: countPickemWins(row.marks.map((mark) => ({
+      result: mark === "W" ? "win" : mark === "L" ? "loss" : "pending",
+    }))),
+  }));
 
   return (
     <main className="min-h-screen bg-[#f5f0e6] px-4 py-6 text-[#171719] sm:px-8 sm:py-10">

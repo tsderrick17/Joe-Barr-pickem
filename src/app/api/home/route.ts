@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
+import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -235,10 +236,9 @@ export async function GET(request: NextRequest) {
 
   const rows = players
     .map((player) => {
-      const wins = allPicks.filter(
-        (pick) =>
-          pick.player_id === player.id && pick.result === "win",
-      ).length;
+      const wins = countPickemWins(
+        allPicks.filter((pick) => pick.player_id === player.id),
+      );
 
       const weeklyPicks = currentWeekPicks
         .filter((pick) => pick.player_id === player.id)
