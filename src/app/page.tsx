@@ -232,17 +232,16 @@ export default function HomePage() {
           <p className="mb-4 text-xs font-bold tracking-[0.2em] text-slate-600">
             PICK&apos;EM THIS WEEK
           </p>
-          <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
+          <div className="border-y-2 border-[#1d1d1f]">
             <table
-              className="w-full border-collapse text-left"
-              style={{ minWidth: `${Math.max(650, 240 + data.maxPicks * 140)}px` }}
+              className="w-full table-fixed border-collapse text-left"
             >
               <thead>
                 <tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]">
-                  <th className="w-20 px-3 py-3">WINS</th>
-                  <th className="w-40 px-3 py-3"><span className="sr-only">Player</span></th>
+                  <th className="w-12 px-2 py-3 sm:w-20 sm:px-3">WINS</th>
+                  <th className="w-20 px-2 py-3 sm:w-40 sm:px-3"><span className="sr-only">Player</span></th>
                   {Array.from({ length: data.maxPicks }, (_, index) => (
-                    <th className="px-3 py-3" key={index}>
+                    <th className="px-2 py-3 sm:px-3" key={index}>
                       PICK {index + 1}
                     </th>
                   ))}
@@ -260,12 +259,12 @@ export default function HomePage() {
                       }`}
                       key={row.id}
                     >
-                      <td className="px-3 py-4 font-serif text-2xl">
+                      <td className="px-2 py-3 font-serif text-xl sm:px-3 sm:py-4 sm:text-2xl">
                         {row.wins}
                       </td>
 
-                      <td className="px-3 py-4">
-                        <span className="font-serif text-xl">
+                      <td className="px-2 py-3 sm:px-3 sm:py-4">
+                        <span className="font-serif text-base leading-tight sm:text-xl">
                           {row.firstName}
                         </span>
 
@@ -276,7 +275,7 @@ export default function HomePage() {
                         const pick = row.picks[pickNumber];
 
                         return (
-                          <td className="px-3 py-4" key={pickNumber}>
+                          <td className="break-words px-2 py-3 text-sm leading-tight sm:px-3 sm:py-4 sm:text-base" key={pickNumber}>
                             {pick?.label ? (
                               <span>
                                 {pick.label}
