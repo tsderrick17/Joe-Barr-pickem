@@ -78,7 +78,7 @@ export default function SurvivorPage() {
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error ?? "Your Survivor pick could not be saved.");
       setMessageKind("success"); setMessage(result.message ?? "Your Survivor pick has been saved.");
-      await load();
+      window.setTimeout(() => window.location.reload(), 850);
     } catch (error) { setMessageKind("error"); setMessage(error instanceof Error ? error.message : "Your Survivor pick could not be saved."); }
     finally { setSaving(false); }
   }
