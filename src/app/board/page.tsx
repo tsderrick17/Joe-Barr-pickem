@@ -343,18 +343,27 @@ export default function BoardPage() {
     return Array.from(grouped.entries());
   }, [games]);
 
-  const selectedTeamNames = useMemo(() => {
+  const selectedTeams = useMemo(() => {
     return selectedPicks
       .map((pick) => {
         const game = games.find((item) => item.id === pick.gameId);
 
         if (!game) return null;
-        if (pick.teamId === game.homeTeamId) return game.homeTeam;
-        if (pick.teamId === game.awayTeamId) return game.awayTeam;
+        const name = pick.teamId === game.homeTeamId
+          ? game.homeTeam
+          : pick.teamId === game.awayTeamId
+            ? game.awayTeam
+            : null;
 
-        return null;
+        if (!name) return null;
+
+        return {
+          gameId: pick.gameId,
+          name,
+          canRemove: new Date(game.kickoffAt) > new Date(),
+        };
       })
-      .filter(Boolean) as string[];
+      .filter(Boolean) as { gameId: string; name: string; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
   const hasUnsavedChanges = useMemo(() => {
@@ -397,11 +406,6 @@ export default function BoardPage() {
 
   const isReadOnly = week?.status === "complete";
   const hasEarlyGame = games.some(isEarlyGame);
-  const undoablePicks = selectedPicks.filter((pick) => {
-    const game = games.find((item) => item.id === pick.gameId);
-    return game && new Date(game.kickoffAt) > new Date();
-  });
-
   function isSelected(gameId: string, teamId: string) {
     return selectedPicks.some(
       (pick) => pick.gameId === gameId && pick.teamId === teamId,
@@ -443,15 +447,11 @@ export default function BoardPage() {
     setSelectedPicks((current) => [...current, { gameId, teamId }]);
   }
 
-  function clearLastSelection() {
-    const lastSelection = undoablePicks.at(-1);
-
-    if (!lastSelection) return;
-
+  function removeSelection(gameId: string) {
     setSelectionWarning("");
     setSubmissionMessage("");
     setSelectedPicks((current) =>
-      current.filter((pick) => pick.gameId !== lastSelection.gameId),
+      current.filter((pick) => pick.gameId !== gameId),
     );
   }
 
@@ -846,10 +846,20 @@ export default function BoardPage() {
                 </p>
 
                 <ol className="mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm">
-                  {selectedTeamNames.length ? (
-                    selectedTeamNames.map((teamName, index) => (
-                      <li className="border border-slate-400 bg-white px-2 py-1" key={`${teamName}-${index}`}>
-                        {index + 1}. {teamName}
+                  {selectedTeams.length ? (
+                    selectedTeams.map((team, index) => (
+                      <li className="flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1" key={team.gameId}>
+                        <span>{index + 1}. {team.name}</span>
+                        {team.canRemove ? (
+                          <button
+                            aria-label={`Remove ${team.name}`}
+                            className="ml-0.5 inline-flex size-5 items-center justify-center rounded-sm text-base leading-none text-slate-600 hover:bg-red-50 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800"
+                            onClick={() => removeSelection(team.gameId)}
+                            type="button"
+                          >
+                            ×
+                          </button>
+                        ) : null}
                       </li>
                     ))
                   ) : (
@@ -879,16 +889,6 @@ export default function BoardPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                {undoablePicks.length > 0 ? (
-                  <button
-                    className="min-h-11 border-2 border-red-800 bg-red-700 px-4 text-sm font-bold text-white hover:bg-red-800 sm:min-h-12 sm:px-6 sm:text-base"
-                    onClick={clearLastSelection}
-                    type="button"
-                  >
-                    Clear last selection
-                  </button>
-                ) : null}
-
                 {hasUnsavedChanges ? (
                   <p className="text-xs font-bold text-amber-800 sm:text-sm">
                     Unsaved changes
