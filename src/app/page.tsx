@@ -223,7 +223,7 @@ export default function HomePage() {
             {data.survivorAvailable ? <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p>
               {viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-2xl font-bold text-red-700">Eliminated</h3><p className="mt-1 text-sm text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <><h3 className="mt-1 font-serif text-2xl font-bold text-green-800">Pick made: {viewerSurvivor.pick.label}</h3><p className="mt-1 text-sm text-slate-700">You can change it until that game begins.</p></> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-2xl font-bold text-green-800">Pick made</h3><p className="mt-1 text-sm text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-2xl font-bold">1 pick due</h3><p className="mt-1 text-sm text-slate-700">Choose one straight-up winner before kickoff.</p></>}
-              <Link className="mt-4 inline-block min-h-11 w-full bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/survivor">View The Survivor Wire</Link>
+              <Link className="mt-4 inline-block min-h-11 w-full bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/survivor">View Survivor Wire</Link>
             </div> : null}
           </div>
         </section>
@@ -346,7 +346,7 @@ export default function HomePage() {
               </p>
             </div>
           )}
-          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/survivor">View The Survivor Wire</Link>
+          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/survivor">View Survivor Wire</Link>
         </section>
       </div>
     </main>
