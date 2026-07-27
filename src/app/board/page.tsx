@@ -569,8 +569,7 @@ export default function BoardPage() {
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-4 sm:-mx-5 sm:px-5 md:-mx-10 md:px-10">
           <div className="flex items-start justify-between gap-5">
             <div className="min-w-0">
-              <p className="text-[10px] font-black tracking-[0.22em] text-slate-600">JOE BARR MEMORIAL PICK&apos;EM</p>
-              <h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">
+              <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
               <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2 sm:mt-4">
@@ -598,7 +597,7 @@ export default function BoardPage() {
                 </div>
 
                 <p className="max-w-sm pb-1 text-xs leading-5 text-slate-700 sm:text-sm">
-                  LIVE lines may move. Teal lines are LOCKED for official grading.
+                  Lines lock at 8 AM ET on game day unless otherwise noted. LIVE lines may move; teal lines are LOCKED for official grading.
                 </p>
               </div>
             </div>
