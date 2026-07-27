@@ -278,12 +278,11 @@ export async function POST(request: NextRequest) {
     .from("scoring_periods")
     .select("id, display_order, starts_at, ends_at")
     .eq("season_id", season.id)
-    .eq("period_type", "regular")
     .order("display_order");
 
   if (periodsError || !periods || periods.length === 0) {
     return NextResponse.json(
-      { error: "No regular-season weeks are configured for 2026." },
+      { error: "No scoring periods are configured for 2026." },
       { status: 500 },
     );
   }
@@ -334,12 +333,12 @@ export async function POST(request: NextRequest) {
     ([first], [second]) => first.localeCompare(second),
   );
 
-  const regularPeriods = periods as PeriodRow[];
+  const seasonPeriods = periods as PeriodRow[];
 
   const periodsByWeekStart = new Map<string, PeriodRow>();
   const emptyPeriods: PeriodRow[] = [];
 
-  for (const period of regularPeriods) {
+  for (const period of seasonPeriods) {
     if (period.starts_at && period.ends_at) {
       const savedWeekStartKey = getWeekStartKey(
         new Date(period.starts_at),
@@ -373,7 +372,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Import stopped because there is no unused regular-season week available for this schedule group.",
+            "Import stopped because there is no unused scoring period available for this schedule group.",
         },
         { status: 409 },
       );

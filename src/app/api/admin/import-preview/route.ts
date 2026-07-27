@@ -156,7 +156,6 @@ export async function GET(request: NextRequest) {
     .from("scoring_periods")
     .select("id, display_name, display_order, starts_at, ends_at")
     .eq("season_id", season.id)
-    .eq("period_type", "regular")
     .order("display_order");
 
   if (periodsError || !periods) {

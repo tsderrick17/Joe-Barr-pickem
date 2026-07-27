@@ -68,6 +68,7 @@ build succeeds.
    - `supabase/033_repair_completed_change_delete_guards.sql`
    - `supabase/034_schedule_prelock_spread_refresh.sql`
    - `supabase/035_restore_mode_specific_audits.sql`
+   - `supabase/036_harden_scoring_period_continuity.sql`
 
 ## Weekly dress rehearsal
 
@@ -83,6 +84,7 @@ Use test player accounts before Week 1 to verify:
 8. Commissioner shows no unexpected entries in **Game Exceptions**.
 9. Commissioner shows the expected **Weekly handoff** state after the final score check.
 10. A week with a pending final-game pick does not rubber-stamp until that pick is resolved.
+11. Confirm the imported preview assigns future postseason games, in order, to Wild Card, Divisional Round, Conference Championships, and Super Bowl.
 
 ## Score recovery
 
