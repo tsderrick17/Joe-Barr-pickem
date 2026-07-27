@@ -159,7 +159,12 @@ export async function POST(request: NextRequest) {
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const oddsApiKey = process.env.ODDS_API_KEY;
+  const cronSecret = process.env.CRON_SECRET;
   const authorization = request.headers.get("authorization");
+
+  const isAutomation =
+    Boolean(cronSecret) &&
+    authorization === `Bearer ${cronSecret}`;
 
   if (!supabaseUrl || !supabasePublishableKey || !oddsApiKey) {
     return NextResponse.json(
@@ -168,44 +173,50 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!authorization?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "You must be signed in to import games." },
-      { status: 401 },
-    );
-  }
+  if (!isAutomation) {
+    if (!authorization?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "You must be signed in to import games." },
+        { status: 401 },
+      );
+    }
 
-  const authClient = createClient(supabaseUrl, supabasePublishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
+    const authClient = createClient(
+      supabaseUrl,
+      supabasePublishableKey,
+      {
+        global: {
+          headers: {
+            Authorization: authorization,
+          },
+        },
       },
-    },
-  });
-
-  const {
-    data: { user },
-    error: userError,
-  } = await authClient.auth.getUser();
-
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "Your sign-in session could not be verified." },
-      { status: 401 },
     );
-  }
 
-  const { data: player } = await supabaseAdmin
-    .from("players")
-    .select("first_name, is_commissioner, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+    const {
+      data: { user },
+      error: userError,
+    } = await authClient.auth.getUser();
 
-  if (!player || !player.active || !player.is_commissioner) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
-    );
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Your sign-in session could not be verified." },
+        { status: 401 },
+      );
+    }
+
+    const { data: player } = await supabaseAdmin
+      .from("players")
+      .select("first_name, is_commissioner, active")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (!player || !player.active || !player.is_commissioner) {
+      return NextResponse.json(
+        { error: "Commissioner access is required." },
+        { status: 403 },
+      );
+    }
   }
 
   const oddsResponse = await fetch(
@@ -262,7 +273,10 @@ export async function POST(request: NextRequest) {
   }
 
   const teamIdByName = new Map(
-    (teams as TeamRow[]).map((team) => [team.full_name, team.id]),
+    (teams as TeamRow[]).map((team) => [
+      team.full_name,
+      team.id,
+    ]),
   );
 
   const unknownTeams = new Set<string>();
@@ -291,14 +305,17 @@ export async function POST(request: NextRequest) {
   const eventsByWeek = new Map<string, OddsEvent[]>();
 
   for (const event of events) {
-    const weekStartKey = getWeekStartKey(new Date(event.commence_time));
+    const weekStartKey = getWeekStartKey(
+      new Date(event.commence_time),
+    );
+
     const games = eventsByWeek.get(weekStartKey) ?? [];
     games.push(event);
     eventsByWeek.set(weekStartKey, games);
   }
 
-  const groupedWeeks = [...eventsByWeek.entries()].sort(([first], [second]) =>
-    first.localeCompare(second),
+  const groupedWeeks = [...eventsByWeek.entries()].sort(
+    ([first], [second]) => first.localeCompare(second),
   );
 
   const regularPeriods = periods as PeriodRow[];
@@ -362,25 +379,6 @@ export async function POST(request: NextRequest) {
     ]),
   );
 
-  const externalGameIds = events.map((event) => event.id);
-
-  const { data: existingGames, error: existingGamesError } =
-    await supabaseAdmin
-      .from("games")
-      .select("external_game_id")
-      .in("external_game_id", externalGameIds);
-
-  if (existingGamesError) {
-    return NextResponse.json(
-      { error: "Existing games could not be checked." },
-      { status: 500 },
-    );
-  }
-
-  const existingExternalGameIds = new Set(
-    existingGames?.map((game) => game.external_game_id) ?? [],
-  );
-
   const gamesToUpsert = [];
 
   for (const event of events) {
@@ -390,7 +388,10 @@ export async function POST(request: NextRequest) {
 
     if (!period) {
       return NextResponse.json(
-        { error: "A schedule group could not be matched to a pool week." },
+        {
+          error:
+            "A schedule group could not be matched to a pool week.",
+        },
         { status: 500 },
       );
     }
@@ -409,10 +410,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { data: savedGames, error: gameError } = await supabaseAdmin
-    .from("games")
-    .upsert(gamesToUpsert, { onConflict: "external_game_id" })
-    .select("id, external_game_id");
+  const { data: savedGames, error: gameError } =
+    await supabaseAdmin
+      .from("games")
+      .upsert(gamesToUpsert, {
+        onConflict: "external_game_id",
+      })
+      .select("id, external_game_id");
 
   if (gameError || !savedGames) {
     return NextResponse.json(
@@ -451,14 +455,13 @@ export async function POST(request: NextRequest) {
   }
 
   const gameIdByExternalId = new Map(
-    savedGames.map((game) => [game.external_game_id, game.id]),
+    savedGames.map((game) => [
+      game.external_game_id,
+      game.id,
+    ]),
   );
 
   const spreadHistoryRows = events.flatMap((event) => {
-    if (existingExternalGameIds.has(event.id)) {
-      return [];
-    }
-
     const draftKings = event.bookmakers?.find(
       (bookmaker) => bookmaker.key === "draftkings",
     );
@@ -468,17 +471,23 @@ export async function POST(request: NextRequest) {
     );
 
     const favorite = spreadMarket?.outcomes.find(
-      (outcome) => outcome.point !== null && outcome.point < 0,
+      (outcome) =>
+        outcome.point !== null && outcome.point < 0,
     );
 
-    if (!favorite) {
+    const gameId = gameIdByExternalId.get(event.id);
+    const favoriteTeamId = favorite
+      ? teamIdByName.get(favorite.name)
+      : null;
+
+    if (!favorite || !gameId || !favoriteTeamId) {
       return [];
     }
 
     return [
       {
-        game_id: gameIdByExternalId.get(event.id),
-        favorite_team_id: teamIdByName.get(favorite.name),
+        game_id: gameId,
+        favorite_team_id: favoriteTeamId,
         spread: Math.abs(favorite.point ?? 0),
         source: "DraftKings",
       },
@@ -503,11 +512,12 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     message:
-      "Schedule import completed. Existing week assignments were preserved and no official lines were locked.",
+      "Schedule and preliminary spread refresh completed. Existing week assignments were preserved and no official lines were changed.",
     importedGames: savedGames.length,
     preliminarySpreadsSaved: spreadHistoryRows.length,
     newWeeksAssigned: newPeriodAssignments.length,
     requestsRemaining:
-      oddsResponse.headers.get("x-requests-remaining") ?? "unknown",
+      oddsResponse.headers.get("x-requests-remaining") ??
+      "unknown",
   });
 }
