@@ -7,6 +7,7 @@ import GameExceptions from "@/components/game-exceptions";
 import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
 import AutomationHealth from "@/components/automation-health";
+import IntegrityRehearsal from "@/components/integrity-rehearsal";
 
 type Spread = {
   team: string;
@@ -209,6 +210,7 @@ export default function AdminPage() {
 </div>
         </header>
         <AutomationHealth />
+        <IntegrityRehearsal />
         <LineLockChecker />
         <ScoreSyncChecker />
         <GameExceptions />
