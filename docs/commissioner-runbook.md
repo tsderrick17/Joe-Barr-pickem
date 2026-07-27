@@ -18,7 +18,10 @@
    - `refresh-nfl-schedule-and-spreads-daily`
    - `refresh-final-nfl-scores-every-15-minutes`
 
-   Run `supabase/020_schedule_daily_nfl_refresh.sql` once in the Supabase SQL Editor to create the daily schedule-and-preliminary-spread refresh.
+   Run these files once in the Supabase SQL Editor to create or restore the automated jobs:
+   - `supabase/019_schedule_final_score_refresh.sql`
+   - `supabase/020_schedule_daily_nfl_refresh.sql`
+   - `supabase/021_schedule_official_line_locking.sql`
 
 ## Weekly dress rehearsal
 
