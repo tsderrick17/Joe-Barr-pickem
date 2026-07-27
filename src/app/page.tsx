@@ -29,10 +29,7 @@ type ScoreboardRow = {
 
 type HomeData = {
   viewerPlayerId: string;
-  weekId: string;
   week: string;
-  weekStatus: "upcoming" | "active" | "complete";
-  weeks: Array<{ id: string; name: string; status: "upcoming" | "active" | "complete" }>;
   maxPicks: number;
   nextRevealAt: string | null;
   rows: ScoreboardRow[];
@@ -53,7 +50,6 @@ export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
-  const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
 
   useEffect(() => {
     let revealTimer: number | null = null;
@@ -72,12 +68,9 @@ export default function HomePage() {
         activeRequest?.abort();
         activeRequest = request;
 
-        const response = await fetchWithSession(
-          selectedWeekId ? `/api/home?scoringPeriodId=${selectedWeekId}` : "/api/home",
-          {
+        const response = await fetchWithSession("/api/home", {
           signal: request.signal,
-          },
-        );
+        });
 
         const result = (await response.json()) as HomeData;
 
@@ -149,7 +142,7 @@ export default function HomePage() {
       activeRequest?.abort();
       window.removeEventListener("focus", refreshOnFocus);
     };
-  }, [retryNonce, selectedWeekId]);
+  }, [retryNonce]);
 
   const viewerRow = useMemo(() => {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
@@ -218,19 +211,8 @@ export default function HomePage() {
         <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
           <div className={`grid gap-5 ${data.survivorAvailable ? "md:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)]" : "md:grid-cols-[10rem_minmax(0,1fr)]"}`}>
             <div className="md:pt-1">
-              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">{data.weekStatus === "complete" ? "WEEK REVIEW" : "THIS WEEK"}</p>
-              <select
-                aria-label="View Pick'em week"
-                className="mt-1 w-full border border-[#1d1d1f] bg-white px-2 py-1 font-serif text-xl font-bold sm:text-2xl"
-                onChange={(event) => setSelectedWeekId(event.target.value)}
-                value={data.weekId}
-              >
-                {data.weeks.map((period) => (
-                  <option key={period.id} value={period.id}>
-                    {period.name}{period.status === "complete" ? " — Final" : ""}
-                  </option>
-                ))}
-              </select>
+              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">THIS WEEK</p>
+              <h2 className="mt-1 font-serif text-2xl font-bold sm:text-3xl">{data.week}</h2>
             </div>
 
             <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">

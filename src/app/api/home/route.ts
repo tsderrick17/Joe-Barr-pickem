@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authorization = request.headers.get("authorization");
-  const requestedPeriodId = new URL(request.url).searchParams.get("scoringPeriodId");
 
   if (!supabaseUrl || !supabasePublishableKey) {
     return NextResponse.json(
@@ -143,12 +142,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const defaultWeek = selectDefaultScoringPeriod(
+  const currentWeek = selectDefaultScoringPeriod(
     periods as ScoringPeriodRow[],
   );
-  const currentWeek = requestedPeriodId
-    ? (periods as ScoringPeriodRow[]).find((period) => period.id === requestedPeriodId)
-    : defaultWeek;
 
   if (!currentWeek) {
     return NextResponse.json(
@@ -460,14 +456,7 @@ return {
 
   return NextResponse.json({
     viewerPlayerId: viewer.id,
-    weekId: currentWeek.id,
     week: currentWeek.display_name,
-    weekStatus: currentWeek.status,
-    weeks: (periods as ScoringPeriodRow[]).map((period) => ({
-      id: period.id,
-      name: period.display_name,
-      status: period.status,
-    })),
     maxPicks: currentWeek.max_picks,
     nextRevealAt: nextPickRevealAt(
       [...((games ?? []) as GameRow[]).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],

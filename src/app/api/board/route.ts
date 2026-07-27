@@ -36,6 +36,7 @@ type GameRow = {
 };
 
 type SurvivorPickRow = { game_id: string; selected_team_id: string };
+type PublicPickRow = { player_id: string; game_id: string; selected_team_id: string };
 
 function atsResultForTeam(
   game: GameRow,
@@ -111,7 +112,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const [gamesResult, picksResult, periodResult] = await Promise.all([
+  const [gamesResult, picksResult, periodResult, publicPicksResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("games")
       .select(
@@ -130,11 +131,21 @@ export async function GET(request: NextRequest) {
       .select("season_id")
       .eq("id", scoringPeriodId)
       .maybeSingle(),
+    supabaseAdmin
+      .from("picks")
+      .select("player_id, game_id, selected_team_id")
+      .eq("scoring_period_id", scoringPeriodId),
+    supabaseAdmin
+      .from("players")
+      .select("id, first_name")
+      .eq("active", true),
   ]);
 
   const { data: games, error: gamesError } = gamesResult;
   const { data: myPicks, error: picksError } = picksResult;
   const { data: period, error: periodError } = periodResult;
+  const { data: publicPicks, error: publicPicksError } = publicPicksResult;
+  const { data: players, error: playersError } = playersResult;
 
   if (gamesError || !games) {
     return NextResponse.json(
@@ -143,7 +154,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (picksError || periodError || !period) {
+  if (picksError || periodError || !period || publicPicksError || playersError || !players) {
     return NextResponse.json(
       { error: "Your submitted picks could not be loaded." },
       { status: 500 },
@@ -304,6 +315,16 @@ export async function GET(request: NextRequest) {
       line,
     ]),
   );
+  const playerNameById = new Map(players.map((item) => [item.id, item.first_name]));
+  const pickersByGameAndTeam = new Map<string, string[]>();
+  for (const pick of (publicPicks ?? []) as PublicPickRow[]) {
+    const key = `${pick.game_id}:${pick.selected_team_id}`;
+    const names = pickersByGameAndTeam.get(key) ?? [];
+    const name = playerNameById.get(pick.player_id);
+    if (name) names.push(name);
+    pickersByGameAndTeam.set(key, names);
+  }
+  const currentTime = new Date();
 
   return NextResponse.json({
     games: (games as GameRow[]).map((game) => {
@@ -337,6 +358,12 @@ export async function GET(request: NextRequest) {
         spreadLockedAt: lockedLine?.locked_at ?? null,
         awayResult: atsResultForTeam(game, lockedLine, game.away_team_id),
         homeResult: atsResultForTeam(game, lockedLine, game.home_team_id),
+        awayPickers: new Date(game.kickoff_at) <= currentTime
+          ? pickersByGameAndTeam.get(`${game.id}:${game.away_team_id}`) ?? []
+          : [],
+        homePickers: new Date(game.kickoff_at) <= currentTime
+          ? pickersByGameAndTeam.get(`${game.id}:${game.home_team_id}`) ?? []
+          : [],
       };
     }),
     myPicks: (myPicks ?? []).map((pick) => ({

@@ -36,6 +36,8 @@ type BoardGame = {
   spreadLockedAt: string | null;
   awayResult: "win" | "loss" | null;
   homeResult: "win" | "loss" | null;
+  awayPickers: string[];
+  homePickers: string[];
 };
 
 type SelectedPick = {
@@ -768,6 +770,14 @@ export default function BoardPage() {
                         ? game.awayResult
                         : game.homeResult;
 
+                      const leftPickers = favoriteIsHome
+                        ? game.homePickers
+                        : game.awayPickers;
+
+                      const rightPickers = favoriteIsHome
+                        ? game.awayPickers
+                        : game.homePickers;
+
                       const gameHasStarted =
                         new Date(game.kickoffAt) <= new Date();
 
@@ -797,6 +807,11 @@ export default function BoardPage() {
                               {teamLabel(leftTeamName, favoriteIsHome)}
                               {isReadOnly ? resultMarker(leftTeamResult) : null}
                             </span>
+                            {gameHasStarted && leftPickers.length ? (
+                              <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, leftTeamId) ? "text-slate-200" : "text-slate-600"}`}>
+                                {leftPickers.join(", ")}
+                              </span>
+                            ) : null}
                           </button>
 
                           <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
@@ -830,6 +845,11 @@ export default function BoardPage() {
                               {teamLabel(rightTeamName, !favoriteIsHome)}
                               {isReadOnly ? resultMarker(rightTeamResult) : null}
                             </span>
+                            {gameHasStarted && rightPickers.length ? (
+                              <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, rightTeamId) ? "text-slate-200" : "text-slate-600"}`}>
+                                {rightPickers.join(", ")}
+                              </span>
+                            ) : null}
                           </button>
                         </article>
                       );
