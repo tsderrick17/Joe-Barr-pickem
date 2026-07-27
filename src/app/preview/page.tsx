@@ -98,6 +98,23 @@ const scenarios: Record<string, Scenario> = {
     atsResults: [null, null],
     survivorResult: null,
   },
+  international: {
+    title: "International game · Saturday line lock",
+    explanation:
+      "The London game kicks off Sunday at 9:30 AM ET, so its official line locks Saturday at 6 PM ET while picks remain editable until kickoff.",
+    instruction:
+      "The first game's teal spread is final. You can still change that selection until Sunday morning; every other game remains a normal live line.",
+    survivorStamp: "Pick selected",
+    survivorDeck:
+      "The Survivor selection is still editable until the 9:30 AM ET kickoff.",
+    boardStatus: "International line locked · Saturday 6 PM ET",
+    lockedGames: [],
+    startedGames: [],
+    initialAtsPicks: ["left", "right"],
+    initialSurvivorPick: "kc-buf-left",
+    atsResults: [null, null],
+    survivorResult: null,
+  },
   partial: {
     title: "Sunday 3:00 PM ET",
     explanation:
@@ -278,6 +295,7 @@ export default function PreviewPage() {
                 onChange={(event) => chooseScenario(event.target.value)}
                 value={scenarioKey}
               >
+                <option value="international">International - Saturday line lock</option>
                 <option value="pending">1 · Lines not final</option>
                 <option value="open">2 · Slate open</option>
                 <option value="partial">3 · Early game locked</option>
@@ -413,9 +431,12 @@ export default function PreviewPage() {
               {rehearsalGames.map((game, index) => {
                 const locked = scenario.lockedGames.includes(index) || !isEditable;
                 const started = scenario.startedGames.includes(index);
+                const lineLocked = scenarioKey !== "pending" && (scenarioKey !== "international" || index === 0);
                 const displayedLine =
                   scenarioKey === "pending"
                     ? game.line
+                    : scenarioKey === "international" && index === 0
+                      ? `${game.line} LOCKED`
                     : `${game.line}${started ? scenarioKey === "live" ? " · LIVE" : " · LOCKED" : ""}`;
 
                 return (
@@ -445,7 +466,7 @@ export default function PreviewPage() {
                       </span>
                     </button>
                     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
-                      <strong className={`block font-mono text-sm sm:text-base ${scenarioKey === "pending" ? "text-zinc-900" : "text-teal-700"}`}>
+                      <strong className={`block font-mono text-sm sm:text-base ${lineLocked ? "text-teal-700" : "text-zinc-900"}`}>
                         {displayedLine}
                       </strong>
                       <span>{game.kickoff}</span>
