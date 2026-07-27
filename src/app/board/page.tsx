@@ -23,6 +23,7 @@ type BoardGame = {
   awayTeamId: string;
   homeTeamId: string;
   officialSpread: number | null;
+  preliminarySpread: number | null;
   spreadSource: string | null;
   spreadLockedAt: string | null;
   awayResult: "win" | "loss" | null;
@@ -100,6 +101,7 @@ export default function BoardPage() {
   const [week, setWeek] = useState<ScoringPeriod | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
+  const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -142,6 +144,7 @@ export default function BoardPage() {
 
       setGames(data.games);
       setSelectedPicks(data.myPicks);
+      setSavedPicks(data.myPicks);
     } catch {
       if (requestId === boardRequestId.current) {
         setErrorMessage("The Slate is taking too long to load. Please try again.");
@@ -248,10 +251,39 @@ export default function BoardPage() {
       .filter(Boolean) as string[];
   }, [games, selectedPicks]);
 
+  const hasUnsavedChanges = useMemo(() => {
+    if (selectedPicks.length !== savedPicks.length) return true;
+
+    return selectedPicks.some(
+      (pick) =>
+        !savedPicks.some(
+          (savedPick) =>
+            savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
+        ),
+    );
+  }, [savedPicks, selectedPicks]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [hasUnsavedChanges]);
+
   const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete";
   const hasEarlyGame = games.some(isEarlyGame);
+  const undoablePicks = selectedPicks.filter((pick) => {
+    const game = games.find((item) => item.id === pick.gameId);
+    return game && new Date(game.kickoffAt) > new Date();
+  });
 
   function isSelected(gameId: string, teamId: string) {
     return selectedPicks.some(
@@ -276,9 +308,10 @@ export default function BoardPage() {
 
     if (existingPick) {
       setSelectedPicks((current) =>
-        current.map((pick) =>
-          pick.gameId === gameId ? { gameId, teamId } : pick,
-        ),
+        [
+          ...current.filter((pick) => pick.gameId !== gameId),
+          { gameId, teamId },
+        ],
       );
       return;
     }
@@ -293,12 +326,31 @@ export default function BoardPage() {
     setSelectedPicks((current) => [...current, { gameId, teamId }]);
   }
 
+  function clearLastSelection() {
+    const lastSelection = undoablePicks.at(-1);
+
+    if (!lastSelection) return;
+
+    setSelectionWarning("");
+    setSubmissionMessage("");
+    setSelectedPicks((current) =>
+      current.filter((pick) => pick.gameId !== lastSelection.gameId),
+    );
+  }
+
   async function chooseWeek(event: React.ChangeEvent<HTMLSelectElement>) {
     const selectedWeek = weeks.find(
       (period) => period.id === event.target.value,
     );
 
     if (!selectedWeek) return;
+
+    if (
+      hasUnsavedChanges &&
+      !window.confirm("You have unsaved pick changes. Switch weeks anyway?")
+    ) {
+      return;
+    }
 
     const {
       data: { session },
@@ -316,8 +368,7 @@ export default function BoardPage() {
     setSelectionWarning("");
     setSubmissionMessage("");
 
-    if (!week || selectedPicks.length < 1) {
-      setSelectionWarning("Choose at least one team before saving.");
+    if (!week) {
       return;
     }
 
@@ -361,6 +412,7 @@ export default function BoardPage() {
       }
 
       setSubmissionMessage(data.message ?? "Your picks have been saved.");
+      setSavedPicks(selectedPicks);
     } catch {
       setSelectionWarning(
         "Your picks are taking too long to save. Please try again.",
@@ -546,10 +598,28 @@ export default function BoardPage() {
 
                           <div className="min-w-20 text-center text-[11px] font-bold leading-4 text-slate-700 sm:min-w-24 sm:text-xs sm:leading-5 md:min-w-36">
                             {game.officialSpread !== null ? (
-                              <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
-                                {officialSpreadLabel(game.officialSpread)}
+                              <div>
+                                <p className="font-serif text-lg font-bold text-zinc-900 sm:text-xl">
+                                  {officialSpreadLabel(game.officialSpread)}
+                                </p>
+                                <p className="text-[9px] font-black tracking-[0.12em] text-green-800 sm:text-[10px]">
+                                  OFFICIAL
+                                </p>
+                              </div>
+                            ) : game.preliminarySpread !== null ? (
+                              <div>
+                                <p className="font-serif text-lg font-bold text-amber-900 sm:text-xl">
+                                  {officialSpreadLabel(game.preliminarySpread)}
+                                </p>
+                                <p className="text-[9px] font-black tracking-[0.12em] text-amber-800 sm:text-[10px]">
+                                  PRELIMINARY
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-[9px] font-black tracking-[0.12em] text-slate-500 sm:text-[10px]">
+                                LINE PENDING
                               </p>
-                            ) : null}
+                            )}
 
                             <p>{easternTime(game.kickoffAt)}</p>
 
@@ -629,18 +699,38 @@ export default function BoardPage() {
                 ) : null}
               </div>
 
-              <button
-                className="min-h-10 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
-                disabled={selectedPicks.length < 1 || isSubmitting}
-                onClick={submitPicks}
-                type="button"
-              >
+              <div className="flex flex-wrap gap-3">
+                {undoablePicks.length > 0 ? (
+                  <button
+                    className="min-h-10 border-2 border-red-800 bg-red-700 px-5 text-sm font-bold text-white hover:bg-red-800 sm:min-h-12 sm:px-6 sm:text-base"
+                    onClick={clearLastSelection}
+                    type="button"
+                  >
+                    Clear last selection
+                  </button>
+                ) : null}
+
+                {hasUnsavedChanges ? (
+                  <p className="mt-2 text-sm font-bold text-amber-800">
+                    Unsaved changes
+                  </p>
+                ) : null}
+
+                <button
+                  className="min-h-10 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
+                  disabled={isSubmitting}
+                  onClick={submitPicks}
+                  type="button"
+                >
                 {isSubmitting
                   ? "Saving…"
-                  : selectedPicks.length === 1
-                    ? "Save 1 pick"
-                    : `Save ${selectedPicks.length} picks`}
-              </button>
+                  : selectedPicks.length === 0
+                    ? "Save cleared picks"
+                    : selectedPicks.length === 1
+                      ? "Save 1 pick"
+                      : `Save ${selectedPicks.length} picks`}
+                </button>
+              </div>
             </div>
           </div>
         </aside>

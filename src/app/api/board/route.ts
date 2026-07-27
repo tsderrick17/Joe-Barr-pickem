@@ -11,6 +11,7 @@ type TeamRow = {
 type PreliminaryLineRow = {
   game_id: string;
   favorite_team_id: string | null;
+  spread: number | string;
   captured_at: string;
 };
 
@@ -117,9 +118,10 @@ export async function GET(request: NextRequest) {
       .order("kickoff_at"),
     supabaseAdmin
       .from("picks")
-      .select("game_id, selected_team_id")
+      .select("game_id, selected_team_id, submitted_at")
       .eq("player_id", player.id)
-      .eq("scoring_period_id", scoringPeriodId),
+      .eq("scoring_period_id", scoringPeriodId)
+      .order("submitted_at"),
   ]);
 
   const { data: games, error: gamesError } = gamesResult;
@@ -157,8 +159,8 @@ export async function GET(request: NextRequest) {
       .in("id", teamIds),
     gameIds.length > 0
       ? supabaseAdmin
-          .from("spread_history")
-          .select("game_id, favorite_team_id, captured_at")
+        .from("spread_history")
+          .select("game_id, favorite_team_id, spread, captured_at")
           .in("game_id", gameIds)
           .order("captured_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
@@ -204,18 +206,11 @@ export async function GET(request: NextRequest) {
     ]),
   );
 
-  const preliminaryFavoriteByGameId =
-    new Map<string, string>();
+  const preliminaryLineByGameId = new Map<string, PreliminaryLineRow>();
 
   for (const line of (history ?? []) as PreliminaryLineRow[]) {
-    if (
-      !preliminaryFavoriteByGameId.has(line.game_id) &&
-      line.favorite_team_id
-    ) {
-      preliminaryFavoriteByGameId.set(
-        line.game_id,
-        line.favorite_team_id,
-      );
+    if (!preliminaryLineByGameId.has(line.game_id)) {
+      preliminaryLineByGameId.set(line.game_id, line);
     }
   }
 
@@ -240,13 +235,18 @@ export async function GET(request: NextRequest) {
           teamNameById.get(game.home_team_id) ?? "Unknown team",
         favoriteTeamId:
           lockedLine?.favorite_team_id ??
-          preliminaryFavoriteByGameId.get(game.id) ??
+          preliminaryLineByGameId.get(game.id)?.favorite_team_id ??
           null,
         awayTeamId: game.away_team_id,
         homeTeamId: game.home_team_id,
         officialSpread: lockedLine
           ? Number(lockedLine.locked_spread)
           : null,
+        preliminarySpread: lockedLine
+          ? null
+          : preliminaryLineByGameId.has(game.id)
+            ? Number(preliminaryLineByGameId.get(game.id)?.spread)
+            : null,
         spreadSource: lockedLine?.source ?? null,
         spreadLockedAt: lockedLine?.locked_at ?? null,
         awayResult: atsResultForTeam(game, lockedLine, game.away_team_id),

@@ -50,13 +50,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (selections.length < 1) {
-    return NextResponse.json(
-      { error: "Choose at least one team." },
-      { status: 400 },
-    );
-  }
-
   const uniqueGameIds = new Set(selections.map((selection) => selection.gameId));
 
   if (uniqueGameIds.size !== selections.length) {
@@ -240,7 +233,9 @@ export async function POST(request: NextRequest) {
   }
 
   const message =
-    selections.length === 1
+    selections.length === 0
+      ? "Your unlocked selections have been cleared."
+      : selections.length === 1
       ? "Your first pick has been saved."
       : `Your ${selections.length} picks have been saved.`;
 
