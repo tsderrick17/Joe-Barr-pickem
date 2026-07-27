@@ -112,6 +112,10 @@ export default function SiteNav() {
             The Slate
           </Link>
 
+          <Link className={linkStyle("/survivor")} href="/survivor">
+            Survivor Wire
+          </Link>
+
           {isCommissioner ? (
             <Link className={linkStyle("/admin")} href="/admin">
               Commissioner

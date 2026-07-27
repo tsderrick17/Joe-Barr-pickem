@@ -369,7 +369,7 @@ export default function HomePage() {
               </p>
             </div>
           )}
-          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/board">Manage picks on The Slate</Link>
+          <Link className="mt-4 inline-block min-h-11 border-2 border-[#1d1d1f] bg-white px-5 py-3 text-center font-bold" href="/survivor">View The Survivor Wire</Link>
         </section>
       </div>
     </main>

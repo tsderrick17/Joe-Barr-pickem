@@ -641,7 +641,7 @@ export default function BoardPage() {
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
           <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9">
-            {!survivorAvailable ? (
+            {false ? (
               <section className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
                 <h2 className="font-serif text-xl font-bold">
                   Survivor is temporarily unavailable

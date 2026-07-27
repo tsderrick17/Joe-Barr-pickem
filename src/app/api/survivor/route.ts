@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       .from("survivor_picks")
       .select("survivor_entry_id, game_id, selected_team_id, result")
       .eq("scoring_period_id", context.period.id),
-    supabaseAdmin.from("teams").select("id, full_name"),
+    supabaseAdmin.from("teams").select("id, full_name, abbreviation"),
     supabaseAdmin
       .from("survivor_entries")
       .select("id, status, player_id")
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds)
     : { data: [] };
   const nameByPlayerId = new Map((players ?? []).map((player) => [player.id, player.first_name]));
-  const teamById = new Map((teams ?? []).map((team) => [team.id, team.full_name]));
+  const teamById = new Map((teams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]));
   const myPick = (picks ?? []).find((pick) => pick.survivor_entry_id === context.entry.id) ?? null;
 
   return NextResponse.json({
@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
       status: game.status,
       awayTeamId: game.away_team_id,
       homeTeamId: game.home_team_id,
-      awayTeam: teamById.get(game.away_team_id) ?? "Unknown team",
-      homeTeam: teamById.get(game.home_team_id) ?? "Unknown team",
+      awayTeam: { id: game.away_team_id, ...(teamById.get(game.away_team_id) ?? { name: "Unknown team", abbreviation: "NFL" }) },
+      homeTeam: { id: game.home_team_id, ...(teamById.get(game.home_team_id) ?? { name: "Unknown team", abbreviation: "NFL" }) },
     })),
     entries: (entries ?? [])
       .map((entry) => ({
