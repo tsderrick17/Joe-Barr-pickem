@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 type Side = "left" | "right";
@@ -31,6 +30,11 @@ type Scenario = {
   survivorResult: "advanced" | "eliminated" | null;
 };
 
+function HelmetIcon(_props: { abbreviation: string; faces: "left" | "right"; unavailable?: boolean }) {
+  void _props;
+  return null;
+}
+
 const games: PreviewGame[] = [
   {
     id: "kc-buf",
@@ -51,6 +55,13 @@ const games: PreviewGame[] = [
     line: "GB −3.0",
   },
 ];
+
+const defaultHomeHelmetColors: Record<string, string> = {
+  BUF: "#ffffff",
+  CHI: "#0b162a",
+  GB: "#ffb612",
+  KC: "#e31837",
+};
 
 const scenarios: Record<string, Scenario> = {
   pending: {
@@ -174,96 +185,6 @@ const scenarios: Record<string, Scenario> = {
   },
 };
 
-const defaultHomeHelmetColors: Record<string, string> = {
-  BUF: "#ffffff",
-  CHI: "#0b162a",
-  GB: "#ffb612",
-  KC: "#e31837",
-};
-
-function HelmetIcon({
-  abbreviation,
-  faces,
-  unavailable = false,
-}: {
-  abbreviation: string;
-  faces: "left" | "right";
-  unavailable?: boolean;
-}) {
-  const flipped = faces === "left";
-  const shellColor = defaultHomeHelmetColors[abbreviation] ?? "#ffffff";
-
-  return (
-    <span
-      aria-hidden="true"
-      className={`relative block h-12 w-[3.9rem] shrink-0 ${
-        flipped ? "-scale-x-100" : ""
-      } ${unavailable ? "grayscale" : ""}`}
-    >
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: shellColor,
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "#ffffff",
-          clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)",
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "#ffffff",
-          clipPath: "polygon(53% 29%, 100% 29%, 100% 62%, 69% 62%, 59% 53%, 52% 48%)",
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <Image
-        alt=""
-        className="absolute inset-0 h-full w-full object-contain mix-blend-multiply"
-        height={48}
-        src="/helmet-newspaper-template.png"
-        width={63}
-      />
-      <Image
-        alt=""
-        className={`absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain ${
-          flipped ? "-scale-x-100" : ""
-        }`}
-        height={24}
-        src={`/team-logos/${abbreviation}.png`}
-        width={24}
-      />
-    </span>
-  );
-}
-
 function ResultMarker({ result }: { result: AtsResult }) {
   if (!result) return null;
 
@@ -306,33 +227,26 @@ export default function PreviewPage() {
   }
 
   function chooseSurvivor(game: PreviewGame, side: Side, index: number) {
-    if (
-      scenario.lockedGames.includes(index) ||
-      scenario.survivorResult !== null
-    ) {
-      return;
-    }
+    if (scenario.lockedGames.includes(index) || scenario.survivorResult !== null) return;
 
     const selection = `${game.id}-${side}`;
-    setSurvivorPick((current) =>
-      current === selection ? null : selection,
-    );
+    setSurvivorPick((current) => current === selection ? null : selection);
   }
 
   const selectedAtsCount = atsPicks.filter(Boolean).length;
   const isEditable = scenario.lockedGames.length < games.length;
 
   return (
-    <main className="min-h-screen bg-slate-100 px-3 py-5 text-zinc-900 sm:px-6 sm:py-8">
+    <main className="min-h-screen bg-[#f5f0e6] px-4 py-6 text-[#171719] sm:px-8 sm:py-10">
       <div className="mx-auto w-full max-w-4xl">
-        <header className="rounded-xl border border-slate-300 bg-white p-4 shadow-sm sm:p-6">
+        <header className="border-b-2 border-[#1d1d1f] pb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-700">
                 Dummy data · Safe preview
               </p>
               <h1 className="mt-1 font-serif text-3xl font-black leading-none sm:text-4xl">
-                Game-State Lab
+                The Slate
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-600">
                 Switch between season moments and test the decisions before real
@@ -368,7 +282,7 @@ export default function PreviewPage() {
                 {scenario.explanation}
               </p>
             </div>
-            <div className="rounded-lg bg-amber-50 p-3 text-sm leading-5 text-amber-950">
+            <div className="border-l border-[#b9b09d] pl-3 text-sm leading-5 text-slate-700">
               <strong className="block text-[10px] uppercase tracking-[0.12em]">
                 What to critique
               </strong>
@@ -377,8 +291,8 @@ export default function PreviewPage() {
           </div>
         </header>
 
-        <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9">
-          <section
+        <div className="mx-auto mt-6 w-full max-w-4xl space-y-6 sm:mt-8">
+          {false ? <section
             aria-labelledby="preview-survivor-heading"
             className="newspaper-clipping survivor-clipping p-2.5 sm:p-3"
           >
@@ -462,43 +376,46 @@ export default function PreviewPage() {
                 );
               })}
             </div>
-          </section>
+          </section> : null}
 
           <section
             aria-labelledby="preview-ats-heading"
-            className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm"
           >
-            <div className="flex items-end justify-between gap-3 border-b border-slate-300 px-3 py-3 sm:px-5">
+            <div className="flex items-end justify-between gap-3 border-y-2 border-[#1d1d1f] px-3 py-2 text-center sm:px-4">
               <h2
-                className="text-sm font-black tracking-[0.13em]"
+                className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm"
                 id="preview-ats-heading"
               >
                 SUNDAY · ATS SLATE
               </h2>
-              <p className="text-[10px] font-bold uppercase text-slate-500">
+              <p className="text-[10px] font-bold uppercase text-slate-600">
                 {scenario.boardStatus}
               </p>
             </div>
 
-            <div className="divide-y divide-slate-200">
+            <div>
               {games.map((game, index) => {
                 const locked = scenario.lockedGames.includes(index);
                 const started = scenario.startedGames.includes(index);
                 const displayedLine =
                   scenarioKey === "pending"
-                    ? `PRELIM ${game.line}`
+                    ? game.line
                     : `${game.line}${started ? scenarioKey === "live" ? " · LIVE" : " · LOCKED" : ""}`;
 
                 return (
                   <article
-                    className="grid grid-cols-[minmax(0,1fr)_minmax(6.5rem,0.72fr)_minmax(0,1fr)] items-center gap-1.5 px-2 py-3 sm:gap-3 sm:px-5"
+                    className="grid grid-cols-[3.25rem_minmax(0,1fr)_3.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:gap-3"
                     key={game.id}
                   >
+                    <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
+                      <p>{game.kickoff.replace("Sunday · ", "")}</p>
+                      <p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p>
+                    </div>
                     <button
-                      className={`min-w-0 rounded-md px-1 py-2 text-xs font-bold sm:text-sm ${
+                      className={`min-w-0 text-left text-sm font-bold leading-tight tracking-tight sm:text-base ${
                         atsPicks[index] === "left"
-                          ? "bg-zinc-900 text-white"
-                          : "hover:bg-slate-100"
+                          ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
+                          : "hover:underline"
                       } disabled:cursor-not-allowed disabled:opacity-70`}
                       disabled={locked}
                       onClick={() => chooseAts(index, "left")}
@@ -510,16 +427,16 @@ export default function PreviewPage() {
                       ) : null}
                     </button>
                     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
-                      <strong className="block font-serif text-sm text-zinc-900 sm:text-base">
+                      <strong className={`block font-mono text-sm sm:text-base ${scenarioKey === "pending" ? "text-zinc-900" : "text-teal-700"}`}>
                         {displayedLine}
                       </strong>
                       <span>{game.kickoff}</span>
                     </div>
                     <button
-                      className={`min-w-0 rounded-md px-1 py-2 text-xs font-bold sm:text-sm ${
+                      className={`min-w-0 text-right text-sm font-bold leading-tight tracking-tight sm:text-base ${
                         atsPicks[index] === "right"
-                          ? "bg-zinc-900 text-white"
-                          : "hover:bg-slate-100"
+                          ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
+                          : "hover:underline"
                       } disabled:cursor-not-allowed disabled:opacity-70`}
                       disabled={locked}
                       onClick={() => chooseAts(index, "right")}
@@ -547,19 +464,18 @@ export default function PreviewPage() {
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   {selectedAtsCount} of {games.length} ATS picks ·{" "}
-                  {survivorPick ? "Survivor selected" : "No Survivor pick"}
+                  ATS selections can be changed until kickoff.
                 </p>
               </div>
               <button
                 className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-400"
                 disabled={
                   !isEditable ||
-                  selectedAtsCount !== games.length ||
-                  !survivorPick
+                  selectedAtsCount !== games.length
                 }
                 onClick={() =>
                   window.alert(
-                    "Demo only: the real board would atomically save ATS and Survivor here.",
+                    "Demo only: the real Slate would save these ATS selections here.",
                   )
                 }
                 type="button"
@@ -569,8 +485,7 @@ export default function PreviewPage() {
             </div>
             <p className="mt-3 border-t border-slate-200 pt-3 text-[11px] leading-4 text-slate-500">
               Integrity preview: kickoff is checked on the server; locked picks
-              cannot be rewritten; Survivor is graded straight-up; official
-              changes retain an audit trail.
+              cannot be rewritten; official changes retain an audit trail.
             </p>
           </section>
         </div>
