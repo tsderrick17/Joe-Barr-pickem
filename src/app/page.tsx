@@ -209,7 +209,7 @@ export default function HomePage() {
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
-                THIS WEEK
+                PICK&apos;EM THIS WEEK
               </p>
 
               <h2 className="mt-2 font-serif text-3xl font-bold">
@@ -325,6 +325,9 @@ export default function HomePage() {
         ) : null}
 
         <section className="py-6 sm:py-7">
+          <p className="mb-4 text-xs font-bold tracking-[0.2em] text-slate-600">
+            PICK&apos;EM THIS WEEK
+          </p>
           <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
             <table
               className="w-full border-collapse text-left"
@@ -333,7 +336,7 @@ export default function HomePage() {
               <thead>
                 <tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]">
                   <th className="w-20 px-3 py-3">WINS</th>
-                  <th className="w-40 px-3 py-3">PLAYER</th>
+                  <th className="w-40 px-3 py-3"><span className="sr-only">Player</span></th>
                   {Array.from({ length: data.maxPicks }, (_, index) => (
                     <th className="px-3 py-3" key={index}>
                       PICK {index + 1}
