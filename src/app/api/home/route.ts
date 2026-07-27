@@ -20,6 +20,31 @@ type GameRow = {
   kickoff_at: string;
 };
 
+type PreliminaryLineRow = {
+  game_id: string;
+  favorite_team_id: string | null;
+  spread: number | string;
+  captured_at: string;
+};
+
+type LockedLineRow = {
+  game_id: string;
+  favorite_team_id: string | null;
+  locked_spread: number | string;
+};
+
+function signedSpread(
+  selectedTeamId: string,
+  favoriteTeamId: string | null,
+  spread: number | string,
+) {
+  const value = Number(spread);
+  if (!Number.isFinite(value)) return null;
+  if (value === 0) return "PK";
+  const displayValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+  return selectedTeamId === favoriteTeamId ? `-${displayValue}` : `+${displayValue}`;
+}
+
 type ScoringPeriodRow = {
   id: string;
   display_name: string;
@@ -171,19 +196,22 @@ export async function GET(request: NextRequest) {
     ...new Set(currentWeekPicks.map((pick) => pick.selected_team_id)),
   ];
 
-  const { data: games } = gameIds.length
-    ? await supabaseAdmin
-        .from("games")
-        .select("id, kickoff_at")
-        .in("id", gameIds)
-    : { data: [] };
-
-  const { data: teams } = teamIds.length
-    ? await supabaseAdmin
-        .from("teams")
-        .select("id, full_name")
-        .in("id", teamIds)
-    : { data: [] };
+  const [gamesResult, teamsResult, historyResult, lockedLinesResult] = await Promise.all([
+    gameIds.length
+      ? supabaseAdmin.from("games").select("id, kickoff_at").in("id", gameIds)
+      : Promise.resolve({ data: [] }),
+    teamIds.length
+      ? supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
+      : Promise.resolve({ data: [] }),
+    gameIds.length
+      ? supabaseAdmin.from("spread_history").select("game_id, favorite_team_id, spread, captured_at").in("game_id", gameIds).order("captured_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+    gameIds.length
+      ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", gameIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const games = gamesResult.data;
+  const teams = teamsResult.data;
 
   const gameById = new Map(
     ((games ?? []) as GameRow[]).map((game) => [game.id, game]),
@@ -197,6 +225,13 @@ export async function GET(request: NextRequest) {
   const teamNameById = new Map(
     (teams ?? []).map((team) => [team.id, team.full_name]),
   );
+  const lockedLineByGameId = new Map(
+    ((lockedLinesResult.data ?? []) as LockedLineRow[]).map((line) => [line.game_id, line]),
+  );
+  const preliminaryLineByGameId = new Map<string, PreliminaryLineRow>();
+  for (const line of (historyResult.data ?? []) as PreliminaryLineRow[]) {
+    if (!preliminaryLineByGameId.has(line.game_id)) preliminaryLineByGameId.set(line.game_id, line);
+  }
 
   const rows = players
     .map((player) => {
@@ -229,12 +264,24 @@ export async function GET(request: NextRequest) {
             resultMark = "L";
           }
 
+          const lockedLine = lockedLineByGameId.get(pick.game_id);
+          const preliminaryLine = preliminaryLineByGameId.get(pick.game_id);
+          const line = lockedLine ?? preliminaryLine;
+
 return {
   label: visible
     ? teamNameById.get(pick.selected_team_id) ?? "Unknown team"
     : null,
   isHidden: !visible,
   resultMark: visible ? resultMark : "",
+  spread: visible && line
+    ? signedSpread(
+        pick.selected_team_id,
+        line.favorite_team_id,
+        lockedLine ? lockedLine.locked_spread : preliminaryLine!.spread,
+      )
+    : null,
+  isLineLocked: Boolean(lockedLine),
 };
         });
 

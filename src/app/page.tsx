@@ -12,6 +12,8 @@ type ScoreboardPick = {
   label: string | null;
   isHidden: boolean;
   resultMark: string;
+  spread?: string | null;
+  isLineLocked?: boolean;
 };
 
 function MiniLogo({ abbreviation, muted }: { abbreviation: string; muted?: boolean }) {
@@ -203,6 +205,7 @@ export default function HomePage() {
           <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 sm:text-sm">
             Picks revealed to others at kickoff
           </p>
+          <p className="mt-1 text-xs text-slate-600">Teal spreads are official locked lines.</p>
         </header>
 
         <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
@@ -279,6 +282,12 @@ export default function HomePage() {
                             {pick?.label ? (
                               <span>
                                 {pick.label}
+
+                                {pick.spread ? (
+                                  <strong className={`ml-1 font-mono text-sm ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>
+                                    {pick.spread}
+                                  </strong>
+                                ) : null}
 
                                 {pick.resultMark ? (
                                   <strong
