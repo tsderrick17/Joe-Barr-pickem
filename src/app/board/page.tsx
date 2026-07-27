@@ -103,12 +103,19 @@ function easternShortDate(value: string) {
 }
 
 function easternLockLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  const date = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     weekday: "short",
+    month: "numeric",
+    day: "numeric",
+  }).format(new Date(value));
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+
+  return `${date} · ${time.replace(":00", "")}`;
 }
 
 function resultMarker(result: "win" | "loss" | null) {
@@ -117,7 +124,7 @@ function resultMarker(result: "win" | "loss" | null) {
   return (
     <strong
       aria-label={`Against the spread: ${result}`}
-      className={`relative -top-1 -ml-px inline-block -rotate-[15deg] text-sm font-black leading-none sm:text-base ${
+      className={`relative -top-1 -ml-px inline-block -rotate-[10deg] text-sm font-black leading-none sm:text-base ${
         result === "win" ? "text-green-700" : "text-red-700"
       }`}
     >
