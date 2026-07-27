@@ -248,8 +248,7 @@ export default function BoardPage() {
       .filter(Boolean) as string[];
   }, [games, selectedPicks]);
 
-  const selectionLimit =
-    week?.period_type === "playoff" ? games.length : week?.max_picks ?? 2;
+  const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete";
   const hasEarlyGame = games.some(isEarlyGame);
@@ -332,34 +331,44 @@ export default function BoardPage() {
     }
 
     setIsSubmitting(true);
+    const request = new AbortController();
+    const requestTimer = window.setTimeout(() => request.abort(), 15_000);
 
-    const response = await fetch("/api/picks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
-        scoringPeriodId: week.id,
-        selections: selectedPicks,
-      }),
-    });
+    try {
+      const response = await fetch("/api/picks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          scoringPeriodId: week.id,
+          selections: selectedPicks,
+        }),
+        signal: request.signal,
+      });
 
-    const data = (await response.json()) as {
-      error?: string;
-      message?: string;
-    };
+      const data = (await response.json()) as {
+        error?: string;
+        message?: string;
+      };
 
-    setIsSubmitting(false);
+      if (!response.ok) {
+        setSelectionWarning(
+          data.error ?? "Your picks could not be saved. Please try again.",
+        );
+        return;
+      }
 
-    if (!response.ok) {
+      setSubmissionMessage(data.message ?? "Your picks have been saved.");
+    } catch {
       setSelectionWarning(
-        data.error ?? "Your picks could not be saved. Please try again.",
+        "Your picks are taking too long to save. Please try again.",
       );
-      return;
+    } finally {
+      window.clearTimeout(requestTimer);
+      setIsSubmitting(false);
     }
-
-    setSubmissionMessage(data.message ?? "Your picks have been saved.");
   }
 
   if (isLoading && !week) {

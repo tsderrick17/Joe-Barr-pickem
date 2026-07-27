@@ -13,8 +13,9 @@
 
 1. In Commissioner, preview and import the available games.
 2. Confirm each game is assigned to the correct scoring week.
-3. Confirm active players can sign in and make a pick.
-4. Confirm the automatic jobs are active in Supabase:
+3. Confirm playoff scoring periods retain their configured pick counts: Wild Card 6, Divisional Round 4, Conference Championships 2, and Super Bowl 1.
+4. Confirm active players can sign in and make a pick.
+5. Confirm the automatic jobs are active in Supabase:
    - `lock-official-lines-every-minute`
    - `refresh-nfl-schedule-and-spreads-daily`
    - `refresh-final-nfl-scores-every-15-minutes`

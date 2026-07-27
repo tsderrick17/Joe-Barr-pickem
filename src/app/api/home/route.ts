@@ -108,7 +108,6 @@ export async function GET(request: NextRequest) {
     .from("scoring_periods")
     .select("id, display_name, display_order, status, max_picks")
     .eq("season_id", season.id)
-    .eq("period_type", "regular")
     .order("display_order");
 
   if (periodsError || !periods?.length) {

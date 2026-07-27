@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (selections.length < 1 || selections.length > 2) {
+  if (selections.length < 1) {
     return NextResponse.json(
-      { error: "Choose one or two teams." },
+      { error: "Choose at least one team." },
       { status: 400 },
     );
   }
@@ -113,7 +113,9 @@ export async function POST(request: NextRequest) {
 
   if (selections.length > period.max_picks) {
     return NextResponse.json(
-      { error: "You cannot submit more than two picks." },
+      {
+        error: `You cannot submit more than ${period.max_picks} picks for this scoring period.`,
+      },
       { status: 400 },
     );
   }
@@ -254,10 +256,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-const message =
-  selections.length === 1
-    ? "Your first pick has been saved."
-    : "Your two picks have been saved.";
+  const message =
+    selections.length === 1
+      ? "Your first pick has been saved."
+      : `Your ${selections.length} picks have been saved.`;
 
   return NextResponse.json({ message });
 }
