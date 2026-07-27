@@ -6,6 +6,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import GameExceptions from "@/components/game-exceptions";
 import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
+import AutomationHealth from "@/components/automation-health";
 
 type Spread = {
   team: string;
@@ -207,6 +208,7 @@ export default function AdminPage() {
   </Link>
 </div>
         </header>
+        <AutomationHealth />
         <LineLockChecker />
         <ScoreSyncChecker />
         <GameExceptions />
