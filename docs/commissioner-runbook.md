@@ -31,6 +31,7 @@
    - `supabase/026_replace_unlocked_picks_atomically.sql`
    - `supabase/027_add_survivor_pick_integrity.sql`
    - `supabase/028_save_slate_selections_atomically.sql`
+   - `supabase/029_harden_survivor_and_audit_history.sql`
 
 ## Weekly dress rehearsal
 
@@ -63,6 +64,7 @@ If a final score appears missing:
 - Do not manually change a final score unless the provider is wrong and the correction is documented.
 - Postponed and cancelled-game replacement policy is not implemented yet. They appear in **Game Exceptions** for manual commissioner review and are never graded automatically.
 - Once a week is rubber-stamped, its period, games, picks, and official lines are database-locked. Complete any correction process before the automated handoff.
+- Audit records are append-only. Record a correction as a new audit event; never rewrite the original history.
 
 ## Survivor
 
@@ -70,4 +72,4 @@ If a final score appears missing:
 - A player selects one straight-up winner per scoring period and cannot reuse a team.
 - A Survivor pick can be changed or cleared until its game's kickoff.
 - Final scores are evaluated by the existing final-score job. A loss or tie eliminates the entry.
-- Run `supabase/027_add_survivor_pick_integrity.sql` and `supabase/028_save_slate_selections_atomically.sql` before publishing Survivor. Together they add server-side safeguards, automatic enrollment, atomic Slate saves, and a submission audit trail.
+- Run migrations 027 through 029 before publishing Survivor. Together they add automatic enrollment, atomic Slate saves, append-only audit history, completed-week protection, and irreversible elimination records.
