@@ -2,7 +2,7 @@
 
 ## Normal automated flow
 
-1. Supabase refreshes the NFL schedule and preliminary spreads daily during NFL months.
+1. Supabase refreshes the NFL schedule and preliminary spreads daily during NFL months without changing final, postponed, or cancelled game statuses.
 2. Supabase checks official lines every minute and locks them at the pool's assigned line-lock time.
 3. Players can edit a pick until that game's kickoff; picks reveal at kickoff.
 4. Starting three hours after kickoff, the score check runs every 15 minutes.
@@ -17,6 +17,8 @@
    - `lock-official-lines-every-minute`
    - `refresh-nfl-schedule-and-spreads-daily`
    - `refresh-final-nfl-scores-every-15-minutes`
+
+   Run `supabase/020_schedule_daily_nfl_refresh.sql` once in the Supabase SQL Editor to create the daily schedule-and-preliminary-spread refresh.
 
 ## Weekly dress rehearsal
 

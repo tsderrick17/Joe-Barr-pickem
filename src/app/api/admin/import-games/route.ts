@@ -406,7 +406,6 @@ export async function POST(request: NextRequest) {
       kickoff_at: event.commence_time,
       line_lock_at: lineLock.lineLockAt,
       is_international: lineLock.isInternational,
-      status: "scheduled",
     });
   }
 
