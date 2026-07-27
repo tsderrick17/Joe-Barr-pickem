@@ -28,8 +28,32 @@ test("records ATS pushes as losses", () => {
   );
 });
 
+test("grades an underdog cover and a favorite ATS loss", () => {
+  assert.equal(
+    gradeAtsPick({ ...game, selectedTeamId: "home", awayScore: 24, homeScore: 23 }),
+    "win",
+  );
+  assert.equal(
+    gradeAtsPick({ ...game, selectedTeamId: "away", awayScore: 24, homeScore: 23 }),
+    "loss",
+  );
+});
+
+test("grades a pick-em winner and records a tie as a loss", () => {
+  assert.equal(
+    gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: 0, awayScore: 20, homeScore: 17 }),
+    "win",
+  );
+  assert.equal(
+    gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: 0, awayScore: 20, homeScore: 20 }),
+    "loss",
+  );
+});
+
 test("does not grade without a usable official line", () => {
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", favoriteTeamId: null }), "pending");
+  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: Number.NaN }), "pending");
+  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "other" }), "pending");
 });
 
 test("begins final-score checks three hours after kickoff", () => {
@@ -45,6 +69,10 @@ test("begins final-score checks three hours after kickoff", () => {
   );
   assert.equal(
     isDueForFinalScoreCheck({ ...game, status: "final" }),
+    false,
+  );
+  assert.equal(
+    isDueForFinalScoreCheck({ ...game, status: "postponed" }, new Date("2026-09-14T00:00:00.000Z")),
     false,
   );
 });
