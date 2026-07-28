@@ -64,7 +64,9 @@ export async function GET(request: NextRequest) {
   try {
     await voidDisruptedPicks();
   } catch {
-    return NextResponse.json({ error: "Disrupted-game checks could not be completed." }, { status: 503 });
+    // Read-only board access must remain available. Pick saves still fail closed
+    // if this integrity check cannot run.
+    console.error("Disrupted-game check failed while loading the board.");
   }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =

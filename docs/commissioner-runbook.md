@@ -74,6 +74,7 @@ build succeeds.
    - `supabase/039_add_automation_preflight.sql`
    - `supabase/040_void_disrupted_game_picks.sql`
    - `supabase/041_record_game_disruptions_atomically.sql`
+   - `supabase/042_repair_disrupted_pick_voiding.sql`
 
 ## Weekly dress rehearsal
 

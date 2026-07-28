@@ -74,7 +74,8 @@ export async function GET(request: NextRequest) {
   try {
     await voidDisruptedPicks();
   } catch {
-    return NextResponse.json({ error: "Survivor disruption checks could not be completed." }, { status: 503 });
+    // Read-only Survivor access remains available; submissions fail closed.
+    console.error("Disrupted-game check failed while loading Survivor.");
   }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
