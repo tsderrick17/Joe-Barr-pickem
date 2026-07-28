@@ -10,6 +10,7 @@ import AutomationHealth from "@/components/automation-health";
 import IntegrityRehearsal from "@/components/integrity-rehearsal";
 import GameDayPlaybook from "@/components/game-day-playbook";
 import AutomationPreflight from "@/components/automation-preflight";
+import FinalScoreReconciliation from "@/components/final-score-reconciliation";
 
 type Spread = {
   team: string;
@@ -217,6 +218,7 @@ export default function AdminPage() {
         <IntegrityRehearsal />
         <LineLockChecker />
         <ScoreSyncChecker />
+        <FinalScoreReconciliation />
         <GameExceptions />
 
         <section className="mt-8 border-y-2 border-zinc-900 py-8">

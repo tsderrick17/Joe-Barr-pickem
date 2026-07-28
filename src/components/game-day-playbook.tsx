@@ -4,6 +4,7 @@ const steps = [
   { time: "Before kickoff", title: "Verify readiness", body: "Run Automation Preflight, refresh health, and run the read-only Integrity Rehearsal. Resolve any red result before picks lock.", href: "#automation-preflight", action: "Open readiness checks" },
   { time: "At line lock", title: "Confirm official lines", body: "Automation locks due lines. The manual check is safe if a scheduled run needs confirmation or recovery.", href: "#official-spread-locks", action: "Open line locks" },
   { time: "After games finish", title: "Sync final scores", body: "Run the final-score check only after the three-hour eligibility window. It grades picks and performs a valid weekly handoff.", href: "#final-score-check", action: "Open score sync" },
+  { time: "After score sync", title: "Reconcile finals", body: "Compare recently saved finals with the provider. It is read-only and flags any discrepancy for review.", href: "#final-score-reconciliation", action: "Open reconciliation" },
   { time: "Any exception", title: "Resolve held games", body: "Review postponed, cancelled, or ungraded final games before treating a completed week as settled.", href: "#game-exceptions", action: "Open exceptions" },
 ];
 
