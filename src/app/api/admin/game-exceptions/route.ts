@@ -11,6 +11,14 @@ type GameRow = {
   status: "postponed" | "cancelled" | "final";
 };
 
+type RecordableGame = {
+  id: string;
+  awayTeam: string;
+  homeTeam: string;
+  week: string;
+  kickoffAt: string;
+};
+
 async function requireCommissioner(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -46,18 +54,24 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const [exceptionResult, pendingPickResult] = await Promise.all([
+  const [exceptionResult, pendingPickResult, recordableResult] = await Promise.all([
     supabaseAdmin
       .from("games")
       .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at, status")
       .in("status", ["postponed", "cancelled"])
       .order("kickoff_at"),
     supabaseAdmin.from("picks").select("game_id").eq("result", "pending"),
+    supabaseAdmin
+      .from("games")
+      .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at")
+      .in("status", ["scheduled", "live"])
+      .order("kickoff_at"),
   ]);
 
   if (
     exceptionResult.error ||
     pendingPickResult.error ||
+    recordableResult.error ||
     !exceptionResult.data ||
     !pendingPickResult.data
   ) {
@@ -99,7 +113,7 @@ export async function GET(request: NextRequest) {
     ),
   ];
   const periodIds = [
-    ...new Set(exceptionGames.map((game) => game.scoring_period_id)),
+    ...new Set([...exceptionGames, ...(recordableResult.data ?? [])].map((game) => game.scoring_period_id)),
   ];
 
   const [teamResult, periodResult] = await Promise.all([
@@ -136,6 +150,13 @@ export async function GET(request: NextRequest) {
       week: periodNameById.get(game.scoring_period_id) ?? "Unknown week",
       kickoffAt: game.kickoff_at,
       status: game.status === "final" ? "pending_grade" : game.status,
+    })),
+    recordableGames: (recordableResult.data ?? []).map((game): RecordableGame => ({
+      id: game.id,
+      awayTeam: teamNameById.get(game.away_team_id) ?? "Unknown team",
+      homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
+      week: periodNameById.get(game.scoring_period_id) ?? "Unknown week",
+      kickoffAt: game.kickoff_at,
     })),
   });
 }
