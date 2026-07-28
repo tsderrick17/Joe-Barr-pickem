@@ -305,6 +305,7 @@ return {
     id: string;
     firstName: string;
     status: string;
+    eliminatedAt: string | null;
     pick: {
       label: string | null;
       isHidden: boolean;
@@ -337,7 +338,7 @@ return {
     ] = await Promise.all([
       supabaseAdmin
         .from("survivor_entries")
-        .select("id, player_id, status")
+        .select("id, player_id, status, eliminated_at")
         .eq("season_id", season.id),
       supabaseAdmin
         .from("survivor_picks")
@@ -420,6 +421,7 @@ return {
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
               status: entry.status,
+              eliminatedAt: entry.eliminated_at,
               pick: pick
                 ? {
                     label: visible
@@ -445,13 +447,12 @@ return {
               }),
             };
           })
-          .sort((first, second) =>
-            first.status === second.status
-              ? first.firstName.localeCompare(second.firstName)
-              : first.status === "active"
-                ? -1
-                : 1,
-          );
+          .sort((first, second) => {
+            if (first.status !== second.status) return first.status === "active" ? -1 : 1;
+            if (first.status === "active") return first.firstName.localeCompare(second.firstName);
+            return new Date(second.eliminatedAt ?? 0).getTime() - new Date(first.eliminatedAt ?? 0).getTime()
+              || first.firstName.localeCompare(second.firstName);
+          });
       }
     }
   }
