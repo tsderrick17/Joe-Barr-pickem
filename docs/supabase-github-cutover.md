@@ -23,8 +23,9 @@ record of the original build.
 4. Re-run the workflow with **Apply migrations** checked. The baseline marker
    records the cutover; it makes no schema or data change.
 
-After that, the workflow can be changed from manual to automatic deployment on
-`main` once at least one normal post-cutover migration has been reviewed.
+After this baseline is applied, every future timestamped migration merged to
+`main` is first dry-run and then deployed automatically. Ordinary app-only
+pushes do not trigger this workflow.
 
 ## Safety rules
 
