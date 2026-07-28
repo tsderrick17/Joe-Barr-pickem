@@ -1,10 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export type AutomationJob = "line_locks" | "scores";
+export type AutomationJob = "line_locks" | "scores" | "reminders";
 
 export class AutomationAlreadyRunningError extends Error {
   constructor(job: AutomationJob) {
-    super(`${job === "line_locks" ? "Official line locking" : "Final-score sync"} is already running.`);
+    const label = job === "line_locks" ? "Official line locking" : job === "scores" ? "Final-score sync" : "Browser reminder delivery";
+    super(`${label} is already running.`);
     this.name = "AutomationAlreadyRunningError";
   }
 }

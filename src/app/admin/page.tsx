@@ -207,6 +207,10 @@ export default function AdminPage() {
     Player setup
   </Link>
 
+  <Link className="font-semibold underline" href="/admin/reminders">
+    Browser reminders
+  </Link>
+
   <Link className="font-semibold underline" href="/">
     Back to Standings
   </Link>
