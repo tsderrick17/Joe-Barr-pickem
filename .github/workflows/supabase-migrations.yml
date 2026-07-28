@@ -1,0 +1,32 @@
+name: Supabase migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply pending production migrations (leave off for a dry run)
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Preview pending migrations
+        if: ${{ !inputs.apply }}
+        run: supabase db push --linked --dry-run
+      - name: Apply pending migrations
+        if: ${{ inputs.apply }}
+        run: supabase db push --linked

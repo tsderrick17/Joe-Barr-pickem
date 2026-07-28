@@ -1,0 +1,6 @@
+-- Baseline marker only.
+--
+-- The production schema and existing root-level /supabase SQL files were
+-- applied manually before the repository adopted Supabase CLI migrations.
+-- This file intentionally makes no database change. Its sole purpose is to
+-- establish a safe starting point for future timestamped migrations.

@@ -1,0 +1,4 @@
+project_id = "qtuycmgjiizrahfchsxe"
+
+# This project uses the hosted database. Local development settings can be
+# added later if we introduce an isolated staging database.
