@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
   const missingOfficialLines = dueIds.filter((id) => !lockedIds.has(id)).length;
   const scoreCandidates = (scoreGamesResult.data ?? []).length;
   const problems: string[] = [];
-  if (latestLocks?.status === "failed") problems.push("The most recent official-line lock failed.");
-  if (latestScores?.status === "failed") problems.push("The most recent final-score sync failed.");
+  if (latestLocks?.status === "failed" && dueIds.length) problems.push("The most recent official-line lock failed while a game needs an official line.");
+  if (latestScores?.status === "failed" && scoreCandidates) problems.push("The most recent final-score sync failed while games are awaiting review.");
   if (missingOfficialLines) problems.push(`${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`);
   if (scoreCandidates && (!latestScores || latestScores.status !== "success" || now.getTime() - new Date(latestScores.completed_at ?? latestScores.started_at).getTime() > 30 * 60 * 1000)) problems.push("Final-score sync is stale while games are awaiting review.");
 

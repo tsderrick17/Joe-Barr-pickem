@@ -104,10 +104,6 @@ async function lockDueLinesInternal(
 
   await voidDisruptedPicks();
 
-  if (!oddsApiKey) {
-    throw new Error("The Odds API key is not configured.");
-  }
-
   const { data: candidates, error: candidatesError } =
     await supabaseAdmin
       .from("games")
@@ -173,6 +169,13 @@ async function lockDueLinesInternal(
     };
   }
 
+  // Outside a live line-lock window, no provider credential is needed. This
+  // keeps preseason and quiet-week cron checks from creating false failures.
+  if (!oddsApiKey) {
+    throw new Error("The Odds API key is not configured for a game that needs an official line.");
+  }
+  const configuredOddsApiKey = oddsApiKey;
+
   const teamIds = [
     ...new Set(
       dueGames.flatMap((game) => [
@@ -234,7 +237,7 @@ async function lockDueLinesInternal(
 
   try {
     const query = new URLSearchParams({
-      apiKey: oddsApiKey,
+      apiKey: configuredOddsApiKey,
       regions: "us",
       markets: "spreads",
       bookmakers: "draftkings",
