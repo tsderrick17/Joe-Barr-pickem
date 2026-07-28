@@ -328,23 +328,23 @@ export default function HomePage() {
 
           {data.survivorAvailable ? (
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
-              <div className="min-w-[57.5rem]">
-                <div className="grid grid-cols-[7rem_repeat(18,2.5rem)_5.5rem] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+              <div className="min-w-[55.5rem]">
+                <div className="grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+                  <span aria-hidden="true" className="py-2" />
                   <span className="px-2 py-2 text-left">PLAYER</span>
                   {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
-                  <span className="py-2">STATUS</span>
                 </div>
                 {data.survivorRows.map((row) => {
                   const isViewer = row.playerId === data.viewerPlayerId;
 
                   return (
-                  <div className={`grid grid-cols-[7rem_repeat(18,2.5rem)_5.5rem] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "bg-[#fffaf0]" : ""}`} key={row.id}>
+                  <div className={`grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "bg-[#fffaf0]" : ""}`} key={row.id}>
+                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                     <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}</span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
                       return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
                     })}
-                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                   </div>
                   );
                 })}
