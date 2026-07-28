@@ -196,7 +196,7 @@ export default function AdminPage() {
 
 <div className="flex flex-col items-end gap-2">
   <Link className="border border-zinc-900 bg-zinc-900 px-3 py-2 text-sm font-bold text-white" href="/preview">
-    Open Week 4 rehearsal
+    Open season rehearsal
   </Link>
 
   <Link className="font-semibold underline" href="/login">

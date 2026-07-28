@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import PickemScoreboard from "@/components/pickem-scoreboard";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -231,6 +232,12 @@ export default function HomePage() {
           </div>
         </section>
 
+        <PickemScoreboard
+          maxPicks={data.maxPicks}
+          rows={data.rows}
+          viewerPlayerId={data.viewerPlayerId}
+        />
+        {false ? (
         <section className="py-6 sm:py-7">
           <p className="mb-4 text-xs font-bold tracking-[0.2em] text-slate-600">
             PICK&apos;EM THIS WEEK
@@ -243,7 +250,7 @@ export default function HomePage() {
                 <tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]">
                   <th className="w-12 px-2 py-3 sm:w-20 sm:px-3">WINS</th>
                   <th className="w-20 px-2 py-3 sm:w-40 sm:px-3"><span className="sr-only">Player</span></th>
-                  {Array.from({ length: data.maxPicks }, (_, index) => (
+                   {Array.from({ length: data!.maxPicks }, (_, index) => (
                     <th className="px-2 py-3 sm:px-3" key={index}>
                       PICK {index + 1}
                     </th>
@@ -252,8 +259,8 @@ export default function HomePage() {
               </thead>
 
               <tbody>
-                {data.rows.map((row) => {
-                  const isViewer = row.id === data.viewerPlayerId;
+                 {data!.rows.map((row) => {
+                   const isViewer = row.id === data!.viewerPlayerId;
 
                   return (
                     <tr
@@ -274,7 +281,7 @@ export default function HomePage() {
 
                       </td>
 
-                      {Array.from({ length: data.maxPicks }, (_, pickNumber) => {
+                       {Array.from({ length: data!.maxPicks }, (_, pickNumber) => {
                         const pick = row.picks[pickNumber];
 
                         return (
@@ -320,6 +327,7 @@ export default function HomePage() {
           </div>
 
         </section>
+        ) : null}
 
         <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
           <p className="text-xs font-bold tracking-[0.2em] text-slate-600">

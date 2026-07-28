@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PickemScoreboard, { type PickemScoreboardRow } from "@/components/pickem-scoreboard";
 import SlateGameRow, { type SlateGameRowData } from "@/components/slate-game-row";
 import { countPickemWins } from "@/lib/standings";
 
@@ -180,6 +181,28 @@ function rehearsalSlateGame(game: RehearsalGame, index: number, scenario: Scenar
   };
 }
 
+function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
+  return Object.keys(priorWins).map((name) => {
+    const selections = playerSelections[name];
+    const picks = selections.map((selection, index) => {
+      if (!selection) return { label: null, isHidden: false, resultMark: "" };
+      const game = games[index];
+      const started = scenario.activeGames.includes(index) || scenario.finalGames.includes(index);
+      const visible = name === "Tyler" || started;
+      const spread = Number(game.line.replace(/[^0-9.]/g, ""));
+      return {
+        label: visible ? (selection === "left" ? game.left : game.right) : null,
+        isHidden: !visible,
+        resultMark: scenario.final ? resultFor(game, selection, true) ?? "" : "",
+        spread: visible ? `${selection === "left" ? "-" : "+"}${spread.toFixed(1)}` : null,
+        isLineLocked: scenario.lockedGames.includes(index),
+      };
+    });
+    const weekWins = countPickemWins(games.map((game, index) => ({ result: selections[index] ? resultFor(game, selections[index]!, scenario.final) : null })));
+    return { id: name.toLowerCase(), firstName: name, wins: priorWins[name] + weekWins, picks };
+  }).sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName));
+}
+
 function ResultMark({ result }: { result: Result }) {
   if (!result) return null;
   return <strong className={`relative -top-1 -ml-px inline-block -rotate-[10deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
@@ -189,6 +212,7 @@ export default function PreviewPage() {
   const [scenarioKey, setScenarioKey] = useState("open");
   const [showStandings, setShowStandings] = useState(false);
   const scenario = scenarios[scenarioKey];
+  const rehearsalRows = rehearsalScoreboardRows(scenario);
   const standings = Object.keys(priorWins).map((name) => {
     const weeklyPicks = playerSelections[name];
     const weekWins = countPickemWins(
@@ -253,8 +277,11 @@ export default function PreviewPage() {
             </article>;
           })}</div></> : null}
         </section></div> : <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-labelledby="standings-heading">
+          <PickemScoreboard maxPicks={2} rows={rehearsalRows} viewerPlayerId="tyler" />
+          {false ? <>
           <div className="flex items-end justify-between border-y-2 border-[#1d1d1f] px-1 py-3 sm:px-3"><div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">Lead Pipe Locks</p><h2 className="font-serif text-3xl font-black" id="standings-heading">Through Week {scenario.final ? "4" : "3"}</h2></div><p className="text-right text-xs text-slate-600">Weeks 1–3 are simulated.<br />Week 4 adds only when final.</p></div>
           <div className="overflow-x-auto"><table className="w-full min-w-[38rem] border-collapse text-left"><thead><tr className="border-b-2 border-[#1d1d1f] text-[11px] font-black uppercase tracking-[0.14em] text-slate-600"><th className="px-3 py-3">Rank</th><th className="px-3 py-3">Player</th><th className="px-3 py-3 text-center">Wk 1–3</th><th className="px-3 py-3 text-center">Wk 4</th><th className="px-3 py-3 text-center">Total wins</th><th className="px-3 py-3">Week 4 receipt</th></tr></thead><tbody>{standings.map((row, index) => <tr className={`border-b border-[#c8c1b5] ${row.name === "Tyler" ? "bg-[#fffaf0]" : index % 2 ? "bg-[#f0eadc]" : ""}`} key={row.name}><td className="px-3 py-4 font-serif text-xl">{index + 1}</td><td className="px-3 py-4 font-serif text-xl">{row.name}</td><td className="px-3 py-4 text-center font-bold">{row.priorWins}</td><td className="px-3 py-4 text-center font-bold">{scenario.final ? row.weekWins : "—"}</td><td className="px-3 py-4 text-center font-serif text-xl font-bold">{row.total}</td><td className="px-3 py-4 text-sm">{scenario.final ? <WeekReceipt name={row.name} /> : <span className="text-slate-500">Picks reveal at each kickoff</span>}</td></tr>)}</tbody></table></div>
+          </> : null}
         </section>}
 
         <p className="mx-auto mt-7 max-w-4xl border-t border-[#b9b09d] pt-4 text-xs leading-5 text-slate-600">Rehearsal integrity check: Week 4 totals are calculated from only the displayed final W marks—never from the number of submitted picks. This page is sample data only.</p>
