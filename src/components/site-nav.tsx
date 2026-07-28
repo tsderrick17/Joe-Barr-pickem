@@ -129,6 +129,10 @@ export default function SiteNav() {
                 <strong className="text-white">{playerName}</strong>
               </span>
 
+              <Link className={linkStyle("/profile")} href="/profile">
+                Preferences
+              </Link>
+
               <button
                 type="button"
                 disabled={isSigningOut}
