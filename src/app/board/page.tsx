@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
+import SlateGameRow from "@/components/slate-game-row";
 
 type ScoringPeriod = {
   id: string;
@@ -85,24 +86,8 @@ function isEarlyGame(game: BoardGame) {
   return game.isInternational;
 }
 
-function teamLabel(teamName: string, isHome: boolean) {
-  return isHome ? teamName.toUpperCase() : teamName;
-}
-function officialSpreadLabel(spread: number | null) {
-  if (spread === null) return null;
-  if (spread === 0) return "PK";
-
-  return `-${Number.isInteger(spread) ? spread : spread.toFixed(1)}`;
-}
-
-function easternShortDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    month: "numeric",
-    day: "numeric",
-  }).format(new Date(value));
-}
-
+// Retained for the adjacent Survivor rendering branch until that presentation is extracted.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function easternLockLabel(value: string) {
   const date = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -118,6 +103,8 @@ function easternLockLabel(value: string) {
   return `${date} · ${time.replace(":00", "")}`;
 }
 
+// Retained for the adjacent Survivor rendering branch until that presentation is extracted.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function resultMarker(result: "win" | "loss" | null) {
   if (!result) return null;
 
@@ -437,12 +424,6 @@ export default function BoardPage() {
 
   const isReadOnly = week?.status === "complete";
   const hasEarlyGame = games.some(isEarlyGame);
-  function isSelected(gameId: string, teamId: string) {
-    return selectedPicks.some(
-      (pick) => pick.gameId === gameId && pick.teamId === teamId,
-    );
-  }
-
   function chooseTeam(gameId: string, teamId: string) {
     if (isReadOnly) return;
 
@@ -751,142 +732,17 @@ export default function BoardPage() {
                   </div>
 
                   <div>
-                    {dayGames.map((game, index) => {
-                      const favoriteIsHome =
-                        game.favoriteTeamId === game.homeTeamId;
-
-                      const leftTeamName = favoriteIsHome
-                        ? game.homeTeam
-                        : game.awayTeam;
-
-                      const leftTeamId = favoriteIsHome
-                        ? game.homeTeamId
-                        : game.awayTeamId;
-
-                      const leftTeamResult = favoriteIsHome
-                        ? game.homeResult
-                        : game.awayResult;
-
-                      const leftTeamScore = favoriteIsHome
-                        ? game.homeScore
-                        : game.awayScore;
-
-                      const rightTeamName = favoriteIsHome
-                        ? game.awayTeam
-                        : game.homeTeam;
-
-                      const rightTeamId = favoriteIsHome
-                        ? game.awayTeamId
-                        : game.homeTeamId;
-
-                      const rightTeamResult = favoriteIsHome
-                        ? game.awayResult
-                        : game.homeResult;
-
-                      const rightTeamScore = favoriteIsHome
-                        ? game.awayScore
-                        : game.homeScore;
-
-                      const gameIsFinal = game.status === "final";
-                      const gameIsLive = game.status === "live";
-
-                      const leftPickers = favoriteIsHome
-                        ? game.homePickers
-                        : game.awayPickers;
-
-                      const rightPickers = favoriteIsHome
-                        ? game.awayPickers
-                        : game.homePickers;
-
-                      const gameHasStarted =
-                        new Date(game.kickoffAt) <= new Date();
-                      const showSpecialLockNote =
-                        game.isInternational && new Date(game.lineLockAt) > new Date();
-
-                      return (
-                        <article
-                          className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 pl-1 pr-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${index % 2 === 1 ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}
-                          key={game.id}
-                        >
-                          <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
-                            {isReadOnly ? (
-                              <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p>
-                            ) : (
-                              <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className={`mt-1 text-[8px] font-black tracking-[0.1em] ${gameIsLive ? "text-red-700" : "text-slate-500"}`}>{gameIsLive ? "LIVE" : "ET"}</p></>
-                            )}
-                          </div>
-                          <button
-                            className={`text-left text-sm font-bold leading-tight tracking-tight sm:text-base ${
-                              isSelected(game.id, leftTeamId)
-                                ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
-                                : "hover:underline disabled:hover:no-underline"
-                            }`}
-                            disabled={isReadOnly || gameHasStarted}
-                            onClick={() => chooseTeam(game.id, leftTeamId)}
-                            type="button"
-                          >
-                            <span className="inline-block">
-                              {teamLabel(leftTeamName, favoriteIsHome)}
-                              {gameIsFinal ? resultMarker(leftTeamResult) : null}
-                              {gameIsFinal && leftTeamScore !== null ? (
-                                <span className="ml-1 font-mono font-black tabular-nums">
-                                  {leftTeamScore}
-                                </span>
-                              ) : null}
-                            </span>
-                            {gameHasStarted && leftPickers.length ? (
-                              <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, leftTeamId) ? "text-slate-200" : "text-slate-600"}`}>
-                                {leftPickers.join(", ")}
-                              </span>
-                            ) : null}
-                          </button>
-
-                          <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
-                            {game.officialSpread !== null ? (
-                              <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">
-                                {officialSpreadLabel(game.officialSpread)}
-                              </span>
-                            ) : game.preliminarySpread !== null ? (
-                              <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">
-                                {officialSpreadLabel(game.preliminarySpread)}
-                              </span>
-                            ) : (
-                              <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">
-                                AWAITING LINE
-                              </p>
-                            )}
-                            {showSpecialLockNote ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
-
-                          </div>
-
-                          <button
-                            className={`text-right text-sm font-bold leading-tight tracking-tight sm:text-base ${
-                              isSelected(game.id, rightTeamId)
-                                ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2"
-                                : "hover:underline disabled:hover:no-underline"
-                            }`}
-                            disabled={isReadOnly || gameHasStarted}
-                            onClick={() => chooseTeam(game.id, rightTeamId)}
-                            type="button"
-                          >
-                            <span className="inline-block">
-                              {teamLabel(rightTeamName, !favoriteIsHome)}
-                              {gameIsFinal ? resultMarker(rightTeamResult) : null}
-                              {gameIsFinal && rightTeamScore !== null ? (
-                                <span className="ml-1 font-mono font-black tabular-nums">
-                                  {rightTeamScore}
-                                </span>
-                              ) : null}
-                            </span>
-                            {gameHasStarted && rightPickers.length ? (
-                              <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${isSelected(game.id, rightTeamId) ? "text-slate-200" : "text-slate-600"}`}>
-                                {rightPickers.join(", ")}
-                              </span>
-                            ) : null}
-                          </button>
-                        </article>
-                      );
-                    })}
+                    {dayGames.map((game, index) => (
+                      <SlateGameRow
+                        allowSelection={!isReadOnly}
+                        alternate={index % 2 === 1}
+                        game={game}
+                        hasStarted={new Date(game.kickoffAt) <= new Date()}
+                        key={game.id}
+                        onChoose={chooseTeam}
+                        selectedTeamId={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId}
+                      />
+                    ))}
                   </div>
                 </section>
               );
