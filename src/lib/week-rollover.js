@@ -41,18 +41,18 @@ function easternDateTimeToUtc(year, month, day, hour) {
   return new Date(utcGuess.getTime() - offset);
 }
 
-export function normalThursdayChangeoverAt(lastFinalizedAt) {
+export function normalWednesdayChangeoverAt(lastFinalizedAt) {
   const finalizedAt = new Date(lastFinalizedAt);
   const eastern = getEasternParts(finalizedAt);
   const easternDate = new Date(
     Date.UTC(eastern.year, eastern.month - 1, eastern.day),
   );
-  const daysUntilThursday = (4 - easternDate.getUTCDay() + 7) % 7;
+  const daysUntilWednesday = (3 - easternDate.getUTCDay() + 7) % 7;
 
-  if (daysUntilThursday === 0 && eastern.hour >= 3) {
+  if (daysUntilWednesday === 0 && eastern.hour >= 3) {
     easternDate.setUTCDate(easternDate.getUTCDate() + 7);
   } else {
-    easternDate.setUTCDate(easternDate.getUTCDate() + daysUntilThursday);
+    easternDate.setUTCDate(easternDate.getUTCDate() + daysUntilWednesday);
   }
 
   return easternDateTimeToUtc(
@@ -76,7 +76,7 @@ export function weekRolloverAt({ lastFinalizedAt, nextKickoffAt }) {
 
   const fullDayAt = new Date(finalizedAt.getTime() + oneDayMilliseconds);
   const normalChangeoverAt = new Date(
-    normalThursdayChangeoverAt(finalizedAt),
+    normalWednesdayChangeoverAt(finalizedAt),
   );
 
   return new Date(

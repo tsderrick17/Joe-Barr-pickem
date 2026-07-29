@@ -318,15 +318,11 @@ export default function BoardPage() {
 
   const availableWeeks = useMemo(() => {
     const currentWeek = selectDefaultScoringPeriod(weeks);
-    const nextWeek = currentWeek
-      ? weeks.find((period) => period.display_order > currentWeek.display_order)
-      : undefined;
 
     return weeks.filter(
       (period) =>
         period.status === "complete" ||
-        period.id === currentWeek?.id ||
-        period.id === nextWeek?.id,
+        period.id === currentWeek?.id,
     );
   }, [weeks]);
 
