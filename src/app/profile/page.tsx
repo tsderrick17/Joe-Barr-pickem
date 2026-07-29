@@ -15,10 +15,10 @@ type Profile = {
 };
 
 const choices = [
-  { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "A friendly welcome when the new week opens." },
+  { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "The full preliminary slate, with black lines, is ready for the week." },
   { key: "finalLines" as const, title: "Final lines · 8:30 AM on game days", note: "A look at the official lines on every game day, including Sunday." },
   { key: "earlyLock" as const, title: "International game locks early", note: "A heads-up when an international matchup has an earlier official lock." },
-  { key: "pickDue" as const, title: "A gentle pick check", note: "Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
+  { key: "pickDue" as const, title: "Selections still to be made", note: "A reminder Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
   { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
   { key: "custom" as const, title: "Commissioner notes", note: "Occasional practical pool updates." },
 ];
