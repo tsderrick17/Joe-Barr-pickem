@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     notificationEmail: player.notification_email ?? "",
     emailNotificationsEnabled: player.email_notifications_enabled,
+    emailWeeklyEnabled: player.email_weekly_enabled,
+    emailAtsDueEnabled: player.email_ats_due_enabled,
+    emailSurvivorDueEnabled: player.email_survivor_due_enabled,
+    emailCustomEnabled: player.email_custom_enabled,
     pushWeeklyEnabled: player.push_weekly_enabled,
     pushAtsDueEnabled: player.push_ats_due_enabled,
     pushSurvivorDueEnabled: player.push_survivor_due_enabled,
@@ -24,7 +28,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; pushWeeklyEnabled?: unknown; pushAtsDueEnabled?: unknown; pushSurvivorDueEnabled?: unknown; pushCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown; pushWeeklyEnabled?: unknown; pushAtsDueEnabled?: unknown; pushSurvivorDueEnabled?: unknown; pushCustomEnabled?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -43,8 +47,11 @@ export async function PUT(request: NextRequest) {
     .from("players")
     .update({
       notification_email: email || null,
-      // Email delivery is intentionally inactive until the pool has a verified sending domain.
-      email_notifications_enabled: false,
+      email_notifications_enabled: email ? preference(body.emailNotificationsEnabled, player.email_notifications_enabled) : false,
+      email_weekly_enabled: preference(body.emailWeeklyEnabled, player.email_weekly_enabled),
+      email_ats_due_enabled: preference(body.emailAtsDueEnabled, player.email_ats_due_enabled),
+      email_survivor_due_enabled: preference(body.emailSurvivorDueEnabled, player.email_survivor_due_enabled),
+      email_custom_enabled: preference(body.emailCustomEnabled, player.email_custom_enabled),
       push_weekly_enabled: preference(body.pushWeeklyEnabled, player.push_weekly_enabled),
       push_ats_due_enabled: preference(body.pushAtsDueEnabled, player.push_ats_due_enabled),
       push_survivor_due_enabled: preference(body.pushSurvivorDueEnabled, player.push_survivor_due_enabled),
@@ -57,5 +64,5 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Your notification settings could not be saved." }, { status: 500 });
   }
 
-  return NextResponse.json({ message: "Contact email saved." });
+  return NextResponse.json({ message: "Notification settings saved." });
 }

@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import { deliverEmailReminder } from "@/lib/email-reminders";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type ReminderCategory = "weekly" | "ats_due" | "survivor_due" | "custom";
@@ -52,7 +53,7 @@ async function activePeriod() {
   return data;
 }
 
-async function eligiblePlayerIds(audience: ReminderAudience) {
+export async function eligiblePlayerIds(audience: ReminderAudience) {
   const { data: activePlayers, error } = await supabaseAdmin
     .from("players")
     .select("id")
@@ -173,9 +174,12 @@ export async function deliverPushReminder(reminder: Reminder, limitedSubscriptio
 export async function sendDuePushReminders() {
   const { data: reminders, error } = await supabaseAdmin.rpc("claim_due_push_reminders");
   if (error) throw new Error("Due browser reminders could not be claimed.");
-  const result = { reminders: 0, sent: 0, failed: 0, skipped: 0 };
+  const result = { reminders: 0, sent: 0, failed: 0, skipped: 0, emailSent: 0, emailFailed: 0 };
   for (const reminder of (reminders ?? []) as Reminder[]) {
-    const delivery = await deliverPushReminder(reminder);
+    const [delivery, emailDelivery] = await Promise.all([
+      deliverPushReminder(reminder),
+      deliverEmailReminder(reminder),
+    ]);
     await supabaseAdmin.from("push_reminders").update({
       status: "sent",
       sent_at: new Date().toISOString(),
@@ -185,6 +189,8 @@ export async function sendDuePushReminders() {
     result.sent += delivery.sent;
     result.failed += delivery.failed;
     result.skipped += delivery.skipped;
+    result.emailSent += emailDelivery.sent;
+    result.emailFailed += emailDelivery.failed;
   }
   return result;
 }

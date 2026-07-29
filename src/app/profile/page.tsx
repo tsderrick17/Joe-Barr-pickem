@@ -5,6 +5,11 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type Profile = {
   notificationEmail: string;
+  emailNotificationsEnabled: boolean;
+  emailWeeklyEnabled: boolean;
+  emailAtsDueEnabled: boolean;
+  emailSurvivorDueEnabled: boolean;
+  emailCustomEnabled: boolean;
   pushWeeklyEnabled: boolean;
   pushAtsDueEnabled: boolean;
   pushSurvivorDueEnabled: boolean;
@@ -33,6 +38,8 @@ export default function ProfilePage() {
   const [pushSupported, setPushSupported] = useState(() => typeof window !== "undefined"
     && Boolean(vapidPublicKey && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window));
   const [pushPreferences, setPushPreferences] = useState({ weekly: true, atsDue: true, survivorDue: true, custom: true });
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [emailPreferences, setEmailPreferences] = useState({ weekly: true, atsDue: true, survivorDue: true, custom: true });
 
   useEffect(() => {
     let active = true;
@@ -44,6 +51,8 @@ export default function ProfilePage() {
         if (active) {
           setProfile(data);
           setEmail(data.notificationEmail);
+          setEmailEnabled(data.emailNotificationsEnabled);
+          setEmailPreferences({ weekly: data.emailWeeklyEnabled, atsDue: data.emailAtsDueEnabled, survivorDue: data.emailSurvivorDueEnabled, custom: data.emailCustomEnabled });
           setPushPreferences({ weekly: data.pushWeeklyEnabled, atsDue: data.pushAtsDueEnabled, survivorDue: data.pushSurvivorDueEnabled, custom: data.pushCustomEnabled });
         }
       } catch (reason) {
@@ -76,6 +85,11 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notificationEmail: email,
+          emailNotificationsEnabled: emailEnabled,
+          emailWeeklyEnabled: emailPreferences.weekly,
+          emailAtsDueEnabled: emailPreferences.atsDue,
+          emailSurvivorDueEnabled: emailPreferences.survivorDue,
+          emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
           pushAtsDueEnabled: pushPreferences.atsDue,
           pushSurvivorDueEnabled: pushPreferences.survivorDue,
@@ -84,8 +98,8 @@ export default function ProfilePage() {
       });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), pushWeeklyEnabled: pushPreferences.weekly, pushAtsDueEnabled: pushPreferences.atsDue, pushSurvivorDueEnabled: pushPreferences.survivorDue, pushCustomEnabled: pushPreferences.custom });
-      setMessage(data.message ?? "Contact email saved.");
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: emailEnabled, emailWeeklyEnabled: emailPreferences.weekly, emailAtsDueEnabled: emailPreferences.atsDue, emailSurvivorDueEnabled: emailPreferences.survivorDue, emailCustomEnabled: emailPreferences.custom, pushWeeklyEnabled: pushPreferences.weekly, pushAtsDueEnabled: pushPreferences.atsDue, pushSurvivorDueEnabled: pushPreferences.survivorDue, pushCustomEnabled: pushPreferences.custom });
+      setMessage(data.message ?? "Notification settings saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
       else setError(reason instanceof Error ? reason.message : "Your notification settings could not be saved.");
@@ -164,6 +178,11 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notificationEmail: email,
+          emailNotificationsEnabled: emailEnabled,
+          emailWeeklyEnabled: emailPreferences.weekly,
+          emailAtsDueEnabled: emailPreferences.atsDue,
+          emailSurvivorDueEnabled: emailPreferences.survivorDue,
+          emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
           pushAtsDueEnabled: pushPreferences.atsDue,
           pushSurvivorDueEnabled: pushPreferences.survivorDue,
@@ -192,7 +211,8 @@ export default function ProfilePage() {
         <form className="mt-8 border-y-2 border-[#1d1d1f] py-6" onSubmit={save}>
           <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
           <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-white px-3 py-2 outline-none focus:border-zinc-900" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
-          <p className="mt-3 text-sm leading-5 text-slate-600">Your contact email is stored privately. Email delivery is not active while the pool remains domain-free.</p>
+          <p className="mt-3 text-sm leading-5 text-slate-600">Your email is private. Turn on the reminder types you want; reminders never reveal your selections.</p>
+          <fieldset className="mt-5 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">EMAIL REMINDERS</legend><label className="mt-3 flex items-start gap-3 text-sm"><input checked={emailEnabled} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send reminders to this email</strong>You can opt out at any time.</span></label>{emailEnabled ? <div className="mt-4 space-y-3 text-sm"><label className="flex items-start gap-3"><input checked={emailPreferences.weekly} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, weekly: event.target.checked }))} type="checkbox" /><span><strong className="block">Weekly slate open</strong>New-week and general pool notices.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.atsDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, atsDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Pick&apos;em pick due</strong>Only when you still need ATS selections.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.survivorDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, survivorDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Survivor pick due</strong>Only while your Survivor entry remains active and needs a pick.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.custom} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, custom: event.target.checked }))} type="checkbox" /><span><strong className="block">Commissioner notices</strong>General pool updates you choose to receive.</span></label></div> : null}</fieldset>
           {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
           {message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
           <button className="mt-6 min-h-12 bg-[#1d1d1f] px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Save contact email"}</button>

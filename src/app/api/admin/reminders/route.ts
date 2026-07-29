@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   const { data: reminders, error } = await supabaseAdmin
     .from("push_reminders")
-    .select("id, category, audience, title, body, scheduled_for, status, sent_at, cancelled_at, created_at, push_reminder_deliveries(status)")
+    .select("id, category, audience, title, body, scheduled_for, status, sent_at, cancelled_at, created_at, push_reminder_deliveries(status), email_reminder_deliveries(status)")
     .order("scheduled_for", { ascending: false })
     .limit(50);
   if (error) return NextResponse.json({ error: "Reminder history could not be loaded." }, { status: 500 });
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     reminders: (reminders ?? []).map((reminder) => {
       const deliveries = (reminder.push_reminder_deliveries ?? []) as Array<{ status: string }>;
+      const emailDeliveries = (reminder.email_reminder_deliveries ?? []) as Array<{ status: string }>;
       return {
         id: reminder.id,
         category: reminder.category,
@@ -30,6 +31,8 @@ export async function GET(request: NextRequest) {
         createdAt: reminder.created_at,
         delivered: deliveries.filter((delivery) => delivery.status === "sent").length,
         failed: deliveries.filter((delivery) => delivery.status === "failed" || delivery.status === "expired").length,
+        emailDelivered: emailDeliveries.filter((delivery) => delivery.status === "sent").length,
+        emailFailed: emailDeliveries.filter((delivery) => delivery.status === "failed" || delivery.status === "suppressed").length,
       };
     }),
   });

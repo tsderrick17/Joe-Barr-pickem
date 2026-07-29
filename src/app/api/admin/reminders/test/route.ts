@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deliverPushReminder } from "@/lib/push-reminders";
+import { deliverEmailTest } from "@/lib/email-reminders";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -21,8 +22,25 @@ export async function POST(request: NextRequest) {
     .from("push_subscriptions")
     .select("id, player_id, endpoint, p256dh, auth")
     .eq("player_id", commissioner.id);
-  if (subscriptionError) return NextResponse.json({ error: "Your browser subscription could not be found." }, { status: 500 });
-  if (!subscriptions?.length) return NextResponse.json({ error: "Turn on browser reminders in Preferences before sending a test." }, { status: 409 });
-  const result = await deliverPushReminder(reminder, subscriptions);
-  return NextResponse.json({ message: result.sent ? "Test sent to your registered browser." : "The test was recorded, but your browser did not accept it.", ...result });
+  if (subscriptionError) return NextResponse.json({ error: "Your browser subscription could not be checked." }, { status: 500 });
+  const { data: player, error: playerError } = await supabaseAdmin
+    .from("players")
+    .select("notification_email, email_notifications_enabled")
+    .eq("id", commissioner.id)
+    .single();
+  if (playerError) return NextResponse.json({ error: "Your email preferences could not be checked." }, { status: 500 });
+  if (!subscriptions?.length && !(player.email_notifications_enabled && player.notification_email)) {
+    return NextResponse.json({ error: "Turn on browser or email reminders in Preferences before sending a test." }, { status: 409 });
+  }
+  const [push, email] = await Promise.all([
+    subscriptions?.length ? deliverPushReminder(reminder, subscriptions) : Promise.resolve({ sent: 0, failed: 0 }),
+    player.email_notifications_enabled && player.notification_email
+      ? deliverEmailTest(reminder, commissioner.id, player.notification_email)
+      : Promise.resolve({ sent: 0, failed: 0 }),
+  ]);
+  return NextResponse.json({
+    message: `Test sent: ${push.sent} browser delivery and ${email.sent} email delivery.`,
+    push,
+    email,
+  });
 }
