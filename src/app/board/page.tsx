@@ -620,7 +620,7 @@ export default function BoardPage() {
                       ? "Choose every team and click Save below."
                       : "Choose TWO teams and click Save below."}
                   </p>
-                  <p className="mt-1">Changes allowed until kickoff.</p>
+                  <p className="mt-1">Changes allowed until kickoff time.</p>
                 </div>
               </div>
               {hasEarlyGame ? (
