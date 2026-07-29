@@ -15,6 +15,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, ...(await runWithAutomationLease("reminders", sendDuePushReminders)) });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) return NextResponse.json({ success: true, skipped: true, message: error.message });
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Browser reminders could not be sent." }, { status: 500 });
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Player reminders could not be sent." }, { status: 500 });
   }
 }

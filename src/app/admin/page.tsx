@@ -208,7 +208,7 @@ export default function AdminPage() {
   </Link>
 
   <Link className="font-semibold underline" href="/admin/reminders">
-    Browser reminders
+    Player reminders
   </Link>
 
   <Link className="font-semibold underline" href="/">
