@@ -11,14 +11,6 @@ type GameRow = {
   status: "postponed" | "cancelled" | "final";
 };
 
-type RecordableGame = {
-  id: string;
-  awayTeam: string;
-  homeTeam: string;
-  week: string;
-  kickoffAt: string;
-};
-
 async function requireCommissioner(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -109,7 +101,10 @@ export async function GET(request: NextRequest) {
   ];
   const teamIds = [
     ...new Set(
-      exceptionGames.flatMap((game) => [game.away_team_id, game.home_team_id]),
+      [...exceptionGames, ...(recordableResult.data ?? [])].flatMap((game) => [
+        game.away_team_id,
+        game.home_team_id,
+      ]),
     ),
   ];
   const periodIds = [
@@ -142,21 +137,23 @@ export async function GET(request: NextRequest) {
     (periodResult.data ?? []).map((period) => [period.id, period.display_name]),
   );
 
-  return NextResponse.json({
-    exceptions: exceptionGames.map((game) => ({
-      id: game.id,
-      awayTeam: teamNameById.get(game.away_team_id) ?? "Unknown team",
-      homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
-      week: periodNameById.get(game.scoring_period_id) ?? "Unknown week",
-      kickoffAt: game.kickoff_at,
-      status: game.status === "final" ? "pending_grade" : game.status,
-    })),
-    recordableGames: (recordableResult.data ?? []).map((game): RecordableGame => ({
-      id: game.id,
-      awayTeam: teamNameById.get(game.away_team_id) ?? "Unknown team",
-      homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
-      week: periodNameById.get(game.scoring_period_id) ?? "Unknown week",
-      kickoffAt: game.kickoff_at,
-    })),
+  const describeGame = (game: GameRow) => {
+    const awayTeam = teamNameById.get(game.away_team_id);
+    const homeTeam = teamNameById.get(game.home_team_id);
+    const week = periodNameById.get(game.scoring_period_id);
+    return awayTeam && homeTeam && week
+      ? { id: game.id, awayTeam, homeTeam, week, kickoffAt: game.kickoff_at }
+      : null;
+  };
+
+  const exceptions = exceptionGames.flatMap((game) => {
+    const described = describeGame(game);
+    return described ? [{ ...described, status: game.status === "final" ? "pending_grade" : game.status }] : [];
   });
+  const recordableGames = (recordableResult.data ?? []).flatMap((game) => {
+    const described = describeGame({ ...game, status: "final" });
+    return described ? [described] : [];
+  });
+
+  return NextResponse.json({ exceptions, recordableGames });
 }
