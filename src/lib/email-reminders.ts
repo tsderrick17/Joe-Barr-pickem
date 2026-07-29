@@ -34,7 +34,7 @@ function escapeHtml(value: string) {
 
 function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "weekly_recap"
-    ? `<div style="margin-top:28px"><img alt="Final Slate" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=slate" style="display:block;height:auto;margin:0 0 18px;width:100%"><img alt="Standings and Survivor recap" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=standings" style="display:block;height:auto;width:100%"></div>`
+    ? `<div style="margin-top:28px"><img alt="Pick'em summary and standings" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"><img alt="Survivor board" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></div>`
     : reminder.category === "final_lines"
       ? `<div style="margin-top:28px"><img alt="Today’s official Slate" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=gameday" style="display:block;height:auto;width:100%"></div>`
       : "";

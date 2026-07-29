@@ -208,7 +208,7 @@ export default function ProfilePage() {
 
   const reminderChoices = [
     { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "A friendly welcome when the new week opens." },
-    { key: "finalLines" as const, title: "Final lines at 8:30 AM", note: "A game-day morning look at the official lines." },
+    { key: "finalLines" as const, title: "Sunday final lines · 8:30 AM", note: "A Sunday-morning look at the official lines." },
     { key: "pickDue" as const, title: "A gentle pick check", note: "Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
     { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
     { key: "custom" as const, title: "Commissioner notes", note: "Occasional practical pool updates." },
