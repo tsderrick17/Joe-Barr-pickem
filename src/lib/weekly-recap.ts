@@ -77,7 +77,7 @@ export async function buildWeeklyRecapSnapshot(): Promise<WeeklyRecapSnapshot> {
       return { away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", awayScore: game.away_score!, homeScore: game.home_score!, favorite: line?.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line?.locked_spread ?? 0) };
     }),
     standings: (players ?? []).map((player) => ({ name: player.first_name, wins: wins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
-    weeklySummary: (players ?? []).map((player) => ({ name: player.first_name, wins: (weeklyPicksByPlayer.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (weeklyPicksByPlayer.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })),
+    weeklySummary: (players ?? []).map((player) => ({ name: player.first_name, wins: (weeklyPicksByPlayer.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (weeklyPicksByPlayer.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })).filter((row) => row.picks.length > 0),
     survivor: { in: (entries ?? []).filter((entry) => entry.status === "active").length, out: (entries ?? []).filter((entry) => entry.status === "eliminated").length, latest: latest ? `${latest} Survivor pick${latest === 1 ? "" : "s"} advanced` : null, visibleWeeks, rows: (players ?? []).map((player) => {
       const entry = [...entryById.values()].find((item) => item.player_id === player.id);
       const entryPicks = entry ? survivorPicksByEntry.get(entry.id) ?? [] : [];

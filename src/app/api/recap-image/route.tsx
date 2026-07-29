@@ -10,8 +10,18 @@ export async function GET(request: NextRequest) {
   const kind = request.nextUrl.searchParams.get("kind");
   if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "gameday" && kind !== "earlylock")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  const snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
+
+  if (snapshot.kind === "weekly_recap" && kind === "survivor") {
+    snapshot = {
+      ...snapshot,
+      survivor: {
+        ...snapshot.survivor,
+        rows: snapshot.survivor.rows.filter((row) => row.status === "IN"),
+      },
+    };
+  }
 
   if (kind === "gameday" && snapshot.kind === "game_day") return new ImageResponse(
     <div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "48px 56px", width: "100%" }}>
@@ -32,7 +42,7 @@ export async function GET(request: NextRequest) {
       <div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 22 }}><span style={{ fontFamily: "Georgia", fontSize: 46, fontWeight: 800 }}>Pick&apos;em Summary</span><span style={{ fontSize: 24, fontWeight: 700, letterSpacing: 3, paddingTop: 16 }}>{snapshot.week.toUpperCase()}</span></div>
       <div style={{ color: "#475569", display: "flex", fontSize: 19, fontWeight: 800, letterSpacing: 2, marginTop: 20 }}>THIS WEEK</div>
       <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>{snapshot.weeklySummary.map((row, index) => <div key={row.name} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 23, minHeight: 48, padding: "0 14px" }}><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 180 }}>{row.name}</span><span style={{ display: "flex", flex: 1, gap: 12 }}>{row.picks.join(" · ") || "—"}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
-      <div style={{ borderTop: "3px solid #171719", display: "flex", flexDirection: "column", marginTop: 28, paddingTop: 16 }}><span style={{ fontFamily: "Georgia", fontSize: 29, fontWeight: 800 }}>Lead Pipe Locks</span>{snapshot.standings.slice(0, 8).map((row, index) => <div key={row.name} style={{ display: "flex", fontSize: 21, marginTop: 6 }}><span style={{ color: "#475569", display: "flex", width: 42 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
+      <div style={{ borderTop: "3px solid #171719", display: "flex", flexDirection: "column", marginTop: 28, paddingTop: 16 }}><span style={{ fontFamily: "Georgia", fontSize: 29, fontWeight: 800 }}>Lead Pipe Locks</span>{snapshot.standings.map((row, index) => <div key={row.name} style={{ display: "flex", fontSize: 21, marginTop: 6 }}><span style={{ color: "#475569", display: "flex", width: 42 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
     </div>,
     { width: 1200, height: 1200 },
   );

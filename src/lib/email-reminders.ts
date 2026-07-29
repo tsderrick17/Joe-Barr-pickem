@@ -33,15 +33,25 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
 }
 
+const siteUrl = "https://pickemjb.vercel.app";
+
+function survivorIsStillRunning(snapshot: unknown) {
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "weekly_recap" || !("survivor" in snapshot)) return false;
+  const survivor = snapshot.survivor;
+  return Boolean(survivor && typeof survivor === "object" && "in" in survivor && typeof survivor.in === "number" && survivor.in > 1);
+}
+
 function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "weekly_recap"
-    ? `<div style="margin-top:28px"><img alt="Pick'em summary and standings" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"><img alt="Survivor board" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></div>`
+    ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Pick'em standings and this week's picks" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"></a>${survivorIsStillRunning(reminder.recap_snapshot) ? `<a href="${siteUrl}/survivor" style="display:block"><img alt="Active Survivor board" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></a>` : ""}</div>`
     : reminder.category === "final_lines"
-      ? `<div style="margin-top:28px"><img alt="Today’s official Slate" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=gameday" style="display:block;height:auto;width:100%"></div>`
+      ? `<div style="margin-top:28px"><a href="${siteUrl}/board" style="display:block"><img alt="Today's official Slate" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=gameday" style="display:block;height:auto;width:100%"></a></div>`
       : reminder.category === "early_lock"
-        ? `<div style="margin-top:28px"><img alt="International game official line" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=earlylock" style="display:block;height:auto;width:100%"></div>`
-      : "";
-  return `<main style="font-family:Georgia,serif;color:#171719;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;margin:8px 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin-top:24px"><a href="https://pickemjb.vercel.app" style="display:inline-block;background:#1d1d1f;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">Open Pick'em</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e">You received this because you opted into Joe Barr Memorial Pick'em email reminders. Change your choices in Preferences.</p></main>`;
+        ? `<div style="margin-top:28px"><a href="${siteUrl}/board" style="display:block"><img alt="International game official line" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=earlylock" style="display:block;height:auto;width:100%"></a></div>`
+        : "";
+  const destination = reminder.category === "final_lines" || reminder.category === "early_lock" ? `${siteUrl}/board` : siteUrl;
+  const callToAction = reminder.category === "weekly_recap" ? "View standings" : "Open The Slate";
+  return `<main style="font-family:Georgia,serif;color:#171719;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;margin:8px 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin-top:24px"><a href="${destination}" style="display:inline-block;background:#1d1d1f;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Preferences.</a></p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
@@ -88,7 +98,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: https://pickemjb.vercel.app`,
+        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "final_lines" || reminder.category === "early_lock" ? `${siteUrl}/board` : siteUrl}`,
         tags: ["pickem-reminder", reminder.category],
       }),
     });
