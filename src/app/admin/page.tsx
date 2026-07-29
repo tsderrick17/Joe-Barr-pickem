@@ -11,6 +11,7 @@ import IntegrityRehearsal from "@/components/integrity-rehearsal";
 import GameDayPlaybook from "@/components/game-day-playbook";
 import AutomationPreflight from "@/components/automation-preflight";
 import FinalScoreReconciliation from "@/components/final-score-reconciliation";
+import SentryVerification from "@/components/sentry-verification";
 
 type Spread = {
   team: string;
@@ -239,6 +240,7 @@ export default function AdminPage() {
               </a>
             ))}
           </div>
+          <SentryVerification />
         </section>
         <GameDayPlaybook />
         <AutomationPreflight />
