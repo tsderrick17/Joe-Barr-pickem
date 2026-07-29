@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { deliverEmailReminder } from "@/lib/email-reminders";
+import { reminderReadiness } from "@/lib/reminder-readiness";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type ReminderCategory = "weekly" | "final_lines" | "early_lock" | "pick_due" | "weekly_recap" | "ats_due" | "survivor_due" | "custom";
@@ -186,8 +187,19 @@ export async function deliverPushReminder(reminder: Reminder, limitedSubscriptio
 export async function sendDuePushReminders() {
   const { data: reminders, error } = await supabaseAdmin.rpc("claim_due_push_reminders");
   if (error) throw new Error("Due email reminders could not be claimed.");
-  const result = { reminders: 0, sent: 0, failed: 0, skipped: 0, emailSent: 0, emailFailed: 0 };
+  const result = { reminders: 0, deferred: 0, sent: 0, failed: 0, skipped: 0, emailSent: 0, emailFailed: 0 };
   for (const reminder of (reminders ?? []) as Reminder[]) {
+    const readiness = await reminderReadiness(reminder.category);
+    if (!readiness.ready) {
+      const { error: deferError } = await supabaseAdmin.from("push_reminders").update({
+        status: "scheduled",
+        processing_started_at: null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", reminder.id).eq("status", "sending");
+      if (deferError) throw new Error("A reminder could not be safely held until its pool update is complete.");
+      result.deferred += 1;
+      continue;
+    }
     const emailDelivery = await deliverEmailReminder(reminder);
     await supabaseAdmin.from("push_reminders").update({
       status: "sent",
