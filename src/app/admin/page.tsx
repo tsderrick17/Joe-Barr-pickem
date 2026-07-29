@@ -216,6 +216,30 @@ export default function AdminPage() {
   </Link>
 </div>
         </header>
+        <section className="border-b-2 border-zinc-900 py-7">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-2xl font-bold">Live Systems</h2>
+              <p className="mt-1 text-sm text-zinc-700">Quick access to the services that run, monitor, and support the pool.</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Vercel", "Live site and deployments", "https://vercel.com/tsderrick/pickem"],
+              ["Supabase", "Database, sign-in, and scheduled automation", "https://supabase.com/dashboard/project/qtuycmgjiizrahfchsxe"],
+              ["GitHub Actions", "Migration deployment history", "https://github.com/tsderrick17/Joe-Barr-pickem/actions"],
+              ["Brevo", "Reminder email delivery", "https://app.brevo.com/"],
+              ["Sentry", "Application error reports", "https://sentry.io/"],
+              ["UptimeRobot", "External health alerts", "https://dashboard.uptimerobot.com/"],
+              ["The Odds API", "NFL odds source", "https://the-odds-api.com/"],
+            ].map(([name, description, href]) => (
+              <a className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href={href} key={name} rel="noreferrer" target="_blank">
+                <span className="block font-bold">{name} ↗</span>
+                <span className="mt-1 block text-sm text-zinc-700">{description}</span>
+              </a>
+            ))}
+          </div>
+        </section>
         <GameDayPlaybook />
         <AutomationPreflight />
         <AutomationHealth />
