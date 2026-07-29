@@ -1,5 +1,6 @@
 import { eligiblePlayerIds, ReminderCategory, ReminderAudience } from "@/lib/push-reminders";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 type Reminder = {
   id: string;
@@ -7,6 +8,7 @@ type Reminder = {
   audience: ReminderAudience;
   title: string;
   body: string;
+  recap_snapshot?: unknown;
 };
 
 type EmailRecipient = {
@@ -31,7 +33,10 @@ function escapeHtml(value: string) {
 }
 
 function messageHtml(reminder: Reminder) {
-  return `<main style="font-family:Georgia,serif;color:#171719;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;margin:8px 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif">${escapeHtml(reminder.body)}</p><p style="margin-top:24px"><a href="https://pickemjb.vercel.app" style="display:inline-block;background:#1d1d1f;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">Open Pick'em</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e">You received this because you opted into Joe Barr Memorial Pick'em email reminders. Change your choices in Preferences.</p></main>`;
+  const recapImages = reminder.category === "weekly_recap"
+    ? `<div style="margin-top:28px"><img alt="Final Slate" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=slate" style="display:block;height:auto;margin:0 0 18px;width:100%"><img alt="Standings and Survivor recap" src="https://pickemjb.vercel.app/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=standings" style="display:block;height:auto;width:100%"></div>`
+    : "";
+  return `<main style="font-family:Georgia,serif;color:#171719;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;margin:8px 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin-top:24px"><a href="https://pickemjb.vercel.app" style="display:inline-block;background:#1d1d1f;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">Open Pick'em</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e">You received this because you opted into Joe Barr Memorial Pick'em email reminders. Change your choices in Preferences.</p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
@@ -101,6 +106,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
 }
 
 export async function deliverEmailReminder(reminder: Reminder, limitedRecipients?: EmailRecipient[]) {
+  if (reminder.category === "weekly_recap") reminder.recap_snapshot = await ensureWeeklyRecapSnapshot(reminder.id, reminder.recap_snapshot);
   const recipients = limitedRecipients ?? await recipientsForReminder(reminder);
   let sent = 0;
   let failed = 0;
