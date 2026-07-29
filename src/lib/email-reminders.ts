@@ -66,7 +66,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
     .insert({ reminder_id: reminder.id, player_id: recipient.playerId, email_address: recipient.email })
     .select("id")
     .maybeSingle();
-  if (createError?.code === "23505") return { skipped: true, sent: false, failed: false };
+  if (createError?.code === "23505") return { skipped: true, sent: false, failed: false, errorMessage: null };
   if (createError || !delivery) throw new Error("An email delivery receipt could not be created.");
 
   const key = process.env.BREVO_API_KEY;
@@ -76,7 +76,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
       status: "failed",
       error_message: "Email sender setup is incomplete.",
     }).eq("id", delivery.id);
-    return { skipped: false, sent: false, failed: true };
+    return { skipped: false, sent: false, failed: true, errorMessage: "Email sender setup is incomplete." };
   }
 
   try {
@@ -100,13 +100,14 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
       provider_message_id: payload.messageId ?? null,
       delivered_at: new Date().toISOString(),
     }).eq("id", delivery.id);
-    return { skipped: false, sent: true, failed: false };
+    return { skipped: false, sent: true, failed: false, errorMessage: null };
   } catch (reason) {
+    const errorMessage = reason instanceof Error ? reason.message.slice(0, 500) : "Brevo rejected the delivery.";
     await supabaseAdmin.from("email_reminder_deliveries").update({
       status: "failed",
-      error_message: reason instanceof Error ? reason.message.slice(0, 500) : "Brevo rejected the delivery.",
+      error_message: errorMessage,
     }).eq("id", delivery.id);
-    return { skipped: false, sent: false, failed: true };
+    return { skipped: false, sent: false, failed: true, errorMessage };
   }
 }
 
@@ -118,13 +119,15 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  const errors: string[] = [];
   for (const recipient of recipients) {
     const result = await recordAndSend(reminder, recipient);
     sent += Number(result.sent);
     failed += Number(result.failed);
     skipped += Number(result.skipped);
+    if (result.errorMessage) errors.push(result.errorMessage);
   }
-  return { recipients: recipients.length, sent, failed, skipped };
+  return { recipients: recipients.length, sent, failed, skipped, errors };
 }
 
 export async function deliverEmailTest(reminder: Reminder, playerId: string, email: string) {

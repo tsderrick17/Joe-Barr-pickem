@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Turn on email reminders in Preferences before sending a test." }, { status: 409 });
   }
   const email = await deliverEmailTest(reminder, commissioner.id, player.notification_email);
+  if (email.sent !== 1) {
+    return NextResponse.json({ error: email.errors[0] ?? "Brevo did not accept the test email." }, { status: 502 });
+  }
   return NextResponse.json({
     message: `Test email sent: ${email.sent} delivery.`,
     email,
