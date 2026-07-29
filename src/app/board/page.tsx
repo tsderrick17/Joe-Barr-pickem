@@ -611,7 +611,7 @@ export default function BoardPage() {
               <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] sm:gap-5">
                 <div>
                   <p className="whitespace-nowrap">Lines lock at 8 AM ET on game day.</p>
-                  <p className="mt-1">They may move before lock; <span className="font-semibold text-teal-700">teal lines</span> are official.</p>
+                  <p className="mt-1"><span className="font-semibold text-teal-700">Teal lines</span> are official and will not change.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
