@@ -46,7 +46,7 @@ function spreadLabel(spread: number | null) {
 
 function ResultMark({ result }: { result: "win" | "loss" | null }) {
   if (!result) return null;
-  return <strong className={`relative -top-1 -ml-px inline-block -rotate-[10deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
+  return <strong className={`relative -top-0.5 inline-block shrink-0 -rotate-[7deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
 }
 
 type Props = {
@@ -72,19 +72,21 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   const isLive = hasStarted && !isFinal && game.status !== "postponed" && game.status !== "cancelled";
   const lockedSpread = game.officialSpread !== null;
   const showSpecialLockNote = game.isInternational && !lockedSpread;
+  const hasPublishedPick = left.pickers.length > 0 || right.pickers.length > 0;
+  const compactFinal = isFinal && !hasPublishedPick;
 
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const className = `${align === "right" ? "text-right" : "text-left"} text-sm font-bold leading-tight tracking-tight sm:text-base ${selected ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2" : allowSelection ? "hover:underline" : ""}`;
     const content = <>
-      <span className="inline-flex items-start">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
+      <span className="inline-flex max-w-full flex-wrap items-start gap-x-1">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     return allowSelection ? <button className={className} disabled={hasStarted} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
   };
 
-  return <article className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] py-2 pl-1 pr-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
+  return <article className={`grid grid-cols-[3.25rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 border-b border-[#c8c1b5] ${compactFinal ? "py-1" : "py-2"} pl-1 pr-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
     <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
       {isFinal ? <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>
