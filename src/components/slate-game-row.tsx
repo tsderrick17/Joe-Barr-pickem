@@ -78,9 +78,9 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
-    const className = `${align === "right" ? "text-right" : "text-left"} text-sm font-bold leading-tight tracking-tight sm:text-base ${selected ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2" : allowSelection ? "hover:underline" : ""}`;
+    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-sm font-bold leading-tight tracking-tight sm:text-base ${allowSelection ? "block w-full" : "block"} ${selected ? "bg-[#1d1d1f] px-2 py-1.5 text-white sm:px-3 sm:py-2" : allowSelection ? "hover:underline" : ""}`;
     const content = <>
-      <span className="inline-flex max-w-full flex-wrap items-start gap-x-1">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="font-mono font-black tabular-nums">{team.score}</span> : null}</span>
+      <span className="block min-w-0 break-words">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     return allowSelection ? <button className={className} disabled={hasStarted} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
