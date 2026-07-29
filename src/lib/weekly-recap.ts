@@ -18,6 +18,13 @@ export type GameDaySlateSnapshot = {
   games: Array<{ time: string; away: string; home: string; favorite: "away" | "home"; spread: number }>;
 };
 
+export type EarlyLockSnapshot = {
+  kind: "early_lock";
+  day: string;
+  generatedAt: string;
+  games: GameDaySlateSnapshot["games"];
+};
+
 export async function buildWeeklyRecapSnapshot(): Promise<WeeklyRecapSnapshot> {
   const { data: period, error: periodError } = await supabaseAdmin
     .from("scoring_periods")
@@ -116,6 +123,25 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
   }) };
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The game-day Slate receipt could not be saved.");
+  return snapshot;
+}
+
+export async function ensureEarlyLockSnapshot(reminderId: string, existing: unknown) {
+  if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "early_lock") return existing as EarlyLockSnapshot;
+  const now = new Date();
+  const { data: period, error: periodError } = await supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle();
+  if (periodError || !period) throw new Error("An active week is not available for the early-lock reminder.");
+  const { data: game, error: gameError } = await supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at").eq("scoring_period_id", period.id).eq("is_international", true).lte("line_lock_at", now.toISOString()).order("line_lock_at", { ascending: false }).limit(1).maybeSingle();
+  if (gameError || !game) throw new Error("A recently locked international game is not available.");
+  const [{ data: teams, error: teamsError }, { data: line, error: lineError }] = await Promise.all([
+    supabaseAdmin.from("teams").select("id, full_name").in("id", [game.away_team_id, game.home_team_id]),
+    supabaseAdmin.from("game_lines").select("favorite_team_id, locked_spread").eq("game_id", game.id).maybeSingle(),
+  ]);
+  if (teamsError || lineError || !line) throw new Error("The international official line could not be prepared.");
+  const names = new Map((teams ?? []).map((team) => [team.id, team.full_name]));
+  const snapshot: EarlyLockSnapshot = { kind: "early_lock", day: easternDayLabel(new Date(game.kickoff_at)), generatedAt: now.toISOString(), games: [{ time: easternTime(game.kickoff_at), away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", favorite: line.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line.locked_spread) }] };
+  const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
+  if (error) throw new Error("The early-lock Slate receipt could not be saved.");
   return snapshot;
 }
 

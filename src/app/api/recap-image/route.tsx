@@ -1,16 +1,16 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import type { GameDaySlateSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import type { EarlyLockSnapshot, GameDaySlateSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const reminderId = request.nextUrl.searchParams.get("reminder");
   const kind = request.nextUrl.searchParams.get("kind");
-  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "gameday")) return new Response("Not found", { status: 404 });
+  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "gameday" && kind !== "earlylock")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  const snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | GameDaySlateSnapshot | null;
+  const snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
 
   if (kind === "gameday" && snapshot.kind === "game_day") return new ImageResponse(
@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     </div>,
     { width: 1200, height: 1200 },
   );
+
+  if (kind === "earlylock" && snapshot.kind === "early_lock") return new ImageResponse(<div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "70px 80px", width: "100%" }}><div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 22 }}><span style={{ fontFamily: "Georgia", fontSize: 48, fontWeight: 800 }}>The Slate</span><span style={{ color: "#007e72", fontSize: 20, fontWeight: 800, letterSpacing: 2, paddingTop: 20 }}>EARLY LOCK</span></div><div style={{ color: "#475569", display: "flex", fontSize: 24, fontWeight: 700, marginTop: 22 }}>{snapshot.day.toUpperCase()}</div>{snapshot.games.map((game) => <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: "#eee4d1", borderBottom: "1px solid #c8c1b5", borderTop: "4px solid #007e72", display: "flex", fontSize: 30, marginTop: 22, minHeight: 120, padding: "0 24px" }}><span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.away}</span><span style={{ color: "#007e72", display: "flex", fontFamily: "monospace", fontSize: 34, fontWeight: 800, justifyContent: "center", width: 170 }}>{game.favorite === "away" ? game.away.slice(0, 3).toUpperCase() : game.home.slice(0, 3).toUpperCase()} −{game.spread}</span><span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end" }}>{game.home}</span></div>)}<div style={{ borderTop: "3px solid #171719", display: "flex", fontSize: 21, marginTop: "auto", paddingTop: 18 }}>This international matchup’s official line is locked early.</div></div>, { width: 1200, height: 800 });
 
   if (snapshot.kind !== "weekly_recap") return new Response("Not found", { status: 404 });
 

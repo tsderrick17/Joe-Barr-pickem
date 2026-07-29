@@ -8,11 +8,13 @@ type Profile = {
   emailNotificationsEnabled: boolean;
   emailWeeklyEnabled: boolean;
   emailFinalLinesEnabled: boolean;
+  emailEarlyLockEnabled: boolean;
   emailPickDueEnabled: boolean;
   emailWeeklyRecapEnabled: boolean;
   emailCustomEnabled: boolean;
   pushWeeklyEnabled: boolean;
   pushFinalLinesEnabled: boolean;
+  pushEarlyLockEnabled: boolean;
   pushPickDueEnabled: boolean;
   pushWeeklyRecapEnabled: boolean;
   pushCustomEnabled: boolean;
@@ -39,9 +41,9 @@ export default function ProfilePage() {
   const [pushError, setPushError] = useState("");
   const [pushSupported, setPushSupported] = useState(() => typeof window !== "undefined"
     && Boolean(vapidPublicKey && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window));
-  const [pushPreferences, setPushPreferences] = useState({ weekly: true, finalLines: true, pickDue: true, weeklyRecap: true, custom: true });
+  const [pushPreferences, setPushPreferences] = useState({ weekly: true, finalLines: true, earlyLock: true, pickDue: true, weeklyRecap: true, custom: true });
   const [emailEnabled, setEmailEnabled] = useState(false);
-  const [emailPreferences, setEmailPreferences] = useState({ weekly: true, finalLines: true, pickDue: true, weeklyRecap: true, custom: true });
+  const [emailPreferences, setEmailPreferences] = useState({ weekly: true, finalLines: true, earlyLock: true, pickDue: true, weeklyRecap: true, custom: true });
 
   useEffect(() => {
     let active = true;
@@ -54,8 +56,8 @@ export default function ProfilePage() {
           setProfile(data);
           setEmail(data.notificationEmail);
           setEmailEnabled(data.emailNotificationsEnabled);
-          setEmailPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
-          setPushPreferences({ weekly: data.pushWeeklyEnabled, finalLines: data.pushFinalLinesEnabled, pickDue: data.pushPickDueEnabled, weeklyRecap: data.pushWeeklyRecapEnabled, custom: data.pushCustomEnabled });
+          setEmailPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
+          setPushPreferences({ weekly: data.pushWeeklyEnabled, finalLines: data.pushFinalLinesEnabled, earlyLock: data.pushEarlyLockEnabled, pickDue: data.pushPickDueEnabled, weeklyRecap: data.pushWeeklyRecapEnabled, custom: data.pushCustomEnabled });
         }
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -90,11 +92,13 @@ export default function ProfilePage() {
           emailNotificationsEnabled: emailEnabled,
           emailWeeklyEnabled: emailPreferences.weekly,
           emailFinalLinesEnabled: emailPreferences.finalLines,
+          emailEarlyLockEnabled: emailPreferences.earlyLock,
           emailPickDueEnabled: emailPreferences.pickDue,
           emailWeeklyRecapEnabled: emailPreferences.weeklyRecap,
           emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
           pushFinalLinesEnabled: pushPreferences.finalLines,
+          pushEarlyLockEnabled: pushPreferences.earlyLock,
           pushPickDueEnabled: pushPreferences.pickDue,
           pushWeeklyRecapEnabled: pushPreferences.weeklyRecap,
           pushCustomEnabled: pushPreferences.custom,
@@ -102,7 +106,7 @@ export default function ProfilePage() {
       });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: emailEnabled, emailWeeklyEnabled: emailPreferences.weekly, emailFinalLinesEnabled: emailPreferences.finalLines, emailPickDueEnabled: emailPreferences.pickDue, emailWeeklyRecapEnabled: emailPreferences.weeklyRecap, emailCustomEnabled: emailPreferences.custom, pushWeeklyEnabled: pushPreferences.weekly, pushFinalLinesEnabled: pushPreferences.finalLines, pushPickDueEnabled: pushPreferences.pickDue, pushWeeklyRecapEnabled: pushPreferences.weeklyRecap, pushCustomEnabled: pushPreferences.custom });
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: emailEnabled, emailWeeklyEnabled: emailPreferences.weekly, emailFinalLinesEnabled: emailPreferences.finalLines, emailEarlyLockEnabled: emailPreferences.earlyLock, emailPickDueEnabled: emailPreferences.pickDue, emailWeeklyRecapEnabled: emailPreferences.weeklyRecap, emailCustomEnabled: emailPreferences.custom, pushWeeklyEnabled: pushPreferences.weekly, pushFinalLinesEnabled: pushPreferences.finalLines, pushEarlyLockEnabled: pushPreferences.earlyLock, pushPickDueEnabled: pushPreferences.pickDue, pushWeeklyRecapEnabled: pushPreferences.weeklyRecap, pushCustomEnabled: pushPreferences.custom });
       setMessage(data.message ?? "Notification settings saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -185,11 +189,13 @@ export default function ProfilePage() {
           emailNotificationsEnabled: emailEnabled,
           emailWeeklyEnabled: emailPreferences.weekly,
           emailFinalLinesEnabled: emailPreferences.finalLines,
+          emailEarlyLockEnabled: emailPreferences.earlyLock,
           emailPickDueEnabled: emailPreferences.pickDue,
           emailWeeklyRecapEnabled: emailPreferences.weeklyRecap,
           emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
           pushFinalLinesEnabled: pushPreferences.finalLines,
+          pushEarlyLockEnabled: pushPreferences.earlyLock,
           pushPickDueEnabled: pushPreferences.pickDue,
           pushWeeklyRecapEnabled: pushPreferences.weeklyRecap,
           pushCustomEnabled: pushPreferences.custom,
@@ -209,6 +215,7 @@ export default function ProfilePage() {
   const reminderChoices = [
     { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "A friendly welcome when the new week opens." },
     { key: "finalLines" as const, title: "Final lines · 8:30 AM on game days", note: "A look at the official lines on every game day, including Sunday." },
+    { key: "earlyLock" as const, title: "International game locks early", note: "A heads-up when an international matchup has an earlier official lock." },
     { key: "pickDue" as const, title: "A gentle pick check", note: "Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
     { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
     { key: "custom" as const, title: "Commissioner notes", note: "Occasional practical pool updates." },

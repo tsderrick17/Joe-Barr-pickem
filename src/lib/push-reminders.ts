@@ -2,7 +2,7 @@ import webpush from "web-push";
 import { deliverEmailReminder } from "@/lib/email-reminders";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export type ReminderCategory = "weekly" | "final_lines" | "pick_due" | "weekly_recap" | "ats_due" | "survivor_due" | "custom";
+export type ReminderCategory = "weekly" | "final_lines" | "early_lock" | "pick_due" | "weekly_recap" | "ats_due" | "survivor_due" | "custom";
 export type ReminderAudience = "all_active" | "pick_due" | "ats_due" | "survivor_due";
 
 type Reminder = {
@@ -36,6 +36,7 @@ function preferenceColumn(category: ReminderCategory) {
   return {
     weekly: "push_weekly_enabled",
     final_lines: "push_final_lines_enabled",
+    early_lock: "push_early_lock_enabled",
     pick_due: "push_pick_due_enabled",
     weekly_recap: "push_weekly_recap_enabled",
     ats_due: "push_ats_due_enabled",
