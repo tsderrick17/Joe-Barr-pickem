@@ -209,7 +209,6 @@ export default function AdminPage() {
             <Link href="/preview">Season rehearsal</Link>
             <Link href="/admin/players">Players</Link>
             <Link href="/admin/reminders">Reminders</Link>
-            <Link href="/">Standings</Link>
           </div>
         </header>
 

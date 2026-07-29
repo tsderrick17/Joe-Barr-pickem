@@ -123,24 +123,24 @@ export default function SiteNav() {
           ) : null}
 
           {playerName ? (
-            <div className="flex items-center gap-2 border-l border-zinc-500 pl-3 text-sm sm:gap-3 sm:pl-4">
-              <span className="text-[#e4ded2]">
-                <span className="hidden sm:inline">Signed in as </span>
-                <strong className="text-white">{playerName}</strong>
+            <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
+              <div className="flex items-center justify-end gap-3">
+                <Link className={linkStyle("/profile")} href="/profile">
+                  Preferences
+                </Link>
+
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={signOut}
+                  className="font-bold text-white underline disabled:opacity-50"
+                >
+                  {isSigningOut ? "Signing out..." : "Sign out"}
+                </button>
+              </div>
+              <span className="mt-1 block text-xs text-[#e4ded2]">
+                Signed in as <strong className="text-sm text-white">{playerName}</strong>
               </span>
-
-              <Link className={linkStyle("/profile")} href="/profile">
-                Preferences
-              </Link>
-
-              <button
-                type="button"
-                disabled={isSigningOut}
-                onClick={signOut}
-                className="font-bold text-white underline disabled:opacity-50"
-              >
-                {isSigningOut ? "Signing out..." : "Sign out"}
-              </button>
             </div>
           ) : null}
         </div>
