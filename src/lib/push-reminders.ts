@@ -2,8 +2,8 @@ import webpush from "web-push";
 import { deliverEmailReminder } from "@/lib/email-reminders";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export type ReminderCategory = "weekly" | "ats_due" | "survivor_due" | "custom";
-export type ReminderAudience = "all_active" | "ats_due" | "survivor_due";
+export type ReminderCategory = "weekly" | "final_lines" | "pick_due" | "weekly_recap" | "ats_due" | "survivor_due" | "custom";
+export type ReminderAudience = "all_active" | "pick_due" | "ats_due" | "survivor_due";
 
 type Reminder = {
   id: string;
@@ -35,6 +35,9 @@ function configureWebPush() {
 function preferenceColumn(category: ReminderCategory) {
   return {
     weekly: "push_weekly_enabled",
+    final_lines: "push_final_lines_enabled",
+    pick_due: "push_pick_due_enabled",
+    weekly_recap: "push_weekly_recap_enabled",
     ats_due: "push_ats_due_enabled",
     survivor_due: "push_survivor_due_enabled",
     custom: "push_custom_enabled",
@@ -65,7 +68,7 @@ export async function eligiblePlayerIds(audience: ReminderAudience) {
   const period = await activePeriod();
   if (!period) return [];
 
-  if (audience === "ats_due") {
+  const atsPlayersDue = async () => {
     const { data: picks, error: picksError } = await supabaseAdmin
       .from("picks")
       .select("player_id, result")
@@ -77,7 +80,9 @@ export async function eligiblePlayerIds(audience: ReminderAudience) {
       if (pick.result !== "void") counts.set(pick.player_id, (counts.get(pick.player_id) ?? 0) + 1);
     }
     return activeIds.filter((playerId) => (counts.get(playerId) ?? 0) < period.max_picks);
-  }
+  };
+
+  if (audience === "ats_due") return atsPlayersDue();
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("survivor_entries")
@@ -95,9 +100,15 @@ export async function eligiblePlayerIds(audience: ReminderAudience) {
     .in("survivor_entry_id", entryIds);
   if (survivorError) throw new Error("Survivor pick status could not be read.");
   const pickedEntryIds = new Set((survivorPicks ?? []).map((pick) => pick.survivor_entry_id));
-  return (entries ?? [])
+  const survivorPlayersDue = (entries ?? [])
     .filter((entry) => !pickedEntryIds.has(entry.id))
     .map((entry) => entry.player_id);
+  if (audience === "survivor_due") return survivorPlayersDue;
+
+  // A courteous "still need to act" check never names a particular pool. A
+  // player receives it only if either their ATS card or active Survivor entry is due.
+  const atsDue = await atsPlayersDue();
+  return [...new Set([...atsDue, ...survivorPlayersDue])];
 }
 
 async function subscriptionsForReminder(reminder: Reminder) {

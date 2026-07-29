@@ -7,12 +7,14 @@ type Profile = {
   notificationEmail: string;
   emailNotificationsEnabled: boolean;
   emailWeeklyEnabled: boolean;
-  emailAtsDueEnabled: boolean;
-  emailSurvivorDueEnabled: boolean;
+  emailFinalLinesEnabled: boolean;
+  emailPickDueEnabled: boolean;
+  emailWeeklyRecapEnabled: boolean;
   emailCustomEnabled: boolean;
   pushWeeklyEnabled: boolean;
-  pushAtsDueEnabled: boolean;
-  pushSurvivorDueEnabled: boolean;
+  pushFinalLinesEnabled: boolean;
+  pushPickDueEnabled: boolean;
+  pushWeeklyRecapEnabled: boolean;
   pushCustomEnabled: boolean;
 };
 
@@ -37,9 +39,9 @@ export default function ProfilePage() {
   const [pushError, setPushError] = useState("");
   const [pushSupported, setPushSupported] = useState(() => typeof window !== "undefined"
     && Boolean(vapidPublicKey && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window));
-  const [pushPreferences, setPushPreferences] = useState({ weekly: true, atsDue: true, survivorDue: true, custom: true });
+  const [pushPreferences, setPushPreferences] = useState({ weekly: true, finalLines: true, pickDue: true, weeklyRecap: true, custom: true });
   const [emailEnabled, setEmailEnabled] = useState(false);
-  const [emailPreferences, setEmailPreferences] = useState({ weekly: true, atsDue: true, survivorDue: true, custom: true });
+  const [emailPreferences, setEmailPreferences] = useState({ weekly: true, finalLines: true, pickDue: true, weeklyRecap: true, custom: true });
 
   useEffect(() => {
     let active = true;
@@ -52,8 +54,8 @@ export default function ProfilePage() {
           setProfile(data);
           setEmail(data.notificationEmail);
           setEmailEnabled(data.emailNotificationsEnabled);
-          setEmailPreferences({ weekly: data.emailWeeklyEnabled, atsDue: data.emailAtsDueEnabled, survivorDue: data.emailSurvivorDueEnabled, custom: data.emailCustomEnabled });
-          setPushPreferences({ weekly: data.pushWeeklyEnabled, atsDue: data.pushAtsDueEnabled, survivorDue: data.pushSurvivorDueEnabled, custom: data.pushCustomEnabled });
+          setEmailPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
+          setPushPreferences({ weekly: data.pushWeeklyEnabled, finalLines: data.pushFinalLinesEnabled, pickDue: data.pushPickDueEnabled, weeklyRecap: data.pushWeeklyRecapEnabled, custom: data.pushCustomEnabled });
         }
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -87,18 +89,20 @@ export default function ProfilePage() {
           notificationEmail: email,
           emailNotificationsEnabled: emailEnabled,
           emailWeeklyEnabled: emailPreferences.weekly,
-          emailAtsDueEnabled: emailPreferences.atsDue,
-          emailSurvivorDueEnabled: emailPreferences.survivorDue,
+          emailFinalLinesEnabled: emailPreferences.finalLines,
+          emailPickDueEnabled: emailPreferences.pickDue,
+          emailWeeklyRecapEnabled: emailPreferences.weeklyRecap,
           emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
-          pushAtsDueEnabled: pushPreferences.atsDue,
-          pushSurvivorDueEnabled: pushPreferences.survivorDue,
+          pushFinalLinesEnabled: pushPreferences.finalLines,
+          pushPickDueEnabled: pushPreferences.pickDue,
+          pushWeeklyRecapEnabled: pushPreferences.weeklyRecap,
           pushCustomEnabled: pushPreferences.custom,
         }),
       });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: emailEnabled, emailWeeklyEnabled: emailPreferences.weekly, emailAtsDueEnabled: emailPreferences.atsDue, emailSurvivorDueEnabled: emailPreferences.survivorDue, emailCustomEnabled: emailPreferences.custom, pushWeeklyEnabled: pushPreferences.weekly, pushAtsDueEnabled: pushPreferences.atsDue, pushSurvivorDueEnabled: pushPreferences.survivorDue, pushCustomEnabled: pushPreferences.custom });
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: emailEnabled, emailWeeklyEnabled: emailPreferences.weekly, emailFinalLinesEnabled: emailPreferences.finalLines, emailPickDueEnabled: emailPreferences.pickDue, emailWeeklyRecapEnabled: emailPreferences.weeklyRecap, emailCustomEnabled: emailPreferences.custom, pushWeeklyEnabled: pushPreferences.weekly, pushFinalLinesEnabled: pushPreferences.finalLines, pushPickDueEnabled: pushPreferences.pickDue, pushWeeklyRecapEnabled: pushPreferences.weeklyRecap, pushCustomEnabled: pushPreferences.custom });
       setMessage(data.message ?? "Notification settings saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -180,12 +184,14 @@ export default function ProfilePage() {
           notificationEmail: email,
           emailNotificationsEnabled: emailEnabled,
           emailWeeklyEnabled: emailPreferences.weekly,
-          emailAtsDueEnabled: emailPreferences.atsDue,
-          emailSurvivorDueEnabled: emailPreferences.survivorDue,
+          emailFinalLinesEnabled: emailPreferences.finalLines,
+          emailPickDueEnabled: emailPreferences.pickDue,
+          emailWeeklyRecapEnabled: emailPreferences.weeklyRecap,
           emailCustomEnabled: emailPreferences.custom,
           pushWeeklyEnabled: pushPreferences.weekly,
-          pushAtsDueEnabled: pushPreferences.atsDue,
-          pushSurvivorDueEnabled: pushPreferences.survivorDue,
+          pushFinalLinesEnabled: pushPreferences.finalLines,
+          pushPickDueEnabled: pushPreferences.pickDue,
+          pushWeeklyRecapEnabled: pushPreferences.weeklyRecap,
           pushCustomEnabled: pushPreferences.custom,
         }),
       });
@@ -200,33 +206,42 @@ export default function ProfilePage() {
     }
   }
 
+  const reminderChoices = [
+    { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "A friendly welcome when the new week opens." },
+    { key: "finalLines" as const, title: "Final lines at 8:30 AM", note: "A game-day morning look at the official lines." },
+    { key: "pickDue" as const, title: "A gentle pick check", note: "Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
+    { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
+    { key: "custom" as const, title: "Commissioner notes", note: "Occasional practical pool updates." },
+  ];
+  const choiceList = (kind: "email" | "push") => {
+    const preferences = kind === "email" ? emailPreferences : pushPreferences;
+    const setPreferences = kind === "email" ? setEmailPreferences : setPushPreferences;
+    return <div className="mt-4 space-y-3 text-sm">{reminderChoices.map((choice) => <label className="flex items-start gap-3" key={choice.key}>
+      <input checked={preferences[choice.key]} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPreferences((current) => ({ ...current, [choice.key]: event.target.checked }))} type="checkbox" />
+      <span><strong className="block">{choice.title}</strong>{choice.note}</span>
+    </label>)}</div>;
+  };
+
   if (!profile && !error) return <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">Loading your preferences...</main>;
 
-  return (
-    <main className="min-h-screen bg-[#f5f0e6] px-4 py-8 text-[#171719] sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-xl">
-        <p className="text-xs font-bold tracking-[0.2em] text-slate-600">YOUR ACCOUNT</p>
-        <h1 className="mt-2 font-serif text-4xl font-bold">Notification preferences</h1>
-        <p className="mt-3 leading-6 text-slate-700">Choose how this device receives Joe Barr Memorial Pick&apos;em reminders. You can change these settings whenever you like.</p>
-        <form className="mt-8 border-y-2 border-[#1d1d1f] py-6" onSubmit={save}>
-          <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
-          <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-white px-3 py-2 outline-none focus:border-zinc-900" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
-          <p className="mt-3 text-sm leading-5 text-slate-600">Your email is private. Turn on the reminder types you want; reminders never reveal your selections.</p>
-          <fieldset className="mt-5 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">EMAIL REMINDERS</legend><label className="mt-3 flex items-start gap-3 text-sm"><input checked={emailEnabled} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send reminders to this email</strong>You can opt out at any time.</span></label>{emailEnabled ? <div className="mt-4 space-y-3 text-sm"><label className="flex items-start gap-3"><input checked={emailPreferences.weekly} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, weekly: event.target.checked }))} type="checkbox" /><span><strong className="block">Weekly slate open</strong>New-week and general pool notices.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.atsDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, atsDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Pick&apos;em pick due</strong>Only when you still need ATS selections.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.survivorDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, survivorDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Survivor pick due</strong>Only while your Survivor entry remains active and needs a pick.</span></label><label className="flex items-start gap-3"><input checked={emailPreferences.custom} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailPreferences((current) => ({ ...current, custom: event.target.checked }))} type="checkbox" /><span><strong className="block">Commissioner notices</strong>General pool updates you choose to receive.</span></label></div> : null}</fieldset>
-          {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
-          {message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
-          <button className="mt-6 min-h-12 bg-[#1d1d1f] px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Save contact email"}</button>
-        </form>
-        <section className="border-b-2 border-[#1d1d1f] py-6">
-          <p className="text-sm font-bold tracking-wide">BROWSER PUSH</p>
-          <p className="mt-2 text-sm leading-5 text-slate-700">Free reminders for this browser and device. Turn them on here, then the Commissioner can send only the reminder types you choose.</p>
-          {!pushSupported ? <p className="mt-3 text-sm text-slate-600">Browser push is being prepared for this deployment, or this browser does not support it.</p> : null}
-          {pushError ? <p className="mt-4 font-semibold text-red-700">{pushError}</p> : null}
-          {pushMessage ? <p className="mt-4 font-semibold text-green-800">{pushMessage}</p> : null}
-          {pushSupported ? <button className="mt-5 min-h-12 border border-[#1d1d1f] px-5 py-3 font-bold disabled:opacity-50" disabled={pushBusy} onClick={pushEnabled ? disableBrowserPush : enableBrowserPush} type="button">{pushBusy ? "Updating..." : pushEnabled ? "Turn off browser reminders" : "Turn on browser reminders"}</button> : null}
-          {pushEnabled ? <fieldset className="mt-6 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">REMINDER TYPES</legend><p className="mt-2 text-sm text-slate-600">Choose what this device may receive.</p><div className="mt-4 space-y-3 text-sm"><label className="flex items-start gap-3"><input checked={pushPreferences.weekly} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPushPreferences((current) => ({ ...current, weekly: event.target.checked }))} type="checkbox" /><span><strong className="block">Weekly slate open</strong>New-week and general pool notices.</span></label><label className="flex items-start gap-3"><input checked={pushPreferences.atsDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPushPreferences((current) => ({ ...current, atsDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Pick&apos;em pick due</strong>Only when you still need ATS selections.</span></label><label className="flex items-start gap-3"><input checked={pushPreferences.survivorDue} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPushPreferences((current) => ({ ...current, survivorDue: event.target.checked }))} type="checkbox" /><span><strong className="block">Survivor pick due</strong>Only while your Survivor entry remains active and needs a pick.</span></label><label className="flex items-start gap-3"><input checked={pushPreferences.custom} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPushPreferences((current) => ({ ...current, custom: event.target.checked }))} type="checkbox" /><span><strong className="block">Commissioner notices</strong>General pool updates you choose to receive.</span></label></div><button className="mt-5 min-h-11 border border-[#1d1d1f] px-4 py-2 text-sm font-bold disabled:opacity-50" disabled={saving} onClick={() => void savePushChoices()} type="button">{saving ? "Saving..." : "Save reminder choices"}</button></fieldset> : null}
-        </section>
-      </div>
-    </main>
-  );
+  return <main className="min-h-screen bg-[#f5f0e6] px-4 py-8 text-[#171719] sm:px-6 sm:py-12"><div className="mx-auto max-w-xl">
+    <p className="text-xs font-bold tracking-[0.2em] text-slate-600">YOUR ACCOUNT</p><h1 className="mt-2 font-serif text-4xl font-bold">Notification preferences</h1>
+    <p className="mt-3 leading-6 text-slate-700">Choose the notes that are useful to you. They are written to be helpful, never pushy, and never reveal a selection.</p>
+    <form className="mt-8 border-y-2 border-[#1d1d1f] py-6" onSubmit={save}>
+      <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
+      <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-white px-3 py-2 outline-none focus:border-zinc-900" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
+      <p className="mt-3 text-sm leading-5 text-slate-600">Your address is private and used only for the choices below.</p>
+      <fieldset className="mt-5 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">EMAIL REMINDERS</legend>
+        <label className="mt-3 flex items-start gap-3 text-sm"><input checked={emailEnabled} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEmailEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send reminders to this email</strong>You can change or turn this off whenever you like.</span></label>
+        {emailEnabled ? choiceList("email") : null}
+      </fieldset>
+      {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}{message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
+      <button className="mt-6 min-h-12 bg-[#1d1d1f] px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Save email choices"}</button>
+    </form>
+    <section className="border-b-2 border-[#1d1d1f] py-6"><p className="text-sm font-bold tracking-wide">BROWSER PUSH</p><p className="mt-2 text-sm leading-5 text-slate-700">Free reminders for this browser and device. They follow the same choices as email, but are managed separately.</p>
+      {!pushSupported ? <p className="mt-3 text-sm text-slate-600">Browser push is being prepared for this deployment, or this browser does not support it.</p> : null}{pushError ? <p className="mt-4 font-semibold text-red-700">{pushError}</p> : null}{pushMessage ? <p className="mt-4 font-semibold text-green-800">{pushMessage}</p> : null}
+      {pushSupported ? <button className="mt-5 min-h-12 border border-[#1d1d1f] px-5 py-3 font-bold disabled:opacity-50" disabled={pushBusy} onClick={pushEnabled ? disableBrowserPush : enableBrowserPush} type="button">{pushBusy ? "Updating..." : pushEnabled ? "Turn off browser reminders" : "Turn on browser reminders"}</button> : null}
+      {pushEnabled ? <fieldset className="mt-6 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">REMINDER TYPES</legend><p className="mt-2 text-sm text-slate-600">Choose what this device may receive.</p>{choiceList("push")}<button className="mt-5 min-h-11 border border-[#1d1d1f] px-4 py-2 text-sm font-bold disabled:opacity-50" disabled={saving} onClick={() => void savePushChoices()} type="button">{saving ? "Saving..." : "Save browser choices"}</button></fieldset> : null}
+    </section>
+  </div></main>;
 }

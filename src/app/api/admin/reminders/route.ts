@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-const categories = new Set(["weekly", "ats_due", "survivor_due", "custom"]);
-const audiences = new Set(["all_active", "ats_due", "survivor_due"]);
+const categories = new Set(["weekly", "final_lines", "pick_due", "weekly_recap", "ats_due", "survivor_due", "custom"]);
+const audiences = new Set(["all_active", "pick_due", "ats_due", "survivor_due"]);
 
 export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
@@ -61,5 +61,5 @@ export async function POST(request: NextRequest) {
     scheduled_for: scheduledFor.toISOString(),
   }).select("id, scheduled_for").single();
   if (error) return NextResponse.json({ error: "Reminder could not be scheduled." }, { status: 500 });
-  return NextResponse.json({ message: "Browser reminder scheduled.", reminder: { id: data.id, scheduledFor: data.scheduled_for } });
+  return NextResponse.json({ message: "Player reminder scheduled.", reminder: { id: data.id, scheduledFor: data.scheduled_for } });
 }

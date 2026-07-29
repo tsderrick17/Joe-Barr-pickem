@@ -17,6 +17,9 @@ type EmailRecipient = {
 function preferenceColumn(category: ReminderCategory) {
   return {
     weekly: "email_weekly_enabled",
+    final_lines: "email_final_lines_enabled",
+    pick_due: "email_pick_due_enabled",
+    weekly_recap: "email_weekly_recap_enabled",
     ats_due: "email_ats_due_enabled",
     survivor_due: "email_survivor_due_enabled",
     custom: "email_custom_enabled",
