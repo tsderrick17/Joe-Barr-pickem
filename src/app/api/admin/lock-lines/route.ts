@@ -100,20 +100,46 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: latestRun, error } = await supabaseAdmin
-    .from("sync_runs")
-    .select("status, started_at, completed_at, details, error_message")
-    .eq("job_type", "line_locks")
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const now = new Date().toISOString();
+  const [latestResult, dueGamesResult] = await Promise.all([
+    supabaseAdmin
+      .from("sync_runs")
+      .select("status, started_at, completed_at, details, error_message")
+      .eq("job_type", "line_locks")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("games")
+      .select("id")
+      .eq("status", "scheduled")
+      .lte("line_lock_at", now)
+      .gt("kickoff_at", now),
+  ]);
 
-  if (error) {
+  if (latestResult.error || dueGamesResult.error) {
     return NextResponse.json(
       { error: "The latest official line lock could not be loaded." },
       { status: 500 },
     );
   }
+
+  const dueGameIds = (dueGamesResult.data ?? []).map((game) => game.id);
+  const { data: lockedLines, error: lockedLinesError } = dueGameIds.length
+    ? await supabaseAdmin.from("game_lines").select("game_id").in("game_id", dueGameIds)
+    : { data: [], error: null };
+  if (lockedLinesError) {
+    return NextResponse.json(
+      { error: "The current official line status could not be loaded." },
+      { status: 500 },
+    );
+  }
+
+  const lockedGameIds = new Set((lockedLines ?? []).map((line) => line.game_id));
+  const missingCurrentLines = dueGameIds.some((gameId) => !lockedGameIds.has(gameId));
+  const latestRun = latestResult.data
+    ? { ...latestResult.data, needsAttention: latestResult.data.status === "failed" && missingCurrentLines }
+    : null;
 
   return NextResponse.json({ latestRun });
 }

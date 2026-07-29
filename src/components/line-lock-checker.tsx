@@ -22,6 +22,7 @@ type LatestLockRun = {
   completed_at: string | null;
   details: Omit<LockResult, "message"> | null;
   error_message: string | null;
+  needsAttention?: boolean;
 };
 
 async function readResponse(response: Response) {
@@ -218,14 +219,18 @@ export default function LineLockChecker() {
       {latestRun ? (
         <div
           className={`mt-6 border bg-white p-5 ${
-            latestRun.status === "failed"
+            latestRun.status === "failed" && latestRun.needsAttention
               ? "border-red-700"
               : "border-zinc-400"
           }`}
         >
           <p className="font-bold">Most recent official line lock</p>
           <p className="mt-1 text-sm text-zinc-700">
-            Status: {latestRun.status === "failed" ? "Needs attention" : "Completed"}
+            Status: {latestRun.status === "failed"
+              ? latestRun.needsAttention
+                ? "Needs attention"
+                : "Prior check failed — no current line-lock impact"
+              : "Completed"}
             {" · "}
             Started {new Date(latestRun.started_at).toLocaleString()}
             {latestRun.completed_at
@@ -239,7 +244,7 @@ export default function LineLockChecker() {
               {latestRun.details.fallbackLocks}
             </p>
           ) : null}
-          {latestRun.error_message ? (
+          {latestRun.error_message && latestRun.needsAttention ? (
             <p className="mt-2 text-sm font-semibold text-red-700">
               {latestRun.error_message}
             </p>
