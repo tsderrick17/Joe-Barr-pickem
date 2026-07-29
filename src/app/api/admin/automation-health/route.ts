@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { checkReminderHealth } from "@/lib/reminder-health";
 
 type Run = { job_type: "line_locks" | "scores"; status: "started" | "success" | "failed"; started_at: string; completed_at: string | null; error_message: string | null };
 
@@ -25,10 +26,11 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
   const scoreDueAt = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
-  const [runsResult, dueGamesResult, scoreGamesResult] = await Promise.all([
+  const [runsResult, dueGamesResult, scoreGamesResult, reminderHealth] = await Promise.all([
     supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message").in("job_type", ["line_locks", "scores"]).order("started_at", { ascending: false }).limit(20),
     supabaseAdmin.from("games").select("id, kickoff_at").eq("status", "scheduled").lte("line_lock_at", now.toISOString()).gt("kickoff_at", now.toISOString()),
     supabaseAdmin.from("games").select("id").in("status", ["scheduled", "live"]).lte("kickoff_at", scoreDueAt),
+    checkReminderHealth(now),
   ]);
   if (runsResult.error || dueGamesResult.error || scoreGamesResult.error) return NextResponse.json({ error: "Automation health could not be prepared." }, { status: 500 });
 
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
   if (latestScores?.status === "failed" && scoreCandidates) problems.push("The most recent final-score sync failed while games are awaiting review.");
   if (missingOfficialLines) problems.push(`${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`);
   if (scoreCandidates && (!latestScores || latestScores.status !== "success" || now.getTime() - new Date(latestScores.completed_at ?? latestScores.started_at).getTime() > 30 * 60 * 1000)) problems.push("Final-score sync is stale while games are awaiting review.");
+  problems.push(...reminderHealth.problems);
 
-  return NextResponse.json({ checkedAt: now.toISOString(), status: problems.length ? "attention" : "healthy", problems, latestLocks, latestScores, missingOfficialLines, scoreCandidates });
+  return NextResponse.json({ checkedAt: now.toISOString(), status: problems.length ? "attention" : "healthy", problems, latestLocks, latestScores, missingOfficialLines, scoreCandidates, reminderHealth });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkReminderHealth } from "@/lib/reminder-health";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,15 @@ export async function GET() {
           status: 503,
           headers: { "Cache-Control": "no-store, max-age=0" },
         },
+      );
+    }
+
+    const reminderHealth = await checkReminderHealth();
+    if (reminderHealth.problems.length) {
+      console.error("Public health detected reminder delivery trouble.", reminderHealth);
+      return NextResponse.json(
+        { status: "degraded", checkedAt: new Date().toISOString() },
+        { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } },
       );
     }
 
