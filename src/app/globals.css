@@ -84,6 +84,13 @@ html[data-theme="night"] [class*="bg-[#edf7ef]"] {
   background-color: #102a27 !important;
 }
 
+/* Your own scorecard row gets a quiet teal ticket treatment in night mode,
+   instead of disappearing into the alternating table surfaces. */
+html[data-theme="night"] .viewer-row {
+  background-color: #16333a !important;
+  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 0 0 1px rgba(126, 225, 210, 0.28);
+}
+
 html[data-theme="night"] [class*="text-zinc-900"],
 html[data-theme="night"] [class*="text-[#171719]"],
 html[data-theme="night"] [class*="text-[#171717]"],

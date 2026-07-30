@@ -41,7 +41,7 @@ export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Pro
             {rows.map((row, rowIndex) => {
               const isViewer = row.id === viewerPlayerId;
               return (
-                <tr className={`border-b border-[#c8c1b5] last:border-b-0 ${isViewer ? "bg-[#fffaf0] shadow-[inset_3px_0_0_#1d1d1f]" : rowIndex % 2 ? "bg-[#f0eadc]" : ""}`} key={row.id}>
+                <tr className={`border-b border-[#c8c1b5] last:border-b-0 ${isViewer ? "viewer-row bg-[#fffaf0] shadow-[inset_3px_0_0_#1d1d1f]" : rowIndex % 2 ? "bg-[#f0eadc]" : ""}`} key={row.id}>
                   <td className="px-2 py-2 text-center font-serif text-lg font-bold sm:px-3 sm:py-2.5 sm:text-xl">{row.wins}</td>
                   <td className="px-2 py-2 sm:px-3 sm:py-2.5"><span className="font-serif text-[15px] font-bold leading-tight sm:text-lg">{row.firstName}{isLastSeasonChampion("pickem", row.firstName) ? <span aria-label="Last season's Pick'em champion" className="ml-1 font-sans text-sm" title="Last season's Pick'em champion">🏆</span> : null}</span></td>
                   {Array.from({ length: maxPicks }, (_, pickNumber) => {
