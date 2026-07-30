@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export type ReminderCategory =
   | "weekly"
   | "final_lines"
+  | "sunday_final_lines"
   | "early_lock"
   | "pick_due"
   | "weekly_recap"

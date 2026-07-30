@@ -18,6 +18,13 @@ export type GameDaySlateSnapshot = {
   games: Array<{ time: string; away: string; home: string; favorite: "away" | "home"; spread: number }>;
 };
 
+export type FreshSlateSnapshot = {
+  kind: "fresh_slate";
+  week: string;
+  generatedAt: string;
+  games: Array<{ day: string; time: string; away: string; home: string; favorite: "away" | "home" | null; spread: number | null }>;
+};
+
 export type EarlyLockSnapshot = {
   kind: "early_lock";
   day: string;
@@ -123,6 +130,56 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
   }) };
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The game-day Slate receipt could not be saved.");
+  return snapshot;
+}
+
+export async function ensureFreshSlateSnapshot(reminderId: string, existing: unknown) {
+  if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "fresh_slate") return existing as FreshSlateSnapshot;
+  const now = new Date();
+  const { data: period, error: periodError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id, display_name")
+    .eq("status", "active")
+    .order("display_order")
+    .limit(1)
+    .maybeSingle();
+  if (periodError || !period) throw new Error("An active week is not available for the fresh Slate.");
+  const { data: games, error: gamesError } = await supabaseAdmin
+    .from("games")
+    .select("id, away_team_id, home_team_id, kickoff_at")
+    .eq("scoring_period_id", period.id)
+    .not("status", "in", "(postponed,cancelled)")
+    .order("kickoff_at");
+  if (gamesError || !(games ?? []).length) throw new Error("The fresh Slate could not be prepared.");
+  const teamIds = [...new Set((games ?? []).flatMap((game) => [game.away_team_id, game.home_team_id]))];
+  const [{ data: teams, error: teamsError }, { data: preliminaryLines, error: linesError }] = await Promise.all([
+    supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds),
+    supabaseAdmin.from("spread_history").select("game_id, favorite_team_id, spread, captured_at").in("game_id", (games ?? []).map((game) => game.id)).order("captured_at", { ascending: false }),
+  ]);
+  if (teamsError || linesError) throw new Error("The fresh Slate details could not be prepared.");
+  const names = new Map((teams ?? []).map((team) => [team.id, team.full_name]));
+  const lineByGame = new Map<string, { favorite_team_id: string | null; spread: number | string }>();
+  for (const line of preliminaryLines ?? []) {
+    if (!lineByGame.has(line.game_id)) lineByGame.set(line.game_id, line);
+  }
+  const snapshot: FreshSlateSnapshot = {
+    kind: "fresh_slate",
+    week: period.display_name,
+    generatedAt: now.toISOString(),
+    games: (games ?? []).map((game) => {
+      const line = lineByGame.get(game.id);
+      return {
+        day: easternDayLabel(new Date(game.kickoff_at)),
+        time: easternTime(game.kickoff_at),
+        away: names.get(game.away_team_id) ?? "Away",
+        home: names.get(game.home_team_id) ?? "Home",
+        favorite: !line?.favorite_team_id ? null : line.favorite_team_id === game.home_team_id ? "home" : "away",
+        spread: line?.spread == null ? null : Number(line.spread),
+      };
+    }),
+  };
+  const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
+  if (error) throw new Error("The fresh Slate receipt could not be saved.");
   return snapshot;
 }
 

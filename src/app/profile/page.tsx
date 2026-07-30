@@ -8,6 +8,7 @@ type Profile = {
   emailNotificationsEnabled: boolean;
   emailWeeklyEnabled: boolean;
   emailFinalLinesEnabled: boolean;
+  emailSundayFinalLinesEnabled: boolean;
   emailEarlyLockEnabled: boolean;
   emailPickDueEnabled: boolean;
   emailWeeklyRecapEnabled: boolean;
@@ -17,6 +18,7 @@ type Profile = {
 const choices = [
   { key: "weekly" as const, title: "Fresh slate on Wednesday", note: "The full preliminary slate, with black lines, is ready for the week." },
   { key: "finalLines" as const, title: "Final lines · 8:30 AM on game days", note: "A look at the official lines on every game day, including Sunday." },
+  { key: "sundayFinalLines" as const, title: "Sunday only - final lines at 8:30 AM", note: "A Sunday-only alternative to final lines on every game day." },
   { key: "earlyLock" as const, title: "International game locks early", note: "A heads-up when an international matchup has an earlier official lock." },
   { key: "pickDue" as const, title: "Selections still to be made", note: "A reminder Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
   { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
@@ -27,7 +29,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [enabled, setEnabled] = useState(false);
-  const [preferences, setPreferences] = useState({ weekly: true, finalLines: true, earlyLock: true, pickDue: true, weeklyRecap: true, custom: true });
+  const [preferences, setPreferences] = useState({ weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDue: true, weeklyRecap: true, custom: true });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,7 +43,7 @@ export default function ProfilePage() {
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data); setEmail(data.notificationEmail); setEnabled(data.emailNotificationsEnabled);
-        setPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
+        setPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, sundayFinalLines: data.emailSundayFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
         else if (active) setError(reason instanceof Error ? reason.message : "Your notification settings could not be loaded.");
@@ -53,10 +55,10 @@ export default function ProfilePage() {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(""); setMessage("");
     try {
-      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom }) });
+      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom }) });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom });
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom });
       setMessage(data.message ?? "Email choices saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -73,7 +75,10 @@ export default function ProfilePage() {
       <p className="mt-3 text-sm leading-5 text-slate-600">Your address is private and used only for the choices below.</p>
       <fieldset className="mt-5 border-t border-zinc-300 pt-5"><legend className="text-sm font-bold tracking-wide">EMAIL REMINDERS</legend>
         <label className="mt-3 flex items-start gap-3 text-sm"><input checked={enabled} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send reminders to this email</strong>You can change or turn this off whenever you like.</span></label>
-        {enabled ? <div className="mt-4 space-y-3 text-sm">{choices.map((choice) => <label className="flex items-start gap-3" key={choice.key}><input checked={preferences[choice.key]} className="mt-1 size-4 accent-zinc-900" onChange={(event) => setPreferences((current) => ({ ...current, [choice.key]: event.target.checked }))} type="checkbox" /><span><strong className="block">{choice.title}</strong>{choice.note}</span></label>)}</div> : null}
+        {enabled ? <div className="mt-4 space-y-3 text-sm">{choices.map((choice) => {
+          const disabled = choice.key === "sundayFinalLines" && preferences.finalLines;
+          return <label className={`flex items-start gap-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`} key={choice.key}><input checked={preferences[choice.key]} className="mt-1 size-4 accent-zinc-900" disabled={disabled} onChange={(event) => setPreferences((current) => ({ ...current, [choice.key]: event.target.checked, ...(choice.key === "finalLines" && event.target.checked ? { sundayFinalLines: false } : {}) }))} type="checkbox" /><span><strong className="block">{choice.title}</strong>{disabled ? "Included in your every-game-day final-lines choice." : choice.note}</span></label>;
+        })}</div> : null}
       </fieldset>
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}{message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
       <button className="mt-6 min-h-12 bg-[#1d1d1f] px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Save email choices"}</button>

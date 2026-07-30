@@ -110,7 +110,7 @@ async function recapReady(): Promise<ReminderReadiness> {
 
 export async function reminderReadiness(category: ReminderCategory): Promise<ReminderReadiness> {
   if (category === "weekly") return freshSlateReady();
-  if (category === "final_lines") return gameDaySlateReady();
+  if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady();
   if (category === "early_lock") return earlyLockReady();
   if (category === "weekly_recap") return recapReady();
   return { ready: true, reason: null };

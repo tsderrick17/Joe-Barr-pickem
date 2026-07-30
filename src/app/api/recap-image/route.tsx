@@ -1,16 +1,16 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import type { EarlyLockSnapshot, GameDaySlateSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import type { EarlyLockSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const reminderId = request.nextUrl.searchParams.get("reminder");
   const kind = request.nextUrl.searchParams.get("kind");
-  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "gameday" && kind !== "earlylock")) return new Response("Not found", { status: 404 });
+  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
@@ -22,6 +22,16 @@ export async function GET(request: NextRequest) {
       },
     };
   }
+
+  if (kind === "fresh" && snapshot.kind === "fresh_slate") return new ImageResponse(
+    <div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "48px 56px", width: "100%" }}>
+      <div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 22 }}><span style={{ fontFamily: "Georgia", fontSize: 46, fontWeight: 800 }}>The Slate</span><span style={{ fontSize: 22, fontWeight: 700, letterSpacing: 2, paddingTop: 18 }}>PRELIMINARY LINES</span></div>
+      <div style={{ color: "#475569", display: "flex", fontSize: 24, fontWeight: 700, marginTop: 18 }}>{snapshot.week.toUpperCase()}</div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 16 }}>{snapshot.games.map((game, index) => <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 18, minHeight: 54, padding: "0 16px" }}><span style={{ color: "#475569", display: "flex", fontSize: 13, fontWeight: 700, width: 132 }}>{game.time}</span><span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.away}</span><span style={{ color: "#171719", display: "flex", fontFamily: "monospace", fontSize: 19, fontWeight: 800, justifyContent: "center", width: 150 }}>{game.favorite && game.spread !== null ? `${game.favorite === "away" ? game.away.slice(0, 3).toUpperCase() : game.home.slice(0, 3).toUpperCase()} -${game.spread}` : "LINE PENDING"}</span><span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", textAlign: "right" }}>{game.home}</span></div>)}</div>
+      <div style={{ borderTop: "3px solid #171719", color: "#475569", display: "flex", fontSize: 18, fontWeight: 800, marginTop: "auto", paddingTop: 18 }}>PRELIMINARY LINES MAY MOVE BEFORE OFFICIAL LOCK.</div>
+    </div>,
+    { width: 1200, height: 1200 },
+  );
 
   if (kind === "gameday" && snapshot.kind === "game_day") return new ImageResponse(
     <div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "48px 56px", width: "100%" }}>

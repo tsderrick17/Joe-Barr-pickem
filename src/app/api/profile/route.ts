@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     emailNotificationsEnabled: player.email_notifications_enabled,
     emailWeeklyEnabled: player.email_weekly_enabled,
     emailFinalLinesEnabled: player.email_final_lines_enabled,
+    emailSundayFinalLinesEnabled: player.email_sunday_final_lines_enabled,
     emailEarlyLockEnabled: player.email_early_lock_enabled,
     emailPickDueEnabled: player.email_pick_due_enabled,
     emailWeeklyRecapEnabled: player.email_weekly_recap_enabled,
@@ -28,7 +29,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -39,6 +40,7 @@ export async function PUT(request: NextRequest) {
     ? body.notificationEmail.trim().toLowerCase()
     : "";
   const preference = (value: unknown, current: boolean) => typeof value === "boolean" ? value : current;
+  const everyGameDayLines = preference(body.emailFinalLinesEnabled, player.email_final_lines_enabled);
 
   if (email.length > 254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
@@ -49,7 +51,10 @@ export async function PUT(request: NextRequest) {
       notification_email: email || null,
       email_notifications_enabled: email ? preference(body.emailNotificationsEnabled, player.email_notifications_enabled) : false,
       email_weekly_enabled: preference(body.emailWeeklyEnabled, player.email_weekly_enabled),
-      email_final_lines_enabled: preference(body.emailFinalLinesEnabled, player.email_final_lines_enabled),
+      email_final_lines_enabled: everyGameDayLines,
+      email_sunday_final_lines_enabled: everyGameDayLines
+        ? false
+        : preference(body.emailSundayFinalLinesEnabled, player.email_sunday_final_lines_enabled),
       email_early_lock_enabled: preference(body.emailEarlyLockEnabled, player.email_early_lock_enabled),
       email_pick_due_enabled: preference(body.emailPickDueEnabled, player.email_pick_due_enabled),
       email_weekly_recap_enabled: preference(body.emailWeeklyRecapEnabled, player.email_weekly_recap_enabled),
