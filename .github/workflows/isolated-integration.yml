@@ -1,0 +1,36 @@
+name: Isolated integration checks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 14 * * 3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-integration-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  database-and-browser:
+    if: vars.PICKEM_TEST_DATABASE_CONFIRMATION == 'isolated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
+      PICKEM_TEST_SUPABASE_URL: ${{ secrets.PICKEM_TEST_SUPABASE_URL }}
+      PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY }}
+      PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
+      PICKEM_E2E_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:integration
+      - run: npm run test:e2e
