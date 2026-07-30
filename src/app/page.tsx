@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
+import { isLastSeasonChampion } from "@/lib/last-season-champions";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -347,7 +348,7 @@ export default function HomePage() {
                   return (
                   <div className={`grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "bg-[#fffaf0]" : ""}`} key={row.id}>
                     <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-                    <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}</span>
+                    <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}{isLastSeasonChampion("survivor", row.firstName) ? <span aria-label="Last season's Survivor champion" className="ml-1 font-sans text-sm no-underline" title="Last season's Survivor champion">🏆</span> : null}</span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
                       return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;
