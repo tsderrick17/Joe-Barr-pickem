@@ -22,7 +22,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
           <Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} />
           {selected && !official ? <span className="survivor-poker-chip-pick-mark">PICK</span> : null}
         </span>
-        <span className="survivor-poker-chip-face survivor-poker-chip-back"><Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} /></span>
+        <span className="survivor-poker-chip-face survivor-poker-chip-back"><Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} />{selected && !official ? <span className="survivor-poker-chip-pick-mark">PICK</span> : null}</span>
       </span>
       {official ? <span className="survivor-poker-chip-seal">{"\u2605"}</span> : null}
     </span>
