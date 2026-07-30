@@ -257,7 +257,7 @@ export default function PreviewPage() {
 
           <div>{games.map((game, index) => (
             <SlateGameRow
-              alternate={index % 2 === 1}
+              alternate={index % 2 === 0}
               game={rehearsalSlateGame(game, index, scenario)}
               hasStarted={scenario.activeGames.includes(index) || scenario.finalGames.includes(index)}
               key={game.id}

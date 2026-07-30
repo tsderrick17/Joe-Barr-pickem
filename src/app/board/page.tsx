@@ -733,7 +733,7 @@ export default function BoardPage() {
                     {dayGames.map((game, index) => (
                       <SlateGameRow
                         allowSelection={!isReadOnly}
-                        alternate={index % 2 === 1}
+                        alternate={index % 2 === 0}
                         game={game}
                         hasStarted={new Date(game.kickoffAt) <= new Date()}
                         key={game.id}
