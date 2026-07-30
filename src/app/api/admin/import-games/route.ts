@@ -397,58 +397,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data: savedGames, error: gameError } =
-    await supabaseAdmin
-      .from("games")
-      .upsert(gamesToUpsert, {
-        onConflict: "external_game_id",
-      })
-      .select("id, external_game_id");
-
-  if (gameError || !savedGames) {
-    return NextResponse.json(
-      {
-        error:
-          "The games could not be saved. Existing week assignments remain protected.",
-      },
-      { status: 500 },
-    );
-  }
-
   const newPeriodAssignments = assignments.filter(
     (assignment) => assignment.isNew,
   );
 
-  for (const assignment of newPeriodAssignments) {
+  const periodAssignments = newPeriodAssignments.map((assignment) => {
     const window = getWeekWindow(assignment.weekStartKey);
+    return {
+      scoring_period_id: assignment.period.id,
+      starts_at: window.startsAt,
+      ends_at: window.endsAt,
+    };
+  });
 
-    const { error: periodDateError } = await supabaseAdmin
-      .from("scoring_periods")
-      .update({
-        starts_at: window.startsAt,
-        ends_at: window.endsAt,
-      })
-      .eq("id", assignment.period.id);
-
-    if (periodDateError) {
-      return NextResponse.json(
-        {
-          error:
-            "Games were saved, but a new scoring period could not be dated.",
-        },
-        { status: 500 },
-      );
-    }
-  }
-
-  const gameIdByExternalId = new Map(
-    savedGames.map((game) => [
-      game.external_game_id,
-      game.id,
-    ]),
-  );
-
-  const spreadHistoryRows = events.flatMap((event) => {
+  const preliminarySpreads = events.flatMap((event) => {
     const draftKings = event.bookmakers?.find(
       (bookmaker) => bookmaker.key === "draftkings",
     );
@@ -462,18 +424,17 @@ export async function POST(request: NextRequest) {
         outcome.point !== null && outcome.point < 0,
     );
 
-    const gameId = gameIdByExternalId.get(event.id);
     const favoriteTeamId = favorite
       ? teamIdByName.get(favorite.name)
       : null;
 
-    if (!favorite || !gameId || !favoriteTeamId) {
+    if (!favorite || !favoriteTeamId) {
       return [];
     }
 
     return [
       {
-        game_id: gameId,
+        external_game_id: event.id,
         favorite_team_id: favoriteTeamId,
         spread: Math.abs(favorite.point ?? 0),
         source: "DraftKings",
@@ -481,28 +442,35 @@ export async function POST(request: NextRequest) {
     ];
   });
 
-  if (spreadHistoryRows.length > 0) {
-    const { error: spreadError } = await supabaseAdmin
-      .from("spread_history")
-      .insert(spreadHistoryRows);
+  const { data: importRows, error: importError } = await supabaseAdmin.rpc(
+    "import_schedule_atomically",
+    {
+      target_season_id: season.id,
+      period_assignments: periodAssignments,
+      schedule_games: gamesToUpsert,
+      preliminary_spreads: preliminarySpreads,
+    },
+  );
 
-    if (spreadError) {
-      return NextResponse.json(
-        {
-          error:
-            "Games were saved, but preliminary spread history could not be saved.",
-        },
-        { status: 500 },
-      );
-    }
+  if (importError || !importRows?.[0]) {
+    return NextResponse.json(
+      { error: "The schedule import could not be completed safely. No changes were saved." },
+      { status: 500 },
+    );
   }
+
+  const importResult = importRows[0] as {
+    games_saved: number;
+    preliminary_spreads_saved: number;
+    new_weeks_assigned: number;
+  };
 
   return NextResponse.json({
     message:
-      "Schedule and preliminary spread refresh completed. Existing week assignments were preserved and no official lines were changed.",
-    importedGames: savedGames.length,
-    preliminarySpreadsSaved: spreadHistoryRows.length,
-    newWeeksAssigned: newPeriodAssignments.length,
+      "Schedule and preliminary spread refresh completed as one protected operation. Existing week assignments were preserved and no official lines were changed.",
+    importedGames: importResult.games_saved,
+    preliminarySpreadsSaved: importResult.preliminary_spreads_saved,
+    newWeeksAssigned: importResult.new_weeks_assigned,
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ??
       "unknown",

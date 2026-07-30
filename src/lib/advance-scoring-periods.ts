@@ -193,41 +193,17 @@ export async function advanceScoringPeriods(
     };
   }
 
-  const { error: completeError } = await supabaseAdmin
-    .from("scoring_periods")
-    .update({ status: "complete" })
-    .eq("id", activePeriod.id);
+  const { error: handoffError } = await supabaseAdmin.rpc(
+    "complete_scoring_period_atomically",
+    {
+      target_scoring_period_id: activePeriod.id,
+      next_scoring_period_id: nextPeriod?.id ?? null,
+      rollover_at: rolloverAt,
+    },
+  );
 
-  if (completeError) {
-    throw new Error("The completed scoring period could not be rubber-stamped.");
-  }
-
-  if (nextPeriod) {
-    const { error: activateError } = await supabaseAdmin
-      .from("scoring_periods")
-      .update({ status: "active" })
-      .eq("id", nextPeriod.id);
-
-    if (activateError) {
-      throw new Error("The next scoring period could not be activated.");
-    }
-  }
-
-  const { error: auditInsertError } = await supabaseAdmin
-    .from("audit_logs")
-    .insert({
-      actor_player_id: null,
-      action: "scoring_period_completed",
-      entity_type: "scoring_period",
-      entity_id: activePeriod.id,
-      details: {
-        rollover_at: rolloverAt,
-        next_scoring_period_id: nextPeriod?.id ?? null,
-      },
-    });
-
-  if (auditInsertError) {
-    throw new Error("The scoring period changed, but its audit entry could not be recorded.");
+  if (handoffError) {
+    throw new Error("The weekly handoff could not be completed safely.");
   }
 
   return {
