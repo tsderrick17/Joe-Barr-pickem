@@ -221,7 +221,7 @@ export default function HomePage() {
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM</p>
               {picksOwed === 0 ? <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">{data.maxPicks} {pickWord(data.maxPicks)} submitted</h3> : <h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">{picksOwed} {pickWord(picksOwed)} due</h3>}
               {picksOwed > 0 ? <p className="mt-2 text-base leading-6 text-slate-700">Make your selections before kickoff.</p> : null}
-              {viewerPicks.length ? <ol className="mt-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((pick, index) => <li className="week-status-pick" key={`${pick.label}-${index}`}>{index + 1}. {pick.label}{pick.isLineLocked && pick.spread ? <strong className="ml-1 font-mono text-teal-700">{pick.spread}</strong> : null}</li>)}</ol> : null}
+              {viewerPicks.length ? <ol className="mt-3 mb-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((pick, index) => <li className="week-status-pick" key={`${pick.label}-${index}`}>{index + 1}. {pick.label}{pick.isLineLocked && pick.spread ? <strong className="ml-1 font-mono text-teal-700">{pick.spread}</strong> : null}</li>)}</ol> : null}
               <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/board">View The Slate</Link>
             </div>
 
