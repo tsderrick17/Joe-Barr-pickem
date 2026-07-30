@@ -157,15 +157,17 @@ body {
   background: color-mix(in srgb, var(--chip-primary) 86%, #171719);
   border: 1px solid color-mix(in srgb, var(--chip-secondary) 72%, #fffdf8);
   border-radius: 999px;
-  bottom: .04rem;
+  bottom: -.32rem;
+  box-shadow: 0 1px 2px rgba(23, 23, 25, .22);
   color: #fffdf8;
   font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: .42rem;
+  font-size: .36rem;
   font-weight: 900;
   letter-spacing: .08em;
   line-height: 1;
-  padding: .16rem .25rem;
+  padding: .13rem .24rem;
   position: absolute;
+  z-index: 4;
 }
 
 .survivor-poker-chip[data-state="picked"] { border-color: #d69a20; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
