@@ -54,9 +54,10 @@ function preferenceColumn(category: ReminderCategory) {
     weekly_recap: "email_weekly_recap_enabled",
     sunday_early_reveal: "email_sunday_early_reveal_enabled",
     sunday_late_reveal: "email_sunday_late_reveal_enabled",
+    featured_window_reveal: "email_featured_window_reveal_enabled",
     ats_due: "email_ats_due_enabled",
     survivor_due: "email_survivor_due_enabled",
-    custom: "email_custom_enabled",
+    custom: "email_notifications_enabled",
   }[category];
 }
 

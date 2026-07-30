@@ -9,6 +9,7 @@ export type ReminderCategory =
   | "weekly_recap"
   | "sunday_early_reveal"
   | "sunday_late_reveal"
+  | "featured_window_reveal"
   | "ats_due"
   | "survivor_due"
   | "custom";

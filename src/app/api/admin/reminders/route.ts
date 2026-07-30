@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-const categories = new Set(["weekly", "final_lines", "sunday_final_lines", "early_lock", "pick_due", "weekly_recap", "sunday_early_reveal", "sunday_late_reveal", "ats_due", "survivor_due", "custom"]);
+const categories = new Set(["weekly", "final_lines", "sunday_final_lines", "early_lock", "pick_due", "weekly_recap", "sunday_early_reveal", "sunday_late_reveal", "featured_window_reveal", "ats_due", "survivor_due", "custom"]);
 const audiences = new Set(["all_active", "pick_due", "ats_due", "survivor_due"]);
 
 export async function GET(request: NextRequest) {

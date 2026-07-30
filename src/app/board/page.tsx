@@ -609,6 +609,7 @@ export default function BoardPage() {
                 <div>
                   <p className="whitespace-nowrap">Lines lock at 8 AM ET on game day, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#006b8f]">Blue lines</span> are official and will not change.</p>
+                  <p className="mt-1">Selections are revealed to others at kickoff.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
@@ -618,7 +619,6 @@ export default function BoardPage() {
                       : "Choose TWO teams and click Save below."}
                   </p>
                   <p className="mt-1">Changes allowed until kickoff time.</p>
-                  <p className="mt-1">Selections are revealed to others at kickoff.</p>
                 </div>
               </div>
               {hasEarlyGame ? (
