@@ -167,6 +167,16 @@ html[data-theme="night"] [class*="text-teal-"] {
   color: #78d8cb !important;
 }
 
+html[data-theme="night"] [class*="text-green-950"],
+html[data-theme="night"] [class*="text-green-800"],
+html[data-theme="night"] [class*="text-green-700"] {
+  color: #a7edc9 !important;
+}
+
+html[data-theme="night"] [class*="border-green-800"] {
+  border-color: #61c998 !important;
+}
+
 html[data-theme="night"] [class*="border-[#1d1d1f]"],
 html[data-theme="night"] [class*="border-[#171719]"],
 html[data-theme="night"] [class*="border-black"] {
