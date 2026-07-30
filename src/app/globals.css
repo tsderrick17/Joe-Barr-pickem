@@ -229,13 +229,39 @@ body {
   transition: background-color 160ms ease, box-shadow 160ms ease;
 }
 
-.survivor-matchup-team:not(:disabled):hover {
-  background: color-mix(in srgb, var(--chip-primary, #16877f) 5%, transparent);
-}
-
-.survivor-matchup-team[aria-pressed="true"] {
+.survivor-matchup-team.is-selected {
   background: rgba(214, 154, 32, .08);
   box-shadow: inset 0 0 0 1px rgba(214, 154, 32, .35);
+}
+
+.survivor-chip-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: .2rem;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.survivor-chip-button:not(:disabled):hover {
+  filter: brightness(1.06) saturate(1.08);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.survivor-chip-button:not(:disabled):active {
+  transform: translateY(0) scale(.96);
+}
+
+.survivor-chip-button:focus-visible {
+  outline: 2px solid #16877f;
+  outline-offset: 2px;
+}
+
+.survivor-chip-button:disabled {
+  cursor: not-allowed;
 }
 
 html[data-theme="night"] .survivor-selection-footer {
