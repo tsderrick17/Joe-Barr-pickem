@@ -151,7 +151,15 @@ body {
   transform: rotateX(180deg);
 }
 
-.survivor-poker-chip-back img { height: 70%; width: 70%; }
+.survivor-poker-chip-star {
+  color: var(--chip-primary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.35rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--chip-secondary) 75%, #fffdf8), 0 2px 2px rgba(23, 23, 25, .22);
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--chip-secondary) 64%, #171719);
+}
 
 .survivor-poker-chip-pick-mark {
   background: color-mix(in srgb, var(--chip-primary) 86%, #171719);
@@ -173,22 +181,22 @@ body {
 .survivor-poker-chip[data-state="picked"] { border-color: #d69a20; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 
 .survivor-poker-chip[data-state="picked"]:not(.survivor-poker-chip-summary) {
-  animation: survivor-chip-lift 1.25s cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-chip-lift 720ms cubic-bezier(.16,.76,.2,1) both;
 }
 
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core {
-  animation: survivor-chip-toss 1.25s cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-chip-toss 720ms cubic-bezier(.16,.76,.2,1) both;
 }
 
 @keyframes survivor-chip-toss {
   0% { filter: brightness(1); transform: rotateX(0deg) scale(1); }
-  15% { filter: brightness(1.18); transform: rotateX(90deg) scaleX(1.08) scaleY(.18); }
-  29% { filter: brightness(1.08); transform: rotateX(180deg) scale(1.1); }
-  44% { filter: brightness(1.2); transform: rotateX(270deg) scaleX(1.08) scaleY(.18); }
-  58% { filter: brightness(1.07); transform: rotateX(360deg) scale(1.07); }
-  74% { filter: brightness(1.15); transform: rotateX(450deg) scaleX(1.04) scaleY(.24); }
-  88% { transform: rotateX(515deg) scale(1.025); }
-  100% { filter: brightness(1); transform: rotateX(540deg) scale(1); }
+  12% { filter: brightness(1.18); transform: rotateX(180deg) scaleX(1.08) scaleY(.18); }
+  25% { filter: brightness(1.08); transform: rotateX(360deg) scale(1.1); }
+  38% { filter: brightness(1.2); transform: rotateX(540deg) scaleX(1.08) scaleY(.18); }
+  51% { filter: brightness(1.07); transform: rotateX(720deg) scale(1.07); }
+  64% { filter: brightness(1.16); transform: rotateX(900deg) scaleX(1.05) scaleY(.2); }
+  80% { transform: rotateX(1020deg) scale(1.025); }
+  100% { filter: brightness(1); transform: rotateX(1080deg) scale(1); }
 }
 
 @keyframes survivor-chip-lift {
