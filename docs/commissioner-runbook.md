@@ -37,7 +37,7 @@ build succeeds.
 3. Players can edit a pick until that game's kickoff; picks reveal at kickoff.
 4. Starting three hours after kickoff, the score check runs every 15 minutes.
 5. Only completed games are saved and graded. ATS pushes are losses.
-6. Once every game in the active week is final and every final-game pick is graded, that week remains on the Standings for at least 24 hours. The normal handoff is Thursday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. Postponed, cancelled, or ungraded final-game picks block the automatic handoff for commissioner review.
+6. Once every game in the active week is final and every final-game pick is graded, that week remains on the Standings for at least 24 hours. The normal handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. Postponed, cancelled, or ungraded final-game picks block the automatic handoff for commissioner review.
 
 ## Before the season
 

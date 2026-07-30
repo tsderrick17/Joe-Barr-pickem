@@ -1,4 +1,8 @@
-import { eligiblePlayerIds, ReminderCategory, ReminderAudience } from "@/lib/push-reminders";
+import {
+  eligiblePlayerIds,
+  type ReminderAudience,
+  type ReminderCategory,
+} from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureGameDaySlateSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
@@ -15,6 +19,30 @@ type EmailRecipient = {
   playerId: string;
   email: string;
 };
+
+type ExistingDelivery = {
+  id: string;
+  status: "sending" | "sent" | "failed" | "suppressed";
+  provider_status: number | null;
+  attempt_count: number;
+};
+
+class EmailProviderError extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+    readonly providerStatus: number,
+  ) {
+    super(message);
+  }
+}
+
+export class ReminderPreparationError extends Error {}
+
+class ReminderDeliveryUncertainError extends Error {}
+
+const MAX_EMAIL_ATTEMPTS = 3;
+const EMAIL_TIMEOUT_MS = 15_000;
 
 function preferenceColumn(category: ReminderCategory) {
   return {
@@ -71,22 +99,100 @@ async function recipientsForReminder(reminder: Reminder) {
 }
 
 async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
-  const { data: delivery, error: createError } = await supabaseAdmin
+  const { data: createdDelivery, error: createError } = await supabaseAdmin
     .from("email_reminder_deliveries")
     .insert({ reminder_id: reminder.id, player_id: recipient.playerId, email_address: recipient.email })
-    .select("id")
+    .select("id, status, provider_status, attempt_count")
     .maybeSingle();
-  if (createError?.code === "23505") return { skipped: true, sent: false, failed: false, errorMessage: null };
-  if (createError || !delivery) throw new Error("An email delivery receipt could not be created.");
+
+  let delivery = createdDelivery as ExistingDelivery | null;
+
+  if (createError?.code === "23505") {
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from("email_reminder_deliveries")
+      .select("id, status, provider_status, attempt_count")
+      .eq("reminder_id", reminder.id)
+      .eq("player_id", recipient.playerId)
+      .maybeSingle();
+
+    if (existingError || !existing) {
+      throw new ReminderPreparationError(
+        "An existing email delivery receipt could not be loaded.",
+      );
+    }
+
+    delivery = existing as ExistingDelivery;
+
+    if (delivery.status === "sent" || delivery.status === "suppressed") {
+      return { skipped: true, sent: false, failed: false, retryable: false, errorMessage: null };
+    }
+    if (delivery.status === "sending") {
+      return {
+        skipped: false,
+        sent: false,
+        failed: true,
+        retryable: false,
+        errorMessage: "A previous email attempt has an uncertain delivery state.",
+      };
+    }
+
+    const previousFailureWasRetryable =
+      delivery.provider_status === 425 ||
+      delivery.provider_status === 429;
+
+    if (!previousFailureWasRetryable || delivery.attempt_count >= MAX_EMAIL_ATTEMPTS) {
+      return {
+        skipped: false,
+        sent: false,
+        failed: true,
+        retryable: false,
+        errorMessage: "Email delivery could not be completed after safe retries.",
+      };
+    }
+
+    const { data: retriedDelivery, error: retryError } = await supabaseAdmin
+      .from("email_reminder_deliveries")
+      .update({
+        status: "sending",
+        provider_status: null,
+        error_message: null,
+        attempted_at: new Date().toISOString(),
+        attempt_count: delivery.attempt_count + 1,
+      })
+      .eq("id", delivery.id)
+      .eq("status", "failed")
+      .select("id, status, provider_status, attempt_count")
+      .maybeSingle();
+
+    if (retryError || !retriedDelivery) {
+      throw new ReminderPreparationError(
+        "A failed email delivery could not be prepared for retry.",
+      );
+    }
+
+    delivery = retriedDelivery as ExistingDelivery;
+  } else if (createError || !delivery) {
+    throw new ReminderPreparationError(
+      "An email delivery receipt could not be created.",
+    );
+  }
 
   const key = process.env.BREVO_API_KEY;
   const sender = process.env.BREVO_SENDER_EMAIL;
   if (!key || !sender) {
-    await supabaseAdmin.from("email_reminder_deliveries").update({
-      status: "failed",
-      error_message: "Email sender setup is incomplete.",
-    }).eq("id", delivery.id);
-    return { skipped: false, sent: false, failed: true, errorMessage: "Email sender setup is incomplete." };
+    const { error: setupReceiptError } = await supabaseAdmin
+      .from("email_reminder_deliveries")
+      .update({
+        status: "failed",
+        error_message: "Email sender setup is incomplete.",
+      })
+      .eq("id", delivery.id);
+    if (setupReceiptError) {
+      throw new ReminderPreparationError(
+        "Email sender setup and its delivery receipt could not be verified.",
+      );
+    }
+    return { skipped: false, sent: false, failed: true, retryable: false, errorMessage: "Email sender setup is incomplete." };
   }
 
   try {
@@ -101,43 +207,90 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" ? siteUrl : `${siteUrl}/board`}`,
         tags: ["pickem-reminder", reminder.category],
       }),
+      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     const payload = await response.json().catch(() => ({})) as { messageId?: string; code?: string; message?: string };
-    if (!response.ok) throw new Error(payload.message ?? `Brevo rejected this email (${response.status}).`);
-    await supabaseAdmin.from("email_reminder_deliveries").update({
-      status: "sent",
-      provider_status: response.status,
-      provider_message_id: payload.messageId ?? null,
-      delivered_at: new Date().toISOString(),
-    }).eq("id", delivery.id);
-    return { skipped: false, sent: true, failed: false, errorMessage: null };
+    if (!response.ok) {
+      throw new EmailProviderError(
+        payload.message ?? `Brevo rejected this email (${response.status}).`,
+        response.status === 425 || response.status === 429,
+        response.status,
+      );
+    }
+    const { error: sentReceiptError } = await supabaseAdmin
+      .from("email_reminder_deliveries")
+      .update({
+        status: "sent",
+        provider_status: response.status,
+        provider_message_id: payload.messageId ?? null,
+        delivered_at: new Date().toISOString(),
+      })
+      .eq("id", delivery.id);
+    if (sentReceiptError) {
+      throw new ReminderDeliveryUncertainError(
+        "Brevo accepted an email, but its delivery receipt could not be recorded.",
+      );
+    }
+    return { skipped: false, sent: true, failed: false, retryable: false, errorMessage: null };
   } catch (reason) {
+    if (reason instanceof ReminderDeliveryUncertainError) throw reason;
     const errorMessage = reason instanceof Error ? reason.message.slice(0, 500) : "Brevo rejected the delivery.";
-    await supabaseAdmin.from("email_reminder_deliveries").update({
-      status: "failed",
-      error_message: errorMessage,
-    }).eq("id", delivery.id);
-    return { skipped: false, sent: false, failed: true, errorMessage };
+    const retryable =
+      reason instanceof EmailProviderError ? reason.retryable : false;
+    const { error: failedReceiptError } = await supabaseAdmin
+      .from("email_reminder_deliveries")
+      .update({
+        status: "failed",
+        provider_status:
+          reason instanceof EmailProviderError
+            ? reason.providerStatus
+            : null,
+        error_message: errorMessage,
+      })
+      .eq("id", delivery.id);
+    if (failedReceiptError) {
+      throw new ReminderDeliveryUncertainError(
+        "An email attempt finished, but its failure receipt could not be recorded.",
+      );
+    }
+    return {
+      skipped: false,
+      sent: false,
+      failed: true,
+      retryable: retryable && delivery.attempt_count < MAX_EMAIL_ATTEMPTS,
+      errorMessage,
+    };
   }
 }
 
 export async function deliverEmailReminder(reminder: Reminder, limitedRecipients?: EmailRecipient[]) {
-  if (reminder.category === "weekly_recap") reminder.recap_snapshot = await ensureWeeklyRecapSnapshot(reminder.id, reminder.recap_snapshot);
-  if (reminder.category === "final_lines") reminder.recap_snapshot = await ensureGameDaySlateSnapshot(reminder.id, reminder.recap_snapshot);
-  if (reminder.category === "early_lock") reminder.recap_snapshot = await ensureEarlyLockSnapshot(reminder.id, reminder.recap_snapshot);
-  const recipients = limitedRecipients ?? await recipientsForReminder(reminder);
+  let recipients: EmailRecipient[];
+  try {
+    if (reminder.category === "weekly_recap") reminder.recap_snapshot = await ensureWeeklyRecapSnapshot(reminder.id, reminder.recap_snapshot);
+    if (reminder.category === "final_lines") reminder.recap_snapshot = await ensureGameDaySlateSnapshot(reminder.id, reminder.recap_snapshot);
+    if (reminder.category === "early_lock") reminder.recap_snapshot = await ensureEarlyLockSnapshot(reminder.id, reminder.recap_snapshot);
+    recipients = limitedRecipients ?? await recipientsForReminder(reminder);
+  } catch (reason) {
+    throw new ReminderPreparationError(
+      reason instanceof Error
+        ? reason.message
+        : "The email reminder could not be prepared.",
+    );
+  }
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  let retryableFailed = 0;
   const errors: string[] = [];
   for (const recipient of recipients) {
     const result = await recordAndSend(reminder, recipient);
     sent += Number(result.sent);
     failed += Number(result.failed);
     skipped += Number(result.skipped);
+    retryableFailed += Number(result.failed && result.retryable);
     if (result.errorMessage) errors.push(result.errorMessage);
   }
-  return { recipients: recipients.length, sent, failed, skipped, errors };
+  return { recipients: recipients.length, sent, failed, skipped, retryableFailed, errors };
 }
 
 export async function deliverEmailTest(reminder: Reminder, playerId: string, email: string) {

@@ -1,43 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-async function requireCommissioner(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-
-  if (!supabaseUrl || !publishableKey || !authorization?.startsWith("Bearer ")) {
-    return false;
-  }
-
-  const authClient = createClient(supabaseUrl, publishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await authClient.auth.getUser();
-
-  if (!user) return false;
-
-  const { data: commissioner } = await supabaseAdmin
-    .from("players")
-    .select("id, is_commissioner, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  return Boolean(
-    commissioner?.active && commissioner.is_commissioner,
-  );
-}
 
 export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -112,9 +77,8 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("games")
       .select("id")
-      .eq("status", "scheduled")
-      .lte("line_lock_at", now)
-      .gt("kickoff_at", now),
+      .in("status", ["scheduled", "live"])
+      .lte("line_lock_at", now),
   ]);
 
   if (latestResult.error || dueGamesResult.error) {

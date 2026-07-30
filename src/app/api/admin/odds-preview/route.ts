@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { requireCommissioner } from "@/lib/require-commissioner";
 
 type OddsApiEvent = {
   id: string;
@@ -32,49 +32,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const authorization = request.headers.get("authorization");
-  const token = authorization?.startsWith("Bearer ")
-    ? authorization.slice(7)
-    : null;
-
-  if (!token) {
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
     return NextResponse.json(
       { error: "Sign in is required." },
       { status: 401 },
     );
   }
 
-const supabase = createClient(supabaseUrl, supabasePublishableKey, {
-  global: {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  },
-  auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser(token);
-
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Your sign-in session is no longer valid." },
-      { status: 401 },
-    );
-  }
-
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .select("is_commissioner")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (playerError || !player?.is_commissioner) {
+  if (!(await requireCommissioner(request))) {
     return NextResponse.json(
       { error: "Commissioner access is required." },
       { status: 403 },

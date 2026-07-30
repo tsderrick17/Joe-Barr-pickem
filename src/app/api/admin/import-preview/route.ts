@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCommissioner } from "@/lib/require-commissioner";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -67,8 +68,6 @@ export async function GET(request: NextRequest) {
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const oddsApiKey = process.env.ODDS_API_KEY;
-  const authorization = request.headers.get("authorization");
-
   if (!supabaseUrl || !supabasePublishableKey || !oddsApiKey) {
     return NextResponse.json(
       { error: "The server is missing required configuration." },
@@ -76,40 +75,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (!authorization?.startsWith("Bearer ")) {
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
     return NextResponse.json(
       { error: "You must be signed in to use this page." },
       { status: 401 },
     );
   }
 
-  const authClient = createClient(supabaseUrl, supabasePublishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
-      },
-    },
-  });
-
-  const {
-    data: { user },
-    error: userError,
-  } = await authClient.auth.getUser();
-
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "Your sign-in session could not be verified." },
-      { status: 401 },
-    );
-  }
-
-  const { data: player } = await supabaseAdmin
-    .from("players")
-    .select("first_name, is_commissioner, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (!player || !player.active || !player.is_commissioner) {
+  const commissioner = await requireCommissioner(request);
+  if (!commissioner) {
     return NextResponse.json(
       { error: "Commissioner access is required." },
       { status: 403 },
@@ -142,12 +116,12 @@ export async function GET(request: NextRequest) {
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", 2026)
+    .eq("year", CURRENT_SEASON_YEAR)
     .maybeSingle();
 
   if (!season) {
     return NextResponse.json(
-      { error: "The 2026 season has not been set up yet." },
+      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up yet.` },
       { status: 500 },
     );
   }
@@ -160,7 +134,7 @@ export async function GET(request: NextRequest) {
 
   if (periodsError || !periods) {
     return NextResponse.json(
-      { error: "The 2026 season weeks could not be loaded." },
+      { error: `The ${CURRENT_SEASON_YEAR} season weeks could not be loaded.` },
       { status: 500 },
     );
   }
@@ -227,7 +201,7 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    commissioner: player.first_name,
+    commissioner: commissioner.first_name,
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ?? "unknown",
     games,

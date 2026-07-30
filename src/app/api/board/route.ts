@@ -148,8 +148,7 @@ export async function GET(request: NextRequest) {
       .neq("result", "void"),
     supabaseAdmin
       .from("players")
-      .select("id, first_name")
-      .eq("active", true),
+      .select("id, first_name"),
   ]);
 
   const { data: games, error: gamesError } = gamesResult;

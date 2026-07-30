@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type GameRow = {
@@ -10,33 +10,6 @@ type GameRow = {
   kickoff_at: string;
   status: "postponed" | "cancelled" | "final";
 };
-
-async function requireCommissioner(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-
-  if (!supabaseUrl || !publishableKey || !authorization?.startsWith("Bearer ")) {
-    return false;
-  }
-
-  const authClient = createClient(supabaseUrl, publishableKey, {
-    global: { headers: { Authorization: authorization } },
-  });
-  const {
-    data: { user },
-  } = await authClient.auth.getUser();
-
-  if (!user) return false;
-
-  const { data: player } = await supabaseAdmin
-    .from("players")
-    .select("active, is_commissioner")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  return Boolean(player?.active && player.is_commissioner);
-}
 
 export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) {

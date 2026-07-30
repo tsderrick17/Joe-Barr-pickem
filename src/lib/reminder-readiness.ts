@@ -1,4 +1,4 @@
-import type { ReminderCategory } from "@/lib/push-reminders";
+import type { ReminderCategory } from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ReminderReadiness = { ready: boolean; reason: string | null };

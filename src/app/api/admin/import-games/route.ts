@@ -1,6 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCommissioner } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -188,37 +189,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const authClient = createClient(
-      supabaseUrl,
-      supabasePublishableKey,
-      {
-        global: {
-          headers: {
-            Authorization: authorization,
-          },
-        },
-      },
-    );
-
-    const {
-      data: { user },
-      error: userError,
-    } = await authClient.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Your sign-in session could not be verified." },
-        { status: 401 },
-      );
-    }
-
-    const { data: player } = await supabaseAdmin
-      .from("players")
-      .select("first_name, is_commissioner, active")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-
-    if (!player || !player.active || !player.is_commissioner) {
+    if (!(await requireCommissioner(request))) {
       return NextResponse.json(
         { error: "Commissioner access is required." },
         { status: 403 },
@@ -252,12 +223,12 @@ export async function POST(request: NextRequest) {
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", 2026)
+    .eq("year", CURRENT_SEASON_YEAR)
     .maybeSingle();
 
   if (!season) {
     return NextResponse.json(
-      { error: "The 2026 season has not been set up yet." },
+      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up yet.` },
       { status: 500 },
     );
   }
@@ -282,7 +253,7 @@ export async function POST(request: NextRequest) {
 
   if (periodsError || !periods || periods.length === 0) {
     return NextResponse.json(
-      { error: "No scoring periods are configured for 2026." },
+      { error: `No scoring periods are configured for ${CURRENT_SEASON_YEAR}.` },
       { status: 500 },
     );
   }

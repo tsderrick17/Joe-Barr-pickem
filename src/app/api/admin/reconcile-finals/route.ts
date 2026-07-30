@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { reconcileFinalScores } from "@/lib/final-score-reconciliation";
+import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ScoreEvent = { id: string; completed: boolean; scores?: Array<{ name: string; score: string | number | null }> };
@@ -9,18 +9,6 @@ function parseScore(value: string | number | null | undefined) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
   if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
   return null;
-}
-
-async function requireCommissioner(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-  if (!url || !key || !authorization?.startsWith("Bearer ")) return false;
-  const client = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await client.auth.getUser();
-  if (!user) return false;
-  const { data: player } = await supabaseAdmin.from("players").select("active, is_commissioner").eq("auth_user_id", user.id).maybeSingle();
-  return Boolean(player?.active && player.is_commissioner);
 }
 
 export async function POST(request: NextRequest) {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
-type Reminder = { id: string; category: string; audience: string; title: string; body: string; scheduledFor: string; status: string; delivered: number; failed: number; emailDelivered: number; emailFailed: number };
+type Reminder = { id: string; category: string; audience: string; title: string; body: string; scheduledFor: string; status: string; emailDelivered: number; emailFailed: number };
 
 const initialTime = () => {
   const date = new Date(Date.now() + 10 * 60_000);

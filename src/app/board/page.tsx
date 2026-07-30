@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 import SlateGameRow from "@/components/slate-game-row";
 
@@ -276,7 +277,7 @@ export default function BoardPage() {
       const { data: season, error: seasonError } = await supabase
         .from("seasons")
         .select("id")
-        .eq("year", 2026)
+        .eq("year", CURRENT_SEASON_YEAR)
         .maybeSingle();
 
       if (seasonError || !season) {

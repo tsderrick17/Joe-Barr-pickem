@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkReminderHealth } from "@/lib/reminder-health";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { checkAutomationHealth } from "@/lib/automation-health";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,35 +11,19 @@ export const revalidate = 0;
  */
 export async function GET() {
   try {
-    const { error } = await supabaseAdmin
-      .from("seasons")
-      .select("id")
-      .limit(1);
-
-    if (error) {
-      console.error("Public health database check failed.", {
-        code: error.code,
+    const health = await checkAutomationHealth();
+    if (health.status !== "healthy") {
+      console.error("Public health detected automation trouble.", {
+        problemCount: health.problems.length,
       });
       return NextResponse.json(
-        { status: "unavailable", checkedAt: new Date().toISOString() },
-        {
-          status: 503,
-          headers: { "Cache-Control": "no-store, max-age=0" },
-        },
-      );
-    }
-
-    const reminderHealth = await checkReminderHealth();
-    if (reminderHealth.problems.length) {
-      console.error("Public health detected reminder delivery trouble.", reminderHealth);
-      return NextResponse.json(
-        { status: "degraded", checkedAt: new Date().toISOString() },
+        { status: "degraded", checkedAt: health.checkedAt },
         { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } },
       );
     }
 
     return NextResponse.json(
-      { status: "ok", checkedAt: new Date().toISOString() },
+      { status: "ok", checkedAt: health.checkedAt },
       { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
   } catch {

@@ -19,14 +19,6 @@ export async function GET(request: NextRequest) {
     emailAtsDueEnabled: player.email_ats_due_enabled,
     emailSurvivorDueEnabled: player.email_survivor_due_enabled,
     emailCustomEnabled: player.email_custom_enabled,
-    pushWeeklyEnabled: player.push_weekly_enabled,
-    pushFinalLinesEnabled: player.push_final_lines_enabled,
-    pushEarlyLockEnabled: player.push_early_lock_enabled,
-    pushPickDueEnabled: player.push_pick_due_enabled,
-    pushWeeklyRecapEnabled: player.push_weekly_recap_enabled,
-    pushAtsDueEnabled: player.push_ats_due_enabled,
-    pushSurvivorDueEnabled: player.push_survivor_due_enabled,
-    pushCustomEnabled: player.push_custom_enabled,
   });
 }
 
@@ -36,7 +28,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown; pushWeeklyEnabled?: unknown; pushFinalLinesEnabled?: unknown; pushEarlyLockEnabled?: unknown; pushPickDueEnabled?: unknown; pushWeeklyRecapEnabled?: unknown; pushAtsDueEnabled?: unknown; pushSurvivorDueEnabled?: unknown; pushCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -64,14 +56,6 @@ export async function PUT(request: NextRequest) {
       email_ats_due_enabled: preference(body.emailAtsDueEnabled, player.email_ats_due_enabled),
       email_survivor_due_enabled: preference(body.emailSurvivorDueEnabled, player.email_survivor_due_enabled),
       email_custom_enabled: preference(body.emailCustomEnabled, player.email_custom_enabled),
-      push_weekly_enabled: preference(body.pushWeeklyEnabled, player.push_weekly_enabled),
-      push_final_lines_enabled: preference(body.pushFinalLinesEnabled, player.push_final_lines_enabled),
-      push_early_lock_enabled: preference(body.pushEarlyLockEnabled, player.push_early_lock_enabled),
-      push_pick_due_enabled: preference(body.pushPickDueEnabled, player.push_pick_due_enabled),
-      push_weekly_recap_enabled: preference(body.pushWeeklyRecapEnabled, player.push_weekly_recap_enabled),
-      push_ats_due_enabled: preference(body.pushAtsDueEnabled, player.push_ats_due_enabled),
-      push_survivor_due_enabled: preference(body.pushSurvivorDueEnabled, player.push_survivor_due_enabled),
-      push_custom_enabled: preference(body.pushCustomEnabled, player.push_custom_enabled),
       notification_preferences_updated_at: new Date().toISOString(),
     })
     .eq("id", player.id);

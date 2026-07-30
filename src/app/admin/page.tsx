@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import GameExceptions from "@/components/game-exceptions";
 import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
@@ -153,7 +154,7 @@ export default function AdminPage() {
     }
 
     const confirmed = window.confirm(
-      `Import ${importPreview.games.length} scheduled games into the 2026 season?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
+      `Import ${importPreview.games.length} scheduled games into the ${CURRENT_SEASON_YEAR} season?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
     );
 
     if (!confirmed) {

@@ -1,5 +1,4 @@
 import { gradeAtsPick } from "@/lib/ats-grading";
-import { gradeSurvivorPick } from "@/lib/survivor-grading";
 import {
   advanceScoringPeriods,
   type WeekRolloverResult,
@@ -292,6 +291,9 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       finalizedGames.push({ ...game, awayScore, homeScore });
     }
 
+    const unmatchedCompletedGames =
+      completedEvents.length - finalizedGames.length;
+
     if (finalizedGames.length > 0) {
       const { data: atomicRows, error: atomicError } = await supabaseAdmin.rpc(
         "finalize_games_atomically",
@@ -326,6 +328,11 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       }
 
       const completedWeekRollover = await advanceScoringPeriods(now);
+      if (unmatchedCompletedGames > 0) {
+        throw new Error(
+          `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,
+        );
+      }
       const result = {
         checkedAt,
         eligibleGames: eligibleGames.length,
@@ -346,180 +353,9 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       return result;
     }
 
-    for (const game of finalizedGames) {
-      const { error } = await supabaseAdmin
-        .from("games")
-        .update({
-          status: "final",
-          away_score: game.awayScore,
-          home_score: game.homeScore,
-          finalized_at: checkedAt,
-        })
-        .eq("id", game.id);
-      if (error) throw new Error("Final game scores could not be saved.");
-    }
-
-    const gameIds = finalizedGames.map((game) => game.id);
-    const { data: lines, error: linesError } = gameIds.length
-      ? await supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", gameIds)
-      : { data: [], error: null };
-    const { data: picks, error: picksError } = gameIds.length
-      ? await supabaseAdmin.from("picks").select("id, game_id, selected_team_id").in("game_id", gameIds)
-      : { data: [], error: null };
-
-    if (linesError || picksError) throw new Error("Picks or official lines could not be loaded.");
-
-    const lineByGameId = new Map(
-      ((lines ?? []) as LockedLineRow[]).map((line) => [line.game_id, line]),
+    throw new Error(
+      `The score provider marked ${unmatchedCompletedGames} game${unmatchedCompletedGames === 1 ? "" : "s"} complete, but valid team scores could not be matched safely.`,
     );
-    const gameById = new Map(finalizedGames.map((game) => [game.id, game]));
-    const gradeUpdates = ((picks ?? []) as PickRow[]).flatMap((pick) => {
-      const game = gameById.get(pick.game_id);
-      const line = lineByGameId.get(pick.game_id);
-      if (!game || !line) return [];
-      return [{
-        id: pick.id,
-        result: gradeAtsPick({
-          selectedTeamId: pick.selected_team_id,
-          favoriteTeamId: line.favorite_team_id,
-          lockedSpread: Number(line.locked_spread),
-          awayTeamId: game.away_team_id,
-          homeTeamId: game.home_team_id,
-          awayScore: game.awayScore,
-          homeScore: game.homeScore,
-        }),
-      }];
-    });
-
-    const pickIdsByResult = new Map<string, string[]>();
-
-    for (const update of gradeUpdates) {
-      const pickIds = pickIdsByResult.get(update.result) ?? [];
-      pickIds.push(update.id);
-      pickIdsByResult.set(update.result, pickIds);
-    }
-
-    const gradeResults = await Promise.all(
-      [...pickIdsByResult.entries()].map(([result, pickIds]) =>
-        supabaseAdmin.from("picks").update({ result }).in("id", pickIds),
-      ),
-    );
-
-    if (gradeResults.some((gradeResult) => gradeResult.error)) {
-      throw new Error("Final pick results could not be saved.");
-    }
-
-    const { data: survivorPicks, error: survivorPicksError } = gameIds.length
-      ? await supabaseAdmin
-          .from("survivor_picks")
-          .select("id, survivor_entry_id, game_id, selected_team_id")
-          .in("game_id", gameIds)
-          .eq("result", "pending")
-      : { data: [], error: null };
-
-    if (survivorPicksError) {
-      throw new Error("Survivor picks could not be loaded for grading.");
-    }
-
-    const survivorUpdates = (survivorPicks ?? []).map((pick) => {
-      const game = gameById.get(pick.game_id);
-      return {
-        id: pick.id,
-        entryId: pick.survivor_entry_id,
-        gameId: pick.game_id,
-        scoringPeriodId: game?.scoring_period_id,
-        result: game
-          ? gradeSurvivorPick({
-              selectedTeamId: pick.selected_team_id,
-              awayTeamId: game.away_team_id,
-              homeTeamId: game.home_team_id,
-              awayScore: game.awayScore,
-              homeScore: game.homeScore,
-            })
-          : "pending",
-      };
-    }).filter((update) => update.result !== "pending");
-
-    const survivorPickIdsByResult = new Map<string, string[]>();
-    for (const update of survivorUpdates) {
-      const ids = survivorPickIdsByResult.get(update.result) ?? [];
-      ids.push(update.id);
-      survivorPickIdsByResult.set(update.result, ids);
-    }
-    const survivorGradeResults = await Promise.all(
-      [...survivorPickIdsByResult.entries()].map(([result, ids]) =>
-        supabaseAdmin.from("survivor_picks").update({ result }).in("id", ids),
-      ),
-    );
-    if (survivorGradeResults.some((gradeResult) => gradeResult.error)) {
-      throw new Error("Survivor pick results could not be saved.");
-    }
-
-    const eliminatedEntries = survivorUpdates.filter((update) => update.result === "loss");
-    const eliminationResults = await Promise.all(
-      eliminatedEntries.map((update) =>
-        supabaseAdmin
-          .from("survivor_entries")
-          .update({
-            status: "eliminated",
-            eliminated_scoring_period_id: update.scoringPeriodId,
-            eliminated_game_id: update.gameId,
-            eliminated_at: checkedAt,
-          })
-          .eq("id", update.entryId)
-          .eq("status", "active"),
-      ),
-    );
-    if (eliminationResults.some((result) => result.error)) {
-      throw new Error("Eliminated Survivor entries could not be saved.");
-    }
-
-    if (finalizedGames.length > 0) {
-      const { error: auditError } = await supabaseAdmin
-        .from("audit_logs")
-        .insert(
-          finalizedGames.map((game) => ({
-            actor_player_id: null,
-            action: "final_score_imported",
-            entity_type: "game",
-            entity_id: game.id,
-            details: {
-              away_score: game.awayScore,
-              home_score: game.homeScore,
-              picks_graded: gradeUpdates.filter(
-                (update) =>
-                  (picks ?? []).find((pick) => pick.id === update.id)
-                    ?.game_id === game.id,
-              ).length,
-            },
-          })),
-        );
-
-      if (auditError) {
-        warnings.push(
-          "Final scores were saved, but their audit entries could not be recorded.",
-        );
-      }
-    }
-
-    const result = {
-      checkedAt,
-      eligibleGames: eligibleGames.length,
-      providerChecked: true,
-      completedGamesFound: completedEvents.length,
-      finalScoresImported: finalizedGames.length,
-      picksGraded: recoveredGrades.picksGraded + gradeUpdates.length,
-      picksAwaitingLine:
-        recoveredGrades.picksAwaitingLine +
-        ((picks ?? []) as PickRow[]).filter(
-          (pick) => !lineByGameId.has(pick.game_id),
-        ).length,
-      requestsRemaining,
-      warnings,
-      weekRollover,
-    };
-    await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details: result }).eq("id", run.data.id);
-    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "The score sync failed.";
     await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.data.id);

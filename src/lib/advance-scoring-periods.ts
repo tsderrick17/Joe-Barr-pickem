@@ -1,4 +1,5 @@
 import { weekRolloverAt } from "@/lib/week-rollover";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type PeriodRow = {
@@ -30,7 +31,7 @@ export async function advanceScoringPeriods(
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", 2026)
+    .eq("year", CURRENT_SEASON_YEAR)
     .maybeSingle();
 
   if (seasonError || !season) {

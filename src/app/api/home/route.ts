@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -84,12 +85,18 @@ export async function GET(request: NextRequest) {
 
   const {
     data: { user },
+    error: userError,
   } = await authClient.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     return NextResponse.json(
-      { error: "Your sign-in session could not be verified." },
-      { status: 401 },
+      {
+        error:
+          userError && (userError.status ?? 500) >= 500
+            ? "The sign-in service could not be reached."
+            : "Your sign-in session could not be verified.",
+      },
+      { status: userError && (userError.status ?? 500) >= 500 ? 503 : 401 },
     );
   }
 
@@ -103,7 +110,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("seasons")
       .select("id")
-      .eq("year", 2026)
+      .eq("year", CURRENT_SEASON_YEAR)
       .maybeSingle(),
     supabaseAdmin
       .from("players")
@@ -111,6 +118,13 @@ export async function GET(request: NextRequest) {
       .eq("active", true)
       .order("first_name"),
   ]);
+
+  if (viewerResult.error || seasonResult.error) {
+    return NextResponse.json(
+      { error: "The current pool could not be loaded safely." },
+      { status: 503 },
+    );
+  }
 
   const viewer = viewerResult.data;
 
@@ -125,7 +139,7 @@ export async function GET(request: NextRequest) {
 
   if (!season) {
     return NextResponse.json(
-      { error: "The 2026 season has not been set up." },
+      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up.` },
       { status: 404 },
     );
   }
@@ -201,17 +215,28 @@ export async function GET(request: NextRequest) {
   const [gamesResult, teamsResult, historyResult, lockedLinesResult] = await Promise.all([
     gameIds.length
       ? supabaseAdmin.from("games").select("id, kickoff_at").in("id", gameIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     teamIds.length
       ? supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     gameIds.length
       ? supabaseAdmin.from("spread_history").select("game_id, favorite_team_id, spread, captured_at").in("game_id", gameIds).order("captured_at", { ascending: false })
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     gameIds.length
       ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", gameIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
   ]);
+  if (
+    gamesResult.error ||
+    teamsResult.error ||
+    historyResult.error ||
+    lockedLinesResult.error
+  ) {
+    return NextResponse.json(
+      { error: "The weekly Standings details could not be loaded." },
+      { status: 503 },
+    );
+  }
   const games = gamesResult.data;
   const teams = teamsResult.data;
 
