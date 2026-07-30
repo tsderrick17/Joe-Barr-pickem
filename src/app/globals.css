@@ -148,6 +148,7 @@ body {
 .survivor-poker-chip-front img { height: 70%; width: 70%; }
 
 .survivor-poker-chip-back {
+  background: radial-gradient(circle at 35% 27%, #ffffff 0 14%, #fbfaf7 64%, #e7e1d5 100%);
   transform: rotateX(180deg);
 }
 
@@ -199,13 +200,11 @@ body {
 
 @keyframes survivor-chip-toss {
   0% { filter: brightness(1); transform: rotateX(0deg) scale(1); }
-  12% { filter: brightness(1.18); transform: rotateX(180deg) scaleX(1.08) scaleY(.18); }
-  25% { filter: brightness(1.08); transform: rotateX(360deg) scale(1.1); }
-  38% { filter: brightness(1.2); transform: rotateX(540deg) scaleX(1.08) scaleY(.18); }
-  51% { filter: brightness(1.07); transform: rotateX(720deg) scale(1.07); }
-  64% { filter: brightness(1.16); transform: rotateX(900deg) scaleX(1.05) scaleY(.2); }
-  80% { transform: rotateX(1020deg) scale(1.025); }
-  100% { filter: brightness(1); transform: rotateX(1080deg) scale(1); }
+  16% { filter: brightness(1.18); transform: rotateX(180deg) scaleX(1.08) scaleY(.18); }
+  33% { filter: brightness(1.08); transform: rotateX(360deg) scale(1.1); }
+  50% { filter: brightness(1.18); transform: rotateX(540deg) scaleX(1.06) scaleY(.2); }
+  70% { filter: brightness(1.06); transform: rotateX(630deg) scale(1.03); }
+  100% { filter: brightness(1); transform: rotateX(720deg) scale(1); }
 }
 
 @keyframes survivor-chip-lift {
