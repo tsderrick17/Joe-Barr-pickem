@@ -14,7 +14,7 @@ export async function authenticatedProfilePlayer(request: NextRequest) {
 
   const { data: player } = await supabaseAdmin
     .from("players")
-    .select("id, active, notification_email, email_notifications_enabled, email_weekly_enabled, email_final_lines_enabled, email_sunday_final_lines_enabled, email_early_lock_enabled, email_pick_due_enabled, email_weekly_recap_enabled, email_ats_due_enabled, email_survivor_due_enabled, email_custom_enabled")
+    .select("id, active, notification_email, email_notifications_enabled, email_weekly_enabled, email_final_lines_enabled, email_sunday_final_lines_enabled, email_early_lock_enabled, email_pick_due_enabled, email_weekly_recap_enabled, email_ats_due_enabled, email_survivor_due_enabled, email_sunday_early_reveal_enabled, email_sunday_late_reveal_enabled, email_custom_enabled")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 

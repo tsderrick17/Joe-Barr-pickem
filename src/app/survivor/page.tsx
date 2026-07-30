@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { isSurvivorTeamUnavailable } from "@/lib/survivor-availability";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
@@ -17,17 +17,12 @@ type Game = {
 type SurvivorData = {
   week: { name: string; status: string };
   entry: { status: "active" | "eliminated" | "complete"; pick: { game_id: string; selected_team_id: string } | null };
+  champion: { playerId: string; name: string } | null;
   usedTeamIds: string[];
   byeTeams: string[];
   games: Game[];
   error?: string;
 };
-
-function TeamLogo({ team, unavailable }: { team: Team; unavailable?: boolean }) {
-  return <span aria-hidden="true" className={`flex h-12 w-14 shrink-0 items-center justify-center ${unavailable ? "grayscale opacity-55" : ""}`}>
-    <Image alt="" className="h-10 w-12 object-contain" height={40} src={`/team-logos/${team.abbreviation}.png`} width={48} />
-  </span>;
-}
 
 export default function SurvivorPage() {
   const [data, setData] = useState<SurvivorData | null>(null);
@@ -69,15 +64,16 @@ export default function SurvivorPage() {
 
   if (!data) return <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">{message || "Loading The Survivor Wire..."}</main>;
   const eliminated = data.entry.status === "eliminated";
+  const complete = data.entry.status === "complete";
   const currentPick = data.entry.pick && data.games.flatMap((game) => [game.awayTeam, game.homeTeam]).find((team) => team.id === data.entry.pick?.selected_team_id);
 
   return <main className="min-h-screen bg-[#f5f0e6] px-4 py-5 text-[#171719] sm:px-5 sm:py-8 md:px-10"><div className="mx-auto max-w-3xl">
     <header className="border-b-4 border-[#171719] pb-4"><p className="text-[11px] font-bold tracking-[.22em] text-slate-600">STRAIGHT-UP SURVIVOR · {data.week.name.toUpperCase()}</p><h1 className="mt-1 font-serif text-4xl font-black tracking-tight sm:text-5xl">The Survivor Wire</h1><p className="mt-2 max-w-xl text-sm text-slate-700">Pick one outright winner and click &ldquo;Submit&rdquo; at the bottom. Each team may be used once per season.</p>{data.byeTeams.length ? <p className="mt-3 text-[11px] font-bold tracking-[.12em] text-slate-600">BYE THIS WEEK: {data.byeTeams.join(", ")}</p> : null}</header>
-    {eliminated ? <section className="mt-5 border-l-4 border-[#171719] bg-[#e7e1d5] px-4 py-3"><p className="text-xs font-black tracking-[.16em] text-zinc-600">SURVIVOR STATUS</p><h2 className="mt-1 font-serif text-2xl font-black">You have been eliminated.</h2><p className="mt-1 text-sm">The matchups remain available to follow the pool, but your entry is closed.</p></section> : <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950"><p className="font-bold">{currentPick ? `Your ${data.week.name} pick: ${currentPick.name}` : "A Survivor pick is due this week."}</p><p className="mt-1 text-sm">You may change it until that matchup begins.</p></section>}
-    <section className={`mt-7 border-t-4 border-[#171719] ${eliminated ? "grayscale" : ""}`}><div className="flex items-center justify-between border-b border-[#171719] py-3"><h2 className="font-serif text-2xl font-black">This week&apos;s matchups</h2><span className="text-[11px] font-bold tracking-[.16em] text-slate-600">{eliminated ? "VIEW ONLY" : "SELECT ONE"}</span></div><div className="grid grid-cols-2 divide-x divide-[#d1c9ba] border-b border-[#d1c9ba] text-center text-[10px] font-bold tracking-[.16em] text-slate-600"><span className="py-2">AWAY</span><span className="py-2">HOME</span></div><div className="divide-y divide-[#c9c1b2]">
-      {data.games.map((game) => { const started = new Date(game.kickoffAt) <= new Date(); const teams = [game.awayTeam, game.homeTeam]; return <article className="relative bg-[#fbfaf7] py-1" key={game.id}><span className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${helmetShellColor(game.awayTeam.abbreviation)} 0 50%, ${helmetShellColor(game.homeTeam.abbreviation)} 50% 100%)` }} /><div className="grid grid-cols-2 divide-x divide-[#d1c9ba]">{teams.map((team) => { const chosen = selected?.teamId === team.id; const official = data.entry.pick?.selected_team_id === team.id; const unavailable = isSurvivorTeamUnavailable({ teamId: team.id, usedTeamIds: data.usedTeamIds, savedPickTeamId: data.entry.pick?.selected_team_id ?? null, gameStarted: started, entryEliminated: eliminated }); return <button aria-label={`Choose ${team.name}`} aria-pressed={chosen} className={`relative flex min-h-16 items-center justify-center gap-2 px-3 py-2 text-left transition ${chosen ? "bg-[#e8e0d0] ring-2 ring-inset ring-[#171719]" : "hover:bg-[#f2eee6]"} disabled:cursor-not-allowed`} disabled={unavailable} key={team.id} onClick={() => setSelected(chosen ? null : { gameId: game.id, teamId: team.id })} title={unavailable ? `${team.name} is unavailable` : `Choose ${team.name}`} type="button"><TeamLogo team={team} unavailable={unavailable} /><span className="max-w-24 text-xs font-bold leading-4 text-zinc-800">{team.name}</span>{official ? <span aria-label="Official Survivor selection" className="pointer-events-none absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[#171719] bg-[#fffaf0] text-2xl leading-none text-[#171719] shadow-[2px_2px_0_#171719]">★</span> : null}</button>; })}</div></article>; })}
+    {complete ? <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950"><p className="text-xs font-black tracking-[.16em]">SURVIVOR CHAMPION</p><h2 className="mt-1 font-serif text-2xl font-black">Congratulations, {data.champion?.name}!</h2><p className="mt-1 text-sm">The Survivor pool is complete for the season. The Wire remains as the permanent record.</p></section> : eliminated ? <section className="mt-5 border-l-4 border-[#171719] bg-[#e7e1d5] px-4 py-3"><p className="text-xs font-black tracking-[.16em] text-zinc-600">SURVIVOR STATUS</p><h2 className="mt-1 font-serif text-2xl font-black">You have been eliminated.</h2><p className="mt-1 text-sm">The matchups remain available to follow the pool, but your entry is closed.</p></section> : <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950"><p className="font-bold">{currentPick ? `Your ${data.week.name} pick: ${currentPick.name}` : "A Survivor pick is due this week."}</p><p className="mt-1 text-sm">You may change it until that matchup begins.</p></section>}
+    <section className={`mt-7 border-t-4 border-[#171719] ${eliminated || complete ? "grayscale" : ""}`}><div className="flex items-center justify-between border-b border-[#171719] py-3"><h2 className="font-serif text-2xl font-black">This week&apos;s matchups</h2><span className="text-[11px] font-bold tracking-[.16em] text-slate-600">{eliminated || complete ? "VIEW ONLY" : "SELECT ONE"}</span></div><div className="grid grid-cols-2 divide-x divide-[#d1c9ba] border-b border-[#d1c9ba] text-center text-[10px] font-bold tracking-[.16em] text-slate-600"><span className="py-2">AWAY</span><span className="py-2">HOME</span></div><div className="divide-y divide-[#c9c1b2]">
+      {data.games.map((game) => { const started = new Date(game.kickoffAt) <= new Date(); const teams = [game.awayTeam, game.homeTeam]; return <article className="relative bg-[#fbfaf7] py-1" key={game.id}><span className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${helmetShellColor(game.awayTeam.abbreviation)} 0 50%, ${helmetShellColor(game.homeTeam.abbreviation)} 50% 100%)` }} /><div className="grid grid-cols-2 divide-x divide-[#d1c9ba]">{teams.map((team) => { const chosen = selected?.teamId === team.id; const official = data.entry.pick?.selected_team_id === team.id; const unavailable = isSurvivorTeamUnavailable({ teamId: team.id, usedTeamIds: data.usedTeamIds, savedPickTeamId: data.entry.pick?.selected_team_id ?? null, gameStarted: started, entryEliminated: eliminated || complete }); return <button aria-label={`Choose ${team.name}`} aria-pressed={chosen} className="relative flex min-h-16 items-center justify-center gap-2 px-3 py-2 text-left transition hover:bg-[#f2eee6] disabled:cursor-not-allowed" disabled={unavailable} key={team.id} onClick={() => setSelected(chosen ? null : { gameId: game.id, teamId: team.id })} title={unavailable ? `${team.name} is unavailable` : `Choose ${team.name}`} type="button"><SurvivorPokerChip abbreviation={team.abbreviation} official={official} selected={chosen} teamName={team.name} unavailable={unavailable} /><span className="max-w-24 text-xs font-bold leading-4 text-zinc-800">{team.name}</span></button>; })}</div></article>; })}
     </div></section>
-    {!eliminated ? <button className="mt-6 min-h-12 bg-[#1d1d1f] px-6 py-3 font-bold text-white disabled:opacity-50" disabled={saving || !selected} onClick={save} type="button">{saving ? "Saving..." : currentPick ? "Update Survivor pick" : "Submit"}</button> : null}
+    {!eliminated && !complete ? <button className="mt-6 min-h-12 bg-[#1d1d1f] px-6 py-3 font-bold text-white disabled:opacity-50" disabled={saving || !selected} onClick={save} type="button">{saving ? "Saving..." : currentPick ? "Update Survivor pick" : "Submit"}</button> : null}
     {message ? <p className={`mt-4 font-semibold ${messageKind === "success" ? "text-green-800" : "text-red-700"}`}>{message}</p> : null}
   </div></main>;
 }

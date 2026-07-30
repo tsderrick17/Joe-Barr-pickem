@@ -7,6 +7,8 @@ export type ReminderCategory =
   | "early_lock"
   | "pick_due"
   | "weekly_recap"
+  | "sunday_early_reveal"
+  | "sunday_late_reveal"
   | "ats_due"
   | "survivor_due"
   | "custom";

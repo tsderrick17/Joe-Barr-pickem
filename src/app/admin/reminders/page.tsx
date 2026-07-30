@@ -20,6 +20,8 @@ const presets = [
   { category: "early_lock", audience: "all_active", title: "International game locked early", body: "The international matchup has its official line early. Take a look at The Slate when you have a moment.", label: "International early lock" },
   { category: "pick_due", audience: "pick_due", title: "Selections still to be made", body: "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready.", label: "Sunday selections reminder - 11 AM" },
   { category: "pick_due", audience: "pick_due", title: "Selections still to be made", body: "A final reminder before tonight's game: please take a moment to look over anything still waiting for you.", label: "Monday selections reminder - 5 PM" },
+  { category: "sunday_early_reveal", audience: "all_active", title: "Sunday early-window picks are public", body: "The early games are underway. The public Pick'em board is ready to look over whenever you have a moment.", label: "Sunday early-window reveal" },
+  { category: "sunday_late_reveal", audience: "all_active", title: "Sunday late-window picks are public", body: "The late games are underway. The updated public Pick'em board is ready to look over whenever you have a moment.", label: "Sunday late-window reveal" },
   { category: "weekly_recap", audience: "all_active", title: "This week in Joe Barr Pick'em", body: "The final slate, current standings, and Survivor recap are ready to look over. Thanks for being part of the pool.", label: "Weekly recap - Tuesday morning" },
 ] as const;
 
@@ -29,6 +31,8 @@ const reminderTypes = [
   ["sunday_final_lines", "Sunday-only final lines"],
   ["early_lock", "International early lock"],
   ["pick_due", "Selections still to be made"],
+  ["sunday_early_reveal", "Sunday early-window reveal"],
+  ["sunday_late_reveal", "Sunday late-window reveal"],
   ["weekly_recap", "Weekly recap"],
   ["custom", "Commissioner note"],
 ] as const;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
+import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -37,12 +38,14 @@ type HomeData = {
   survivorAvailable: boolean;
   survivorNotice: string | null;
   survivorChampionPlayerId: string | null;
+  survivorComplete: boolean;
+  survivorChampionName: string | null;
   survivorRows: {
     id: string;
     playerId: string;
     firstName: string;
     status: "active" | "eliminated" | "complete";
-    pick: ScoreboardPick | null;
+    pick: (ScoreboardPick & { abbreviation?: string | null }) | null;
     picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
   }[];
   error?: string;
@@ -152,10 +155,7 @@ export default function HomePage() {
 
   const maxPicks = data?.maxPicks ?? 2;
   const picksOwed = Math.max(0, maxPicks - (viewerRow?.picks.length ?? 0));
-  const viewerPicks =
-    viewerRow?.picks
-      .map((pick) => pick.label)
-      .filter((label): label is string => Boolean(label)) ?? [];
+  const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
 
@@ -220,13 +220,13 @@ export default function HomePage() {
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM</p>
               {picksOwed === 0 ? <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">{data.maxPicks} {pickWord(data.maxPicks)} submitted</h3> : <h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">{picksOwed} {pickWord(picksOwed)} due</h3>}
               {picksOwed > 0 ? <p className="mt-2 text-base leading-6 text-slate-700">Make your selections before kickoff.</p> : null}
-              {viewerPicks.length ? <ol className="mt-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((team, index) => <li className="week-status-pick" key={`${team}-${index}`}>{index + 1}. {team}</li>)}</ol> : null}
+              {viewerPicks.length ? <ol className="mt-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((pick, index) => <li className="week-status-pick" key={`${pick.label}-${index}`}>{index + 1}. {pick.label}{pick.isLineLocked && pick.spread ? <strong className="ml-1 font-mono text-teal-700">{pick.spread}</strong> : null}</li>)}</ol> : null}
               <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/board">View The Slate</Link>
             </div>
 
             {data.survivorAvailable ? <div className="week-status-card flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p>
-              {viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-red-700 sm:text-2xl">Eliminated</h3><p className="mt-2 text-base leading-6 text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made: {viewerSurvivor.pick.label}</h3><p className="mt-2 text-base leading-6 text-slate-700">You can change it until that game begins.</p></> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made</h3><p className="mt-2 text-base leading-6 text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">1 pick due</h3><p className="mt-2 text-base leading-6 text-slate-700">Choose one straight-up winner before kickoff.</p></>}
+              {data.survivorComplete ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Congratulations, {data.survivorChampionName}!</h3><p className="mt-2 text-base leading-6 text-slate-700">The Survivor pool is complete for the season.</p></> : viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-red-700 sm:text-2xl">Eliminated</h3><p className="mt-2 text-base leading-6 text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <><div className="mt-2 flex items-center gap-2"><SurvivorPokerChip abbreviation={viewerSurvivor.pick.abbreviation ?? "NFL"} official size="summary" teamName={viewerSurvivor.pick.label} /><h3 className="font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made: {viewerSurvivor.pick.label}</h3></div><p className="mt-2 text-base leading-6 text-slate-700">You can change it until that game begins.</p></> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made</h3><p className="mt-2 text-base leading-6 text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">1 pick due</h3><p className="mt-2 text-base leading-6 text-slate-700">Choose one straight-up winner before kickoff.</p></>}
               <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/survivor">View Survivor Wire</Link>
             </div> : null}
           </div>
@@ -338,8 +338,8 @@ export default function HomePage() {
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
               <div className="min-w-[55.5rem]">
                 <div className="grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
-                  <span aria-hidden="true" className="py-2" />
-                  <span className="px-2 py-2 text-left">PLAYER</span>
+                  <span aria-hidden="true" className="survivor-sticky-status py-2" />
+                  <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
                   {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
                 </div>
                 {data.survivorRows.map((row) => {
@@ -347,8 +347,8 @@ export default function HomePage() {
 
                   return (
                   <div className={`grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "viewer-row bg-[#fffaf0]" : ""}`} key={row.id}>
-                    <span className={`text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-                    <span className={`truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}{row.playerId === data.survivorChampionPlayerId ? <span aria-label="Reigning Survivor champion" className="ml-1 font-sans text-sm no-underline" title="Reigning Survivor champion">🏆</span> : null}</span>
+                    <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
+                    <span className={`survivor-sticky-name truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}{row.playerId === data.survivorChampionPlayerId ? <span aria-label="Reigning Survivor champion" className="ml-1 font-sans text-sm no-underline" title="Reigning Survivor champion">🏆</span> : null}</span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
                       return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;

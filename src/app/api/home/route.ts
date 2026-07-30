@@ -255,6 +255,10 @@ export async function GET(request: NextRequest) {
       (player) => player.first_name.trim().toLocaleLowerCase() === "john",
     )?.id ??
     null;
+  const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
+  const survivorChampionName = championSeason?.survivor_champion_player_id
+    ? players.find((player) => player.id === championSeason.survivor_champion_player_id)?.first_name ?? "Survivor champion"
+    : null;
   const games = gamesResult.data;
   const teams = teamsResult.data;
 
@@ -474,6 +478,10 @@ return {
                       ? survivorTeamById.get(pick.selected_team_id)?.name ??
                         "Unknown team"
                       : null,
+                    abbreviation: visible
+                      ? survivorTeamById.get(pick.selected_team_id)?.abbreviation ??
+                        null
+                      : null,
                     isHidden: !visible,
                     resultMark:
                       visible && pick.result === "win"
@@ -516,5 +524,7 @@ return {
     survivorNotice,
     survivorRows,
     survivorChampionPlayerId,
+    survivorComplete,
+    survivorChampionName,
   });
 }

@@ -109,9 +109,9 @@ export default function SiteNav() {
 
   return (
     <nav className="border-b-2 border-black bg-[#171719] text-[#f5f0e6]">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:px-5 sm:py-4 md:px-10">
+      <div className="site-nav-shell mx-auto max-w-6xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
         <Link
-          className="font-serif leading-none text-[#f5f0e6]"
+          className="site-nav-brand font-serif leading-none text-[#f5f0e6]"
           href="/"
         >
           <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[#e4ded2] md:text-xs">
@@ -122,7 +122,7 @@ export default function SiteNav() {
           </span>
         </Link>
 
-        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:gap-x-7 md:text-base">
+        <div className="site-nav-links flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:gap-x-6 md:text-base">
           <Link className={linkStyle("/")} href="/">
             Standings
           </Link>
@@ -141,6 +141,9 @@ export default function SiteNav() {
             </Link>
           ) : null}
 
+        </div>
+
+        <div className="site-nav-account flex items-center justify-end gap-3">
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
@@ -156,9 +159,9 @@ export default function SiteNav() {
           {playerName ? (
             <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
               <div className="flex items-center justify-end gap-3">
-                <Link className={linkStyle("/profile")} href="/profile">
+                <a className={linkStyle("/profile")} href="/profile">
                   Preferences
-                </Link>
+                </a>
 
                 <button
                   type="button"

@@ -92,7 +92,7 @@ async function survivorContext(request: NextRequest) {
 
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
-    .select("id")
+    .select("id, survivor_champion_player_id")
     .eq("year", CURRENT_SEASON_YEAR)
     .maybeSingle();
   if (seasonError) return { error: "The current season could not be loaded.", status: 503 as const };
@@ -202,7 +202,8 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     week: { id: context.period.id, name: context.period.display_name, status: context.period.status },
-    entry: { status: context.entry.status, pick: myPick },
+    entry: { status: context.season.survivor_champion_player_id ? "complete" : context.entry.status, pick: myPick },
+    champion: context.season.survivor_champion_player_id ? { playerId: context.season.survivor_champion_player_id, name: nameByPlayerId.get(context.season.survivor_champion_player_id) ?? "Survivor champion" } : null,
     usedTeamIds: [...new Set(usedPicks.map((pick) => pick.selected_team_id))],
     byeTeams,
     games: games.map((game) => ({
@@ -233,6 +234,9 @@ export async function POST(request: NextRequest) {
   }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
+  if (context.season.survivor_champion_player_id) {
+    return NextResponse.json({ error: "Survivor is complete for the season." }, { status: 409 });
+  }
   let body: { gameId?: string; teamId?: string };
 
   try {

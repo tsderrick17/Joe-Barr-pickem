@@ -24,7 +24,6 @@ export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Pro
     <section className="py-4 sm:py-5">
       <div className="mb-2 flex items-end justify-between gap-3">
         <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM THIS WEEK</p>
-        <p className="text-[10px] font-bold tracking-[0.14em] text-slate-500">W = TOTAL WINS</p>
       </div>
       <div className="border-y-2 border-[#1d1d1f]">
         <table className="w-full table-fixed border-collapse text-left tabular-nums">

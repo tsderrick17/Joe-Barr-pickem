@@ -11,6 +11,8 @@ type Profile = {
   emailSundayFinalLinesEnabled: boolean;
   emailEarlyLockEnabled: boolean;
   emailPickDueEnabled: boolean;
+  emailSundayEarlyRevealEnabled: boolean;
+  emailSundayLateRevealEnabled: boolean;
   emailWeeklyRecapEnabled: boolean;
   emailCustomEnabled: boolean;
 };
@@ -21,6 +23,8 @@ const choices = [
   { key: "sundayFinalLines" as const, title: "Sunday only - final lines at 8:30 AM", note: "A Sunday-only alternative to final lines on every game day." },
   { key: "earlyLock" as const, title: "International game locks early", note: "A heads-up when an international matchup has an earlier official lock." },
   { key: "pickDue" as const, title: "Selections still to be made", note: "A reminder Sunday at 11 AM and Monday at 5 PM, only if you still need to act." },
+  { key: "sundayEarlyReveal" as const, title: "Sunday early-window reveal", note: "A Sunday standings update after the early games begin, showing public selections only." },
+  { key: "sundayLateReveal" as const, title: "Sunday late-window reveal", note: "A second Sunday standings update after the late games begin, showing public selections only." },
   { key: "weeklyRecap" as const, title: "Weekly recap", note: "Tuesday morning—Monday during the playoffs—with the final slate, standings, and Survivor result." },
   { key: "custom" as const, title: "Commissioner notes", note: "Occasional practical pool updates." },
 ];
@@ -29,7 +33,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [enabled, setEnabled] = useState(false);
-  const [preferences, setPreferences] = useState({ weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDue: true, weeklyRecap: true, custom: true });
+  const [preferences, setPreferences] = useState({ weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDue: true, sundayEarlyReveal: false, sundayLateReveal: false, weeklyRecap: true, custom: true });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -43,7 +47,7 @@ export default function ProfilePage() {
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data); setEmail(data.notificationEmail); setEnabled(data.emailNotificationsEnabled);
-        setPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, sundayFinalLines: data.emailSundayFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
+        setPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, sundayFinalLines: data.emailSundayFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, sundayEarlyReveal: data.emailSundayEarlyRevealEnabled, sundayLateReveal: data.emailSundayLateRevealEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, custom: data.emailCustomEnabled });
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
         else if (active) setError(reason instanceof Error ? reason.message : "Your notification settings could not be loaded.");
@@ -55,10 +59,10 @@ export default function ProfilePage() {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(""); setMessage("");
     try {
-      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom }) });
+      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom }) });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom });
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailCustomEnabled: preferences.custom });
       setMessage(data.message ?? "Email choices saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");

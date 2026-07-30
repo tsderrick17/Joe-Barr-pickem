@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     emailWeeklyRecapEnabled: player.email_weekly_recap_enabled,
     emailAtsDueEnabled: player.email_ats_due_enabled,
     emailSurvivorDueEnabled: player.email_survivor_due_enabled,
+    emailSundayEarlyRevealEnabled: player.email_sunday_early_reveal_enabled,
+    emailSundayLateRevealEnabled: player.email_sunday_late_reveal_enabled,
     emailCustomEnabled: player.email_custom_enabled,
   });
 }
@@ -29,7 +31,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailCustomEnabled?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -60,6 +62,8 @@ export async function PUT(request: NextRequest) {
       email_weekly_recap_enabled: preference(body.emailWeeklyRecapEnabled, player.email_weekly_recap_enabled),
       email_ats_due_enabled: preference(body.emailAtsDueEnabled, player.email_ats_due_enabled),
       email_survivor_due_enabled: preference(body.emailSurvivorDueEnabled, player.email_survivor_due_enabled),
+      email_sunday_early_reveal_enabled: preference(body.emailSundayEarlyRevealEnabled, player.email_sunday_early_reveal_enabled),
+      email_sunday_late_reveal_enabled: preference(body.emailSundayLateRevealEnabled, player.email_sunday_late_reveal_enabled),
       email_custom_enabled: preference(body.emailCustomEnabled, player.email_custom_enabled),
       notification_preferences_updated_at: new Date().toISOString(),
     })
