@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle(),
     supabaseAdmin
       .from("seasons")
-      .select("id")
+      .select("id, survivor_champion_player_id")
       .eq("year", CURRENT_SEASON_YEAR)
       .maybeSingle(),
     supabaseAdmin
@@ -238,6 +238,15 @@ export async function GET(request: NextRequest) {
       { status: 503 },
     );
   }
+
+  // The 2026 launch predates the first historical-season record. Keep John as
+  // the inaugural displayed holder until this season crowns its own winner.
+  const survivorChampionPlayerId =
+    season.survivor_champion_player_id ??
+    players.find(
+      (player) => player.first_name.trim().toLocaleLowerCase() === "john",
+    )?.id ??
+    null;
   const games = gamesResult.data;
   const teams = teamsResult.data;
 
@@ -498,5 +507,6 @@ return {
     survivorAvailable,
     survivorNotice,
     survivorRows,
+    survivorChampionPlayerId,
   });
 }
