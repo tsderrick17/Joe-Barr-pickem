@@ -94,11 +94,21 @@ body {
   perspective: 700px;
 }
 
+.survivor-poker-chip::before {
+  border: 1px dashed color-mix(in srgb, var(--chip-primary) 58%, #fffdf8);
+  border-radius: 50%;
+  content: "";
+  inset: .24rem;
+  opacity: .7;
+  pointer-events: none;
+  position: absolute;
+}
+
 .survivor-poker-chip-core {
   display: grid;
   height: calc(100% - .55rem);
   transform-style: preserve-3d;
-  transition: transform 420ms cubic-bezier(.2,.75,.2,1), filter 220ms ease;
+  transition: filter 220ms ease;
   width: calc(100% - .55rem);
 }
 
@@ -127,10 +137,22 @@ body {
   text-shadow: 0 1px 1px rgba(0,0,0,.55);
 }
 
-.survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core,
-.survivor-poker-chip[data-state="official"] .survivor-poker-chip-core { transform: rotateY(180deg); }
+.survivor-poker-chip-pick-mark {
+  background: color-mix(in srgb, var(--chip-primary) 86%, #171719);
+  border: 1px solid color-mix(in srgb, var(--chip-secondary) 72%, #fffdf8);
+  border-radius: 999px;
+  bottom: .04rem;
+  color: #fffdf8;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: .42rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+  padding: .16rem .25rem;
+  position: absolute;
+}
 
-.survivor-poker-chip[data-state="picked"] { box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 2px rgba(238,183,65,.35), 0 0 13px rgba(222,158,30,.46); }
+.survivor-poker-chip[data-state="picked"] { border-color: #d69a20; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 
 .survivor-poker-chip[data-state="official"] { border-color: #16877f; box-shadow: 0 1px 0 rgba(255,255,255,.75) inset, 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
 
@@ -153,9 +175,14 @@ body {
 }
 
 .survivor-poker-chip-summary { height: 2.65rem; width: 2.65rem; }
-.survivor-poker-chip-summary[data-state="official"] .survivor-poker-chip-core { transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
+
+html[data-theme="night"] .survivor-selection-footer {
+  border-color: #6ed7ca !important;
+  background: #0f1d25 !important;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .survivor-poker-chip-core { transition: none; }
