@@ -72,6 +72,17 @@ body {
   color: #3f6867 !important;
 }
 
+.selection-chip {
+  border-color: #4c9e96 !important;
+  background: linear-gradient(135deg, #eff8f4, #dbece5) !important;
+  color: #163d3d;
+  box-shadow: inset 3px 0 0 #16877f, 0 1px 2px rgba(22, 61, 61, 0.12);
+}
+
+.selection-chip button {
+  color: #3f6867 !important;
+}
+
 .newspaper-clipping {
   position: relative;
   isolation: isolate;
