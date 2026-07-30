@@ -12,13 +12,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -50,4 +43,89 @@ body {
 
 .survivor-clipping {
   background-color: #ece5d5;
+}
+
+/* A restrained late-night sportsbook palette. Page components retain their
+   newspaper proportions; the theme only swaps paper, ink, and line colors. */
+html[data-theme="night"] {
+  --background: #0b1117;
+  --foreground: #e8ece7;
+  color-scheme: dark;
+}
+
+html[data-theme="night"] body {
+  background: #0b1117;
+  color: #e8ece7;
+}
+
+html[data-theme="night"] main,
+html[data-theme="night"] [class*="bg-[#f7f3e8]"] {
+  background-color: #0b1117 !important;
+}
+
+html[data-theme="night"] [class*="bg-[#fffaf0]"],
+html[data-theme="night"] [class*="bg-[#fffdf8]"],
+html[data-theme="night"] [class*="bg-[#fbfaf7]"],
+html[data-theme="night"] [class*="bg-[#f5f0e6]"] {
+  background-color: #121b22 !important;
+}
+
+html[data-theme="night"] [class*="bg-[#e9e0cd]"],
+html[data-theme="night"] [class*="bg-[#e9e2d3]"],
+html[data-theme="night"] [class*="bg-[#e8e0d0]"],
+html[data-theme="night"] [class*="bg-[#e7e1d5]"],
+html[data-theme="night"] [class*="bg-[#eee4d1]"],
+html[data-theme="night"] [class*="bg-[#f0eadc]"],
+html[data-theme="night"] [class*="bg-[#f2eee6]"] {
+  background-color: #18252d !important;
+}
+
+html[data-theme="night"] [class*="bg-[#edf7ef]"] {
+  background-color: #102a27 !important;
+}
+
+html[data-theme="night"] [class*="text-zinc-900"],
+html[data-theme="night"] [class*="text-[#171719]"],
+html[data-theme="night"] [class*="text-[#171717]"],
+html[data-theme="night"] [class*="text-[#29251d]"] {
+  color: #edf1eb !important;
+}
+
+html[data-theme="night"] [class*="text-slate-"],
+html[data-theme="night"] [class*="text-zinc-"],
+html[data-theme="night"] [class*="text-[#324564]"],
+html[data-theme="night"] [class*="text-[#425574]"] {
+  color: #b7c3cb !important;
+}
+
+html[data-theme="night"] [class*="text-teal-"] {
+  color: #78d8cb !important;
+}
+
+html[data-theme="night"] [class*="border-[#1d1d1f]"],
+html[data-theme="night"] [class*="border-[#171719]"],
+html[data-theme="night"] [class*="border-black"] {
+  border-color: #6ed7ca !important;
+}
+
+html[data-theme="night"] [class*="border-[#b7aea0]"],
+html[data-theme="night"] [class*="border-[#b9b09d]"],
+html[data-theme="night"] [class*="border-[#c8c1b5]"],
+html[data-theme="night"] [class*="border-[#d1c9ba]"],
+html[data-theme="night"] [class*="border-[#91afd0]"] {
+  border-color: #314651 !important;
+}
+
+html[data-theme="night"] .newspaper-clipping,
+html[data-theme="night"] .survivor-clipping {
+  border-color: #52646b;
+  background-color: #152028;
+  background-image:
+    linear-gradient(90deg, rgba(120, 216, 203, 0.06), transparent 20%, transparent 80%, rgba(120, 216, 203, 0.06)),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(152, 176, 184, 0.06) 3px 4px);
+  box-shadow: 2px 3px 0 rgba(4, 8, 12, 0.72), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="night"] .newspaper-clipping::after {
+  border-color: rgba(120, 216, 203, 0.18);
 }

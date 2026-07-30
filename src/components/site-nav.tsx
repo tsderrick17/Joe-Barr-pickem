@@ -12,6 +12,18 @@ export default function SiteNav() {
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isNightMode, setIsNightMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("pickem-theme");
+    const nightMode = savedTheme === "night";
+    document.documentElement.dataset.theme = nightMode ? "night" : "day";
+    const frame = window.requestAnimationFrame(() => {
+      setIsNightMode(nightMode);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -88,6 +100,13 @@ export default function SiteNav() {
     }
   }
 
+  function toggleTheme() {
+    const nextNightMode = !isNightMode;
+    document.documentElement.dataset.theme = nextNightMode ? "night" : "day";
+    window.localStorage.setItem("pickem-theme", nextNightMode ? "night" : "day");
+    setIsNightMode(nextNightMode);
+  }
+
   return (
     <nav className="border-b-2 border-black bg-[#171719] text-[#f5f0e6]">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:px-5 sm:py-4 md:px-10">
@@ -121,6 +140,17 @@ export default function SiteNav() {
               Commissioner
             </Link>
           ) : null}
+
+          <button
+            aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
+            aria-pressed={isNightMode}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#6d6a64] bg-[#25272a] text-base text-[#b9e5da] transition hover:border-[#82d5c7] hover:bg-[#30363b] focus:outline-none focus:ring-2 focus:ring-[#82d5c7]"
+            onClick={toggleTheme}
+            title={isNightMode ? "Use light mode" : "Use dark mode"}
+            type="button"
+          >
+            <span aria-hidden="true">{isNightMode ? "☀" : "☾"}</span>
+          </button>
 
           {playerName ? (
             <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
