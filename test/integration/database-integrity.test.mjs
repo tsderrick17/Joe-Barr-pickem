@@ -14,6 +14,7 @@ test("isolated database enforces atomic ATS and Survivor grading", { skip: !conf
   const name = `Integration ${token}`;
   let seasonId;
   let playerId;
+  let noPickPlayerId;
   let teamIds = [];
 
   try {
@@ -74,6 +75,14 @@ test("isolated database enforces atomic ATS and Survivor grading", { skip: !conf
     assert.equal(playerError, null, playerError?.message);
     playerId = player.id;
 
+    const { data: noPickPlayer, error: noPickPlayerError } = await admin
+      .from("players")
+      .insert({ first_name: `${name} No Pick` })
+      .select("id")
+      .single();
+    assert.equal(noPickPlayerError, null, noPickPlayerError?.message);
+    noPickPlayerId = noPickPlayer.id;
+
     const { error: entryError } = await admin.rpc("ensure_survivor_entries", { target_season_id: seasonId });
     assert.equal(entryError, null, entryError?.message);
     const { data: entry, error: entryLoadError } = await admin
@@ -126,6 +135,24 @@ test("isolated database enforces atomic ATS and Survivor grading", { skip: !conf
       .eq("id", game.id);
     assert.equal(pastKickoffError, null, pastKickoffError?.message);
 
+    const { data: noPickResult, error: noPickError } = await admin.rpc(
+      "eliminate_survivor_no_picks",
+      { evaluated_at: new Date().toISOString() },
+    );
+    assert.equal(noPickError, null, noPickError?.message);
+    assert.equal(noPickResult[0].entries_eliminated, 1);
+    const { data: noPickEntry } = await admin
+      .from("survivor_entries")
+      .select("status, eliminated_scoring_period_id, eliminated_game_id")
+      .eq("player_id", noPickPlayerId)
+      .eq("season_id", seasonId)
+      .single();
+    assert.deepEqual(noPickEntry, {
+      status: "eliminated",
+      eliminated_scoring_period_id: period.id,
+      eliminated_game_id: null,
+    });
+
     const { data: finalization, error: finalizationError } = await admin.rpc("finalize_games_atomically", {
       final_games: [{ game_id: game.id, away_score: 24, home_score: 17 }],
     });
@@ -140,6 +167,7 @@ test("isolated database enforces atomic ATS and Survivor grading", { skip: !conf
   } finally {
     if (seasonId) await admin.from("seasons").delete().eq("id", seasonId);
     if (playerId) await admin.from("players").delete().eq("id", playerId);
+    if (noPickPlayerId) await admin.from("players").delete().eq("id", noPickPlayerId);
     if (teamIds.length) await admin.from("teams").delete().in("id", teamIds);
   }
 });

@@ -4,6 +4,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
+import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 
 export const dynamic = "force-dynamic";
 
@@ -126,9 +127,12 @@ async function survivorContext(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     await voidDisruptedPicks();
+    await eliminateSurvivorNoPicks();
   } catch {
-    // Read-only Survivor access remains available; submissions fail closed.
-    console.error("Disrupted-game check failed while loading Survivor.");
+    return NextResponse.json(
+      { error: "Survivor status could not be verified safely. Please try again." },
+      { status: 503 },
+    );
   }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
@@ -223,8 +227,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await voidDisruptedPicks();
+    await eliminateSurvivorNoPicks();
   } catch {
-    return NextResponse.json({ error: "Survivor disruption checks could not be completed." }, { status: 503 });
+    return NextResponse.json({ error: "Survivor status could not be verified safely." }, { status: 503 });
   }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });

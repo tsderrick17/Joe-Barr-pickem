@@ -5,6 +5,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 
 export const dynamic = "force-dynamic";
 
@@ -345,16 +346,19 @@ return {
   }> = [];
   let survivorGames: GameRow[] = [];
 
-  const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
-    target_season_id: season.id,
-  });
+  const [ensuredEntries, noPickEvaluation] = await Promise.all([
+    supabaseAdmin.rpc("ensure_survivor_entries", {
+      target_season_id: season.id,
+    }),
+    eliminateSurvivorNoPicks().catch(() => null),
+  ]);
 
-  if (ensuredEntries.error) {
+  if (ensuredEntries.error || !noPickEvaluation) {
     survivorAvailable = false;
     survivorNotice =
       "Survivor is temporarily unavailable. ATS standings remain current.";
     console.error("Survivor enrollment failed.", {
-      code: ensuredEntries.error.code,
+      code: ensuredEntries.error?.code ?? "no-pick-evaluation-failed",
     });
   } else {
     const [

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
+import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 
 type TeamRow = {
   id: string;
@@ -63,6 +64,7 @@ function atsResultForTeam(
 export async function GET(request: NextRequest) {
   try {
     await voidDisruptedPicks();
+    await eliminateSurvivorNoPicks();
   } catch {
     // Read-only board access must remain available. Pick saves still fail closed
     // if this integrity check cannot run.

@@ -6,6 +6,7 @@ import {
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
+import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 
 type Score = { name: string; score: string | number | null };
 type ScoreEvent = {
@@ -42,6 +43,7 @@ export type ScoreSyncResult = {
   requestsRemaining: string | null;
   warnings: string[];
   weekRollover: WeekRolloverResult;
+  survivorNoPickEliminations: number;
 };
 
 function parseScore(value: string | number | null | undefined) {
@@ -152,6 +154,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   const now = new Date(checkedAt);
   const warnings: string[] = [];
   await voidDisruptedPicks();
+  const noPickResult = await eliminateSurvivorNoPicks(checkedAt);
   const recoveredGrades = await recoverPendingFinalPickGrades();
   const weekRollover = await advanceScoringPeriods(now);
   const providerLookbackStart = new Date(
@@ -189,6 +192,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     requestsRemaining: null,
     warnings,
     weekRollover,
+    survivorNoPickEliminations: noPickResult.entries_eliminated,
   };
   const shouldRecordRollover =
     weekRollover.action === "activated" ||
@@ -255,6 +259,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
         requestsRemaining,
         warnings,
         weekRollover,
+        survivorNoPickEliminations: noPickResult.entries_eliminated,
       };
       await supabaseAdmin
         .from("sync_runs")
@@ -345,6 +350,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
         requestsRemaining,
         warnings,
         weekRollover: completedWeekRollover,
+        survivorNoPickEliminations: noPickResult.entries_eliminated,
       };
       await supabaseAdmin
         .from("sync_runs")
