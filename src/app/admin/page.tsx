@@ -66,7 +66,7 @@ type ImportResult = {
 
 const commissionerPanels = [
   ["overview", "Overview", "Daily status, player tools, and connected services"],
-  ["game-day", "Game day", "Readiness, official lines, final scores, and reconciliation"],
+  ["game-day", "Gameday", "Readiness, official lines, final scores, and reconciliation"],
   ["season-setup", "Season setup", "Review odds and bring in a new schedule"],
   ["integrity", "Integrity", "Read-only audits and rare game exceptions"],
 ] as const;

@@ -11,7 +11,7 @@ const steps = [
 export default function GameDayPlaybook() {
   return <section className="border-b-2 border-zinc-900 py-8">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div><h2 className="font-serif text-2xl font-bold">Game Day Playbook</h2><p className="mt-2 text-zinc-700">Use this order for manual verification. Scheduled automation remains the primary path.</p></div>
+      <div><h2 className="font-serif text-2xl font-bold">Gameday Playbook</h2><p className="mt-2 text-zinc-700">Use this order for manual verification. Scheduled automation remains the primary path.</p></div>
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-600">Readiness → Lock → Grade → Review</p>
     </div>
     <ol className="mt-5 grid gap-3 sm:grid-cols-2">

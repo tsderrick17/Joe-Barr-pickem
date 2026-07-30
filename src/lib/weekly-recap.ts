@@ -131,7 +131,7 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
   const now = new Date();
   const day = easternDate(now);
   const { data: period, error: periodError } = await supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle();
-  if (periodError || !period) throw new Error("An active week is not available for the game-day Slate.");
+  if (periodError || !period) throw new Error("An active week is not available for the gameday Slate.");
   const { data: games, error: gamesError } = await supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at").eq("scoring_period_id", period.id).order("kickoff_at");
   if (gamesError) throw new Error("Today’s Slate could not be prepared.");
   const dayGames = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
@@ -149,7 +149,7 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
     return { time: easternTime(game.kickoff_at), away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", favorite: line?.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line?.locked_spread ?? 0) };
   }) };
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
-  if (error) throw new Error("The game-day Slate receipt could not be saved.");
+  if (error) throw new Error("The gameday Slate receipt could not be saved.");
   return snapshot;
 }
 

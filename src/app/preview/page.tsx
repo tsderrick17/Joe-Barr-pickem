@@ -239,7 +239,7 @@ export default function PreviewPage() {
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
               <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] sm:gap-5">
-                <div><p>Lines lock at 8 AM ET on game day, unless otherwise noted.</p><p className="mt-1"><span className="font-semibold text-teal-700">Teal lines</span> are official and will not change.</p></div>
+                <div><p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p><p className="mt-1"><span className="font-semibold text-[#006b8f]">Blue lines</span> are official and will not change.</p></div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><p>Favorites left; home team ALL CAPS.</p><p className="mt-1 whitespace-nowrap">Choose TWO teams and click Save below.</p><p className="mt-1">Changes allowed until kickoff time.</p></div>
               </div>
               <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold">EARLY GAME: London kickoff is Sunday at 9:30 AM ET.</p>
