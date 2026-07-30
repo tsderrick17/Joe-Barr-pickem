@@ -245,7 +245,7 @@ html[data-theme="night"] .survivor-selection-footer {
 @media (prefers-reduced-motion: reduce) {
   .survivor-poker-chip[data-state="picked"] { animation: none !important; transform: none; }
   .survivor-poker-chip-core { animation: none !important; transition: none; }
-  .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core { transform: rotateX(180deg); }
+  .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core { transform: none; }
 }
 
 .viewer-row .survivor-sticky-status,
