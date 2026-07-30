@@ -209,25 +209,25 @@ export default function HomePage() {
           </p>
         </header>
 
-        <section className="border-b-2 border-[#1d1d1f] py-5 sm:py-6">
-          <div className={`grid gap-5 ${data.survivorAvailable ? "md:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)]" : "md:grid-cols-[10rem_minmax(0,1fr)]"}`}>
-            <div className="md:pt-1">
+        <section className="border-b-2 border-[#1d1d1f] py-4 sm:py-5">
+          <div className={`grid gap-4 ${data.survivorAvailable ? "md:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)]" : "md:grid-cols-[10rem_minmax(0,1fr)]"}`}>
+            <div className="week-status-week md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">THIS WEEK</p>
               <h2 className="mt-1 font-serif text-2xl font-bold sm:text-3xl">{data.week}</h2>
             </div>
 
-            <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
+            <div className="week-status-card flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM</p>
               {picksOwed === 0 ? <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">{data.maxPicks} {pickWord(data.maxPicks)} submitted</h3> : <h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">{picksOwed} {pickWord(picksOwed)} due</h3>}
               {picksOwed > 0 ? <p className="mt-2 text-base leading-6 text-slate-700">Make your selections before kickoff.</p> : null}
-              {viewerPicks.length ? <ol className="mt-2 space-y-1 font-serif text-base leading-6 sm:text-lg">{viewerPicks.map((team, index) => <li key={`${team}-${index}`}>{index + 1}. {team}</li>)}</ol> : null}
-              <Link className="mt-4 inline-block min-h-11 w-full bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/board">View The Slate</Link>
+              {viewerPicks.length ? <ol className="mt-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((team, index) => <li className="week-status-pick" key={`${team}-${index}`}>{index + 1}. {team}</li>)}</ol> : null}
+              <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/board">View The Slate</Link>
             </div>
 
-            {data.survivorAvailable ? <div className="flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
+            {data.survivorAvailable ? <div className="week-status-card flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
               <p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p>
               {viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-red-700 sm:text-2xl">Eliminated</h3><p className="mt-2 text-base leading-6 text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made: {viewerSurvivor.pick.label}</h3><p className="mt-2 text-base leading-6 text-slate-700">You can change it until that game begins.</p></> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made</h3><p className="mt-2 text-base leading-6 text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">1 pick due</h3><p className="mt-2 text-base leading-6 text-slate-700">Choose one straight-up winner before kickoff.</p></>}
-              <Link className="mt-4 inline-block min-h-11 w-full bg-[#1d1d1f] px-5 py-3 text-center font-bold text-white md:mt-auto" href="/survivor">View Survivor Wire</Link>
+              <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/survivor">View Survivor Wire</Link>
             </div> : null}
           </div>
         </section>

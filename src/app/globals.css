@@ -83,6 +83,41 @@ body {
   color: #3f6867 !important;
 }
 
+/* The standings summary is an information rail, not a second dashboard. */
+.week-status-week {
+  align-self: start;
+}
+
+.week-status-pick {
+  border: 1px solid #8cb9b2;
+  background: #edf5f0;
+  color: #214747;
+  padding: 0.2rem 0.45rem;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.week-status-action {
+  border: 1px solid #2b6666;
+  background: linear-gradient(145deg, #3f8b85, #255f63);
+  color: #f4fbf7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 0 #173c40;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.week-status-action:hover {
+  border-color: #1e5054;
+  background: linear-gradient(145deg, #55a49c, #2e7174);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 3px 0 #173c40, 0 5px 12px rgba(36, 95, 99, 0.2);
+  transform: translateY(-1px);
+}
+
+.week-status-action:active {
+  box-shadow: inset 0 2px 5px rgba(7, 38, 41, 0.35);
+  transform: translateY(1px);
+}
+
 .newspaper-clipping {
   position: relative;
   isolation: isolate;
@@ -205,6 +240,25 @@ html[data-theme="night"] .selection-chip button {
 html[data-theme="night"] .selection-chip button:hover {
   background-color: #472d35 !important;
   color: #ffb4bd !important;
+}
+
+html[data-theme="night"] .week-status-pick {
+  border-color: #5fc8bb;
+  background: #1b3941;
+  color: #eaf8f3;
+}
+
+html[data-theme="night"] .week-status-action {
+  border-color: #78d8cb;
+  background: linear-gradient(145deg, #347d79, #1c4e57);
+  color: #f1fffb;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 0 #071116, 0 0 10px rgba(120, 216, 203, 0.12);
+}
+
+html[data-theme="night"] .week-status-action:hover {
+  border-color: #b0f2e5;
+  background: linear-gradient(145deg, #4c9e98, #27616b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 0 #071116, 0 0 16px rgba(120, 216, 203, 0.24);
 }
 
 html[data-theme="night"] .slate-team-selection,
