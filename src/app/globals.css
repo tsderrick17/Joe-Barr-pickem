@@ -59,6 +59,19 @@ body {
   box-shadow: inset 4px 0 0 #16877f, inset 0 0 0 1px rgba(22, 135, 127, 0.18);
 }
 
+/* A selected ATS team reads like a marked betting ticket, not an inverted
+   black block that fights the newspaper slate. */
+.slate-team-selection {
+  border: 1px solid #4c9e96;
+  background: linear-gradient(135deg, #eff8f4, #dbece5) !important;
+  color: #163d3d !important;
+  box-shadow: inset 4px 0 0 #16877f, 0 1px 2px rgba(22, 61, 61, 0.16);
+}
+
+.slate-team-selection .text-slate-200 {
+  color: #3f6867 !important;
+}
+
 .newspaper-clipping {
   position: relative;
   isolation: isolate;
