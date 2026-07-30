@@ -91,6 +91,23 @@ html[data-theme="night"] .viewer-row {
   box-shadow: inset 4px 0 0 #7ee1d2, inset 0 0 0 1px rgba(126, 225, 210, 0.28);
 }
 
+html[data-theme="night"] select {
+  border-color: #6ed7ca !important;
+  background-color: #172731 !important;
+  color: #f0f5f1 !important;
+  color-scheme: dark;
+}
+
+html[data-theme="night"] select:focus {
+  outline: 2px solid #7ee1d2;
+  outline-offset: 2px;
+}
+
+html[data-theme="night"] select option {
+  background-color: #172731;
+  color: #f0f5f1;
+}
+
 html[data-theme="night"] [class*="text-zinc-900"],
 html[data-theme="night"] [class*="text-[#171719]"],
 html[data-theme="night"] [class*="text-[#171717]"],
