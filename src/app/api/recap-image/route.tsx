@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       ...snapshot,
       survivor: {
         ...snapshot.survivor,
-        rows: snapshot.survivor.rows.filter((row) => row.status === "IN"),
+        rows: snapshot.survivor.rows.filter((row) => row.status === "IN" || row.eliminatedInRecapWeek),
       },
     };
   }
