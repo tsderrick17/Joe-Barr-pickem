@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle(),
     supabaseAdmin
       .from("seasons")
-      .select("id, survivor_champion_player_id")
+      .select("id")
       .eq("year", CURRENT_SEASON_YEAR)
       .maybeSingle(),
     supabaseAdmin
@@ -168,6 +168,14 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  // A trophy is decorative, never a reason to make the whole pool
+  // unavailable while a production migration is still catching up.
+  const { data: championSeason } = await supabaseAdmin
+    .from("seasons")
+    .select("survivor_champion_player_id")
+    .eq("id", season.id)
+    .maybeSingle();
 
   const periodIds = periods.map((period) => period.id);
 
@@ -242,7 +250,7 @@ export async function GET(request: NextRequest) {
   // The 2026 launch predates the first historical-season record. Keep John as
   // the inaugural displayed holder until this season crowns its own winner.
   const survivorChampionPlayerId =
-    season.survivor_champion_player_id ??
+    championSeason?.survivor_champion_player_id ??
     players.find(
       (player) => player.first_name.trim().toLocaleLowerCase() === "john",
     )?.id ??
