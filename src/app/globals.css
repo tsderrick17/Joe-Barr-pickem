@@ -66,7 +66,7 @@ body {
 .survivor-sticky-name {
   align-items: center;
   align-self: stretch;
-  background: #f5f0e6;
+  background-color: var(--survivor-row-bg, #f5f0e6);
   display: flex;
   position: sticky;
   z-index: 4;
@@ -78,9 +78,9 @@ body {
 }
 
 .survivor-sticky-name {
+  border-right: 1px solid rgba(23, 23, 25, .09);
   justify-content: flex-start;
   left: 3rem;
-  box-shadow: 6px 0 7px -8px rgba(23, 23, 25, 0.5);
 }
 
 .survivor-poker-chip {
@@ -248,14 +248,33 @@ html[data-theme="night"] .survivor-selection-footer {
   .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core { transform: none; }
 }
 
-.viewer-row .survivor-sticky-status,
-.viewer-row .survivor-sticky-name {
-  background: #e6f2ee;
+.survivor-standings-header {
+  --survivor-row-bg: #ebe3d4;
+  background-color: var(--survivor-row-bg);
+}
+
+.survivor-standings-row {
+  --survivor-row-bg: #f5f0e6;
+  background-color: var(--survivor-row-bg);
+}
+
+.survivor-standings-row.is-alt {
+  --survivor-row-bg: #f0eadf;
+}
+
+.survivor-standings-row .survivor-sticky-status,
+.survivor-standings-row .survivor-sticky-name {
+  background-image: repeating-linear-gradient(0deg, rgba(23, 23, 25, .018) 0 1px, transparent 1px 4px);
 }
 
 .viewer-row {
-  background-color: #e6f2ee !important;
-  box-shadow: inset 4px 0 0 #16877f, inset 0 0 0 1px rgba(22, 135, 127, 0.18);
+  --survivor-row-bg: #e6f2ee;
+  background-color: var(--survivor-row-bg) !important;
+  box-shadow: inset 0 0 0 1px rgba(22, 135, 127, 0.18);
+}
+
+.viewer-row .survivor-sticky-status {
+  box-shadow: inset 4px 0 0 #16877f;
 }
 
 /* A selected ATS team reads like a marked betting ticket, not an inverted
@@ -474,18 +493,39 @@ html[data-theme="night"] .survivor-team-selection span {
 /* Your own scorecard row gets a quiet teal ticket treatment in night mode,
    instead of disappearing into the alternating table surfaces. */
 html[data-theme="night"] .viewer-row {
+  --survivor-row-bg: #16333a;
   background-color: #16333a !important;
-  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 0 0 1px rgba(126, 225, 210, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
 }
 
 html[data-theme="night"] .survivor-sticky-status,
 html[data-theme="night"] .survivor-sticky-name {
-  background: #101c24;
+  background-color: var(--survivor-row-bg, #101c24);
+}
+
+html[data-theme="night"] .survivor-standings-header {
+  --survivor-row-bg: #17242c;
+}
+
+html[data-theme="night"] .survivor-standings-row {
+  --survivor-row-bg: #101c24;
+}
+
+html[data-theme="night"] .survivor-standings-row.is-alt {
+  --survivor-row-bg: #13232b;
+}
+
+html[data-theme="night"] .survivor-standings-row.viewer-row {
+  --survivor-row-bg: #16333a;
 }
 
 html[data-theme="night"] .viewer-row .survivor-sticky-status,
 html[data-theme="night"] .viewer-row .survivor-sticky-name {
-  background: #16333a;
+  background-color: var(--survivor-row-bg);
+}
+
+html[data-theme="night"] .viewer-row .survivor-sticky-status {
+  box-shadow: inset 4px 0 0 #7ee1d2;
 }
 
 html[data-theme="night"] .slate-selection-footer [class*="text-slate-"] {

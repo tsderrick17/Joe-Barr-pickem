@@ -338,16 +338,16 @@ export default function HomePage() {
           {data.survivorAvailable ? (
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
               <div className="min-w-[55.5rem]">
-                <div className="grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+                <div className="survivor-standings-header grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
                   <span aria-hidden="true" className="survivor-sticky-status py-2" />
                   <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
                   {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
                 </div>
-                {data.survivorRows.map((row) => {
+                {data.survivorRows.map((row, rowIndex) => {
                   const isViewer = row.playerId === data.viewerPlayerId;
 
                   return (
-                  <div className={`grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${isViewer ? "viewer-row bg-[#fffaf0]" : ""}`} key={row.id}>
+                  <div className={`survivor-standings-row grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
                     <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
                     <span className={`survivor-sticky-name truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}{row.playerId === data.survivorChampionPlayerId ? <span aria-label="Reigning Survivor champion" className="ml-1 font-sans text-sm no-underline" title="Reigning Survivor champion">🏆</span> : null}</span>
                     {Array.from({ length: 18 }, (_, index) => {
