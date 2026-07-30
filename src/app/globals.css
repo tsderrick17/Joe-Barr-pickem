@@ -157,6 +157,28 @@ html[data-theme="night"] [class*="bg-zinc-900"] {
   background-color: #1c4146 !important;
 }
 
+html[data-theme="night"] .slate-selection-footer {
+  border-color: #6ed7ca !important;
+  background-color: #0f1d25 !important;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="night"] .selection-chip {
+  border-color: #5fc8bb !important;
+  background-color: #1a3942 !important;
+  color: #f0f5f1;
+  box-shadow: inset 2px 0 0 #7ee1d2;
+}
+
+html[data-theme="night"] .selection-chip button {
+  color: #b9d4d2 !important;
+}
+
+html[data-theme="night"] .selection-chip button:hover {
+  background-color: #472d35 !important;
+  color: #ffb4bd !important;
+}
+
 /* Your own scorecard row gets a quiet teal ticket treatment in night mode,
    instead of disappearing into the alternating table surfaces. */
 html[data-theme="night"] .viewer-row {
