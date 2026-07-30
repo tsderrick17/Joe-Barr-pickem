@@ -98,9 +98,10 @@ after update of status on public.survivor_entries
 for each row
 execute function public.refresh_survivor_champion_after_entry_change();
 
--- Covers a deployment made after a season has already narrowed to one entry.
-select public.refresh_survivor_champion(id)
-from public.seasons;
+-- The trigger above handles every future elimination. We intentionally do not
+-- invoke the function across every historic season during deployment: old
+-- schemas can contain seasons from before Survivor entries were introduced,
+-- and a deploy must never be blocked by archival data.
 
 revoke all on function public.refresh_survivor_champion(uuid, timestamptz)
   from public, anon, authenticated;
