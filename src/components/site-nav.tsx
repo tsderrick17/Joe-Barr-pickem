@@ -144,12 +144,13 @@ export default function SiteNav() {
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#6d6a64] bg-[#25272a] text-base text-[#b9e5da] transition hover:border-[#82d5c7] hover:bg-[#30363b] focus:outline-none focus:ring-2 focus:ring-[#82d5c7]"
+            className="theme-toggle flex h-9 w-9 items-center justify-center rounded-full"
+            data-active={isNightMode}
             onClick={toggleTheme}
             title={isNightMode ? "Use light mode" : "Use dark mode"}
             type="button"
           >
-            <span aria-hidden="true">{isNightMode ? "☀" : "☾"}</span>
+            <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
           </button>
 
           {playerName ? (
