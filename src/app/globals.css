@@ -183,6 +183,17 @@ html[data-theme="night"] .selection-chip button:hover {
   color: #ffb4bd !important;
 }
 
+html[data-theme="night"] .slate-team-selection,
+html[data-theme="night"] .survivor-team-selection {
+  background: linear-gradient(135deg, #276d70, #15333b) !important;
+  color: #f2fffb !important;
+  box-shadow: inset 3px 0 0 #8be9dc, inset 0 0 0 1px rgba(139, 233, 220, 0.38), 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="night"] .survivor-team-selection span {
+  color: #f2fffb !important;
+}
+
 /* Your own scorecard row gets a quiet teal ticket treatment in night mode,
    instead of disappearing into the alternating table surfaces. */
 html[data-theme="night"] .viewer-row {
