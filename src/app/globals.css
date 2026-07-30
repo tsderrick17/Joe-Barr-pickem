@@ -178,6 +178,15 @@ body {
   z-index: 4;
 }
 
+.survivor-poker-chip[data-state="picked"]:not(.survivor-poker-chip-summary) .survivor-poker-chip-pick-mark {
+  animation: survivor-pick-mark-reveal 720ms cubic-bezier(.16,.76,.2,1) both;
+}
+
+@keyframes survivor-pick-mark-reveal {
+  0%, 78% { opacity: 0; transform: translateY(.35rem) scale(.72); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .survivor-poker-chip[data-state="picked"] { border-color: #d69a20; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 
 .survivor-poker-chip[data-state="picked"]:not(.survivor-poker-chip-summary) {
