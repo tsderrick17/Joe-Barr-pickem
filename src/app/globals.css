@@ -729,11 +729,14 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-wins {
   border-right: 2px solid var(--scorepad-red);
-  font-family: Georgia, serif;
-  font-size: 1.15rem;
-  font-weight: 800;
+  /* A narrow score margin, like the hand-written totals beside a ruled pad. */
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: 1.08rem;
+  font-weight: 700;
   line-height: 1;
-  text-align: center;
+  padding-right: .7rem !important;
+  text-align: right;
+  width: clamp(5.25rem, 12vw, 10rem);
 }
 
 .pickem-ledger-player {
@@ -760,7 +763,7 @@ html[data-theme="night"] .survivor-selection-footer {
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
   .pickem-ledger-row td { padding: .62rem .75rem; }
-  .pickem-ledger-wins { font-size: 1.35rem; }
+  .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: .94rem; }
 }
 
