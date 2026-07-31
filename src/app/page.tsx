@@ -227,24 +227,6 @@ export default function HomePage() {
     }
   }
 
-  async function setChatDisplay(show: boolean) {
-    setSavingDisplay(true);
-    try {
-      const response = await fetchWithSession("/api/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ showPoolChat: show }),
-      });
-      if (!response.ok) throw new Error("Unable to save that display choice.");
-      setData((current) => current ? { ...current, showPoolChat: show } : current);
-      window.dispatchEvent(new CustomEvent("pool-chat-visibility", { detail: show }));
-    } catch {
-      setErrorMessage("That display choice could not be saved. Please try again.");
-    } finally {
-      setSavingDisplay(false);
-    }
-  }
-
   if (errorMessage && !data) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
@@ -395,7 +377,7 @@ export default function HomePage() {
         ) : null}
 
         {!data.isPlayoff ? <section className="pickem-ledger survivor-ledger py-6 sm:py-7">
-          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><div className="flex items-center gap-2"><p className="pickem-ledger-period">{data.week.toUpperCase()}</p><button aria-expanded={data.showPoolChat} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setChatDisplay(!data.showPoolChat)} type="button">{data.showPoolChat ? "Hide Chat" : "Show Chat"}</button></div></div>
+          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
           {data.showSurvivorStandings && data.survivorAvailable ? (
             <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">

@@ -43,8 +43,17 @@ export default function PoolChatDock() {
     if (response.ok) setShowChat(true);
   }
 
+  async function hideChat() {
+    const response = await fetchWithSession("/api/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showPoolChat: false }),
+    });
+    if (response.ok) setShowChat(false);
+  }
+
   if (pathname === "/login" || pathname.startsWith("/preview") || pathname.startsWith("/admin")) return null;
   if (showChat === null) return null;
   if (!showChat) return <div className="pool-chat-dock"><div className="mx-auto flex max-w-5xl justify-end"><button className="pool-display-toggle" onClick={() => void restoreChat()} type="button">Show pool chat</button></div></div>;
-  return <div className="pool-chat-dock"><PoolChat /></div>;
+  return <div className="pool-chat-dock"><div className="mx-auto mb-1 flex max-w-5xl justify-end"><button className="pool-display-toggle" onClick={() => void hideChat()} type="button">Hide chat</button></div><PoolChat /></div>;
 }
