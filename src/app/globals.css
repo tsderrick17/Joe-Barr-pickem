@@ -126,10 +126,11 @@ body {
   align-items: center;
   display: inline-flex;
   gap: .45rem;
-  margin: 1.05rem 0 -.35rem;
   user-select: none;
   width: fit-content;
 }
+
+.slate-view-switch--header { margin-top: 1.35rem; }
 
 .slate-view-switch > span {
   color: #687179;

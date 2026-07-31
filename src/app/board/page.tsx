@@ -618,6 +618,12 @@ export default function BoardPage() {
                   </option>
                 ))}
               </select>
+
+              <div className={`slate-view-switch slate-view-switch--header ${showActionOnly ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
+                <span className={!showActionOnly ? "is-active" : ""}>ALL GAMES</span>
+                <button aria-checked={showActionOnly} aria-label={showActionOnly ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
+                <span className={showActionOnly ? "is-active" : ""}>POOL ACTION</span>
+              </div>
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
@@ -737,11 +743,6 @@ export default function BoardPage() {
                 </div>
               </section>
             ) : null}
-            <div className={`slate-view-switch ${showActionOnly ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-              <span className={!showActionOnly ? "is-active" : ""}>ALL GAMES</span>
-              <button aria-checked={showActionOnly} aria-label={showActionOnly ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
-              <span className={showActionOnly ? "is-active" : ""}>POOL ACTION</span>
-            </div>
             {showActionOnly && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}
