@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function SiteNav() {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement | null>(null);
 
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
@@ -69,6 +70,30 @@ export default function SiteNav() {
     };
   }, [pathname]);
 
+  // The Slate's small receipt bar sits directly beneath this navigation on
+  // phones. Measure the real rendered height so account links or a wrapped
+  // brand never cause the two sticky bars to overlap.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const syncHeight = () => {
+      document.documentElement.style.setProperty(
+        "--site-nav-height",
+        `${Math.ceil(nav.getBoundingClientRect().height)}px`,
+      );
+    };
+
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(nav);
+    window.addEventListener("resize", syncHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeight);
+    };
+  }, []);
+
   if (pathname === "/login") {
     return null;
   }
@@ -108,7 +133,7 @@ export default function SiteNav() {
   }
 
   return (
-    <nav className="border-b-2 border-black bg-[#171719] text-[#f5f0e6]">
+    <nav className="site-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6]" ref={navRef}>
       <div className="site-nav-shell mx-auto max-w-6xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
         <Link
           className="site-nav-brand font-serif leading-none text-[#f5f0e6]"

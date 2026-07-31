@@ -119,6 +119,12 @@ body {
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
 @media (max-width: 767px) {
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
   /* This lives outside the Slate header so it can remain in view while a
      player works through a long mobile slate. */
   .slate-mini-nav {
@@ -127,7 +133,7 @@ body {
     margin-left: -.5rem;
     margin-right: -.5rem;
     position: sticky;
-    top: 0;
+    top: var(--site-nav-height, 7rem);
     z-index: 40;
   }
 
