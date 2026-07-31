@@ -1693,6 +1693,7 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 
 .pool-chat-message:last-child { border-bottom: 0; }
 .pool-chat-message.is-deleted { color: #7b7368; font-style: italic; }
+.pool-chat-message.is-moderator { border-left: 3px solid #b88a19; padding-left: .55rem; }
 
 .pool-chat-message-meta {
   align-items: baseline;
@@ -1705,10 +1706,27 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 }
 
 .pool-chat-message-meta strong { color: #34415a; font-size: .76rem; letter-spacing: 0; }
+.pool-chat-message-meta span { color: #8c6612; font-size: .5rem; font-weight: 900; letter-spacing: .11em; }
 .pool-chat-message-meta button { color: #7f858d; font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
 .pool-chat-message-meta button:hover { color: #a82820; text-decoration: underline; }
 
 html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
+
+.pool-display-toggle {
+  border: 1px solid #77746e;
+  background: #fffdf8;
+  color: #34415a;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  padding: .36rem .52rem;
+  text-transform: uppercase;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: #e7f2ee; border-color: #167d75; color: #075f58; }
+.pool-display-toggle:disabled { cursor: wait; opacity: .6; }
+html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
+html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: #ffffff; }
 
 @media (max-width: 639px) {
   body:has(.slate-selection-footer) .pool-chat-dock { padding-bottom: 12rem; }

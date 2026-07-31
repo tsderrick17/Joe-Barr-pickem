@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     emailSundayLateRevealEnabled: player.email_sunday_late_reveal_enabled,
     emailFeaturedWindowRevealEnabled: player.email_featured_window_reveal_enabled,
     emailCustomEnabled: player.email_custom_enabled,
+    showSurvivorStandings: player.show_survivor_standings,
+    showPoolChat: player.show_pool_chat,
   });
 }
 
@@ -34,16 +36,17 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showPoolChat?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
   }
 
-  const email = typeof body.notificationEmail === "string"
-    ? body.notificationEmail.trim().toLowerCase()
-    : "";
+  const hasEmailUpdate = typeof body.notificationEmail === "string";
+  const email = hasEmailUpdate
+    ? (body.notificationEmail as string).trim().toLowerCase()
+    : player.notification_email ?? "";
   const preference = (value: unknown, current: boolean) => typeof value === "boolean" ? value : current;
   const everyGameDayLines = preference(body.emailFinalLinesEnabled, player.email_final_lines_enabled);
 
@@ -53,8 +56,8 @@ export async function PUT(request: NextRequest) {
   const { error } = await supabaseAdmin
     .from("players")
     .update({
-      notification_email: email || null,
-      email_notifications_enabled: email ? preference(body.emailNotificationsEnabled, player.email_notifications_enabled) : false,
+      notification_email: hasEmailUpdate ? email || null : player.notification_email,
+      email_notifications_enabled: hasEmailUpdate ? (email ? preference(body.emailNotificationsEnabled, player.email_notifications_enabled) : false) : player.email_notifications_enabled,
       email_weekly_enabled: preference(body.emailWeeklyEnabled, player.email_weekly_enabled),
       email_final_lines_enabled: everyGameDayLines,
       email_sunday_final_lines_enabled: everyGameDayLines
@@ -71,6 +74,8 @@ export async function PUT(request: NextRequest) {
       email_sunday_late_reveal_enabled: preference(body.emailSundayLateRevealEnabled, player.email_sunday_late_reveal_enabled),
       email_featured_window_reveal_enabled: preference(body.emailFeaturedWindowRevealEnabled, player.email_featured_window_reveal_enabled),
       email_custom_enabled: true,
+      show_survivor_standings: preference(body.showSurvivorStandings, player.show_survivor_standings),
+      show_pool_chat: preference(body.showPoolChat, player.show_pool_chat),
       notification_preferences_updated_at: new Date().toISOString(),
     })
     .eq("id", player.id);

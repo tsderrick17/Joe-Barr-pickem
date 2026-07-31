@@ -9,6 +9,7 @@ type ChatMessageRow = {
   body: string;
   created_at: string;
   deleted_at: string | null;
+  is_moderator: boolean;
 };
 
 async function currentSeason() {
@@ -25,7 +26,7 @@ async function currentSeason() {
 async function loadMessages(seasonId: string, viewer: { id: string; is_commissioner: boolean }) {
   let query = supabaseAdmin
     .from("pool_chat_messages")
-    .select("id, player_id, body, created_at, deleted_at")
+    .select("id, player_id, body, created_at, deleted_at, is_moderator")
     .eq("season_id", seasonId);
   if (!viewer.is_commissioner) query = query.is("deleted_at", null);
   const { data: messages, error } = await query.order("created_at", { ascending: false }).limit(50);
@@ -47,7 +48,8 @@ async function loadMessages(seasonId: string, viewer: { id: string; is_commissio
       body: message.body,
       createdAt: message.created_at,
       isDeleted: Boolean(message.deleted_at),
-      playerName: names.get(message.player_id) ?? "Player",
+      isModerator: message.is_moderator,
+      playerName: message.is_moderator ? "Commissioner" : names.get(message.player_id) ?? "Player",
       canDelete: !message.deleted_at && (message.player_id === viewer.id || viewer.is_commissioner),
     })),
   };

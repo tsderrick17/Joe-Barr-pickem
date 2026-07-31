@@ -35,6 +35,7 @@ type ScoreboardRow = {
 
 type HomeData = {
   viewerPlayerId: string;
+  showSurvivorStandings: boolean;
   isPlayoff: boolean;
   week: string;
   weekStatus: "upcoming" | "active" | "complete";
@@ -78,6 +79,7 @@ export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
+  const [savingDisplay, setSavingDisplay] = useState(false);
 
   useEffect(() => {
     let revealTimer: number | null = null;
@@ -206,6 +208,23 @@ export default function HomePage() {
         resultMark: survivorResultMark,
       }
     : null;
+
+  async function setSurvivorDisplay(show: boolean) {
+    setSavingDisplay(true);
+    try {
+      const response = await fetchWithSession("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showSurvivorStandings: show }),
+      });
+      if (!response.ok) throw new Error("Unable to save that display choice.");
+      setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
+    } catch {
+      setErrorMessage("That display choice could not be saved. Please try again.");
+    } finally {
+      setSavingDisplay(false);
+    }
+  }
 
   if (errorMessage && !data) {
     return (
@@ -356,11 +375,9 @@ export default function HomePage() {
         ) : null}
 
         {!data.isPlayoff ? <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
-          <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
-            SURVIVOR
-          </p>
+          <div className="flex items-center justify-between gap-4"><p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p><button aria-expanded={data.showSurvivorStandings} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} type="button">{data.showSurvivorStandings ? "Hide Survivor" : "Show Survivor"}</button></div>
 
-          {data.survivorAvailable ? (
+          {data.showSurvivorStandings && data.survivorAvailable ? (
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
               <div className="min-w-[55.5rem]">
                 <div className="survivor-standings-header grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
@@ -384,14 +401,14 @@ export default function HomePage() {
                 })}
               </div>
             </div>
-          ) : (
+          ) : data.showSurvivorStandings ? (
             <div className="mt-4 border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
               <p className="font-bold">
                 {data.survivorNotice ??
                   "Survivor is temporarily unavailable. ATS standings remain current."}
               </p>
             </div>
-          )}
+          ) : <p className="mt-3 text-sm text-slate-600">Survivor standings are hidden for you. This choice is saved to your account.</p>}
         </section> : null}
       </div>
     </main>

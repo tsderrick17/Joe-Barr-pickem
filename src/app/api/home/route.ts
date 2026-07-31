@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
   const [viewerResult, seasonResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("players")
-      .select("id")
+      .select("id, show_survivor_standings")
       .eq("auth_user_id", user.id)
       .eq("active", true)
       .maybeSingle(),
@@ -554,6 +554,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     viewerPlayerId: viewer.id,
+    showSurvivorStandings: viewer.show_survivor_standings,
     isPlayoff: currentWeek.period_type === "playoff",
     week: currentWeek.display_name,
     weekStatus: currentWeek.status,
