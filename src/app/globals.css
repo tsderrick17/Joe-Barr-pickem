@@ -676,6 +676,9 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-period {
   padding-bottom: .08rem;
   text-align: right;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .28em;
 }
 
 .survivor-ledger-masthead h2 { margin: 0; }
