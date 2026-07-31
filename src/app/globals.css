@@ -525,7 +525,14 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
-.survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
+.survivor-poker-chip-wrap-slate {
+  /* The Slate's chip lanes are rectangular; the chip itself is always a
+     true circle sized from the available row height. */
+  aspect-ratio: 1;
+  height: 100%;
+  max-width: 100%;
+  width: auto;
+}
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
@@ -921,7 +928,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button {
   align-items: center;
   align-self: stretch;
-  aspect-ratio: 1;
   background: transparent;
   border: 0;
   border-radius: 50%;
@@ -932,6 +938,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   min-width: 0;
   padding: .04rem;
   transition: filter 160ms ease, transform 160ms ease;
+  width: 100%;
 }
 
 .slate-survivor-chip-button:not(:disabled):hover {
@@ -945,7 +952,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 @media (min-width: 640px) {
   .slate-survivor-chip-button { height: auto; min-width: 0; }
-  .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
+  .survivor-poker-chip-wrap-slate { height: 100%; width: auto; }
 }
 
 .selection-chip {
