@@ -13,7 +13,6 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 import SlateGameRow from "@/components/slate-game-row";
-import SelectionReceipt from "@/components/selection-receipt";
 
 type ScoringPeriod = {
   id: string;
@@ -378,14 +377,8 @@ export default function BoardPage() {
       .filter(Boolean) as { gameId: string; name: string; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
-  const hasUnsavedChanges = useMemo(() => {
-    const survivorChanged =
-      survivorAvailable &&
-      (survivorPick?.gameId !== savedSurvivorPick?.gameId ||
-        survivorPick?.teamId !== savedSurvivorPick?.teamId);
-    if (survivorChanged) return true;
+  const pickemHasUnsavedChanges = useMemo(() => {
     if (selectedPicks.length !== savedPicks.length) return true;
-
     return selectedPicks.some(
       (pick) =>
         !savedPicks.some(
@@ -393,21 +386,11 @@ export default function BoardPage() {
             savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
         ),
     );
-  }, [
-    savedPicks,
-    savedSurvivorPick,
-    selectedPicks,
-    survivorAvailable,
-    survivorPick,
-  ]);
+  }, [savedPicks, selectedPicks]);
 
-  const savedTeams = useMemo(() => savedPicks
-    .map((pick) => {
-      const game = games.find((item) => item.id === pick.gameId);
-      if (!game) return null;
-      return pick.teamId === game.awayTeamId ? game.awayTeam : pick.teamId === game.homeTeamId ? game.homeTeam : null;
-    })
-    .filter((team): team is string => Boolean(team)), [games, savedPicks]);
+  const survivorHasUnsavedChanges = survivorAvailable &&
+    (survivorPick?.gameId !== savedSurvivorPick?.gameId || survivorPick?.teamId !== savedSurvivorPick?.teamId);
+  const hasUnsavedChanges = pickemHasUnsavedChanges || survivorHasUnsavedChanges;
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -425,18 +408,13 @@ export default function BoardPage() {
   const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete" || playoffEliminated;
-  const pickemMiniStatus = isReadOnly
-    ? week?.status === "complete" ? "FINAL" : "OUT"
-    : `${selectedPicks.length}/${selectionLimit} SELECTED`;
-  const survivorMiniStatus = survivorStatus === "complete"
-    ? "COMPLETE"
-    : survivorStatus === "eliminated"
-      ? "OUT"
-      : survivorPick
-        ? "PICK MADE"
-        : survivorAvailable
-          ? "PICK DUE"
-          : "NOT DUE";
+  const survivorTeamName = (pick: SelectedPick | null) => {
+    if (!pick) return "";
+    const game = games.find((item) => item.id === pick.gameId);
+    return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
+  };
+  const pickemReceipt = selectedTeams.map((team) => team.name).join(" · ") || "OPEN";
+  const survivorReceipt = survivorTeamName(survivorPick) || (survivorStatus === "complete" ? "COMPLETE" : survivorStatus === "eliminated" ? "OUT" : "OPEN");
   const hasEarlyGame = games.some(isEarlyGame);
   function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
@@ -659,11 +637,13 @@ export default function BoardPage() {
             </Link>
             <a href="#slate-matchups">
               <span>PICK&apos;EM</span>
-              <strong className={pickemMiniStatus === "FINAL" || pickemMiniStatus === "OUT" ? "is-quiet" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemMiniStatus}</strong>
+              <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemReceipt}</strong>
+              <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
             </a>
             <Link href="/survivor">
               <span>SURVIVOR</span>
-              <strong className={survivorMiniStatus === "PICK DUE" ? "is-due" : survivorMiniStatus === "OUT" ? "is-out" : survivorMiniStatus === "PICK MADE" ? "is-complete" : "is-quiet"}>{survivorMiniStatus}</strong>
+              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
+              <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
             </Link>
           </nav>
 
@@ -675,8 +655,6 @@ export default function BoardPage() {
             <p className="mt-1 text-sm">Your existing selections remain on the Slate for the season&apos;s audit trail. You are not eligible to make further Pick&apos;em selections.</p>
           </section>
         ) : null}
-
-        {!isReadOnly ? <SelectionReceipt heading="PICK'EM RECEIPT" items={selectedTeams.map((team) => team.name)} savedItems={savedTeams} selectionLimit={selectionLimit} /> : null}
 
         {errorMessage ? (
           <div className="mt-8">
