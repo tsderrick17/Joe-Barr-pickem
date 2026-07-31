@@ -1269,29 +1269,36 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-completion {
+  align-self: stretch;
   color: #665e51;
   display: grid;
   gap: .16rem;
+  grid-template-rows: auto 1fr;
 }
 
 .my-ticket-change-note {
+  align-self: start;
   font: 700 .58rem/1.15 Arial, sans-serif;
   letter-spacing: .02em;
 }
 
 .my-ticket-completion > span:last-child {
+  align-self: end;
   color: #a82820;
   font-weight: 900;
 }
 
 .my-ticket-footer > div {
+  align-self: stretch;
   grid-column: 2;
   display: grid;
+  grid-template-rows: auto 1fr;
   justify-items: center;
   line-height: 1;
 }
 
 .my-ticket-footer small {
+  align-self: start;
   color: #665e51;
   font-size: .46rem;
   font-weight: 800;
@@ -1299,6 +1306,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-footer strong {
+  align-self: end;
   color: inherit;
   font: 900 .64rem/1.25 Arial, sans-serif;
   letter-spacing: .08em;

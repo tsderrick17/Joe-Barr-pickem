@@ -94,7 +94,7 @@ export default function MyTicket({
                       </span>
                     </>
                   ) : (
-                    <span className="my-ticket-open">OPEN SELECTION</span>
+                    <span className="my-ticket-open">OPEN</span>
                   )}
                 </li>
               );
