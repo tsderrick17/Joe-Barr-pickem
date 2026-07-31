@@ -1051,6 +1051,7 @@ html[data-theme="night"] .newspaper-clipping::after {
   font-weight: 900;
   justify-content: space-between;
   letter-spacing: .13em;
+  min-height: .76rem;
 }
 
 .my-ticket-section-heading strong {
@@ -1147,7 +1148,8 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-survivor-pick {
-  margin-top: .58rem;
+  /* Matches the Pick'em list gap so both top receipt rules share one line. */
+  margin-top: .35rem;
   border-block: 1px dotted #958a77;
   padding: .7rem 0;
 }
@@ -1171,7 +1173,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-survivor-state {
   border-block: 1px dotted #958a77;
   font: 900 .75rem/1.2 "Courier New", monospace;
-  margin-top: .58rem;
+  margin-top: .35rem;
   padding: .8rem 0;
 }
 
