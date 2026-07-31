@@ -224,7 +224,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+      <div className="mx-auto max-w-5xl px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
         {errorMessage ? (
           <div className="mb-5 flex flex-col gap-3 border-2 border-red-700 bg-red-50 p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
             <p className="font-semibold">{errorMessage}</p>
