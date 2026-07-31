@@ -687,7 +687,7 @@ export default function BoardPage() {
 
         </header>
 
-        <nav aria-label="Your weekly controls" className="slate-mini-nav slate-receipt-grid mt-5">
+        <nav aria-label="Your weekly controls" className="slate-mini-nav slate-receipt-grid">
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
             <strong>VIEW FULL TICKET</strong>

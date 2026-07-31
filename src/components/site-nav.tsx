@@ -132,8 +132,8 @@ export default function SiteNav() {
     setIsNightMode(nextNightMode);
   }
 
-  return (
-    <nav className="site-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6]" ref={navRef}>
+  return <>
+    <nav className="site-nav hidden border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:block" ref={navRef}>
       <div className="site-nav-shell mx-auto max-w-6xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
         <Link
           className="site-nav-brand font-serif leading-none text-[#f5f0e6]"
@@ -205,5 +205,12 @@ export default function SiteNav() {
         </div>
       </div>
     </nav>
-  );
+    <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
+      <div className="mx-auto flex max-w-6xl items-center justify-around px-3 py-2 text-sm">
+        <Link className={linkStyle("/")} href="/">Standings</Link>
+        <Link className={linkStyle("/board")} href="/board">The Slate</Link>
+        <Link className={linkStyle("/survivor")} href="/survivor">Survivor Wire</Link>
+      </div>
+    </nav>
+  </>;
 }

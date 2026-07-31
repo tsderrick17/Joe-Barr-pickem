@@ -117,7 +117,7 @@ body {
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
 @media (max-width: 767px) {
-  .site-nav {
+  .mobile-primary-nav {
     position: sticky;
     top: 0;
     z-index: 50;
@@ -1138,28 +1138,7 @@ html[data-theme="night"] .slate-selection-footer [class*="text-slate-"] {
 }
 
 @media (max-width: 767px) {
-  .site-nav-shell {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .site-nav-links {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    order: 3;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding-bottom: .15rem;
-    scrollbar-width: none;
-  }
-
-  .site-nav-links::-webkit-scrollbar { display: none; }
-  .site-nav-links a { flex: 0 0 auto; }
-
-  .site-nav-account {
-    align-self: start;
-  }
+  .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
 }
 
 html[data-theme="night"] select {
