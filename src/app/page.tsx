@@ -377,7 +377,7 @@ export default function HomePage() {
         ) : null}
 
         {!data.isPlayoff ? <section className="pickem-ledger survivor-ledger py-6 sm:py-7">
-          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
+          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
           {data.showSurvivorStandings && data.survivorAvailable ? (
             <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
