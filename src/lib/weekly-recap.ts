@@ -32,6 +32,14 @@ export type SundayRevealSnapshot = {
   rows: Array<{ name: string; wins: number; picks: string[] }>;
 };
 
+export type PlayoffPublicRevealSnapshot = {
+  kind: "playoff_public_reveal";
+  round: string;
+  window: string;
+  generatedAt: string;
+  rows: Array<{ name: string; wins: number; picks: string[] }>;
+};
+
 export type GameDaySlateSnapshot = {
   kind: "game_day";
   day: string;
@@ -386,5 +394,64 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   };
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The Sunday reveal receipt could not be saved.");
+  return snapshot;
+}
+
+export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, existing: unknown) {
+  if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "playoff_public_reveal") return existing as PlayoffPublicRevealSnapshot;
+
+  const now = new Date();
+  const { data: period, error: periodError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id, season_id, display_name")
+    .eq("period_type", "playoff")
+    .eq("status", "active")
+    .order("display_order")
+    .limit(1)
+    .maybeSingle();
+  if (periodError || !period) throw new Error("An active playoff round is not available for this public-pick update.");
+
+  const [{ data: games, error: gamesError }, { data: seasonPeriods, error: periodsError }, { data: players, error: playersError }] = await Promise.all([
+    supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at, status").eq("scoring_period_id", period.id).order("kickoff_at"),
+    supabaseAdmin.from("scoring_periods").select("id").eq("season_id", period.season_id),
+    supabaseAdmin.from("players").select("id, first_name").eq("active", true),
+  ]);
+  if (gamesError || periodsError || playersError) throw new Error("The playoff public-pick update could not be prepared.");
+
+  const publicGames = (games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status));
+  if (!publicGames.length) throw new Error("No playoff games have reached kickoff yet.");
+
+  const periodIds = (seasonPeriods ?? []).map((item) => item.id);
+  const publicGameIds = new Set(publicGames.map((game) => game.id));
+  const { data: picks, error: picksError } = periodIds.length
+    ? await supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void")
+    : { data: [], error: null };
+  if (picksError) throw new Error("Public playoff selections could not be prepared.");
+
+  const selectedTeamIds = [...new Set((picks ?? []).filter((pick) => publicGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
+  const { data: teams, error: teamsError } = selectedTeamIds.length
+    ? await supabaseAdmin.from("teams").select("id, abbreviation").in("id", selectedTeamIds)
+    : { data: [], error: null };
+  if (teamsError) throw new Error("Public playoff team labels could not be prepared.");
+
+  const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
+  const wins = new Map<string, number>();
+  const picksByPlayer = new Map<string, string[]>();
+  for (const pick of picks ?? []) {
+    if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
+    if (pick.scoring_period_id === period.id && publicGameIds.has(pick.game_id)) {
+      picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), abbreviationById.get(pick.selected_team_id) ?? "NFL"]);
+    }
+  }
+
+  const snapshot: PlayoffPublicRevealSnapshot = {
+    kind: "playoff_public_reveal",
+    round: period.display_name,
+    window: easternDayLabel(new Date(publicGames[publicGames.length - 1].kickoff_at)),
+    generatedAt: now.toISOString(),
+    rows: (players ?? []).map((player) => ({ name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] })).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+  };
+  const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
+  if (error) throw new Error("The playoff public-pick receipt could not be saved.");
   return snapshot;
 }

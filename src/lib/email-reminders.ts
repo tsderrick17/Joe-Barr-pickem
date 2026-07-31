@@ -4,7 +4,7 @@ import {
   type ReminderCategory,
 } from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { ensureEarlyLockSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import { ensureEarlyLockSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 type Reminder = {
   id: string;
@@ -53,6 +53,7 @@ function preferenceColumn(category: ReminderCategory) {
     pick_due: "email_pick_due_enabled",
     weekly_recap: "email_weekly_recap_enabled",
     playoff_day_recap: "email_playoff_day_recap_enabled",
+    playoff_public_reveal: "email_playoff_public_reveal_enabled",
     sunday_early_reveal: "email_sunday_early_reveal_enabled",
     sunday_late_reveal: "email_sunday_late_reveal_enabled",
     featured_window_reveal: "email_featured_window_reveal_enabled",
@@ -83,11 +84,11 @@ function messageHtml(reminder: Reminder) {
       ? `<div style="margin-top:28px"><a href="${siteUrl}/board" style="display:block"><img alt="Today's official Slate" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=gameday" style="display:block;height:auto;width:100%"></a></div>`
       : reminder.category === "early_lock"
         ? `<div style="margin-top:28px"><a href="${siteUrl}/board" style="display:block"><img alt="International game official line" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=earlylock" style="display:block;height:auto;width:100%"></a></div>`
-        : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal"
+        : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "playoff_public_reveal"
           ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Public Pick'em standings and revealed selections" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=reveal" style="display:block;height:auto;width:100%"></a></div>`
         : "";
-  const destination = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`;
-  const callToAction = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? "View standings" : "Open The Slate";
+  const destination = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`;
+  const callToAction = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? "View standings" : "Open The Slate";
   return `<main style="font-family:Georgia,serif;color:#171719;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;margin:8px 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin-top:24px"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Preferences.</a></p></main>`;
 }
 
@@ -213,7 +214,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}`,
+        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
@@ -277,6 +278,7 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
   try {
     if (reminder.category === "weekly_recap") reminder.recap_snapshot = await ensureWeeklyRecapSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "playoff_day_recap") reminder.recap_snapshot = await ensurePlayoffDayRecapSnapshot(reminder.id, reminder.recap_snapshot);
+    if (reminder.category === "playoff_public_reveal") reminder.recap_snapshot = await ensurePlayoffPublicRevealSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "weekly") reminder.recap_snapshot = await ensureFreshSlateSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "final_lines" || reminder.category === "sunday_final_lines") reminder.recap_snapshot = await ensureGameDaySlateSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "early_lock") reminder.recap_snapshot = await ensureEarlyLockSnapshot(reminder.id, reminder.recap_snapshot);

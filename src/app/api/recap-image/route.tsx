@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import type { EarlyLockSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import type { EarlyLockSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const kind = request.nextUrl.searchParams.get("kind");
   if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | PlayoffPublicRevealSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
@@ -51,6 +51,16 @@ export async function GET(request: NextRequest) {
       <div style={{ color: "#475569", display: "flex", fontSize: 19, fontWeight: 800, letterSpacing: 2, marginTop: 18 }}>{snapshot.week.toUpperCase()} · PUBLIC RECEIPTS</div>
       <div style={{ display: "flex", flexDirection: "column", marginTop: 14 }}>{snapshot.rows.map((row, index) => <div key={row.name} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 22, minHeight: 56, padding: "0 12px" }}><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span><span style={{ display: "flex", flex: 1 }}>{row.picks.join(" · ") || "No public picks yet"}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
       <div style={{ borderTop: "3px solid #171719", display: "flex", fontSize: 18, marginTop: "auto", paddingTop: 16 }}>Only selections from games already underway are shown. Future picks remain private.</div>
+    </div>,
+    { width: 1200, height: 1200 },
+  );
+
+  if (kind === "reveal" && snapshot.kind === "playoff_public_reveal") return new ImageResponse(
+    <div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "46px 54px", width: "100%" }}>
+      <div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 20 }}><span style={{ fontFamily: "Georgia", fontSize: 44, fontWeight: 800 }}>Lead Pipe Locks</span><span style={{ color: "#007e72", fontSize: 20, fontWeight: 800, letterSpacing: 2, paddingTop: 18 }}>PLAYOFF PICKS</span></div>
+      <div style={{ color: "#475569", display: "flex", fontSize: 19, fontWeight: 800, letterSpacing: 2, marginTop: 18 }}>{snapshot.round.toUpperCase()} · {snapshot.window.toUpperCase()}</div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 14 }}>{snapshot.rows.map((row, index) => <div key={row.name} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 22, minHeight: 56, padding: "0 12px" }}><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span><span style={{ display: "flex", flex: 1 }}>{row.picks.join(" · ") || "No public picks in this window"}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
+      <div style={{ borderTop: "3px solid #171719", display: "flex", fontSize: 18, marginTop: "auto", paddingTop: 16 }}>Only selections from games already underway are shown. Later playoff picks remain private.</div>
     </div>,
     { width: 1200, height: 1200 },
   );

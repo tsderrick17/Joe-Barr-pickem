@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     emailPickDueEnabled: player.email_pick_due_enabled,
     emailWeeklyRecapEnabled: player.email_weekly_recap_enabled,
     emailPlayoffDayRecapEnabled: player.email_playoff_day_recap_enabled,
+    emailPlayoffPublicRevealEnabled: player.email_playoff_public_reveal_enabled,
     emailAtsDueEnabled: player.email_ats_due_enabled,
     emailSurvivorDueEnabled: player.email_survivor_due_enabled,
     emailSundayEarlyRevealEnabled: player.email_sunday_early_reveal_enabled,
@@ -33,7 +34,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -63,6 +64,7 @@ export async function PUT(request: NextRequest) {
       email_pick_due_enabled: preference(body.emailPickDueEnabled, player.email_pick_due_enabled),
       email_weekly_recap_enabled: preference(body.emailWeeklyRecapEnabled, player.email_weekly_recap_enabled),
       email_playoff_day_recap_enabled: preference(body.emailPlayoffDayRecapEnabled, player.email_playoff_day_recap_enabled),
+      email_playoff_public_reveal_enabled: preference(body.emailPlayoffPublicRevealEnabled, player.email_playoff_public_reveal_enabled),
       email_ats_due_enabled: preference(body.emailAtsDueEnabled, player.email_ats_due_enabled),
       email_survivor_due_enabled: preference(body.emailSurvivorDueEnabled, player.email_survivor_due_enabled),
       email_sunday_early_reveal_enabled: preference(body.emailSundayEarlyRevealEnabled, player.email_sunday_early_reveal_enabled),

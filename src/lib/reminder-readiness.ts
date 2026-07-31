@@ -141,6 +141,30 @@ async function playoffDayRecapReady(): Promise<ReminderReadiness> {
     : { ready: false, reason: "Playoff grades are still being finalized." };
 }
 
+async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
+  const { data: period, error: periodError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id")
+    .eq("period_type", "playoff")
+    .eq("status", "active")
+    .order("display_order")
+    .limit(1)
+    .maybeSingle();
+  if (periodError) throw new Error("The playoff kickoff window could not be checked before sending a public update.");
+  if (!period) return { ready: false, reason: "A playoff round is not active yet." };
+
+  const { count, error } = await supabaseAdmin
+    .from("games")
+    .select("id", { count: "exact", head: true })
+    .eq("scoring_period_id", period.id)
+    .lte("kickoff_at", new Date().toISOString())
+    .not("status", "in", "(postponed,cancelled)");
+  if (error) throw new Error("The playoff kickoff window could not be checked before sending a public update.");
+  return (count ?? 0) > 0
+    ? { ready: true, reason: null }
+    : { ready: false, reason: "The selected playoff window has not reached kickoff yet." };
+}
+
 function easternWeekday(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
 }
@@ -173,6 +197,7 @@ export async function reminderReadiness(category: ReminderCategory): Promise<Rem
   if (category === "early_lock") return earlyLockReady();
   if (category === "weekly_recap") return recapReady();
   if (category === "playoff_day_recap") return playoffDayRecapReady();
+  if (category === "playoff_public_reveal") return playoffPublicRevealReady();
   if (category === "sunday_early_reveal") return sundayRevealReady("early");
   if (category === "sunday_late_reveal") return sundayRevealReady("late");
   return { ready: true, reason: null };
