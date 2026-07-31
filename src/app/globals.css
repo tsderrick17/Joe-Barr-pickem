@@ -98,9 +98,7 @@ body {
 .slate-mini-nav strong {
   font-size: .66rem;
   letter-spacing: .045em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .slate-mini-nav em {
@@ -144,9 +142,16 @@ body {
 }
 
 @media (min-width: 640px) {
-  /* The internal divider shares the receipt's Pick'em/Survivor rule. */
+  /* One rail map serves the Slate title, both instruction columns, and the
+     receipt beneath them. Selections wrap inside their own cells instead of
+     shifting a divider when a long team name appears. */
+  .slate-header-grid,
+  .slate-receipt-grid {
+    grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
+  }
+
   .slate-how-to-grid {
-    grid-template-columns: minmax(0, calc(50% - 1.1rem)) minmax(0, calc(50% + 1.1rem));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
