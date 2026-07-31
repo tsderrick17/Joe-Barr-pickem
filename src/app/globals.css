@@ -1044,6 +1044,18 @@ html[data-theme="night"] .newspaper-clipping::after {
   font-size: .55rem;
 }
 
+.my-ticket-section-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.my-ticket-section-link:hover,
+.my-ticket-section-link:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .18rem;
+}
+
 .my-ticket-picks {
   margin-top: .35rem;
 }
@@ -1071,6 +1083,21 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-selection strong {
   font: 900 .84rem/1.1 "Courier New", monospace;
 }
+
+.my-ticket-result {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-size: .9em;
+  font-weight: 900;
+  line-height: 1;
+  margin-left: .22rem;
+  position: relative;
+  top: -.12rem;
+  transform: rotate(-7deg);
+}
+
+.my-ticket-result.is-w { color: #16834e; }
+.my-ticket-result.is-l { color: #bd3028; }
 
 .my-ticket-selection small {
   color: #665e51;

@@ -180,9 +180,15 @@ export default function HomePage() {
     kickoff: ticketKickoff(pick.kickoffAt),
     spread: pick.isLineLocked ? pick.spread ?? null : null,
     lineLocked: Boolean(pick.isLineLocked),
+    resultMark: pick.resultMark === "W" || pick.resultMark === "L" ? pick.resultMark : "",
   }));
+  const survivorResultMark: "W" | "L" | "" = viewerSurvivor?.pick?.resultMark === "W"
+    ? "W"
+    : viewerSurvivor?.pick?.resultMark === "L"
+      ? "L"
+      : "";
   const ticketSurvivor = viewerSurvivor?.pick?.label
-    ? { team: viewerSurvivor.pick.label }
+    ? { team: viewerSurvivor.pick.label, resultMark: survivorResultMark }
     : null;
 
   if (errorMessage && !data) {

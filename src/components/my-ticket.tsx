@@ -1,13 +1,17 @@
+import Link from "next/link";
+
 export type TicketPick = {
   gameId: string;
   team: string;
   kickoff: string;
   spread: string | null;
   lineLocked: boolean;
+  resultMark?: "W" | "L" | "";
 };
 
 type SurvivorTicket = {
   team: string;
+  resultMark?: "W" | "L" | "";
 } | null;
 
 type Props = {
@@ -19,6 +23,11 @@ type Props = {
   survivorStatus: "active" | "eliminated" | "complete";
   week: string;
 };
+
+function ResultStamp({ result }: { result?: "W" | "L" | "" }) {
+  if (!result) return null;
+  return <span className={`my-ticket-result is-${result.toLowerCase()}`}>{result}</span>;
+}
 
 export default function MyTicket({
   maxPicks,
@@ -49,7 +58,7 @@ export default function MyTicket({
       <div className="my-ticket-columns">
         <div className="my-ticket-section">
           <div className="my-ticket-section-heading">
-            <span>PICK&apos;EM ATS</span>
+            <Link className="my-ticket-section-link" href="/board">PICK&apos;EM ATS</Link>
             <strong>OFFICIAL LINES</strong>
           </div>
           <ol className="my-ticket-picks">
@@ -61,7 +70,7 @@ export default function MyTicket({
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
-                        <strong>{pick.team}</strong>
+                        <strong>{pick.team}<ResultStamp result={pick.resultMark} /></strong>
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
@@ -79,14 +88,13 @@ export default function MyTicket({
 
         <div className="my-ticket-section my-ticket-survivor">
           <div className="my-ticket-section-heading">
-            <span>SURVIVOR</span>
-            <strong>STRAIGHT-UP</strong>
+            <Link className="my-ticket-section-link" href="/survivor">SURVIVOR WINNER</Link>
           </div>
           {survivorPick ? (
             <div className="my-ticket-survivor-pick">
               <div>
                 <small>OFFICIAL SELECTION</small>
-                <strong>{survivorPick.team}</strong>
+                <strong>{survivorPick.team}<ResultStamp result={survivorPick.resultMark} /></strong>
               </div>
             </div>
           ) : survivorStatus === "eliminated" ? (
