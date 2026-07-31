@@ -118,6 +118,14 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
+/* The active save receipt is a true viewport layer. Survivor chips intentionally
+   overlap neighboring Slate rows, but never this confirmation surface. */
+.slate-selection-footer {
+  isolation: isolate;
+  position: fixed !important;
+  z-index: 2147483647 !important;
+}
+
 @media (max-width: 767px) {
   .mobile-primary-nav {
     position: sticky;
