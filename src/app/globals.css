@@ -787,30 +787,38 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .slate-team-label--selected {
-  background: linear-gradient(178deg, transparent 8%, rgba(44, 165, 153, .42) 12%, rgba(44, 165, 153, .42) 84%, transparent 88%);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  margin: 0 -.16em;
-  padding: .02em .16em .06em;
+  background: transparent;
+  margin: 0 -.13em;
+  padding: .04em .13em .08em;
   position: relative;
-  z-index: 0;
+  isolation: isolate;
 }
 
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
-.slate-team-label--selected::after {
-  background: linear-gradient(90deg, rgba(5, 103, 94, .72), rgba(18, 137, 126, .56));
-  border-radius: 58% 22% 20% 54%;
+.slate-team-label--selected::before {
+  background: linear-gradient(90deg, rgba(23, 145, 133, .64), rgba(67, 183, 169, .48));
+  clip-path: polygon(0 16%, 100% 4%, 100% 86%, 0 98%);
   content: "";
-  inset: 13% auto 11% -.2em;
+  inset: 13% -.16em 10%;
   position: absolute;
-  width: .32em;
   z-index: 0;
 }
 
-.slate-team-label--from-right::after {
-  border-radius: 22% 58% 54% 20%;
-  inset: 13% -.2em 11% auto;
+.slate-team-label--selected::after {
+  background: rgba(5, 104, 96, .8);
+  clip-path: polygon(18% 0, 100% 12%, 83% 100%, 0 87%);
+  content: "";
+  height: 1.06em;
+  left: -.22em;
+  position: absolute;
+  top: 2%;
+  transform: rotate(15deg);
+  transform-origin: center;
+  width: .24em;
+  z-index: 0;
 }
 
 .slate-team-name-short { display: none; }
@@ -829,15 +837,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .slate-team-label--new::before {
-  background: linear-gradient(178deg, transparent 8%, rgba(44, 165, 153, .48) 12%, rgba(44, 165, 153, .48) 84%, transparent 88%);
-  clip-path: polygon(0 16%, 100% 5%, 99% 88%, 1% 96%);
-  content: "";
-  inset: -.03em -.2em -.07em;
-  position: absolute;
   will-change: transform;
   transform: scaleX(0);
   transform-origin: left center;
-  z-index: 0;
   animation: slate-selection-sweep 460ms cubic-bezier(.16,.8,.2,1) 35ms both;
 }
 
@@ -1069,15 +1071,15 @@ html[data-theme="night"] .survivor-team-selection {
 }
 
 html[data-theme="night"] .slate-team-label--selected {
-  background: linear-gradient(178deg, transparent 8%, rgba(78, 202, 190, .48) 12%, rgba(78, 202, 190, .48) 84%, transparent 88%);
+  background: transparent;
 }
 
-html[data-theme="night"] .slate-team-label--new::before {
-  background: linear-gradient(178deg, transparent 8%, rgba(78, 202, 190, .54) 12%, rgba(78, 202, 190, .54) 84%, transparent 88%);
+html[data-theme="night"] .slate-team-label--selected::before {
+  background: linear-gradient(90deg, rgba(80, 215, 200, .72), rgba(126, 235, 220, .52));
 }
 
 html[data-theme="night"] .slate-team-label--selected::after {
-  background: linear-gradient(90deg, rgba(112, 235, 221, .78), rgba(69, 187, 178, .62));
+  background: rgba(133, 244, 229, .9);
 }
 
 html[data-theme="night"] .survivor-team-selection span {
