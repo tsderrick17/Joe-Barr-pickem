@@ -82,9 +82,9 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
-    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${feedbackType === "sweep" ? "slate-team-selection--new" : ""} bg-[#1d1d1f] text-white` : allowSelection ? "hover:underline" : ""}`;
+    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const content = <>
-      <span className="block min-w-0 break-normal [hyphens:none]"><span className="slate-team-name-full">{label}</span><span aria-label={label} className="slate-team-name-short">{team.abbreviation}</span><ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
+      <span className="block min-w-0 break-normal [hyphens:none]"><span className={`slate-team-label ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className="slate-team-name-full">{label}</span><span aria-label={label} className="slate-team-name-short">{team.abbreviation}</span></span><ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;

@@ -749,20 +749,35 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 /* A selected ATS team reads like a marked betting ticket, not an inverted
    black block that fights the newspaper slate. */
 .slate-team-selection {
-  border: 0;
-  outline: 1px solid #4c9e96;
-  outline-offset: -1px;
-  background: linear-gradient(135deg, #eff8f4, #dbece5) !important;
+  background: transparent !important;
   color: #163d3d !important;
-  box-shadow: 0 1px 2px rgba(22, 61, 61, 0.16);
-  isolation: isolate;
-  overflow: hidden;
-  position: relative;
 }
 
-.slate-team-selection > * {
+.slate-team-label--selected {
+  background: linear-gradient(178deg, transparent 8%, rgba(44, 165, 153, .42) 12%, rgba(44, 165, 153, .42) 84%, transparent 88%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  margin: 0 -.16em;
+  padding: .02em .16em .06em;
   position: relative;
-  z-index: 1;
+  z-index: 0;
+}
+
+.slate-team-label--selected > span { position: relative; z-index: 1; }
+
+.slate-team-label--selected::after {
+  background: linear-gradient(90deg, rgba(5, 103, 94, .72), rgba(18, 137, 126, .56));
+  border-radius: 58% 22% 20% 54%;
+  content: "";
+  inset: 13% auto 11% -.2em;
+  position: absolute;
+  width: .32em;
+  z-index: 0;
+}
+
+.slate-team-label--from-right::after {
+  border-radius: 22% 58% 54% 20%;
+  inset: 13% -.2em 11% auto;
 }
 
 .slate-team-name-short { display: none; }
@@ -780,38 +795,27 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   .scoreboard-team-name-short { display: inline; }
 }
 
-.slate-team-selection--new {
-  background: transparent !important;
-}
-
-.slate-team-selection--new::before {
-  background: linear-gradient(100deg, #e6f5ef 0%, #eff8f4 58%, #dbece5 100%);
+.slate-team-label--new::before {
+  background: linear-gradient(178deg, transparent 8%, rgba(44, 165, 153, .48) 12%, rgba(44, 165, 153, .48) 84%, transparent 88%);
+  clip-path: polygon(0 16%, 100% 5%, 99% 88%, 1% 96%);
   content: "";
-  inset: 0;
+  inset: -.03em -.2em -.07em;
   position: absolute;
   will-change: transform;
+  transform: scaleX(0);
+  transform-origin: left center;
   z-index: 0;
-  clip-path: inset(0 100% 0 0);
   animation: slate-selection-sweep 460ms cubic-bezier(.16,.8,.2,1) 35ms both;
 }
 
-.slate-team-selection::after {
-  background: #16877f;
-  content: "";
-  inset: -1px auto -1px -1px;
-  position: absolute;
-  width: 5px;
-  z-index: 2;
-}
-
 @keyframes slate-selection-sweep {
-  0% { clip-path: inset(0 100% 0 0); }
-  12% { clip-path: inset(0 94% 0 0); }
-  100% { clip-path: inset(0 0 0 0); }
+  0% { transform: scaleX(0); }
+  12% { transform: scaleX(.05); }
+  100% { transform: scaleX(1); }
 }
 
 @media (max-width: 767px) {
-  .slate-team-selection--new::before {
+  .slate-team-label--new::before {
     animation-duration: 580ms;
   }
 }
@@ -1031,16 +1035,16 @@ html[data-theme="night"] .survivor-team-selection {
   box-shadow: inset 3px 0 0 #8be9dc, inset 0 0 0 1px rgba(139, 233, 220, 0.38), 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
-html[data-theme="night"] .slate-team-selection--new {
-  background: transparent !important;
+html[data-theme="night"] .slate-team-label--selected {
+  background: linear-gradient(178deg, transparent 8%, rgba(78, 202, 190, .48) 12%, rgba(78, 202, 190, .48) 84%, transparent 88%);
 }
 
-html[data-theme="night"] .slate-team-selection--new::before {
-  background: linear-gradient(100deg, #255f63 0%, #276d70 56%, #15333b 100%);
+html[data-theme="night"] .slate-team-label--new::before {
+  background: linear-gradient(178deg, transparent 8%, rgba(78, 202, 190, .54) 12%, rgba(78, 202, 190, .54) 84%, transparent 88%);
 }
 
-html[data-theme="night"] .slate-team-selection::after {
-  background: #8be9dc;
+html[data-theme="night"] .slate-team-label--selected::after {
+  background: linear-gradient(90deg, rgba(112, 235, 221, .78), rgba(69, 187, 178, .62));
 }
 
 html[data-theme="night"] .survivor-team-selection span {
