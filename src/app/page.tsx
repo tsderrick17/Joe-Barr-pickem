@@ -36,6 +36,7 @@ type ScoreboardRow = {
 type HomeData = {
   viewerPlayerId: string;
   showSurvivorStandings: boolean;
+  showPoolChat: boolean;
   isPlayoff: boolean;
   week: string;
   weekStatus: "upcoming" | "active" | "complete";
@@ -226,6 +227,24 @@ export default function HomePage() {
     }
   }
 
+  async function setChatDisplay(show: boolean) {
+    setSavingDisplay(true);
+    try {
+      const response = await fetchWithSession("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showPoolChat: show }),
+      });
+      if (!response.ok) throw new Error("Unable to save that display choice.");
+      setData((current) => current ? { ...current, showPoolChat: show } : current);
+      window.dispatchEvent(new CustomEvent("pool-chat-visibility", { detail: show }));
+    } catch {
+      setErrorMessage("That display choice could not be saved. Please try again.");
+    } finally {
+      setSavingDisplay(false);
+    }
+  }
+
   if (errorMessage && !data) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
@@ -375,7 +394,7 @@ export default function HomePage() {
         ) : null}
 
         {!data.isPlayoff ? <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
-          <div className="flex items-center justify-between gap-4"><p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p><button aria-expanded={data.showSurvivorStandings} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} type="button">{data.showSurvivorStandings ? "Hide Survivor" : "Show Survivor"}</button></div>
+          <div className="flex items-center justify-between gap-4"><p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p><div className="flex items-center gap-2"><button aria-expanded={data.showSurvivorStandings} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} type="button">{data.showSurvivorStandings ? "Hide Survivor" : "Show Survivor"}</button><button aria-expanded={data.showPoolChat} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setChatDisplay(!data.showPoolChat)} type="button">{data.showPoolChat ? "Hide Chat" : "Show Chat"}</button></div></div>
 
           {data.showSurvivorStandings && data.survivorAvailable ? (
             <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
@@ -408,7 +427,7 @@ export default function HomePage() {
                   "Survivor is temporarily unavailable. ATS standings remain current."}
               </p>
             </div>
-          ) : <p className="mt-3 text-sm text-slate-600">Survivor standings are hidden for you. This choice is saved to your account.</p>}
+          ) : null}
         </section> : null}
       </div>
     </main>

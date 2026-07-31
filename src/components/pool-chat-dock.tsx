@@ -25,6 +25,15 @@ export default function PoolChatDock() {
     return () => { current = false; };
   }, []);
 
+  useEffect(() => {
+    const syncVisibility = (event: Event) => {
+      const detail = (event as CustomEvent<boolean>).detail;
+      if (typeof detail === "boolean") setShowChat(detail);
+    };
+    window.addEventListener("pool-chat-visibility", syncVisibility);
+    return () => window.removeEventListener("pool-chat-visibility", syncVisibility);
+  }, []);
+
   async function restoreChat() {
     const response = await fetchWithSession("/api/profile", {
       method: "PUT",
