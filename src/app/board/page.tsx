@@ -738,9 +738,9 @@ export default function BoardPage() {
               </section>
             ) : null}
             <div className={`slate-view-switch ${showActionOnly ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-              <span aria-hidden="true" className="slate-view-switch-thumb" />
-              <button aria-pressed={!showActionOnly} onClick={() => setShowActionOnly(false)} type="button">ALL GAMES</button>
-              <button aria-pressed={showActionOnly} onClick={() => setShowActionOnly(true)} type="button">POOL ACTION</button>
+              <span className={!showActionOnly ? "is-active" : ""}>ALL GAMES</span>
+              <button aria-checked={showActionOnly} aria-label={showActionOnly ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
+              <span className={showActionOnly ? "is-active" : ""}>POOL ACTION</span>
             </div>
             {showActionOnly && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
