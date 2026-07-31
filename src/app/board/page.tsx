@@ -593,8 +593,8 @@ export default function BoardPage() {
     >
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="grid gap-5 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-7">
-            <div className="min-w-0">
+          <div className="grid gap-5 md:grid-cols-3 md:gap-0">
+            <div className="min-w-0 md:pr-7">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
@@ -620,15 +620,15 @@ export default function BoardPage() {
               </select>
             </div>
 
-            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
-              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] sm:gap-5">
+              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-2 sm:gap-0">
                 <div>
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#006b8f]">Blue lines</span> are official and will not change.</p>
                   <p className="mt-1">Selections are revealed to others at kickoff.</p>
                 </div>
-                <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+                <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-7 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
                   <p className="mt-1">
                     {week.period_type === "playoff"
@@ -648,8 +648,8 @@ export default function BoardPage() {
 
           <nav aria-label="Your weekly controls" className="slate-mini-nav mt-5">
             <Link href="/#my-ticket">
-              <span>YOUR TICKET</span>
-              <strong>VIEW RECEIPT</strong>
+              <span>YOUR RECEIPT</span>
+              <strong>VIEW FULL TICKET</strong>
             </Link>
             <a href="#slate-matchups">
               <span>PICK&apos;EM</span>
