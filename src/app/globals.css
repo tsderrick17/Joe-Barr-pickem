@@ -758,7 +758,8 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .pickem-ledger-row td {
-  padding: .5rem .5rem;
+  /* Keep the writing close to its blue rule, like ink on a narrow-ruled pad. */
+  padding: .36rem .35rem;
   vertical-align: middle;
 }
 
@@ -769,7 +770,7 @@ html[data-theme="night"] .survivor-selection-footer {
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
-  padding-right: .7rem !important;
+  padding-right: .5rem !important;
   text-align: right;
 }
 
@@ -803,7 +804,7 @@ html[data-theme="night"] .survivor-selection-footer {
 
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
-  .pickem-ledger-row td { padding: .62rem .75rem; }
+  .pickem-ledger-row td { padding: .44rem .52rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: .94rem; }
 }
