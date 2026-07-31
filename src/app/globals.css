@@ -206,7 +206,7 @@ body {
   cursor: pointer;
   height: .44rem;
   padding: 0;
-  position: relative;
+  position: absolute;
   transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
   width: 1.62rem;
 }
@@ -526,16 +526,13 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
 .survivor-poker-chip-wrap-slate {
-  /* The Slate's chip lanes are rectangular; the chip itself is always a
-     true circle sized from the available row height. */
+  /* The Slate's lanes are rectangular, so the chip gets an explicit square
+     frame. That prevents grid sizing from ever turning the rim into an oval. */
   aspect-ratio: 1;
   filter: drop-shadow(0 .14rem .16rem rgba(23, 23, 25, .26));
   height: 100%;
-  max-width: 100%;
   position: relative;
-  transform: scale(1.14);
-  transform-origin: center;
-  width: auto;
+  width: 100%;
   z-index: 2;
 }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
@@ -944,37 +941,39 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .slate-survivor-chip-button {
   align-items: center;
-  align-self: stretch;
+  align-self: auto;
   background: transparent;
   border: 0;
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
-  height: auto;
+  height: 3.55rem;
   justify-content: center;
+  left: 50%;
   min-width: 0;
   padding: .04rem;
-  position: relative;
-  transform: scale(1.28);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1.12);
   transform-origin: center;
   transition: filter 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
-  width: 100%;
+  width: 3.55rem;
   z-index: 1;
 }
 
 .slate-survivor-chip-button:not(:disabled):hover {
   filter: brightness(1.08) saturate(1.14);
-  transform: translateY(-2px) scale(1.46);
+  transform: translate(-50%, calc(-50% - 2px)) scale(1.28);
   z-index: 12;
 }
 
-.slate-survivor-chip-button:not(:disabled):active { transform: translateY(-1px) scale(1.36); }
+.slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.18); }
 .slate-survivor-chip-button:focus-visible { outline: 2px solid #16877f; outline-offset: 2px; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-survivor-chip-button { height: auto; min-width: 0; transform: scale(1.42); }
-  .survivor-poker-chip-wrap-slate { height: 100%; width: auto; }
+  .slate-survivor-chip-button { height: 4.15rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 4.15rem; }
+  .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 }
 
 .selection-chip {
