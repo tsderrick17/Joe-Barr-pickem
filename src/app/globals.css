@@ -936,6 +936,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:hover),
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:focus-visible) { z-index: 12; }
 
+/* A selected chip's plaque is a persistent foreground element. A different
+   chip can briefly take that layer only while the player is engaging it. */
+.slate-game-row.has-survivor-selection { z-index: 3; }
+.slate-game-row:has(.slate-survivor-chip-button:hover),
+.slate-game-row:has(.slate-survivor-chip-button:focus-visible) { z-index: 8; }
+
 .slate-survivor-chip-button {
   align-items: center;
   align-self: stretch;
