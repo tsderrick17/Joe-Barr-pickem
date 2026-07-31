@@ -78,6 +78,18 @@ function easternDate(value: string) {
   }).format(new Date(value));
 }
 
+function easternCalendarDate(value: string | number | Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/New_York",
+    year: "numeric",
+  }).formatToParts(new Date(value));
+  const read = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${read("year")}-${read("month")}-${read("day")}`;
+}
+
 function easternTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -197,6 +209,7 @@ export default function BoardPage() {
   const [week, setWeek] = useState<ScoringPeriod | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
   const [showActionOnly, setShowActionOnly] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
@@ -329,6 +342,11 @@ export default function BoardPage() {
     void loadBoard();
   }, []);
 
+  useEffect(() => {
+    const refreshTime = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    return () => window.clearInterval(refreshTime);
+  }, []);
+
   const availableWeeks = useMemo(() => {
     const currentWeek = selectDefaultScoringPeriod(weeks);
 
@@ -355,8 +373,19 @@ export default function BoardPage() {
     return Array.from(grouped.entries());
   }, [games]);
 
+  const actionSwitchAvailable = useMemo(() => {
+    if (!games.length) return false;
+    const firstKickoff = games.reduce((earliest, game) =>
+      new Date(game.kickoffAt).getTime() < new Date(earliest.kickoffAt).getTime() ? game : earliest,
+    );
+
+    return easternCalendarDate(currentTime) >= easternCalendarDate(firstKickoff.kickoffAt);
+  }, [currentTime, games]);
+
+  const actionOnlyActive = actionSwitchAvailable && showActionOnly;
+
   const visibleGamesByDay = useMemo(() => {
-    if (!showActionOnly) return gamesByDay;
+    if (!actionOnlyActive) return gamesByDay;
 
     return gamesByDay
       .map(([day, dayGames]) => [
@@ -368,7 +397,7 @@ export default function BoardPage() {
         }),
       ] as const)
       .filter(([, dayGames]) => dayGames.length > 0);
-  }, [gamesByDay, showActionOnly]);
+  }, [actionOnlyActive, gamesByDay]);
 
   const selectedTeams = useMemo(() => {
     return selectedPicks
@@ -495,6 +524,7 @@ export default function BoardPage() {
       return;
     }
 
+    setShowActionOnly(false);
     await loadWeek(selectedWeek);
   }
 
@@ -615,11 +645,13 @@ export default function BoardPage() {
                 ))}
               </select>
 
-              <div className={`slate-view-switch slate-view-switch--header ${showActionOnly ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-                <span className={!showActionOnly ? "is-active" : ""}>ALL GAMES</span>
-                <button aria-checked={showActionOnly} aria-label={showActionOnly ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
-                <span className={showActionOnly ? "is-active" : ""}>POOL ACTION</span>
-              </div>
+              {actionSwitchAvailable ? (
+                <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
+                  <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
+                  <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
+                  <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
+                </div>
+              ) : null}
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-4 md:pt-0">
@@ -747,7 +779,7 @@ export default function BoardPage() {
                 </div>
               </section>
             ) : null}
-            {showActionOnly && visibleGamesByDay.length === 0 ? (
+            {actionOnlyActive && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}
             {visibleGamesByDay.map(([day, dayGames]) => {
