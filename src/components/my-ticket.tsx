@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ticketCompletion } from "@/lib/ticket-completion";
 
 export type TicketPick = {
   gameId: string;
@@ -37,10 +38,13 @@ export default function MyTicket({
   survivorStatus,
   week,
 }: Props) {
-  const survivorIsDue = survivorAvailable && survivorStatus === "active";
-  const totalRequiredSelections = maxPicks + (survivorIsDue ? 1 : 0);
-  const totalSelections = picks.length + (survivorIsDue && survivorPick ? 1 : 0);
-  const isFilled = totalSelections >= totalRequiredSelections;
+  const { isFilled, requiredSelections: totalRequiredSelections, selectionsMade: totalSelections } = ticketCompletion({
+    maxPicks,
+    pickemSelections: picks.length,
+    survivorAvailable,
+    survivorPickMade: Boolean(survivorPick),
+    survivorStatus,
+  });
   const status = isFilled ? "FILLED" : "OPEN";
 
   return (
@@ -118,6 +122,7 @@ export default function MyTicket({
           {totalSelections}/{totalRequiredSelections} SELECTIONS MADE
         </span>
         <div>
+          <small>TICKET STATUS</small>
           <strong className={isFilled ? "is-filled" : "is-open"}>{status}</strong>
         </div>
         <i aria-hidden="true" className="my-ticket-barcode" />

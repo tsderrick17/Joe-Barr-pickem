@@ -1169,7 +1169,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-instructions p + p { margin-top: .28rem; }
 
 .my-ticket-footer {
-  align-items: center;
+  align-items: end;
   border-top: 2px solid #28221b;
   display: grid;
   gap: .5rem;
@@ -1184,6 +1184,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-footer > div {
   display: grid;
   justify-items: center;
+  line-height: 1;
 }
 
 .my-ticket-footer small {
@@ -1206,6 +1207,8 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-footer strong.is-filled { color: #08764e; }
 
 .my-ticket-barcode {
+  align-self: end;
+  justify-self: end;
   background: linear-gradient(90deg,
     #28221b 0 2%, transparent 2% 4%, #28221b 4% 5%, transparent 5% 8%, #28221b 8% 12%, transparent 12% 14%,
     #28221b 14% 15%, transparent 15% 18%, #28221b 18% 21%, transparent 21% 23%, #28221b 23% 24%, transparent 24% 28%,
