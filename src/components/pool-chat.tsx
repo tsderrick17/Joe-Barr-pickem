@@ -80,9 +80,9 @@ export default function PoolChat() {
       <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[#b7aea0] pb-3">
         <div>
           <p className="text-[10px] font-black tracking-[.18em] text-[#00756e]">POOL CHAT</p>
-          <h2 className="mt-0.5 font-serif text-2xl font-black" id="pool-chat-title">The Rail</h2>
+          <h2 className="mt-0.5 font-serif text-2xl font-black" id="pool-chat-title">Live across the pool</h2>
         </div>
-        <p className="max-w-xs text-right text-xs leading-4 text-slate-600">A little room for table talk. Keep it friendly.</p>
+        <p className="max-w-xs text-right text-xs leading-4 text-slate-600">One shared conversation, wherever you are. Keep it friendly.</p>
       </div>
 
       <div aria-live="polite" className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">

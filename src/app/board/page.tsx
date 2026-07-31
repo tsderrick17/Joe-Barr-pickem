@@ -13,7 +13,6 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 import SlateGameRow from "@/components/slate-game-row";
-import PoolChat from "@/components/pool-chat";
 
 type ScoringPeriod = {
   id: string;
@@ -772,7 +771,6 @@ export default function BoardPage() {
                 </section>
               );
             })}
-            <PoolChat />
           </div>
         )}
       </div>

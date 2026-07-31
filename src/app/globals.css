@@ -1402,6 +1402,18 @@ html[data-theme="night"] .player-trophy-card {
 
 html[data-theme="night"] .player-trophy-card span { color: #f0eadf !important; }
 
+.pool-chat-dock {
+  background: #f5f0e6;
+  padding: 0 1rem 2rem;
+}
+
+.pool-chat-dock .pool-chat {
+  margin: 0 auto;
+  max-width: 64rem;
+}
+
+html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
+
 @media (max-width: 639px) {
   .my-ticket {
     padding: .8rem .8rem .7rem;
