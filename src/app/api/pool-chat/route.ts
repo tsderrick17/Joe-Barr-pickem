@@ -7,6 +7,7 @@ type ChatMessageRow = {
   id: string;
   player_id: string;
   body: string;
+  gif_url: string | null;
   created_at: string;
 };
 
@@ -24,7 +25,7 @@ async function currentSeason() {
 async function loadMessages(seasonId: string) {
   const { data: messages, error } = await supabaseAdmin
     .from("pool_chat_messages")
-    .select("id, player_id, body, created_at")
+    .select("id, player_id, body, gif_url, created_at")
     .eq("season_id", seasonId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -44,10 +45,31 @@ async function loadMessages(seasonId: string) {
     messages: rows.reverse().map((message) => ({
       id: message.id,
       body: message.body,
+      gifUrl: message.gif_url,
       createdAt: message.created_at,
       playerName: names.get(message.player_id) ?? "Player",
     })),
   };
+}
+
+function normalizeGifUrl(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "https:") return null;
+    const host = url.hostname.toLowerCase();
+    const allowedHosts = ["media.giphy.com", "media0.giphy.com", "media.tenor.com", "c.tenor.com"];
+    if (allowedHosts.includes(host)) return url.toString();
+
+    // A copied GIPHY page link can become its stable direct GIF URL.
+    if (host === "giphy.com" || host === "www.giphy.com") {
+      const match = url.pathname.match(/-([a-zA-Z0-9]+)$/);
+      if (match) return `https://media.giphy.com/media/${match[1]}/giphy.gif`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -66,7 +88,7 @@ export async function POST(request: NextRequest) {
   const player = await authenticatedProfilePlayer(request);
   if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
 
-  let body: { message?: unknown };
+  let body: { message?: unknown; gifUrl?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -74,8 +96,9 @@ export async function POST(request: NextRequest) {
   }
 
   const message = typeof body.message === "string" ? body.message.trim().replace(/\s+/g, " ") : "";
-  if (!message || message.length > 280) {
-    return NextResponse.json({ error: "Messages must be between 1 and 280 characters." }, { status: 400 });
+  const gifUrl = normalizeGifUrl(body.gifUrl);
+  if ((!message && !gifUrl) || message.length > 280) {
+    return NextResponse.json({ error: "Add a message or GIF (messages may be up to 280 characters)." }, { status: 400 });
   }
 
   const season = await currentSeason();
@@ -98,6 +121,7 @@ export async function POST(request: NextRequest) {
     season_id: season.id,
     player_id: player.id,
     body: message,
+    gif_url: gifUrl,
   });
   if (error) return NextResponse.json({ error: "Your note could not be sent." }, { status: 503 });
 
