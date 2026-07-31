@@ -12,6 +12,7 @@ export type TicketPick = {
 
 type SurvivorTicket = {
   team: string;
+  kickoff: string;
   resultMark?: "W" | "L" | "";
 } | null;
 
@@ -99,6 +100,7 @@ export default function MyTicket({
               <div>
                 <small>OFFICIAL SELECTION</small>
                 <strong>{survivorPick.team}<ResultStamp result={survivorPick.resultMark} /></strong>
+                <small>{survivorPick.kickoff}</small>
               </div>
             </div>
           ) : survivorStatus === "eliminated" ? (

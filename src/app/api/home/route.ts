@@ -503,6 +503,7 @@ return {
                         : visible && pick.result === "loss"
                           ? "L"
                           : "",
+                    kickoffAt: game?.kickoff_at ?? null,
                   }
                 : null,
               picks: periods.map((period) => {

@@ -188,7 +188,11 @@ export default function HomePage() {
       ? "L"
       : "";
   const ticketSurvivor = viewerSurvivor?.pick?.label
-    ? { team: viewerSurvivor.pick.label, resultMark: survivorResultMark }
+    ? {
+        team: viewerSurvivor.pick.label,
+        kickoff: ticketKickoff(viewerSurvivor.pick.kickoffAt),
+        resultMark: survivorResultMark,
+      }
     : null;
 
   if (errorMessage && !data) {
