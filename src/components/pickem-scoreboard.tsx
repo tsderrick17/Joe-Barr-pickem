@@ -35,6 +35,11 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
+          {!isPlayoff ? <colgroup>
+            <col className="pickem-ledger-wins-column" />
+            <col className="pickem-ledger-player-column" />
+            {Array.from({ length: maxPicks }, (_, index) => <col key={index} />)}
+          </colgroup> : null}
           <tbody>
             {rows.map((row) => {
               const isViewer = row.id === viewerPlayerId;

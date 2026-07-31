@@ -740,8 +740,13 @@ html[data-theme="night"] .survivor-selection-footer {
   line-height: 1;
   padding-right: .7rem !important;
   text-align: right;
-  width: clamp(5.25rem, 12vw, 10rem);
 }
+
+/* Dad's paper scorecards kept the running total and name in a tight left
+   gutter; picks earned the broad writing space.  Make that geometry explicit
+   instead of letting the table split all remaining columns evenly. */
+.pickem-ledger-wins-column { width: clamp(3.7rem, 6vw, 5rem); }
+.pickem-ledger-player-column { width: clamp(8.3rem, 13vw, 11rem); }
 
 .pickem-ledger-player {
   border-right: 0;
