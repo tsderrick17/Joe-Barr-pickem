@@ -189,6 +189,7 @@ export default function HomePage() {
       : "";
   const ticketSurvivor = viewerSurvivor?.pick?.label
     ? {
+        abbreviation: viewerSurvivor.pick.abbreviation ?? "NFL",
         team: viewerSurvivor.pick.label,
         kickoff: ticketKickoff(viewerSurvivor.pick.kickoffAt),
         resultMark: survivorResultMark,

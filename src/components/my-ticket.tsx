@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ticketCompletion } from "@/lib/ticket-completion";
+import SurvivorPokerChip from "@/components/survivor-poker-chip";
 
 export type TicketPick = {
   gameId: string;
@@ -11,6 +12,7 @@ export type TicketPick = {
 };
 
 type SurvivorTicket = {
+  abbreviation: string;
   team: string;
   kickoff: string;
   resultMark?: "W" | "L" | "";
@@ -50,6 +52,16 @@ export default function MyTicket({
 
   return (
     <section className="my-ticket" aria-label={`Your current ticket for ${week}`}>
+      {survivorPick ? (
+        <span className="my-ticket-survivor-chip" aria-label={`Survivor selection: ${survivorPick.team}`}>
+          <SurvivorPokerChip
+            abbreviation={survivorPick.abbreviation}
+            official
+            size="ticket"
+            teamName={survivorPick.team}
+          />
+        </span>
+      ) : null}
       <div className="my-ticket-brand">
         <p>JOE BARR MEMORIAL</p>
         <h1>LEAD PIPE LOCKS</h1>

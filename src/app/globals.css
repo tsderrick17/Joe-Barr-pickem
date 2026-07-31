@@ -338,6 +338,9 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
+.survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
+.survivor-poker-chip-ticket { height: 100%; width: 100%; }
+.survivor-poker-chip-ticket[data-state="official"] { transform: rotate(-7deg); }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
 
 .survivor-matchup-team {
@@ -948,6 +951,14 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket::before { left: -.5rem; }
 .my-ticket::after { right: -.5rem; }
 
+.my-ticket-survivor-chip {
+  pointer-events: none;
+  position: absolute;
+  right: -.9rem;
+  top: -.85rem;
+  z-index: 3;
+}
+
 .my-ticket-brand {
   text-align: center;
 }
@@ -1277,6 +1288,13 @@ html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 @media (max-width: 639px) {
   .my-ticket {
     padding: .8rem .8rem .7rem;
+  }
+
+  .my-ticket-survivor-chip {
+    right: -.45rem;
+    top: -.55rem;
+    transform: scale(.82);
+    transform-origin: top right;
   }
 
   .my-ticket-columns {
