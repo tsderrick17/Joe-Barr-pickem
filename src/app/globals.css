@@ -833,7 +833,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
 .slate-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(23, 145, 133, .64), rgba(67, 183, 169, .48));
+  background: linear-gradient(90deg, rgba(5, 104, 96, .82) 0 8%, rgba(23, 145, 133, .68) 14%, rgba(67, 183, 169, .48) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
@@ -846,17 +846,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .slate-team-label--selected::after {
-  background: rgba(5, 104, 96, .8);
-  clip-path: polygon(16% 0, 100% 0, 84% 100%, 0 100%);
-  content: "";
-  height: calc(100% + .38em);
-  left: -.36em;
-  position: absolute;
-  top: -.2em;
-  transform: rotate(-2.5deg);
-  transform-origin: center;
-  width: .27em;
-  z-index: 0;
+  content: none;
 }
 
 .slate-team-name-short { display: none; }
@@ -1113,11 +1103,7 @@ html[data-theme="night"] .slate-team-label--selected {
 }
 
 html[data-theme="night"] .slate-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(80, 215, 200, .72), rgba(126, 235, 220, .52));
-}
-
-html[data-theme="night"] .slate-team-label--selected::after {
-  background: rgba(133, 244, 229, .9);
+  background: linear-gradient(90deg, rgba(101, 237, 220, .9) 0 8%, rgba(80, 215, 200, .78) 14%, rgba(126, 235, 220, .52) 100%);
 }
 
 html[data-theme="night"] .survivor-team-selection span {
