@@ -826,24 +826,28 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .slate-team-label--selected::before {
   background: linear-gradient(90deg, rgba(23, 145, 133, .64), rgba(67, 183, 169, .48));
-  clip-path: polygon(0 16%, 100% 4%, 100% 86%, 0 98%);
+  /* One broad chisel pass: matching angled entry and exit, with enough
+     overscan to read as a marker stroke rather than a text background. */
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
   content: "";
-  inset: 13% -.16em 10%;
+  inset: -.2em -.4em -.18em;
   position: absolute;
+  transform: rotate(-2.5deg);
+  transform-origin: center;
   z-index: 0;
 }
 
 .slate-team-label--selected::after {
   background: rgba(5, 104, 96, .8);
-  clip-path: polygon(18% 0, 100% 12%, 83% 100%, 0 87%);
+  clip-path: polygon(16% 0, 100% 0, 84% 100%, 0 100%);
   content: "";
-  height: 1.06em;
-  left: -.22em;
+  height: calc(100% + .38em);
+  left: -.36em;
   position: absolute;
-  top: 2%;
-  transform: rotate(15deg);
+  top: -.2em;
+  transform: rotate(-2.5deg);
   transform-origin: center;
-  width: .24em;
+  width: .27em;
   z-index: 0;
 }
 
@@ -864,15 +868,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .slate-team-label--new::before {
   will-change: transform;
-  transform: scaleX(0);
+  transform: rotate(-2.5deg) scaleX(0);
   transform-origin: left center;
   animation: slate-selection-sweep 460ms cubic-bezier(.16,.8,.2,1) 35ms both;
 }
 
 @keyframes slate-selection-sweep {
-  0% { transform: scaleX(0); }
-  12% { transform: scaleX(.05); }
-  100% { transform: scaleX(1); }
+  0% { transform: rotate(-2.5deg) scaleX(0); }
+  12% { transform: rotate(-2.5deg) scaleX(.05); }
+  100% { transform: rotate(-2.5deg) scaleX(1); }
 }
 
 @media (max-width: 767px) {
