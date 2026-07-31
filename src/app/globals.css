@@ -782,7 +782,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 /* Give the teams—not the line—a little more room on a phone, in enlarged
    text, and at browser zoom. The full record remains available to assistive
    technology through the short label's aria-label. */
-@media (max-width: 440px) {
+/* Abbreviations are an emergency fallback only. Team cells deliberately wrap
+   first, so a normal phone keeps the full team name visible. */
+@media (max-width: 320px) {
   .slate-team-name-full { display: none; }
   .slate-team-name-short { display: inline; }
   .scoreboard-team-name-full { display: none; }
