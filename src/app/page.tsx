@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
+import PlayerTrophyName from "@/components/player-trophy-name";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -27,6 +28,7 @@ type ScoreboardRow = {
   firstName: string;
   wins: number;
   playoffEliminated?: boolean;
+  trophies?: string[];
   picks: ScoreboardPick[];
 };
 
@@ -46,6 +48,7 @@ type HomeData = {
     id: string;
     playerId: string;
     firstName: string;
+    trophies?: string[];
     status: "active" | "eliminated" | "complete";
     pick: (ScoreboardPick & { abbreviation?: string | null }) | null;
     picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
@@ -361,7 +364,7 @@ export default function HomePage() {
                   return (
                   <div className={`survivor-standings-row grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
                     <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-                    <span className={`survivor-sticky-name truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}>{row.firstName}{row.playerId === data.survivorChampionPlayerId ? <span aria-label="Reigning Survivor champion" className="ml-1 font-sans text-sm no-underline" title="Reigning Survivor champion">🏆</span> : null}</span>
+                    <span className={`survivor-sticky-name truncate px-2 py-2 font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500 line-through"}`}><PlayerTrophyName name={row.firstName} titles={row.trophies} /></span>
                     {Array.from({ length: 18 }, (_, index) => {
                       const pick = row.picks[index];
                       return <span className="flex h-10 items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span title="Pick submitted" className="text-xs">🔒</span> : <span className="text-slate-400">·</span>}</span>;

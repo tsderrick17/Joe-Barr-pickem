@@ -37,6 +37,12 @@ type LockedLineRow = {
   locked_spread: number | string;
 };
 
+type ChampionshipRow = {
+  player_id: string;
+  pool: "pickem" | "survivor";
+  season_year: number;
+};
+
 function signedSpread(
   selectedTeamId: string,
   favoriteTeamId: string | null,
@@ -249,6 +255,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // A missing decorative ledger must never take down the real standings.
+  const { data: championshipRows, error: championshipsError } = await supabaseAdmin
+    .from("pool_championships")
+    .select("player_id, pool, season_year")
+    .order("season_year", { ascending: false });
+  if (championshipsError) {
+    console.warn("Championship history is unavailable.", { code: championshipsError.code });
+  }
+  const trophiesByPlayerId = new Map<string, string[]>();
+  for (const championship of (championshipRows ?? []) as ChampionshipRow[]) {
+    const title = `'${String(championship.season_year).slice(-2)} ${championship.pool === "pickem" ? "Pick'em" : "Survivor"} Champion`;
+    const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
+    titles.push(title);
+    trophiesByPlayerId.set(championship.player_id, titles);
+  }
+
   let playoffEliminatedPlayerIds = new Set<string>();
   if (currentWeek.period_type === "playoff" && currentWeek.status === "active") {
     try {
@@ -349,6 +371,7 @@ return {
       return {
         id: player.id,
         firstName: player.first_name,
+        trophies: trophiesByPlayerId.get(player.id) ?? [],
         wins,
         playoffEliminated: playoffEliminatedPlayerIds.has(player.id),
         picks: weeklyPicks,
@@ -484,6 +507,7 @@ return {
               playerId: entry.player_id,
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
+              trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
               status: entry.status,
               eliminatedAt: entry.eliminated_at,
               pick: pick
