@@ -70,9 +70,8 @@ export default function SiteNav() {
     };
   }, [pathname]);
 
-  // The Slate's small receipt bar sits directly beneath this navigation on
-  // phones. Measure the real rendered height so account links or a wrapped
-  // brand never cause the two sticky bars to overlap.
+  // The Slate's small receipt bar sits directly beneath the sticky player
+  // navigation on phones. The account strip intentionally scrolls away.
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
@@ -203,6 +202,19 @@ export default function SiteNav() {
             </div>
           ) : null}
         </div>
+      </div>
+    </nav>
+    <nav aria-label="Account navigation" className="mobile-account-nav border-b border-zinc-700 bg-[#171719] text-[#f5f0e6] md:hidden">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2">
+        <Link className="min-w-0 font-serif text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]" href="/">Joe Barr Memorial</Link>
+        {playerName ? (
+          <div className="flex min-w-0 items-center justify-end gap-2 text-[11px] text-[#e4ded2]">
+            {isCommissioner ? <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/admin">Comish</Link> : null}
+            <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/profile">Preferences</Link>
+            <button className="whitespace-nowrap font-bold text-white underline underline-offset-2 disabled:opacity-50" disabled={isSigningOut} onClick={signOut} type="button">{isSigningOut ? "Signing out..." : "Sign out"}</button>
+            <span className="truncate text-[#f5f0e6]">{playerName}</span>
+          </div>
+        ) : null}
       </div>
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
