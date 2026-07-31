@@ -11,7 +11,6 @@ type SurvivorTicket = {
 } | null;
 
 type Props = {
-  hasUnsavedChanges?: boolean;
   maxPicks: number;
   picks: TicketPick[];
   readOnly?: boolean;
@@ -21,37 +20,19 @@ type Props = {
   week: string;
 };
 
-function ticketStatus({
-  hasUnsavedChanges,
-  pickemDue,
-  readOnly,
-  survivorDue,
-}: {
-  hasUnsavedChanges: boolean;
-  pickemDue: number;
-  readOnly: boolean;
-  survivorDue: boolean;
-}) {
-  if (readOnly) return "FINAL RECEIPT";
-  if (hasUnsavedChanges) return "UNSAVED CHANGES";
-  if (pickemDue > 0 || survivorDue) return "ACTION DUE";
-  return "TICKET FILED";
-}
-
 export default function MyTicket({
-  hasUnsavedChanges = false,
   maxPicks,
   picks,
-  readOnly = false,
   survivorAvailable,
   survivorPick,
   survivorStatus,
   week,
 }: Props) {
-  const pickemDue = Math.max(0, maxPicks - picks.length);
-  const survivorDue = survivorAvailable && survivorStatus === "active" && !survivorPick;
-  const totalSelections = picks.length + (survivorPick ? 1 : 0);
-  const status = ticketStatus({ hasUnsavedChanges, pickemDue, readOnly, survivorDue });
+  const survivorIsDue = survivorAvailable && survivorStatus === "active";
+  const totalRequiredSelections = maxPicks + (survivorIsDue ? 1 : 0);
+  const totalSelections = picks.length + (survivorIsDue && survivorPick ? 1 : 0);
+  const isFilled = totalSelections >= totalRequiredSelections;
+  const status = isFilled ? "FILLED" : "OPEN";
 
   return (
     <section className="my-ticket" aria-label={`Your current ticket for ${week}`}>
@@ -62,7 +43,7 @@ export default function MyTicket({
 
       <div className="my-ticket-race">
         <strong>{week}</strong>
-        <span>YOUR RECEIPT</span>
+        <span>TICKET</span>
       </div>
 
       <div className="my-ticket-columns">
@@ -94,7 +75,6 @@ export default function MyTicket({
               );
             })}
           </ol>
-          {pickemDue > 0 && !readOnly ? <p className="my-ticket-due">{pickemDue} PICK{pickemDue === 1 ? "" : "S"} STILL DUE</p> : null}
         </div>
 
         <div className="my-ticket-section my-ticket-survivor">
@@ -110,7 +90,7 @@ export default function MyTicket({
               </div>
             </div>
           ) : survivorStatus === "eliminated" ? (
-            <p className="my-ticket-survivor-state is-out">ENTRY CLOSED &middot; OUT</p>
+            <p className="my-ticket-survivor-state">ENTRY CLOSED &middot; OUT</p>
           ) : survivorStatus === "complete" ? (
             <p className="my-ticket-survivor-state">POOL COMPLETE</p>
           ) : survivorAvailable ? (
@@ -126,11 +106,11 @@ export default function MyTicket({
       </div>
 
       <div className="my-ticket-footer">
-        <span>{totalSelections} SELECTION{totalSelections === 1 ? "" : "S"} FILED</span>
+        <span className={`my-ticket-completion ${isFilled ? "is-filled" : "is-open"}`}>
+          {totalSelections}/{totalRequiredSelections} SELECTIONS MADE
+        </span>
         <div>
-          <small>TICKET STATUS</small>
-          <strong className={status === "ACTION DUE" || status === "UNSAVED CHANGES" ? "needs-action" : ""}>{status}</strong>
-          <small>{readOnly ? "PERMANENT WEEKLY RECEIPT" : "PRIVATE UNTIL EACH GAME KICKS OFF"}</small>
+          <strong className={isFilled ? "is-filled" : "is-open"}>{status}</strong>
         </div>
         <i aria-hidden="true" className="my-ticket-barcode" />
       </div>

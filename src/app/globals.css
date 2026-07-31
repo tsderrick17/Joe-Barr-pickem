@@ -1040,7 +1040,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-section-heading strong {
-  color: #006b64;
+  color: inherit;
   font-size: .55rem;
 }
 
@@ -1084,7 +1084,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-line.is-locked {
-  color: #006b8f;
+  color: inherit;
   font-size: .78rem;
 }
 
@@ -1131,8 +1131,6 @@ html[data-theme="night"] .newspaper-clipping::after {
   padding: .8rem 0;
 }
 
-.my-ticket-survivor-state.is-out { color: #9f2424; }
-
 .my-ticket-instructions {
   border-top: 1px dashed #958a77;
   color: #665e51;
@@ -1169,12 +1167,16 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-footer strong {
-  color: #006b64;
+  color: inherit;
   font: 900 .64rem/1.25 Arial, sans-serif;
   letter-spacing: .08em;
 }
 
-.my-ticket-footer strong.needs-action { color: #993b22; }
+.my-ticket-completion.is-open,
+.my-ticket-footer strong.is-open { color: #a82820; }
+
+.my-ticket-completion.is-filled,
+.my-ticket-footer strong.is-filled { color: #08764e; }
 
 .my-ticket-barcode {
   background: linear-gradient(90deg,
