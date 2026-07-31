@@ -525,7 +525,7 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
-.survivor-poker-chip-wrap-slate { height: 3rem; width: 3rem; }
+.survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
@@ -910,23 +910,27 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 /* Survivor chips sit inside the matchup, on either side of the spread. Their
    lanes are fixed so the team-name columns retain their normal geometry. */
 .slate-survivor-chip-slot {
+  align-self: stretch;
   align-items: center;
   display: flex;
+  height: auto;
   justify-content: center;
   min-width: 0;
 }
 
 .slate-survivor-chip-button {
   align-items: center;
+  align-self: stretch;
+  aspect-ratio: 1;
   background: transparent;
   border: 0;
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
-  height: 3.3rem;
+  height: auto;
   justify-content: center;
-  min-width: 3.3rem;
-  padding: .08rem;
+  min-width: 0;
+  padding: .04rem;
   transition: filter 160ms ease, transform 160ms ease;
 }
 
@@ -940,8 +944,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-survivor-chip-button { height: 4.3rem; min-width: 4.3rem; }
-  .survivor-poker-chip-wrap-slate { height: 3.85rem; width: 3.85rem; }
+  .slate-survivor-chip-button { height: auto; min-width: 0; }
+  .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 }
 
 .selection-chip {
