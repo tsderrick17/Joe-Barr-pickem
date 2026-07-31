@@ -156,9 +156,9 @@ body {
   }
 }
 
-@media (min-width: 1280px) {
-  /* Keep the title and instructions stacked until both can breathe. This is
-     especially important for players using larger text or browser zoom. */
+@media (min-width: 768px) {
+  /* The week controls stay in their own rail; the instructions use the open
+     space to the right rather than falling below the title. */
   .slate-header-grid {
     grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
   }
@@ -177,8 +177,10 @@ body {
 }
 
 .slate-view-switch--header {
+  display: flex;
   gap: .22rem;
-  margin-top: 1.1rem;
+  margin-top: .85rem;
+  width: fit-content;
 }
 
 

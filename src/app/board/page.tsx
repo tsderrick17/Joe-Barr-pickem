@@ -637,8 +637,8 @@ export default function BoardPage() {
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
         <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
-          <div className="slate-header-grid grid gap-5 xl:gap-0">
-            <div className="min-w-0 xl:pr-7">
+          <div className="slate-header-grid grid gap-5 md:gap-0">
+            <div className="min-w-0 md:pr-7">
               <h1 className="font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
@@ -672,10 +672,10 @@ export default function BoardPage() {
               ) : null}
             </div>
 
-            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 xl:col-span-2 xl:self-stretch xl:border-l xl:border-t-0 xl:pt-0">
-              <p className="xl:col-span-2 xl:pl-4 font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
+              <p className="md:col-span-2 md:pl-4 font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
-                <div className="xl:pl-4">
+                <div className="md:pl-4">
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#00756e]">Teal lines</span> are official and will not change.</p>
                   <p className="mt-1">Selections are revealed to others at kickoff.</p>
@@ -691,7 +691,7 @@ export default function BoardPage() {
                 </div>
               </div>
               {hasEarlyGame ? (
-                <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold xl:pl-4">
+                <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold md:pl-4">
                   EARLY GAME: spreads post at 6 PM ET the night before.
                 </p>
               ) : null}
