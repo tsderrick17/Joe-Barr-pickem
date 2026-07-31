@@ -622,7 +622,7 @@ export default function BoardPage() {
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
-              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-2 sm:gap-0">
+              <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
                 <div>
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#00756e]">Teal lines</span> are official and will not change.</p>

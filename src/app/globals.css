@@ -115,6 +115,13 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
+@media (min-width: 640px) {
+  /* The right-hand divider intentionally shares the receipt's Survivor rule. */
+  .slate-how-to-grid {
+    grid-template-columns: minmax(0, calc(50% - 1.5rem)) minmax(0, calc(50% + 1.5rem));
+  }
+}
+
 .slate-view-switch {
   align-items: center;
   display: inline-flex;
