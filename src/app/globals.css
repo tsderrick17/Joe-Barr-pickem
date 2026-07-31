@@ -836,12 +836,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
 .slate-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(5, 104, 96, .82) 0 8%, rgba(23, 145, 133, .68) 14%, rgba(67, 183, 169, .48) 100%);
+  background: linear-gradient(90deg, rgba(5, 104, 96, .82) 0, rgba(5, 104, 96, .82) 3%, rgba(23, 145, 133, .68) 13%, rgba(67, 183, 169, .48) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
   content: "";
-  inset: -.2em -.4em -.18em;
+  inset: -.08em -.4em -.3em;
   position: absolute;
   transform: rotate(-2.5deg);
   transform-origin: center;
