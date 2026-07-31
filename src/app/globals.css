@@ -928,7 +928,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   height: auto;
   justify-content: center;
   min-width: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
 }
+
+.slate-survivor-chip-slot:has(.slate-survivor-chip-button:hover),
+.slate-survivor-chip-slot:has(.slate-survivor-chip-button:focus-visible) { z-index: 12; }
 
 .slate-survivor-chip-button {
   align-items: center;
@@ -942,21 +948,26 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   justify-content: center;
   min-width: 0;
   padding: .04rem;
-  transition: filter 160ms ease, transform 160ms ease;
+  position: relative;
+  transform: scale(1.28);
+  transform-origin: center;
+  transition: filter 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
   width: 100%;
+  z-index: 1;
 }
 
 .slate-survivor-chip-button:not(:disabled):hover {
-  filter: brightness(1.06) saturate(1.08);
-  transform: translateY(-1px) scale(1.035);
+  filter: brightness(1.08) saturate(1.14);
+  transform: translateY(-2px) scale(1.46);
+  z-index: 12;
 }
 
-.slate-survivor-chip-button:not(:disabled):active { transform: scale(.96); }
+.slate-survivor-chip-button:not(:disabled):active { transform: translateY(-1px) scale(1.36); }
 .slate-survivor-chip-button:focus-visible { outline: 2px solid #16877f; outline-offset: 2px; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-survivor-chip-button { height: auto; min-width: 0; }
+  .slate-survivor-chip-button { height: auto; min-width: 0; transform: scale(1.42); }
   .survivor-poker-chip-wrap-slate { height: 100%; width: auto; }
 }
 
