@@ -14,9 +14,9 @@ type Message = {
 
 const EMOJI_GROUPS = [
   { label: "Reactions and faces", emojis: ["😀", "😂", "🤣", "😮", "😤", "😮‍💨", "🤯", "😳", "🤔", "😏", "😎", "🤡", "😭", "😈"] },
-  { label: "Hands, arms, and eyes", emojis: ["👀", "👍", "👎", "👏", "🙌", "🙏", "🫡", "🤞", "🤌", "💪", "👆", "👇", "👉", "👈", "🤝"] },
+  { label: "Hands, arms, and eyes", emojis: ["👀", "👍", "👎", "👏", "🙌", "🙏", "✊", "🤞", "👌", "💪", "👆", "👇", "👉", "👈", "🤝"] },
   { label: "Game day", emojis: ["🏈", "🏆", "🎯", "🚨", "🔥", "💰", "💸", "🍀", "👑", "🐐", "💎", "📈", "📉", "🎉", "🧱"] },
-  { label: "Quick marks", emojis: ["✅", "❌", "⚡", "💯", "📝", "🧾", "⏰", "🎲", "🃏", "🎰", "📣", "💥", "⭐", "🫠", "🫣"] },
+  { label: "Quick marks", emojis: ["✅", "❌", "⚡", "💯", "📝", "🧾", "⏰", "🎲", "🃏", "🎰", "📣", "💥", "⭐", "🔔", "📌"] },
 ];
 
 function messageTime(value: string) {
