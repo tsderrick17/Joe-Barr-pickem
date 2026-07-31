@@ -448,52 +448,11 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row {
   --survivor-row-bg: #f5f0e6;
-  --survivor-steel-edge: #c2c5c2;
-  --survivor-steel-low: #dde0dd;
-  --survivor-steel-face: #f1f3f0;
-  --survivor-steel-glint: #fffefa;
   background-color: var(--survivor-row-bg);
 }
 
 .survivor-standings-row.is-alt {
   --survivor-row-bg: #f0eadf;
-  --survivor-steel-edge: #bfc2bf;
-  --survivor-steel-low: #d9dcda;
-  --survivor-steel-face: #edefec;
-  --survivor-steel-glint: #fcfcf8;
-}
-
-.survivor-standings-row .survivor-sticky-status,
-.survivor-standings-row .survivor-sticky-name {
-  background-color: transparent;
-  /* Both sticky cells sample one satin steel plate. The polish is horizontal
-     and deliberately texture-free: clean machine stock, not corrugated foil. */
-  background-image: linear-gradient(90deg, var(--survivor-steel-edge) 0%, var(--survivor-steel-low) 9%, var(--survivor-steel-face) 28%, var(--survivor-steel-glint) 52%, var(--survivor-steel-face) 76%, var(--survivor-steel-low) 93%, var(--survivor-steel-edge) 100%);
-  background-size: 10rem 100%;
-  border-block: 0;
-  box-shadow: none;
-  /* Cover the parent row rule so the steel rail reads as a single, seamless
-     surface while the score cells keep their normal row separators. */
-  margin-bottom: -1px;
-  padding-bottom: 1px;
-}
-
-.survivor-standings-row .survivor-sticky-status {
-  background-position: 0 0;
-  border-left: 1px solid rgba(96, 87, 72, .25);
-  border-radius: 0;
-  border-right: 0;
-  text-shadow: 0 1px 0 rgba(255,255,255,.72);
-}
-
-.survivor-standings-row .survivor-sticky-name {
-  background-position: -3rem 0;
-  border-left: 0;
-  border-radius: 0;
-  border-right: 1px solid rgba(96, 87, 72, .25);
-  letter-spacing: .008em;
-  margin-right: 0;
-  text-shadow: 0 1px 0 rgba(255,255,255,.9);
 }
 
 .viewer-row {
@@ -503,21 +462,12 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .viewer-row .survivor-sticky-status {
-  box-shadow: inset 4px 0 0 #16877f, inset 0 1px 1px rgba(72, 61, 45, .12), inset 0 -1px 1px rgba(72, 61, 45, .12);
+  box-shadow: inset 4px 0 0 #16877f;
 }
 
 .survivor-standings-row.viewer-row {
   --survivor-row-bg: #dff0eb;
-  --survivor-steel-edge: #61aaa2;
-  --survivor-steel-low: #a9d3cb;
-  --survivor-steel-face: #d9ece7;
-  --survivor-steel-glint: #f4fbf8;
   box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
-}
-
-.survivor-standings-row.viewer-row .survivor-sticky-status,
-.survivor-standings-row.viewer-row .survivor-sticky-name {
-  border-color: rgba(22, 135, 127, .38);
 }
 
 /* A selected ATS team reads like a marked betting ticket, not an inverted
@@ -823,26 +773,14 @@ html[data-theme="night"] .survivor-standings-header {
 
 html[data-theme="night"] .survivor-standings-row {
   --survivor-row-bg: #101c24;
-  --survivor-steel-edge: #2e3c41;
-  --survivor-steel-low: #48575b;
-  --survivor-steel-face: #5d6c70;
-  --survivor-steel-glint: #748286;
 }
 
 html[data-theme="night"] .survivor-standings-row.is-alt {
   --survivor-row-bg: #13232b;
-  --survivor-steel-edge: #2c3b40;
-  --survivor-steel-low: #45555a;
-  --survivor-steel-face: #59696d;
-  --survivor-steel-glint: #718085;
 }
 
 html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-row-bg: #16333a;
-  --survivor-steel-edge: #276569;
-  --survivor-steel-low: #4c8585;
-  --survivor-steel-face: #77aaa4;
-  --survivor-steel-glint: #a7cbc4;
 }
 
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
@@ -854,10 +792,6 @@ html[data-theme="night"] .slate-mini-nav strong.is-complete { color: #7ee1b0; }
 html[data-theme="night"] .slate-mini-nav strong.is-due { color: #ffaaa1; }
 html[data-theme="night"] .slate-mini-nav strong.is-out { color: #ffaaa1; }
 html[data-theme="night"] .slate-mini-nav strong.is-quiet { color: #b8c5ca; }
-
-html[data-theme="night"] .survivor-standings-row .survivor-sticky-name {
-  text-shadow: 0 1px 0 rgba(255,255,255,.16), 0 -1px 0 rgba(0,0,0,.42);
-}
 
 html[data-theme="night"] .viewer-row .survivor-sticky-status,
 html[data-theme="night"] .viewer-row .survivor-sticky-name {
