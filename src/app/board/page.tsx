@@ -362,13 +362,13 @@ export default function BoardPage() {
       .map(([day, dayGames]) => [
         day,
         dayGames.filter((game) => {
-          const iSelectedThisGame = selectedPicks.some((pick) => pick.gameId === game.id);
+          const stillOpenForSelection = new Date(game.kickoffAt) > new Date();
           const hasPublishedPoolAction = game.awayPickers.length > 0 || game.homePickers.length > 0;
-          return iSelectedThisGame || hasPublishedPoolAction;
+          return stillOpenForSelection || hasPublishedPoolAction;
         }),
       ] as const)
       .filter(([, dayGames]) => dayGames.length > 0);
-  }, [gamesByDay, selectedPicks, showActionOnly]);
+  }, [gamesByDay, showActionOnly]);
 
   const selectedTeams = useMemo(() => {
     return selectedPicks
@@ -737,13 +737,13 @@ export default function BoardPage() {
                 </div>
               </section>
             ) : null}
-            <div className="slate-view-switch" aria-label="Slate display">
-              <span>SHOW</span>
-              <button aria-pressed={!showActionOnly} className={!showActionOnly ? "is-active" : ""} onClick={() => setShowActionOnly(false)} type="button">ALL GAMES</button>
-              <button aria-pressed={showActionOnly} className={showActionOnly ? "is-active" : ""} onClick={() => setShowActionOnly(true)} type="button">POOL ACTION</button>
+            <div className={`slate-view-switch ${showActionOnly ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
+              <span aria-hidden="true" className="slate-view-switch-thumb" />
+              <button aria-pressed={!showActionOnly} onClick={() => setShowActionOnly(false)} type="button">ALL GAMES</button>
+              <button aria-pressed={showActionOnly} onClick={() => setShowActionOnly(true)} type="button">POOL ACTION</button>
             </div>
             {showActionOnly && visibleGamesByDay.length === 0 ? (
-              <p className="slate-action-empty">No public pool action yet. Your selections will appear here immediately; everyone else&apos;s reveals at kickoff.</p>
+              <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}
             {visibleGamesByDay.map(([day, dayGames]) => {
               return (
