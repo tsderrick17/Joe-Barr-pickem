@@ -403,16 +403,39 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row {
   --survivor-row-bg: #f5f0e6;
+  --survivor-pipe-top: #fffdf8;
+  --survivor-pipe-mid: #eee8dc;
+  --survivor-pipe-bottom: #d9d0c1;
   background-color: var(--survivor-row-bg);
 }
 
 .survivor-standings-row.is-alt {
   --survivor-row-bg: #f0eadf;
+  --survivor-pipe-top: #fbf8f1;
+  --survivor-pipe-mid: #e9e2d5;
+  --survivor-pipe-bottom: #d4cab9;
 }
 
 .survivor-standings-row .survivor-sticky-status,
 .survivor-standings-row .survivor-sticky-name {
-  background-image: repeating-linear-gradient(0deg, rgba(23, 23, 25, .018) 0 1px, transparent 1px 4px);
+  background-color: transparent;
+  background-image: linear-gradient(180deg, var(--survivor-pipe-top) 0%, var(--survivor-pipe-mid) 46%, var(--survivor-pipe-bottom) 100%);
+  border-block: 1px solid rgba(96, 87, 72, .25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .82), inset 0 -1px 0 rgba(72, 61, 45, .14), 0 1px 1px rgba(49, 40, 28, .06);
+  margin-block: .16rem;
+}
+
+.survivor-standings-row .survivor-sticky-status {
+  border-left: 1px solid rgba(96, 87, 72, .25);
+  border-radius: 999px 0 0 999px;
+  border-right: 0;
+}
+
+.survivor-standings-row .survivor-sticky-name {
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  border-right: 1px solid rgba(96, 87, 72, .25);
+  margin-right: .28rem;
 }
 
 .viewer-row {
@@ -423,6 +446,19 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .viewer-row .survivor-sticky-status {
   box-shadow: inset 4px 0 0 #16877f;
+}
+
+.survivor-standings-row.viewer-row {
+  --survivor-row-bg: #dff0eb;
+  --survivor-pipe-top: #f4fffb;
+  --survivor-pipe-mid: #dff3ed;
+  --survivor-pipe-bottom: #bbddd4;
+  box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
+}
+
+.survivor-standings-row.viewer-row .survivor-sticky-status,
+.survivor-standings-row.viewer-row .survivor-sticky-name {
+  border-color: rgba(22, 135, 127, .38);
 }
 
 /* A selected ATS team reads like a marked betting ticket, not an inverted
@@ -728,14 +764,23 @@ html[data-theme="night"] .survivor-standings-header {
 
 html[data-theme="night"] .survivor-standings-row {
   --survivor-row-bg: #101c24;
+  --survivor-pipe-top: #29424a;
+  --survivor-pipe-mid: #1d343c;
+  --survivor-pipe-bottom: #12262d;
 }
 
 html[data-theme="night"] .survivor-standings-row.is-alt {
   --survivor-row-bg: #13232b;
+  --survivor-pipe-top: #2a444d;
+  --survivor-pipe-mid: #203943;
+  --survivor-pipe-bottom: #142b33;
 }
 
 html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-row-bg: #16333a;
+  --survivor-pipe-top: #315e62;
+  --survivor-pipe-mid: #20474d;
+  --survivor-pipe-bottom: #16363d;
 }
 
 html[data-theme="night"] .viewer-row .survivor-sticky-status,
