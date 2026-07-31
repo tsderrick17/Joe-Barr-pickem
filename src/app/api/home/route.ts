@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
       ? supabaseAdmin.from("games").select("id, kickoff_at").in("id", gameIds)
       : Promise.resolve({ data: [], error: null }),
     teamIds.length
-      ? supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
+      ? supabaseAdmin.from("teams").select("id, full_name, abbreviation").in("id", teamIds)
       : Promise.resolve({ data: [], error: null }),
     gameIds.length
       ? supabaseAdmin.from("spread_history").select("game_id, favorite_team_id, spread, captured_at").in("game_id", gameIds).order("captured_at", { ascending: false })
@@ -305,8 +305,8 @@ export async function GET(request: NextRequest) {
     currentTime,
   );
 
-  const teamNameById = new Map(
-    (teams ?? []).map((team) => [team.id, team.full_name]),
+  const teamById = new Map(
+    (teams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]),
   );
   const lockedLineByGameId = new Map(
     ((lockedLinesResult.data ?? []) as LockedLineRow[]).map((line) => [line.game_id, line]),
@@ -350,10 +350,12 @@ export async function GET(request: NextRequest) {
           const preliminaryLine = preliminaryLineByGameId.get(pick.game_id);
           const line = lockedLine ?? preliminaryLine;
 
-return {
-  label: visible
-    ? teamNameById.get(pick.selected_team_id) ?? "Unknown team"
+          const team = teamById.get(pick.selected_team_id);
+          return {
+            label: visible
+    ? team?.name ?? "Unknown team"
     : null,
+  abbreviation: visible ? team?.abbreviation ?? null : null,
   kickoffAt: game?.kickoff_at,
   isHidden: !visible,
   resultMark: visible ? resultMark : "",

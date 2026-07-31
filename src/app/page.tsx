@@ -12,6 +12,7 @@ import {
 
 type ScoreboardPick = {
   label: string | null;
+  abbreviation?: string | null;
   isHidden: boolean;
   resultMark: string;
   spread?: string | null;
@@ -257,6 +258,7 @@ export default function HomePage() {
         />
 
         <PickemScoreboard
+          isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           rows={data.rows}
           viewerPlayerId={data.viewerPlayerId}

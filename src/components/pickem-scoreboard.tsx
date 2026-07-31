@@ -2,6 +2,7 @@ import PlayerTrophyName from "@/components/player-trophy-name";
 
 export type PickemScoreboardPick = {
   label: string | null;
+  abbreviation?: string | null;
   isHidden: boolean;
   resultMark: string;
   spread?: string | null;
@@ -18,23 +19,24 @@ export type PickemScoreboardRow = {
 };
 
 type Props = {
+  isPlayoff?: boolean;
   rows: PickemScoreboardRow[];
   viewerPlayerId: string;
   maxPicks: number;
 };
 
-export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Props) {
+export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayerId, maxPicks }: Props) {
   return (
-    <section className="py-4 sm:py-5">
+    <section className={`py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
       <div className="mb-2 flex items-end justify-between gap-3">
-        <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM THIS WEEK</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-slate-600">{isPlayoff ? "PLAYOFF PICK'EM · ROUND LEDGER" : "PICK'EM THIS WEEK"}</p>
       </div>
-      <div className="border-y-2 border-[#1d1d1f]">
-        <table className="w-full table-fixed border-collapse text-left tabular-nums">
+      <div className={`border-y-2 border-[#1d1d1f] ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
+        <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
           <thead>
             <tr className="border-b-2 border-[#1d1d1f] bg-[#e9e0cd] text-[10px] font-black tracking-[0.16em] text-slate-700 sm:text-xs">
               <th className="w-11 px-2 py-2 text-center sm:w-16 sm:px-3">W</th>
-              <th className="w-24 px-2 py-2 sm:w-36 sm:px-3"><span className="sr-only">Player</span></th>
+              <th className={`${isPlayoff ? "w-32" : "w-24 sm:w-36"} px-2 py-2 sm:px-3`}><span className="sr-only">Player</span></th>
               {Array.from({ length: maxPicks }, (_, index) => (
                 <th className="px-2 py-2 sm:px-3" key={index}>PICK {index + 1}</th>
               ))}
@@ -54,10 +56,10 @@ export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Pro
                   ) : Array.from({ length: maxPicks }, (_, pickNumber) => {
                     const pick = row.picks[pickNumber];
                     return (
-                      <td className="break-words px-2 py-2 text-[13px] leading-tight sm:px-3 sm:py-2.5 sm:text-[15px]" key={pickNumber}>
+                      <td className={`break-words px-2 py-2 text-[13px] leading-tight sm:px-3 sm:py-2.5 sm:text-[15px] ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
                         {pick?.label ? (
                           <span>
-                            {pick.label}
+                            {isPlayoff ? pick.abbreviation ?? pick.label : pick.label}
                             {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>{pick.spread}</strong> : null}
                             {pick.resultMark ? <strong className={`ml-1.5 text-[13px] ${pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{pick.resultMark}</strong> : null}
                           </span>

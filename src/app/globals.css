@@ -1515,5 +1515,39 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   .my-ticket-survivor-pick strong { font-size: .8rem; }
   .my-ticket-footer { gap: .35rem; }
   .my-ticket-change-note { font-size: .53rem; }
-  .my-ticket-barcode { width: 3.2rem; }
+.my-ticket-barcode { width: 3.2rem; }
+}
+
+/* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
+   texts without creating a separate source of truth from the regular board. */
+.playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(75, 126, 183, .18) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
+    #fbf8ef;
+  border-left: 1px solid rgba(167, 62, 55, .3);
+  padding-left: .5rem;
+  padding-right: .5rem;
+}
+
+.playoff-scoreboard table { background: transparent; }
+.playoff-scoreboard tbody tr { background: transparent !important; }
+.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
+.playoff-scoreboard-pick {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: .95rem;
+  letter-spacing: .025em;
+}
+
+@media (max-width: 639px) {
+  .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
+  .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .playoff-scoreboard-pick { font-size: .86rem; }
+}
+
+html[data-theme="night"] .playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(96, 178, 198, .14) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
+    #172027;
 }
