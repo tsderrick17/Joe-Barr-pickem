@@ -116,9 +116,9 @@ body {
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
 @media (min-width: 640px) {
-  /* The right-hand divider intentionally shares the receipt's Survivor rule. */
+  /* The internal divider shares the receipt's Pick'em/Survivor rule. */
   .slate-how-to-grid {
-    grid-template-columns: minmax(0, calc(50% - 1.5rem)) minmax(0, calc(50% + 1.5rem));
+    grid-template-columns: minmax(0, calc(50% - .5rem)) minmax(0, calc(50% + .5rem));
   }
 }
 
