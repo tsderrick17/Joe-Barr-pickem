@@ -410,21 +410,31 @@ export default function BoardPage() {
         const isHome = pick.teamId === game.homeTeamId;
         const isAway = pick.teamId === game.awayTeamId;
         const name = isHome
-          ? game.homeTeam
+          ? game.homeTeam.toUpperCase()
           : isAway
             ? game.awayTeam
             : null;
 
         if (!name) return null;
 
+        const abbreviation = (isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation).toUpperCase();
+        const hasFinalLine = game.spreadLockedAt !== null && game.officialSpread !== null;
+        const selectedTeamIsFavorite = pick.teamId === game.favoriteTeamId;
+        const lineValue = game.officialSpread === null
+          ? null
+          : game.officialSpread === 0
+            ? "PK"
+            : `${selectedTeamIsFavorite ? "-" : "+"}${Number.isInteger(game.officialSpread) ? game.officialSpread : game.officialSpread.toFixed(1)}`;
+
         return {
           gameId: pick.gameId,
           name,
-          abbreviation: isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation,
+          abbreviation,
+          lockedLineLabel: hasFinalLine && lineValue ? `${abbreviation} ${lineValue}` : null,
           canRemove: new Date(game.kickoffAt) > new Date(),
         };
       })
-      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; canRemove: boolean }[];
+      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lockedLineLabel: string | null; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
   const pickemHasUnsavedChanges = useMemo(() => {
@@ -905,7 +915,7 @@ export default function BoardPage() {
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
                       <li className="selection-chip flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1" key={team.gameId}>
-                        <span>{index + 1}. {team.name}</span>
+                        <span>{index + 1}. {team.lockedLineLabel ?? team.name}</span>
                         {team.canRemove ? (
                           <button
                             aria-label={`Remove ${team.name}`}
