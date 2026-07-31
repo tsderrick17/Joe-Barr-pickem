@@ -373,19 +373,14 @@ export default function BoardPage() {
     return Array.from(grouped.entries());
   }, [games]);
 
-  // Temporary visual preview: remove this override when the commissioner is ready
-  // to return the All Games / Pool Action switch to its first-gameday release.
-  const previewActionSwitch = true;
-
   const actionSwitchAvailable = useMemo(() => {
-    if (previewActionSwitch) return games.length > 0;
     if (!games.length) return false;
     const firstKickoff = games.reduce((earliest, game) =>
       new Date(game.kickoffAt).getTime() < new Date(earliest.kickoffAt).getTime() ? game : earliest,
     );
 
     return easternCalendarDate(currentTime) >= easternCalendarDate(firstKickoff.kickoffAt);
-  }, [currentTime, games, previewActionSwitch]);
+  }, [currentTime, games]);
 
   const actionOnlyActive = actionSwitchAvailable && showActionOnly;
 
