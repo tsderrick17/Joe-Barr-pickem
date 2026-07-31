@@ -1408,6 +1408,12 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
   padding: 0 1rem 2rem;
 }
 
+/* The shared chat sits outside each page's document flow. Reserve scroll room
+   whenever an active pick footer is fixed to the viewport so every message and
+   the composer can be brought completely above it. */
+body:has(.slate-selection-footer) .pool-chat-dock { padding-bottom: 15rem; }
+body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 12rem; }
+
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
   max-width: 64rem;
@@ -1416,6 +1422,9 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 
 @media (max-width: 639px) {
+  body:has(.slate-selection-footer) .pool-chat-dock { padding-bottom: 20rem; }
+  body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 17rem; }
+
   .my-ticket {
     padding: .8rem .8rem .7rem;
   }
