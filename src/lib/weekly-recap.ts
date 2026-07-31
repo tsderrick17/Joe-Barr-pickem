@@ -40,6 +40,14 @@ export type PlayoffPublicRevealSnapshot = {
   rows: Array<{ name: string; wins: number; picks: string[] }>;
 };
 
+export type FeaturedWindowRevealSnapshot = {
+  kind: "featured_window_reveal";
+  week: string;
+  window: string;
+  generatedAt: string;
+  rows: Array<{ name: string; wins: number; picks: string[] }>;
+};
+
 export type GameDaySlateSnapshot = {
   kind: "game_day";
   day: string;
@@ -394,6 +402,71 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   };
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The Sunday reveal receipt could not be saved.");
+  return snapshot;
+}
+
+function isFeaturedGame(game: { is_international: boolean; kickoff_at: string }) {
+  if (game.is_international) return true;
+  const weekday = easternWeekday(game.kickoff_at);
+  const hour = easternHour(game.kickoff_at);
+  return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
+}
+
+export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, existing: unknown) {
+  if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "featured_window_reveal") return existing as FeaturedWindowRevealSnapshot;
+
+  const now = new Date();
+  const { data: period, error: periodError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id, season_id, display_name")
+    .eq("status", "active")
+    .order("display_order")
+    .limit(1)
+    .maybeSingle();
+  if (periodError || !period) throw new Error("An active week is not available for the featured-game reveal.");
+
+  const [{ data: games, error: gamesError }, { data: periods, error: periodsError }, { data: players, error: playersError }] = await Promise.all([
+    supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at, is_international, status").eq("scoring_period_id", period.id).order("kickoff_at"),
+    supabaseAdmin.from("scoring_periods").select("id").eq("season_id", period.season_id),
+    supabaseAdmin.from("players").select("id, first_name").eq("active", true),
+  ]);
+  if (gamesError || periodsError || playersError) throw new Error("The featured-game reveal could not be prepared.");
+
+  const featuredGames = (games ?? []).filter((game) => isFeaturedGame(game) && new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status));
+  if (!featuredGames.length) throw new Error("No featured game has reached kickoff yet.");
+  const publicGameIds = new Set((games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status)).map((game) => game.id));
+  const periodIds = (periods ?? []).map((item) => item.id);
+  const { data: picks, error: picksError } = periodIds.length
+    ? await supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void")
+    : { data: [], error: null };
+  if (picksError) throw new Error("Public featured-game selections could not be prepared.");
+
+  const selectedTeamIds = [...new Set((picks ?? []).filter((pick) => pick.scoring_period_id === period.id && publicGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
+  const { data: teams, error: teamsError } = selectedTeamIds.length
+    ? await supabaseAdmin.from("teams").select("id, abbreviation").in("id", selectedTeamIds)
+    : { data: [], error: null };
+  if (teamsError) throw new Error("Featured-game team labels could not be prepared.");
+
+  const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
+  const wins = new Map<string, number>();
+  const picksByPlayer = new Map<string, string[]>();
+  for (const pick of picks ?? []) {
+    if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
+    if (pick.scoring_period_id === period.id && publicGameIds.has(pick.game_id)) {
+      picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), abbreviationById.get(pick.selected_team_id) ?? "NFL"]);
+    }
+  }
+
+  const latestFeatured = featuredGames[featuredGames.length - 1];
+  const snapshot: FeaturedWindowRevealSnapshot = {
+    kind: "featured_window_reveal",
+    week: period.display_name,
+    window: `${easternDayLabel(new Date(latestFeatured.kickoff_at))} featured window`,
+    generatedAt: now.toISOString(),
+    rows: (players ?? []).map((player) => ({ name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] })).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+  };
+  const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
+  if (error) throw new Error("The featured-game public receipt could not be saved.");
   return snapshot;
 }
 

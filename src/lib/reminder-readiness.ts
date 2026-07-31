@@ -165,6 +165,29 @@ async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
     : { ready: false, reason: "The selected playoff window has not reached kickoff yet." };
 }
 
+function isFeaturedKickoff(game: { is_international: boolean; kickoff_at: string }) {
+  if (game.is_international) return true;
+  const weekday = easternWeekday(game.kickoff_at);
+  const hour = easternHour(game.kickoff_at);
+  return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
+}
+
+async function featuredWindowRevealReady(): Promise<ReminderReadiness> {
+  const period = await activePeriod();
+  if (!period) return { ready: false, reason: "There is no active week for the featured-game reveal." };
+  const { data: games, error } = await supabaseAdmin
+    .from("games")
+    .select("kickoff_at, is_international, status")
+    .eq("scoring_period_id", period.id);
+  if (error) throw new Error("Featured kickoff status could not be checked before sending a reveal.");
+  const hasStartedFeaturedGame = (games ?? []).some((game) =>
+    isFeaturedKickoff(game) && new Date(game.kickoff_at) <= new Date() && !["postponed", "cancelled"].includes(game.status),
+  );
+  return hasStartedFeaturedGame
+    ? { ready: true, reason: null }
+    : { ready: false, reason: "The selected primetime or international game has not reached kickoff yet." };
+}
+
 function easternWeekday(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
 }
@@ -198,6 +221,7 @@ export async function reminderReadiness(category: ReminderCategory): Promise<Rem
   if (category === "weekly_recap") return recapReady();
   if (category === "playoff_day_recap") return playoffDayRecapReady();
   if (category === "playoff_public_reveal") return playoffPublicRevealReady();
+  if (category === "featured_window_reveal") return featuredWindowRevealReady();
   if (category === "sunday_early_reveal") return sundayRevealReady("early");
   if (category === "sunday_late_reveal") return sundayRevealReady("late");
   return { ready: true, reason: null };
