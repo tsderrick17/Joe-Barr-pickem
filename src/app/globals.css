@@ -142,10 +142,7 @@ body {
 }
 
 @media (min-width: 640px) {
-  /* One rail map serves the Slate title, both instruction columns, and the
-     receipt beneath them. Selections wrap inside their own cells instead of
-     shifting a divider when a long team name appears. */
-  .slate-header-grid,
+  /* The receipt remains three tidy columns on a normal phone/tablet width. */
   .slate-receipt-grid {
     grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
   }
@@ -155,7 +152,15 @@ body {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
+  /* Keep the title and instructions stacked until both can breathe. This is
+     especially important for players using larger text or browser zoom. */
+  .slate-header-grid {
+    grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
+  }
+}
+
+@media (min-width: 1280px) {
   .slate-how-to-grid p { white-space: nowrap; }
 }
 
