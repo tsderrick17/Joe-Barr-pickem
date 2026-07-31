@@ -51,7 +51,7 @@ export default function MyTicket({
   const status = isFilled ? "FILLED" : "OPEN";
 
   return (
-    <section className="my-ticket" aria-label={`Your current ticket for ${week}`}>
+    <section className="my-ticket" aria-label={`Your current ticket for ${week}`} id="my-ticket">
       {survivorPick ? (
         <span className="my-ticket-survivor-chip" aria-label={`Survivor selection: ${survivorPick.team}`}>
           <SurvivorPokerChip

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchWithSession,
@@ -201,6 +202,7 @@ export default function BoardPage() {
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
+  const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +256,7 @@ export default function BoardPage() {
       setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
+      setSurvivorStatus(data.survivor.status);
       setSurvivorNotice(data.survivor.notice);
     } catch (error) {
       if (requestId === boardRequestId.current) {
@@ -413,6 +416,18 @@ export default function BoardPage() {
   const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete" || playoffEliminated;
+  const pickemMiniStatus = isReadOnly
+    ? week?.status === "complete" ? "FINAL" : "OUT"
+    : `${selectedPicks.length}/${selectionLimit} SELECTED`;
+  const survivorMiniStatus = survivorStatus === "complete"
+    ? "COMPLETE"
+    : survivorStatus === "eliminated"
+      ? "OUT"
+      : survivorPick
+        ? "PICK MADE"
+        : survivorAvailable
+          ? "PICK DUE"
+          : "NOT DUE";
   const hasEarlyGame = games.some(isEarlyGame);
   function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
@@ -628,6 +643,21 @@ export default function BoardPage() {
             </aside>
           </div>
 
+          <nav aria-label="Your weekly controls" className="slate-mini-nav mt-5">
+            <Link href="/#my-ticket">
+              <span>YOUR TICKET</span>
+              <strong>VIEW RECEIPT</strong>
+            </Link>
+            <a href="#slate-matchups">
+              <span>PICK&apos;EM</span>
+              <strong className={pickemMiniStatus === "FINAL" || pickemMiniStatus === "OUT" ? "is-quiet" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemMiniStatus}</strong>
+            </a>
+            <Link href="/survivor">
+              <span>SURVIVOR</span>
+              <strong className={survivorMiniStatus === "PICK DUE" ? "is-due" : survivorMiniStatus === "OUT" ? "is-out" : survivorMiniStatus === "PICK MADE" ? "is-complete" : "is-quiet"}>{survivorMiniStatus}</strong>
+            </Link>
+          </nav>
+
         </header>
 
         {playoffEliminated ? (
@@ -651,7 +681,7 @@ export default function BoardPage() {
         ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9">
+          <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9" id="slate-matchups">
             {false ? (
               <section className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
                 <h2 className="font-serif text-xl font-bold">

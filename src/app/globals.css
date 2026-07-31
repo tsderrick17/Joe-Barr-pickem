@@ -62,6 +62,49 @@ body {
   row-gap: 0.75rem;
 }
 
+.slate-mini-nav {
+  border-block: 1px solid #b7aea0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.slate-mini-nav a {
+  color: #25334a;
+  display: grid;
+  gap: .16rem;
+  min-width: 0;
+  padding: .58rem .7rem;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.slate-mini-nav a + a { border-left: 1px solid #b7aea0; }
+
+.slate-mini-nav a:hover,
+.slate-mini-nav a:focus-visible {
+  background: #ede6d8;
+  color: #171719;
+}
+
+.slate-mini-nav span {
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.slate-mini-nav strong {
+  font-size: .66rem;
+  letter-spacing: .045em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slate-mini-nav strong.is-complete { color: #08764e; }
+.slate-mini-nav strong.is-due { color: #a82820; }
+.slate-mini-nav strong.is-out { color: #b42318; }
+.slate-mini-nav strong.is-quiet { color: #5d6470; }
+
 .survivor-sticky-status,
 .survivor-sticky-name {
   align-items: center;
@@ -801,6 +844,16 @@ html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-steel-face: #77aaa4;
   --survivor-steel-glint: #a7cbc4;
 }
+
+html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
+html[data-theme="night"] .slate-mini-nav a { color: #d6e2df; }
+html[data-theme="night"] .slate-mini-nav a + a { border-color: #6d746c; }
+html[data-theme="night"] .slate-mini-nav a:hover,
+html[data-theme="night"] .slate-mini-nav a:focus-visible { background: #29343a; color: #ffffff; }
+html[data-theme="night"] .slate-mini-nav strong.is-complete { color: #7ee1b0; }
+html[data-theme="night"] .slate-mini-nav strong.is-due { color: #ffaaa1; }
+html[data-theme="night"] .slate-mini-nav strong.is-out { color: #ffaaa1; }
+html[data-theme="night"] .slate-mini-nav strong.is-quiet { color: #b8c5ca; }
 
 html[data-theme="night"] .survivor-standings-row .survivor-sticky-name {
   text-shadow: 0 1px 0 rgba(255,255,255,.16), 0 -1px 0 rgba(0,0,0,.42);
