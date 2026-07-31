@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type Message = {
@@ -19,12 +19,17 @@ const EMOJI_GROUPS = [
   { label: "Quick marks", emojis: ["✅", "❌", "⚡", "💯", "📝", "🧾", "⏰", "🎲", "🃏", "🎰", "📣", "💥", "⭐", "🔔", "📌"] },
 ];
 
-function messageTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).format(new Date(value));
-}
-
 function messageDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", { day: "numeric", hour: "numeric", minute: "2-digit", month: "short", timeZone: "America/New_York" }).format(new Date(value));
+  const timestamp = new Date(value);
+  if (Number.isNaN(timestamp.getTime())) return "Time unavailable";
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+  }).format(timestamp);
 }
 
 export default function PoolChat() {
@@ -35,6 +40,8 @@ export default function PoolChat() {
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const messagesViewport = useRef<HTMLDivElement>(null);
+  const hasPositionedMessages = useRef(false);
 
   const loadMessages = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -57,6 +64,13 @@ export default function PoolChat() {
     const refresh = window.setInterval(() => void loadMessages(true), 25_000);
     return () => { window.clearTimeout(initialLoad); window.clearInterval(refresh); };
   }, [loadMessages]);
+
+  useEffect(() => {
+    if (!messages.length || hasPositionedMessages.current) return;
+    const viewport = messagesViewport.current;
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
+    hasPositionedMessages.current = true;
+  }, [messages]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,12 +119,12 @@ export default function PoolChat() {
 
   return (
     <section aria-label="Pool chat" className="pool-chat border-y-2 border-[#1d1d1f] bg-[#fffdf8] px-4 py-3 sm:px-5">
-      <div aria-live="polite" className="max-h-60 overflow-y-auto">
+      <div aria-live="polite" className="max-h-[21.5rem] overflow-y-auto" ref={messagesViewport}>
         {loading ? <p className="py-3 text-sm text-slate-600">Opening chat...</p> : null}
         {!loading && !messages.length ? <p className="py-3 text-sm text-slate-600">No messages yet.</p> : null}
         {messages.map((message) => <article className={`pool-chat-message ${message.isDeleted ? "is-deleted" : ""}`} key={message.id}>
           <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{message.isDeleted ? "Message removed." : message.body}</p>
-          <div className="pool-chat-message-meta"><strong className="font-serif">{message.playerName}</strong><time title={`${messageDateTime(message.createdAt)} ET`}>{messageTime(message.createdAt)} ET</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
+          <div className="pool-chat-message-meta"><strong className="font-serif">{message.playerName}</strong><time dateTime={message.createdAt} title={messageDateTime(message.createdAt)}>{messageDateTime(message.createdAt)}</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
         </article>)}
       </div>
 
