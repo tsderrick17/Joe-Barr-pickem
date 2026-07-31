@@ -31,8 +31,6 @@ type Profile = {
   emailWeeklyRecapEnabled: boolean;
   emailPlayoffDayRecapEnabled: boolean;
   emailPlayoffPublicRevealEnabled: boolean;
-  showSurvivorStandings: boolean;
-  showPoolChat: boolean;
 };
 
 type NotificationPace = "quiet" | "regular" | "full" | "custom";
@@ -70,8 +68,6 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [showSurvivorStandings, setShowSurvivorStandings] = useState(true);
-  const [showPoolChat, setShowPoolChat] = useState(true);
   const update = (patch: Partial<Preferences>) => setPreferences((current) => ({ ...current, ...patch }));
   const pace = paceFor(preferences);
 
@@ -84,7 +80,6 @@ export default function ProfilePage() {
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data); setEmail(data.notificationEmail); setEnabled(data.emailNotificationsEnabled);
-        setShowSurvivorStandings(data.showSurvivorStandings !== false); setShowPoolChat(data.showPoolChat !== false);
         setPreferences({ weekly: data.emailWeeklyEnabled, finalLines: data.emailFinalLinesEnabled, sundayFinalLines: data.emailSundayFinalLinesEnabled, earlyLock: data.emailEarlyLockEnabled, pickDue: data.emailPickDueEnabled, sundayEarlyReveal: data.emailSundayEarlyRevealEnabled, sundayLateReveal: data.emailSundayLateRevealEnabled, featuredWindowReveal: data.emailFeaturedWindowRevealEnabled, weeklyRecap: data.emailWeeklyRecapEnabled, playoffDayRecap: data.emailPlayoffDayRecapEnabled, playoffPublicReveal: data.emailPlayoffPublicRevealEnabled });
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -97,10 +92,10 @@ export default function ProfilePage() {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(""); setMessage("");
     try {
-      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailPlayoffDayRecapEnabled: preferences.playoffDayRecap, emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal, showSurvivorStandings, showPoolChat }) });
+      const response = await fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationEmail: email, emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailPlayoffDayRecapEnabled: preferences.playoffDayRecap, emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal }) });
       const data = await response.json() as { error?: string; message?: string };
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
-      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailPlayoffDayRecapEnabled: preferences.playoffDayRecap, emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal, showSurvivorStandings, showPoolChat });
+      setProfile({ notificationEmail: email.trim(), emailNotificationsEnabled: enabled, emailWeeklyEnabled: preferences.weekly, emailFinalLinesEnabled: preferences.finalLines, emailSundayFinalLinesEnabled: preferences.sundayFinalLines, emailEarlyLockEnabled: preferences.earlyLock, emailPickDueEnabled: preferences.pickDue, emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal, emailSundayLateRevealEnabled: preferences.sundayLateReveal, emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal, emailWeeklyRecapEnabled: preferences.weeklyRecap, emailPlayoffDayRecapEnabled: preferences.playoffDayRecap, emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal });
       setMessage(data.message ?? "Notification settings saved.");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -116,7 +111,6 @@ export default function ProfilePage() {
       <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-white px-3 py-2 outline-none focus:border-[#007e72]" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
       <p className="mt-3 text-sm leading-5 text-slate-600">Your address is private and used only for this pool.</p>
       <label className="mt-5 flex items-start gap-3 border-y border-zinc-300 py-5 text-sm"><input checked={enabled} className="mt-1 size-4 accent-[#007e72]" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send pool emails to this address</strong>You can change the pace below whenever you like.</span></label>
-      <section className="mt-7 border-y border-zinc-300 py-5"><h2 className="text-sm font-black tracking-[.14em] text-[#171719]">DISPLAY</h2><p className="mt-1 text-sm text-slate-600">These choices are saved to your account and apply whenever you sign in.</p><div className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={showSurvivorStandings} note="Show the Survivor standings table on the Standings page." onChange={setShowSurvivorStandings} title="Show Survivor pool" /><Choice checked={showPoolChat} note="Show the shared pool chat at the bottom of player pages." onChange={setShowPoolChat} title="Show pool chat" /></div></section>
       {enabled ? <div className="mt-7 space-y-8">
         <section><h2 className="text-sm font-black tracking-[.14em] text-[#171719]">CHOOSE YOUR PACE</h2><p className="mt-1 text-sm text-slate-600">Start simple. You can fine-tune the exact timing and content below.</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><PaceCard active={pace === "quiet"} detail="Tuesday recap, plus a reminder only when you still owe a pick." onChoose={() => setPreferences(quiet)} title="Quiet" /><PaceCard active={pace === "regular"} detail="Wednesday Slate, final gameday lines, due reminders, and Tuesday recap." onChoose={() => setPreferences(regular)} recommended title="Regular" /><PaceCard active={pace === "full"} detail="Everything in Regular, plus public pick reveals and playoff-day updates." onChoose={() => setPreferences(full)} title="Full card" /></div>{pace === "custom" ? <p className="mt-3 text-sm font-semibold text-[#007e72]">You have a custom mix. Your choices are preserved below.</p> : null}</section>
         <section className="border-y border-zinc-300 py-5"><button aria-expanded={showFineTune} className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setShowFineTune((current) => !current)} type="button"><span><strong className="block text-sm tracking-[.12em]">FINE-TUNE THE DETAILS</strong><span className="mt-1 block text-sm text-slate-600">Optional controls for exact days, public windows, and playoffs.</span></span><span className="text-xl text-[#007e72]">{showFineTune ? "−" : "+"}</span></button>{showFineTune ? <div className="mt-5 space-y-7">
