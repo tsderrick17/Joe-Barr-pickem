@@ -13,6 +13,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 import SlateGameRow from "@/components/slate-game-row";
+import SelectionReceipt from "@/components/selection-receipt";
 
 type ScoringPeriod = {
   id: string;
@@ -400,6 +401,14 @@ export default function BoardPage() {
     survivorPick,
   ]);
 
+  const savedTeams = useMemo(() => savedPicks
+    .map((pick) => {
+      const game = games.find((item) => item.id === pick.gameId);
+      if (!game) return null;
+      return pick.teamId === game.awayTeamId ? game.awayTeam : pick.teamId === game.homeTeamId ? game.homeTeam : null;
+    })
+    .filter((team): team is string => Boolean(team)), [games, savedPicks]);
+
   useEffect(() => {
     if (!hasUnsavedChanges) return;
 
@@ -666,6 +675,8 @@ export default function BoardPage() {
             <p className="mt-1 text-sm">Your existing selections remain on the Slate for the season&apos;s audit trail. You are not eligible to make further Pick&apos;em selections.</p>
           </section>
         ) : null}
+
+        {!isReadOnly ? <SelectionReceipt heading="PICK'EM RECEIPT" items={selectedTeams.map((team) => team.name)} savedItems={savedTeams} selectionLimit={selectionLimit} /> : null}
 
         {errorMessage ? (
           <div className="mt-8">
