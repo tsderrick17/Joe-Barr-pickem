@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
     usedPicksResult.error
   ) {
     return NextResponse.json(
-      { error: "The Survivor Wire could not be loaded safely. Please try again." },
+      { error: "The Survivor Table could not be loaded safely. Please try again." },
       { status: 503 },
     );
   }

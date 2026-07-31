@@ -766,7 +766,7 @@ export default function BoardPage() {
             ) : false ? (
               <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping survivor-clipping p-2.5 sm:p-3">
                 <div className="flex items-center justify-between gap-3 border-b-2 border-[#1d1d1f] pb-1.5">
-                  <h2 className="font-serif text-xl font-black leading-none sm:text-2xl" id="survivor-wire-heading">The Survivor Wire</h2>
+                  <h2 className="font-serif text-xl font-black leading-none sm:text-2xl" id="survivor-wire-heading">Survivor Table</h2>
                   <p className="text-right text-[9px] font-black uppercase tracking-[0.1em] text-[#29251d] sm:text-[10px]">Straight-up · {week?.display_name}</p>
                 </div>
                 <div className="mt-2 divide-y divide-[#1d1d1f] border-y border-[#1d1d1f]">

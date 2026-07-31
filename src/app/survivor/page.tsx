@@ -36,12 +36,12 @@ export default function SurvivorPage() {
     try {
       const response = await fetchWithSession("/api/survivor");
       const result = (await response.json()) as SurvivorData;
-      if (!response.ok) throw new Error(result.error ?? "The Survivor Wire could not be loaded.");
+      if (!response.ok) throw new Error(result.error ?? "The Survivor Table could not be loaded.");
       setData(result);
       setSelected(result.entry.pick ? { gameId: result.entry.pick.game_id, teamId: result.entry.pick.selected_team_id } : null);
     } catch (error) {
       if (error instanceof SessionUnavailableError) window.location.assign("/login");
-      else { setMessageKind("error"); setMessage(error instanceof Error ? error.message : "The Survivor Wire could not be loaded."); }
+      else { setMessageKind("error"); setMessage(error instanceof Error ? error.message : "The Survivor Table could not be loaded."); }
     }
   }
 
@@ -63,7 +63,7 @@ export default function SurvivorPage() {
     finally { setSaving(false); }
   }
 
-  if (!data) return <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">{message || "Loading The Survivor Wire..."}</main>;
+  if (!data) return <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">{message || "Loading Survivor Table..."}</main>;
   const eliminated = data.entry.status === "eliminated";
   const complete = data.entry.status === "complete";
   const hasUnsavedChange = selected?.gameId !== data.entry.pick?.game_id || selected?.teamId !== data.entry.pick?.selected_team_id;
@@ -71,7 +71,7 @@ export default function SurvivorPage() {
   const survivorReceipt = selectedTeam?.name ?? "OPEN";
 
   return <main className={`min-h-screen bg-[#f5f0e6] px-4 py-5 text-[#171719] sm:px-5 sm:py-8 md:px-10 ${hasUnsavedChange ? "pb-36 sm:pb-32" : ""}`}><div className="mx-auto max-w-3xl">
-    <header className="border-b-4 border-[#171719] pb-4"><p className="text-[11px] font-bold tracking-[.22em] text-slate-600">STRAIGHT-UP SURVIVOR · {data.week.name.toUpperCase()}</p><h1 className="mt-1 font-serif text-4xl font-black tracking-tight sm:text-5xl">The Survivor Wire</h1><p className="mt-2 max-w-xl text-sm font-bold text-[#171719]">Each team may be used once per season.</p><p className="mt-1 max-w-xl text-sm text-slate-700">Pick one outright winner and click &ldquo;Save&rdquo; at the bottom.</p>{data.byeTeams.length ? <p className="mt-3 text-[11px] font-bold tracking-[.12em] text-slate-600">BYE THIS WEEK: {data.byeTeams.join(", ")}</p> : null}</header>
+    <header className="border-b-4 border-[#171719] pb-4"><p className="text-[11px] font-bold tracking-[.22em] text-slate-600">STRAIGHT-UP SURVIVOR · {data.week.name.toUpperCase()}</p><h1 className="mt-1 font-serif text-4xl font-black tracking-tight sm:text-5xl">Survivor Table</h1><p className="mt-2 max-w-xl text-sm font-bold text-[#171719]">Each team may be used once per season.</p><p className="mt-1 max-w-xl text-sm text-slate-700">Pick one outright winner and click &ldquo;Save&rdquo; at the bottom.</p>{data.byeTeams.length ? <p className="mt-3 text-[11px] font-bold tracking-[.12em] text-slate-600">BYE THIS WEEK: {data.byeTeams.join(", ")}</p> : null}</header>
     <nav aria-label="Your weekly receipt" className="slate-mini-nav mt-5"><Link href="/#my-ticket"><span>YOUR RECEIPT</span><strong>VIEW FULL TICKET</strong></Link><Link href="/board"><span>PICK&apos;EM</span><strong className="is-quiet">VIEW THE SLATE</strong><em>ATS SELECTIONS</em></Link><a href="#survivor-matchups"><span>SURVIVOR</span><strong className={hasUnsavedChange ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : "is-complete"}>{survivorReceipt}</strong><em>{hasUnsavedChange ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : "SAVED"}</em></a></nav>
     {complete ? <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950"><p className="text-xs font-black tracking-[.16em]">SURVIVOR CHAMPION</p><h2 className="mt-1 font-serif text-2xl font-black">Congratulations, {data.champion?.name}!</h2><p className="mt-1 text-sm">The Survivor pool is complete for the season. The Wire remains as the permanent record.</p></section> : eliminated ? <section className="mt-5 border-l-4 border-[#171719] bg-[#e7e1d5] px-4 py-3"><p className="text-xs font-black tracking-[.16em] text-zinc-600">SURVIVOR STATUS</p><h2 className="mt-1 font-serif text-2xl font-black">You have been eliminated.</h2><p className="mt-1 text-sm">The matchups remain available to follow the pool, but your entry is closed.</p></section> : null}
     <section className={`mt-7 border-t-4 border-[#171719] ${eliminated || complete ? "grayscale" : ""}`} id="survivor-matchups"><div className="flex items-center justify-between border-b border-[#171719] py-3"><h2 className="font-serif text-2xl font-black">This week&apos;s matchups</h2><span className="text-[11px] font-bold tracking-[.16em] text-slate-600">{eliminated || complete ? "VIEW ONLY" : "SELECT ONE"}</span></div><div className="divide-y divide-[#c9c1b2]">

@@ -156,7 +156,7 @@ export default function SiteNav() {
           </Link>
 
           <Link className={linkStyle("/survivor")} href="/survivor">
-            Survivor Wire
+            Survivor Table
           </Link>
 
           {isCommissioner ? (
@@ -221,7 +221,7 @@ export default function SiteNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-around px-3 py-2 text-sm">
         <Link className={linkStyle("/")} href="/">Standings</Link>
         <Link className={linkStyle("/board")} href="/board">The Slate</Link>
-        <Link className={linkStyle("/survivor")} href="/survivor">Survivor Wire</Link>
+        <Link className={linkStyle("/survivor")} href="/survivor">Survivor Table</Link>
       </div>
     </nav>
   </>;
