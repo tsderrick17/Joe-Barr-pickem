@@ -55,7 +55,7 @@ type Props = {
   hasStarted: boolean;
   selectedTeamId?: string | null;
   selectionIsNew?: boolean;
-  selectionFeedback?: { teamId: string; type: "sweep" | "pulse"; token: number } | null;
+  selectionFeedback?: { teamId: string; type: "sweep"; token: number } | null;
   allowSelection?: boolean;
   onChoose?: (gameId: string, teamId: string) => void;
 };
@@ -81,7 +81,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
-    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[12px] font-bold leading-[1.15] tracking-tight min-[380px]:text-[13px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${(selectionIsNew || feedbackType === "sweep") ? "slate-team-selection--new" : ""} ${feedbackType === "pulse" ? "slate-team-selection--pulse" : ""} bg-[#1d1d1f] px-1 py-1.5 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
+    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[12px] font-bold leading-[1.15] tracking-tight min-[380px]:text-[13px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${(selectionIsNew || feedbackType === "sweep") ? "slate-team-selection--new" : ""} bg-[#1d1d1f] px-1 py-1.5 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
     const content = <>
       <span className="block min-w-0 break-normal [hyphens:none]">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}

@@ -208,7 +208,7 @@ export default function BoardPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
-  const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep" | "pulse"; token: number } | null>(null);
+  const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep"; token: number } | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
   const selectionFeedbackToken = useRef(0);
@@ -429,7 +429,7 @@ export default function BoardPage() {
 
   const isReadOnly = week?.status === "complete" || playoffEliminated;
   const hasEarlyGame = games.some(isEarlyGame);
-  function showSelectionFeedback(gameId: string, teamId: string, type: "sweep" | "pulse") {
+  function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
     setSelectionFeedback({ gameId, teamId, type, token: selectionFeedbackToken.current });
   }
@@ -443,7 +443,8 @@ export default function BoardPage() {
     const existingPick = selectedPicks.find((pick) => pick.gameId === gameId);
 
     if (existingPick?.teamId === teamId) {
-      showSelectionFeedback(gameId, teamId, "pulse");
+      setSelectedPicks((current) => current.filter((pick) => pick.gameId !== gameId));
+      setSelectionFeedback(null);
       return;
     }
 
