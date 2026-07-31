@@ -6,6 +6,8 @@ export type SlateGameRowData = {
   status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
   awayTeam: string;
   homeTeam: string;
+  awayTeamAbbreviation: string;
+  homeTeamAbbreviation: string;
   awayTeamId: string;
   homeTeamId: string;
   favoriteTeamId: string | null;
@@ -62,11 +64,11 @@ type Props = {
 export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose }: Props) {
   const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
   const left = favoriteIsHome
-    ? { name: game.homeTeam, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true }
-    : { name: game.awayTeam, id: game.awayTeamId, result: game.awayResult, score: game.awayScore, pickers: game.awayPickers, home: false };
+    ? { name: game.homeTeam, abbreviation: game.homeTeamAbbreviation, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true }
+    : { name: game.awayTeam, abbreviation: game.awayTeamAbbreviation, id: game.awayTeamId, result: game.awayResult, score: game.awayScore, pickers: game.awayPickers, home: false };
   const right = favoriteIsHome
-    ? { name: game.awayTeam, id: game.awayTeamId, result: game.awayResult, score: game.awayScore, pickers: game.awayPickers, home: false }
-    : { name: game.homeTeam, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true };
+    ? { name: game.awayTeam, abbreviation: game.awayTeamAbbreviation, id: game.awayTeamId, result: game.awayResult, score: game.awayScore, pickers: game.awayPickers, home: false }
+    : { name: game.homeTeam, abbreviation: game.homeTeamAbbreviation, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true };
   const isFinal = game.status === "final";
   // Kickoff, not a delayed provider status, is the fair public-receipt line.
   // The card becomes live at that moment and remains a fixed audit record after final.
@@ -82,14 +84,14 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${feedbackType === "sweep" ? "slate-team-selection--new" : ""} bg-[#1d1d1f] px-1 py-1 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
     const content = <>
-      <span className="block min-w-0 break-normal [hyphens:none]">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
+      <span className="block min-w-0 break-normal [hyphens:none]"><span className="slate-team-name-full">{label}</span><span aria-label={label} className="slate-team-name-short">{team.abbreviation}</span><ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
     return allowSelection ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
   };
 
-  return <article className={`grid grid-cols-[2.45rem_minmax(0,1fr)_3.85rem_minmax(0,1fr)] items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:grid-cols-[2.8rem_minmax(0,1fr)_4.4rem_minmax(0,1fr)] min-[380px]:gap-1 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
+  return <article className={`grid grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] min-[380px]:gap-1 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
     <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
       {isFinal ? <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>

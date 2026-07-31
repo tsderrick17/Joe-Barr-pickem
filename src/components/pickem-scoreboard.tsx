@@ -59,7 +59,7 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
                       <td className={`break-words px-2 py-2 text-[13px] leading-tight sm:px-3 sm:py-2.5 sm:text-[15px] ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
                         {pick?.label ? (
                           <span>
-                            {isPlayoff ? pick.abbreviation ?? pick.label : pick.label}
+                            {isPlayoff ? pick.abbreviation ?? pick.label : <><span className="scoreboard-team-name-full">{pick.label}</span>{pick.abbreviation ? <span aria-label={pick.label} className="scoreboard-team-name-short">{pick.abbreviation}</span> : null}</>}
                             {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>{pick.spread}</strong> : null}
                             {pick.resultMark ? <strong className={`ml-1.5 text-[13px] ${pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{pick.resultMark}</strong> : null}
                           </span>

@@ -153,6 +153,12 @@ const rehearsalKickoffs = [
   "2026-09-29T00:15:00Z",
 ];
 
+const rehearsalAbbreviations: Record<string, string> = {
+  Bears: "CHI", Bills: "BUF", Chiefs: "KC", Cowboys: "DAL", Eagles: "PHI",
+  Jaguars: "JAX", Lions: "DET", Packers: "GB", Rams: "LAR", Ravens: "BAL",
+  Steelers: "PIT",
+};
+
 function rehearsalSlateGame(game: RehearsalGame, index: number, scenario: Scenario): SlateGameRowData {
   const final = scenario.finalGames.includes(index);
   const live = scenario.activeGames.includes(index) && !final;
@@ -167,6 +173,8 @@ function rehearsalSlateGame(game: RehearsalGame, index: number, scenario: Scenar
     status: final ? "final" : live ? "live" : "scheduled",
     awayTeam: game.right,
     homeTeam: game.left,
+    awayTeamAbbreviation: rehearsalAbbreviations[game.right],
+    homeTeamAbbreviation: rehearsalAbbreviations[game.left],
     awayTeamId: `${game.id}-away`,
     homeTeamId: `${game.id}-home`,
     favoriteTeamId: `${game.id}-home`,

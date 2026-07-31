@@ -625,6 +625,19 @@ html[data-theme="night"] .survivor-selection-footer {
   z-index: 1;
 }
 
+.slate-team-name-short { display: none; }
+.scoreboard-team-name-short { display: none; }
+
+/* Give the teams—not the line—a little more room on a phone, in enlarged
+   text, and at browser zoom. The full record remains available to assistive
+   technology through the short label's aria-label. */
+@media (max-width: 440px) {
+  .slate-team-name-full { display: none; }
+  .slate-team-name-short { display: inline; }
+  .scoreboard-team-name-full { display: none; }
+  .scoreboard-team-name-short { display: inline; }
+}
+
 .slate-team-selection--new {
   background: transparent !important;
 }
