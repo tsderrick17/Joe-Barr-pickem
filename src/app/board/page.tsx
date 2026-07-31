@@ -622,7 +622,7 @@ export default function BoardPage() {
               </div>
             </div>
 
-            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
+            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pl-4 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
                 <div>

@@ -118,7 +118,7 @@ body {
 @media (min-width: 640px) {
   /* The internal divider shares the receipt's Pick'em/Survivor rule. */
   .slate-how-to-grid {
-    grid-template-columns: minmax(0, calc(50% - .5rem)) minmax(0, calc(50% + .5rem));
+    grid-template-columns: minmax(0, calc(50% - 1.1rem)) minmax(0, calc(50% + 1.1rem));
   }
 }
 
@@ -130,7 +130,18 @@ body {
   width: fit-content;
 }
 
-.slate-view-switch--header { margin-top: 1.35rem; }
+.slate-view-switch--header {
+  column-gap: .45rem;
+  display: grid;
+  grid-template-columns: max-content 2.1rem;
+  grid-template-rows: repeat(2, auto);
+  margin-top: 1.35rem;
+  row-gap: .15rem;
+}
+
+.slate-view-switch--header > span:first-child { grid-column: 1; grid-row: 1; }
+.slate-view-switch--header > button { grid-column: 2; grid-row: 1 / span 2; }
+.slate-view-switch--header > span:last-child { grid-column: 1; grid-row: 2; }
 
 .slate-view-switch > span {
   color: #687179;
