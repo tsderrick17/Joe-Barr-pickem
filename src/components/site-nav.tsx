@@ -214,7 +214,7 @@ export default function SiteNav() {
       </div>
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
-      <div className="mx-auto flex max-w-6xl items-center justify-around px-3 py-2 text-sm">
+      <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link className={linkStyle("/")} href="/">Standings</Link>
         <Link className={linkStyle("/board")} href="/board">The Slate</Link>
       </div>
