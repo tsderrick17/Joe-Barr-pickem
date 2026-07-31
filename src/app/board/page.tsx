@@ -12,6 +12,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { helmetShellColor } from "@/lib/nfl-helmet-colors";
 import SlateGameRow from "@/components/slate-game-row";
+import MyTicket, { type TicketPick } from "@/components/my-ticket";
 
 type ScoringPeriod = {
   id: string;
@@ -201,6 +202,7 @@ export default function BoardPage() {
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
+  const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +256,7 @@ export default function BoardPage() {
       setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
+      setSurvivorStatus(data.survivor.status);
       setSurvivorNotice(data.survivor.notice);
     } catch (error) {
       if (requestId === boardRequestId.current) {
@@ -374,20 +377,47 @@ export default function BoardPage() {
       .filter(Boolean) as { gameId: string; name: string; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
-  const savedPickNames = useMemo(() => {
+  const savedTicketPicks = useMemo(() => {
     return savedPicks
       .map((pick) => {
         const game = games.find((item) => item.id === pick.gameId);
         if (!game) return null;
-
-        return pick.teamId === game.homeTeamId
+        const team = pick.teamId === game.homeTeamId
           ? game.homeTeam
           : pick.teamId === game.awayTeamId
             ? game.awayTeam
             : null;
+        if (!team) return null;
+
+        let spread: string | null = null;
+        if (game.officialSpread !== null) {
+          if (game.officialSpread === 0) spread = "PK";
+          else spread = `${pick.teamId === game.favoriteTeamId ? "-" : "+"}${Number.isInteger(game.officialSpread) ? game.officialSpread : game.officialSpread.toFixed(1)}`;
+        }
+
+        return {
+          gameId: game.id,
+          team,
+          kickoff: easternTime(game.kickoffAt),
+          spread,
+          lineLocked: game.officialSpread !== null,
+        };
       })
-      .filter(Boolean) as string[];
+      .filter(Boolean) as TicketPick[];
   }, [games, savedPicks]);
+
+  const savedSurvivorTicket = useMemo(() => {
+    if (!savedSurvivorPick) return null;
+    const game = games.find((item) => item.id === savedSurvivorPick.gameId);
+    if (!game) return null;
+    if (savedSurvivorPick.teamId === game.homeTeamId) {
+      return { team: game.homeTeam, abbreviation: game.homeTeamAbbreviation };
+    }
+    if (savedSurvivorPick.teamId === game.awayTeamId) {
+      return { team: game.awayTeam, abbreviation: game.awayTeamAbbreviation };
+    }
+    return null;
+  }, [games, savedSurvivorPick]);
 
   const hasUnsavedChanges = useMemo(() => {
     const survivorChanged =
@@ -652,30 +682,17 @@ export default function BoardPage() {
           </section>
         ) : null}
 
-        {savedPickNames.length ? (
-          <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950">
-            <p className="font-bold">
-              {week.status === "complete"
-                ? `Your ${week.display_name} picks`
-                : savedPickNames.length >= selectionLimit
-                  ? `Your ${week.display_name} picks are submitted.`
-                  : `Your ${week.display_name} pick is saved.`}
-            </p>
-            <p className="mt-1 text-sm font-semibold">
-              {savedPickNames.join(" · ")}
-            </p>
-            <p className="mt-1 text-sm">
-              {week.status === "complete"
-                ? "This week is final."
-                : playoffEliminated
-                  ? "Your playoff race is over; these selections remain visible for audit."
-                : hasUnsavedChanges
-                  ? "You have unsaved changes below."
-                  : savedPickNames.length >= selectionLimit
-                    ? "You may change them until their listed kickoff."
-                    : `Select and save ${selectionLimit - savedPickNames.length} more ${selectionLimit - savedPickNames.length === 1 ? "pick" : "picks"} to complete your entry.`}
-            </p>
-          </section>
+        {!isLoading && !errorMessage ? (
+          <MyTicket
+            hasUnsavedChanges={hasUnsavedChanges}
+            maxPicks={selectionLimit}
+            picks={savedTicketPicks}
+            readOnly={isReadOnly}
+            survivorAvailable={survivorAvailable}
+            survivorPick={savedSurvivorTicket}
+            survivorStatus={survivorStatus}
+            week={week.display_name}
+          />
         ) : null}
 
         {errorMessage ? (

@@ -869,3 +869,320 @@ html[data-theme="night"] .survivor-clipping {
 html[data-theme="night"] .newspaper-clipping::after {
   border-color: rgba(120, 216, 203, 0.18);
 }
+
+/* Thermal race ticket: intentionally compact, ink-heavy, and lightweight. */
+.my-ticket {
+  background:
+    repeating-linear-gradient(0deg, rgba(46, 39, 30, .025) 0 1px, transparent 1px 4px),
+    #f3ead6;
+  border: 1px solid #756b5b;
+  box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
+  color: #28221b;
+  padding: .9rem 1.05rem .8rem;
+  position: relative;
+}
+
+.my-ticket::before,
+.my-ticket::after {
+  background: #fffdf8;
+  border: 1px solid #756b5b;
+  border-radius: 50%;
+  content: "";
+  height: .9rem;
+  position: absolute;
+  top: calc(50% - .45rem);
+  width: .9rem;
+}
+
+.my-ticket::before { left: -.5rem; }
+.my-ticket::after { right: -.5rem; }
+
+.my-ticket-brand {
+  text-align: center;
+}
+
+.my-ticket-brand p,
+.my-ticket-brand span,
+.my-ticket-serial,
+.my-ticket-rule,
+.my-ticket-section-heading,
+.my-ticket-footer {
+  font-family: Arial, sans-serif;
+}
+
+.my-ticket-brand p {
+  font-size: .52rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.my-ticket-brand h2 {
+  font: 900 1.9rem/.9 Georgia, serif;
+  letter-spacing: -.04em;
+  margin-top: .12rem;
+}
+
+.my-ticket-brand span {
+  display: block;
+  font-size: .5rem;
+  font-weight: 900;
+  letter-spacing: .15em;
+  margin-top: .22rem;
+}
+
+.my-ticket-serial {
+  font: 800 .57rem/1.2 "Courier New", monospace;
+  letter-spacing: .12em;
+  margin-top: .38rem;
+  text-align: center;
+}
+
+.my-ticket-race {
+  align-items: end;
+  border-bottom: 2px solid #28221b;
+  display: flex;
+  justify-content: space-between;
+  margin-top: .6rem;
+  padding-bottom: .25rem;
+}
+
+.my-ticket-race strong {
+  font: 900 1.35rem/1 "Courier New", monospace;
+  text-transform: uppercase;
+}
+
+.my-ticket-race span {
+  font: 900 1.05rem/1 "Courier New", monospace;
+}
+
+.my-ticket-rule {
+  align-items: center;
+  border-bottom: 1px solid #28221b;
+  display: flex;
+  font-size: .68rem;
+  font-weight: 900;
+  justify-content: space-between;
+  letter-spacing: .05em;
+  padding: .32rem 0;
+}
+
+.my-ticket-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.my-ticket-section {
+  min-width: 0;
+  padding: .68rem .75rem .58rem 0;
+}
+
+.my-ticket-section + .my-ticket-section {
+  border-left: 1px dashed #958a77;
+  padding-left: .8rem;
+  padding-right: 0;
+}
+
+.my-ticket-section-heading {
+  align-items: center;
+  display: flex;
+  font-size: .58rem;
+  font-weight: 900;
+  justify-content: space-between;
+  letter-spacing: .13em;
+}
+
+.my-ticket-section-heading strong {
+  color: #006b64;
+  font-size: .55rem;
+}
+
+.my-ticket-picks {
+  margin-top: .35rem;
+}
+
+.my-ticket-picks li {
+  align-items: center;
+  border-top: 1px dotted #9b907e;
+  display: grid;
+  gap: .4rem;
+  grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+  min-height: 2.45rem;
+  padding: .28rem 0;
+}
+
+.my-ticket-number {
+  color: #736b5d;
+  font: 900 .72rem/1 "Courier New", monospace;
+}
+
+.my-ticket-selection {
+  display: grid;
+  min-width: 0;
+}
+
+.my-ticket-selection strong {
+  font: 900 .84rem/1.1 "Courier New", monospace;
+}
+
+.my-ticket-selection small {
+  color: #665e51;
+  font: 700 .55rem/1.2 Arial, sans-serif;
+  margin-top: .16rem;
+}
+
+.my-ticket-line {
+  color: #71695d;
+  font: 900 .62rem/1 "Courier New", monospace;
+}
+
+.my-ticket-line.is-locked {
+  color: #006b8f;
+  font-size: .78rem;
+}
+
+.my-ticket-open {
+  color: #766e60;
+  font: 800 .64rem/1 Arial, sans-serif;
+  grid-column: 2 / 4;
+  letter-spacing: .09em;
+}
+
+.my-ticket-due {
+  color: #923c24;
+  font: 900 .56rem/1.2 Arial, sans-serif;
+  letter-spacing: .12em;
+  margin-top: .28rem;
+}
+
+.my-ticket-survivor-pick {
+  align-items: center;
+  display: flex;
+  gap: .6rem;
+  margin-top: .58rem;
+}
+
+.my-ticket-survivor-pick div {
+  display: grid;
+  min-width: 0;
+}
+
+.my-ticket-survivor-pick small {
+  color: #665e51;
+  font: 800 .5rem/1.2 Arial, sans-serif;
+  letter-spacing: .1em;
+}
+
+.my-ticket-survivor-pick strong {
+  font: 900 .84rem/1.15 "Courier New", monospace;
+  margin-top: .16rem;
+}
+
+.my-ticket-survivor-state {
+  border-block: 1px dotted #958a77;
+  font: 900 .75rem/1.2 "Courier New", monospace;
+  margin-top: .58rem;
+  padding: .8rem 0;
+}
+
+.my-ticket-survivor-state.is-out { color: #9f2424; }
+
+.my-ticket-footer {
+  align-items: center;
+  border-top: 2px solid #28221b;
+  display: grid;
+  gap: .5rem;
+  grid-template-columns: auto minmax(0, 1fr) 4.2rem;
+  padding-top: .48rem;
+}
+
+.my-ticket-footer > span {
+  font: 900 .68rem/1 "Courier New", monospace;
+}
+
+.my-ticket-footer > div {
+  display: grid;
+  justify-items: center;
+}
+
+.my-ticket-footer small {
+  color: #665e51;
+  font-size: .46rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+.my-ticket-footer strong {
+  color: #006b64;
+  font: 900 .64rem/1.25 Arial, sans-serif;
+  letter-spacing: .08em;
+}
+
+.my-ticket-footer strong.needs-action { color: #993b22; }
+
+.my-ticket-barcode {
+  background: repeating-linear-gradient(90deg, #28221b 0 1px, transparent 1px 3px, #28221b 3px 5px, transparent 5px 7px);
+  height: 1.12rem;
+}
+
+html[data-theme="night"] .my-ticket {
+  background:
+    repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
+    #29251f;
+  border-color: #897e6b;
+  color: #f2e8d3;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+}
+
+html[data-theme="night"] .my-ticket::before,
+html[data-theme="night"] .my-ticket::after {
+  background: #10181e;
+  border-color: #897e6b;
+}
+
+html[data-theme="night"] .my-ticket-race,
+html[data-theme="night"] .my-ticket-rule,
+html[data-theme="night"] .my-ticket-footer {
+  border-color: #d1c4aa;
+}
+
+html[data-theme="night"] .my-ticket-section + .my-ticket-section,
+html[data-theme="night"] .my-ticket-picks li,
+html[data-theme="night"] .my-ticket-survivor-state {
+  border-color: #756b5b;
+}
+
+html[data-theme="night"] .my-ticket-selection small,
+html[data-theme="night"] .my-ticket-survivor-pick small,
+html[data-theme="night"] .my-ticket-footer small,
+html[data-theme="night"] .my-ticket-number,
+html[data-theme="night"] .my-ticket-open {
+  color: #bdb19b;
+}
+
+@media (max-width: 639px) {
+  .my-ticket {
+    padding: .8rem .8rem .7rem;
+  }
+
+  .my-ticket-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .my-ticket-section {
+    padding-right: 0;
+  }
+
+  .my-ticket-section + .my-ticket-section {
+    border-left: 0;
+    border-top: 1px dashed #958a77;
+    padding-left: 0;
+  }
+
+  .my-ticket-footer {
+    grid-template-columns: auto 1fr;
+  }
+
+  .my-ticket-barcode {
+    display: none;
+  }
+}
