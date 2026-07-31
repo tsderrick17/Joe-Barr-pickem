@@ -7,8 +7,8 @@ type ChatMessageRow = {
   id: string;
   player_id: string;
   body: string;
-  gif_url: string | null;
   created_at: string;
+  deleted_at: string | null;
 };
 
 async function currentSeason() {
@@ -23,12 +23,12 @@ async function currentSeason() {
 }
 
 async function loadMessages(seasonId: string, viewer: { id: string; is_commissioner: boolean }) {
-  const { data: messages, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("pool_chat_messages")
-    .select("id, player_id, body, gif_url, created_at")
-    .eq("season_id", seasonId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .select("id, player_id, body, created_at, deleted_at")
+    .eq("season_id", seasonId);
+  if (!viewer.is_commissioner) query = query.is("deleted_at", null);
+  const { data: messages, error } = await query.order("created_at", { ascending: false }).limit(50);
 
   if (error) return { error: true as const, messages: [] };
   const rows = (messages ?? []) as ChatMessageRow[];
@@ -45,32 +45,12 @@ async function loadMessages(seasonId: string, viewer: { id: string; is_commissio
     messages: rows.reverse().map((message) => ({
       id: message.id,
       body: message.body,
-      gifUrl: message.gif_url,
       createdAt: message.created_at,
+      isDeleted: Boolean(message.deleted_at),
       playerName: names.get(message.player_id) ?? "Player",
-      canDelete: message.player_id === viewer.id || viewer.is_commissioner,
+      canDelete: !message.deleted_at && (message.player_id === viewer.id || viewer.is_commissioner),
     })),
   };
-}
-
-function normalizeGifUrl(value: unknown) {
-  if (typeof value !== "string" || !value.trim()) return null;
-  try {
-    const url = new URL(value.trim());
-    if (url.protocol !== "https:") return null;
-    const host = url.hostname.toLowerCase();
-    const allowedHosts = ["media.giphy.com", "media0.giphy.com", "media.tenor.com", "c.tenor.com"];
-    if (allowedHosts.includes(host)) return url.toString();
-
-    // A copied GIPHY page link can become its stable direct GIF URL.
-    if (host === "giphy.com" || host === "www.giphy.com") {
-      const match = url.pathname.match(/-([a-zA-Z0-9]+)$/);
-      if (match) return `https://media.giphy.com/media/${match[1]}/giphy.gif`;
-    }
-  } catch {
-    return null;
-  }
-  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -89,7 +69,7 @@ export async function POST(request: NextRequest) {
   const player = await authenticatedProfilePlayer(request);
   if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
 
-  let body: { message?: unknown; gifUrl?: unknown };
+  let body: { message?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -97,9 +77,8 @@ export async function POST(request: NextRequest) {
   }
 
   const message = typeof body.message === "string" ? body.message.trim().replace(/\s+/g, " ") : "";
-  const gifUrl = normalizeGifUrl(body.gifUrl);
-  if ((!message && !gifUrl) || message.length > 280) {
-    return NextResponse.json({ error: "Add a message or GIF (messages may be up to 280 characters)." }, { status: 400 });
+  if (!message || message.length > 280) {
+    return NextResponse.json({ error: "Write a message of up to 280 characters before sending." }, { status: 400 });
   }
 
   const season = await currentSeason();
@@ -122,7 +101,6 @@ export async function POST(request: NextRequest) {
     season_id: season.id,
     player_id: player.id,
     body: message,
-    gif_url: gifUrl,
   });
   if (error) return NextResponse.json({ error: "Your note could not be sent." }, { status: 503 });
 
@@ -148,14 +126,18 @@ export async function DELETE(request: NextRequest) {
 
   const { data: message, error: messageError } = await supabaseAdmin
     .from("pool_chat_messages")
-    .select("id, player_id")
+    .select("id, player_id, deleted_at")
     .eq("id", body.messageId)
     .eq("season_id", season.id)
     .maybeSingle();
   if (messageError || !message) return NextResponse.json({ error: "That message is no longer available." }, { status: 404 });
+  if (message.deleted_at) return NextResponse.json({ error: "That message has already been removed." }, { status: 409 });
   if (message.player_id !== player.id && !player.is_commissioner) return NextResponse.json({ error: "You can only remove your own messages." }, { status: 403 });
 
-  const { error } = await supabaseAdmin.from("pool_chat_messages").delete().eq("id", message.id);
+  const { error } = await supabaseAdmin
+    .from("pool_chat_messages")
+    .update({ deleted_at: new Date().toISOString(), deleted_by_player_id: player.id })
+    .eq("id", message.id);
   if (error) return NextResponse.json({ error: "That message could not be removed." }, { status: 503 });
 
   const result = await loadMessages(season.id, player);
