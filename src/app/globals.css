@@ -185,10 +185,11 @@ body {
 
 .survivor-poker-chip-core {
   display: grid;
-  height: calc(100% - .55rem);
+  /* Leave the color inserts a touch more room at 12/3/6/9. */
+  height: calc(100% - .68rem);
   transform-style: preserve-3d;
   transition: filter 220ms ease;
-  width: calc(100% - .55rem);
+  width: calc(100% - .68rem);
   z-index: 3;
 }
 
