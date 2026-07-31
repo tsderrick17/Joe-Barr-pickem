@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import type { EarlyLockSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import type { EarlyLockSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const kind = request.nextUrl.searchParams.get("kind");
   if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
@@ -55,11 +55,11 @@ export async function GET(request: NextRequest) {
     { width: 1200, height: 1200 },
   );
 
-  if (snapshot.kind !== "weekly_recap") return new Response("Not found", { status: 404 });
+  if (snapshot.kind !== "weekly_recap" && snapshot.kind !== "playoff_day_recap") return new Response("Not found", { status: 404 });
 
   if (kind === "summary") return new ImageResponse(
     <div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "48px 56px", width: "100%" }}>
-      <div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 22 }}><span style={{ fontFamily: "Georgia", fontSize: 46, fontWeight: 800 }}>Pick&apos;em Summary</span><span style={{ fontSize: 24, fontWeight: 700, letterSpacing: 3, paddingTop: 16 }}>{snapshot.week.toUpperCase()}</span></div>
+      <div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 22 }}><span style={{ fontFamily: "Georgia", fontSize: 46, fontWeight: 800 }}>Pick&apos;em Summary</span><span style={{ fontSize: 24, fontWeight: 700, letterSpacing: 3, paddingTop: 16 }}>{(snapshot.kind === "playoff_day_recap" ? snapshot.day : snapshot.week).toUpperCase()}</span></div>
       <div style={{ color: "#475569", display: "flex", fontSize: 19, fontWeight: 800, letterSpacing: 2, marginTop: 20 }}>THIS WEEK</div>
       <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>{snapshot.weeklySummary.map((row, index) => <div key={row.name} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 23, minHeight: 48, padding: "0 14px" }}><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 180 }}>{row.name}</span><span style={{ display: "flex", flex: 1, gap: 12 }}>{row.picks.join(" · ") || "—"}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
       <div style={{ borderTop: "3px solid #171719", display: "flex", flexDirection: "column", marginTop: 28, paddingTop: 16 }}><span style={{ fontFamily: "Georgia", fontSize: 29, fontWeight: 800 }}>Lead Pipe Locks</span>{snapshot.standings.map((row, index) => <div key={row.name} style={{ display: "flex", fontSize: 21, marginTop: 6 }}><span style={{ color: "#475569", display: "flex", width: 42 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ color: "#08785d", display: "flex", fontWeight: 800 }}>{row.wins} W</span></div>)}</div>
@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
     { width: 1200, height: 1200 },
   );
 
+  if (kind === "survivor" && snapshot.kind !== "weekly_recap") return new Response("Not found", { status: 404 });
   if (kind === "survivor") return new ImageResponse(<div style={{ background: "#fffdf8", color: "#171719", display: "flex", flexDirection: "column", height: "100%", padding: "42px 42px", width: "100%" }}><div style={{ borderBottom: "6px solid #171719", display: "flex", justifyContent: "space-between", paddingBottom: 18 }}><span style={{ fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Survivor Board</span><span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 2, paddingTop: 14 }}>{snapshot.week.toUpperCase()}</span></div><div style={{ alignItems: "center", borderBottom: "2px solid #171719", display: "flex", fontSize: 16, fontWeight: 800, marginTop: 18, padding: "0 8px 10px" }}><span style={{ display: "flex", width: 170 }}>PLAYER</span>{Array.from({ length: snapshot.survivor.visibleWeeks }, (_, index) => <span key={index} style={{ display: "flex", justifyContent: "center", width: 54 }}>{index + 1}</span>)}<span style={{ display: "flex", justifyContent: "flex-end", marginLeft: "auto", width: 65 }}>STATUS</span></div>{snapshot.survivor.rows.map((row, index) => <div key={row.name} style={{ alignItems: "center", background: index % 2 ? "#eee4d1" : "#fffdf8", borderBottom: "1px solid #c8c1b5", display: "flex", fontSize: 18, minHeight: 44, padding: "0 8px" }}><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span>{row.picks.map((pick, pickIndex) => <span key={pickIndex} style={{ color: "#334155", display: "flex", fontSize: 13, fontWeight: 800, justifyContent: "center", width: 54 }}>{pick ?? "·"}</span>)}<span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 14, fontWeight: 800, justifyContent: "flex-end", marginLeft: "auto", width: 65 }}>{row.status}</span></div>)}<div style={{ borderTop: "3px solid #171719", display: "flex", fontSize: 17, marginTop: "auto", paddingTop: 14 }}>{snapshot.survivor.championCrownedInRecapWeek ? `Congratulations, ${snapshot.survivor.championName ?? "champion"}!` : `${snapshot.survivor.in} in · ${snapshot.survivor.out} out · The board starts at 10 weeks and expands as the season does.`}</div></div>, { width: 1200, height: 1200 });
 
   return new Response("Not found", { status: 404 });

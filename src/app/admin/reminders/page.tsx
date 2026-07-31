@@ -24,6 +24,7 @@ const presets = [
   { category: "sunday_late_reveal", audience: "all_active", title: "Sunday late window picks are public", body: "The late games are underway. The updated public Pick'em board is ready to look over whenever you have a moment.", label: "Sunday late window reveal" },
   { category: "featured_window_reveal", audience: "all_active", title: "Featured-game picks are public", body: "The featured game window is underway. Public Pick'em selections are now available on the standings page.", label: "Primetime or international reveal" },
   { category: "weekly_recap", audience: "all_active", title: "This week in Joe Barr Pick'em", body: "The final slate, current standings, and Survivor recap are ready to look over. Thanks for being part of the pool.", label: "Weekly recap — Tuesday morning" },
+  { category: "playoff_day_recap", audience: "all_active", title: "Today in the playoff race", body: "Today’s playoff card is final and the updated Pick'em race is ready to look over. Good luck in the next round.", label: "Playoff day recap — after final grades" },
 ] as const;
 
 const reminderTypes = [
@@ -36,6 +37,7 @@ const reminderTypes = [
   ["sunday_late_reveal", "Sunday late window reveal"],
   ["featured_window_reveal", "Primetime or international reveal"],
   ["weekly_recap", "Weekly recap"],
+  ["playoff_day_recap", "Playoff day recap"],
   ["custom", "Commissioner note"],
 ] as const;
 

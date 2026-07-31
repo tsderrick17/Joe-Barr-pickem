@@ -502,6 +502,21 @@ html[data-theme="night"] .survivor-selection-footer {
   color: #3f6867 !important;
 }
 
+.pickem-eliminated-stamp {
+  border: 3px solid #b42318;
+  box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
+  color: #b42318;
+  display: inline-block;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: clamp(.9rem, 2.5vw, 1.35rem);
+  font-weight: 950;
+  letter-spacing: .12em;
+  line-height: 1;
+  opacity: .88;
+  padding: .18rem .45rem .14rem;
+  transform: rotate(-5deg);
+}
+
 /* The standings summary is an information rail, not a second dashboard. */
 .week-status-week {
   align-self: start;

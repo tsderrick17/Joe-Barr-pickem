@@ -108,6 +108,39 @@ async function recapReady(): Promise<ReminderReadiness> {
   return { ready: true, reason: null };
 }
 
+async function playoffDayRecapReady(): Promise<ReminderReadiness> {
+  const { data: period, error: periodError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id")
+    .eq("period_type", "playoff")
+    .in("status", ["active", "complete"])
+    .order("display_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (periodError) throw new Error("The playoff day could not be checked before sending a recap.");
+  if (!period) return { ready: false, reason: "A playoff round is not active yet." };
+
+  const { data: games, error: gamesError } = await supabaseAdmin
+    .from("games")
+    .select("id, kickoff_at, status")
+    .eq("scoring_period_id", period.id)
+    .lte("kickoff_at", new Date().toISOString());
+  if (gamesError) throw new Error("Playoff scores could not be checked before sending a recap.");
+  if (!(games ?? []).length) return { ready: false, reason: "No playoff games have started yet." };
+  const latestDay = (games ?? []).reduce((latest, game) => easternDate(new Date(game.kickoff_at)) > latest ? easternDate(new Date(game.kickoff_at)) : latest, easternDate(new Date(games![0].kickoff_at)));
+  const dayGames = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
+  if (dayGames.some((game) => game.status !== "final")) return { ready: false, reason: "The latest playoff day is still in progress." };
+  const { count, error: picksError } = await supabaseAdmin
+    .from("picks")
+    .select("id", { count: "exact", head: true })
+    .in("game_id", dayGames.map((game) => game.id))
+    .eq("result", "pending");
+  if (picksError) throw new Error("Playoff grades could not be checked before sending a recap.");
+  return (count ?? 0) === 0
+    ? { ready: true, reason: null }
+    : { ready: false, reason: "Playoff grades are still being finalized." };
+}
+
 function easternWeekday(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
 }
@@ -139,6 +172,7 @@ export async function reminderReadiness(category: ReminderCategory): Promise<Rem
   if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady();
   if (category === "early_lock") return earlyLockReady();
   if (category === "weekly_recap") return recapReady();
+  if (category === "playoff_day_recap") return playoffDayRecapReady();
   if (category === "sunday_early_reveal") return sundayRevealReady("early");
   if (category === "sunday_late_reveal") return sundayRevealReady("late");
   return { ready: true, reason: null };

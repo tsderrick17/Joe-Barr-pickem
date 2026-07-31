@@ -7,6 +7,7 @@ export type ReminderCategory =
   | "early_lock"
   | "pick_due"
   | "weekly_recap"
+  | "playoff_day_recap"
   | "sunday_early_reveal"
   | "sunday_late_reveal"
   | "featured_window_reveal"
