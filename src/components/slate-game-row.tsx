@@ -93,12 +93,6 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
 
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
-    const survivorSelected = survivor?.selectedTeamId === team.id;
-    const survivorOfficial = survivorSelected && survivor?.savedTeamId === team.id;
-    const survivorUsed = Boolean(
-      survivor?.usedTeamIds.includes(team.id) && !survivorSelected,
-    );
-    const survivorUnavailable = hasStarted || survivorUsed;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
@@ -111,7 +105,16 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
       : <div className={className}>{content}</div>;
 
-    if (!survivor?.enabled) return pickemControl;
+    return pickemControl;
+  };
+
+  const survivorChip = (team: typeof left) => {
+    if (!survivor?.enabled) return null;
+
+    const survivorSelected = survivor.selectedTeamId === team.id;
+    const survivorOfficial = survivorSelected && survivor.savedTeamId === team.id;
+    const survivorUsed = survivor.usedTeamIds.includes(team.id) && !survivorSelected;
+    const survivorUnavailable = hasStarted || survivorUsed;
 
     const replayChip = () => {
       setChipReplay((current) => ({
@@ -120,7 +123,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       }));
     };
 
-    const chip = <button
+    return <div className="slate-survivor-chip-slot"><button
       aria-label={survivorOfficial ? `Flip your saved Survivor ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable for Survivor` : `Choose ${team.name} as your Survivor winner`}
       aria-pressed={survivorSelected}
       className="slate-survivor-chip-button"
@@ -146,24 +149,25 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
         teamName={team.name}
         unavailable={survivorUnavailable}
       />
-    </button>;
-
-    return <div className={`slate-team-with-survivor-chip slate-team-with-survivor-chip--${align}`}>
-      {pickemControl}
-      {chip}
-    </div>;
+    </button></div>;
   };
 
-  return <article className={`grid grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] min-[380px]:gap-1 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
+  const rowColumns = survivor?.enabled
+    ? "grid-cols-[2.3rem_minmax(0,1fr)_3.45rem_2.5rem_3.45rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.9rem_2.9rem_3.9rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_4.7rem_5rem_4.7rem_minmax(0,1fr)]"
+    : "grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)]";
+
+  return <article className={`grid ${rowColumns} items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:gap-1 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
     <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
       {isFinal ? <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>
     {teamCell(left, "left")}
+    {survivorChip(left)}
     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
       {lockedSpread ? <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">AWAITING LINE</p>}
       {isLive ? <p className="mx-auto mt-1 w-fit border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black tracking-[0.12em] text-red-800">LIVE</p> : null}
       {showSpecialLockNote ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
     </div>
+    {survivorChip(right)}
     {teamCell(right, "right")}
   </article>;
 }

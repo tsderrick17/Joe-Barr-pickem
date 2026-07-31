@@ -525,7 +525,7 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
-.survivor-poker-chip-wrap-slate { height: 2rem; width: 2rem; }
+.survivor-poker-chip-wrap-slate { height: 3rem; width: 3rem; }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
@@ -904,13 +904,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   color: #3f6867 !important;
 }
 
-/* Survivor lives beside a Slate team name rather than on top of it. The chip
-   has a fixed lane, so a pick never shifts spread, score, or mobile text. */
-.slate-team-with-survivor-chip {
+/* Survivor chips sit inside the matchup, on either side of the spread. Their
+   lanes are fixed so the team-name columns retain their normal geometry. */
+.slate-survivor-chip-slot {
   align-items: center;
-  display: grid;
-  gap: .08rem;
-  grid-template-columns: minmax(0, 1fr) 2.36rem;
+  display: flex;
+  justify-content: center;
   min-width: 0;
 }
 
@@ -921,10 +920,10 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
-  height: 2.42rem;
+  height: 3.3rem;
   justify-content: center;
-  min-width: 2.32rem;
-  padding: .17rem;
+  min-width: 3.3rem;
+  padding: .08rem;
   transition: filter 160ms ease, transform 160ms ease;
 }
 
@@ -938,9 +937,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-team-with-survivor-chip { grid-template-columns: minmax(0, 1fr) 2.82rem; }
-  .slate-survivor-chip-button { height: 2.82rem; min-width: 2.76rem; }
-  .survivor-poker-chip-wrap-slate { height: 2.38rem; width: 2.38rem; }
+  .slate-survivor-chip-button { height: 4.3rem; min-width: 4.3rem; }
+  .survivor-poker-chip-wrap-slate { height: 3.85rem; width: 3.85rem; }
 }
 
 .selection-chip {
