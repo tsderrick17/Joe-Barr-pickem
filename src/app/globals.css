@@ -118,17 +118,17 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   /* This lives outside the Slate header so it can remain in view while a
      player works through a long mobile slate. */
   .slate-mini-nav {
     background: #fffdf8;
-    box-shadow: 0 5px 12px rgba(35, 30, 23, .12);
+    box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
     margin-left: -.5rem;
     margin-right: -.5rem;
     position: sticky;
-    top: .35rem;
-    z-index: 20;
+    top: 0;
+    z-index: 40;
   }
 
   .slate-mini-nav a { padding: .5rem .45rem; }
@@ -896,7 +896,7 @@ html[data-theme="night"] .survivor-standings-row.viewer-row {
 }
 
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   html[data-theme="night"] .slate-mini-nav { background: #1b2527; }
 }
 html[data-theme="night"] .slate-mini-nav a { color: #d6e2df; }
@@ -942,9 +942,17 @@ html[data-theme="night"] .slate-selection-footer [class*="text-slate-"] {
   .site-nav-links {
     grid-column: 1 / -1;
     grid-row: 2;
+    flex-wrap: nowrap;
     justify-content: flex-start;
     order: 3;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: .15rem;
+    scrollbar-width: none;
   }
+
+  .site-nav-links::-webkit-scrollbar { display: none; }
+  .site-nav-links a { flex: 0 0 auto; }
 
   .site-nav-account {
     align-self: start;
