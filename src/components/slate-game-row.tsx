@@ -80,7 +80,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
-    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[12px] font-bold leading-[1.15] tracking-tight min-[380px]:text-[13px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${feedbackType === "sweep" ? "slate-team-selection--new" : ""} bg-[#1d1d1f] px-1 py-1.5 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
+    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${feedbackType === "sweep" ? "slate-team-selection--new" : ""} bg-[#1d1d1f] px-1 py-1 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
     const content = <>
       <span className="block min-w-0 break-normal [hyphens:none]">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
@@ -89,7 +89,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     return allowSelection ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
   };
 
-  return <article className={`grid grid-cols-[2.75rem_minmax(0,1fr)_4.25rem_minmax(0,1fr)] items-center gap-1 border-b border-[#c8c1b5] ${compactFinal ? "py-1" : "py-2"} pl-1 pr-2 min-[380px]:grid-cols-[3.1rem_minmax(0,1fr)_5rem_minmax(0,1fr)] min-[380px]:gap-1.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
+  return <article className={`grid grid-cols-[2.45rem_minmax(0,1fr)_3.85rem_minmax(0,1fr)] items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:grid-cols-[2.8rem_minmax(0,1fr)_4.4rem_minmax(0,1fr)] min-[380px]:gap-1 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
     <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
       {isFinal ? <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>

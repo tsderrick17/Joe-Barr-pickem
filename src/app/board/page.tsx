@@ -688,7 +688,7 @@ export default function BoardPage() {
         ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mx-auto mt-5 w-full max-w-4xl space-y-6 sm:mt-8 sm:space-y-9" id="slate-matchups">
+          <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 sm:mt-8 sm:space-y-7" id="slate-matchups">
             {false ? (
               <section className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
                 <h2 className="font-serif text-xl font-bold">
@@ -745,7 +745,7 @@ export default function BoardPage() {
             {visibleGamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
-                  <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center">
+                  <div className="border-y-2 border-[#1d1d1f] px-2 py-1.5 text-center sm:px-3 sm:py-2">
                     <h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm">
                       {day.toUpperCase()}
                     </h2>
