@@ -405,30 +405,28 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row {
   --survivor-row-bg: #f5f0e6;
-  --survivor-steel-edge: #858783;
-  --survivor-steel-low: #b9bbb7;
-  --survivor-steel-face: #e6e7e3;
-  --survivor-steel-glint: #f8f8f5;
+  --survivor-steel-edge: #c2c5c2;
+  --survivor-steel-low: #dde0dd;
+  --survivor-steel-face: #f1f3f0;
+  --survivor-steel-glint: #fffefa;
   background-color: var(--survivor-row-bg);
 }
 
 .survivor-standings-row.is-alt {
   --survivor-row-bg: #f0eadf;
-  --survivor-steel-edge: #838581;
-  --survivor-steel-low: #b6b8b4;
-  --survivor-steel-face: #e2e3df;
-  --survivor-steel-glint: #f5f5f2;
+  --survivor-steel-edge: #bfc2bf;
+  --survivor-steel-low: #d9dcda;
+  --survivor-steel-face: #edefec;
+  --survivor-steel-glint: #fcfcf8;
 }
 
 .survivor-standings-row .survivor-sticky-status,
 .survivor-standings-row .survivor-sticky-name {
   background-color: transparent;
-  /* Both sticky cells sample the same ten-rem-wide steel plate. Matching
-     background positions remove the tiled-cylinder look at their seam. */
-  background-image:
-    repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 1px, rgba(23,23,25,.025) 1px 2px, transparent 2px 4px),
-    linear-gradient(90deg, var(--survivor-steel-edge) 0%, var(--survivor-steel-low) 8%, var(--survivor-steel-face) 24%, var(--survivor-steel-glint) 52%, var(--survivor-steel-face) 77%, var(--survivor-steel-low) 94%, var(--survivor-steel-edge) 100%);
-  background-size: 10rem 100%, 10rem 100%;
+  /* Both sticky cells sample one satin steel plate. The polish is horizontal
+     and deliberately texture-free: clean machine stock, not corrugated foil. */
+  background-image: linear-gradient(90deg, var(--survivor-steel-edge) 0%, var(--survivor-steel-low) 9%, var(--survivor-steel-face) 28%, var(--survivor-steel-glint) 52%, var(--survivor-steel-face) 76%, var(--survivor-steel-low) 93%, var(--survivor-steel-edge) 100%);
+  background-size: 10rem 100%;
   border-block: 0;
   box-shadow: none;
   /* Cover the parent row rule so the steel rail reads as a single, seamless
@@ -438,21 +436,21 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .survivor-standings-row .survivor-sticky-status {
-  background-position: 0 0, 0 0;
+  background-position: 0 0;
   border-left: 1px solid rgba(96, 87, 72, .25);
   border-radius: 0;
   border-right: 0;
-  text-shadow: 0 1px 0 rgba(255,255,255,.72), 0 -1px 0 rgba(30,48,42,.24);
+  text-shadow: 0 1px 0 rgba(255,255,255,.72);
 }
 
 .survivor-standings-row .survivor-sticky-name {
-  background-position: -3rem 0, -3rem 0;
+  background-position: -3rem 0;
   border-left: 0;
   border-radius: 0;
   border-right: 1px solid rgba(96, 87, 72, .25);
   letter-spacing: .008em;
   margin-right: 0;
-  text-shadow: 0 1px 0 rgba(255,255,255,.82), 0 -1px 0 rgba(28,30,29,.3);
+  text-shadow: 0 1px 0 rgba(255,255,255,.9);
 }
 
 .viewer-row {
@@ -467,10 +465,10 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row.viewer-row {
   --survivor-row-bg: #dff0eb;
-  --survivor-steel-edge: #4d9690;
-  --survivor-steel-low: #92c4bd;
-  --survivor-steel-face: #d4eae5;
-  --survivor-steel-glint: #f1faf7;
+  --survivor-steel-edge: #61aaa2;
+  --survivor-steel-low: #a9d3cb;
+  --survivor-steel-face: #d9ece7;
+  --survivor-steel-glint: #f4fbf8;
   box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
 }
 
@@ -782,26 +780,26 @@ html[data-theme="night"] .survivor-standings-header {
 
 html[data-theme="night"] .survivor-standings-row {
   --survivor-row-bg: #101c24;
-  --survivor-steel-edge: #101b21;
-  --survivor-steel-low: #27373e;
-  --survivor-steel-face: #48575e;
-  --survivor-steel-glint: #69767b;
+  --survivor-steel-edge: #2e3c41;
+  --survivor-steel-low: #48575b;
+  --survivor-steel-face: #5d6c70;
+  --survivor-steel-glint: #748286;
 }
 
 html[data-theme="night"] .survivor-standings-row.is-alt {
   --survivor-row-bg: #13232b;
-  --survivor-steel-edge: #111e24;
-  --survivor-steel-low: #293a41;
-  --survivor-steel-face: #45555c;
-  --survivor-steel-glint: #647176;
+  --survivor-steel-edge: #2c3b40;
+  --survivor-steel-low: #45555a;
+  --survivor-steel-face: #59696d;
+  --survivor-steel-glint: #718085;
 }
 
 html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-row-bg: #16333a;
-  --survivor-steel-edge: #15474b;
-  --survivor-steel-low: #347076;
-  --survivor-steel-face: #65a19f;
-  --survivor-steel-glint: #9cc8c2;
+  --survivor-steel-edge: #276569;
+  --survivor-steel-low: #4c8585;
+  --survivor-steel-face: #77aaa4;
+  --survivor-steel-glint: #a7cbc4;
 }
 
 html[data-theme="night"] .survivor-standings-row .survivor-sticky-name {
