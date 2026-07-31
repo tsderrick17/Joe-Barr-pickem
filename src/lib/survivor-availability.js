@@ -23,7 +23,9 @@ export function isSurvivorSlateEditable({
   selectedGameKickoffAt,
   now = new Date(),
 }) {
-  if (periodType !== "regular" || periodStatus !== "active") return false;
+  // Players are allowed to prepare the current/next regular-season slate
+  // before it becomes formally active. Completed weeks must remain audit-only.
+  if (periodType !== "regular" || periodStatus === "complete") return false;
   if (!survivorAvailable || survivorStatus !== "active") return false;
 
   if (selectedGameKickoffAt) {

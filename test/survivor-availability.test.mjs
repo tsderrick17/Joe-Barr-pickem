@@ -42,7 +42,7 @@ test("never permits a started matchup or eliminated entry", () => {
   }), true);
 });
 
-test("only exposes Slate Survivor chips for an editable active regular-season entry", () => {
+test("exposes Slate Survivor chips for an editable upcoming or active regular-season entry", () => {
   const activeEntry = {
     periodType: "regular",
     periodStatus: "active",
@@ -53,6 +53,7 @@ test("only exposes Slate Survivor chips for an editable active regular-season en
   };
 
   assert.equal(isSurvivorSlateEditable(activeEntry), true);
+  assert.equal(isSurvivorSlateEditable({ ...activeEntry, periodStatus: "upcoming" }), true);
   assert.equal(isSurvivorSlateEditable({ ...activeEntry, periodType: "playoff" }), false);
   assert.equal(isSurvivorSlateEditable({ ...activeEntry, periodStatus: "complete" }), false);
   assert.equal(isSurvivorSlateEditable({ ...activeEntry, survivorStatus: "eliminated" }), false);
