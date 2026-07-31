@@ -418,6 +418,7 @@ export default function BoardPage() {
         if (!name) return null;
 
         const abbreviation = (isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation).toUpperCase();
+        const receiptAbbreviation = isHome ? abbreviation : abbreviation.toLowerCase();
         const hasFinalLine = game.spreadLockedAt !== null && game.officialSpread !== null;
         const selectedTeamIsFavorite = pick.teamId === game.favoriteTeamId;
         const lineValue = game.officialSpread === null
@@ -430,7 +431,7 @@ export default function BoardPage() {
           gameId: pick.gameId,
           name,
           abbreviation,
-          lockedLineLabel: hasFinalLine && lineValue ? `${abbreviation} ${lineValue}` : null,
+          lockedLineLabel: hasFinalLine && lineValue ? `${receiptAbbreviation} ${lineValue}` : null,
           canRemove: new Date(game.kickoffAt) > new Date(),
         };
       })
