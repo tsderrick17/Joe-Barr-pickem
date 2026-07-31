@@ -1269,13 +1269,19 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-completion {
+  color: #665e51;
   display: grid;
   gap: .16rem;
 }
 
 .my-ticket-change-note {
-  font: 900 .64rem/1.15 Arial, sans-serif;
+  font: 700 .58rem/1.15 Arial, sans-serif;
   letter-spacing: .02em;
+}
+
+.my-ticket-completion > span:last-child {
+  color: #a82820;
+  font-weight: 900;
 }
 
 .my-ticket-footer > div {
@@ -1297,10 +1303,8 @@ html[data-theme="night"] .newspaper-clipping::after {
   letter-spacing: .08em;
 }
 
-.my-ticket-completion.is-open,
 .my-ticket-footer strong.is-open { color: #a82820; }
 
-.my-ticket-completion.is-filled,
 .my-ticket-footer strong.is-filled { color: #08764e; }
 
 .my-ticket-barcode {
@@ -1358,6 +1362,7 @@ html[data-theme="night"] .my-ticket-instructions {
 }
 
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
+html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
 
 @media (max-width: 639px) {
   .my-ticket {
