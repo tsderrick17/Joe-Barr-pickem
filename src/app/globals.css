@@ -890,19 +890,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .slate-team-label--selected::after {
-  /* The first touch of a chisel-tip marker leaves a tiny angled ink pool
-     before the lighter stroke is drawn across the team name. */
-  background: linear-gradient(135deg, rgba(0, 110, 102, .88), rgba(5, 195, 175, .72));
-  box-shadow: .05em 0 .08em rgba(0, 112, 103, .18);
-  clip-path: polygon(28% 0, 100% 9%, 72% 100%, 0 91%);
+  /* The ink pool is the first five percent of the same chisel pass. Both
+     angled sides share the exact slope of the fading stroke behind it. */
+  background: linear-gradient(90deg, rgba(0, 107, 99, .86), rgba(0, 168, 153, .76));
+  clip-path: polygon(3% 0, 8% 0, 5% 100%, 0 100%);
   content: "";
-  height: calc(100% + .2em);
-  left: -.3em;
+  inset: -.04em -.32em -.16em;
   position: absolute;
-  top: -.08em;
   transform: rotate(-1.1deg);
   transform-origin: center;
-  width: .36em;
   z-index: 0;
 }
 
