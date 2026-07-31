@@ -17,6 +17,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
 
   return (
     <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={teamName}>
+      <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${unavailable ? " is-unavailable" : ""}`} data-state={state}>
         <span className="survivor-poker-chip-core">
           <span className="survivor-poker-chip-face survivor-poker-chip-front">
