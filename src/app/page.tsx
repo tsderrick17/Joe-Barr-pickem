@@ -178,7 +178,13 @@ export default function HomePage() {
   const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
-  const ticketPicks: TicketPick[] = viewerPicks.map((pick, index) => ({
+  const ticketPicks: TicketPick[] = [...viewerPicks]
+    .sort((first, second) => {
+      const firstKickoff = first.kickoffAt ? new Date(first.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
+      const secondKickoff = second.kickoffAt ? new Date(second.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
+      return firstKickoff - secondKickoff || (first.label ?? "").localeCompare(second.label ?? "");
+    })
+    .map((pick, index) => ({
     gameId: `viewer-pick-${index}`,
     team: pick.label ?? "Selection",
     kickoff: ticketKickoff(pick.kickoffAt),

@@ -42,3 +42,17 @@ test("removes Survivor from the ticket requirement once a player is out or the p
     );
   }
 });
+
+test("treats a playoff ticket as Pick'em-only even if stale Survivor data is present", () => {
+  assert.deepEqual(
+    ticketCompletion({
+      isPlayoff: true,
+      maxPicks: 6,
+      pickemSelections: 6,
+      survivorAvailable: true,
+      survivorPickMade: false,
+      survivorStatus: "active",
+    }),
+    { requiredSelections: 6, selectionsMade: 6, isFilled: true },
+  );
+});

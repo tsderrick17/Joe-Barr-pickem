@@ -634,7 +634,7 @@ export default function BoardPage() {
                   <p>Favorites left; home team ALL CAPS.</p>
                   <p className="mt-1">
                     {week.period_type === "playoff"
-                      ? "Choose every team and click Save below."
+                      ? "Pick every playoff game. Save early or one at a time."
                       : "Choose TWO teams and click Save below."}
                   </p>
                   <p className="mt-1">Changes allowed until kickoff time.</p>
@@ -660,11 +660,19 @@ export default function BoardPage() {
             <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemReceipt}</strong>
             <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
           </a>
-          <Link href="/survivor">
-            <span>SURVIVOR</span>
-            <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
-            <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
-          </Link>
+          {week.period_type === "playoff" ? (
+            <a href="#slate-matchups">
+              <span>PLAYOFF ROUND</span>
+              <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{selectedPicks.length}/{selectionLimit} GAMES</strong>
+              <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "ROUND FILLED" : "GAMES DUE"}</em>
+            </a>
+          ) : (
+            <Link href="/survivor">
+              <span>SURVIVOR</span>
+              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
+              <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
+            </Link>
+          )}
         </nav>
 
         {playoffEliminated ? (

@@ -4,13 +4,16 @@
  * elimination or after the pool crowns its champion.
  */
 export function ticketCompletion({
+  isPlayoff = false,
   maxPicks,
   pickemSelections,
   survivorAvailable,
   survivorPickMade,
   survivorStatus,
 }) {
-  const survivorRequired = survivorAvailable && survivorStatus === "active";
+  // Survivor ends before the postseason. Keep the ticket truthful even if a
+  // stale client response still contains an active Survivor entry.
+  const survivorRequired = !isPlayoff && survivorAvailable && survivorStatus === "active";
   const requiredSelections = maxPicks + (survivorRequired ? 1 : 0);
   const selectionsMade =
     pickemSelections + (survivorRequired && survivorPickMade ? 1 : 0);

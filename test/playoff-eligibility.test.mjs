@@ -57,3 +57,30 @@ test("marks a player out only when they cannot tie the day-start leader", () => 
   assert.equal(result.leaderWinsAtDayStart, 3);
   assert.deepEqual([...result.eliminatedPlayerIds], ["out"]);
 });
+
+test("uses the season-long win total when deciding whether a playoff player is out", () => {
+  const regularGames = Array.from({ length: 8 }, (_, index) => ({
+    id: `regular-${index}`,
+    scoring_period_id: "week-18",
+    kickoff_at: "2026-01-04T18:00:00.000Z",
+    status: "final",
+  }));
+  const result = calculatePlayoffEligibility({
+    players: [{ id: "leader" }, { id: "out" }],
+    periods: [
+      { id: "week-18", display_order: 18, period_type: "regular", status: "complete", max_picks: 2 },
+      { id: "wild", display_order: 19, period_type: "playoff", status: "active", max_picks: 6 },
+      { id: "div", display_order: 20, period_type: "playoff", status: "upcoming", max_picks: 4 },
+      { id: "conf", display_order: 21, period_type: "playoff", status: "upcoming", max_picks: 2 },
+      { id: "sb", display_order: 22, period_type: "playoff", status: "upcoming", max_picks: 1 },
+    ],
+    targetPeriodId: "wild",
+    now: new Date("2026-01-10T15:00:00.000Z"),
+    games: regularGames,
+    picks: regularGames.map((game) => ({ player_id: "leader", game_id: game.id, result: "win" })),
+  });
+
+  assert.equal(result.leaderWinsAtDayStart, 8);
+  assert.equal(result.remainingPossibleWins, 7);
+  assert.deepEqual([...result.eliminatedPlayerIds], ["out"]);
+});

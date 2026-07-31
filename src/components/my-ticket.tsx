@@ -44,6 +44,7 @@ export default function MyTicket({
   week,
 }: Props) {
   const { isFilled, requiredSelections: totalRequiredSelections, selectionsMade: totalSelections } = ticketCompletion({
+    isPlayoff,
     maxPicks,
     pickemSelections: picks.length,
     survivorAvailable,
@@ -76,8 +77,8 @@ export default function MyTicket({
       <div className={`my-ticket-columns ${isPlayoff ? "is-playoff" : ""}`}>
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
-            <Link className="my-ticket-section-link" href="/board">PICK&apos;EM ATS</Link>
-            <strong>OFFICIAL LINES</strong>
+            <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
+            <strong>{isPlayoff ? "ROUND LINES" : "OFFICIAL LINES"}</strong>
           </div>
           <ol className="my-ticket-picks">
             {Array.from({ length: maxPicks }, (_, index) => {
