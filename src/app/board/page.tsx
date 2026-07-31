@@ -410,9 +410,11 @@ export default function BoardPage() {
         const game = games.find((item) => item.id === pick.gameId);
 
         if (!game) return null;
-        const name = pick.teamId === game.homeTeamId
+        const isHome = pick.teamId === game.homeTeamId;
+        const isAway = pick.teamId === game.awayTeamId;
+        const name = isHome
           ? game.homeTeam
-          : pick.teamId === game.awayTeamId
+          : isAway
             ? game.awayTeam
             : null;
 
@@ -421,10 +423,11 @@ export default function BoardPage() {
         return {
           gameId: pick.gameId,
           name,
+          abbreviation: isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation,
           canRemove: new Date(game.kickoffAt) > new Date(),
         };
       })
-      .filter(Boolean) as { gameId: string; name: string; canRemove: boolean }[];
+      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; canRemove: boolean }[];
   }, [games, selectedPicks]);
 
   const pickemHasUnsavedChanges = useMemo(() => {
@@ -464,7 +467,17 @@ export default function BoardPage() {
     return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
   };
   const pickemReceipt = selectedTeams.map((team) => team.name).join(" · ") || "OPEN";
+  const pickemReceiptShort = selectedTeams.map((team) => team.abbreviation).join(", ") || "OPEN";
   const survivorReceipt = survivorTeamName(survivorPick) || (survivorStatus === "complete" ? "COMPLETE" : survivorStatus === "eliminated" ? "OUT" : "OPEN");
+  const survivorReceiptShort = (() => {
+    if (!survivorPick) return survivorReceipt;
+    const game = games.find((item) => item.id === survivorPick.gameId);
+    return survivorPick.teamId === game?.awayTeamId
+      ? game.awayTeamAbbreviation
+      : survivorPick.teamId === game?.homeTeamId
+        ? game.homeTeamAbbreviation
+        : survivorReceipt;
+  })();
   const hasEarlyGame = games.some(isEarlyGame);
   function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
@@ -694,7 +707,10 @@ export default function BoardPage() {
           </Link>
           <a href="#slate-matchups">
             <span>PICK&apos;EM</span>
-            <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemReceipt}</strong>
+            <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>
+              <span className="slate-receipt-picks-full">{pickemReceipt}</span>
+              <span className="slate-receipt-picks-short">{pickemReceiptShort}</span>
+            </strong>
             <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
           </a>
           {week.period_type === "playoff" ? (
@@ -706,7 +722,10 @@ export default function BoardPage() {
           ) : (
             <Link href="/survivor">
               <span>SURVIVOR</span>
-              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
+              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>
+                <span className="slate-receipt-picks-full">{survivorReceipt}</span>
+                <span className="slate-receipt-picks-short">{survivorReceiptShort}</span>
+              </strong>
               <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
             </Link>
           )}

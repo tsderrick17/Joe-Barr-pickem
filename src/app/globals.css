@@ -89,7 +89,7 @@ body {
   color: #171719;
 }
 
-.slate-mini-nav span {
+.slate-mini-nav > a > span {
   font-size: .54rem;
   font-weight: 900;
   letter-spacing: .13em;
@@ -100,6 +100,8 @@ body {
   letter-spacing: .045em;
   overflow-wrap: anywhere;
 }
+
+.slate-receipt-picks-short { display: none; }
 
 .slate-mini-nav em {
   color: #5d6470;
@@ -136,9 +138,11 @@ body {
   }
 
   .slate-mini-nav a { padding: .5rem .45rem; }
-  .slate-mini-nav span { font-size: .48rem; }
-  .slate-mini-nav strong { font-size: .58rem; }
-  .slate-mini-nav em { font-size: .46rem; }
+  .slate-mini-nav > a > span { font-size: .53rem; }
+  .slate-mini-nav strong { font-size: .64rem; }
+  .slate-mini-nav em { font-size: .5rem; }
+  .slate-receipt-picks-full { display: none; }
+  .slate-receipt-picks-short { display: inline; white-space: nowrap; }
 }
 
 @media (min-width: 640px) {
