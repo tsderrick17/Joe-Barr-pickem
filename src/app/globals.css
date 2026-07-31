@@ -720,8 +720,8 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-table {
   background: var(--ledger-paper);
-  border-top: 2px solid var(--ledger-ink);
-  border-bottom: 2px solid var(--ledger-ink);
+  border-top: 0;
+  border-bottom: 0;
   font-family: Cambria, "Times New Roman", serif;
   overflow: hidden;
 }
@@ -735,8 +735,10 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
 
 .pickem-ledger-week-row th {
-  border-bottom: 2px solid var(--ledger-ink);
-  padding: .42rem .5rem .35rem;
+  /* The week is written directly on the same blue ruled line as the pad. */
+  background: linear-gradient(to bottom, transparent calc(100% - 1px), var(--scorepad-blue) calc(100% - 1px));
+  border-bottom: 0;
+  padding: .7rem .5rem .08rem;
   text-align: center;
 }
 
@@ -749,7 +751,9 @@ html[data-theme="night"] .survivor-selection-footer {
   font-weight: 700;
   letter-spacing: .12em;
   line-height: 1;
-  padding-bottom: .08em;
+  padding-bottom: 0;
+  position: relative;
+  top: .08em;
   text-transform: uppercase;
 }
 
