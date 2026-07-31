@@ -91,7 +91,8 @@ body {
   flex: 0 0 auto;
   height: 3.2rem;
   place-items: center;
-  perspective: 700px;
+  isolation: isolate;
+  perspective: 460px;
   position: relative;
   width: 3.2rem;
 }
@@ -136,17 +137,20 @@ body {
     color-mix(in srgb, var(--chip-primary) 78%, #171719) 90deg 95.33deg, color-mix(in srgb, var(--chip-secondary) 72%, #8b8479) 95.33deg 100.66deg, color-mix(in srgb, var(--chip-tertiary) 78%, #80601f) 100.66deg 106deg, #aaa49a 106deg 180deg,
     color-mix(in srgb, var(--chip-primary) 78%, #171719) 180deg 185.33deg, color-mix(in srgb, var(--chip-secondary) 72%, #8b8479) 185.33deg 190.66deg, color-mix(in srgb, var(--chip-tertiary) 78%, #80601f) 190.66deg 196deg, #aaa49a 196deg 270deg,
     color-mix(in srgb, var(--chip-primary) 78%, #171719) 270deg 275.33deg, color-mix(in srgb, var(--chip-secondary) 72%, #8b8479) 275.33deg 280.66deg, color-mix(in srgb, var(--chip-tertiary) 78%, #80601f) 280.66deg 286deg, #aaa49a 286deg 360deg);
-  border: 2px solid color-mix(in srgb, var(--chip-primary) 38%, #69655e);
+  border: 2px solid color-mix(in srgb, var(--chip-primary) 48%, #5e5a54);
   border-radius: 50%;
   inset: 0;
   pointer-events: none;
   position: absolute;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), inset 0 -1px 0 rgba(23,23,25,.32);
 }
 
-.survivor-poker-chip-depth-back-2 { transform: translateZ(-3px); }
-.survivor-poker-chip-depth-back-1 { transform: translateZ(-1.5px); }
-.survivor-poker-chip-depth-front-1 { transform: translateZ(1.5px); }
-.survivor-poker-chip-depth-front-2 { transform: translateZ(3px); }
+.survivor-poker-chip-depth-back-3 { transform: translateZ(-6px); }
+.survivor-poker-chip-depth-back-2 { transform: translateZ(-4px); }
+.survivor-poker-chip-depth-back-1 { transform: translateZ(-2px); }
+.survivor-poker-chip-depth-front-1 { transform: translateZ(2px); }
+.survivor-poker-chip-depth-front-2 { transform: translateZ(4px); }
+.survivor-poker-chip-depth-front-3 { transform: translateZ(6px); }
 
 .survivor-poker-chip::before {
   border: 1px dashed color-mix(in srgb, var(--chip-primary) 54%, #fffdf8);
@@ -156,6 +160,7 @@ body {
   opacity: .7;
   pointer-events: none;
   position: absolute;
+  transform: translateZ(6.5px);
   z-index: 2;
 }
 
@@ -167,6 +172,7 @@ body {
   inset: .08rem;
   pointer-events: none;
   position: absolute;
+  transform: rotateX(180deg) translateZ(6.5px);
 }
 
 .survivor-poker-chip-core {
@@ -192,11 +198,11 @@ body {
 
 .survivor-poker-chip-front img { height: 70%; width: 70%; }
 
-.survivor-poker-chip-front { transform: translateZ(3.5px); }
+.survivor-poker-chip-front { transform: translateZ(7.5px); }
 
 .survivor-poker-chip-back {
   background: radial-gradient(circle at 35% 27%, #ffffff 0 14%, #fbfaf7 64%, #e7e1d5 100%);
-  transform: rotateX(180deg) translateZ(3.5px);
+  transform: rotateX(180deg) translateZ(7.5px);
 }
 
 .survivor-poker-chip-star {
@@ -248,12 +254,12 @@ body {
 }
 
 @keyframes survivor-chip-toss {
-  0% { filter: brightness(1); transform: translateY(-1px) rotateX(0deg) scale(1); }
-  16% { filter: brightness(1.18); transform: translateY(-8px) rotateX(180deg) scaleX(1.08) scaleY(.18); }
-  33% { filter: brightness(1.08); transform: translateY(-7px) rotateX(360deg) scale(1.1); }
-  50% { filter: brightness(1.18); transform: translateY(-5px) rotateX(540deg) scaleX(1.06) scaleY(.2); }
-  70% { filter: brightness(1.06); transform: translateY(-3px) rotateX(630deg) scale(1.03); }
-  100% { filter: brightness(1); transform: translateY(-1px) rotateX(720deg) scale(1); }
+  0% { filter: brightness(1); transform: translateY(-1px) rotateX(0deg) rotateY(-7deg) scale(1); }
+  16% { filter: brightness(1.2); transform: translateY(-9px) rotateX(180deg) rotateY(7deg) scaleX(1.1) scaleY(.17); }
+  33% { filter: brightness(1.09); transform: translateY(-8px) rotateX(360deg) rotateY(2deg) scale(1.11); }
+  50% { filter: brightness(1.2); transform: translateY(-6px) rotateX(540deg) rotateY(-6deg) scaleX(1.08) scaleY(.18); }
+  70% { filter: brightness(1.07); transform: translateY(-3px) rotateX(630deg) rotateY(-3deg) scale(1.04); }
+  100% { filter: brightness(1); transform: translateY(-1px) rotateX(720deg) rotateY(-7deg) scale(1); }
 }
 
 @keyframes survivor-chip-shadow {
@@ -283,6 +289,17 @@ body {
   right: -.18rem;
   top: -.18rem;
   width: 1rem;
+  z-index: 4;
+}
+
+.survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-seal {
+  animation: survivor-official-seal-reveal 720ms cubic-bezier(.16,.76,.2,1) both;
+}
+
+@keyframes survivor-official-seal-reveal {
+  0%, 76% { opacity: 0; transform: translate(28%, -34%) rotate(-20deg) scale(.5); }
+  90% { opacity: 1; transform: translate(-6%, 8%) rotate(4deg) scale(1.08); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
 }
 
 .survivor-poker-chip-wrap-summary { height: 2.65rem; width: 2.65rem; }

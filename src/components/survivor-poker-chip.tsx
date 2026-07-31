@@ -20,10 +20,12 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
     <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-back-3" />
         <span className="survivor-poker-chip-depth survivor-poker-chip-depth-back-2" />
         <span className="survivor-poker-chip-depth survivor-poker-chip-depth-back-1" />
         <span className="survivor-poker-chip-depth survivor-poker-chip-depth-front-1" />
         <span className="survivor-poker-chip-depth survivor-poker-chip-depth-front-2" />
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-front-3" />
         <span className="survivor-poker-chip-core">
           <span className="survivor-poker-chip-face survivor-poker-chip-front">
             <Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} />
