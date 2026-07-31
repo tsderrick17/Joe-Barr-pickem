@@ -6,6 +6,7 @@ import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
+import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ type ScoringPeriodRow = {
   display_name: string;
   display_order: number;
   status: "upcoming" | "active" | "complete";
+  period_type: "regular" | "playoff";
   max_picks: number;
 };
 
@@ -147,7 +149,7 @@ export async function GET(request: NextRequest) {
 
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, display_name, display_order, status, max_picks")
+    .select("id, display_name, display_order, status, period_type, max_picks")
     .eq("season_id", season.id)
     .order("display_order");
 
@@ -247,6 +249,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let playoffEliminatedPlayerIds = new Set<string>();
+  if (currentWeek.period_type === "playoff" && currentWeek.status === "active") {
+    try {
+      const eligibility = await loadPlayoffEligibility(season.id, currentWeek.id, players);
+      playoffEliminatedPlayerIds = eligibility.eliminatedPlayerIds;
+    } catch {
+      return NextResponse.json({ error: "Playoff eligibility could not be calculated safely." }, { status: 503 });
+    }
+  }
+
   // The 2026 launch predates the first historical-season record. Keep John as
   // the inaugural displayed holder until this season crowns its own winner.
   const survivorChampionPlayerId =
@@ -337,6 +349,7 @@ return {
         id: player.id,
         firstName: player.first_name,
         wins,
+        playoffEliminated: playoffEliminatedPlayerIds.has(player.id),
         picks: weeklyPicks,
       };
     })

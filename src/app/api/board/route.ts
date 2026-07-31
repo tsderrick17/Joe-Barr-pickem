@@ -4,6 +4,7 @@ import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
+import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 
 type TeamRow = {
   id: string;
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
       .order("submitted_at"),
     supabaseAdmin
       .from("scoring_periods")
-      .select("season_id")
+      .select("season_id, period_type, status")
       .eq("id", scoringPeriodId)
       .maybeSingle(),
     supabaseAdmin
@@ -150,7 +151,8 @@ export async function GET(request: NextRequest) {
       .neq("result", "void"),
     supabaseAdmin
       .from("players")
-      .select("id, first_name"),
+      .select("id, first_name")
+      .eq("active", true),
   ]);
 
   const { data: games, error: gamesError } = gamesResult;
@@ -171,6 +173,16 @@ export async function GET(request: NextRequest) {
       { error: "Your submitted picks could not be loaded." },
       { status: 500 },
     );
+  }
+
+  let playoffEliminated = false;
+  if (period.period_type === "playoff" && period.status === "active") {
+    try {
+      const eligibility = await loadPlayoffEligibility(period.season_id, scoringPeriodId, players);
+      playoffEliminated = eligibility.eliminatedPlayerIds.has(player.id);
+    } catch {
+      return NextResponse.json({ error: "Playoff eligibility could not be verified safely." }, { status: 503 });
+    }
   }
 
   let survivor: {
@@ -388,6 +400,9 @@ export async function GET(request: NextRequest) {
       gameId: pick.game_id,
       teamId: pick.selected_team_id,
     })),
+    pickem: {
+      playoffEliminated,
+    },
     survivor,
   });
 }

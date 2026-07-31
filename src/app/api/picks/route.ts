@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { prepareAtsReplacements } from "@/lib/slate-submission";
+import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 
@@ -52,10 +53,26 @@ export async function POST(request: NextRequest) {
   const { data: player } = await supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle();
   if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
 
-  const { data: period } = await supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status").eq("id", scoringPeriodId).maybeSingle();
+  const { data: period } = await supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle();
   if (!period) return NextResponse.json({ error: "That week could not be found." }, { status: 404 });
   if (period.status === "complete") return NextResponse.json({ error: "This completed week is read-only." }, { status: 400 });
   if (selections.length > period.max_picks) return NextResponse.json({ error: `You cannot submit more than ${period.max_picks} picks for this scoring period.` }, { status: 400 });
+
+  if (period.period_type === "playoff" && period.status === "active") {
+    const { data: activePlayers, error: activePlayersError } = await supabaseAdmin
+      .from("players")
+      .select("id")
+      .eq("active", true);
+    if (activePlayersError || !activePlayers) return NextResponse.json({ error: "Playoff eligibility could not be verified safely." }, { status: 503 });
+    try {
+      const eligibility = await loadPlayoffEligibility(period.season_id, scoringPeriodId, activePlayers);
+      if (eligibility.eliminatedPlayerIds.has(player.id)) {
+        return NextResponse.json({ error: "You are mathematically eliminated from the playoff race. Your existing selections remain available for audit." }, { status: 403 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Playoff eligibility could not be verified safely." }, { status: 503 });
+    }
+  }
 
   const { data: existingPicks, error: existingError } = await supabaseAdmin.from("picks").select("id, game_id, selected_team_id").eq("player_id", player.id).eq("scoring_period_id", scoringPeriodId).neq("result", "void");
   if (existingError) return NextResponse.json({ error: "Your existing picks could not be loaded." }, { status: 500 });

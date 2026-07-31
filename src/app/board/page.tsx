@@ -55,6 +55,9 @@ type SelectedPick = {
 type BoardResponse = {
   games: BoardGame[];
   myPicks: SelectedPick[];
+  pickem: {
+    playoffEliminated: boolean;
+  };
   survivor: {
     available: boolean;
     notice: string | null;
@@ -199,6 +202,7 @@ export default function BoardPage() {
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
+  const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -220,6 +224,7 @@ export default function BoardPage() {
     setErrorMessage("");
     setSelectionWarning("");
     setSubmissionMessage("");
+    setPlayoffEliminated(false);
     setWeek(period);
 
     try {
@@ -240,6 +245,7 @@ export default function BoardPage() {
       }
 
       setGames(data.games);
+      setPlayoffEliminated(data.pickem.playoffEliminated);
       setSelectedPicks(data.myPicks);
       setSavedPicks(data.myPicks);
       setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
@@ -419,7 +425,7 @@ export default function BoardPage() {
 
   const selectionLimit = week?.max_picks ?? 2;
 
-  const isReadOnly = week?.status === "complete";
+  const isReadOnly = week?.status === "complete" || playoffEliminated;
   const hasEarlyGame = games.some(isEarlyGame);
   function chooseTeam(gameId: string, teamId: string) {
     if (isReadOnly) return;
@@ -631,10 +637,17 @@ export default function BoardPage() {
 
         </header>
 
+        {playoffEliminated ? (
+          <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">
+            <p className="font-bold">Playoff race: mathematically eliminated</p>
+            <p className="mt-1 text-sm">Your existing selections remain on the Slate for the season&apos;s audit trail. You are not eligible to make further Pick&apos;em selections.</p>
+          </section>
+        ) : null}
+
         {savedPickNames.length ? (
           <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950">
             <p className="font-bold">
-              {isReadOnly
+              {week.status === "complete"
                 ? `Your ${week.display_name} picks`
                 : savedPickNames.length >= selectionLimit
                   ? `Your ${week.display_name} picks are submitted.`
@@ -644,8 +657,10 @@ export default function BoardPage() {
               {savedPickNames.join(" · ")}
             </p>
             <p className="mt-1 text-sm">
-              {isReadOnly
+              {week.status === "complete"
                 ? "This week is final."
+                : playoffEliminated
+                  ? "Your playoff race is over; these selections remain visible for audit."
                 : hasUnsavedChanges
                   ? "You have unsaved changes below."
                   : savedPickNames.length >= selectionLimit

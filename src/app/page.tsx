@@ -26,6 +26,7 @@ type ScoreboardRow = {
   id: string;
   firstName: string;
   wins: number;
+  playoffEliminated?: boolean;
   picks: ScoreboardPick[];
 };
 
