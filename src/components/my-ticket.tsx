@@ -56,7 +56,6 @@ export default function MyTicket({
         <span className="my-ticket-survivor-chip" aria-label={`Survivor selection: ${survivorPick.team}`}>
           <SurvivorPokerChip
             abbreviation={survivorPick.abbreviation}
-            official
             size="ticket"
             teamName={survivorPick.team}
           />
