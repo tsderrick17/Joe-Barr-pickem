@@ -759,7 +759,7 @@ export default function BoardPage() {
 
         </header>
 
-        <nav aria-label="Your weekly controls" className="slate-mini-nav slate-receipt-grid">
+        <nav aria-label="Your weekly controls" className="slate-mini-nav slate-receipt-grid -mt-px">
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
             <strong>VIEW FULL TICKET</strong>
@@ -903,7 +903,7 @@ export default function BoardPage() {
       </div>
 
       {!isReadOnly && (hasUnsavedChanges || selectionWarning) ? (
-        <aside className="slate-selection-footer fixed inset-x-0 bottom-0 border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
+        <aside className="slate-selection-footer fixed inset-x-0 bottom-0 z-[60] border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
           <div className="mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div className="min-w-0">
