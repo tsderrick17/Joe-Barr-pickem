@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
-import SurvivorPokerChip from "@/components/survivor-poker-chip";
+import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -16,6 +15,7 @@ type ScoreboardPick = {
   resultMark: string;
   spread?: string | null;
   isLineLocked?: boolean;
+  kickoffAt?: string;
 };
 
 function MiniLogo({ abbreviation, muted, resultMark }: { abbreviation: string; muted?: boolean; resultMark?: string }) {
@@ -33,6 +33,7 @@ type ScoreboardRow = {
 type HomeData = {
   viewerPlayerId: string;
   week: string;
+  weekStatus: "upcoming" | "active" | "complete";
   maxPicks: number;
   nextRevealAt: string | null;
   rows: ScoreboardRow[];
@@ -51,6 +52,22 @@ type HomeData = {
   }[];
   error?: string;
 };
+
+function ticketKickoff(value: string | undefined) {
+  if (!value) return "Kickoff to be announced";
+  const date = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(value));
+  return `${date} · ${time}`;
+}
 
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
@@ -154,13 +171,19 @@ export default function HomePage() {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
   }, [data]);
 
-  const maxPicks = data?.maxPicks ?? 2;
-  const picksOwed = Math.max(0, maxPicks - (viewerRow?.picks.length ?? 0));
   const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
-
-  const pickWord = (count: number) => (count === 1 ? "pick" : "picks");
+  const ticketPicks: TicketPick[] = viewerPicks.map((pick, index) => ({
+    gameId: `viewer-pick-${index}`,
+    team: pick.label ?? "Selection",
+    kickoff: ticketKickoff(pick.kickoffAt),
+    spread: pick.isLineLocked ? pick.spread ?? null : null,
+    lineLocked: Boolean(pick.isLineLocked),
+  }));
+  const ticketSurvivor = viewerSurvivor?.pick?.label
+    ? { team: viewerSurvivor.pick.label }
+    : null;
 
   if (errorMessage && !data) {
     return (
@@ -201,38 +224,15 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        <header className="border-b-2 border-[#1d1d1f] pb-4 sm:pb-6">
-          <h1 className="font-serif text-3xl font-bold sm:text-4xl md:text-5xl">
-            Lead Pipe Locks
-          </h1>
-          <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 sm:text-sm">
-            Picks revealed to others at kickoff
-          </p>
-        </header>
-
-        <section className="border-b-2 border-[#1d1d1f] py-4 sm:py-5">
-          <div className={`grid gap-4 ${data.survivorAvailable ? "md:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)]" : "md:grid-cols-[10rem_minmax(0,1fr)]"}`}>
-            <div className="week-status-week md:pt-1">
-              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">THIS WEEK</p>
-              <h2 className="mt-1 font-serif text-2xl font-bold sm:text-3xl">{data.week}</h2>
-              <p className="mt-2 max-w-36 text-xs leading-4 text-slate-600">Picks may be changed until their listed kickoff times.</p>
-            </div>
-
-            <div className="week-status-card flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
-              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">PICK&apos;EM</p>
-              {picksOwed === 0 ? <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">{data.maxPicks} {pickWord(data.maxPicks)} submitted</h3> : <h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">{picksOwed} {pickWord(picksOwed)} due</h3>}
-              {picksOwed > 0 ? <p className="mt-2 text-base leading-6 text-slate-700">Make your selections before kickoff.</p> : null}
-              {viewerPicks.length ? <ol className="mt-3 mb-3 flex flex-wrap gap-1.5 text-sm sm:gap-2">{viewerPicks.map((pick, index) => <li className="week-status-pick" key={`${pick.label}-${index}`}>{index + 1}. {pick.label}{pick.isLineLocked && pick.spread ? <strong className="ml-1 font-mono text-teal-700">{pick.spread}</strong> : null}</li>)}</ol> : null}
-              <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/board">View The Slate</Link>
-            </div>
-
-            {data.survivorAvailable ? <div className="week-status-card flex flex-col border-t border-[#b9b09d] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-1">
-              <p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p>
-              {data.survivorComplete ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Congratulations, {data.survivorChampionName}!</h3><p className="mt-2 text-base leading-6 text-slate-700">The Survivor pool is complete for the season.</p></> : viewerSurvivor?.status === "eliminated" ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-red-700 sm:text-2xl">Eliminated</h3><p className="mt-2 text-base leading-6 text-slate-700">Follow the remaining pool on The Survivor Wire.</p></> : viewerSurvivor?.pick?.label ? <div className="mt-2 flex items-center gap-2"><SurvivorPokerChip abbreviation={viewerSurvivor.pick.abbreviation ?? "NFL"} official size="summary" teamName={viewerSurvivor.pick.label} /><h3 className="font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made: {viewerSurvivor.pick.label}</h3></div> : viewerSurvivor?.pick?.isHidden ? <><h3 className="mt-1 font-serif text-xl font-bold leading-tight text-green-800 sm:text-2xl">Pick made</h3><p className="mt-2 text-base leading-6 text-slate-700">Your Survivor selection is submitted.</p></> : <><h3 className="mt-1 font-serif text-xl font-bold leading-tight sm:text-2xl">1 pick due</h3><p className="mt-2 text-base leading-6 text-slate-700">Choose one straight-up winner before kickoff.</p></>}
-              <Link className="week-status-action mt-4 inline-flex min-h-11 w-full items-center justify-center px-5 py-3 text-center font-bold md:mt-auto" href="/survivor">View Survivor Wire</Link>
-            </div> : null}
-          </div>
-        </section>
+        <MyTicket
+          maxPicks={data.maxPicks}
+          picks={ticketPicks}
+          readOnly={data.weekStatus === "complete"}
+          survivorAvailable={data.survivorAvailable}
+          survivorPick={ticketSurvivor}
+          survivorStatus={data.survivorComplete ? "complete" : viewerSurvivor?.status ?? "active"}
+          week={data.week}
+        />
 
         <PickemScoreboard
           maxPicks={data.maxPicks}

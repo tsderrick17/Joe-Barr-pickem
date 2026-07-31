@@ -332,6 +332,7 @@ return {
   label: visible
     ? teamNameById.get(pick.selected_team_id) ?? "Unknown team"
     : null,
+  kickoffAt: game?.kickoff_at,
   isHidden: !visible,
   resultMark: visible ? resultMark : "",
   spread: visible && line
@@ -527,6 +528,7 @@ return {
   return NextResponse.json({
     viewerPlayerId: viewer.id,
     week: currentWeek.display_name,
+    weekStatus: currentWeek.status,
     maxPicks: currentWeek.max_picks,
     nextRevealAt: nextPickRevealAt(
       [...((games ?? []) as GameRow[]).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],

@@ -1,5 +1,3 @@
-import SurvivorPokerChip from "@/components/survivor-poker-chip";
-
 export type TicketPick = {
   gameId: string;
   team: string;
@@ -9,15 +7,14 @@ export type TicketPick = {
 };
 
 type SurvivorTicket = {
-  abbreviation: string;
   team: string;
 } | null;
 
 type Props = {
-  hasUnsavedChanges: boolean;
+  hasUnsavedChanges?: boolean;
   maxPicks: number;
   picks: TicketPick[];
-  readOnly: boolean;
+  readOnly?: boolean;
   survivorAvailable: boolean;
   survivorPick: SurvivorTicket;
   survivorStatus: "active" | "eliminated" | "complete";
@@ -38,58 +35,41 @@ function ticketStatus({
   if (readOnly) return "FINAL RECEIPT";
   if (hasUnsavedChanges) return "UNSAVED CHANGES";
   if (pickemDue > 0 || survivorDue) return "ACTION DUE";
-  return "TICKET COMPLETE";
+  return "TICKET FILED";
 }
 
 export default function MyTicket({
-  hasUnsavedChanges,
+  hasUnsavedChanges = false,
   maxPicks,
   picks,
-  readOnly,
+  readOnly = false,
   survivorAvailable,
   survivorPick,
   survivorStatus,
   week,
 }: Props) {
   const pickemDue = Math.max(0, maxPicks - picks.length);
-  const survivorDue =
-    survivorAvailable &&
-    survivorStatus === "active" &&
-    !survivorPick;
-  const status = ticketStatus({
-    hasUnsavedChanges,
-    pickemDue,
-    readOnly,
-    survivorDue,
-  });
+  const survivorDue = survivorAvailable && survivorStatus === "active" && !survivorPick;
+  const totalSelections = picks.length + (survivorPick ? 1 : 0);
+  const status = ticketStatus({ hasUnsavedChanges, pickemDue, readOnly, survivorDue });
 
   return (
-    <section className="my-ticket mt-5" aria-label={`My ticket for ${week}`}>
+    <section className="my-ticket" aria-label={`Your current ticket for ${week}`}>
       <div className="my-ticket-brand">
         <p>JOE BARR MEMORIAL</p>
-        <h2>Saratoga</h2>
-        <span>MY TICKET · LEAD PIPE LOCKS</span>
+        <h1>LEAD PIPE LOCKS</h1>
       </div>
-
-      <p className="my-ticket-serial">
-        JB-{week.replace(/\s+/g, "-").toUpperCase()}-{String(maxPicks).padStart(2, "0")}P
-      </p>
 
       <div className="my-ticket-race">
         <strong>{week}</strong>
-        <span>THE SLATE</span>
-      </div>
-
-      <div className="my-ticket-rule">
-        <span>{maxPicks} PICK ATS CARD</span>
-        <strong>{picks.length} BET{picks.length === 1 ? "" : "S"}</strong>
+        <span>YOUR RECEIPT</span>
       </div>
 
       <div className="my-ticket-columns">
         <div className="my-ticket-section">
           <div className="my-ticket-section-heading">
-            <span>PICK&apos;EM</span>
-            <strong>{picks.length}/{maxPicks} FILED</strong>
+            <span>PICK&apos;EM ATS</span>
+            <strong>OFFICIAL LINES</strong>
           </div>
           <ol className="my-ticket-picks">
             {Array.from({ length: maxPicks }, (_, index) => {
@@ -104,7 +84,7 @@ export default function MyTicket({
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
-                        {pick.lineLocked && pick.spread ? pick.spread : "PENDING"}
+                        {pick.lineLocked && pick.spread ? pick.spread : "—"}
                       </span>
                     </>
                   ) : (
@@ -114,9 +94,7 @@ export default function MyTicket({
               );
             })}
           </ol>
-          {pickemDue > 0 && !readOnly ? (
-            <p className="my-ticket-due">{pickemDue} PICK{pickemDue === 1 ? "" : "S"} STILL DUE</p>
-          ) : null}
+          {pickemDue > 0 && !readOnly ? <p className="my-ticket-due">{pickemDue} PICK{pickemDue === 1 ? "" : "S"} STILL DUE</p> : null}
         </div>
 
         <div className="my-ticket-section my-ticket-survivor">
@@ -126,19 +104,13 @@ export default function MyTicket({
           </div>
           {survivorPick ? (
             <div className="my-ticket-survivor-pick">
-              <SurvivorPokerChip
-                abbreviation={survivorPick.abbreviation}
-                official
-                size="summary"
-                teamName={survivorPick.team}
-              />
               <div>
                 <small>OFFICIAL SELECTION</small>
                 <strong>{survivorPick.team}</strong>
               </div>
             </div>
           ) : survivorStatus === "eliminated" ? (
-            <p className="my-ticket-survivor-state is-out">ENTRY CLOSED · OUT</p>
+            <p className="my-ticket-survivor-state is-out">ENTRY CLOSED &middot; OUT</p>
           ) : survivorStatus === "complete" ? (
             <p className="my-ticket-survivor-state">POOL COMPLETE</p>
           ) : survivorAvailable ? (
@@ -146,15 +118,19 @@ export default function MyTicket({
           ) : (
             <p className="my-ticket-survivor-state">NOT AVAILABLE</p>
           )}
+          <div className="my-ticket-instructions">
+            <p>Official ATS spreads appear here once locked.</p>
+            <p>Selections may be changed until their listed kickoff time.</p>
+          </div>
         </div>
       </div>
 
       <div className="my-ticket-footer">
-        <span>{picks.length + (survivorPick ? 1 : 0)} BETS</span>
+        <span>{totalSelections} SELECTION{totalSelections === 1 ? "" : "S"} FILED</span>
         <div>
           <small>TICKET STATUS</small>
           <strong className={status === "ACTION DUE" || status === "UNSAVED CHANGES" ? "needs-action" : ""}>{status}</strong>
-          <small>{readOnly ? "PERMANENT WEEKLY RECEIPT" : "EDITABLE UNTIL EACH LISTED KICKOFF"}</small>
+          <small>{readOnly ? "PERMANENT WEEKLY RECEIPT" : "PRIVATE UNTIL EACH GAME KICKS OFF"}</small>
         </div>
         <i aria-hidden="true" className="my-ticket-barcode" />
       </div>

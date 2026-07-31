@@ -917,8 +917,8 @@ html[data-theme="night"] .newspaper-clipping::after {
   letter-spacing: .2em;
 }
 
-.my-ticket-brand h2 {
-  font: 900 1.9rem/.9 Georgia, serif;
+.my-ticket-brand h1 {
+  font: 900 1.72rem/.95 Georgia, serif;
   letter-spacing: -.04em;
   margin-top: .12rem;
 }
@@ -1056,10 +1056,9 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-survivor-pick {
-  align-items: center;
-  display: flex;
-  gap: .6rem;
   margin-top: .58rem;
+  border-block: 1px dotted #958a77;
+  padding: .7rem 0;
 }
 
 .my-ticket-survivor-pick div {
@@ -1086,6 +1085,16 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-survivor-state.is-out { color: #9f2424; }
+
+.my-ticket-instructions {
+  border-top: 1px dashed #958a77;
+  color: #665e51;
+  font: 700 .58rem/1.35 Arial, sans-serif;
+  margin-top: .7rem;
+  padding-top: .55rem;
+}
+
+.my-ticket-instructions p + p { margin-top: .28rem; }
 
 .my-ticket-footer {
   align-items: center;
@@ -1121,8 +1130,17 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-footer strong.needs-action { color: #993b22; }
 
 .my-ticket-barcode {
-  background: repeating-linear-gradient(90deg, #28221b 0 1px, transparent 1px 3px, #28221b 3px 5px, transparent 5px 7px);
-  height: 1.12rem;
+  background: linear-gradient(90deg,
+    #28221b 0 2%, transparent 2% 4%, #28221b 4% 5%, transparent 5% 8%, #28221b 8% 12%, transparent 12% 14%,
+    #28221b 14% 15%, transparent 15% 18%, #28221b 18% 21%, transparent 21% 23%, #28221b 23% 24%, transparent 24% 28%,
+    #28221b 28% 33%, transparent 33% 35%, #28221b 35% 37%, transparent 37% 41%, #28221b 41% 42%, transparent 42% 45%,
+    #28221b 45% 49%, transparent 49% 51%, #28221b 51% 54%, transparent 54% 57%, #28221b 57% 58%, transparent 58% 61%,
+    #28221b 61% 66%, transparent 66% 68%, #28221b 68% 70%, transparent 70% 74%, #28221b 74% 75%, transparent 75% 78%,
+    #28221b 78% 83%, transparent 83% 85%, #28221b 85% 88%, transparent 88% 91%, #28221b 91% 92%, transparent 92% 96%,
+    #28221b 96% 100%);
+  border-inline: 1px solid #28221b;
+  height: 1.28rem;
+  opacity: .9;
 }
 
 html[data-theme="night"] .my-ticket {
@@ -1156,9 +1174,12 @@ html[data-theme="night"] .my-ticket-selection small,
 html[data-theme="night"] .my-ticket-survivor-pick small,
 html[data-theme="night"] .my-ticket-footer small,
 html[data-theme="night"] .my-ticket-number,
-html[data-theme="night"] .my-ticket-open {
+html[data-theme="night"] .my-ticket-open,
+html[data-theme="night"] .my-ticket-instructions {
   color: #bdb19b;
 }
+
+html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 
 @media (max-width: 639px) {
   .my-ticket {
