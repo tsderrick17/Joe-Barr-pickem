@@ -637,7 +637,8 @@ html[data-theme="night"] .survivor-selection-footer {
   --ledger-ink: #1d1d1f;
   --ledger-muted: #516076;
   --ledger-paper: #fffdf8;
-  --ledger-alt: #f0eadc;
+  --scorepad-blue: #9bb9de;
+  --scorepad-red: #c76862;
 }
 
 .pickem-ledger-masthead {
@@ -677,37 +678,18 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .pickem-ledger-table {
+  background: var(--ledger-paper);
   border-top: 2px solid var(--ledger-ink);
   border-bottom: 2px solid var(--ledger-ink);
   overflow: hidden;
 }
 
-.pickem-ledger-table thead tr {
-  background: #e9e0cd;
-  border-bottom: 2px solid var(--ledger-ink);
-  color: #34415a;
-}
-
-.pickem-ledger-table th {
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: .61rem;
-  font-weight: 900;
-  letter-spacing: .16em;
-  padding: .48rem .5rem;
-  vertical-align: middle;
-}
-
-.pickem-ledger-wins-head { border-right: 1px solid #bfb6a7; }
-.pickem-ledger-player-head { border-right: 1px solid #bfb6a7; text-align: left; }
-.pickem-ledger-pick-head { text-align: left; }
-
 .pickem-ledger-row {
-  background: var(--ledger-paper);
-  border-bottom: 1px solid #c8c1b5;
+  background: transparent;
+  border-bottom: 1px solid var(--scorepad-blue);
 }
 
 .pickem-ledger-row:last-child { border-bottom: 0; }
-.pickem-ledger-row.is-alt { background: var(--ledger-alt); }
 .pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
 
 .pickem-ledger-row td {
@@ -716,7 +698,7 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .pickem-ledger-wins {
-  border-right: 1px solid #d5cdbf;
+  border-right: 2px solid var(--scorepad-red);
   font-family: Georgia, serif;
   font-size: 1.15rem;
   font-weight: 800;
@@ -725,7 +707,7 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .pickem-ledger-player {
-  border-right: 1px solid #d5cdbf;
+  border-right: 0;
   font-family: Georgia, serif;
   font-size: clamp(.95rem, 2.5vw, 1.12rem);
   font-weight: 800;
@@ -747,7 +729,6 @@ html[data-theme="night"] .survivor-selection-footer {
 
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
-  .pickem-ledger-table th { font-size: .68rem; padding: .58rem .75rem; }
   .pickem-ledger-row td { padding: .62rem .75rem; }
   .pickem-ledger-wins { font-size: 1.35rem; }
   .pickem-ledger-pick { font-size: .94rem; }
@@ -757,14 +738,11 @@ html[data-theme="night"] .pickem-ledger {
   --ledger-ink: #ede6d9;
   --ledger-muted: #b7c4d3;
   --ledger-paper: #252722;
-  --ledger-alt: #2c2d27;
+  --scorepad-blue: #55769a;
+  --scorepad-red: #b86d68;
 }
 
-html[data-theme="night"] .pickem-ledger-table thead tr { background: #3a372e; color: #e9dfcb; }
-html[data-theme="night"] .pickem-ledger-row { border-color: #5e5a50; }
-html[data-theme="night"] .pickem-ledger-row td,
-html[data-theme="night"] .pickem-ledger-wins-head,
-html[data-theme="night"] .pickem-ledger-player-head { border-color: #625e53; }
+html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
 html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
 html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 

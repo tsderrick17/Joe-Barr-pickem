@@ -37,20 +37,11 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
-          <thead>
-            <tr>
-              <th className="pickem-ledger-wins-head w-11 text-center sm:w-16"><span>W</span></th>
-              <th className={`pickem-ledger-player-head ${isPlayoff ? "w-32" : "w-24 sm:w-36"}`}><span>PLAYER</span></th>
-              {Array.from({ length: maxPicks }, (_, index) => (
-                <th className="pickem-ledger-pick-head" key={index}>PICK {index + 1}</th>
-              ))}
-            </tr>
-          </thead>
           <tbody>
-            {rows.map((row, rowIndex) => {
+            {rows.map((row) => {
               const isViewer = row.id === viewerPlayerId;
               return (
-                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : isViewer ? "viewer-row" : rowIndex % 2 ? "is-alt" : ""}`} key={row.id}>
+                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : isViewer ? "viewer-row" : ""}`} key={row.id}>
                   <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}{row.playoffEliminated ? <span className="mt-0.5 block -rotate-6 border border-red-700 px-0.5 py-px font-sans text-[8px] font-black tracking-[0.08em] text-red-800" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (
