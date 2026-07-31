@@ -1743,6 +1743,15 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 .pool-chat-message-meta button { color: #7f858d; font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
 .pool-chat-message-meta button:hover { color: #a82820; text-decoration: underline; }
 
+.pool-chat-hide {
+  color: #7f858d;
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.pool-chat-hide:hover, .pool-chat-hide:focus-visible { color: #075f58; text-decoration: underline; }
+
 html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 
 .pool-display-toggle {
