@@ -633,6 +633,13 @@ html[data-theme="night"] .survivor-selection-footer {
   box-shadow: inset -1px 0 0 rgba(22, 135, 127, .3), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
 }
 
+/* The Pick'em Pad stays impartial: its ruled paper should not color a
+   player's whole line. Survivor retains its stronger personal marker. */
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
+}
+
 /* Pick'em is the pool's long-running scorebook: deliberately more like a
    compact ballpark ledger than the Survivor grid beside it. */
 .pickem-ledger {
@@ -1158,6 +1165,11 @@ html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
 
 html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
   box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+
+html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
 }
 
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
