@@ -1366,6 +1366,35 @@ html[data-theme="night"] .my-ticket-instructions {
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
 
+html[data-theme="night"] .pool-chat {
+  background: #22231f;
+  border-color: #918d81;
+  color: #f2ede2;
+}
+
+html[data-theme="night"] .pool-chat > div,
+html[data-theme="night"] .pool-chat form {
+  border-color: #817d72;
+}
+
+html[data-theme="night"] .pool-chat .text-slate-500,
+html[data-theme="night"] .pool-chat .text-slate-600,
+html[data-theme="night"] .pool-chat .text-slate-700 {
+  color: #cfd4ca !important;
+}
+
+html[data-theme="night"] .pool-chat article {
+  border-color: #716d64;
+}
+
+html[data-theme="night"] .pool-chat input {
+  background: #2d2f2a;
+  border-color: #96978d;
+  color: #f2ede2;
+}
+
+html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
+
 @media (max-width: 639px) {
   .my-ticket {
     padding: .8rem .8rem .7rem;
