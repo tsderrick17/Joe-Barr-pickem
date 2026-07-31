@@ -30,7 +30,7 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
       <div className="pickem-ledger-masthead">
-        <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Scoreboard"}</h2>
+        <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Pad"}</h2>
         {isPlayoff ? <p className="pickem-ledger-period">{week.toUpperCase()}</p> : null}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
