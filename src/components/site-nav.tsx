@@ -147,7 +147,7 @@ export default function SiteNav() {
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
-            className="theme-toggle flex h-9 w-9 items-center justify-center rounded-full"
+            className="theme-toggle flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
             data-active={isNightMode}
             onClick={toggleTheme}
             title={isNightMode ? "Use light mode" : "Use dark mode"}

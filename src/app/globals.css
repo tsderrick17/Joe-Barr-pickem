@@ -26,6 +26,9 @@ body {
   transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
+/* Keep the theme control at the true right edge, separate from account links. */
+.site-nav-account .theme-toggle { order: 2; }
+
 .theme-toggle:hover {
   border-color: #b1f1e6;
   background: linear-gradient(145deg, #4b747a, #28434c);
