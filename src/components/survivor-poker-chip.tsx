@@ -7,18 +7,23 @@ type Props = {
   teamName: string;
   selected?: boolean;
   official?: boolean;
+  animate?: boolean;
   unavailable?: boolean;
   size?: "wire" | "summary";
 };
 
-export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, unavailable = false, size = "wire" }: Props) {
+export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, unavailable = false, size = "wire" }: Props) {
   const accent = teamChipAccents(abbreviation);
   const state = official ? "official" : selected ? "picked" : "available";
 
   return (
-    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={teamName}>
+    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
-      <span className={`survivor-poker-chip survivor-poker-chip-${size}${unavailable ? " is-unavailable" : ""}`} data-state={state}>
+      <span className={`survivor-poker-chip survivor-poker-chip-${size}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-back-2" />
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-back-1" />
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-front-1" />
+        <span className="survivor-poker-chip-depth survivor-poker-chip-depth-front-2" />
         <span className="survivor-poker-chip-core">
           <span className="survivor-poker-chip-face survivor-poker-chip-front">
             <Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} />
