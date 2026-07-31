@@ -619,15 +619,15 @@ export default function BoardPage() {
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-7 md:pt-0">
               <p className="font-bold tracking-[0.12em] text-[#171719]">HOW TO PLAY</p>
-              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:gap-5">
+              <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] sm:gap-5">
                 <div>
-                  <p className="xl:whitespace-nowrap">Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
+                  <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#006b8f]">Blue lines</span> are official and will not change.</p>
                   <p className="mt-1">Selections are revealed to others at kickoff.</p>
                 </div>
-                <div className="border-t border-[#b7aea0] pt-3 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
-                  <p className="mt-1 xl:whitespace-nowrap">
+                  <p className="mt-1">
                     {week.period_type === "playoff"
                       ? "Choose every team and click Save below."
                       : "Choose TWO teams and click Save below."}
