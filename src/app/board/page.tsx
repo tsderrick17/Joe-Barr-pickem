@@ -196,6 +196,7 @@ export default function BoardPage() {
   const [weeks, setWeeks] = useState<ScoringPeriod[]>([]);
   const [week, setWeek] = useState<ScoringPeriod | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
+  const [showActionOnly, setShowActionOnly] = useState(false);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
@@ -353,6 +354,21 @@ export default function BoardPage() {
 
     return Array.from(grouped.entries());
   }, [games]);
+
+  const visibleGamesByDay = useMemo(() => {
+    if (!showActionOnly) return gamesByDay;
+
+    return gamesByDay
+      .map(([day, dayGames]) => [
+        day,
+        dayGames.filter((game) => {
+          const iSelectedThisGame = selectedPicks.some((pick) => pick.gameId === game.id);
+          const hasPublishedPoolAction = game.awayPickers.length > 0 || game.homePickers.length > 0;
+          return iSelectedThisGame || hasPublishedPoolAction;
+        }),
+      ] as const)
+      .filter(([, dayGames]) => dayGames.length > 0);
+  }, [gamesByDay, selectedPicks, showActionOnly]);
 
   const selectedTeams = useMemo(() => {
     return selectedPicks
@@ -721,7 +737,15 @@ export default function BoardPage() {
                 </div>
               </section>
             ) : null}
-            {gamesByDay.map(([day, dayGames]) => {
+            <div className="slate-view-switch" aria-label="Slate display">
+              <span>SHOW</span>
+              <button aria-pressed={!showActionOnly} className={!showActionOnly ? "is-active" : ""} onClick={() => setShowActionOnly(false)} type="button">ALL GAMES</button>
+              <button aria-pressed={showActionOnly} className={showActionOnly ? "is-active" : ""} onClick={() => setShowActionOnly(true)} type="button">POOL ACTION</button>
+            </div>
+            {showActionOnly && visibleGamesByDay.length === 0 ? (
+              <p className="slate-action-empty">No public pool action yet. Your selections will appear here immediately; everyone else&apos;s reveals at kickoff.</p>
+            ) : null}
+            {visibleGamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
                   <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center">
