@@ -144,6 +144,10 @@ body {
   }
 }
 
+@media (min-width: 1024px) {
+  .slate-how-to-grid p { white-space: nowrap; }
+}
+
 .slate-view-switch {
   align-items: center;
   display: inline-flex;
@@ -153,17 +157,10 @@ body {
 }
 
 .slate-view-switch--header {
-  column-gap: .45rem;
-  display: grid;
-  grid-template-columns: max-content 2.1rem;
-  grid-template-rows: repeat(2, auto);
-  margin-top: 1.35rem;
-  row-gap: .15rem;
+  gap: .38rem;
+  margin-top: 1.1rem;
 }
 
-.slate-view-switch--header > span:first-child { grid-column: 1; grid-row: 1; }
-.slate-view-switch--header > button { grid-column: 2; grid-row: 1 / span 2; }
-.slate-view-switch--header > span:last-child { grid-column: 1; grid-row: 2; }
 
 .slate-view-switch > span {
   color: #687179;
@@ -573,7 +570,11 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .viewer-row .survivor-sticky-status {
-  box-shadow: inset 4px 0 0 #16877f;
+  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+
+.viewer-row .survivor-sticky-name {
+  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
 }
 
 .survivor-standings-row.viewer-row {
@@ -923,6 +924,10 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
 
 html[data-theme="night"] .viewer-row .survivor-sticky-status {
   box-shadow: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
+}
+
+html[data-theme="night"] .viewer-row .survivor-sticky-name {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
 }
 
 html[data-theme="night"] .slate-selection-footer [class*="text-slate-"] {
@@ -1469,6 +1474,28 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
   margin: 0 auto;
   max-width: 64rem;
 }
+
+.pool-chat-message {
+  border-bottom: 1px solid #ddd5c7;
+  padding: .46rem 0 .42rem;
+}
+
+.pool-chat-message:last-child { border-bottom: 0; }
+.pool-chat-message.is-deleted { color: #7b7368; font-style: italic; }
+
+.pool-chat-message-meta {
+  align-items: baseline;
+  color: #69707a;
+  display: flex;
+  font-size: .62rem;
+  gap: .45rem;
+  letter-spacing: .045em;
+  margin-top: .14rem;
+}
+
+.pool-chat-message-meta strong { color: #34415a; font-size: .76rem; letter-spacing: 0; }
+.pool-chat-message-meta button { color: #7f858d; font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
+.pool-chat-message-meta button:hover { color: #a82820; text-decoration: underline; }
 
 html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 
