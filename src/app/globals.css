@@ -676,9 +676,6 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-period {
   padding-bottom: .08rem;
   text-align: right;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: .28em;
 }
 
 .survivor-ledger-masthead h2 { margin: 0; }
@@ -725,6 +722,25 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-row:last-child { border-bottom: 0; }
 .pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
+
+.pickem-ledger-week-row th {
+  border-bottom: 2px solid var(--ledger-ink);
+  padding: .42rem .5rem .35rem;
+  text-align: left;
+}
+
+.pickem-ledger-week-row span {
+  border-bottom: 2px solid currentColor;
+  color: var(--ledger-ink);
+  display: inline-block;
+  font-family: Cambria, "Times New Roman", serif;
+  font-size: clamp(1rem, 2.3vw, 1.28rem);
+  font-weight: 700;
+  letter-spacing: .12em;
+  line-height: 1;
+  padding-bottom: .08em;
+  text-transform: uppercase;
+}
 
 .pickem-ledger-row td {
   padding: .5rem .5rem;

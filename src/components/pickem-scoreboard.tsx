@@ -31,7 +31,7 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
     <section className={`pickem-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
       <div className="pickem-ledger-masthead">
         <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Scoreboard"}</h2>
-        <p className="pickem-ledger-period">{week.toUpperCase()}</p>
+        {isPlayoff ? <p className="pickem-ledger-period">{week.toUpperCase()}</p> : null}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
@@ -40,6 +40,9 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
             <col className="pickem-ledger-player-column" />
             {Array.from({ length: maxPicks }, (_, index) => <col key={index} />)}
           </colgroup> : null}
+          {!isPlayoff ? <thead>
+            <tr className="pickem-ledger-week-row"><th colSpan={maxPicks + 2}><span>{week}</span></th></tr>
+          </thead> : null}
           <tbody>
             {rows.map((row) => {
               const isViewer = row.id === viewerPlayerId;
