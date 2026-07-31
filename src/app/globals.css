@@ -406,25 +406,26 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row {
   --survivor-row-bg: #f5f0e6;
-  --survivor-pipe-top: #fffdf8;
-  --survivor-pipe-mid: #eee8dc;
-  --survivor-pipe-bottom: #d9d0c1;
+  --survivor-steel-edge: #9c9b96;
+  --survivor-steel-mid: #dddcd6;
+  --survivor-steel-face: #f2f1ec;
   background-color: var(--survivor-row-bg);
 }
 
 .survivor-standings-row.is-alt {
   --survivor-row-bg: #f0eadf;
-  --survivor-pipe-top: #fbf8f1;
-  --survivor-pipe-mid: #e9e2d5;
-  --survivor-pipe-bottom: #d4cab9;
+  --survivor-steel-edge: #8e8e8a;
+  --survivor-steel-mid: #d2d1cc;
+  --survivor-steel-face: #ebeae5;
 }
 
 .survivor-standings-row .survivor-sticky-status,
 .survivor-standings-row .survivor-sticky-name {
   background-color: transparent;
-  /* A shallow vertical roll, like a brushed-machine steel face. The paired
-     cells meet flush so each player reads as one continuous rail. */
-  background-image: linear-gradient(180deg, var(--survivor-pipe-bottom) 0%, var(--survivor-pipe-mid) 27%, var(--survivor-pipe-top) 50%, var(--survivor-pipe-mid) 73%, var(--survivor-pipe-bottom) 100%);
+  /* A cold, shallow roll with fine longitudinal machining marks. */
+  background-image:
+    linear-gradient(180deg, var(--survivor-steel-edge) 0%, var(--survivor-steel-mid) 18%, var(--survivor-steel-face) 48%, var(--survivor-steel-mid) 78%, var(--survivor-steel-edge) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.11) 0 1px, rgba(23,23,25,.035) 1px 2px, transparent 2px 5px);
   border-block: 0;
   box-shadow: none;
   /* Cover the parent row rule so the steel rail reads as a single, seamless
@@ -444,6 +445,7 @@ html[data-theme="night"] .survivor-selection-footer {
   border-radius: 0;
   border-right: 1px solid rgba(96, 87, 72, .25);
   margin-right: 0;
+  text-shadow: 0 1px 0 rgba(255,255,255,.72), 0 -1px 0 rgba(43,43,41,.12);
 }
 
 .viewer-row {
@@ -458,9 +460,9 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-standings-row.viewer-row {
   --survivor-row-bg: #dff0eb;
-  --survivor-pipe-top: #f4fffb;
-  --survivor-pipe-mid: #dff3ed;
-  --survivor-pipe-bottom: #bbddd4;
+  --survivor-steel-edge: #78b7b0;
+  --survivor-steel-mid: #bfe0da;
+  --survivor-steel-face: #e6f4f1;
   box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
 }
 
@@ -772,23 +774,27 @@ html[data-theme="night"] .survivor-standings-header {
 
 html[data-theme="night"] .survivor-standings-row {
   --survivor-row-bg: #101c24;
-  --survivor-pipe-top: #29424a;
-  --survivor-pipe-mid: #1d343c;
-  --survivor-pipe-bottom: #12262d;
+  --survivor-steel-edge: #16252c;
+  --survivor-steel-mid: #33434a;
+  --survivor-steel-face: #526169;
 }
 
 html[data-theme="night"] .survivor-standings-row.is-alt {
   --survivor-row-bg: #13232b;
-  --survivor-pipe-top: #2a444d;
-  --survivor-pipe-mid: #203943;
-  --survivor-pipe-bottom: #142b33;
+  --survivor-steel-edge: #14252c;
+  --survivor-steel-mid: #2d4048;
+  --survivor-steel-face: #46575f;
 }
 
 html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-row-bg: #16333a;
-  --survivor-pipe-top: #315e62;
-  --survivor-pipe-mid: #20474d;
-  --survivor-pipe-bottom: #16363d;
+  --survivor-steel-edge: #1b5960;
+  --survivor-steel-mid: #3f7e80;
+  --survivor-steel-face: #75aaa4;
+}
+
+html[data-theme="night"] .survivor-standings-row .survivor-sticky-name {
+  text-shadow: 0 1px 0 rgba(255,255,255,.16), 0 -1px 0 rgba(0,0,0,.42);
 }
 
 html[data-theme="night"] .viewer-row .survivor-sticky-status,
