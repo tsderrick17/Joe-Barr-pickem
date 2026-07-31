@@ -112,8 +112,13 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     if (!survivor?.enabled) return null;
 
     const survivorSelected = survivor.selectedTeamId === team.id;
-    const survivorOfficial = survivorSelected && survivor.savedTeamId === team.id;
-    const survivorUsed = survivor.usedTeamIds.includes(team.id) && !survivorSelected;
+    /* The saved selection for this week is not a past-team restriction. It
+       stays visible as the official teal/star chip while an unsaved change is
+       being considered elsewhere on the Slate. */
+    const survivorOfficial = survivor.savedTeamId === team.id;
+    const survivorUsed = survivor.usedTeamIds.includes(team.id)
+      && !survivorSelected
+      && team.id !== survivor.savedTeamId;
     const survivorUnavailable = hasStarted || survivorUsed;
 
     const replayChip = () => {
