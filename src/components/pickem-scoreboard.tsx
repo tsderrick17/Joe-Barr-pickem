@@ -62,7 +62,7 @@ export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Pro
                             {pick.resultMark ? <strong className={`ml-1.5 text-[13px] ${pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{pick.resultMark}</strong> : null}
                           </span>
                         ) : pick?.isHidden ? (
-                          <span aria-label="Pick submitted and hidden until kickoff" title="Pick submitted — revealed at kickoff">🔒</span>
+                          <span aria-label="Selection submitted and hidden until kickoff" title="Selection submitted — revealed at kickoff">🔒</span>
                         ) : null}
                       </td>
                     );
