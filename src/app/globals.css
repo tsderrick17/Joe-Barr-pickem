@@ -1303,6 +1303,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-barcode {
   align-self: end;
+  display: block;
   justify-self: end;
   background: linear-gradient(90deg,
     #28221b 0 2%, transparent 2% 4%, #28221b 4% 5%, transparent 5% 8%, #28221b 8% 12%, transparent 12% 14%,
@@ -1315,6 +1316,7 @@ html[data-theme="night"] .newspaper-clipping::after {
   border-inline: 1px solid #28221b;
   height: 1.28rem;
   opacity: .9;
+  width: 4.1rem;
 }
 
 html[data-theme="night"] .my-ticket {
