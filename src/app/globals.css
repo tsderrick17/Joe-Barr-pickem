@@ -339,8 +339,7 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary .survivor-poker-chip-back { display: none; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
-.survivor-poker-chip-ticket { height: 100%; width: 100%; }
-.survivor-poker-chip-ticket[data-state="official"] { transform: rotate(-7deg); }
+.survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
 
 .survivor-matchup-team {
