@@ -726,7 +726,7 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-week-row th {
   border-bottom: 2px solid var(--ledger-ink);
   padding: .42rem .5rem .35rem;
-  text-align: left;
+  text-align: center;
 }
 
 .pickem-ledger-week-row span {
