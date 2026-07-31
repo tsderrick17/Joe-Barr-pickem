@@ -303,20 +303,21 @@ body {
 
 .survivor-poker-chip-seal {
   align-items: center;
-  background: #edf7ef;
-  border: 1px solid #16877f;
+  background: #e5f5f1;
+  border: 2px solid #0f766e;
   border-radius: 50%;
-  color: #0f625d;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, .28), inset 0 1px 0 rgba(255,255,255,.86);
+  color: #08645f;
   display: flex;
-  font-size: .58rem;
+  font-size: .68rem;
   font-weight: 900;
-  height: 1rem;
+  height: 1.14rem;
   justify-content: center;
   line-height: 1;
   position: absolute;
-  right: -.18rem;
-  top: -.18rem;
-  width: 1rem;
+  right: -.24rem;
+  top: -.24rem;
+  width: 1.14rem;
   z-index: 4;
 }
 
