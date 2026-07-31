@@ -115,7 +115,7 @@ export default function MyTicket({
           )}
           <div className="my-ticket-instructions">
             <p>Official ATS spreads appear here once locked.</p>
-            <p>Selections may be changed until their listed kickoff time.</p>
+            <p>Selections are revealed to others at kickoff.</p>
           </div>
         </div>
       </div>
@@ -127,6 +127,7 @@ export default function MyTicket({
         <div>
           <small>TICKET STATUS</small>
           <strong className={isFilled ? "is-filled" : "is-open"}>{status}</strong>
+          <small className="my-ticket-footer-note">May be changed prior to kickoff.</small>
         </div>
         <i aria-hidden="true" className="my-ticket-barcode" />
       </div>

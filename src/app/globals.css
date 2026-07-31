@@ -1197,6 +1197,14 @@ html[data-theme="night"] .newspaper-clipping::after {
   letter-spacing: .09em;
 }
 
+.my-ticket-footer .my-ticket-footer-note {
+  font-size: .4rem;
+  letter-spacing: .04em;
+  line-height: 1.15;
+  margin-top: .12rem;
+  text-align: center;
+}
+
 .my-ticket-footer strong {
   color: inherit;
   font: 900 .64rem/1.25 Arial, sans-serif;
