@@ -661,6 +661,13 @@ html[data-theme="night"] .survivor-selection-footer {
   --scorepad-red: #c76862;
 }
 
+/* The four pieces of the Standings page are one reading surface: ticket,
+   Pick'em Pad, Survivor Table, and pool chat. Keep their outer edges aligned
+   instead of letting each component choose a different card width. */
+:root {
+  --standings-module-width: 39.6rem;
+}
+
 /* A hand-kept weekly pad should feel compact in a broad browser, while still
    using every available pixel on a phone. */
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) {
@@ -671,7 +678,7 @@ html[data-theme="night"] .survivor-selection-footer {
   /* A scorepad puts the two handwritten entries immediately after the
      names.  Keep this deliberately narrower on wide screens; phones still
      use their full available width. */
-  max-width: 36rem;
+  max-width: var(--standings-module-width);
   width: 100%;
 }
 
@@ -1400,8 +1407,12 @@ html[data-theme="night"] .newspaper-clipping::after {
   border: 1px solid #756b5b;
   box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
   color: #28221b;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--standings-module-width);
   padding: .9rem 1.05rem .8rem;
   position: relative;
+  width: 100%;
 }
 
 .my-ticket-survivor-chip {
@@ -1810,7 +1821,23 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
-  max-width: 64rem;
+  max-width: var(--standings-module-width);
+  width: 100%;
+}
+
+/* The compact restore control follows the same edge when chat is hidden. */
+.pool-chat-dock > div:not(.pool-chat) {
+  max-width: var(--standings-module-width) !important;
+  width: 100%;
+}
+
+/* Survivor has a horizontally scrollable grid, but its visible card aligns
+   with the ticket and score pad at every viewport size. */
+.survivor-ledger {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--standings-module-width);
+  width: 100%;
 }
 
 .pool-chat-message {
