@@ -1402,13 +1402,6 @@ html[data-theme="night"] .pool-chat input {
 
 html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 
-html[data-theme="night"] .player-trophy-card {
-  background: #2b2c28;
-  border-color: #a79e8d;
-}
-
-html[data-theme="night"] .player-trophy-card span { color: #f0eadf !important; }
-
 .pool-chat-dock {
   background: #f5f0e6;
   padding: 0 1rem 2rem;
