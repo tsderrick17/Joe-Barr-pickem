@@ -300,6 +300,7 @@ export default function HomePage() {
           maxPicks={data.maxPicks}
           rows={data.rows}
           viewerPlayerId={data.viewerPlayerId}
+          week={data.week}
         />
         {false ? (
         <section className="py-6 sm:py-7">
@@ -393,11 +394,11 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        {!data.isPlayoff ? <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
-          <div className="flex items-center justify-between gap-4"><p className="text-xs font-bold tracking-[0.2em] text-slate-600">SURVIVOR</p><div className="flex items-center gap-2"><button aria-expanded={data.showSurvivorStandings} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} type="button">{data.showSurvivorStandings ? "Hide Survivor" : "Show Survivor"}</button><button aria-expanded={data.showPoolChat} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setChatDisplay(!data.showPoolChat)} type="button">{data.showPoolChat ? "Hide Chat" : "Show Chat"}</button></div></div>
+        {!data.isPlayoff ? <section className="pickem-ledger survivor-ledger py-6 sm:py-7">
+          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor standings" : "Show Survivor standings"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><div className="flex items-center gap-2"><p className="pickem-ledger-period">{data.week.toUpperCase()}</p><button aria-expanded={data.showPoolChat} className="pool-display-toggle" disabled={savingDisplay} onClick={() => void setChatDisplay(!data.showPoolChat)} type="button">{data.showPoolChat ? "Hide Chat" : "Show Chat"}</button></div></div>
 
           {data.showSurvivorStandings && data.survivorAvailable ? (
-            <div className="mt-4 overflow-x-auto border-y-2 border-[#1d1d1f]">
+            <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
               <div className="min-w-[55.5rem]">
                 <div className="survivor-standings-header grid grid-cols-[3rem_7rem_repeat(18,2.5rem)] border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
                   <span aria-hidden="true" className="survivor-sticky-status py-2" />
@@ -421,7 +422,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : data.showSurvivorStandings ? (
-            <div className="mt-4 border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
+            <div className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
               <p className="font-bold">
                 {data.survivorNotice ??
                   "Survivor is temporarily unavailable. ATS standings remain current."}

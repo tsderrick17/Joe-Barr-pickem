@@ -23,17 +23,15 @@ type Props = {
   rows: PickemScoreboardRow[];
   viewerPlayerId: string;
   maxPicks: number;
+  week: string;
 };
 
-export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayerId, maxPicks }: Props) {
+export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayerId, maxPicks, week }: Props) {
   return (
     <section className={`pickem-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
       <div className="pickem-ledger-masthead">
-        <div>
-          <p className="pickem-ledger-kicker">LEAD PIPE LOCKS</p>
-          <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Scoreboard"}</h2>
-        </div>
-        <p className="pickem-ledger-period">{isPlayoff ? "ROUND CARD" : "THIS WEEK"}</p>
+        <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Scoreboard"}</h2>
+        <p className="pickem-ledger-period">{week.toUpperCase()}</p>
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>

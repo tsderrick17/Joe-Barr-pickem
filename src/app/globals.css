@@ -654,7 +654,6 @@ html[data-theme="night"] .survivor-selection-footer {
   padding: .6rem .15rem .52rem;
 }
 
-.pickem-ledger-kicker,
 .pickem-ledger-period {
   color: var(--ledger-muted);
   font-family: var(--font-geist-sans), Arial, sans-serif;
@@ -678,6 +677,35 @@ html[data-theme="night"] .survivor-selection-footer {
   padding-bottom: .08rem;
   text-align: right;
 }
+
+.survivor-ledger-masthead h2 { margin: 0; }
+
+.survivor-title-toggle {
+  align-items: center;
+  background: #fffdf8;
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  color: #40516a;
+  display: inline-flex;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  height: 1.35rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  width: 1.35rem;
+}
+
+.survivor-title-toggle:hover:not(:disabled),
+.survivor-title-toggle:focus-visible {
+  background: #e4eee9;
+  color: #0b625b;
+  transform: translateY(-1px);
+}
+
+.survivor-title-toggle:disabled { opacity: .55; }
 
 .pickem-ledger-table {
   background: var(--ledger-paper);
