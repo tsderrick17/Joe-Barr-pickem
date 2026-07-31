@@ -9,7 +9,7 @@ type Props = {
   official?: boolean;
   animate?: boolean;
   unavailable?: boolean;
-  size?: "wire" | "summary" | "ticket";
+  size?: "wire" | "summary" | "ticket" | "slate";
 };
 
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, unavailable = false, size = "wire" }: Props) {

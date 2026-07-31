@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import SurvivorPokerChip from "@/components/survivor-poker-chip";
+
 export type SlateGameRowData = {
   id: string;
   kickoffAt: string;
@@ -59,9 +64,17 @@ type Props = {
   selectionFeedback?: { teamId: string; type: "sweep"; token: number } | null;
   allowSelection?: boolean;
   onChoose?: (gameId: string, teamId: string) => void;
+  survivor?: {
+    enabled: boolean;
+    selectedTeamId: string | null;
+    savedTeamId: string | null;
+    usedTeamIds: string[];
+    onChoose: (gameId: string, teamId: string) => void;
+  };
 };
 
-export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose }: Props) {
+export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
+  const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
   const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
   const left = favoriteIsHome
     ? { name: game.homeTeam, abbreviation: game.homeTeamAbbreviation, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true }
@@ -80,6 +93,12 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
 
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
+    const survivorSelected = survivor?.selectedTeamId === team.id;
+    const survivorOfficial = survivorSelected && survivor?.savedTeamId === team.id;
+    const survivorUsed = Boolean(
+      survivor?.usedTeamIds.includes(team.id) && !survivorSelected,
+    );
+    const survivorUnavailable = hasStarted || survivorUsed;
     const label = team.home ? team.name.toUpperCase() : team.name;
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
@@ -88,7 +107,51 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
-    return allowSelection ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
+    const pickemControl = allowSelection
+      ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
+      : <div className={className}>{content}</div>;
+
+    if (!survivor?.enabled) return pickemControl;
+
+    const replayChip = () => {
+      setChipReplay((current) => ({
+        ...current,
+        [team.id]: (current[team.id] ?? 0) + 1,
+      }));
+    };
+
+    const chip = <button
+      aria-label={survivorOfficial ? `Flip your saved Survivor ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable for Survivor` : `Choose ${team.name} as your Survivor winner`}
+      aria-pressed={survivorSelected}
+      className="slate-survivor-chip-button"
+      disabled={survivorUnavailable}
+      onClick={() => {
+        if (survivorOfficial) {
+          replayChip();
+          return;
+        }
+        survivor.onChoose(game.id, team.id);
+        replayChip();
+      }}
+      title={survivorOfficial ? `Flip your saved ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable` : `Choose ${team.name} for Survivor`}
+      type="button"
+    >
+      <SurvivorPokerChip
+        abbreviation={team.abbreviation}
+        animate={Boolean(chipReplay[team.id])}
+        key={`${team.id}-${chipReplay[team.id] ?? 0}`}
+        official={survivorOfficial}
+        selected={survivorSelected}
+        size="slate"
+        teamName={team.name}
+        unavailable={survivorUnavailable}
+      />
+    </button>;
+
+    return <div className={`slate-team-with-survivor-chip slate-team-with-survivor-chip--${align}`}>
+      {pickemControl}
+      {chip}
+    </div>;
   };
 
   return <article className={`grid grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] items-center gap-0.5 border-b border-[#c8c1b5] ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] min-[380px]:gap-1 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>
