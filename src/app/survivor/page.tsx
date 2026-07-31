@@ -89,8 +89,9 @@ export default function SurvivorPage() {
               setChipReplay((current) => ({ ...current, [team.id]: (current[team.id] ?? 0) + 1 }));
               return;
             }
+            setChipReplay((current) => ({ ...current, [team.id]: (current[team.id] ?? 0) + 1 }));
             setSelected(chosen ? null : { gameId: game.id, teamId: team.id });
-          }} title={canReplayOfficial ? `Flip your ${team.name} chip` : disabled ? `${team.name} is unavailable` : `Choose ${team.name}`} type="button"><SurvivorPokerChip abbreviation={team.abbreviation} animate={canReplayOfficial} key={`${team.id}-${chipReplay[team.id] ?? 0}`} official={official} selected={chosen} teamName={team.name} unavailable={unavailable && !official} /></button>;
+          }} title={canReplayOfficial ? `Flip your ${team.name} chip` : disabled ? `${team.name} is unavailable` : `Choose ${team.name}`} type="button"><SurvivorPokerChip abbreviation={team.abbreviation} animate={Boolean(chipReplay[team.id])} key={`${team.id}-${chipReplay[team.id] ?? 0}`} official={official} selected={chosen} teamName={team.name} unavailable={unavailable && !official} /></button>;
           const sideLabel = <span className="text-[9px] font-black tracking-[.15em] text-slate-500">{index === 0 ? "AWAY" : "HOME"}</span>;
           const labeledChip = <div className="flex flex-col items-center gap-0.5">{sideLabel}{chip}</div>;
           return <div className={`survivor-matchup-team grid min-h-20 items-center gap-2 px-1 py-2 sm:px-3 ${chosen ? "is-selected" : ""} ${index === 0 ? "grid-cols-[minmax(0,1fr)_auto]" : "col-start-3 grid-cols-[auto_minmax(0,1fr)]"}`} key={team.id}>{index === 0 ? <><span className="text-right text-xs font-bold leading-4 text-zinc-800 sm:text-sm">{team.name}</span>{labeledChip}</> : <>{labeledChip}<span className="text-left text-xs font-bold leading-4 text-zinc-800 sm:text-sm">{team.name}</span></>}</div>;

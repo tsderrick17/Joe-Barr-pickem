@@ -296,12 +296,10 @@ body {
 .survivor-poker-chip[data-state="picked"] { box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-rim { border-color: #d69a20; }
 
-.survivor-poker-chip[data-state="picked"]:not(.survivor-poker-chip-summary),
 .survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
   animation: survivor-chip-toss 720ms cubic-bezier(.16,.76,.2,1) both;
 }
 
-.survivor-poker-chip-wrap[data-state="picked"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow,
 .survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow {
   animation: survivor-chip-shadow 720ms cubic-bezier(.16,.76,.2,1) both;
 }
