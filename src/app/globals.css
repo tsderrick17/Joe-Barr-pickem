@@ -853,11 +853,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   background: linear-gradient(90deg, rgba(5, 104, 96, .86) 0 5%, rgba(9, 119, 110, .78) 8%, rgba(23, 145, 133, .68) 17%, rgba(67, 183, 169, .48) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
-  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
   content: "";
-  inset: -.08em -.7em -.3em;
+  inset: -.04em -.32em -.16em;
   position: absolute;
-  transform: rotate(-2.5deg);
+  transform: rotate(-1.1deg);
   transform-origin: center;
   z-index: 0;
 }
@@ -889,9 +889,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 @keyframes slate-selection-sweep {
-  0% { clip-path: polygon(6% 0, 6% 0, 0 100%, 0 100%); }
-  12% { clip-path: polygon(6% 0, 12% 0, 6% 100%, 0 100%); }
-  100% { clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%); }
+  0% { clip-path: polygon(3% 0, 3% 0, 0 100%, 0 100%); }
+  12% { clip-path: polygon(3% 0, 8% 0, 5% 100%, 0 100%); }
+  100% { clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); }
 }
 
 @media (max-width: 767px) {
