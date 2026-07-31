@@ -659,7 +659,10 @@ html[data-theme="night"] .survivor-selection-footer {
   margin-right: auto;
   /* Keep the weekly card compact enough that Pick 1 and Pick 2 read as
      handwritten columns rather than a stretched dashboard. */
-  max-width: 42rem;
+  /* A scorepad puts the two handwritten entries immediately after the
+     names.  Keep this deliberately narrower on wide screens; phones still
+     use their full available width. */
+  max-width: 36rem;
   width: 100%;
 }
 
@@ -786,8 +789,8 @@ html[data-theme="night"] .survivor-selection-footer {
 /* Dad's paper scorecards kept the running total and name in a tight left
    gutter; picks earned the broad writing space.  Make that geometry explicit
    instead of letting the table split all remaining columns evenly. */
-.pickem-ledger-wins-column { width: clamp(3.15rem, 5vw, 3.75rem); }
-.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
+.pickem-ledger-wins-column { width: clamp(2.7rem, 4vw, 3.25rem); }
+.pickem-ledger-player-column { width: clamp(6.2rem, 10vw, 7.2rem); }
 
 .pickem-ledger-player {
   border-right: 0;
