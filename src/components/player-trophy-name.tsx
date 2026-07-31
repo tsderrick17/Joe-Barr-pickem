@@ -1,6 +1,6 @@
-type Props = { name: string; titles?: string[] };
+type Props = { name: string; showTrophy?: boolean; titles?: string[] };
 
-export default function PlayerTrophyName({ name, titles = [] }: Props) {
+export default function PlayerTrophyName({ name, showTrophy = true, titles = [] }: Props) {
   if (!titles.length) return <>{name}</>;
 
   return (
@@ -10,12 +10,7 @@ export default function PlayerTrophyName({ name, titles = [] }: Props) {
       title={titles.map((title) => `🏆 ${title}`).join("\n")}
     >
       <span>{name}</span>
-      <span
-        className="font-sans text-sm no-underline"
-        aria-hidden="true"
-      >
-        🏆
-      </span>
+      {showTrophy ? <span aria-hidden="true" className="font-sans text-sm no-underline">🏆</span> : null}
     </span>
   );
 }

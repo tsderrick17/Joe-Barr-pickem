@@ -46,7 +46,7 @@ export default function PickemScoreboard({ rows, viewerPlayerId, maxPicks }: Pro
               return (
                 <tr className={`border-b border-[#c8c1b5] last:border-b-0 ${row.playoffEliminated ? "bg-[#e7dfd1] text-slate-500" : isViewer ? "viewer-row bg-[#fffaf0]" : rowIndex % 2 ? "bg-[#f0eadc]" : ""}`} key={row.id}>
                   <td className="px-2 py-2 text-center font-serif text-lg font-bold sm:px-3 sm:py-2.5 sm:text-xl">{row.wins}{row.playoffEliminated ? <span className="mt-0.5 block -rotate-6 border border-red-700 px-0.5 py-px font-sans text-[8px] font-black tracking-[0.08em] text-red-800" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
-                  <td className="px-2 py-2 sm:px-3 sm:py-2.5"><span className="font-serif text-[15px] font-bold leading-tight sm:text-lg"><PlayerTrophyName name={row.firstName} titles={row.trophies} /></span></td>
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5"><span className="font-serif text-[15px] font-bold leading-tight sm:text-lg"><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (
                     <td className="px-2 py-2 sm:px-3 sm:py-2.5" colSpan={maxPicks}>
                       <span aria-label="Mathematically eliminated from the Pick'em playoff race" className="pickem-eliminated-stamp" title="Mathematically eliminated from the Pick'em playoff race">ELIMINATED</span>
