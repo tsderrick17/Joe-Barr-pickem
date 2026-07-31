@@ -739,6 +739,7 @@ export default function BoardPage() {
                         key={game.id}
                         onChoose={chooseTeam}
                         selectedTeamId={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId}
+                        selectionIsNew={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId !== savedPicks.find((pick) => pick.gameId === game.id)?.teamId}
                       />
                     ))}
                   </div>

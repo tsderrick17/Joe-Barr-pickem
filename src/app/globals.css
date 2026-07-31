@@ -426,6 +426,36 @@ html[data-theme="night"] .survivor-selection-footer {
   background: linear-gradient(135deg, #eff8f4, #dbece5) !important;
   color: #163d3d !important;
   box-shadow: inset 4px 0 0 #16877f, 0 1px 2px rgba(22, 61, 61, 0.16);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.slate-team-selection > * {
+  position: relative;
+  z-index: 1;
+}
+
+.slate-team-selection--new {
+  background: transparent !important;
+}
+
+.slate-team-selection--new::before {
+  background: linear-gradient(100deg, #e6f5ef 0%, #eff8f4 58%, #dbece5 100%);
+  content: "";
+  inset: 0;
+  position: absolute;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+  z-index: 0;
+  animation: slate-selection-sweep 380ms cubic-bezier(.16,.8,.2,1) both;
+}
+
+@keyframes slate-selection-sweep {
+  0% { transform: scaleX(0); }
+  12% { transform: scaleX(.06); }
+  100% { transform: scaleX(1); }
 }
 
 .slate-team-selection .text-slate-200 {
@@ -626,6 +656,14 @@ html[data-theme="night"] .survivor-team-selection {
   background: linear-gradient(135deg, #276d70, #15333b) !important;
   color: #f2fffb !important;
   box-shadow: inset 3px 0 0 #8be9dc, inset 0 0 0 1px rgba(139, 233, 220, 0.38), 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="night"] .slate-team-selection--new {
+  background: transparent !important;
+}
+
+html[data-theme="night"] .slate-team-selection--new::before {
+  background: linear-gradient(100deg, #255f63 0%, #276d70 56%, #15333b 100%);
 }
 
 html[data-theme="night"] .survivor-team-selection span {
