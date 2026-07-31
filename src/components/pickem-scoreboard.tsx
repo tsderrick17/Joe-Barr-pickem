@@ -26,7 +26,7 @@ type Props = {
   week: string;
 };
 
-export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayerId, maxPicks, week }: Props) {
+export default function PickemScoreboard({ isPlayoff = false, rows, maxPicks, week }: Props) {
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
       <div className="pickem-ledger-masthead">
@@ -45,9 +45,8 @@ export default function PickemScoreboard({ isPlayoff = false, rows, viewerPlayer
           </thead> : null}
           <tbody>
             {rows.map((row) => {
-              const isViewer = row.id === viewerPlayerId;
               return (
-                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : isViewer ? "viewer-row" : ""}`} key={row.id}>
+                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} key={row.id}>
                   <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}{row.playoffEliminated ? <span className="mt-0.5 block -rotate-6 border border-red-700 px-0.5 py-px font-sans text-[8px] font-black tracking-[0.08em] text-red-800" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (
