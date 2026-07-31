@@ -422,9 +422,12 @@ html[data-theme="night"] .survivor-selection-footer {
   /* A shallow vertical roll, like a brushed-machine steel face. The paired
      cells meet flush so each player reads as one continuous rail. */
   background-image: linear-gradient(180deg, var(--survivor-pipe-bottom) 0%, var(--survivor-pipe-mid) 27%, var(--survivor-pipe-top) 50%, var(--survivor-pipe-mid) 73%, var(--survivor-pipe-bottom) 100%);
-  border-block: 1px solid rgba(96, 87, 72, .25);
-  box-shadow: inset 0 1px 1px rgba(72, 61, 45, .15), inset 0 -1px 1px rgba(72, 61, 45, .13);
-  margin-block: 0;
+  border-block: 0;
+  box-shadow: none;
+  /* Cover the parent row rule so the steel rail reads as a single, seamless
+     surface while the score cells keep their normal row separators. */
+  margin-bottom: -1px;
+  padding-bottom: 1px;
 }
 
 .survivor-standings-row .survivor-sticky-status {
