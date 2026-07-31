@@ -118,6 +118,25 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
+@media (max-width: 639px) {
+  /* This lives outside the Slate header so it can remain in view while a
+     player works through a long mobile slate. */
+  .slate-mini-nav {
+    background: #fffdf8;
+    box-shadow: 0 5px 12px rgba(35, 30, 23, .12);
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    position: sticky;
+    top: .35rem;
+    z-index: 20;
+  }
+
+  .slate-mini-nav a { padding: .5rem .45rem; }
+  .slate-mini-nav span { font-size: .48rem; }
+  .slate-mini-nav strong { font-size: .58rem; }
+  .slate-mini-nav em { font-size: .46rem; }
+}
+
 @media (min-width: 640px) {
   /* The internal divider shares the receipt's Pick'em/Survivor rule. */
   .slate-how-to-grid {
@@ -876,6 +895,9 @@ html[data-theme="night"] .survivor-standings-row.viewer-row {
 }
 
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
+@media (max-width: 639px) {
+  html[data-theme="night"] .slate-mini-nav { background: #1b2527; }
+}
 html[data-theme="night"] .slate-mini-nav a { color: #d6e2df; }
 html[data-theme="night"] .slate-mini-nav a + a { border-color: #6d746c; }
 html[data-theme="night"] .slate-mini-nav a:hover,
@@ -1117,6 +1139,19 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Once Survivor ends, the ticket becomes a full-round Pick'em receipt. Each
+   playoff game remains visible at once; nothing collapses into a daily view. */
+.my-ticket-columns.is-playoff .my-ticket-playoff {
+  grid-column: 1 / -1;
+  padding-right: 0;
+}
+
+.my-ticket-columns.is-playoff .my-ticket-picks {
+  column-gap: 1.35rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1452,11 +1487,33 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
     transform-origin: top right;
   }
 
-  .my-ticket-section { padding-right: .5rem; }
+  .my-ticket-brand h1 { font-size: 1.43rem; }
+  .my-ticket-race { margin-top: .48rem; }
+  .my-ticket-race strong { font-size: 1.08rem; }
+  .my-ticket-race span { font-size: .88rem; }
+
+  /* A receipt should read down the page on a phone, not compress two ticket
+     stubs into a cramped side-by-side grid. */
+  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
+  .my-ticket-section { padding: .58rem 0; }
+
+  .my-ticket-columns.is-playoff .my-ticket-picks {
+    column-gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
 
   .my-ticket-section + .my-ticket-section {
-    border-left: 1px dashed #958a77;
-    border-top: 0;
-    padding-left: .55rem;
+    border-left: 0;
+    border-top: 1px dashed #958a77;
+    padding-left: 0;
   }
+
+  .my-ticket-section-heading { font-size: .62rem; }
+  .my-ticket-section-heading strong { font-size: .57rem; }
+  .my-ticket-picks li { min-height: 2.15rem; }
+  .my-ticket-selection strong,
+  .my-ticket-survivor-pick strong { font-size: .8rem; }
+  .my-ticket-footer { gap: .35rem; }
+  .my-ticket-change-note { font-size: .53rem; }
+  .my-ticket-barcode { width: 3.2rem; }
 }

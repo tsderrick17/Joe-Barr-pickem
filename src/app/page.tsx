@@ -34,6 +34,7 @@ type ScoreboardRow = {
 
 type HomeData = {
   viewerPlayerId: string;
+  isPlayoff: boolean;
   week: string;
   weekStatus: "upcoming" | "active" | "complete";
   maxPicks: number;
@@ -239,6 +240,7 @@ export default function HomePage() {
         ) : null}
 
         <MyTicket
+          isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}
           readOnly={data.weekStatus === "complete"}
@@ -345,7 +347,7 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
+        {!data.isPlayoff ? <section className="border-t-2 border-[#1d1d1f] py-6 sm:py-7">
           <p className="text-xs font-bold tracking-[0.2em] text-slate-600">
             SURVIVOR
           </p>
@@ -382,7 +384,7 @@ export default function HomePage() {
               </p>
             </div>
           )}
-        </section>
+        </section> : null}
       </div>
     </main>
   );

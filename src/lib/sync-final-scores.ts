@@ -143,6 +143,26 @@ async function recoverPendingFinalPickGrades() {
   };
 }
 
+async function snapshotActivePlayoffEligibility() {
+  const { data: activePlayoffPeriods, error: periodsError } = await supabaseAdmin
+    .from("scoring_periods")
+    .select("id")
+    .eq("period_type", "playoff")
+    .eq("status", "active");
+  if (periodsError) throw new Error("Active playoff eligibility could not be prepared.");
+
+  const results = await Promise.all(
+    (activePlayoffPeriods ?? []).map((period) =>
+      supabaseAdmin.rpc("snapshot_playoff_day_eligibility", {
+        target_scoring_period_id: period.id,
+      }),
+    ),
+  );
+  if (results.some((result) => result.error)) {
+    throw new Error("Active playoff eligibility could not be snapshotted safely.");
+  }
+}
+
 export async function syncFinalScores(): Promise<ScoreSyncResult> {
   const oddsApiKey = process.env.ODDS_API_KEY;
 
@@ -157,6 +177,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   const noPickResult = await eliminateSurvivorNoPicks(checkedAt);
   const recoveredGrades = await recoverPendingFinalPickGrades();
   const weekRollover = await advanceScoringPeriods(now);
+  await snapshotActivePlayoffEligibility();
   const providerLookbackStart = new Date(
     now.getTime() - 3 * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -333,6 +354,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       }
 
       const completedWeekRollover = await advanceScoringPeriods(now);
+      await snapshotActivePlayoffEligibility();
       if (unmatchedCompletedGames > 0) {
         throw new Error(
           `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,

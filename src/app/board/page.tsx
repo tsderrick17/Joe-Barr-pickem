@@ -648,24 +648,24 @@ export default function BoardPage() {
             </aside>
           </div>
 
-          <nav aria-label="Your weekly controls" className="slate-mini-nav mt-5">
-            <Link href="/#my-ticket">
-              <span>YOUR RECEIPT</span>
-              <strong>VIEW FULL TICKET</strong>
-            </Link>
-            <a href="#slate-matchups">
-              <span>PICK&apos;EM</span>
-              <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemReceipt}</strong>
-              <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
-            </a>
-            <Link href="/survivor">
-              <span>SURVIVOR</span>
-              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
-              <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
-            </Link>
-          </nav>
-
         </header>
+
+        <nav aria-label="Your weekly controls" className="slate-mini-nav mt-5">
+          <Link href="/#my-ticket">
+            <span>YOUR RECEIPT</span>
+            <strong>VIEW FULL TICKET</strong>
+          </Link>
+          <a href="#slate-matchups">
+            <span>PICK&apos;EM</span>
+            <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{pickemReceipt}</strong>
+            <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
+          </a>
+          <Link href="/survivor">
+            <span>SURVIVOR</span>
+            <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>{survivorReceipt}</strong>
+            <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
+          </Link>
+        </nav>
 
         {playoffEliminated ? (
           <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">

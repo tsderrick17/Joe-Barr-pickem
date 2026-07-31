@@ -19,6 +19,7 @@ type SurvivorTicket = {
 } | null;
 
 type Props = {
+  isPlayoff?: boolean;
   maxPicks: number;
   picks: TicketPick[];
   readOnly?: boolean;
@@ -34,6 +35,7 @@ function ResultStamp({ result }: { result?: "W" | "L" | "" }) {
 }
 
 export default function MyTicket({
+  isPlayoff = false,
   maxPicks,
   picks,
   survivorAvailable,
@@ -71,8 +73,8 @@ export default function MyTicket({
         <span>TICKET</span>
       </div>
 
-      <div className="my-ticket-columns">
-        <div className="my-ticket-section">
+      <div className={`my-ticket-columns ${isPlayoff ? "is-playoff" : ""}`}>
+        <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board">PICK&apos;EM ATS</Link>
             <strong>OFFICIAL LINES</strong>
@@ -102,7 +104,7 @@ export default function MyTicket({
           </ol>
         </div>
 
-        <div className="my-ticket-section my-ticket-survivor">
+        {!isPlayoff ? <div className="my-ticket-section my-ticket-survivor">
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/survivor">SURVIVOR WINNER</Link>
             <strong>STRAIGHT-UP</strong>
@@ -128,7 +130,7 @@ export default function MyTicket({
             <p>Official ATS spreads appear here once locked.</p>
             <p>Selections are revealed to others at kickoff.</p>
           </div>
-        </div>
+        </div> : null}
       </div>
 
       <div className="my-ticket-footer">

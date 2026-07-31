@@ -552,6 +552,7 @@ return {
 
   return NextResponse.json({
     viewerPlayerId: viewer.id,
+    isPlayoff: currentWeek.period_type === "playoff",
     week: currentWeek.display_name,
     weekStatus: currentWeek.status,
     maxPicks: currentWeek.max_picks,
@@ -560,7 +561,7 @@ return {
       currentTime,
     ) ?? atsNextRevealAt,
     rows,
-    survivorAvailable,
+    survivorAvailable: currentWeek.period_type === "playoff" ? false : survivorAvailable,
     survivorNotice,
     survivorRows,
     survivorChampionPlayerId,

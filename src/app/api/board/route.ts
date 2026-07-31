@@ -352,6 +352,18 @@ export async function GET(request: NextRequest) {
   }
   const currentTime = new Date();
 
+  // Survivor is a regular-season competition. The playoff ticket uses this
+  // reclaimed space for every Pick'em game in the active round instead.
+  if (period.period_type === "playoff") {
+    survivor = {
+      available: false,
+      notice: "Survivor has concluded for the season.",
+      status: "complete",
+      pick: null,
+      usedTeamIds: [],
+    };
+  }
+
   return NextResponse.json({
     games: (games as GameRow[]).map((game) => {
       const lockedLine = lockedLineByGameId.get(game.id);
