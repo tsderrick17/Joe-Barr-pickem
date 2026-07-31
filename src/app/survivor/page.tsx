@@ -82,7 +82,9 @@ export default function SurvivorPage() {
           const chosen = selected?.teamId === team.id;
           const official = data.entry.pick?.selected_team_id === team.id;
           const unavailable = isSurvivorTeamUnavailable({ teamId: team.id, usedTeamIds: data.usedTeamIds, savedPickTeamId: data.entry.pick?.selected_team_id ?? null, gameStarted: started, entryEliminated: eliminated || complete });
-          const canReplayOfficial = official && chosen && !eliminated && !complete;
+          // The chip is a reward for an editable choice, never a toy after
+          // kickoff. Once the game starts, the official receipt is final.
+          const canReplayOfficial = official && chosen && !started && !eliminated && !complete;
           const disabled = unavailable && !canReplayOfficial;
           const chip = <button aria-label={canReplayOfficial ? `Flip your ${team.name} chip` : `Choose ${team.name}`} aria-pressed={chosen} className="survivor-chip-button" disabled={disabled} onClick={() => {
             if (canReplayOfficial) {
