@@ -94,6 +94,7 @@ export default function MyTicket({
         <div className="my-ticket-section my-ticket-survivor">
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/survivor">SURVIVOR WINNER</Link>
+            <strong>STRAIGHT-UP</strong>
           </div>
           {survivorPick ? (
             <div className="my-ticket-survivor-pick">
