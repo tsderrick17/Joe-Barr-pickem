@@ -22,7 +22,6 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
         <span className="survivor-poker-chip-rim survivor-poker-chip-rim-front" />
         <span className="survivor-poker-chip-rim survivor-poker-chip-rim-back" />
-        <span className="survivor-poker-chip-depth" />
         <span className="survivor-poker-chip-edge" />
         <span className="survivor-poker-chip-core">
           <span className="survivor-poker-chip-face survivor-poker-chip-front">

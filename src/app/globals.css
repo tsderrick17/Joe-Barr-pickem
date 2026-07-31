@@ -92,7 +92,7 @@ body {
   height: 3.2rem;
   place-items: center;
   isolation: isolate;
-  perspective: 320px;
+  perspective: 460px;
   position: relative;
   width: 3.2rem;
 }
@@ -118,7 +118,6 @@ body {
   height: 100%;
   place-items: center;
   position: relative;
-  transform: translateY(-1px) rotateX(-14deg) rotateZ(-1.25deg);
   transform-style: preserve-3d;
   width: 100%;
   z-index: 1;
@@ -141,23 +140,8 @@ body {
   backface-visibility: hidden;
 }
 
-.survivor-poker-chip-rim-front { transform: translateZ(10px); }
-.survivor-poker-chip-rim-back { transform: rotateX(180deg) translateZ(10px); }
-
-.survivor-poker-chip-depth {
-  background: conic-gradient(from -8deg,
-    color-mix(in srgb, var(--chip-primary) 80%, #191816) 0 5.33deg, color-mix(in srgb, var(--chip-secondary) 62%, #726e66) 5.33deg 10.66deg, color-mix(in srgb, var(--chip-tertiary) 66%, #5f4a22) 10.66deg 16deg, #9d988f 16deg 90deg,
-    color-mix(in srgb, var(--chip-primary) 80%, #191816) 90deg 95.33deg, color-mix(in srgb, var(--chip-secondary) 62%, #726e66) 95.33deg 100.66deg, color-mix(in srgb, var(--chip-tertiary) 66%, #5f4a22) 100.66deg 106deg, #9d988f 106deg 180deg,
-    color-mix(in srgb, var(--chip-primary) 80%, #191816) 180deg 185.33deg, color-mix(in srgb, var(--chip-secondary) 62%, #726e66) 185.33deg 190.66deg, color-mix(in srgb, var(--chip-tertiary) 66%, #5f4a22) 190.66deg 196deg, #9d988f 196deg 270deg,
-    color-mix(in srgb, var(--chip-primary) 80%, #191816) 270deg 275.33deg, color-mix(in srgb, var(--chip-secondary) 62%, #726e66) 275.33deg 280.66deg, color-mix(in srgb, var(--chip-tertiary) 66%, #5f4a22) 280.66deg 286deg, #9d988f 286deg 360deg);
-  border: 2px solid color-mix(in srgb, var(--chip-primary) 62%, #403d38);
-  border-radius: 50%;
-  box-shadow: 0 5px 1px rgba(23,23,25,.32), 0 7px 6px rgba(23,23,25,.22);
-  inset: .05rem;
-  pointer-events: none;
-  position: absolute;
-  transform: translateZ(-9px);
-}
+.survivor-poker-chip-rim-front { transform: translateZ(8px); }
+.survivor-poker-chip-rim-back { transform: rotateX(180deg) translateZ(8px); }
 
 .survivor-poker-chip-edge {
   background:
@@ -166,12 +150,12 @@ body {
   border: 1px solid color-mix(in srgb, var(--chip-primary) 54%, #45413c);
   border-radius: .22rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.48), inset 0 -2px 1px rgba(23,23,25,.42), 0 1px 2px rgba(23,23,25,.35);
-  height: 1.25rem;
-  left: .08rem;
+  height: 1.04rem;
+  left: .1rem;
   pointer-events: none;
   position: absolute;
-  right: .08rem;
-  top: calc(50% - .625rem);
+  right: .1rem;
+  top: calc(50% - .52rem);
   transform: rotateX(90deg);
   transform-style: preserve-3d;
 }
@@ -184,7 +168,7 @@ body {
   opacity: .7;
   pointer-events: none;
   position: absolute;
-  transform: translateZ(10.5px);
+  transform: translateZ(8.5px);
   z-index: 2;
 }
 
@@ -196,13 +180,12 @@ body {
   inset: .08rem;
   pointer-events: none;
   position: absolute;
-  transform: translateZ(10.7px);
+  transform: translateZ(8.7px);
 }
 
 .survivor-poker-chip-core {
   display: grid;
   height: calc(100% - .55rem);
-  position: relative;
   transform-style: preserve-3d;
   transition: filter 220ms ease;
   width: calc(100% - .55rem);
@@ -215,7 +198,6 @@ body {
   background: radial-gradient(circle at 35% 27%, #ffffff 0 12%, color-mix(in srgb, var(--chip-secondary) 8%, #fffdf8) 54%, color-mix(in srgb, var(--chip-primary) 7%, #f1eee7) 100%);
   border: 1px solid rgba(23,23,25,.34);
   border-radius: 50%;
-  box-shadow: inset 0 3px 4px rgba(23,23,25,.24), inset 0 -1px 1px rgba(255,255,255,.78), 0 1px 1px rgba(23,23,25,.18);
   display: flex;
   grid-area: 1 / 1;
   justify-content: center;
@@ -224,11 +206,11 @@ body {
 
 .survivor-poker-chip-front img { height: 70%; width: 70%; }
 
-.survivor-poker-chip-front { transform: translateZ(5px); }
+.survivor-poker-chip-front { transform: translateZ(9px); }
 
 .survivor-poker-chip-back {
   background: radial-gradient(circle at 35% 27%, #ffffff 0 14%, #fbfaf7 64%, #e7e1d5 100%);
-  transform: rotateX(180deg) translateZ(5px);
+  transform: rotateX(180deg) translateZ(9px);
 }
 
 .survivor-poker-chip-star {
@@ -267,7 +249,7 @@ body {
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.survivor-poker-chip[data-state="picked"] { box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); }
+.survivor-poker-chip[data-state="picked"] { box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-rim { border-color: #d69a20; }
 
 .survivor-poker-chip[data-state="picked"]:not(.survivor-poker-chip-summary),
@@ -281,19 +263,23 @@ body {
 }
 
 @keyframes survivor-chip-toss {
-  0% { filter: brightness(1); transform: translateY(-1px) rotateX(-14deg) rotateZ(-1.25deg) scale(1); }
-  7% { filter: brightness(1.08); transform: translateY(-4px) rotateX(62deg) rotateZ(-.5deg) scale(1.035); }
-  16% { filter: brightness(1.2); transform: translateY(-9px) rotateX(166deg) rotateZ(.9deg) scale(1.1); }
-  25% { filter: brightness(1.15); transform: translateY(-10px) rotateX(260deg) rotateZ(1.2deg) scale(1.12); }
-  33% { filter: brightness(1.09); transform: translateY(-8px) rotateX(346deg) rotateZ(.5deg) scale(1.11); }
-  41% { filter: brightness(1.13); transform: translateY(-7px) rotateX(438deg) rotateZ(-.8deg) scale(1.09); }
-  50% { filter: brightness(1.2); transform: translateY(-6px) rotateX(526deg) rotateZ(-1.2deg) scale(1.08); }
-  58% { filter: brightness(1.13); transform: translateY(-5px) rotateX(572deg) rotateZ(-.6deg) scale(1.065); }
-  66% { filter: brightness(1.08); transform: translateY(-4px) rotateX(618deg) rotateZ(.3deg) scale(1.045); }
-  74% { filter: brightness(1.04); transform: translateY(-3px) rotateX(656deg) rotateZ(.6deg) scale(1.03); }
-  84% { filter: brightness(1.02); transform: translateY(-2px) rotateX(686deg) rotateZ(.1deg) scale(1.015); }
-  93% { filter: brightness(1); transform: translateY(-1px) rotateX(702deg) rotateZ(-.8deg) scale(1.004); }
-  100% { filter: brightness(1); transform: translateY(-1px) rotateX(706deg) rotateZ(-1.25deg) scale(1); }
+  0% { filter: brightness(1); transform: translateY(-1px) rotateX(0deg) scale(1); }
+  5% { filter: brightness(1.04); transform: translateY(-3px) rotateX(52deg) scale(1.025); }
+  10% { filter: brightness(1.1); transform: translateY(-6px) rotateX(112deg) scale(1.055); }
+  16% { filter: brightness(1.17); transform: translateY(-9px) rotateX(180deg) scale(1.09); }
+  22% { filter: brightness(1.16); transform: translateY(-10px) rotateX(248deg) scale(1.11); }
+  28% { filter: brightness(1.12); transform: translateY(-9px) rotateX(316deg) scale(1.11); }
+  34% { filter: brightness(1.08); transform: translateY(-8px) rotateX(360deg) scale(1.1); }
+  40% { filter: brightness(1.12); transform: translateY(-7px) rotateX(424deg) scale(1.09); }
+  46% { filter: brightness(1.17); transform: translateY(-6px) rotateX(492deg) scale(1.08); }
+  52% { filter: brightness(1.15); transform: translateY(-5px) rotateX(540deg) scale(1.075); }
+  58% { filter: brightness(1.12); transform: translateY(-5px) rotateX(582deg) scale(1.065); }
+  64% { filter: brightness(1.09); transform: translateY(-4px) rotateX(620deg) scale(1.052); }
+  70% { filter: brightness(1.06); transform: translateY(-3px) rotateX(654deg) scale(1.04); }
+  77% { filter: brightness(1.04); transform: translateY(-2px) rotateX(682deg) scale(1.028); }
+  84% { filter: brightness(1.02); transform: translateY(-2px) rotateX(704deg) scale(1.016); }
+  92% { filter: brightness(1); transform: translateY(-1px) rotateX(716deg) scale(1.006); }
+  100% { filter: brightness(1); transform: translateY(-1px) rotateX(720deg) scale(1); }
 }
 
 @keyframes survivor-chip-shadow {
