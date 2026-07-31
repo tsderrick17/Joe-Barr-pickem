@@ -529,9 +529,14 @@ body {
   /* The Slate's chip lanes are rectangular; the chip itself is always a
      true circle sized from the available row height. */
   aspect-ratio: 1;
+  filter: drop-shadow(0 .14rem .16rem rgba(23, 23, 25, .26));
   height: 100%;
   max-width: 100%;
+  position: relative;
+  transform: scale(1.14);
+  transform-origin: center;
   width: auto;
+  z-index: 2;
 }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
