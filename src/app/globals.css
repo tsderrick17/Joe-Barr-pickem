@@ -127,10 +127,10 @@ body {
 
 .survivor-poker-chip-rim {
   background: conic-gradient(from -8deg,
-    var(--chip-primary) 0 5.33deg, var(--chip-secondary) 5.33deg 10.66deg, var(--chip-tertiary) 10.66deg 16deg, #ded9cf 16deg 90deg,
-    var(--chip-primary) 90deg 95.33deg, var(--chip-secondary) 95.33deg 100.66deg, var(--chip-tertiary) 100.66deg 106deg, #ded9cf 106deg 180deg,
-    var(--chip-primary) 180deg 185.33deg, var(--chip-secondary) 185.33deg 190.66deg, var(--chip-tertiary) 190.66deg 196deg, #ded9cf 196deg 270deg,
-    var(--chip-primary) 270deg 275.33deg, var(--chip-secondary) 275.33deg 280.66deg, var(--chip-tertiary) 280.66deg 286deg, #ded9cf 286deg 360deg);
+    var(--chip-secondary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-tertiary) 12deg 16deg, #ded9cf 16deg 90deg,
+    var(--chip-secondary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-tertiary) 102deg 106deg, #ded9cf 106deg 180deg,
+    var(--chip-secondary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-tertiary) 192deg 196deg, #ded9cf 196deg 270deg,
+    var(--chip-secondary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-tertiary) 282deg 286deg, #ded9cf 286deg 360deg);
   border: 2px solid color-mix(in srgb, var(--chip-primary) 34%, #77726a);
   border-radius: 50%;
   box-shadow: inset 0 2px 1px rgba(255,255,255,.82), inset 0 -2px 2px rgba(23,23,25,.2), 0 2px 4px rgba(23,23,25,.28);
