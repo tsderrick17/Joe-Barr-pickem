@@ -657,7 +657,7 @@ html[data-theme="night"] .survivor-selection-footer {
   margin-right: auto;
   /* Keep the weekly card compact enough that Pick 1 and Pick 2 read as
      handwritten columns rather than a stretched dashboard. */
-  max-width: 50rem;
+  max-width: 42rem;
   width: 100%;
 }
 
@@ -766,7 +766,7 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-row td {
   /* Keep the writing close to its blue rule, like ink on a narrow-ruled pad. */
-  padding: .36rem .35rem;
+  padding: .24rem .28rem;
   vertical-align: middle;
 }
 
@@ -777,15 +777,15 @@ html[data-theme="night"] .survivor-selection-footer {
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
-  padding-right: .5rem !important;
+  padding-right: .38rem !important;
   text-align: right;
 }
 
 /* Dad's paper scorecards kept the running total and name in a tight left
    gutter; picks earned the broad writing space.  Make that geometry explicit
    instead of letting the table split all remaining columns evenly. */
-.pickem-ledger-wins-column { width: clamp(3.7rem, 6vw, 5rem); }
-.pickem-ledger-player-column { width: clamp(8.3rem, 13vw, 11rem); }
+.pickem-ledger-wins-column { width: clamp(3.15rem, 5vw, 3.75rem); }
+.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
 
 .pickem-ledger-player {
   border-right: 0;
@@ -800,7 +800,7 @@ html[data-theme="night"] .survivor-selection-footer {
   font-family: Cambria, "Times New Roman", serif;
   font-size: .83rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.08;
 }
 
 .pickem-ledger-pick .font-mono {
@@ -811,7 +811,7 @@ html[data-theme="night"] .survivor-selection-footer {
 
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
-  .pickem-ledger-row td { padding: .44rem .52rem; }
+  .pickem-ledger-row td { padding: .32rem .38rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: .94rem; }
 }
