@@ -30,7 +30,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
           <span className="survivor-poker-chip-face survivor-poker-chip-back"><span className="survivor-poker-chip-star">★</span></span>
         </span>
       </span>
-      {selected && !official ? <span className="survivor-poker-chip-pick-mark">PICK</span> : null}
+      {selected && !official ? <span className="survivor-poker-chip-pick-mark">SURVIVOR</span> : null}
       {official ? <span className="survivor-poker-chip-seal">{"\u2605"}</span> : null}
     </span>
   );
