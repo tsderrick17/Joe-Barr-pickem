@@ -156,6 +156,9 @@ export async function GET(request: NextRequest) {
       .from("survivor_picks")
       .select("selected_team_id")
       .eq("survivor_entry_id", context.entry.id)
+      // A pick in the current week is a replacement candidate, not a
+      // season-long used team. Only earlier weeks make a team unavailable.
+      .neq("scoring_period_id", context.period.id)
       .neq("result", "void"),
   ]);
   if (

@@ -237,6 +237,9 @@ export async function GET(request: NextRequest) {
           .from("survivor_picks")
           .select("selected_team_id")
           .eq("survivor_entry_id", survivorEntry.id)
+          // The active week's pick is editable until kickoff. It must never
+          // be treated as a prior-season use when a player changes teams.
+          .neq("scoring_period_id", scoringPeriodId)
           .neq("result", "void"),
       ]);
 

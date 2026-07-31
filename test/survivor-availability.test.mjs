@@ -15,6 +15,19 @@ test("keeps this week's saved Survivor pick selectable while choosing a replacem
   }), false);
 });
 
+test("allows a player to switch back after reconsidering an unsaved replacement", () => {
+  // The browser may still have the prior used-team snapshot while the player
+  // clicks from Bengals -> Colts -> Bengals before saving. The weekly saved
+  // pick remains a legal choice until its game begins.
+  assert.equal(isSurvivorTeamUnavailable({
+    teamId: "bengals",
+    usedTeamIds: ["bengals"],
+    savedPickTeamId: "bengals",
+    gameStarted: false,
+    entryEliminated: false,
+  }), false);
+});
+
 test("blocks teams used in prior Survivor weeks", () => {
   assert.equal(isSurvivorTeamUnavailable({
     teamId: "bills",

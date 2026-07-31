@@ -547,7 +547,16 @@ export default function BoardPage() {
     if (!game || new Date(game.kickoffAt).getTime() <= currentTime) return;
 
     const isCurrentSelection = survivorPick?.teamId === teamId;
-    if (survivorUsedTeamIds.includes(teamId) && !isCurrentSelection) {
+    // During an unsaved replacement, the originally saved team must remain
+    // selectable too. The client can still hold an older used-team snapshot
+    // until the next board refresh, so explicitly preserve the active week's
+    // saved team here as well as on the server.
+    const isThisWeeksSavedPick = savedSurvivorPick?.teamId === teamId;
+    if (
+      survivorUsedTeamIds.includes(teamId) &&
+      !isCurrentSelection &&
+      !isThisWeeksSavedPick
+    ) {
       setSelectionWarning("That team has already been used in Survivor.");
       return;
     }
