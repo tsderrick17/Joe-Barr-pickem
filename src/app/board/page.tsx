@@ -208,8 +208,10 @@ export default function BoardPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
+  const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep" | "pulse"; token: number } | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
+  const selectionFeedbackToken = useRef(0);
 
   async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
@@ -427,6 +429,11 @@ export default function BoardPage() {
 
   const isReadOnly = week?.status === "complete" || playoffEliminated;
   const hasEarlyGame = games.some(isEarlyGame);
+  function showSelectionFeedback(gameId: string, teamId: string, type: "sweep" | "pulse") {
+    selectionFeedbackToken.current += 1;
+    setSelectionFeedback({ gameId, teamId, type, token: selectionFeedbackToken.current });
+  }
+
   function chooseTeam(gameId: string, teamId: string) {
     if (isReadOnly) return;
 
@@ -436,9 +443,7 @@ export default function BoardPage() {
     const existingPick = selectedPicks.find((pick) => pick.gameId === gameId);
 
     if (existingPick?.teamId === teamId) {
-      setSelectedPicks((current) =>
-        current.filter((pick) => pick.gameId !== gameId),
-      );
+      showSelectionFeedback(gameId, teamId, "pulse");
       return;
     }
 
@@ -449,6 +454,7 @@ export default function BoardPage() {
           { gameId, teamId },
         ],
       );
+      showSelectionFeedback(gameId, teamId, "sweep");
       return;
     }
 
@@ -460,6 +466,7 @@ export default function BoardPage() {
     }
 
     setSelectedPicks((current) => [...current, { gameId, teamId }]);
+    showSelectionFeedback(gameId, teamId, "sweep");
   }
 
   function removeSelection(gameId: string) {
@@ -755,6 +762,7 @@ export default function BoardPage() {
                         onChoose={chooseTeam}
                         selectedTeamId={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId}
                         selectionIsNew={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId !== savedPicks.find((pick) => pick.gameId === game.id)?.teamId}
+                        selectionFeedback={selectionFeedback?.gameId === game.id ? selectionFeedback : null}
                       />
                     ))}
                   </div>

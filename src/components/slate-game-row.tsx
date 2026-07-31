@@ -55,11 +55,12 @@ type Props = {
   hasStarted: boolean;
   selectedTeamId?: string | null;
   selectionIsNew?: boolean;
+  selectionFeedback?: { teamId: string; type: "sweep" | "pulse"; token: number } | null;
   allowSelection?: boolean;
   onChoose?: (gameId: string, teamId: string) => void;
 };
 
-export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionIsNew = false, allowSelection = false, onChoose }: Props) {
+export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionIsNew = false, selectionFeedback = null, allowSelection = false, onChoose }: Props) {
   const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
   const left = favoriteIsHome
     ? { name: game.homeTeam, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true }
@@ -79,12 +80,14 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
-    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[12px] font-bold leading-[1.15] tracking-tight min-[380px]:text-[13px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${selectionIsNew ? "slate-team-selection--new" : ""} bg-[#1d1d1f] px-1 py-1.5 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
+    const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
+    const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[12px] font-bold leading-[1.15] tracking-tight min-[380px]:text-[13px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? `slate-team-selection ${(selectionIsNew || feedbackType === "sweep") ? "slate-team-selection--new" : ""} ${feedbackType === "pulse" ? "slate-team-selection--pulse" : ""} bg-[#1d1d1f] px-1 py-1.5 text-white sm:px-3 sm:py-2` : allowSelection ? "hover:underline" : ""}`;
     const content = <>
       <span className="block min-w-0 break-normal [hyphens:none]">{label}<ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
-    return allowSelection ? <button className={className} disabled={hasStarted} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
+    const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
+    return allowSelection ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button> : <div className={className}>{content}</div>;
   };
 
   return <article className={`grid grid-cols-[2.75rem_minmax(0,1fr)_4.25rem_minmax(0,1fr)] items-center gap-1 border-b border-[#c8c1b5] ${compactFinal ? "py-1" : "py-2"} pl-1 pr-2 min-[380px]:grid-cols-[3.1rem_minmax(0,1fr)_5rem_minmax(0,1fr)] min-[380px]:gap-1.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)] sm:gap-3 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#eee4d1]" : "bg-[#fffdf8]"}`}>

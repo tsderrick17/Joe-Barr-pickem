@@ -455,6 +455,10 @@ html[data-theme="night"] .survivor-selection-footer {
   animation: slate-selection-sweep 460ms cubic-bezier(.16,.8,.2,1) 35ms both;
 }
 
+.slate-team-selection--pulse {
+  animation: slate-selection-pulse 310ms cubic-bezier(.2,.8,.28,1) both;
+}
+
 .slate-team-selection::after {
   background: #16877f;
   content: "";
@@ -468,6 +472,12 @@ html[data-theme="night"] .survivor-selection-footer {
   0% { clip-path: inset(0 100% 0 0); }
   12% { clip-path: inset(0 94% 0 0); }
   100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes slate-selection-pulse {
+  0% { box-shadow: 0 1px 2px rgba(22, 61, 61, 0.16); transform: scale(1); }
+  45% { box-shadow: 0 0 0 3px rgba(22, 135, 127, .22), 0 4px 10px rgba(22, 61, 61, .2); transform: scale(1.035); }
+  100% { box-shadow: 0 1px 2px rgba(22, 61, 61, 0.16); transform: scale(1); }
 }
 
 @media (max-width: 767px) {
