@@ -22,7 +22,7 @@ async function currentSeason() {
   return data;
 }
 
-async function loadMessages(seasonId: string) {
+async function loadMessages(seasonId: string, viewer: { id: string; is_commissioner: boolean }) {
   const { data: messages, error } = await supabaseAdmin
     .from("pool_chat_messages")
     .select("id, player_id, body, gif_url, created_at")
@@ -48,6 +48,7 @@ async function loadMessages(seasonId: string) {
       gifUrl: message.gif_url,
       createdAt: message.created_at,
       playerName: names.get(message.player_id) ?? "Player",
+      canDelete: message.player_id === viewer.id || viewer.is_commissioner,
     })),
   };
 }
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
   const season = await currentSeason();
   if (!season) return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
 
-  const result = await loadMessages(season.id);
+  const result = await loadMessages(season.id, player);
   if (result.error) return NextResponse.json({ error: "The Rail could not be loaded yet." }, { status: 503 });
   return NextResponse.json({ messages: result.messages });
 }
@@ -125,7 +126,39 @@ export async function POST(request: NextRequest) {
   });
   if (error) return NextResponse.json({ error: "Your note could not be sent." }, { status: 503 });
 
-  const result = await loadMessages(season.id);
+  const result = await loadMessages(season.id, player);
   if (result.error) return NextResponse.json({ error: "Your note was saved, but the Rail could not refresh." }, { status: 503 });
+  return NextResponse.json({ messages: result.messages });
+}
+
+export async function DELETE(request: NextRequest) {
+  const player = await authenticatedProfilePlayer(request);
+  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+
+  let body: { messageId?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "That message could not be identified." }, { status: 400 });
+  }
+  if (typeof body.messageId !== "string") return NextResponse.json({ error: "That message could not be identified." }, { status: 400 });
+
+  const season = await currentSeason();
+  if (!season) return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
+
+  const { data: message, error: messageError } = await supabaseAdmin
+    .from("pool_chat_messages")
+    .select("id, player_id")
+    .eq("id", body.messageId)
+    .eq("season_id", season.id)
+    .maybeSingle();
+  if (messageError || !message) return NextResponse.json({ error: "That message is no longer available." }, { status: 404 });
+  if (message.player_id !== player.id && !player.is_commissioner) return NextResponse.json({ error: "You can only remove your own messages." }, { status: 403 });
+
+  const { error } = await supabaseAdmin.from("pool_chat_messages").delete().eq("id", message.id);
+  if (error) return NextResponse.json({ error: "That message could not be removed." }, { status: 503 });
+
+  const result = await loadMessages(season.id, player);
+  if (result.error) return NextResponse.json({ error: "The message was removed, but chat could not refresh." }, { status: 503 });
   return NextResponse.json({ messages: result.messages });
 }

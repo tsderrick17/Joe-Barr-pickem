@@ -6,7 +6,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
-type Message = { id: string; body: string; createdAt: string; gifUrl: string | null; playerName: string };
+type Message = { id: string; body: string; canDelete: boolean; createdAt: string; gifUrl: string | null; playerName: string };
 
 const QUICK_EMOJIS = ["😂", "🔥", "😤", "🏈", "🍻", "👀", "🙌", "🏆"];
 
@@ -21,6 +21,7 @@ export default function PoolChat() {
   const [showGifField, setShowGifField] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const loadMessages = useCallback(async (quiet = false) => {
@@ -70,18 +71,34 @@ export default function PoolChat() {
     }
   }
 
-  return (
-    <section aria-labelledby="pool-chat-title" className="pool-chat border-y-2 border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,.7)] sm:px-5">
-      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[#b7aea0] pb-3">
-        <div><p className="text-[10px] font-black tracking-[.18em] text-[#00756e]">POOL CHAT</p><h2 className="mt-0.5 font-serif text-2xl font-black" id="pool-chat-title">Live across the pool</h2></div>
-        <p className="max-w-xs text-right text-xs leading-4 text-slate-600">One shared conversation, wherever you are. Keep it friendly.</p>
-      </div>
+  async function deleteMessage(messageId: string) {
+    if (deletingId) return;
+    setDeletingId(messageId);
+    setError("");
+    try {
+      const response = await fetchWithSession("/api/pool-chat", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId }),
+      });
+      const data = await response.json() as { error?: string; messages?: Message[] };
+      if (!response.ok) throw new Error(data.error ?? "That message could not be removed.");
+      setMessages(data.messages ?? []);
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+      else setError(reason instanceof Error ? reason.message : "That message could not be removed.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
-      <div aria-live="polite" className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+  return (
+    <section aria-label="Pool chat" className="pool-chat border-y-2 border-[#1d1d1f] bg-[#fffdf8] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.7)] sm:px-5">
+      <div aria-live="polite" className="max-h-72 space-y-2 overflow-y-auto pr-1">
         {loading ? <p className="py-4 text-sm text-slate-600">Opening pool chat...</p> : null}
         {!loading && !messages.length ? <p className="py-4 text-sm text-slate-600">No messages yet. Set the tone.</p> : null}
         {messages.map((message) => <article className="border-l-2 border-[#d6cdbd] pl-3" key={message.id}>
-          <p className="flex flex-wrap items-baseline gap-x-2"><strong className="font-serif text-base">{message.playerName}</strong><time className="text-[10px] font-bold tracking-[.08em] text-slate-500">{messageTime(message.createdAt)} ET</time></p>
+          <p className="flex flex-wrap items-baseline gap-x-2"><strong className="font-serif text-base">{message.playerName}</strong><time className="text-[10px] font-bold tracking-[.08em] text-slate-500">{messageTime(message.createdAt)} ET</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} className="ml-auto text-[10px] font-bold tracking-[.08em] text-slate-500 underline-offset-2 hover:text-red-700 hover:underline" disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</p>
           {message.body ? <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{message.body}</p> : null}
           {message.gifUrl ? <img alt={`${message.playerName}'s GIF`} className="mt-2 max-h-48 max-w-full rounded-sm border border-[#b7aea0] bg-white object-contain" loading="lazy" src={message.gifUrl} /> : null}
         </article>)}
