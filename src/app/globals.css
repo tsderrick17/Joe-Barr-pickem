@@ -938,21 +938,6 @@ html[data-theme="night"] .newspaper-clipping::after {
   position: relative;
 }
 
-.my-ticket::before,
-.my-ticket::after {
-  background: #fffdf8;
-  border: 1px solid #756b5b;
-  border-radius: 50%;
-  content: "";
-  height: .9rem;
-  position: absolute;
-  top: calc(50% - .45rem);
-  width: .9rem;
-}
-
-.my-ticket::before { left: -.5rem; }
-.my-ticket::after { right: -.5rem; }
-
 .my-ticket-survivor-chip {
   pointer-events: none;
   position: absolute;
@@ -1276,12 +1261,6 @@ html[data-theme="night"] .my-ticket {
   border-color: #897e6b;
   color: #f2e8d3;
   box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
-}
-
-html[data-theme="night"] .my-ticket::before,
-html[data-theme="night"] .my-ticket::after {
-  background: #10181e;
-  border-color: #897e6b;
 }
 
 html[data-theme="night"] .my-ticket-race,
