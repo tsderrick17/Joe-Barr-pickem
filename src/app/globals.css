@@ -1290,9 +1290,11 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-completion > span:last-child {
   align-self: end;
-  color: #a82820;
   font-weight: 900;
 }
+
+.my-ticket-completion.is-open > span:last-child { color: #a82820; }
+.my-ticket-completion.is-filled > span:last-child { color: #08764e; }
 
 .my-ticket-footer > div {
   align-self: stretch;
