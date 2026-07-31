@@ -133,12 +133,12 @@ export default function MyTicket({
 
       <div className="my-ticket-footer">
         <span className={`my-ticket-completion ${isFilled ? "is-filled" : "is-open"}`}>
-          {totalSelections}/{totalRequiredSelections} SELECTIONS MADE
+          <span className="my-ticket-change-note">Selections can be changed prior to kickoff</span>
+          <span>{totalSelections}/{totalRequiredSelections} SELECTIONS MADE</span>
         </span>
         <div>
           <small>TICKET STATUS</small>
           <strong className={isFilled ? "is-filled" : "is-open"}>{status}</strong>
-          <small className="my-ticket-footer-note">May be changed prior to kickoff.</small>
         </div>
         <i aria-hidden="true" className="my-ticket-barcode" />
       </div>

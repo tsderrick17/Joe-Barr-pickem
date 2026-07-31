@@ -1268,6 +1268,16 @@ html[data-theme="night"] .newspaper-clipping::after {
   font: 900 .68rem/1 "Courier New", monospace;
 }
 
+.my-ticket-completion {
+  display: grid;
+  gap: .16rem;
+}
+
+.my-ticket-change-note {
+  font: 900 .64rem/1.15 Arial, sans-serif;
+  letter-spacing: .02em;
+}
+
 .my-ticket-footer > div {
   display: grid;
   justify-items: center;
@@ -1279,14 +1289,6 @@ html[data-theme="night"] .newspaper-clipping::after {
   font-size: .46rem;
   font-weight: 800;
   letter-spacing: .09em;
-}
-
-.my-ticket-footer .my-ticket-footer-note {
-  font-size: .4rem;
-  letter-spacing: .04em;
-  line-height: 1.15;
-  margin-top: .12rem;
-  text-align: center;
 }
 
 .my-ticket-footer strong {
