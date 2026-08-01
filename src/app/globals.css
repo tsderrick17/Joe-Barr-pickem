@@ -674,7 +674,10 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger {
   --ledger-ink: #1d1d1f;
   --ledger-muted: #516076;
-  --ledger-paper: #fffdf8;
+  /* A quiet scorepad parchment: warm enough to feel tactile, still light
+     enough that the blue ruling and red margin remain crisp. */
+  --ledger-paper: #fbf7ec;
+  --ledger-hand-font: Cambria, "Times New Roman", serif;
   --scorepad-blue: #9bb9de;
   --scorepad-red: #c76862;
 }
@@ -768,7 +771,7 @@ html[data-theme="night"] .survivor-selection-footer {
   background: var(--ledger-paper);
   border-top: 0;
   border-bottom: 0;
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   overflow: hidden;
 }
 
@@ -792,7 +795,7 @@ html[data-theme="night"] .survivor-selection-footer {
   border-bottom: 2px solid currentColor;
   color: var(--ledger-ink);
   display: inline-block;
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   font-size: clamp(1rem, 2.3vw, 1.28rem);
   font-weight: 700;
   letter-spacing: .12em;
@@ -812,7 +815,7 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-wins {
   border-right: 2px solid var(--scorepad-red);
   /* A narrow score margin, like the hand-written totals beside a ruled pad. */
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
@@ -828,7 +831,7 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-player {
   border-right: 0;
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   font-size: clamp(.95rem, 2.5vw, 1.12rem);
   font-weight: 800;
   line-height: 1.06;
@@ -836,14 +839,14 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .pickem-ledger-pick {
   color: #273349;
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   font-size: .83rem;
   font-weight: 700;
   line-height: 1.08;
 }
 
 .pickem-ledger-pick .font-mono {
-  font-family: Cambria, "Times New Roman", serif;
+  font-family: var(--ledger-hand-font);
   font-size: .78rem;
   font-weight: 900;
 }
