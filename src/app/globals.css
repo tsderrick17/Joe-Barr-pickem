@@ -1935,9 +1935,8 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
-  /* The chat belongs to the full Slate reading surface, not the narrower
-     standings tables. Keep its outer edge on the same max-w-5xl rail as the
-     Slate header, receipt, and matchup list. */
+  /* The Slate uses the broad reading rail by default. Standings overrides
+     this below so the shared chat follows the page it is attached to. */
   max-width: 64rem;
   width: 100%;
 }
@@ -1946,6 +1945,14 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 .pool-chat-dock > div:not(.pool-chat) {
   max-width: 64rem !important;
   width: 100%;
+}
+
+/* Standings is intentionally a tighter scorecard surface than the Slate.
+   Keep both the visible chat and its compact restore control on that same
+   rail instead of leaving a Slate-width gutter around the table. */
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock .pool-chat,
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
+  max-width: var(--standings-module-width) !important;
 }
 
 /* Survivor has a horizontally scrollable grid, but its visible card aligns
