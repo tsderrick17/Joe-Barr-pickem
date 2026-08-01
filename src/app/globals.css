@@ -979,7 +979,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
-  height: 3rem;
+  height: 2.85rem;
   justify-content: center;
   left: 50%;
   min-width: 0;
@@ -989,7 +989,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   transform: translate(-50%, -50%) scale(1.12);
   transform-origin: center;
   transition: filter 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
-  width: 3rem;
+  width: 2.85rem;
   z-index: 1;
 }
 
@@ -1004,7 +1004,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-survivor-chip-button { height: 3.5rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.5rem; }
+  .slate-survivor-chip-button { height: 3.325rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.325rem; }
   .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 }
 
