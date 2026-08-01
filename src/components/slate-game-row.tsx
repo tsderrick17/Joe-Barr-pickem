@@ -147,6 +147,11 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       disabled={survivorUnavailable}
       onClick={() => {
         if (survivorOfficial) {
+          // Clicking the saved team while another team is staged restores the
+          // official pick and clears the pending replacement.
+          if (!survivorSelected) {
+            survivor.onChoose(game.id, team.id);
+          }
           replayChip();
           return;
         }
