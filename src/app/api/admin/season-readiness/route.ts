@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
-    .select("id")
+    .select("id, state")
     .eq("year", CURRENT_SEASON_YEAR)
     .maybeSingle();
 
@@ -30,23 +30,30 @@ export async function GET(request: NextRequest) {
   }
 
   const periodIds = (periods ?? []).map((period) => period.id);
-  const [gamesResult, remindersResult] = await Promise.all([
+  const [gamesResult, remindersResult, deliveryFailuresResult] = await Promise.all([
     periodIds.length
       ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, line_lock_at, away_team_id, home_team_id, status").in("scoring_period_id", periodIds)
       : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("push_reminders").select("id, status, processing_started_at").in("status", ["scheduled", "sending", "failed"]),
+    supabaseAdmin
+      .from("email_reminder_deliveries")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["failed", "suppressed"])
+      .gte("attempted_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
   ]);
 
-  if (gamesResult.error || remindersResult.error) {
+  if (gamesResult.error || remindersResult.error || deliveryFailuresResult.error) {
     return NextResponse.json({ error: "Season-readiness checks could not read the current records." }, { status: 500 });
   }
 
   return NextResponse.json({
     checkedAt: new Date().toISOString(),
     ...assessSeasonReadiness({
+      seasonState: season.state,
       periods: periods ?? [],
       games: gamesResult.data ?? [],
       reminders: remindersResult.data ?? [],
+      emailDeliveryFailures: deliveryFailuresResult.count ?? 0,
     }),
   });
 }

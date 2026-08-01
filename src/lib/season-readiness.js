@@ -8,14 +8,17 @@ function check(id, label, detail, state = "pass") {
  * A read-only, data-shape audit for the season's operational prerequisites.
  * It intentionally does not make schedule, pick, or reminder changes.
  */
-export function assessSeasonReadiness({ periods, games, reminders, now = new Date() }) {
+export function assessSeasonReadiness({ seasonState, periods, games, reminders, emailDeliveryFailures = 0, now = new Date() }) {
   const checks = [];
   const activePeriods = periods.filter((period) => period.status === "active");
   const completedPeriods = periods.filter((period) => period.status === "complete");
 
+  const preseasonWaitingForKickoff = activePeriods.length === 0 && seasonState === "preseason";
   checks.push(activePeriods.length === 1
     ? check("active-period", "One active scoring period", `${activePeriods[0].display_name} is the only active period.`)
-    : check("active-period", "One active scoring period", activePeriods.length === 0 ? "No scoring period is active." : `${activePeriods.length} scoring periods are active at once.`, "attention"));
+    : preseasonWaitingForKickoff
+      ? check("active-period", "Scoring period activation", "Preseason is scheduled. Week 1 will activate automatically when its start time arrives.", "setup")
+      : check("active-period", "One active scoring period", activePeriods.length === 0 ? "No scoring period is active." : `${activePeriods.length} scoring periods are active at once.`, "attention"));
 
   const incompleteCompleted = completedPeriods.filter((period) =>
     games.some((game) => game.scoring_period_id === period.id && !SETTLED_GAME_STATUSES.has(game.status)),
@@ -60,8 +63,13 @@ export function assessSeasonReadiness({ periods, games, reminders, now = new Dat
 
   const staleSending = reminders.filter((reminder) => reminder.status === "sending" && reminder.processing_started_at && now.getTime() - new Date(reminder.processing_started_at).getTime() > 20 * 60 * 1000);
   const failedReminders = reminders.filter((reminder) => reminder.status === "failed");
-  if (failedReminders.length || staleSending.length) {
-    checks.push(check("reminder-queue", "Reminder delivery queue", `${failedReminders.length} failed and ${staleSending.length} stale reminder${failedReminders.length + staleSending.length === 1 ? " needs" : "s need"} attention.`, "attention"));
+  if (failedReminders.length || staleSending.length || emailDeliveryFailures) {
+    const issues = [
+      failedReminders.length ? `${failedReminders.length} failed reminder${failedReminders.length === 1 ? "" : "s"}` : null,
+      staleSending.length ? `${staleSending.length} stale reminder${staleSending.length === 1 ? "" : "s"}` : null,
+      emailDeliveryFailures ? `${emailDeliveryFailures} failed email deliver${emailDeliveryFailures === 1 ? "y" : "ies"}` : null,
+    ].filter(Boolean).join(", ");
+    checks.push(check("reminder-queue", "Reminder delivery queue", `${issues} need attention.`, "attention"));
   } else {
     checks.push(check("reminder-queue", "Reminder delivery queue", "No reminder is failed or stalled in delivery."));
   }
