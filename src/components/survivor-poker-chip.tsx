@@ -13,7 +13,12 @@ type Props = {
 };
 
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, unavailable = false, size = "wire" }: Props) {
-  const accent = teamChipAccents(abbreviation);
+  // Display abbreviations may use scorepad casing (for example `Sea`), but
+  // the public logo assets use the canonical uppercase team key (`SEA`).
+  // Normalize at the asset boundary so presentation casing can never break a
+  // chip image.
+  const logoAbbreviation = abbreviation.trim().toUpperCase();
+  const accent = teamChipAccents(logoAbbreviation);
   const state = official ? "official" : selected ? "picked" : "available";
 
   return (
@@ -25,7 +30,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
         <span className="survivor-poker-chip-edge" />
         <span className="survivor-poker-chip-core">
           <span className="survivor-poker-chip-face survivor-poker-chip-front">
-            <Image alt="" className="object-contain" height={44} src={`/team-logos/${abbreviation}.png`} width={44} />
+            <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
           </span>
           <span className="survivor-poker-chip-face survivor-poker-chip-back"><span className="survivor-poker-chip-star">★</span></span>
         </span>
