@@ -1237,11 +1237,62 @@ html[data-theme="night"] .slate-team-label--selected {
 }
 
 html[data-theme="night"] .slate-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(31, 236, 212, .82) 0 5%, rgba(74, 240, 220, .65) 12%, rgba(127, 248, 231, .4) 100%);
+  background: linear-gradient(90deg,
+    rgba(24, 206, 188, .68) 0%,
+    rgba(40, 220, 202, .62) 9%,
+    rgba(75, 230, 214, .5) 24%,
+    rgba(122, 240, 226, .34) 58%,
+    rgba(159, 247, 236, .14) 100%);
+}
+
+html[data-theme="night"] .slate-team-label--selected::after {
+  background: linear-gradient(90deg,
+    rgba(10, 145, 136, .42) 0%,
+    rgba(23, 183, 169, .34) 34%,
+    rgba(65, 218, 201, .16) 72%,
+    rgba(65, 218, 201, 0) 100%);
 }
 
 html[data-theme="night"] .survivor-team-selection span {
   color: #f2fffb !important;
+}
+
+/* The instructional action cards use a deliberately dark paper surface in
+   night mode; restate their hard-coded light-mode ink so the instructions do
+   not disappear into the background. */
+html[data-theme="night"] .slate-header-grid > aside {
+  color: #cbd9df !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside > div {
+  border-color: #5f7d82 !important;
+  background-color: #1b2a31 !important;
+  color: #d9e7e8 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside strong {
+  color: #63e1d3 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid {
+  border-color: #536f75 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
+  border-color: #536f75 !important;
+}
+
+/* Keep the sticky player identity cells and the scrollable Survivor cells as
+   one continuous active row in night mode. */
+html[data-theme="night"] .survivor-standings-row.viewer-row > td {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
+}
+
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
 }
 
 /* Your own scorecard row gets a quiet teal ticket treatment in night mode,
@@ -1816,6 +1867,21 @@ html[data-theme="night"] .my-ticket-instructions {
 
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
+
+html[data-theme="night"] .my-ticket-barcode {
+  background: linear-gradient(90deg,
+    #f2e8d3 0 2%, transparent 2% 4%, #f2e8d3 4% 5%, transparent 5% 8%,
+    #f2e8d3 8% 12%, transparent 12% 14%, #f2e8d3 14% 15%, transparent 15% 18%,
+    #f2e8d3 18% 21%, transparent 21% 23%, #f2e8d3 23% 24%, transparent 24% 28%,
+    #f2e8d3 28% 33%, transparent 33% 35%, #f2e8d3 35% 37%, transparent 37% 41%,
+    #f2e8d3 41% 42%, transparent 42% 45%, #f2e8d3 45% 49%, transparent 49% 51%,
+    #f2e8d3 51% 54%, transparent 54% 57%, #f2e8d3 57% 58%, transparent 58% 61%,
+    #f2e8d3 61% 66%, transparent 66% 68%, #f2e8d3 68% 70%, transparent 70% 74%,
+    #f2e8d3 74% 75%, transparent 75% 78%, #f2e8d3 78% 83%, transparent 83% 85%,
+    #f2e8d3 85% 88%, transparent 88% 91%, #f2e8d3 91% 92%, transparent 92% 96%,
+    #f2e8d3 96% 100%);
+  border-inline-color: #f2e8d3;
+}
 
 html[data-theme="night"] .pool-chat {
   background: #22231f;
