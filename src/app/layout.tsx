@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import SiteNav from "@/components/site-nav";
 import PoolChatDock from "@/components/pool-chat-dock";
+
+const architectsDaughter = localFont({
+  src: "../../public/fonts/architects-daughter.ttf",
+  variable: "--font-architects-daughter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Lead Pipe Locks",
@@ -15,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={architectsDaughter.variable}>
         <SiteNav />
         {children}
         <PoolChatDock />

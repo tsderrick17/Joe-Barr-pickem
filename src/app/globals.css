@@ -685,7 +685,7 @@ html[data-theme="night"] .survivor-selection-footer {
   /* A quiet scorepad parchment: warm enough to feel tactile, still light
      enough that the blue ruling and red margin remain crisp. */
   --ledger-paper: #fbf7ec;
-  --ledger-hand-font: Cambria, "Times New Roman", serif;
+  --ledger-hand-font: var(--font-architects-daughter), "Segoe Print", "Bradley Hand", cursive;
   --scorepad-blue: #9bb9de;
   --scorepad-red: #c76862;
 }
