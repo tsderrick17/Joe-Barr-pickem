@@ -200,8 +200,8 @@ export default function SiteNav() {
         </div>
       </div>
     </nav>
-    <nav aria-label="Account navigation" className="mobile-account-nav border-b border-zinc-700 bg-[#171719] text-[#f5f0e6] md:hidden">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2">
+    <nav aria-label="Account navigation" className="mobile-account-nav relative border-b border-zinc-700 bg-[#171719] text-[#f5f0e6] md:hidden">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 pr-12">
         <Link className="min-w-0 font-serif text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]" href="/">Joe Barr Memorial</Link>
         {playerName ? (
           <div className="flex min-w-0 items-center justify-end gap-2 text-[11px] text-[#e4ded2]">
@@ -212,6 +212,17 @@ export default function SiteNav() {
           </div>
         ) : null}
       </div>
+      <button
+        aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
+        aria-pressed={isNightMode}
+        className="theme-toggle absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
+        data-active={isNightMode}
+        onClick={toggleTheme}
+        title={isNightMode ? "Use light mode" : "Use dark mode"}
+        type="button"
+      >
+        <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
+      </button>
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
