@@ -15,6 +15,7 @@ import AutomationPreflight from "@/components/automation-preflight";
 import FinalScoreReconciliation from "@/components/final-score-reconciliation";
 import SentryVerification from "@/components/sentry-verification";
 import SeasonReadiness from "@/components/season-readiness";
+import OpeningWeekChecklist from "@/components/opening-week-checklist";
 import CommissionerHandbook from "@/components/commissioner-handbook";
 
 type Spread = {
@@ -270,6 +271,7 @@ export default function AdminPage() {
           <SentryVerification />
         </section>
         <SeasonReadiness />
+        <OpeningWeekChecklist />
         </> : null}
 
         {activePanel === "game-day" ? <>
