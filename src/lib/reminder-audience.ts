@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { isSurvivorReminderApplicable } from "./reminder-rules.js";
 
 export type ReminderCategory =
   | "weekly"
@@ -25,7 +26,7 @@ export type ReminderAudience =
 async function activePeriod() {
   const { data, error } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, season_id, max_picks")
+    .select("id, season_id, max_picks, period_type")
     .eq("status", "active")
     .order("display_order", { ascending: true })
     .limit(1)
@@ -71,6 +72,10 @@ export async function eligiblePlayerIds(audience: ReminderAudience) {
   };
 
   if (audience === "ats_due") return atsPlayersDue();
+
+  if (!isSurvivorReminderApplicable(period.period_type as "regular" | "playoff")) {
+    return audience === "survivor_due" ? [] : atsPlayersDue();
+  }
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("survivor_entries")
