@@ -9,6 +9,7 @@ import LineLockChecker from "@/components/line-lock-checker";
 import ScoreSyncChecker from "@/components/score-sync-checker";
 import AutomationHealth from "@/components/automation-health";
 import IntegrityRehearsal from "@/components/integrity-rehearsal";
+import SeasonRecoveryRehearsal from "@/components/season-recovery-rehearsal";
 import GameDayPlaybook from "@/components/game-day-playbook";
 import AutomationPreflight from "@/components/automation-preflight";
 import FinalScoreReconciliation from "@/components/final-score-reconciliation";
@@ -289,6 +290,7 @@ export default function AdminPage() {
             <p className="mt-1 text-zinc-700">Read-only checks come first. Record an exception only after it has been verified.</p>
           </section>
           <IntegrityRehearsal />
+          <SeasonRecoveryRehearsal />
           <GameExceptions />
         </> : null}
 
