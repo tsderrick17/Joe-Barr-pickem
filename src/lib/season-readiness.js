@@ -1,0 +1,68 @@
+const SETTLED_GAME_STATUSES = new Set(["final", "postponed", "cancelled"]);
+
+function check(id, label, detail, state = "pass") {
+  return { id, label, detail, state };
+}
+
+/**
+ * A read-only, data-shape audit for the season's operational prerequisites.
+ * It intentionally does not make schedule, pick, or reminder changes.
+ */
+export function assessSeasonReadiness({ periods, games, reminders, now = new Date() }) {
+  const checks = [];
+  const activePeriods = periods.filter((period) => period.status === "active");
+  const completedPeriods = periods.filter((period) => period.status === "complete");
+
+  checks.push(activePeriods.length === 1
+    ? check("active-period", "One active scoring period", `${activePeriods[0].display_name} is the only active period.`)
+    : check("active-period", "One active scoring period", activePeriods.length === 0 ? "No scoring period is active." : `${activePeriods.length} scoring periods are active at once.`, "attention"));
+
+  const incompleteCompleted = completedPeriods.filter((period) =>
+    games.some((game) => game.scoring_period_id === period.id && !SETTLED_GAME_STATUSES.has(game.status)),
+  );
+  checks.push(incompleteCompleted.length === 0
+    ? check("completed-periods", "Completed-period continuity", "Every completed period contains only settled games.")
+    : check("completed-periods", "Completed-period continuity", `${incompleteCompleted.map((period) => period.display_name).join(", ")} still contains unsettled games.`, "attention"));
+
+  const invalidGames = games.filter((game) =>
+    !game.kickoff_at || !game.line_lock_at || !game.away_team_id || !game.home_team_id ||
+    game.away_team_id === game.home_team_id || new Date(game.line_lock_at) > new Date(game.kickoff_at),
+  );
+  checks.push(invalidGames.length === 0
+    ? check("game-timing", "Game timing and matchups", "Every game has a valid matchup and an official line lock no later than kickoff.")
+    : check("game-timing", "Game timing and matchups", `${invalidGames.length} game${invalidGames.length === 1 ? " has" : "s have"} invalid timing or matchup data.`, "attention"));
+
+  const playoffPeriods = periods.filter((period) => period.period_type === "playoff");
+  const scheduledPlayoffPeriods = playoffPeriods.filter((period) => games.some((game) => game.scoring_period_id === period.id));
+  const capacityProblems = scheduledPlayoffPeriods.filter((period) => {
+    const playableGames = games.filter((game) =>
+      game.scoring_period_id === period.id && !["postponed", "cancelled"].includes(game.status),
+    ).length;
+    return playableGames !== period.max_picks;
+  });
+
+  if (playoffPeriods.length === 0) {
+    checks.push(check("playoff-capacity", "Playoff round capacity", "Playoff scoring periods have not been loaded yet. Add them before the postseason.", "setup"));
+  } else if (scheduledPlayoffPeriods.length === 0) {
+    checks.push(check("playoff-capacity", "Playoff round capacity", "Playoff rounds exist; their game schedule can be imported when the bracket is known.", "setup"));
+  } else if (capacityProblems.length === 0) {
+    checks.push(check("playoff-capacity", "Playoff round capacity", "Each scheduled playoff round requires one ATS selection for every playable game."));
+  } else {
+    checks.push(check("playoff-capacity", "Playoff round capacity", `${capacityProblems.map((period) => period.display_name).join(", ")} has a max-pick count that does not match its playable games.`, "attention"));
+  }
+
+  const staleSending = reminders.filter((reminder) => reminder.status === "sending" && reminder.processing_started_at && now.getTime() - new Date(reminder.processing_started_at).getTime() > 20 * 60 * 1000);
+  const failedReminders = reminders.filter((reminder) => reminder.status === "failed");
+  if (failedReminders.length || staleSending.length) {
+    checks.push(check("reminder-queue", "Reminder delivery queue", `${failedReminders.length} failed and ${staleSending.length} stale reminder${failedReminders.length + staleSending.length === 1 ? " needs" : "s need"} attention.`, "attention"));
+  } else {
+    checks.push(check("reminder-queue", "Reminder delivery queue", "No reminder is failed or stalled in delivery."));
+  }
+
+  const state = checks.some((item) => item.state === "attention")
+    ? "attention"
+    : checks.some((item) => item.state === "setup")
+      ? "setup"
+      : "ready";
+  return { status: state, checks };
+}

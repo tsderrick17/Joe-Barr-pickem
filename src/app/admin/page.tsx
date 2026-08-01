@@ -13,6 +13,7 @@ import GameDayPlaybook from "@/components/game-day-playbook";
 import AutomationPreflight from "@/components/automation-preflight";
 import FinalScoreReconciliation from "@/components/final-score-reconciliation";
 import SentryVerification from "@/components/sentry-verification";
+import SeasonReadiness from "@/components/season-readiness";
 
 type Spread = {
   team: string;
@@ -264,6 +265,7 @@ export default function AdminPage() {
           </div>
           <SentryVerification />
         </section>
+        <SeasonReadiness />
         </> : null}
 
         {activePanel === "game-day" ? <>
