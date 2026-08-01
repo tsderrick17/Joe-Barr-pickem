@@ -51,6 +51,12 @@ function spreadLabel(spread: number | null) {
   return `-${Number.isInteger(spread) ? spread : spread.toFixed(1)}`;
 }
 
+function compactTeamAbbreviation(name: string, abbreviation?: string | null) {
+  if (abbreviation) return abbreviation;
+  const words = name.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
+  return (words.length > 1 ? words.map((word) => word[0]).join("") : words[0] ?? "NFL").slice(0, 3).toUpperCase();
+}
+
 function ResultMark({ result }: { result: "win" | "loss" | null }) {
   if (!result) return null;
   return <strong className={`relative -top-0.5 inline-block shrink-0 -rotate-[7deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
@@ -94,10 +100,14 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
+    // Keep the familiar home/away casing on the compact mobile treatment too:
+    // home abbreviations stay loud, while away abbreviations remain lowercase.
+    const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
+    const compactLabel = team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const content = <>
-      <span className="block min-w-0 break-normal [hyphens:none]"><span className={`slate-team-label ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className="slate-team-name-full">{label}</span><span aria-label={label} className="slate-team-name-short">{team.abbreviation}</span></span><ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
+      <span className="block min-w-0 break-normal [hyphens:none]"><span className={`slate-team-label ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span><ResultMark result={isFinal ? team.result : null} />{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}</span>
       {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
@@ -128,6 +138,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       }));
     };
 
+    const teamAbbreviation = compactTeamAbbreviation(team.name, team.abbreviation);
     return <div className="slate-survivor-chip-slot"><button
       aria-label={survivorOfficial ? `Flip your saved Survivor ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable for Survivor` : `Choose ${team.name} as your Survivor winner`}
       aria-pressed={survivorSelected}
@@ -145,7 +156,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       type="button"
     >
       <SurvivorPokerChip
-        abbreviation={team.abbreviation}
+        abbreviation={teamAbbreviation}
         animate={Boolean(chipReplay[team.id])}
         key={`${team.id}-${chipReplay[team.id] ?? 0}`}
         official={survivorOfficial}

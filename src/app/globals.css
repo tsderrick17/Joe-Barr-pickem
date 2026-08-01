@@ -913,6 +913,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 @media (max-width: 320px) {
   .slate-team-name-full { display: none; }
   .slate-team-name-short { display: inline; }
+}
+
+/* Active Survivor chips consume the center of a Slate row. On a phone, use
+   the three-letter team mark only for that chip-enabled presentation. */
+@media (max-width: 767px) {
+  .slate-team-name-full--chips { display: none; }
+  .slate-team-name-short--chips { display: inline; }
   .scoreboard-team-name-full { display: none; }
   .scoreboard-team-name-short { display: inline; }
 }
