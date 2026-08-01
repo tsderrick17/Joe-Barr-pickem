@@ -1,4 +1,5 @@
 import PlayerTrophyName from "@/components/player-trophy-name";
+import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
 
 export type PickemScoreboardPick = {
   label: string | null;
@@ -59,7 +60,7 @@ export default function PickemScoreboard({ isPlayoff = false, rows, maxPicks, we
                       <td className={`pickem-ledger-pick break-words ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
                         {pick?.label ? (
                           <span>
-                            {isPlayoff ? pick.abbreviation ?? pick.label : <><span className="scoreboard-team-name-full">{pick.label}</span>{pick.abbreviation ? <span aria-label={pick.label} className="scoreboard-team-name-short">{pick.abbreviation}</span> : null}</>}
+                            {isPlayoff ? (pick.abbreviation ? scorepadAbbreviation(pick.abbreviation) : pick.label) : <><span className="scoreboard-team-name-full">{pick.label}</span>{pick.abbreviation ? <span aria-label={pick.label} className="scoreboard-team-name-short">{scorepadAbbreviation(pick.abbreviation)}</span> : null}</>}
                             {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>{pick.spread}</strong> : null}
                             {pick.resultMark ? <strong className={`ml-1.5 text-[13px] ${pick.resultMark === "W" ? "text-green-800" : "text-red-700"}`}>{pick.resultMark}</strong> : null}
                           </span>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
+import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
 
 export type SlateGameRowData = {
   id: string;
@@ -52,9 +53,9 @@ function spreadLabel(spread: number | null) {
 }
 
 function compactTeamAbbreviation(name: string, abbreviation?: string | null) {
-  if (abbreviation) return abbreviation;
+  if (abbreviation) return scorepadAbbreviation(abbreviation);
   const words = name.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? words.map((word) => word[0]).join("") : words[0] ?? "NFL").slice(0, 3).toUpperCase();
+  return scorepadAbbreviation((words.length > 1 ? words.map((word) => word[0]).join("") : words[0] ?? "NFL").slice(0, 3));
 }
 
 function ResultMark({ result }: { result: "win" | "loss" | null }) {
