@@ -918,8 +918,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 /* Active Survivor chips consume the center of a Slate row. On a phone, use
    the three-letter team mark only for that chip-enabled presentation. */
 @media (max-width: 767px) {
+  .slate-team-label--chips { display: block; text-align: center; width: 100%; }
   .slate-team-name-full--chips { display: none; }
-  .slate-team-name-short--chips { display: inline; }
+  .slate-team-name-short--chips { display: block; text-align: center; }
   .scoreboard-team-name-full { display: none; }
   .scoreboard-team-name-short { display: inline; }
 }

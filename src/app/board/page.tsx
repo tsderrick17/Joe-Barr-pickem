@@ -741,18 +741,10 @@ export default function BoardPage() {
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="font-semibold text-[#00756e]">Teal lines</span> are official and will not change.</p>
                   <p className="mt-1">Selections are revealed to others at kickoff.</p>
-                  <p className="mt-1">Favorites left; home team ALL CAPS.</p>
+                  <p className="mt-1">Changes allowed until kickoff time.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-7 sm:pt-0">
-                  <p>
-                    {week.period_type === "playoff"
-                      ? "Pick every playoff game. Save early or one at a time."
-                      : "Choose TWO teams and click Save below."}
-                  </p>
-                  {survivorControlsEnabled ? (
-                    <p className="mt-1">Use a poker chip to choose one straight-up Survivor winner.</p>
-                  ) : null}
-                  <p className="mt-1">Changes allowed until kickoff time.</p>
+                  <p>Favorites left; home team ALL CAPS.</p>
                 </div>
               </div>
               {hasEarlyGame ? (
