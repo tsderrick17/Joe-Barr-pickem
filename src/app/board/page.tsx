@@ -417,8 +417,11 @@ export default function BoardPage() {
 
         if (!name) return null;
 
-        const abbreviation = (isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation).toUpperCase();
-        const receiptAbbreviation = isHome ? abbreviation : abbreviation.toLowerCase();
+        const canonicalAbbreviation = (isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation).toUpperCase();
+        // Keep the compact receipt convention everywhere: home abbreviations
+        // are uppercase while away abbreviations remain lowercase.
+        const abbreviation = isHome ? canonicalAbbreviation : canonicalAbbreviation.toLowerCase();
+        const receiptAbbreviation = abbreviation;
         const hasFinalLine = game.spreadLockedAt !== null && game.officialSpread !== null;
         const selectedTeamIsFavorite = pick.teamId === game.favoriteTeamId;
         const lineValue = game.officialSpread === null
@@ -485,7 +488,7 @@ export default function BoardPage() {
     const game = games.find((item) => item.id === pick.gameId);
     return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
   };
-  const pickemReceipt = selectedTeams.map((team) => team.name).join(" · ") || "OPEN";
+  const pickemReceipt = selectedTeams.map((team) => team.abbreviation).join(" · ") || "OPEN";
   const pickemReceiptShort = selectedTeams.map((team) => team.abbreviation).join(", ") || "OPEN";
   const survivorReceipt = survivorTeamName(survivorPick) || (survivorStatus === "complete" ? "COMPLETE" : survivorStatus === "eliminated" ? "OUT" : "OPEN");
   const survivorReceiptShort = (() => {
@@ -911,7 +914,7 @@ export default function BoardPage() {
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
                       <li className="selection-chip flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1" key={team.gameId}>
-                        <span>{index + 1}. {team.lockedLineLabel ?? team.name}</span>
+                        <span aria-label={`${index + 1}. ${team.name}${team.lockedLineLabel ? `, ${team.lockedLineLabel}` : ""}`} title={team.name}>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
                         {team.canRemove ? (
                           <button
                             aria-label={`Remove ${team.name}`}
