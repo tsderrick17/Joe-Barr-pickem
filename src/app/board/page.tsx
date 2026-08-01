@@ -739,12 +739,11 @@ export default function BoardPage() {
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
                 <div className="md:pl-4">
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
-                  <p className="mt-1"><span className="font-semibold text-[#00756e]">Teal lines</span> are official and will not change.</p>
-                  <p className="mt-1">Selections are revealed to others at kickoff.</p>
                   <p className="mt-1">Changes allowed until kickoff time.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-7 sm:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
+                  <p className="mt-1"><span className="font-semibold text-[#00756e]">Teal lines</span> are official and will not change.</p>
                 </div>
               </div>
               {hasEarlyGame ? (
