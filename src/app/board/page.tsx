@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchWithSession,
   getFreshSession,
@@ -922,7 +922,10 @@ export default function BoardPage() {
                 </p>
                 </div>
 
-                <ol className="slate-selection-footer-picks mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm">
+                <ol
+                  className={`slate-selection-footer-picks ${week.period_type === "playoff" ? "slate-selection-footer-picks--playoff" : "slate-selection-footer-picks--regular"} mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm`}
+                  style={{ "--selection-slot-count": selectionLimit } as CSSProperties}
+                >
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
                       <li className={`selection-chip slate-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1`} key={team.gameId}>
