@@ -733,7 +733,7 @@ export default function BoardPage() {
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-              <div className={`mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] sm:text-xs ${survivorControlsEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] sm:text-xs ${survivorControlsEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
                 <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
                 {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
                 <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SAVE</strong>Review your choices, then click <span className="font-black">Save selections</span> at the bottom.</p>

@@ -168,7 +168,17 @@ body {
   /* The week controls stay in their own rail; the instructions use the open
      space to the right rather than falling below the title. */
   .slate-header-grid {
-    grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
+    /* Give the title/week rail only what it needs and return the reclaimed
+       width to the instruction surface. */
+    grid-template-columns: minmax(11rem, .66fr) minmax(0, 1.17fr) minmax(0, 1.17fr);
+  }
+
+  .slate-action-instructions {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) !important;
+  }
+
+  .slate-action-instructions.has-survivor {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr) !important;
   }
 }
 
