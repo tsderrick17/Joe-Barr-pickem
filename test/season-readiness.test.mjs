@@ -32,6 +32,20 @@ test("season readiness treats an unloaded postseason as setup, not an integrity 
   assert.equal(result.checks.find((check) => check.id === "playoff-capacity").state, "setup");
 });
 
+test("season readiness catches completed periods whose audit history disappeared", () => {
+  const result = assessSeasonReadiness({
+    periods: [
+      { id: "week-1", display_name: "Week 1", status: "complete", period_type: "regular", max_picks: 2 },
+      { id: "week-2", display_name: "Week 2", status: "active", period_type: "regular", max_picks: 2 },
+    ],
+    games: [game("week-2-game", "week-2")],
+    reminders: [],
+  });
+
+  assert.equal(result.status, "attention");
+  assert.equal(result.checks.find((check) => check.id === "completed-period-data")?.state, "attention");
+});
+
 test("season readiness catches capacity, timing, concurrent-period, and stalled-reminder failures", () => {
   const malformedPeriods = [...periods, { id: "duplicate", display_name: "Duplicate", period_type: "regular", status: "active", max_picks: 2 }];
   const games = [game("regular", "week-18", "live"), ...Array.from({ length: 5 }, (_, index) => game(`wild-${index}`, "wild")), { ...game("bad", "wild"), line_lock_at: "2027-01-11T19:00:00Z" }];

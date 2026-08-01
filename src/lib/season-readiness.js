@@ -24,6 +24,13 @@ export function assessSeasonReadiness({ periods, games, reminders, now = new Dat
     ? check("completed-periods", "Completed-period continuity", "Every completed period contains only settled games.")
     : check("completed-periods", "Completed-period continuity", `${incompleteCompleted.map((period) => period.display_name).join(", ")} still contains unsettled games.`, "attention"));
 
+  const emptyCompletedPeriods = completedPeriods.filter((period) =>
+    !games.some((game) => game.scoring_period_id === period.id),
+  );
+  checks.push(emptyCompletedPeriods.length === 0
+    ? check("completed-period-data", "Completed-period data", "Every completed period retains its game history.")
+    : check("completed-period-data", "Completed-period data", `${emptyCompletedPeriods.map((period) => period.display_name).join(", ")} has no retained game history.`, "attention"));
+
   const invalidGames = games.filter((game) =>
     !game.kickoff_at || !game.line_lock_at || !game.away_team_id || !game.home_team_id ||
     game.away_team_id === game.home_team_id || new Date(game.line_lock_at) > new Date(game.kickoff_at),

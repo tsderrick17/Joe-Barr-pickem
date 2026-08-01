@@ -1,5 +1,11 @@
 import type { ReminderCategory } from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import {
+  isFreshSlateReady,
+  isPlayoffDayRecapReady,
+  isRecapReady,
+  isSundayWindowReady,
+} from "@/lib/reminder-readiness-rules.js";
 
 type ReminderReadiness = { ready: boolean; reason: string | null };
 
@@ -42,9 +48,7 @@ async function freshSlateReady(): Promise<ReminderReadiness> {
     .select("id", { count: "exact", head: true })
     .eq("scoring_period_id", period.id);
   if (error) throw new Error("The new Slate could not be checked before sending a reminder.");
-  return count && count > 1
-    ? { ready: true, reason: null }
-    : { ready: false, reason: "The new week does not yet have a full Slate." };
+  return isFreshSlateReady({ activePeriod: period, gameCount: count ?? 0 });
 }
 
 async function gameDaySlateReady(): Promise<ReminderReadiness> {
@@ -101,11 +105,12 @@ async function recapReady(): Promise<ReminderReadiness> {
     supabaseAdmin.from("survivor_picks").select("id", { count: "exact", head: true }).eq("scoring_period_id", period.id).eq("result", "pending"),
   ]);
   if (gamesResult.error || picksResult.error || survivorResult.error) throw new Error("Final grades could not be checked before sending a recap.");
-  const gamesFinal = (gamesResult.data ?? []).length > 0 && (gamesResult.data ?? []).every((game) => game.status === "final");
-  if (!gamesFinal || (picksResult.count ?? 0) > 0 || (survivorResult.count ?? 0) > 0) {
-    return { ready: false, reason: "Final scores and standings are still being settled." };
-  }
-  return { ready: true, reason: null };
+  return isRecapReady({
+    period,
+    games: gamesResult.data ?? [],
+    pendingAtsCount: picksResult.count ?? 0,
+    pendingSurvivorCount: survivorResult.count ?? 0,
+  });
 }
 
 async function playoffDayRecapReady(): Promise<ReminderReadiness> {
@@ -136,9 +141,13 @@ async function playoffDayRecapReady(): Promise<ReminderReadiness> {
     .in("game_id", dayGames.map((game) => game.id))
     .eq("result", "pending");
   if (picksError) throw new Error("Playoff grades could not be checked before sending a recap.");
-  return (count ?? 0) === 0
-    ? { ready: true, reason: null }
-    : { ready: false, reason: "Playoff grades are still being finalized." };
+  return isPlayoffDayRecapReady({
+    period,
+    games: games ?? [],
+    pendingAtsCount: count ?? 0,
+    now: new Date(),
+    easternDay: (value: string) => easternDate(new Date(value)),
+  });
 }
 
 async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
@@ -204,14 +213,14 @@ async function sundayRevealReady(window: "early" | "late"): Promise<ReminderRead
     .select("kickoff_at, status")
     .eq("scoring_period_id", period.id);
   if (error) throw new Error("Sunday kickoff status could not be checked before sending a reveal.");
-  const [startHour, endHour] = window === "early" ? [12, 16] : [16, 20];
-  const gamesInWindow = (games ?? []).filter((game) => easternWeekday(game.kickoff_at) === "Sunday" && easternHour(game.kickoff_at) >= startHour && easternHour(game.kickoff_at) < endHour && !["postponed", "cancelled"].includes(game.status));
-  if (!gamesInWindow.length) return { ready: false, reason: "There are no games in this Sunday kickoff window." };
-  const now = new Date();
-  if (gamesInWindow.some((game) => new Date(game.kickoff_at) > now)) {
-    return { ready: false, reason: "The selected Sunday games have not all reached kickoff yet." };
-  }
-  return { ready: true, reason: null };
+  return isSundayWindowReady({
+    activePeriod: period,
+    games: games ?? [],
+    window,
+    now: new Date(),
+    easternWeekday,
+    easternHour,
+  });
 }
 
 export async function reminderReadiness(category: ReminderCategory): Promise<ReminderReadiness> {
