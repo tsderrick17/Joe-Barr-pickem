@@ -909,7 +909,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     rgba(0, 169, 155, .58) 5%,
     rgba(35, 211, 193, .5) 12%,
     rgba(70, 225, 207, .46) 22%,
-    rgba(70, 225, 207, .43) 100%);
+    rgba(70, 225, 207, .43) 88%,
+    rgba(70, 225, 207, .24) 96%,
+    rgba(70, 225, 207, 0) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
@@ -922,14 +924,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .slate-team-label--selected::after {
-  /* The ink pool is the first five percent of the same chisel pass. Both
+  /* The ink pool is a tiny two-percent leading chisel mark. Both
      angled sides share the exact slope of the fading stroke behind it. */
   background: linear-gradient(90deg,
     rgba(0, 107, 99, .48) 0%,
     rgba(0, 135, 124, .42) 28%,
     rgba(0, 168, 153, .24) 68%,
     rgba(0, 168, 153, 0) 100%);
-  clip-path: polygon(3% 0, 14% 0, 11% 100%, 0 100%);
+  clip-path: polygon(3% 0, 7% 0, 5% 100%, 0 100%);
   content: "";
   inset: -.04em -.32em -.16em;
   position: absolute;
