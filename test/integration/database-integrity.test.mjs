@@ -135,6 +135,16 @@ test("isolated database enforces atomic ATS and Survivor grading", { skip: !conf
       .eq("id", game.id);
     assert.equal(pastKickoffError, null, pastKickoffError?.message);
 
+    // The no-pick rule applies only to entries that existed before the final
+    // eligible kickoff. Move this fixture entry before the simulated kickoff
+    // so the test exercises that real-world case rather than a late joiner.
+    const { error: noPickEntryTimingError } = await admin
+      .from("survivor_entries")
+      .update({ entered_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() })
+      .eq("player_id", noPickPlayerId)
+      .eq("season_id", seasonId);
+    assert.equal(noPickEntryTimingError, null, noPickEntryTimingError?.message);
+
     const { data: noPickResult, error: noPickError } = await admin.rpc(
       "eliminate_survivor_no_picks",
       { evaluated_at: new Date().toISOString() },

@@ -37,7 +37,7 @@ begin
   end if;
 
   select count(*), count(*) filter (where status = 'active'),
-    max(player_id) filter (where status = 'active')
+    (array_agg(player_id order by player_id) filter (where status = 'active'))[1]
     into remaining_entry_count, active_entry_count, winning_player_id
   from public.survivor_entries
   where season_id = target_season_id;

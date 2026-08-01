@@ -39,7 +39,9 @@ async function prepareFixture(): Promise<Fixture> {
   const admin = requireIsolatedConfig();
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const pin = String(1000 + Math.floor(Math.random() * 8999));
-  const email = `e2e-${suffix}@pickemjb.test`;
+  // The player-facing PIN screen deliberately derives this address; use the
+  // same credential shape here so this is a true browser login, not a bypass.
+  const email = `pin-${pin}@pickemjb.app`;
   const password = `pickem-${pin}`;
 
   const { data: authData, error: authError } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
@@ -132,14 +134,19 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await page.getByRole("button", { name: "Seattle Seahawks", exact: true }).click();
   await page.getByRole("button", { name: "Los Angeles Rams", exact: true }).click();
   await page.getByRole("button", { name: "Choose Seattle Seahawks as your Survivor winner" }).click();
+  const firstSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Save selections" }).click();
-  await expect(page.getByText("Your 2 picks have been saved.")).toBeVisible();
-  await expect(page.getByText("Your straight-up Survivor pick has been saved.")).toBeVisible();
+  expect((await firstSave).status()).toBe(200);
+  const receipt = page.getByRole("navigation", { name: "Your weekly controls" });
+  await expect(receipt.getByText(/2\/2 SELECTED.*SAVED/)).toBeVisible();
+  await expect(receipt.getByText(/Seattle Seahawks.*SAVED/)).toBeVisible();
 
   await page.getByRole("button", { name: "Choose Los Angeles Rams as your Survivor winner" }).click();
-  await expect(page.getByText("UNSAVED CHANGE")).toBeVisible();
+  await expect(receipt.getByRole("link", { name: /SURVIVOR.*UNSAVED CHANGE/ })).toBeVisible();
+  const replacementSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Save selections" }).click();
-  await expect(page.getByText("Your straight-up Survivor pick has been saved.")).toBeVisible();
+  expect((await replacementSave).status()).toBe(200);
+  await expect(receipt.getByText(/Los Angeles Rams.*SAVED/)).toBeVisible();
 
   const { data: savedAts, error: savedAtsError } = await fixture.admin
     .from("picks")
@@ -149,9 +156,18 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   expect(savedAtsError).toBeNull();
   expect(savedAts?.map((pick) => pick.selected_team_id).sort()).toEqual([fixture.firstGame.awayId, fixture.secondGame.awayId].sort());
 
+  const { data: survivorEntry, error: survivorEntryError } = await fixture.admin
+    .from("survivor_entries")
+    .select("id")
+    .eq("player_id", fixture.playerId)
+    .eq("season_id", fixture.seasonId)
+    .single();
+  expect(survivorEntryError).toBeNull();
+
   const { data: savedSurvivor, error: savedSurvivorError } = await fixture.admin
     .from("survivor_picks")
-    .select("selected_team_id")
+    .select("id, game_id, selected_team_id, result, submitted_at")
+    .eq("survivor_entry_id", survivorEntry?.id)
     .eq("scoring_period_id", fixture.periodId)
     .single();
   expect(savedSurvivorError).toBeNull();
