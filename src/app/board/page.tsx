@@ -767,7 +767,7 @@ export default function BoardPage() {
               <span className="slate-receipt-picks-full">{pickemReceipt}</span>
               <span className="slate-receipt-picks-short">{pickemReceiptShort}</span>
             </strong>
-            <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length ? "SAVED" : "PICK DUE"}</em>
+            <em>{selectedPicks.length}/{selectionLimit} SELECTED · {pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "SAVED" : "PICK DUE"}</em>
           </a>
           {week.period_type === "playoff" ? (
             <a href="#slate-matchups">
