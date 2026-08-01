@@ -887,16 +887,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
 .slate-team-label--selected::before {
-  /* Let the marker body ease gradually from its wet leading ink into the
-     translucent tail. The closely spaced stops avoid a visible color seam. */
+  /* Blend only the first few percent after the wet leading ink; the body
+     remains a confident, readable stroke all the way to its angled end. */
   background: linear-gradient(90deg,
     rgba(0, 132, 121, .64) 0%,
-    rgba(0, 169, 155, .61) 7%,
-    rgba(24, 203, 185, .56) 16%,
-    rgba(70, 225, 207, .46) 30%,
-    rgba(119, 239, 224, .34) 58%,
-    rgba(163, 247, 235, .2) 82%,
-    rgba(163, 247, 235, .08) 100%);
+    rgba(0, 169, 155, .58) 5%,
+    rgba(35, 211, 193, .5) 12%,
+    rgba(70, 225, 207, .46) 22%,
+    rgba(70, 225, 207, .43) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
@@ -1249,10 +1247,9 @@ html[data-theme="night"] .slate-team-label--selected {
 html[data-theme="night"] .slate-team-label--selected::before {
   background: linear-gradient(90deg,
     rgba(24, 206, 188, .68) 0%,
-    rgba(40, 220, 202, .62) 9%,
-    rgba(75, 230, 214, .5) 24%,
-    rgba(122, 240, 226, .34) 58%,
-    rgba(159, 247, 236, .14) 100%);
+    rgba(40, 220, 202, .59) 5%,
+    rgba(75, 230, 214, .5) 14%,
+    rgba(91, 232, 216, .43) 100%);
 }
 
 html[data-theme="night"] .slate-team-label--selected::after {
