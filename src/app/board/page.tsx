@@ -330,7 +330,11 @@ export default function BoardPage() {
       const loadedWeeks = periods as ScoringPeriod[];
       setWeeks(loadedWeeks);
 
-      const initialWeek = selectDefaultScoringPeriod(loadedWeeks);
+      const requestedWeekId = new URLSearchParams(window.location.search).get("week");
+      const requestedWeek = requestedWeekId
+        ? loadedWeeks.find((period) => period.id === requestedWeekId && period.status === "complete")
+        : null;
+      const initialWeek = requestedWeek ?? selectDefaultScoringPeriod(loadedWeeks);
 
       if (!initialWeek) {
         setErrorMessage("The weekly schedule could not be loaded.");

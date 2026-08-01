@@ -14,6 +14,7 @@ import AutomationPreflight from "@/components/automation-preflight";
 import FinalScoreReconciliation from "@/components/final-score-reconciliation";
 import SentryVerification from "@/components/sentry-verification";
 import SeasonReadiness from "@/components/season-readiness";
+import CommissionerHandbook from "@/components/commissioner-handbook";
 
 type Spread = {
   team: string;
@@ -70,6 +71,7 @@ const commissionerPanels = [
   ["game-day", "Gameday", "Readiness, official lines, final scores, and reconciliation"],
   ["season-setup", "Season setup", "Review odds and bring in a new schedule"],
   ["integrity", "Integrity", "Read-only audits and rare game exceptions"],
+  ["handbook", "Runbook", "Rules, contingencies, archive, and season closeout"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
@@ -214,7 +216,7 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <nav aria-label="Commissioner sections" className="mt-6 grid grid-cols-2 gap-2 border-b-2 border-zinc-900 pb-6 sm:grid-cols-4">
+        <nav aria-label="Commissioner sections" className="mt-6 grid grid-cols-2 gap-2 border-b-2 border-zinc-900 pb-6 sm:grid-cols-5">
           {commissionerPanels.map(([panel, label, description]) => (
             <button
               aria-pressed={activePanel === panel}
@@ -241,6 +243,7 @@ export default function AdminPage() {
             <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/players"><span className="block font-bold">Player setup</span><span className="mt-1 block text-sm text-zinc-700">Manage the roster and commissioner access.</span></Link>
             <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/reminders"><span className="block font-bold">Player reminders</span><span className="mt-1 block text-sm text-zinc-700">Review preferences and reminder delivery.</span></Link>
             <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/preview"><span className="block font-bold">Season rehearsal</span><span className="mt-1 block text-sm text-zinc-700">Preview game states without live records.</span></Link>
+            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/archive"><span className="block font-bold">Week archive</span><span className="mt-1 block text-sm text-zinc-700">Review settled slates and public receipts.</span></Link>
           </div>
         </section>
         <AutomationHealth />
@@ -480,6 +483,8 @@ export default function AdminPage() {
           ) : null}
         </section>
         </> : null}
+
+        {activePanel === "handbook" ? <CommissionerHandbook /> : null}
       </div>
     </main>
   );
