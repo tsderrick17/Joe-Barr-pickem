@@ -1846,13 +1846,16 @@ body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
-  max-width: var(--standings-module-width);
+  /* The chat belongs to the full Slate reading surface, not the narrower
+     standings tables. Keep its outer edge on the same max-w-5xl rail as the
+     Slate header, receipt, and matchup list. */
+  max-width: 64rem;
   width: 100%;
 }
 
 /* The compact restore control follows the same edge when chat is hidden. */
 .pool-chat-dock > div:not(.pool-chat) {
-  max-width: var(--standings-module-width) !important;
+  max-width: 64rem !important;
   width: 100%;
 }
 
