@@ -14,7 +14,7 @@ const rules = [
   ["Survivor", "One outright winner is required each active week. A tie is a loss. Teams may be used only once, and a missed required weekly pick is OUT."],
   ["Privacy", "Choices remain private until the selected game’s kickoff. After that, names and picks remain visible as the permanent public receipt."],
   ["Playoffs", "Eligibility is snapshotted at the start of each Eastern game day. Anyone who can still tie the leader at that point may pick that day; players already unable to tie are excluded and their later picks are not counted."],
-  ["Season tie", "The site never invents a winner. A sole Pick’em leader is crowned automatically; a tied season lead is preserved for the commissioner to resolve under the published pool agreement before closeout."],
+  ["Season tie", "The site never invents a tiebreaker. Every player tied for the final Pick'em lead is crowned a co-champion automatically and receives the same permanent trophy-history record."],
   ["Survivor finish", "When one active entry remains, Survivor crowns that player automatically, records the trophy history, stops Survivor reminders, and leaves the table available for audit."],
 ];
 
@@ -48,7 +48,7 @@ export default function CommissionerHandbook() {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Data-source contingency</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Before lock, retry the official-line check. At or after lock, preserve the saved official line; never retroactively replace it. A late score remains pending until verified.</p></article>
         <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Rare controls</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Import is preview-first. Line locking is repeat-safe. Final-score reconciliation is read-only. A score correction requires the audited database workflow; disruption changes demand confirmation and write an audit record.</p></article>
-        <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Season closeout</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Confirm every period is complete, review the final archive, resolve any shared Pick’em lead, verify trophy history, then create—not overwrite—the next season.</p></article>
+        <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Season closeout</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Confirm every period is complete, review the final archive, verify every champion and co-champion history record, then create—not overwrite—the next season.</p></article>
       </div>
     </section>
   );
