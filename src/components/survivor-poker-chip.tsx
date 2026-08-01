@@ -12,6 +12,24 @@ type Props = {
   size?: "wire" | "summary" | "ticket" | "slate";
 };
 
+// The source marks have different amounts of transparent canvas around them.
+// A small, bounded boost for the airier marks keeps their visible ink weight
+// consistent without changing the chip or face dimensions.
+const chipLogoScales: Record<string, number> = {
+  BAL: 1.18,
+  BUF: 1.08,
+  CAR: 1.16,
+  DEN: 1.13,
+  GB: 1.09,
+  KC: 1.09,
+  LAC: 1.2,
+  NE: 1.18,
+  PHI: 1.07,
+  SEA: 1.2,
+  SF: 1.12,
+  WAS: 1.18,
+};
+
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, unavailable = false, size = "wire" }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
@@ -19,6 +37,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   // chip image.
   const logoAbbreviation = abbreviation.trim().toUpperCase();
   const accent = teamChipAccents(logoAbbreviation);
+  const logoScale = chipLogoScales[logoAbbreviation] ?? 1;
   const state = official ? "official" : selected ? "picked" : "available";
 
   return (
@@ -29,7 +48,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
         <span className="survivor-poker-chip-rim survivor-poker-chip-rim-back" />
         <span className="survivor-poker-chip-edge" />
         <span className="survivor-poker-chip-core">
-          <span className="survivor-poker-chip-face survivor-poker-chip-front">
+          <span className="survivor-poker-chip-face survivor-poker-chip-front" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
             <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
           </span>
           <span className="survivor-poker-chip-face survivor-poker-chip-back"><span className="survivor-poker-chip-star">★</span></span>

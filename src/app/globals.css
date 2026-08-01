@@ -420,7 +420,11 @@ body {
   overflow: hidden;
 }
 
-.survivor-poker-chip-front img { height: 70%; width: 70%; }
+.survivor-poker-chip-front img {
+  height: 70%;
+  transform: scale(var(--chip-logo-scale, 1));
+  width: 70%;
+}
 
 .survivor-poker-chip-front { transform: translateZ(9px); }
 
