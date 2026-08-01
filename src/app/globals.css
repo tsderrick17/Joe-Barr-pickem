@@ -190,14 +190,22 @@ body {
   align-items: center;
   display: inline-flex;
   gap: .22rem;
+  position: relative;
   user-select: none;
   width: fit-content;
+}
+
+.slate-view-switch-slot {
+  align-items: center;
+  display: flex;
+  min-height: 2rem;
+  padding-top: .45rem;
 }
 
 .slate-view-switch--header {
   display: flex;
   gap: .22rem;
-  margin-top: .85rem;
+  margin-top: 0;
   width: fit-content;
 }
 
