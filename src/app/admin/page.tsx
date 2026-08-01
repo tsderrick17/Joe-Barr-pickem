@@ -69,11 +69,10 @@ type ImportResult = {
 };
 
 const commissionerPanels = [
-  ["overview", "Overview", "Daily status, player tools, and connected services"],
-  ["game-day", "Gameday", "Readiness, official lines, final scores, and reconciliation"],
-  ["season-setup", "Season setup", "Review odds and bring in a new schedule"],
-  ["integrity", "Integrity", "Read-only audits and rare game exceptions"],
-  ["handbook", "Runbook", "Rules, contingencies, archive, and season closeout"],
+  ["overview", "Today", "Start here: launch status and common tasks"],
+  ["game-day", "Game day", "Locks, scores, and the normal operating order"],
+  ["season-setup", "Schedule", "Preview odds and bring in a new season"],
+  ["safeguards", "Safeguards", "Integrity checks, exceptions, and the runbook"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
@@ -218,7 +217,7 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <nav aria-label="Commissioner sections" className="mt-6 grid grid-cols-2 gap-2 border-b-2 border-zinc-900 pb-6 sm:grid-cols-5">
+        <nav aria-label="Commissioner sections" className="mt-6 grid grid-cols-2 gap-2 border-b-2 border-zinc-900 pb-6 sm:grid-cols-4">
           {commissionerPanels.map(([panel, label, description]) => (
             <button
               aria-pressed={activePanel === panel}
@@ -237,22 +236,26 @@ export default function AdminPage() {
         <section className="border-b-2 border-zinc-900 py-7">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-bold">Pool controls</h2>
-              <p className="mt-1 text-sm text-zinc-700">Start here for routine work and a quick view of the systems supporting the pool.</p>
+              <p className="text-xs font-black tracking-[0.16em] text-zinc-600">START HERE</p>
+              <h2 className="mt-1 font-serif text-2xl font-bold">Today&apos;s commissioner desk</h2>
+              <p className="mt-1 text-sm text-zinc-700">Run the read-only launch checks first. Use the cards below only when there is something specific to do.</p>
             </div>
           </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/players"><span className="block font-bold">Player setup</span><span className="mt-1 block text-sm text-zinc-700">Manage the roster and commissioner access.</span></Link>
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/reminders"><span className="block font-bold">Player reminders</span><span className="mt-1 block text-sm text-zinc-700">Review preferences and reminder delivery.</span></Link>
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/preview"><span className="block font-bold">Season rehearsal</span><span className="mt-1 block text-sm text-zinc-700">Preview game states without live records.</span></Link>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/players"><span className="block font-bold">Players</span><span className="mt-1 block text-sm text-zinc-700">Roster, PINs, and commissioner access.</span></Link>
+            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/reminders"><span className="block font-bold">Reminders</span><span className="mt-1 block text-sm text-zinc-700">Preferences, delivery, and a safe test email.</span></Link>
+            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/preview"><span className="block font-bold">Season rehearsal</span><span className="mt-1 block text-sm text-zinc-700">See game states without live records.</span></Link>
             <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/archive"><span className="block font-bold">Week archive</span><span className="mt-1 block text-sm text-zinc-700">Review settled slates and public receipts.</span></Link>
           </div>
         </section>
+        <OpeningWeekChecklist />
         <AutomationHealth />
+        <SeasonReadiness />
         <section className="border-b-2 border-zinc-900 py-7">
-          <h2 className="font-serif text-2xl font-bold">Connected systems</h2>
-          <p className="mt-1 text-sm text-zinc-700">Open a service only when you need to inspect its own dashboard.</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <details>
+            <summary className="cursor-pointer font-serif text-xl font-bold">Connected systems</summary>
+            <p className="mt-2 text-sm text-zinc-700">Open one only when you need that service&apos;s own dashboard.</p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Vercel", "Live site and deployments", "https://vercel.com/tsderrick/pickem"],
               ["Supabase", "Database, sign-in, and scheduled automation", "https://supabase.com/dashboard/project/qtuycmgjiizrahfchsxe"],
@@ -267,11 +270,10 @@ export default function AdminPage() {
                 <span className="mt-1 block text-sm text-zinc-700">{description}</span>
               </a>
             ))}
-          </div>
-          <SentryVerification />
+            </div>
+            <SentryVerification />
+          </details>
         </section>
-        <SeasonReadiness />
-        <OpeningWeekChecklist />
         </> : null}
 
         {activePanel === "game-day" ? <>
@@ -286,14 +288,16 @@ export default function AdminPage() {
           <FinalScoreReconciliation />
         </> : null}
 
-        {activePanel === "integrity" ? <>
+        {activePanel === "safeguards" ? <>
           <section className="border-b-2 border-zinc-900 py-7">
-            <h2 className="font-serif text-2xl font-bold">Integrity and exceptions</h2>
+            <p className="text-xs font-black tracking-[0.16em] text-zinc-600">RARELY NEEDED</p>
+            <h2 className="mt-1 font-serif text-2xl font-bold">Safeguards and recovery</h2>
             <p className="mt-1 text-zinc-700">Read-only checks come first. Record an exception only after it has been verified.</p>
           </section>
           <IntegrityRehearsal />
           <SeasonRecoveryRehearsal />
           <GameExceptions />
+          <CommissionerHandbook />
         </> : null}
 
         {activePanel === "season-setup" ? <>
@@ -488,7 +492,6 @@ export default function AdminPage() {
         </section>
         </> : null}
 
-        {activePanel === "handbook" ? <CommissionerHandbook /> : null}
       </div>
     </main>
   );
