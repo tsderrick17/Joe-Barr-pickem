@@ -126,7 +126,45 @@ body {
   z-index: 2147483647 !important;
 }
 
+.slate-selection-footer-heading {
+  align-items: baseline;
+  display: flex;
+  gap: .65rem;
+}
+
+.slate-selection-footer-state {
+  color: #08764e;
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.slate-selection-footer-state.is-unsaved { color: #a86008; }
+
+.slate-selection-chip {
+  border-left-width: 3px;
+  min-width: 0;
+}
+
+.slate-selection-chip.is-saved { border-left-color: #0b8f80; }
+.slate-selection-chip.is-draft { border-left-color: #c4882b; }
+.slate-selection-chip small {
+  color: #657080;
+  font-size: .5rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
 @media (max-width: 767px) {
+  .slate-selection-footer-inner { padding: .55rem .75rem .65rem; }
+  .slate-selection-footer-heading { gap: .5rem; }
+  .slate-selection-footer-picks { margin-top: .3rem !important; gap: .3rem !important; }
+  .slate-selection-chip { flex: 1 1 calc(50% - .3rem); justify-content: space-between; padding: .3rem .25rem .3rem .45rem; }
+  .slate-selection-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slate-selection-chip small { font-size: .45rem; }
+  .slate-selection-chip button { flex: 0 0 1.25rem; height: 1.25rem; width: 1.25rem; }
+  .slate-selection-footer-empty { font-size: .72rem; }
+
   .mobile-primary-nav {
     position: sticky;
     top: 0;

@@ -430,16 +430,21 @@ export default function BoardPage() {
             ? "PK"
             : `${selectedTeamIsFavorite ? "-" : "+"}${Number.isInteger(game.officialSpread) ? game.officialSpread : game.officialSpread.toFixed(1)}`;
 
+        const isSaved = savedPicks.some(
+          (savedPick) => savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
+        );
+
         return {
           gameId: pick.gameId,
           name,
           abbreviation,
           lockedLineLabel: hasFinalLine && lineValue ? `${receiptAbbreviation} ${lineValue}` : null,
           canRemove: new Date(game.kickoffAt) > new Date(),
+          isSaved,
         };
       })
-      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lockedLineLabel: string | null; canRemove: boolean }[];
-  }, [games, selectedPicks]);
+      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lockedLineLabel: string | null; canRemove: boolean; isSaved: boolean }[];
+  }, [games, savedPicks, selectedPicks]);
 
   const pickemHasUnsavedChanges = useMemo(() => {
     if (selectedPicks.length !== savedPicks.length) return true;
@@ -905,18 +910,24 @@ export default function BoardPage() {
 
       {!isReadOnly && (hasUnsavedChanges || selectionWarning) ? (
         <aside className="slate-selection-footer fixed inset-x-0 bottom-0 z-[60] border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
-          <div className="mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="slate-selection-footer-inner mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
               <div className="min-w-0">
+                <div className="slate-selection-footer-heading">
                 <p className="text-[11px] font-black tracking-[0.14em] text-slate-600">
                   YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
                 </p>
+                <p className={`slate-selection-footer-state ${hasUnsavedChanges ? "is-unsaved" : "is-saved"}`}>
+                  {hasUnsavedChanges ? "UNSAVED CHANGES" : "SAVED"}
+                </p>
+                </div>
 
-                <ol className="mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm">
+                <ol className="slate-selection-footer-picks mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm">
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
-                      <li className="selection-chip flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1" key={team.gameId}>
+                      <li className={`selection-chip slate-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1`} key={team.gameId}>
                         <span aria-label={`${index + 1}. ${team.name}${team.lockedLineLabel ? `, ${team.lockedLineLabel}` : ""}`} title={team.name}>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
+                        <small>{team.isSaved ? "SAVED" : "NEW"}</small>
                         {team.canRemove ? (
                           <button
                             aria-label={`Remove ${team.name}`}
