@@ -912,7 +912,7 @@ export default function BoardPage() {
         <aside className="slate-selection-footer fixed inset-x-0 bottom-0 z-[60] border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
           <div className="slate-selection-footer-inner mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="slate-selection-footer-heading">
                 <p className="text-[11px] font-black tracking-[0.14em] text-slate-600">
                   YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
@@ -929,12 +929,12 @@ export default function BoardPage() {
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
                       <li className={`selection-chip slate-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1`} key={team.gameId}>
-                        <span aria-label={`${index + 1}. ${team.name}${team.lockedLineLabel ? `, ${team.lockedLineLabel}` : ""}`} title={team.name}>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
+                        <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap" aria-label={`${index + 1}. ${team.name}${team.lockedLineLabel ? `, ${team.lockedLineLabel}` : ""}`} title={team.name}>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
                         <small>{team.isSaved ? "SAVED" : "NEW"}</small>
                         {team.canRemove ? (
                           <button
                             aria-label={`Remove ${team.name}`}
-                            className="ml-0.5 inline-flex size-5 items-center justify-center rounded-sm text-base leading-none text-slate-600 hover:bg-red-50 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800"
+                            className="ml-auto inline-flex size-6 shrink-0 items-center justify-center rounded border border-slate-300 bg-slate-50 text-lg font-black leading-none text-slate-600 shadow-sm transition hover:border-red-400 hover:bg-red-50 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800"
                             onClick={() => removeSelection(team.gameId)}
                             type="button"
                           >

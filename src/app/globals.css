@@ -178,7 +178,7 @@ body {
   .slate-selection-chip { flex: none; justify-content: space-between; padding: .3rem .25rem .3rem .45rem; }
   .slate-selection-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .slate-selection-chip small { font-size: .45rem; }
-  .slate-selection-chip button { flex: 0 0 1.25rem; height: 1.25rem; width: 1.25rem; }
+  .slate-selection-chip button { flex: 0 0 1.4rem; height: 1.4rem; width: 1.4rem; }
   .slate-selection-footer-empty { font-size: .72rem; }
 
   .mobile-primary-nav {
