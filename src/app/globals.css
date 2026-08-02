@@ -343,7 +343,12 @@ body {
 .slate-receipt-print {
   align-self: end;
   appearance: none;
-  background: linear-gradient(#fafafa, #c6c8c6);
+  background:
+    linear-gradient(105deg, transparent 0 36%, rgba(255, 255, 255, .52) 47%, transparent 58%),
+    linear-gradient(#fafafa, #c6c8c6);
+  background-position: -150% 0, 0 0;
+  background-repeat: no-repeat;
+  background-size: 55% 100%, 100% 100%;
   border: 2px outset #f9f9f9;
   box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
   color: #15191b;
@@ -361,48 +366,37 @@ body {
 
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
-.slate-receipt-print-trace {
-  inset: -3px;
-  pointer-events: none;
-  position: absolute;
-}
-.slate-receipt-print-trace svg { display: block; height: 100%; overflow: visible; width: 100%; }
-.slate-receipt-print-trace path {
-  fill: none;
-  opacity: 0;
-  /* One normalized dash, initially zero length. The animation grows it from
-     the upper-left start point, then shortens it from that same point. */
-  stroke-dasharray: 0 100;
-  stroke-dashoffset: 0;
-  vector-effect: non-scaling-stroke;
-}
-.slate-receipt-print-trace-path {
-  filter: drop-shadow(0 0 1.5px rgba(255, 61, 174, .58));
-  /* One continuous pink trace starts at the top-left corner, completes one
-     clockwise lap, then erases from that same point at the same pace. */
-  stroke: #ff3ea8;
-  stroke-linecap: round;
-  stroke-width: 1.1;
-}
-.slate-receipt-print:not(:disabled) .slate-receipt-print-trace-path { animation: receipt-print-trace 5.8s linear infinite; }
+.slate-receipt-print:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
 .slate-receipt-print.is-placeholder {
   pointer-events: none;
   visibility: hidden;
 }
 
-@keyframes receipt-print-trace {
-  /* Draw clockwise from the upper-left. Once the tip reaches that exact
-     corner again, the oldest section is erased from the same corner at an
-     equal speed, leaving one continuous line for the whole cycle. */
-  0% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: 0; }
-  25% { opacity: 1; stroke-dasharray: 100 0; stroke-dashoffset: 0; }
-  50% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
-  51%, 100% { opacity: 0; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
+@keyframes receipt-print-attention {
+  /* A brief old-machine acknowledgement: light passes over the button as it
+     gently presses and releases, then it rests for the remaining interval. */
+  0%, 7%, 100% {
+    background-position: -150% 0, 0 0;
+    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+    filter: none;
+    transform: translateY(0);
+  }
+  3% {
+    background-position: 250% 0, 0 0;
+    box-shadow: 1px 2px 0 #6f7474, 0 0 0 2px rgba(255, 79, 171, .18), 0 0 12px rgba(255, 79, 171, .34), inset 0 1px rgba(255, 255, 255, .96);
+    filter: brightness(1.1) saturate(1.08);
+    transform: translateY(-1px);
+  }
+  5% {
+    background-position: 250% 0, 0 0;
+    box-shadow: inset 1px 1px 0 #6f7474, 0 0 0 1px rgba(255, 79, 171, .12);
+    filter: brightness(1.03);
+    transform: translateY(1px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .slate-receipt-print:not(:disabled),
-  .slate-receipt-print:not(:disabled) .slate-receipt-print-trace path,
   .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
   .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
 }

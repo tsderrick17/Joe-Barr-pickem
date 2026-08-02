@@ -860,11 +860,6 @@ export default function BoardPage() {
               tabIndex={receiptNeedsSaving ? undefined : -1}
               type="button"
             >
-              <span aria-hidden="true" className="slate-receipt-print-trace">
-                <svg focusable="false" preserveAspectRatio="none" viewBox="0 0 100 40">
-                  <path className="slate-receipt-print-trace-path" d="M 2 2 H 98 V 38 H 2 V 2" pathLength="100" />
-                </svg>
-              </span>
                 {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
             </button>
             <i aria-hidden="true" className="slate-receipt-bottom-perf" />
