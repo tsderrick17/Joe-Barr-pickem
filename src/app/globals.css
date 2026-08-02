@@ -363,18 +363,21 @@ body {
 .slate-receipt-print-trace path {
   fill: none;
   opacity: 0;
-  stroke-dashoffset: 100;
+  stroke-dasharray: 0 264;
+  stroke-dashoffset: 0;
   vector-effect: non-scaling-stroke;
 }
 .slate-receipt-print-trace-path {
   filter: drop-shadow(0 0 1.5px rgba(255, 70, 190, .5));
-  /* One actual path, with a teal leading point resolving into a pink tail.
-     Keeping the gap longer than the full perimeter prevents a second trace
-     from appearing at the tunnel/start point. */
-  stroke: url(#receipt-print-trace-gradient);
-  stroke-dasharray: 64 300;
+  /* One continuous pink trail grows from the top-left tunnel and completes
+     one clean lap; the teal point in the SVG is the sole leading marker. */
+  stroke: #ff5bc9;
   stroke-linecap: round;
   stroke-width: 1.1;
+}
+.slate-receipt-print-trace-lead {
+  fill: #58f4e3;
+  filter: drop-shadow(0 0 1.5px rgba(88, 244, 227, .9));
 }
 .slate-receipt-print:not(:disabled) .slate-receipt-print-trace-path { animation: receipt-print-trace 5.8s linear infinite; }
 .slate-receipt-print.is-placeholder {
@@ -383,9 +386,9 @@ body {
 }
 
 @keyframes receipt-print-trace {
-  0% { opacity: 1; stroke-dashoffset: 0; }
-  15% { opacity: 1; stroke-dashoffset: -264; }
-  16%, 100% { opacity: 0; stroke-dashoffset: -264; }
+  0% { opacity: 1; stroke-dasharray: 0 264; }
+  18% { opacity: 1; stroke-dasharray: 264 264; }
+  20%, 100% { opacity: 0; stroke-dasharray: 264 264; }
 }
 
 @media (prefers-reduced-motion: reduce) {
