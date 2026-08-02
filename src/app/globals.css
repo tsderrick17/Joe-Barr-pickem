@@ -147,6 +147,181 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
+/* The Slate receipt is a single thin tear-off strip: selections live here, and
+   the only save action appears here. The faint offset sheet gives it a used
+   receipt feel without affecting layout or accessibility. */
+.slate-receipt-strip {
+  --receipt-paper: #fffdf8;
+  --receipt-ink: #25334a;
+  --receipt-rule: #b7aea0;
+  border: 0;
+  box-shadow: 0 8px 14px rgba(37, 30, 18, .13);
+  color: var(--receipt-ink);
+  display: grid;
+  grid-template-columns: minmax(8.6rem, .8fr) minmax(17rem, 1.5fr) minmax(12rem, 1.08fr);
+  margin: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 7;
+}
+
+.slate-receipt-strip::before,
+.slate-receipt-strip::after {
+  background-image: radial-gradient(circle, rgba(119, 103, 77, .62) 1.05px, transparent 1.15px);
+  background-repeat: repeat-x;
+  background-size: 8px 2px;
+  content: "";
+  height: 2px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 2;
+}
+
+.slate-receipt-strip::before { top: -1px; }
+.slate-receipt-strip::after { bottom: -1px; }
+
+.slate-receipt-strip > * {
+  background: repeating-linear-gradient(0deg, rgba(126, 105, 64, .035) 0 1px, transparent 1px 4px), var(--receipt-paper);
+  min-width: 0;
+  padding: .55rem .72rem .5rem;
+}
+
+.slate-receipt-strip > * + * { border-left: 1px dashed var(--receipt-rule); }
+
+.slate-receipt-ticket,
+.slate-receipt-pool {
+  align-content: center;
+  display: grid;
+  gap: .18rem;
+}
+
+.slate-receipt-ticket > span,
+.slate-receipt-pool > span {
+  color: #42516a;
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.slate-receipt-ticket a {
+  color: #1d3551;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-decoration: underline;
+  text-decoration-color: rgba(29, 53, 81, .45);
+  text-underline-offset: .18rem;
+}
+
+.slate-receipt-print {
+  align-self: start;
+  appearance: none;
+  background: linear-gradient(#fafafa, #c6c8c6);
+  border: 2px outset #f9f9f9;
+  box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+  color: #15191b;
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  margin-top: .14rem;
+  padding: .32rem .42rem;
+  text-transform: uppercase;
+}
+
+.slate-receipt-print:hover { filter: brightness(1.04); }
+.slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
+.slate-receipt-print:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
+
+@keyframes receipt-print-attention {
+  0%, 5%, 100% { box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92); }
+  1.5%, 3.5% { box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92), 0 0 0 3px rgba(255, 222, 86, .62), 0 0 14px rgba(255, 212, 53, .55); }
+}
+
+.slate-receipt-selection-chips {
+  display: grid;
+  gap: .25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.slate-receipt-selection-chips--playoff { grid-template-columns: repeat(var(--selection-slot-count), minmax(0, 1fr)); }
+
+.slate-receipt-selection-chip {
+  align-items: center;
+  background: #fffaf3;
+  border: 1px solid #c8b8a0;
+  border-left: 3px solid #cf2879;
+  color: #18364d;
+  display: flex;
+  font-size: .63rem;
+  font-weight: 800;
+  gap: .22rem;
+  min-width: 0;
+  padding: .2rem .24rem .2rem .35rem;
+}
+
+.slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
+.slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slate-receipt-selection-chip button {
+  background: transparent;
+  border: 0;
+  color: #5d6470;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: .75;
+  margin-left: auto;
+  padding: 0 .03rem;
+}
+.slate-receipt-selection-chip button:hover { color: #9d1e1e; }
+
+.slate-receipt-pool > em {
+  color: #5d6470;
+  font-size: .48rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+.slate-receipt-pool > em.is-complete { color: #08764e; }
+.slate-receipt-pool > em.is-unsaved { color: #a86008; }
+
+.slate-receipt-survivor-pick { align-items: center; display: flex; gap: .35rem; min-width: 0; }
+.slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex: 0 0 1.65rem; height: 1.65rem; width: 1.65rem; }
+.slate-receipt-survivor .is-due { color: #a82820; }
+.slate-receipt-survivor .is-out { color: #b42318; }
+.slate-receipt-survivor .is-quiet { color: #5d6470; }
+
+.slate-receipt-warning,
+.slate-receipt-success {
+  border-top: 1px dashed var(--receipt-rule);
+  font-size: .62rem;
+  font-weight: 700;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: .28rem .7rem;
+}
+.slate-receipt-warning { color: #a82820; }
+.slate-receipt-success { color: #08764e; }
+
+@media (max-width: 639px) {
+  .slate-receipt-strip { grid-template-columns: minmax(5.6rem, .66fr) minmax(9rem, 1.28fr) minmax(7rem, .88fr); }
+  .slate-receipt-strip > * { padding: .42rem .36rem; }
+  .slate-receipt-ticket > span,
+  .slate-receipt-pool > span { font-size: .46rem; }
+  .slate-receipt-ticket a { font-size: .54rem; }
+  .slate-receipt-print { font-size: .45rem; padding: .26rem .28rem; }
+  .slate-receipt-selection-chips { gap: .16rem; }
+  .slate-receipt-selection-chip { font-size: .52rem; padding: .18rem .14rem .18rem .22rem; }
+  .slate-receipt-selection-chip button { font-size: .84rem; }
+  .slate-receipt-pool > em { font-size: .4rem; }
+  .slate-receipt-survivor-pick { gap: .16rem; }
+  .slate-receipt-survivor-pick > strong { font-size: .54rem; }
+  .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex-basis: 1.22rem; height: 1.22rem; width: 1.22rem; }
+}
+
 /* The active save receipt is a true viewport layer. Survivor chips intentionally
    overlap neighboring Slate rows, but never this confirmation surface. */
 .slate-selection-footer {
@@ -1293,6 +1468,28 @@ html[data-theme="night"] .slate-selection-footer {
   background-color: #0f1d25 !important;
   box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
 }
+
+html[data-theme="night"] .slate-receipt-strip {
+  --receipt-paper: #132129;
+  --receipt-ink: #eaf0ed;
+  --receipt-rule: #4f7478;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
+}
+
+html[data-theme="night"] .slate-receipt-strip > * {
+  background: repeating-linear-gradient(0deg, rgba(150, 222, 212, .035) 0 1px, transparent 1px 4px), var(--receipt-paper);
+}
+
+html[data-theme="night"] .slate-receipt-ticket > span,
+html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
+html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
+html[data-theme="night"] .slate-receipt-selection-chip {
+  background: linear-gradient(135deg, #57203e, #321d32) !important;
+  border-color: #ec81ba !important;
+  color: #fff1f8;
+}
+html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
+html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: #edf7f5; }
 
 html[data-theme="night"] .selection-chip {
   border-color: #ec81ba !important;

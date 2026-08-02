@@ -545,6 +545,23 @@ export default function BoardPage() {
   // Saved selections arrive asynchronously. Keep the receipt neutral until
   // they do so, rather than briefly presenting an incorrect OPEN ticket.
   const receiptIsLoading = isLoading;
+  const receiptNeedsSaving = hasUnsavedChanges;
+  const pickemReceiptStatus = receiptIsLoading
+    ? "CHECKING"
+    : pickemHasUnsavedChanges
+      ? "CHANGED"
+      : selectedPicks.length === selectionLimit
+        ? "FILLED"
+        : "OPEN";
+  const survivorReceiptStatus = receiptIsLoading
+    ? "CHECKING"
+    : survivorHasUnsavedChanges
+      ? "CHANGED"
+      : survivorReceipt === "OPEN"
+        ? "OPEN"
+        : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE"
+          ? survivorReceipt
+          : "FILLED";
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -775,9 +792,9 @@ export default function BoardPage() {
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
               <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] sm:text-xs ${survivorControlsEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
+                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
                 {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
-                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SAVE</strong>Review your choices, then click <span className="font-black">Save selections</span> at the bottom.</p>
+                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PRINT</strong>Review your choices, then click <span className="font-black">Print Ticket</span> to save your receipt.</p>
               </div>
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
                 <div className="md:pl-4">
@@ -799,7 +816,8 @@ export default function BoardPage() {
 
         </header>
 
-        <nav aria-label="Your weekly controls" className={`slate-mini-nav slate-receipt-grid ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
+        <section aria-label="Your weekly receipt" className={`slate-mini-nav slate-receipt-strip ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
+          {false ? (<>
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
             <strong>VIEW FULL TICKET</strong>
@@ -812,7 +830,7 @@ export default function BoardPage() {
             </strong>
             <em>{selectedPicks.length}/{selectionLimit} SELECTED · {pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "SAVED" : "PICK DUE"}</em>
           </a>
-          {week.period_type === "playoff" ? (
+          {week?.period_type === "playoff" ? (
             <a href="#slate-matchups">
               <span>PLAYOFF ROUND</span>
               <strong className={receiptIsLoading ? "is-quiet" : pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
@@ -828,7 +846,46 @@ export default function BoardPage() {
               <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
             </a>
           )}
-        </nav>
+          </>) : null}
+          <div className="slate-receipt-ticket">
+            <span>YOUR RECEIPT</span>
+            <Link href="/#my-ticket">VIEW FULL TICKET</Link>
+            {receiptNeedsSaving ? (
+              <button className="slate-receipt-print" disabled={isSubmitting} onClick={submitPicks} type="button">
+                {isSubmitting ? "SAVING…" : "PRINT TICKET"}
+              </button>
+            ) : null}
+          </div>
+          <div className="slate-receipt-pool">
+            <span>PICK&apos;EM</span>
+            <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"}`} style={{ "--selection-slot-count": selectionLimit } as CSSProperties}>
+              {receiptIsLoading ? <strong className="is-quiet">CHECKING</strong> : selectedTeams.length ? selectedTeams.map((team, index) => (
+                <span className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"}`} key={team.gameId}>
+                  <span>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
+                  {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : null}
+                </span>
+              )) : <strong className="is-due">PICK DUE</strong>}
+            </div>
+            <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} · ${pickemReceiptStatus}`}</em>
+          </div>
+          {week?.period_type === "playoff" ? (
+            <div className="slate-receipt-pool">
+              <span>PLAYOFF ROUND</span>
+              <strong className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
+              <em>{pickemReceiptStatus === "CHANGED" ? "UNSAVED CHANGE" : pickemReceiptStatus === "FILLED" ? "ROUND FILLED" : "GAMES DUE"}</em>
+            </div>
+          ) : (
+            <div className="slate-receipt-pool slate-receipt-survivor">
+              <span>SURVIVOR</span>
+              <div className="slate-receipt-survivor-pick">
+                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} official={survivorPick?.teamId === savedSurvivorPick?.teamId} selected size="summary" teamName={survivorPickDetails.name} /><strong>{survivorPickDetails.name}</strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
+              </div>
+              <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : survivorReceiptStatus}</em>
+            </div>
+          )}
+          {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
+          {submissionMessage ? <p className="slate-receipt-success" role="status">{submissionMessage}</p> : null}
+        </section>
 
         {playoffEliminated ? (
           <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">
@@ -942,7 +999,7 @@ export default function BoardPage() {
         )}
       </div>
 
-      {!isReadOnly && (hasUnsavedChanges || selectionWarning) ? (
+      {false ? (
         <aside className="slate-selection-footer fixed inset-x-0 bottom-0 z-[60] border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
           <div className="slate-selection-footer-inner mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
@@ -957,7 +1014,7 @@ export default function BoardPage() {
                 </div>
 
                 <ol
-                  className={`slate-selection-footer-picks ${week.period_type === "playoff" ? "slate-selection-footer-picks--playoff" : "slate-selection-footer-picks--regular"} mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm`}
+                  className={`slate-selection-footer-picks ${week?.period_type === "playoff" ? "slate-selection-footer-picks--playoff" : "slate-selection-footer-picks--regular"} mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm`}
                   style={{ "--selection-slot-count": selectionLimit } as CSSProperties}
                 >
                   {selectedTeams.length ? (
@@ -982,19 +1039,19 @@ export default function BoardPage() {
                   )}
                 </ol>
 
-                {week.period_type === "regular" && survivorAvailable ? (
+                {week?.period_type === "regular" && survivorAvailable ? (
                   <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-slate-700 sm:text-sm">
                     <span className="font-black tracking-[0.12em] text-slate-600">SURVIVOR</span>
                     {survivorPickDetails ? (
                       <>
                         <SurvivorPokerChip
-                          abbreviation={survivorPickDetails.abbreviation}
+                          abbreviation={survivorPickDetails?.abbreviation ?? ""}
                           official={survivorPick?.teamId === savedSurvivorPick?.teamId}
                           selected
                           size="summary"
-                          teamName={survivorPickDetails.name}
+                          teamName={survivorPickDetails?.name ?? ""}
                         />
-                        <span className="font-semibold">{survivorPickDetails.name}</span>
+                        <span className="font-semibold">{survivorPickDetails?.name}</span>
                       </>
                     ) : (
                       <span>{savedSurvivorPick ? "Survivor pick cleared" : "Survivor pick due"}</span>
