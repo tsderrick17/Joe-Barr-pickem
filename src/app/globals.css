@@ -459,28 +459,6 @@ body {
 .slate-receipt-survivor-pick { align-items: center; display: flex; gap: .35rem; min-width: 0; }
 .slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex: 0 0 3.19rem; height: 3.19rem; width: 3.19rem; }
-.slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary {
-  animation: receipt-survivor-chip-spin 4.8s linear infinite;
-}
-.slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-rim-back {
-  transform: rotateY(180deg) translateZ(4px);
-}
-.slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-back {
-  display: flex;
-  transform: rotateY(180deg) translateZ(4.5px);
-}
-.slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-edge {
-  bottom: .1rem;
-  height: auto;
-  left: calc(50% - .29rem);
-  right: auto;
-  top: .1rem;
-  transform: rotateY(90deg);
-  width: .58rem;
-}
-@keyframes receipt-survivor-chip-spin {
-  to { transform: rotateY(360deg); }
-}
 .slate-receipt-survivor .is-due { color: #a82820; }
 .slate-receipt-survivor .is-out { color: #b42318; }
 .slate-receipt-survivor .is-quiet { color: #5d6470; }
