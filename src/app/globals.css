@@ -191,7 +191,7 @@ body {
   left: .54rem;
   position: absolute;
   right: .54rem;
-  z-index: 2;
+  z-index: 1;
 }
 
 .slate-receipt-strip::after { bottom: -1px; }
@@ -210,6 +210,7 @@ body {
   align-content: stretch;
   display: grid;
   gap: .18rem;
+  z-index: 3;
 }
 
 /* Both pools share fixed label, selection, and status tracks. That keeps the
@@ -268,7 +269,7 @@ body {
   pointer-events: none;
   position: absolute;
   width: 1.12rem;
-  z-index: 3;
+  z-index: 5;
 }
 .slate-receipt-pool > span { align-self: start; }
 .slate-receipt-pool > em { align-self: end; }
