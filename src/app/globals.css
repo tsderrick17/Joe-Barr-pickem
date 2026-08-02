@@ -156,9 +156,9 @@ body {
   --receipt-paper: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
-  /* These are deliberately the surrounding page, not a shaded printed
-     circle: a punch must read as a genuine hole in the receipt. */
-  --receipt-cutout: #fffdf8;
+  /* The surrounding board stock, not a shaded printed circle.  Keeping this
+     distinct from the receipt makes each perforation read as a real punch. */
+  --receipt-cutout: #e9e2d3;
   /* Corner notches are quarter circles; divider notches are half circles.
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
