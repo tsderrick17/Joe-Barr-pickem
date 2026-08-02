@@ -546,6 +546,7 @@ export default function BoardPage() {
   // they do so, rather than briefly presenting an incorrect OPEN ticket.
   const receiptIsLoading = isLoading;
   const receiptNeedsSaving = hasUnsavedChanges;
+  const receiptIsReprint = savedPicks.length > 0 || Boolean(savedSurvivorPick);
   const pickemReceiptStatus = receiptIsLoading
     ? "CHECKING"
     : pickemHasUnsavedChanges
@@ -852,7 +853,7 @@ export default function BoardPage() {
             <Link href="/#my-ticket">VIEW FULL TICKET</Link>
             {receiptNeedsSaving ? (
               <button className="slate-receipt-print" disabled={isSubmitting} onClick={submitPicks} type="button">
-                {isSubmitting ? "SAVING…" : "PRINT TICKET"}
+                {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
               </button>
             ) : null}
           </div>
