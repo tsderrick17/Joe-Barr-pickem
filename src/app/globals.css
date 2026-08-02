@@ -165,7 +165,6 @@ body {
   z-index: 7;
 }
 
-.slate-receipt-strip::before,
 .slate-receipt-strip::after {
   background-image: repeating-linear-gradient(90deg, rgba(119, 103, 77, .72) 0 5px, transparent 5px 8px);
   background-repeat: repeat-x;
@@ -179,7 +178,6 @@ body {
   z-index: 2;
 }
 
-.slate-receipt-strip::before { top: -1px; }
 .slate-receipt-strip::after { bottom: -1px; }
 
 .slate-receipt-strip > * {
