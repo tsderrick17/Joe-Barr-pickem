@@ -385,11 +385,11 @@ body {
   border-left: 3px solid #cf2879;
   color: #18364d;
   display: flex;
-  font-size: .63rem;
+  font-size: .68rem;
   font-weight: 800;
   gap: .22rem;
   min-width: 0;
-  padding: .2rem .24rem .2rem .35rem;
+  padding: .25rem .28rem .25rem .39rem;
 }
 
 .slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
@@ -474,7 +474,7 @@ body {
   .slate-receipt-ticket > span small { display: none; }
   .slate-receipt-print { font-size: .45rem; padding: .26rem .28rem; }
   .slate-receipt-selection-chips { gap: .16rem; }
-  .slate-receipt-selection-chip { font-size: .52rem; padding: .18rem .14rem .18rem .22rem; }
+  .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-pool > em { font-size: .4rem; }
   .slate-receipt-pool { grid-template-rows: .58rem 2.42rem .58rem; }
