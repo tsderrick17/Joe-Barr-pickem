@@ -1011,6 +1011,27 @@ body {
   animation: survivor-receipt-chip-idle-spin 7.2s linear infinite;
 }
 
+/* The receipt chip rotates slowly, so its profile has to read as one molded
+   poker chip—not two faces separated by a cream centre.  Keep the actual
+   depth deliberately shallow here; the Slate chips retain their fuller toss
+   treatment. */
+.survivor-poker-chip-summary .survivor-poker-chip-rim-front { transform: translateZ(1.5px); }
+.survivor-poker-chip-summary .survivor-poker-chip-rim-back { transform: rotateY(180deg) translateZ(1.5px); }
+.survivor-poker-chip-summary .survivor-poker-chip-front { transform: translateZ(1.8px); }
+.survivor-poker-chip-summary .survivor-poker-chip-back { transform: rotateY(180deg) translateZ(1.8px); }
+.survivor-poker-chip-summary .survivor-poker-chip-edge {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.46), rgba(23,23,25,.22)),
+    repeating-linear-gradient(90deg, var(--chip-primary) 0 24%, var(--chip-secondary) 24% 45%, var(--chip-tertiary) 45% 56%, #5d5a54 56% 72%);
+  border-width: 0 1px;
+  border-radius: .12rem;
+  height: calc(100% - .24rem);
+  top: .12rem;
+  width: .18rem;
+}
+.survivor-poker-chip-summary::before { transform: translateZ(2px); }
+.survivor-poker-chip-summary::after { transform: translateZ(2.1px); }
+
 @keyframes survivor-receipt-chip-idle-spin {
   from { transform: rotateY(0deg); }
   to { transform: rotateY(360deg); }
