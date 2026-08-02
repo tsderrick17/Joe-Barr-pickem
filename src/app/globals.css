@@ -2023,6 +2023,10 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
   padding: 0 1rem 2rem;
 }
 
+/* The open chat begins immediately after the page content. Give the compact
+   restore control its own modest breathing room only when chat is hidden. */
+.pool-chat-dock--collapsed { padding-top: .85rem; }
+
 /* The shared chat sits outside each page's document flow. Reserve scroll room
    whenever an active pick footer is fixed to the viewport so every message and
    the composer can be brought completely above it. */

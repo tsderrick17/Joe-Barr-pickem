@@ -54,6 +54,6 @@ export default function PoolChatDock() {
 
   if (pathname === "/login" || pathname.startsWith("/preview") || pathname.startsWith("/admin") || pathname.startsWith("/profile")) return null;
   if (showChat === null) return null;
-  if (!showChat) return <div className="pool-chat-dock"><div className="mx-auto flex max-w-5xl justify-end"><button className="pool-display-toggle" onClick={() => void restoreChat()} type="button">Show pool chat</button></div></div>;
+  if (!showChat) return <div className="pool-chat-dock pool-chat-dock--collapsed"><div className="mx-auto flex max-w-5xl justify-end"><button className="pool-display-toggle" onClick={() => void restoreChat()} type="button">Show Chat</button></div></div>;
   return <div className="pool-chat-dock"><PoolChat onHide={() => void hideChat()} /></div>;
 }
