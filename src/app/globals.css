@@ -154,6 +154,7 @@ body {
   --receipt-paper: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
+  --receipt-cutout: #f7f3e8;
   border-bottom: 1px solid rgba(86, 71, 48, .5);
   border-top: 1px solid rgba(86, 71, 48, .75);
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
@@ -163,13 +164,24 @@ body {
   margin: 0;
   overflow: visible;
   position: relative;
+  isolation: isolate;
   z-index: 7;
 }
 
+.slate-receipt-strip::before {
+  background: radial-gradient(circle at 100% 50%, var(--receipt-cutout) 0 .16rem, transparent .18rem) right .34rem / .38rem .68rem repeat-y;
+  content: "";
+  inset: 0 -1px 0 auto;
+  pointer-events: none;
+  position: absolute;
+  width: .38rem;
+  z-index: 4;
+}
+
 .slate-receipt-strip::after {
-  background-image: repeating-linear-gradient(90deg, rgba(119, 103, 77, .72) 0 5px, transparent 5px 8px);
+  background-image: radial-gradient(circle, rgba(119, 103, 77, .74) 0 1px, transparent 1.12px);
   background-repeat: repeat-x;
-  background-size: 8px 1px;
+  background-size: 6px 2px;
   box-shadow: 0 1px rgba(255, 255, 255, .58);
   content: "";
   height: 1px;
@@ -185,9 +197,10 @@ body {
   background: var(--receipt-paper);
   min-width: 0;
   padding: .46rem .68rem .42rem;
+  position: relative;
 }
 
-.slate-receipt-strip > * + * { border-left: 1px dashed var(--receipt-rule); }
+.slate-receipt-strip > * + * { border-left: 0; }
 
 .slate-receipt-ticket,
 .slate-receipt-pool {
@@ -209,6 +222,39 @@ body {
   grid-template-rows: .72rem 2.2rem .68rem;
   padding-left: .88rem;
   position: relative;
+}
+
+/* Punched paper, not a generic card: each receipt section is separated with
+   a fine tear line and tiny circular notches, while both outside edges have
+   the faintly scalloped fringe of an old wagering slip. */
+.slate-receipt-ticket::before {
+  background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .16rem, transparent .18rem) left .34rem / .38rem .68rem repeat-y;
+  content: "";
+  inset: 0 auto 0 -1px;
+  pointer-events: none;
+  position: absolute;
+  width: .38rem;
+  z-index: 4;
+}
+
+.slate-receipt-pool::before {
+  background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 2px, transparent 2px 5px);
+  content: "";
+  inset: .3rem auto .3rem 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+  z-index: 2;
+}
+
+.slate-receipt-pool::after {
+  background: radial-gradient(circle at 50% 50%, var(--receipt-cutout) 0 .16rem, transparent .18rem) center .34rem / .56rem .68rem repeat-y;
+  content: "";
+  inset: 0 auto 0 -.28rem;
+  pointer-events: none;
+  position: absolute;
+  width: .56rem;
+  z-index: 3;
 }
 .slate-receipt-pool > span { align-self: start; }
 .slate-receipt-pool > em { align-self: end; }
@@ -1582,6 +1628,7 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-paper: #132129;
   --receipt-ink: #eaf0ed;
   --receipt-rule: #4f7478;
+  --receipt-cutout: #0b1117;
   box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
 }
 
