@@ -363,21 +363,17 @@ body {
 .slate-receipt-print-trace path {
   fill: none;
   opacity: 0;
-  stroke-dasharray: 0 264;
+  stroke-dasharray: 0 100;
   stroke-dashoffset: 0;
   vector-effect: non-scaling-stroke;
 }
 .slate-receipt-print-trace-path {
-  filter: drop-shadow(0 0 1.5px rgba(255, 70, 190, .5));
-  /* One continuous pink trail grows from the top-left tunnel and completes
-     one clean lap; the teal point in the SVG is the sole leading marker. */
-  stroke: #ff5bc9;
+  filter: drop-shadow(0 0 1.5px rgba(255, 61, 174, .58));
+  /* One continuous pink trace starts at the top-left corner, completes one
+     clockwise lap, then erases from that same point at the same pace. */
+  stroke: #ff3ea8;
   stroke-linecap: round;
   stroke-width: 1.1;
-}
-.slate-receipt-print-trace-lead {
-  fill: #58f4e3;
-  filter: drop-shadow(0 0 1.5px rgba(88, 244, 227, .9));
 }
 .slate-receipt-print:not(:disabled) .slate-receipt-print-trace-path { animation: receipt-print-trace 5.8s linear infinite; }
 .slate-receipt-print.is-placeholder {
@@ -386,9 +382,10 @@ body {
 }
 
 @keyframes receipt-print-trace {
-  0% { opacity: 1; stroke-dasharray: 0 264; }
-  18% { opacity: 1; stroke-dasharray: 264 264; }
-  20%, 100% { opacity: 0; stroke-dasharray: 264 264; }
+  0% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: 0; }
+  25% { opacity: 1; stroke-dasharray: 100 100; stroke-dashoffset: 0; }
+  50% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
+  51%, 100% { opacity: 0; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
 }
 
 @media (prefers-reduced-motion: reduce) {

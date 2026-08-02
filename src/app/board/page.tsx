@@ -862,18 +862,7 @@ export default function BoardPage() {
             >
               <span aria-hidden="true" className="slate-receipt-print-trace">
                 <svg focusable="false" preserveAspectRatio="none" viewBox="0 0 100 40">
-                  <path className="slate-receipt-print-trace-path" d="M 2 2 H 98 V 38 H 2 V 2" />
-                  <circle className="slate-receipt-print-trace-lead" cx="2" cy="2" r="1.35">
-                    <animateMotion
-                      calcMode="linear"
-                      dur="5.8s"
-                      keyPoints="0;1;1"
-                      keyTimes="0;.18;1"
-                      path="M 0 0 H 96 V 36 H 0 V 0"
-                      repeatCount="indefinite"
-                    />
-                    <animate attributeName="opacity" dur="5.8s" keyTimes="0;.18;.20;1" repeatCount="indefinite" values="1;1;0;0" />
-                  </circle>
+                  <path className="slate-receipt-print-trace-path" d="M 2 2 H 98 V 38 H 2 V 2" pathLength="100" />
                 </svg>
               </span>
                 {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
