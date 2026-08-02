@@ -170,14 +170,14 @@ body {
 
 .slate-receipt-strip::before {
   background:
-    radial-gradient(circle at 100% 0, var(--receipt-cutout) 0 .26rem, transparent .275rem) top right / .54rem .54rem no-repeat,
-    radial-gradient(circle at 100% 100%, var(--receipt-cutout) 0 .26rem, transparent .275rem) bottom right / .54rem .54rem no-repeat,
-    radial-gradient(circle at 100% 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) right .42rem / .54rem .78rem repeat-y;
+    radial-gradient(circle at 100% 0, var(--receipt-cutout) 0 .52rem, transparent .535rem) top right / 1.08rem 1.08rem no-repeat,
+    radial-gradient(circle at 100% 100%, var(--receipt-cutout) 0 .52rem, transparent .535rem) bottom right / 1.08rem 1.08rem no-repeat,
+    radial-gradient(circle at 100% 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) right .7rem / 1.08rem .78rem repeat-y;
   content: "";
   inset: 0 -1px 0 auto;
   pointer-events: none;
   position: absolute;
-  width: .54rem;
+  width: 1.08rem;
   z-index: 4;
 }
 
@@ -188,9 +188,9 @@ body {
   box-shadow: 0 1px rgba(255, 255, 255, .58);
   content: "";
   height: 1px;
-  left: 0;
+  left: .54rem;
   position: absolute;
-  right: 0;
+  right: .54rem;
   z-index: 2;
 }
 
@@ -229,30 +229,30 @@ body {
    fine tear line. The circular cuts belong only at the ends of that line,
    rather than repeating down the middle like a column of dots. */
 .slate-receipt-ticket::before {
-  background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) left .42rem / .54rem .78rem repeat-y;
+  background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) left .7rem / 1.08rem .78rem repeat-y;
   content: "";
   inset: 0 auto 0 -1px;
   pointer-events: none;
   position: absolute;
-  width: .54rem;
+  width: 1.08rem;
   z-index: 4;
 }
 .slate-receipt-ticket::after {
   background:
-    radial-gradient(circle at 0 0, var(--receipt-cutout) 0 .26rem, transparent .275rem) top left / .54rem .54rem no-repeat,
-    radial-gradient(circle at 0 100%, var(--receipt-cutout) 0 .26rem, transparent .275rem) bottom left / .54rem .54rem no-repeat;
+    radial-gradient(circle at 0 0, var(--receipt-cutout) 0 .52rem, transparent .535rem) top left / 1.08rem 1.08rem no-repeat,
+    radial-gradient(circle at 0 100%, var(--receipt-cutout) 0 .52rem, transparent .535rem) bottom left / 1.08rem 1.08rem no-repeat;
   content: "";
   inset: 0 auto 0 -1px;
   pointer-events: none;
   position: absolute;
-  width: .54rem;
+  width: 1.08rem;
   z-index: 5;
 }
 
 .slate-receipt-pool::before {
   background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 2px, transparent 2px 5px);
   content: "";
-  inset: .3rem auto .3rem 0;
+  inset: .58rem auto .58rem 0;
   pointer-events: none;
   position: absolute;
   width: 1px;
@@ -261,13 +261,13 @@ body {
 
 .slate-receipt-pool::after {
   background:
-    radial-gradient(circle at 50% 0, var(--receipt-cutout) 0 .255rem, rgba(119, 103, 77, .34) .26rem .275rem, transparent .28rem) top center / .62rem .56rem no-repeat,
-    radial-gradient(circle at 50% 100%, var(--receipt-cutout) 0 .255rem, rgba(119, 103, 77, .34) .26rem .275rem, transparent .28rem) bottom center / .62rem .56rem no-repeat;
+    radial-gradient(circle at 50% 0, var(--receipt-cutout) 0 .51rem, rgba(119, 103, 77, .34) .52rem .54rem, transparent .555rem) top center / 1.12rem 1.12rem no-repeat,
+    radial-gradient(circle at 50% 100%, var(--receipt-cutout) 0 .51rem, rgba(119, 103, 77, .34) .52rem .54rem, transparent .555rem) bottom center / 1.12rem 1.12rem no-repeat;
   content: "";
-  inset: 0 auto 0 -.31rem;
+  inset: 0 auto 0 -.56rem;
   pointer-events: none;
   position: absolute;
-  width: .62rem;
+  width: 1.12rem;
   z-index: 3;
 }
 .slate-receipt-pool > span { align-self: start; }
