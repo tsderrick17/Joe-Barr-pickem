@@ -167,11 +167,12 @@ body {
 
 .slate-receipt-strip::before,
 .slate-receipt-strip::after {
-  background-image: radial-gradient(circle, rgba(119, 103, 77, .62) 1.05px, transparent 1.15px);
+  background-image: repeating-linear-gradient(90deg, rgba(119, 103, 77, .72) 0 5px, transparent 5px 8px);
   background-repeat: repeat-x;
-  background-size: 8px 2px;
+  background-size: 8px 1px;
+  box-shadow: 0 1px rgba(255, 255, 255, .58);
   content: "";
-  height: 2px;
+  height: 1px;
   left: 0;
   position: absolute;
   right: 0;
@@ -182,7 +183,7 @@ body {
 .slate-receipt-strip::after { bottom: -1px; }
 
 .slate-receipt-strip > * {
-  background: repeating-linear-gradient(0deg, rgba(126, 105, 64, .035) 0 1px, transparent 1px 4px), var(--receipt-paper);
+  background: var(--receipt-paper);
   min-width: 0;
   padding: .55rem .72rem .5rem;
 }
@@ -234,6 +235,10 @@ body {
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
 .slate-receipt-print:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
+.slate-receipt-print.is-placeholder {
+  pointer-events: none;
+  visibility: hidden;
+}
 
 @keyframes receipt-print-attention {
   0%, 5%, 100% { box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92); }
@@ -1477,7 +1482,7 @@ html[data-theme="night"] .slate-receipt-strip {
 }
 
 html[data-theme="night"] .slate-receipt-strip > * {
-  background: repeating-linear-gradient(0deg, rgba(150, 222, 212, .035) 0 1px, transparent 1px 4px), var(--receipt-paper);
+  background: var(--receipt-paper);
 }
 
 html[data-theme="night"] .slate-receipt-ticket > span,

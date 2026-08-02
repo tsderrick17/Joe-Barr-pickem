@@ -851,11 +851,16 @@ export default function BoardPage() {
           <div className="slate-receipt-ticket">
             <span>YOUR RECEIPT</span>
             <Link href="/#my-ticket">VIEW FULL TICKET</Link>
-            {receiptNeedsSaving ? (
-              <button className="slate-receipt-print" disabled={isSubmitting} onClick={submitPicks} type="button">
+            <button
+              aria-hidden={!receiptNeedsSaving}
+              className={`slate-receipt-print ${receiptNeedsSaving ? "" : "is-placeholder"}`}
+              disabled={!receiptNeedsSaving || isSubmitting}
+              onClick={submitPicks}
+              tabIndex={receiptNeedsSaving ? undefined : -1}
+              type="button"
+            >
                 {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
-              </button>
-            ) : null}
+            </button>
           </div>
           <div className="slate-receipt-pool">
             <span>PICK&apos;EM</span>
