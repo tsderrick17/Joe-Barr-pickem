@@ -849,7 +849,7 @@ export default function BoardPage() {
           )}
           </>) : null}
           <div className="slate-receipt-ticket">
-            <span>YOUR RECEIPT</span>
+            <span>YOUR RECEIPT <small>PLAYER COPY</small></span>
             <Link href="/#my-ticket">VIEW FULL TICKET</Link>
             <button
               aria-hidden={!receiptNeedsSaving}
