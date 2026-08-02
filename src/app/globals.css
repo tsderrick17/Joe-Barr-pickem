@@ -367,7 +367,10 @@ body {
 .slate-receipt-print-trace-tail {
   filter: drop-shadow(0 0 1.5px rgba(255, 58, 184, .5));
   stroke: #ff4abf;
-  stroke-dasharray: 18 82;
+  /* Keep the gap longer than the whole open perimeter. That guarantees one
+     tail only; a closed path can wrap a dash across its start and look like
+     two opposing traces. */
+  stroke-dasharray: 18 150;
   stroke-linecap: round;
   stroke-width: 1.05;
 }
@@ -384,9 +387,9 @@ body {
 }
 
 @keyframes receipt-print-trace {
-  0% { opacity: 1; stroke-dashoffset: 100; }
-  15% { opacity: 1; stroke-dashoffset: 0; }
-  16%, 100% { opacity: 0; stroke-dashoffset: 0; }
+  0% { opacity: 1; stroke-dashoffset: 0; }
+  15% { opacity: 1; stroke-dashoffset: -100; }
+  16%, 100% { opacity: 0; stroke-dashoffset: -100; }
 }
 
 @keyframes receipt-print-trace-head {

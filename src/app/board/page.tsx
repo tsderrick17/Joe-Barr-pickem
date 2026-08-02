@@ -862,14 +862,14 @@ export default function BoardPage() {
             >
               <span aria-hidden="true" className="slate-receipt-print-trace">
                 <svg focusable="false" preserveAspectRatio="none" viewBox="0 0 100 40">
-                  <path className="slate-receipt-print-trace-tail" d="M 2 2 H 98 V 38 H 2 Z" pathLength="100" />
+                  <path className="slate-receipt-print-trace-tail" d="M 2 2 H 98 V 38 H 2 V 2" pathLength="100" />
                   <circle className="slate-receipt-print-trace-head" cx="2" cy="2" r="1.25">
                     <animateMotion
                       calcMode="linear"
                       dur="5.8s"
                       keyPoints="0;1;1"
                       keyTimes="0;.15;1"
-                      path="M 2 2 H 98 V 38 H 2 Z"
+                      path="M 2 2 H 98 V 38 H 2 V 2"
                       repeatCount="indefinite"
                     />
                   </circle>
