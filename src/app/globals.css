@@ -156,7 +156,9 @@ body {
   --receipt-paper: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
-  --receipt-cutout: #f2ede2;
+  /* These are deliberately the surrounding page, not a shaded printed
+     circle: a punch must read as a genuine hole in the receipt. */
+  --receipt-cutout: #fffdf8;
   /* Corner notches are quarter circles; divider notches are half circles.
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
@@ -175,7 +177,7 @@ body {
   background:
     radial-gradient(circle at 100% 0, var(--receipt-cutout) 0 var(--receipt-notch-radius), transparent .535rem) top right / 1.08rem 1.08rem no-repeat,
     radial-gradient(circle at 100% 100%, var(--receipt-cutout) 0 var(--receipt-notch-radius), transparent .535rem) bottom right / 1.08rem 1.08rem no-repeat,
-    radial-gradient(circle at 100% 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) right .7rem / 1.08rem .78rem repeat-y;
+    radial-gradient(circle at 100% 50%, var(--receipt-cutout) 0 .2rem, transparent .205rem) right .7rem / 1.08rem .78rem repeat-y;
   content: "";
   inset: 0 -1px 0 auto;
   pointer-events: none;
@@ -248,7 +250,7 @@ body {
    fine tear line. The circular cuts belong only at the ends of that line,
    rather than repeating down the middle like a column of dots. */
 .slate-receipt-ticket::before {
-  background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) left .7rem / 1.08rem .78rem repeat-y;
+  background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .2rem, transparent .205rem) left .7rem / 1.08rem .78rem repeat-y;
   content: "";
   inset: 0 auto 0 -1px;
   pointer-events: none;
@@ -280,8 +282,8 @@ body {
 
 .slate-receipt-pool::after {
   background:
-    radial-gradient(circle at 50% 0, var(--receipt-cutout) 0 var(--receipt-notch-radius), rgba(119, 103, 77, .34) .53rem .55rem, transparent .565rem) top center / 1.12rem 1.12rem no-repeat,
-    radial-gradient(circle at 50% 100%, var(--receipt-cutout) 0 var(--receipt-notch-radius), rgba(119, 103, 77, .34) .53rem .55rem, transparent .565rem) bottom center / 1.12rem 1.12rem no-repeat;
+    radial-gradient(circle at 50% 0, var(--receipt-cutout) 0 var(--receipt-notch-radius), transparent .535rem) top center / 1.12rem 1.12rem no-repeat,
+    radial-gradient(circle at 50% 100%, var(--receipt-cutout) 0 var(--receipt-notch-radius), transparent .535rem) bottom center / 1.12rem 1.12rem no-repeat;
   content: "";
   inset: 0 auto 0 -.56rem;
   pointer-events: none;
@@ -1672,7 +1674,7 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-paper: #132129;
   --receipt-ink: #eaf0ed;
   --receipt-rule: #4f7478;
-  --receipt-cutout: #0b1117;
+  --receipt-cutout: #121b22;
   box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
 }
 
