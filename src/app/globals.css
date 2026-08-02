@@ -335,33 +335,37 @@ body {
 .slate-receipt-print-trace path {
   fill: none;
   opacity: 0;
-  stroke-dashoffset: 1;
+  stroke-dashoffset: 100;
   vector-effect: non-scaling-stroke;
 }
 .slate-receipt-print-trace-tail {
-  filter: drop-shadow(0 0 1.5px rgba(255, 58, 184, .55));
+  filter: drop-shadow(0 0 1.5px rgba(255, 58, 184, .5));
   stroke: #ff4abf;
-  stroke-dasharray: .17 .83;
+  stroke-dasharray: 18 82;
   stroke-linecap: round;
-  stroke-width: 1.25;
+  stroke-width: 1.05;
 }
 .slate-receipt-print-trace-head {
+  fill: #54f3e3;
   filter: drop-shadow(0 0 2px rgba(70, 245, 227, .75));
-  stroke: #54f3e3;
-  stroke-dasharray: .018 .982;
-  stroke-linecap: round;
-  stroke-width: 1.7;
+  opacity: 0;
 }
 .slate-receipt-print:not(:disabled) .slate-receipt-print-trace path { animation: receipt-print-trace 5.8s linear infinite; }
+.slate-receipt-print:not(:disabled) .slate-receipt-print-trace-head { animation: receipt-print-trace-head 5.8s linear infinite; }
 .slate-receipt-print.is-placeholder {
   pointer-events: none;
   visibility: hidden;
 }
 
 @keyframes receipt-print-trace {
-  0% { opacity: 1; stroke-dashoffset: 1; }
+  0% { opacity: 1; stroke-dashoffset: 100; }
   15% { opacity: 1; stroke-dashoffset: 0; }
   16%, 100% { opacity: 0; stroke-dashoffset: 0; }
+}
+
+@keyframes receipt-print-trace-head {
+  0%, 15% { opacity: 1; }
+  16%, 100% { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
