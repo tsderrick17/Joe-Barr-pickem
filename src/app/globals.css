@@ -325,32 +325,32 @@ body {
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
 .slate-receipt-print-trace {
-  inset: -5px;
+  inset: -3px;
   pointer-events: none;
   position: absolute;
 }
 .slate-receipt-print-trace svg { display: block; height: 100%; overflow: visible; width: 100%; }
-.slate-receipt-print-trace rect {
+.slate-receipt-print-trace path {
   fill: none;
   opacity: 0;
   stroke-dashoffset: 1;
   vector-effect: non-scaling-stroke;
 }
 .slate-receipt-print-trace-tail {
-  filter: drop-shadow(0 0 2px rgba(255, 42, 184, .82));
-  stroke: #ff37bd;
-  stroke-dasharray: .27 .73;
+  filter: drop-shadow(0 0 1.5px rgba(255, 58, 184, .55));
+  stroke: #ff4abf;
+  stroke-dasharray: .17 .83;
   stroke-linecap: round;
-  stroke-width: 2.2;
+  stroke-width: 1.25;
 }
 .slate-receipt-print-trace-head {
-  filter: drop-shadow(0 0 3px rgba(255, 134, 224, .96));
-  stroke: #fff1fb;
-  stroke-dasharray: .026 .974;
+  filter: drop-shadow(0 0 2px rgba(70, 245, 227, .75));
+  stroke: #54f3e3;
+  stroke-dasharray: .018 .982;
   stroke-linecap: round;
-  stroke-width: 3.2;
+  stroke-width: 1.7;
 }
-.slate-receipt-print:not(:disabled) .slate-receipt-print-trace rect { animation: receipt-print-trace 5.8s linear infinite; }
+.slate-receipt-print:not(:disabled) .slate-receipt-print-trace path { animation: receipt-print-trace 5.8s linear infinite; }
 .slate-receipt-print.is-placeholder {
   pointer-events: none;
   visibility: hidden;
@@ -358,13 +358,13 @@ body {
 
 @keyframes receipt-print-trace {
   0% { opacity: 1; stroke-dashoffset: 1; }
-  13% { opacity: 1; stroke-dashoffset: 0; }
-  14%, 100% { opacity: 0; stroke-dashoffset: 0; }
+  15% { opacity: 1; stroke-dashoffset: 0; }
+  16%, 100% { opacity: 0; stroke-dashoffset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .slate-receipt-print:not(:disabled),
-  .slate-receipt-print:not(:disabled) .slate-receipt-print-trace rect,
+  .slate-receipt-print:not(:disabled) .slate-receipt-print-trace path,
   .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary { animation: none; }
 }
 
