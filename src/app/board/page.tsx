@@ -862,8 +862,14 @@ export default function BoardPage() {
             >
               <span aria-hidden="true" className="slate-receipt-print-trace">
                 <svg focusable="false" preserveAspectRatio="none" viewBox="0 0 100 40">
-                  <path className="slate-receipt-print-trace-tail" d="M 2 2 H 98 V 38 H 2 V 2" />
-                  <path className="slate-receipt-print-trace-head" d="M 2 2 H 98 V 38 H 2 V 2" />
+                  <defs>
+                    <linearGradient id="receipt-print-trace-gradient" x1="0" x2="1" y1="0" y2="0">
+                      <stop offset="0" stopColor="#58f4e3" />
+                      <stop offset=".18" stopColor="#ff64c8" />
+                      <stop offset="1" stopColor="#ff3faf" />
+                    </linearGradient>
+                  </defs>
+                  <path className="slate-receipt-print-trace-path" d="M 2 2 H 98 V 38 H 2 V 2" />
                 </svg>
               </span>
                 {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
