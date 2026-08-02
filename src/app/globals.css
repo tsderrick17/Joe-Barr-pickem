@@ -294,7 +294,7 @@ body {
 
 .slate-receipt-survivor-pick { align-items: center; display: flex; gap: .35rem; min-width: 0; }
 .slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex: 0 0 1.65rem; height: 1.65rem; width: 1.65rem; }
+.slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex: 0 0 1.82rem; height: 1.82rem; width: 1.82rem; }
 .slate-receipt-survivor .is-due { color: #a82820; }
 .slate-receipt-survivor .is-out { color: #b42318; }
 .slate-receipt-survivor .is-quiet { color: #5d6470; }
@@ -324,7 +324,7 @@ body {
   .slate-receipt-pool > em { font-size: .4rem; }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
-  .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex-basis: 1.22rem; height: 1.22rem; width: 1.22rem; }
+  .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex-basis: 1.3rem; height: 1.3rem; width: 1.3rem; }
 }
 
 /* The active save receipt is a true viewport layer. Survivor chips intentionally

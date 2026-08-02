@@ -884,7 +884,7 @@ export default function BoardPage() {
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
               <div className="slate-receipt-survivor-pick">
-                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} official={survivorPick?.teamId === savedSurvivorPick?.teamId} selected size="summary" teamName={survivorPickDetails.name} /><strong>{survivorPickDetails.name}</strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
+                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} /><strong>{survivorPickDetails.name}</strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : survivorReceiptStatus}</em>
             </div>
