@@ -364,13 +364,17 @@ body {
   /* Keep the gap longer than the whole open perimeter. That guarantees one
      tail only; a closed path can wrap a dash across its start and look like
      two opposing traces. */
-  stroke-dasharray: 18 150;
+  stroke-dasharray: 50 300;
   stroke-linecap: round;
   stroke-width: 1.05;
 }
 .slate-receipt-print-trace-head {
-  fill: #54f3e3;
+  fill: none;
   filter: drop-shadow(0 0 2px rgba(70, 245, 227, .75));
+  stroke: #54f3e3;
+  stroke-dasharray: 3 300;
+  stroke-linecap: round;
+  stroke-width: 1.4;
   opacity: 0;
 }
 .slate-receipt-print:not(:disabled) .slate-receipt-print-trace path { animation: receipt-print-trace 5.8s linear infinite; }
@@ -382,13 +386,14 @@ body {
 
 @keyframes receipt-print-trace {
   0% { opacity: 1; stroke-dashoffset: 0; }
-  15% { opacity: 1; stroke-dashoffset: -100; }
-  16%, 100% { opacity: 0; stroke-dashoffset: -100; }
+  15% { opacity: 1; stroke-dashoffset: -264; }
+  16%, 100% { opacity: 0; stroke-dashoffset: -264; }
 }
 
 @keyframes receipt-print-trace-head {
-  0%, 15% { opacity: 1; }
-  16%, 100% { opacity: 0; }
+  0% { opacity: 1; stroke-dashoffset: -50; }
+  15% { opacity: 1; stroke-dashoffset: -314; }
+  16%, 100% { opacity: 0; stroke-dashoffset: -314; }
 }
 
 @media (prefers-reduced-motion: reduce) {
