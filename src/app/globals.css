@@ -357,25 +357,31 @@ body {
 }
 
 @keyframes receipt-print-attention {
-  /* A brief old-machine acknowledgement: light passes over the button as it
-     gently presses and releases, then it rests for the remaining interval. */
-  0%, 7%, 100% {
+  /* A quick copier-glass glare, followed by two tactile 1990s button taps.
+     The full cue is over in well under a second; the button then rests. */
+  0%, 1.2%, 5.56%, 100% {
     background-position: -150% 0, 0 0;
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
-    transform: translateY(0);
+    transform: translate(0, 0);
   }
-  3% {
+  2.8% {
     background-position: 250% 0, 0 0;
-    box-shadow: 1px 2px 0 #6f7474, 0 0 0 2px rgba(255, 79, 171, .18), 0 0 12px rgba(255, 79, 171, .34), inset 0 1px rgba(255, 255, 255, .96);
-    filter: brightness(1.1) saturate(1.08);
-    transform: translateY(-1px);
+    box-shadow: 1px 1px 0 #6f7474, 0 0 10px rgba(76, 228, 216, .22), inset 0 1px rgba(255, 255, 255, .98);
+    filter: brightness(1.12) saturate(1.04);
+    transform: translate(0, 0);
   }
-  5% {
+  3.35%, 4.85% {
     background-position: 250% 0, 0 0;
-    box-shadow: inset 1px 1px 0 #6f7474, 0 0 0 1px rgba(255, 79, 171, .12);
-    filter: brightness(1.03);
-    transform: translateY(1px);
+    box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
+    filter: brightness(.96);
+    transform: translate(1px, 1px);
+  }
+  4.05%, 5.55% {
+    background-position: 250% 0, 0 0;
+    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
+    filter: brightness(1.04);
+    transform: translate(0, 0);
   }
 }
 
