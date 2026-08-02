@@ -191,8 +191,8 @@ body {
   width: auto;
 }
 
-.slate-selection-chip.is-saved { border-left-color: #0b8f80; }
-.slate-selection-chip.is-draft { border-left-color: #c4882b; }
+.slate-selection-chip.is-saved { border-left-color: #cf2879; }
+.slate-selection-chip.is-draft { border-left-color: #a84c85; }
 .slate-selection-chip small {
   color: #657080;
   font-size: .5rem;
@@ -1117,14 +1117,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .selection-chip {
-  border-color: #4c9e96 !important;
-  background: linear-gradient(135deg, #eff8f4, #dbece5) !important;
-  color: #163d3d;
-  box-shadow: inset 3px 0 0 #16877f, 0 1px 2px rgba(22, 61, 61, 0.12);
+  border-color: #d979ae !important;
+  background: linear-gradient(135deg, #fff5fa, #f8dbe9) !important;
+  color: #4b1532;
+  box-shadow: inset 3px 0 0 #cf2879, 0 1px 2px rgba(95, 20, 61, 0.14);
 }
 
 .selection-chip button {
-  color: #3f6867 !important;
+  color: #7c2a58 !important;
 }
 
 .pickem-eliminated-stamp {
@@ -1287,14 +1287,14 @@ html[data-theme="night"] .slate-selection-footer {
 }
 
 html[data-theme="night"] .selection-chip {
-  border-color: #5fc8bb !important;
-  background: linear-gradient(135deg, #244b50, #18343d) !important;
-  color: #f0f5f1;
-  box-shadow: inset 2px 0 0 #7ee1d2;
+  border-color: #ec81ba !important;
+  background: linear-gradient(135deg, #57203e, #321d32) !important;
+  color: #fff1f8;
+  box-shadow: inset 2px 0 0 #ff78ba;
 }
 
 html[data-theme="night"] .selection-chip button {
-  color: #b9d4d2 !important;
+  color: #ffc1df !important;
 }
 
 html[data-theme="night"] .selection-chip button:hover {
