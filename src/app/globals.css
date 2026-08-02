@@ -969,7 +969,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    black block that fights the newspaper slate. */
 .slate-team-selection {
   background: transparent !important;
-  color: #383000 !important;
+  color: #47102e !important;
 }
 
 .slate-team-label--selected {
@@ -985,16 +985,16 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
 .slate-team-label--selected::before {
-  /* A single translucent, textbook-yellow highlighter pass: a touch of
-     denser yellow at the nib melts immediately into the familiar marker
+  /* A single translucent, textbook-pink highlighter pass: a touch of
+     denser pink at the nib melts immediately into the familiar marker
      body, with no second block or visible seam between them. */
   background: linear-gradient(90deg,
-    rgba(190, 142, 0, .52) 0%,
-    rgba(224, 187, 18, .49) 1.5%,
-    rgba(241, 214, 55, .45) 4%,
-    rgba(249, 228, 72, .42) 8%,
-    rgba(255, 238, 97, .40) 14%,
-    rgba(255, 238, 97, .38) 100%);
+    rgba(191, 20, 104, .58) 0%,
+    rgba(220, 45, 133, .54) 1.5%,
+    rgba(241, 78, 158, .48) 4%,
+    rgba(250, 113, 182, .43) 8%,
+    rgba(255, 151, 204, .39) 14%,
+    rgba(255, 174, 216, .37) 100%);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
@@ -1329,7 +1329,7 @@ html[data-theme="night"] .survivor-team-selection {
 
 html[data-theme="night"] .slate-team-selection {
   background: transparent !important;
-  color: #fff9cf !important;
+  color: #fff3fb !important;
   box-shadow: none;
 }
 
@@ -1339,12 +1339,12 @@ html[data-theme="night"] .slate-team-label--selected {
 
 html[data-theme="night"] .slate-team-label--selected::before {
   background: linear-gradient(90deg,
-    rgba(183, 132, 0, .60) 0%,
-    rgba(219, 176, 10, .56) 1.5%,
-    rgba(242, 206, 40, .51) 4%,
-    rgba(255, 222, 60, .47) 8%,
-    rgba(255, 235, 89, .43) 14%,
-    rgba(255, 235, 89, .40) 100%);
+    rgba(232, 31, 139, .70) 0%,
+    rgba(244, 59, 160, .64) 1.5%,
+    rgba(251, 91, 181, .58) 4%,
+    rgba(255, 124, 197, .52) 8%,
+    rgba(255, 156, 214, .48) 14%,
+    rgba(255, 178, 224, .44) 100%);
 }
 
 html[data-theme="night"] .slate-team-label--selected::after {
