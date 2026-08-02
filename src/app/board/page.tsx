@@ -877,6 +877,7 @@ export default function BoardPage() {
               </span>
                 {isSubmitting ? "SAVING…" : receiptIsReprint ? "REPRINT TICKET" : "PRINT TICKET"}
             </button>
+            <i aria-hidden="true" className="slate-receipt-bottom-perf" />
           </div>
           <div className="slate-receipt-pool">
             <span>PICK&apos;EM</span>
@@ -889,12 +890,14 @@ export default function BoardPage() {
               )) : <strong className="is-due">PICK DUE</strong>}
             </div>
             <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} · ${pickemReceiptStatus}`}</em>
+            <i aria-hidden="true" className="slate-receipt-bottom-perf" />
           </div>
           {week?.period_type === "playoff" ? (
             <div className="slate-receipt-pool">
               <span>PLAYOFF ROUND</span>
               <strong className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
               <em>{pickemReceiptStatus === "CHANGED" ? "UNSAVED CHANGE" : pickemReceiptStatus === "FILLED" ? "ROUND FILLED" : "GAMES DUE"}</em>
+              <i aria-hidden="true" className="slate-receipt-bottom-perf" />
             </div>
           ) : (
             <div className="slate-receipt-pool slate-receipt-survivor">
@@ -903,6 +906,7 @@ export default function BoardPage() {
                 {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} /><strong>{survivorPickDetails.name}</strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : survivorReceiptStatus}</em>
+              <i aria-hidden="true" className="slate-receipt-bottom-perf" />
             </div>
           )}
           {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}

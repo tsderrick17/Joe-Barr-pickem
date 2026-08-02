@@ -182,19 +182,8 @@ body {
 }
 
 .slate-receipt-strip::after {
-  background-image: radial-gradient(circle, rgba(119, 103, 77, .74) 0 1px, transparent 1.12px);
-  background-repeat: repeat-x;
-  background-size: 6px 2px;
-  box-shadow: 0 1px rgba(255, 255, 255, .58);
-  content: "";
-  height: 1px;
-  left: .54rem;
-  position: absolute;
-  right: .54rem;
-  z-index: 1;
+  content: none;
 }
-
-.slate-receipt-strip::after { bottom: -1px; }
 
 .slate-receipt-strip > * {
   background: var(--receipt-paper);
@@ -211,6 +200,22 @@ body {
   display: grid;
   gap: .18rem;
   z-index: 3;
+}
+
+/* Each segment owns its bottom perforation, with clearance at both ends so
+   the nearby circular punches are true cut-outs, never dots in the line. */
+.slate-receipt-bottom-perf {
+  background-image: radial-gradient(circle, rgba(119, 103, 77, .74) 0 1px, transparent 1.12px);
+  background-repeat: repeat-x;
+  background-size: 6px 2px;
+  bottom: -1px;
+  box-shadow: 0 1px rgba(255, 255, 255, .58);
+  height: 1px;
+  left: .54rem;
+  pointer-events: none;
+  position: absolute;
+  right: .54rem;
+  z-index: 1;
 }
 
 /* Both pools share fixed label, selection, and status tracks. That keeps the
