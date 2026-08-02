@@ -216,14 +216,16 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
           </button>
         </div>
-        {playerName ? (
-          <div className="mt-1 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[11px] text-[#e4ded2]">
+        <div className="mt-1 min-h-[1rem] flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[11px] text-[#e4ded2]">
+          {playerName ? (
+            <>
             {isCommissioner ? <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/admin">Comish</Link> : null}
             <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/profile">Preferences</Link>
             <button className="whitespace-nowrap font-bold text-white underline underline-offset-2 disabled:opacity-50" disabled={isSigningOut} onClick={signOut} type="button">{isSigningOut ? "Signing out..." : "Sign out"}</button>
             <span className="whitespace-nowrap text-[#f5f0e6]">{playerName}</span>
+            </>
+          ) : null}
           </div>
-        ) : null}
       </div>
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>

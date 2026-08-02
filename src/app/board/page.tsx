@@ -71,6 +71,39 @@ type BoardResponse = {
   error?: string;
 };
 
+function SlateLoadingShell() {
+  return (
+    <main aria-busy="true" className="min-h-screen bg-[#e9e2d3] text-[#171719]">
+      <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+          <div className="slate-header-grid grid gap-5 md:gap-0">
+            <div className="min-w-0 md:pr-7">
+              <h1 className="font-serif text-3xl font-bold sm:text-4xl">The Slate</h1>
+              <p className="mt-4 text-xs font-bold tracking-[0.16em] text-slate-600">VIEW WEEK</p>
+              <div className="mt-1 h-9 w-28 border border-[#1d1d1f] bg-white" />
+            </div>
+            <aside className="border-t border-[#b7aea0] pt-4 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
+              <div className="h-[7.25rem] border-y-2 border-[#1d1d1f] bg-[#eee4d1]" />
+              <div className="mt-2 h-16 border-t border-[#b7aea0] pt-3" />
+            </aside>
+          </div>
+        </header>
+        <div className="slate-loading-receipt -mt-px h-[4.55rem] border-y border-[#b7aea0]" />
+        <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 sm:mt-8 sm:space-y-7">
+          {Array.from({ length: 5 }, (_, index) => (
+            <section key={index} className="space-y-2">
+              <div className="mx-auto h-7 w-2/5 border-y-2 border-[#1d1d1f]" />
+              {Array.from({ length: index === 2 ? 8 : 2 }, (_, rowIndex) => (
+                <div key={rowIndex} className="h-14 border-y border-[#b7aea0] bg-[#f4ede1]" />
+              ))}
+            </section>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function easternDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -675,13 +708,7 @@ export default function BoardPage() {
     }
   }
 
-  if (isLoading && !week) {
-    return (
-      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
-        Loading The Slate…
-      </main>
-    );
-  }
+  if (isLoading && !week) return <SlateLoadingShell />;
 
   if (errorMessage && !week) {
     return (

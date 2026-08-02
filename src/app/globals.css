@@ -65,6 +65,13 @@ body {
   row-gap: 0.75rem;
 }
 
+/* Reserve the signed-in account strip before the async player lookup settles. */
+.mobile-account-nav > div { min-height: 3.375rem; }
+
+.slate-loading-receipt {
+  background: linear-gradient(90deg, #fffdf8 0 33%, #f4ede1 33% 66%, #fffdf8 66% 100%);
+}
+
 .slate-mini-nav {
   border-block: 1px solid #b7aea0;
   display: grid;
