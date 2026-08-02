@@ -542,6 +542,9 @@ export default function BoardPage() {
         ? game.homeTeamAbbreviation
         : survivorReceipt;
   })();
+  // Saved selections arrive asynchronously. Keep the receipt neutral until
+  // they do so, rather than briefly presenting an incorrect OPEN ticket.
+  const receiptIsLoading = isLoading;
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -796,31 +799,31 @@ export default function BoardPage() {
 
         </header>
 
-        <nav aria-label="Your weekly controls" className="slate-mini-nav slate-receipt-grid -mt-px">
+        <nav aria-label="Your weekly controls" className={`slate-mini-nav slate-receipt-grid -mt-px ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
             <strong>VIEW FULL TICKET</strong>
           </Link>
           <a href="#slate-matchups">
             <span>PICK&apos;EM</span>
-            <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>
-              <span className="slate-receipt-picks-full">{pickemReceipt}</span>
-              <span className="slate-receipt-picks-short">{pickemReceiptShort}</span>
+            <strong className={receiptIsLoading ? "is-quiet" : pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>
+              <span className="slate-receipt-picks-full">{receiptIsLoading ? "CHECKING" : pickemReceipt}</span>
+              <span className="slate-receipt-picks-short">{receiptIsLoading ? "CHECKING" : pickemReceiptShort}</span>
             </strong>
             <em>{selectedPicks.length}/{selectionLimit} SELECTED · {pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "SAVED" : "PICK DUE"}</em>
           </a>
           {week.period_type === "playoff" ? (
             <a href="#slate-matchups">
               <span>PLAYOFF ROUND</span>
-              <strong className={pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{selectedPicks.length}/{selectionLimit} GAMES</strong>
+              <strong className={receiptIsLoading ? "is-quiet" : pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
               <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "ROUND FILLED" : "GAMES DUE"}</em>
             </a>
           ) : (
             <a href="#slate-matchups">
               <span>SURVIVOR</span>
-              <strong className={survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>
-                <span className="slate-receipt-picks-full">{survivorReceipt}</span>
-                <span className="slate-receipt-picks-short">{survivorReceiptShort}</span>
+              <strong className={receiptIsLoading ? "is-quiet" : survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>
+                <span className="slate-receipt-picks-full">{receiptIsLoading ? "CHECKING" : survivorReceipt}</span>
+                <span className="slate-receipt-picks-short">{receiptIsLoading ? "CHECKING" : survivorReceiptShort}</span>
               </strong>
               <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
             </a>

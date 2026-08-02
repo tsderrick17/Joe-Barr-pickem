@@ -132,6 +132,15 @@ body {
   line-height: 1.2;
 }
 
+/* Never flash an empty or OPEN receipt before the signed-in selections load. */
+.slate-mini-nav.receipt-is-loading a:not(:first-child) em {
+  font-size: 0;
+}
+.slate-mini-nav.receipt-is-loading a:not(:first-child) em::after {
+  content: "CHECKING SAVED SELECTIONS";
+  font-size: .5rem;
+}
+
 .slate-mini-nav strong.is-complete { color: #08764e; }
 .slate-mini-nav strong.is-due { color: #a82820; }
 .slate-mini-nav strong.is-out { color: #b42318; }
