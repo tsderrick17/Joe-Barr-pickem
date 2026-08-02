@@ -1205,6 +1205,7 @@ html[data-theme="night"] [class*="bg-[#e9e2d3]"],
 html[data-theme="night"] [class*="bg-[#e8e0d0]"],
 html[data-theme="night"] [class*="bg-[#e7e1d5]"],
 html[data-theme="night"] [class*="bg-[#eee4d1]"],
+html[data-theme="night"] [class*="bg-[#f4ede1]"],
 html[data-theme="night"] [class*="bg-[#f0eadc]"],
 html[data-theme="night"] [class*="bg-[#f2eee6]"] {
   background-color: #18252d !important;
