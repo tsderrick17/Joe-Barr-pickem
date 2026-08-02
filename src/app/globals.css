@@ -86,7 +86,9 @@ body {
 .standings-loading-rows-short { min-height: 24rem; }
 
 .slate-mini-nav {
-  border-block: 1px solid #b7aea0;
+  /* The receipt draws its own broken rules. A shared border here would run
+     through every perforation and make the punches look painted on. */
+  border-block: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -193,7 +195,9 @@ body {
   background-image: linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
   background-position: center top;
   background-repeat: no-repeat;
-  background-size: calc(100% - (var(--receipt-notch-radius) * 2)) 1px;
+  /* Stop the top stroke well before each punch. The next section starts its
+     own stroke, leaving an actual opening rather than a line beneath a hole. */
+  background-size: calc(100% - 1.32rem) 1px;
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
@@ -218,10 +222,12 @@ body {
   bottom: -1px;
   box-shadow: 0 1px rgba(255, 255, 255, .58);
   height: 1px;
-  left: .7rem;
+  /* This clearance is deliberately larger than the half-circle radius: no
+     dotted or solid rule may be visible inside a perforation. */
+  left: 1rem;
   pointer-events: none;
   position: absolute;
-  right: .7rem;
+  right: 1rem;
   z-index: 1;
 }
 
