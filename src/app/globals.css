@@ -154,14 +154,14 @@ body {
    receipt feel without affecting layout or accessibility. */
 .slate-receipt-strip {
   --receipt-paper: #fffdf8;
+  --receipt-underlay: #f5f0e6;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
-  /* Cutouts are actual holes in the paper: they expose whatever page surface
-     sits behind the receipt instead of painting a second beige circle. */
-  --receipt-cutout: transparent;
   /* Corner notches are quarter circles; divider notches are half circles.
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
+  --receipt-notch-diameter: 1.04rem;
+  background: var(--receipt-underlay);
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
@@ -182,15 +182,37 @@ body {
 }
 
 .slate-receipt-strip > * {
-  /* Each receipt segment draws its own edge.  That leaves a full notch-sized
-     break at every punch instead of carrying one parent rule through it. */
+  /* Every paper segment owns four quarter-circle punches. At a divider, the
+     neighboring quarters meet to form one exact semicircle. This is ordinary
+     background geometry rather than a browser-dependent mask, so the punches
+     cannot silently disappear. */
   background-color: var(--receipt-paper);
-  background-image: linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
-  background-position: center top;
+  background-image:
+    radial-gradient(circle at 0 0,
+      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
+      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      transparent calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 0 100%,
+      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
+      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      transparent calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 0,
+      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
+      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      transparent calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 100%,
+      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
+      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      transparent calc(var(--receipt-notch-radius) + .5px)),
+    linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
+  background-position: left top, left bottom, right top, right bottom, center top;
   background-repeat: no-repeat;
-  /* Stop the top stroke well before each punch. The next section starts its
-     own stroke, leaving an actual opening rather than a line beneath a hole. */
-  background-size: calc(100% - 1.32rem) 1px;
+  background-size:
+    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
+    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
+    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
+    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
+    calc(100% - var(--receipt-notch-diameter)) 1px;
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
@@ -206,44 +228,6 @@ body {
   z-index: 3;
 }
 
-/* Physical perforations: each mask layer removes one half-circle from the
-   paper, including its printed rules. This is intentionally a mask rather
-   than a painted pseudo-element, so no substitute color can ever show. */
-.slate-receipt-ticket {
-  -webkit-mask-composite: source-in;
-  -webkit-mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-  mask-composite: intersect;
-  mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-}
-.slate-receipt-pool {
-  -webkit-mask-composite: source-in;
-  -webkit-mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-  mask-composite: intersect;
-  mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-}
-.slate-receipt-pool:last-of-type {
-  -webkit-mask-composite: source-in, source-in, source-in;
-  -webkit-mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-  mask-composite: intersect, intersect, intersect;
-  mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem)),
-    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .015rem));
-}
-
 /* Each segment owns its bottom perforation, with clearance at both ends so
    the nearby circular punches are true cut-outs, never dots in the line. */
 .slate-receipt-bottom-perf {
@@ -255,10 +239,10 @@ body {
   height: 1px;
   /* This clearance is deliberately larger than the half-circle radius: no
      dotted or solid rule may be visible inside a perforation. */
-  left: 1rem;
+  left: .66rem;
   pointer-events: none;
   position: absolute;
-  right: 1rem;
+  right: .66rem;
   z-index: 1;
 }
 
@@ -269,7 +253,7 @@ body {
   grid-template-rows: .72rem 3.48rem .68rem;
 }
 .slate-receipt-ticket {
-  background: var(--receipt-paper);
+  background-color: var(--receipt-paper);
   grid-template-rows: .72rem .88rem minmax(1.98rem, 1fr);
   padding-left: .68rem;
   position: relative;
@@ -1682,9 +1666,9 @@ html[data-theme="night"] .slate-selection-footer {
 
 html[data-theme="night"] .slate-receipt-strip {
   --receipt-paper: #132129;
+  --receipt-underlay: #0b1117;
   --receipt-ink: #eaf0ed;
   --receipt-rule: #4f7478;
-  --receipt-cutout: transparent;
   box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
 }
 
