@@ -158,8 +158,6 @@ body {
   /* Corner notches are quarter circles; divider notches are half circles.
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
-  border-bottom: 1px solid rgba(86, 71, 48, .5);
-  border-top: 1px solid rgba(86, 71, 48, .75);
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
@@ -189,7 +187,19 @@ body {
 }
 
 .slate-receipt-strip > * {
-  background: var(--receipt-paper);
+  /* Each receipt segment draws its own edge.  That leaves a full notch-sized
+     break at every punch instead of carrying one parent rule through it. */
+  background-color: var(--receipt-paper);
+  background-image:
+    linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75)),
+    linear-gradient(rgba(86, 71, 48, .5), rgba(86, 71, 48, .5));
+  background-position:
+    center top,
+    center bottom;
+  background-repeat: no-repeat;
+  background-size:
+    calc(100% - (var(--receipt-notch-radius) * 2)) 1px,
+    calc(100% - (var(--receipt-notch-radius) * 2)) 1px;
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
@@ -1667,7 +1677,7 @@ html[data-theme="night"] .slate-receipt-strip {
 }
 
 html[data-theme="night"] .slate-receipt-strip > * {
-  background: var(--receipt-paper);
+  background-color: var(--receipt-paper);
 }
 
 html[data-theme="night"] .slate-receipt-ticket > span,
