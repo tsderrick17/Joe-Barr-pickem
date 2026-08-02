@@ -124,7 +124,7 @@ export default function MyTicket({
             <p className="my-ticket-survivor-state">NOT AVAILABLE</p>
           )}
           <div className="my-ticket-instructions">
-            <p>Official ATS spreads appear here once locked.</p>
+            <p>Official spreads appear on Ticket once final.</p>
             <p>Selections are revealed to others at kickoff.</p>
           </div>
         </div> : null}
