@@ -897,7 +897,6 @@ export default function BoardPage() {
             </div>
           )}
           {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
-          {submissionMessage ? <p className="slate-receipt-success" role="status">{submissionMessage}</p> : null}
         </section>
 
         {playoffEliminated ? (
