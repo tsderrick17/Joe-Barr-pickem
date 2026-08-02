@@ -65,12 +65,25 @@ body {
   row-gap: 0.75rem;
 }
 
+/* The account details arrive after the session check. Reserve their desktop
+   footprint so they do not nudge the centered primary navigation sideways. */
+@media (min-width: 768px) {
+  .site-nav-account { min-width: 12.75rem; }
+}
+
 /* Reserve the signed-in account strip before the async player lookup settles. */
 .mobile-account-nav > div { min-height: 3.375rem; }
 
 .slate-loading-receipt {
   background: linear-gradient(90deg, #fffdf8 0 33%, #f4ede1 33% 66%, #fffdf8 66% 100%);
 }
+
+.standings-loading-ticket { min-height: 19rem; }
+.standings-loading-rows {
+  min-height: 28rem;
+  background: repeating-linear-gradient(to bottom, #fffdf8 0 3.5rem, #a9c5e7 3.5rem calc(3.5rem + 1px));
+}
+.standings-loading-rows-short { min-height: 24rem; }
 
 .slate-mini-nav {
   border-block: 1px solid #b7aea0;
