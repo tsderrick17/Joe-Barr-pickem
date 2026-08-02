@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import AtsResultStamp from "@/components/ats-result-stamp";
 import { useEffect, useMemo, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
@@ -343,17 +344,7 @@ export default function HomePage() {
                                   </strong>
                                 ) : null}
 
-                                {pick.resultMark ? (
-                                  <strong
-                                    className={`ml-2 ${
-                                      pick.resultMark === "W"
-                                        ? "text-green-800"
-                                        : "text-red-700"
-                                    }`}
-                                  >
-                                    {pick.resultMark}
-                                  </strong>
-                                ) : null}
+                                <AtsResultStamp className="ml-1.5" result={pick.resultMark} />
                               </span>
 ) : pick?.isHidden ? (
   <span

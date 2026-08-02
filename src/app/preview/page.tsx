@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AtsResultStamp from "@/components/ats-result-stamp";
 import PickemScoreboard, { type PickemScoreboardRow } from "@/components/pickem-scoreboard";
 import SlateGameRow, { type SlateGameRowData } from "@/components/slate-game-row";
 import { countPickemWins } from "@/lib/standings";
@@ -211,11 +212,6 @@ function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
   }).sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName));
 }
 
-function ResultMark({ result }: { result: Result }) {
-  if (!result) return null;
-  return <strong className={`relative -top-1 -ml-px inline-block -rotate-[10deg] ${result === "win" ? "text-green-700" : "text-red-700"}`}>{result === "win" ? "W" : "L"}</strong>;
-}
-
 export default function PreviewPage() {
   const [scenarioKey, setScenarioKey] = useState("open");
   const [showStandings, setShowStandings] = useState(false);
@@ -299,7 +295,7 @@ export default function PreviewPage() {
 }
 
 function TeamCell({ team, score, result, pickers, align }: { team: string; score: number | null; result: Result; pickers: string[]; align: "left" | "right" }) {
-  return <div className={`min-w-0 ${align === "right" ? "text-right" : "text-left"}`}><p className="text-sm font-bold leading-tight sm:text-base">{team}<ResultMark result={result} />{score !== null ? <span className="ml-1 font-mono">{score}</span> : null}</p>{pickers.length ? <p className="mt-1 text-[11px] leading-4 text-slate-600">Picked by {pickers.join(", ")}</p> : null}</div>;
+  return <div className={`min-w-0 ${align === "right" ? "text-right" : "text-left"}`}><p className="text-sm font-bold leading-tight sm:text-base">{team}<AtsResultStamp result={result} />{score !== null ? <span className="ml-1 font-mono">{score}</span> : null}</p>{pickers.length ? <p className="mt-1 text-[11px] leading-4 text-slate-600">Picked by {pickers.join(", ")}</p> : null}</div>;
 }
 
 function WeekReceipt({ name }: { name: string }) {
@@ -307,6 +303,6 @@ function WeekReceipt({ name }: { name: string }) {
   return <span className="text-slate-700">{games.map((game, index) => {
     const selection = selections[index];
     if (!selection) return null;
-    return <span className="mr-3 inline-block" key={game.id}>{selection === "left" ? game.left : game.right}<ResultMark result={resultFor(game, selection, true)} /></span>;
+    return <span className="mr-3 inline-block" key={game.id}>{selection === "left" ? game.left : game.right}<AtsResultStamp result={resultFor(game, selection, true)} /></span>;
   })}</span>;
 }

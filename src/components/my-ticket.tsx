@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AtsResultStamp from "@/components/ats-result-stamp";
 import { ticketCompletion } from "@/lib/ticket-completion";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 
@@ -28,11 +29,6 @@ type Props = {
   survivorStatus: "active" | "eliminated" | "complete";
   week: string;
 };
-
-function ResultStamp({ result }: { result?: "W" | "L" | "" }) {
-  if (!result) return null;
-  return <span className={`my-ticket-result is-${result.toLowerCase()}`}>{result}</span>;
-}
 
 export default function MyTicket({
   isPlayoff = false,
@@ -89,7 +85,7 @@ export default function MyTicket({
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
-                        <strong>{pick.team}<ResultStamp result={pick.resultMark} /></strong>
+                        <strong>{pick.team}<AtsResultStamp className="ml-1" result={pick.resultMark} /></strong>
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
@@ -114,7 +110,7 @@ export default function MyTicket({
             <div className="my-ticket-survivor-pick">
               <div>
                 <small>OFFICIAL SELECTION</small>
-                <strong>{survivorPick.team}<ResultStamp result={survivorPick.resultMark} /></strong>
+                <strong>{survivorPick.team}<AtsResultStamp className="ml-1" result={survivorPick.resultMark} /></strong>
                 <small>{survivorPick.kickoff}</small>
               </div>
             </div>
