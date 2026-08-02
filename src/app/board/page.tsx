@@ -88,7 +88,7 @@ function SlateLoadingShell() {
             </aside>
           </div>
         </header>
-        <div className="slate-loading-receipt -mt-px h-[4.55rem] border-y border-[#b7aea0]" />
+        <div className="slate-loading-receipt h-[4.55rem] border-y border-[#b7aea0]" />
         <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 sm:mt-8 sm:space-y-7">
           {Array.from({ length: 5 }, (_, index) => (
             <section key={index} className="space-y-2">
@@ -799,7 +799,7 @@ export default function BoardPage() {
 
         </header>
 
-        <nav aria-label="Your weekly controls" className={`slate-mini-nav slate-receipt-grid -mt-px ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
+        <nav aria-label="Your weekly controls" className={`slate-mini-nav slate-receipt-grid ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
             <strong>VIEW FULL TICKET</strong>
