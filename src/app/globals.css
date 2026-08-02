@@ -1001,22 +1001,23 @@ body {
    poker chip—not two faces separated by a cream centre.  Keep the actual
    depth deliberately shallow here; the Slate chips retain their fuller toss
    treatment. */
-.survivor-poker-chip-summary .survivor-poker-chip-rim-front { transform: translateZ(1.5px); }
-.survivor-poker-chip-summary .survivor-poker-chip-rim-back { transform: rotateY(180deg) translateZ(1.5px); }
-.survivor-poker-chip-summary .survivor-poker-chip-front { transform: translateZ(1.8px); }
-.survivor-poker-chip-summary .survivor-poker-chip-back { transform: rotateY(180deg) translateZ(1.8px); }
+.survivor-poker-chip-summary .survivor-poker-chip-rim-front { transform: translateZ(3px); }
+.survivor-poker-chip-summary .survivor-poker-chip-rim-back { transform: rotateY(180deg) translateZ(3px); }
+.survivor-poker-chip-summary .survivor-poker-chip-front { transform: translateZ(3.4px); }
+.survivor-poker-chip-summary .survivor-poker-chip-back { transform: rotateY(180deg) translateZ(3.4px); }
 .survivor-poker-chip-summary .survivor-poker-chip-edge {
   background:
-    linear-gradient(180deg, rgba(255,255,255,.46), rgba(23,23,25,.22)),
-    repeating-linear-gradient(90deg, var(--chip-primary) 0 24%, var(--chip-secondary) 24% 45%, var(--chip-tertiary) 45% 56%, #5d5a54 56% 72%);
-  border-width: 0 1px;
-  border-radius: .12rem;
-  height: calc(100% - .24rem);
-  top: .12rem;
-  width: .18rem;
+    linear-gradient(180deg, rgba(255,255,255,.44) 0 10%, rgba(255,255,255,0) 30%, rgba(20,18,15,.2) 70%, rgba(20,18,15,.58) 100%),
+    repeating-linear-gradient(90deg, #504a43 0 9%, var(--chip-primary) 9% 23%, var(--chip-secondary) 23% 34%, var(--chip-tertiary) 34% 45%, #504a43 45% 55%);
+  border: 1px solid color-mix(in srgb, var(--chip-primary) 56%, #38342f);
+  border-radius: .24rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 1px rgba(12,10,8,.48), 0 1px 2px rgba(12,10,8,.34);
+  height: calc(100% - .14rem);
+  top: .07rem;
+  width: .42rem;
 }
-.survivor-poker-chip-summary::before { transform: translateZ(2px); }
-.survivor-poker-chip-summary::after { transform: translateZ(2.1px); }
+.survivor-poker-chip-summary::before { transform: translateZ(3.25px); }
+.survivor-poker-chip-summary::after { transform: translateZ(3.3px); }
 
 @keyframes survivor-receipt-chip-idle-spin {
   from { transform: rotateY(0deg); }
