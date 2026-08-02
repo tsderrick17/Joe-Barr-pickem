@@ -1952,14 +1952,9 @@ html[data-theme="night"] .newspaper-clipping::after {
   border-top: 1px dotted #9b907e;
   display: grid;
   gap: .4rem;
-  grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 2.45rem;
   padding: .28rem 0;
-}
-
-.my-ticket-number {
-  color: #736b5d;
-  font: 900 .72rem/1 "Courier New", monospace;
 }
 
 .my-ticket-selection {

@@ -81,7 +81,6 @@ export default function MyTicket({
               const pick = picks[index];
               return (
                 <li key={pick?.gameId ?? `open-${index}`}>
-                  <span className="my-ticket-number">{String(index + 1).padStart(2, "0")}</span>
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
