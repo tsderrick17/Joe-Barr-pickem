@@ -142,7 +142,7 @@ export default function SiteNav() {
             Joe Barr Memorial
           </span>
           <span className="mt-1 block text-lg font-bold md:text-xl">
-            Pick&apos;em
+            Lead Pipe Locks
           </span>
         </Link>
 
