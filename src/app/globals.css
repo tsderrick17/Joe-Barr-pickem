@@ -284,7 +284,7 @@ body {
   z-index: 5;
 }
 .slate-receipt-pool > span { align-self: start; }
-.slate-receipt-pool > em { align-self: end; }
+.slate-receipt-pool > em { align-self: end; margin-left: .46rem; }
 .slate-receipt-selection-chips,
 .slate-receipt-survivor-pick { align-self: center; }
 
@@ -481,7 +481,7 @@ body {
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
   .slate-receipt-selection-chip button { font-size: .84rem; }
-  .slate-receipt-pool > em { font-size: .4rem; }
+  .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
   .slate-receipt-pool { grid-template-rows: .58rem 2.42rem .58rem; }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
