@@ -200,6 +200,14 @@ body {
   letter-spacing: .08em;
 }
 
+/* Desktop can afford a touch more air around the receipt chips. Keep their
+   grid footprint fixed so this remains a purely visual adjustment. */
+@media (min-width: 768px) {
+  .slate-selection-footer-picks .slate-selection-chip {
+    transform: scale(.95);
+  }
+}
+
 @media (max-width: 767px) {
   .slate-selection-footer-inner { padding: .55rem .75rem .65rem; }
   .slate-selection-footer-heading { gap: .5rem; }
