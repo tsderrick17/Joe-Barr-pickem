@@ -370,11 +370,10 @@ body {
 .slate-receipt-print-trace path {
   fill: none;
   opacity: 0;
-  /* A single dash exactly one perimeter long.  Moving this dash from one
-     side of its gap to the other produces one uninterrupted lap, then a
-     single erase front—rather than two independent animated segments. */
-  stroke-dasharray: 100 100;
-  stroke-dashoffset: 100;
+  /* One normalized dash, initially zero length. The animation grows it from
+     the upper-left start point, then shortens it from that same point. */
+  stroke-dasharray: 0 100;
+  stroke-dashoffset: 0;
   vector-effect: non-scaling-stroke;
 }
 .slate-receipt-print-trace-path {
@@ -392,13 +391,13 @@ body {
 }
 
 @keyframes receipt-print-trace {
-  /* The dash starts hidden in the gap at the upper-left, travels clockwise
-     until it closes there, then keeps moving at the same speed so its oldest
-     (upper-left) portion clears first. */
-  0% { opacity: 1; stroke-dashoffset: 100; }
-  25% { opacity: 1; stroke-dashoffset: 0; }
-  50% { opacity: 1; stroke-dashoffset: -100; }
-  51%, 100% { opacity: 0; stroke-dashoffset: -100; }
+  /* Draw clockwise from the upper-left. Once the tip reaches that exact
+     corner again, the oldest section is erased from the same corner at an
+     equal speed, leaving one continuous line for the whole cycle. */
+  0% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: 0; }
+  25% { opacity: 1; stroke-dasharray: 100 0; stroke-dashoffset: 0; }
+  50% { opacity: 1; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
+  51%, 100% { opacity: 0; stroke-dasharray: 0 100; stroke-dashoffset: -100; }
 }
 
 @media (prefers-reduced-motion: reduce) {
