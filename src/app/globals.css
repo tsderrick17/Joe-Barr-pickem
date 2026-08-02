@@ -491,6 +491,17 @@ body {
 }
 
 @media (min-width: 768px) {
+  /* Keep the saved/draft receipt available while a player works through a
+     long Slate. Desktop navigation scrolls away, so this owns the top edge
+     once it reaches it—matching the mobile experience. */
+  .slate-mini-nav {
+    background: var(--receipt-paper, #fffdf8);
+    box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
   /* The week controls stay in their own rail; the instructions use the open
      space to the right rather than falling below the title. */
   .slate-header-grid {
