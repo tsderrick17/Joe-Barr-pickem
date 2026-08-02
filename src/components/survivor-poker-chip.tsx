@@ -51,7 +51,9 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
           <span className="survivor-poker-chip-face survivor-poker-chip-front" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
             <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
           </span>
-          <span className="survivor-poker-chip-face survivor-poker-chip-back"><span className="survivor-poker-chip-star">★</span></span>
+          <span className="survivor-poker-chip-face survivor-poker-chip-back" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
+            <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
+          </span>
         </span>
       </span>
       {selected && !official ? <span className="survivor-poker-chip-pick-mark">SURVIVOR</span> : null}
