@@ -394,7 +394,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .slate-receipt-print:not(:disabled),
   .slate-receipt-print:not(:disabled) .slate-receipt-print-trace path,
-  .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary { animation: none; }
+  .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
+  .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
 }
 
 .slate-receipt-selection-chips {
@@ -995,6 +996,14 @@ body {
 .survivor-poker-chip-summary { height: 100%; width: 100%; }
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
+.survivor-poker-chip-summary.is-idle-spinning {
+  animation: survivor-receipt-chip-idle-spin 7.2s linear infinite;
+}
+
+@keyframes survivor-receipt-chip-idle-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
 .survivor-poker-chip-wrap-slate {
   /* The Slate's lanes are rectangular, so the chip gets an explicit square
      frame. That prevents grid sizing from ever turning the rim into an oval. */
