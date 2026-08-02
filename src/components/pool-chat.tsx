@@ -13,11 +13,15 @@ type Message = {
   playerName: string;
 };
 
+// Kept intentionally compact: these cover the reactions players actually use
+// around picks, bad beats, wins, and chirping without turning the composer into
+// an endless emoji catalogue. Avoid newer/poorly-supported glyphs so every
+// option renders cleanly on the phones the pool is most likely to use.
 const EMOJI_GROUPS = [
-  { label: "Reactions and faces", emojis: ["😀", "😂", "🤣", "😮", "😤", "😮‍💨", "🤯", "😳", "🤔", "😏", "😎", "🤡", "😭", "😈"] },
-  { label: "Hands, arms, and eyes", emojis: ["👀", "👍", "👎", "👏", "🙌", "🙏", "✊", "🤞", "👌", "💪", "👆", "👇", "👉", "👈", "🤝"] },
-  { label: "Game day", emojis: ["🏈", "🏆", "🎯", "🚨", "🔥", "💰", "💸", "🍀", "👑", "🐐", "💎", "📈", "📉", "🎉", "🧱"] },
-  { label: "Quick marks", emojis: ["✅", "❌", "⚡", "💯", "📝", "🧾", "⏰", "🎲", "🃏", "🎰", "📣", "💥", "⭐", "🔔", "📌"] },
+  { label: "Reactions and faces", emojis: ["😀", "😂", "🤣", "😭", "😤", "😮", "😳", "🤔", "😏", "😎", "🤡", "💀", "😈", "😬"] },
+  { label: "Hands, arms, and eyes", emojis: ["👀", "👍", "👎", "👏", "🙌", "🙏", "👊", "🤞", "👌", "💪", "👆", "👇", "👉", "👈", "🖕", "🤝"] },
+  { label: "Game day", emojis: ["🏈", "🏆", "🎯", "🚨", "🔥", "💰", "💸", "🍀", "👑", "🐐", "💎", "📈", "📉", "🎉", "🍻"] },
+  { label: "Quick marks", emojis: ["✅", "❌", "⚡", "💯", "⏰", "🚩", "📣", "💥", "⭐", "🎲", "🃏", "🧨"] },
 ];
 
 function messageDateTime(value: string) {
