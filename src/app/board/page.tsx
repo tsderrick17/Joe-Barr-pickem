@@ -458,14 +458,14 @@ export default function BoardPage() {
         // Keep the compact receipt convention everywhere: home abbreviations
         // are uppercase while away abbreviations remain lowercase.
         const abbreviation = isHome ? canonicalAbbreviation : canonicalAbbreviation.toLowerCase();
-        const receiptAbbreviation = abbreviation;
         const hasFinalLine = game.spreadLockedAt !== null && game.officialSpread !== null;
         const selectedTeamIsFavorite = pick.teamId === game.favoriteTeamId;
-        const lineValue = game.officialSpread === null
+        const displayedSpread = hasFinalLine ? game.officialSpread : game.preliminarySpread;
+        const lineValue = displayedSpread === null
           ? null
-          : game.officialSpread === 0
+          : displayedSpread === 0
             ? "PK"
-            : `${selectedTeamIsFavorite ? "-" : "+"}${Number.isInteger(game.officialSpread) ? game.officialSpread : game.officialSpread.toFixed(1)}`;
+            : `${selectedTeamIsFavorite ? "-" : "+"}${Number.isInteger(displayedSpread) ? displayedSpread : displayedSpread.toFixed(1)}`;
 
         const isSaved = savedPicks.some(
           (savedPick) => savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
@@ -475,12 +475,13 @@ export default function BoardPage() {
           gameId: pick.gameId,
           name,
           abbreviation,
-          lockedLineLabel: hasFinalLine && lineValue ? `${receiptAbbreviation} ${lineValue}` : null,
+          lineValue,
+          isLineLocked: hasFinalLine,
           canRemove: new Date(game.kickoffAt) > new Date(),
           isSaved,
         };
       })
-      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lockedLineLabel: string | null; canRemove: boolean; isSaved: boolean }[];
+      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lineValue: string | null; isLineLocked: boolean; canRemove: boolean; isSaved: boolean }[];
   }, [games, savedPicks, selectedPicks]);
 
   const pickemHasUnsavedChanges = useMemo(() => {
@@ -872,7 +873,7 @@ export default function BoardPage() {
             <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"}`} style={{ "--selection-slot-count": selectionLimit } as CSSProperties}>
               {receiptIsLoading ? <strong className="is-quiet">CHECKING</strong> : selectedTeams.length ? selectedTeams.map((team, index) => (
                 <span className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"}`} key={team.gameId}>
-                  <span>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
+                  <span>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
                   {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : null}
                 </span>
               )) : <strong className="is-due">PICK DUE</strong>}
@@ -1031,7 +1032,7 @@ export default function BoardPage() {
                   {selectedTeams.length ? (
                     selectedTeams.map((team, index) => (
                       <li className={`selection-chip slate-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1`} key={team.gameId}>
-                        <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap" aria-label={`${index + 1}. ${team.name}${team.lockedLineLabel ? `, ${team.lockedLineLabel}` : ""}`} title={team.name}>{index + 1}. {team.lockedLineLabel ?? team.abbreviation}</span>
+                        <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap" aria-label={`${index + 1}. ${team.name}${team.lineValue ? `, ${team.lineValue}` : ""}`} title={team.name}>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
                         <small>{team.isSaved ? "SAVED" : "NEW"}</small>
                         {team.canRemove ? (
                           <button

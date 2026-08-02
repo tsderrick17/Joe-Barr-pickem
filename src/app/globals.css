@@ -330,6 +330,12 @@ body {
 
 .slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
 .slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slate-receipt-selection-chip small {
+  color: #243248;
+  font-size: inherit;
+  font-weight: 900;
+}
+.slate-receipt-selection-chip small.is-official { color: #0f766e; }
 .slate-receipt-selection-chip button {
   background: transparent;
   border: 0;
@@ -465,6 +471,7 @@ body {
   font-weight: 900;
   letter-spacing: .08em;
 }
+.slate-selection-chip small.is-official { color: #0f766e; }
 
 /* Desktop can afford a touch more air around the receipt chips. Keep their
    grid footprint fixed so this remains a purely visual adjustment. */
@@ -1590,6 +1597,8 @@ html[data-theme="night"] .slate-receipt-selection-chip {
   border-color: #ec81ba !important;
   color: #fff1f8;
 }
+html[data-theme="night"] .slate-receipt-selection-chip small { color: #f3d9e8; }
+html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
 html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
 html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: #edf7f5; }
 
@@ -1608,6 +1617,7 @@ html[data-theme="night"] .selection-chip button:hover {
   background-color: #472d35 !important;
   color: #ffb4bd !important;
 }
+html[data-theme="night"] .selection-chip small.is-official { color: #66d8cc; }
 
 html[data-theme="night"] .week-status-pick {
   border-color: #5fc8bb;
