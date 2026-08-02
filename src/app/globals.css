@@ -190,16 +190,10 @@ body {
   /* Each receipt segment draws its own edge.  That leaves a full notch-sized
      break at every punch instead of carrying one parent rule through it. */
   background-color: var(--receipt-paper);
-  background-image:
-    linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75)),
-    linear-gradient(rgba(86, 71, 48, .5), rgba(86, 71, 48, .5));
-  background-position:
-    center top,
-    center bottom;
+  background-image: linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
+  background-position: center top;
   background-repeat: no-repeat;
-  background-size:
-    calc(100% - (var(--receipt-notch-radius) * 2)) 1px,
-    calc(100% - (var(--receipt-notch-radius) * 2)) 1px;
+  background-size: calc(100% - (var(--receipt-notch-radius) * 2)) 1px;
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
@@ -224,10 +218,10 @@ body {
   bottom: -1px;
   box-shadow: 0 1px rgba(255, 255, 255, .58);
   height: 1px;
-  left: .54rem;
+  left: .7rem;
   pointer-events: none;
   position: absolute;
-  right: .54rem;
+  right: .7rem;
   z-index: 1;
 }
 
