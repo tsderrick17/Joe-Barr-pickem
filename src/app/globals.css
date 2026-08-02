@@ -301,10 +301,17 @@ body {
   font-weight: 900;
   justify-self: start;
   letter-spacing: .06em;
-  padding-bottom: .18rem;
+  line-height: 1;
+  padding: 0 0 .18rem;
   text-decoration: none;
+  z-index: 5;
 }
 .slate-receipt-ticket a::after { content: "›"; font-size: .88rem; line-height: .55; margin-left: .22rem; }
+.slate-receipt-ticket a:hover,
+.slate-receipt-ticket a:focus-visible {
+  background: transparent;
+  color: #1d3551;
+}
 
 .slate-receipt-print {
   align-self: end;
