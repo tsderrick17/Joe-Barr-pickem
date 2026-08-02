@@ -225,9 +225,9 @@ body {
   position: relative;
 }
 
-/* Punched paper, not a generic card: each receipt section is separated with
-   a fine tear line and tiny circular notches, while both outside edges have
-   the faintly scalloped fringe of an old wagering slip. */
+/* Punched paper, not a generic card: each receipt section is separated by a
+   fine tear line. The circular cuts belong only at the ends of that line,
+   rather than repeating down the middle like a column of dots. */
 .slate-receipt-ticket::before {
   background: radial-gradient(circle at 0 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .36) .205rem .225rem, transparent .23rem) left .42rem / .54rem .78rem repeat-y;
   content: "";
@@ -260,9 +260,11 @@ body {
 }
 
 .slate-receipt-pool::after {
-  background: radial-gradient(circle at 50% 50%, var(--receipt-cutout) 0 .2rem, rgba(119, 103, 77, .38) .205rem .225rem, transparent .23rem) center .42rem / .62rem .78rem repeat-y;
+  background:
+    radial-gradient(circle at 50% 0, var(--receipt-cutout) 0 .255rem, rgba(119, 103, 77, .34) .26rem .275rem, transparent .28rem) top center / .62rem .56rem no-repeat,
+    radial-gradient(circle at 50% 100%, var(--receipt-cutout) 0 .255rem, rgba(119, 103, 77, .34) .26rem .275rem, transparent .28rem) bottom center / .62rem .56rem no-repeat;
   content: "";
-  inset: 0 auto 0 -.28rem;
+  inset: 0 auto 0 -.31rem;
   pointer-events: none;
   position: absolute;
   width: .62rem;
