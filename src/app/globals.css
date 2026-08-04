@@ -408,14 +408,15 @@ body {
 }
 
 .slate-receipt-print::before {
-  /* One quick inspection beam, like a light catching across polished metal.
+  /* One unhurried inspection beam, like a light catching across a silver blade.
      It is clipped inside the button so it never reads as a second outline. */
   background: linear-gradient(105deg,
-    transparent 22%,
-    rgba(116, 239, 230, .08) 35%,
-    rgba(255, 255, 255, .9) 48%,
-    rgba(118, 240, 232, .48) 55%,
-    transparent 70%);
+    transparent 21%,
+    rgba(220, 227, 232, .06) 34%,
+    rgba(255, 255, 255, .96) 47%,
+    rgba(177, 190, 201, .62) 54%,
+    rgba(235, 240, 244, .11) 63%,
+    transparent 72%);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -433,19 +434,19 @@ body {
 }
 
 @keyframes receipt-print-attention {
-  /* The light has time to travel across the whole face before the familiar
+  /* The slower light has time to travel across the whole face before the familiar
      two tactile 1990s button taps. The rest of the cycle is still. */
-  0%, 13.8%, 16.8%, 100% {
+  0%, 27.8%, 30.8%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  14.25%, 15.7% {
+  28.25%, 29.7% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  14.85%, 16.3% {
+  28.85%, 30.3% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
@@ -453,10 +454,10 @@ body {
 }
 
 @keyframes receipt-print-inspection-beam {
-  0%, .5% { opacity: 0; transform: translateX(-165%); }
-  1% { opacity: 1; }
-  13.45% { opacity: 1; transform: translateX(165%); }
-  13.8%, 100% { opacity: 0; transform: translateX(165%); }
+  0%, 1% { opacity: 0; transform: translateX(-165%); }
+  1.5% { opacity: 1; }
+  27.35% { opacity: 1; transform: translateX(165%); }
+  27.8%, 100% { opacity: 0; transform: translateX(165%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
