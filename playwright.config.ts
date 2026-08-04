@@ -22,6 +22,7 @@ export default defineConfig({
     reuseExistingServer: false,
     env: {
       ...process.env,
+      NEXT_DIST_DIR: ".next-e2e",
       NEXT_PUBLIC_SUPABASE_URL: process.env.PICKEM_TEST_SUPABASE_URL ?? "",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY ?? "",
       SUPABASE_SECRET_KEY: process.env.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY ?? "",

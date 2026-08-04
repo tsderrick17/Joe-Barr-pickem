@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // Browser rehearsals run beside a normal local server. Give that temporary
+  // server its own build directory so Next never contends for .next/dev.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   async headers() {
     return [
       {

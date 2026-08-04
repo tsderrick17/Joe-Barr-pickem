@@ -102,6 +102,19 @@ async function prepareFixture(): Promise<Fixture> {
 
 async function cleanupFixture(fixture: Fixture | undefined) {
   if (!fixture) return;
+
+  // Delete dependent records explicitly. This keeps an interrupted browser run
+  // from leaving test players behind in the isolated project.
+  const { data: entries } = await fixture.admin
+    .from("survivor_entries")
+    .select("id")
+    .eq("player_id", fixture.playerId);
+  const entryIds = (entries ?? []).map((entry) => entry.id as string);
+  if (entryIds.length > 0) {
+    await fixture.admin.from("survivor_picks").delete().in("survivor_entry_id", entryIds);
+  }
+  await fixture.admin.from("survivor_entries").delete().eq("player_id", fixture.playerId);
+  await fixture.admin.from("picks").delete().eq("player_id", fixture.playerId);
   await fixture.admin.from("games").delete().in("id", fixture.gameIds);
   await fixture.admin.from("players").delete().eq("id", fixture.playerId);
   await fixture.admin.auth.admin.deleteUser(fixture.authUserId);
@@ -126,10 +139,11 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await page.goto("/login");
   await page.getByLabel("FOUR-DIGIT PIN").fill(fixture.pin);
   await page.getByRole("button", { name: "Enter Pick'em" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/$/, { timeout: 12_000 });
 
   await page.getByRole("link", { name: "The Slate" }).click();
-  await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible();
+  await expect(page).toHaveURL(/\/board$/, { timeout: 12_000 });
+  await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible({ timeout: 12_000 });
 
   await page.getByRole("button", { name: "Seattle Seahawks", exact: true }).click();
   await page.getByRole("button", { name: "Los Angeles Rams", exact: true }).click();
