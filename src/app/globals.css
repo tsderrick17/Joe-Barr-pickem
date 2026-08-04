@@ -1318,14 +1318,16 @@ html[data-theme="night"] .survivor-selection-footer {
 .pickem-ledger-pick {
   color: #273349;
   font-family: var(--ledger-hand-font);
-  font-size: .83rem;
+  /* Match the handwritten names more closely without changing the ruled-row
+     rhythm; the player cell already establishes each row's minimum height. */
+  font-size: .95rem;
   font-weight: 700;
-  line-height: 1.08;
+  line-height: 1;
 }
 
 .pickem-ledger-pick .font-mono {
   font-family: var(--ledger-hand-font);
-  font-size: .78rem;
+  font-size: .88rem;
   font-weight: 900;
 }
 
@@ -1333,7 +1335,8 @@ html[data-theme="night"] .survivor-selection-footer {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
   .pickem-ledger-row td { padding: .32rem .38rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
-  .pickem-ledger-pick { font-size: .94rem; }
+  .pickem-ledger-pick { font-size: 1.05rem; }
+  .pickem-ledger-pick .font-mono { font-size: .96rem; }
 }
 
 html[data-theme="night"] .pickem-ledger {
