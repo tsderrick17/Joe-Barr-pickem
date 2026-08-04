@@ -305,7 +305,7 @@ body {
 .slate-receipt-print {
   align-self: flex-start;
   appearance: none;
-  background: linear-gradient(#fafafa, #c6c8c6);
+  background: linear-gradient(180deg, #f7f7f6 0%, #e8e9e7 42%, #c8cbc9 100%);
   border: 2px outset #f9f9f9;
   box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
   color: #15191b;
@@ -326,14 +326,18 @@ body {
 
 .slate-receipt-print::before {
   /* One unhurried inspection beam, like a light catching across a silver blade.
-     It is clipped inside the button so it never reads as a second outline. */
+     Closely spaced translucent stops blend the white reflection into the grey
+     button face so it never reads as a separate stripe or second outline. */
   background: linear-gradient(105deg,
-    transparent 21%,
-    rgba(220, 227, 232, .06) 34%,
-    rgba(255, 255, 255, .96) 47%,
-    rgba(177, 190, 201, .62) 54%,
-    rgba(235, 240, 244, .11) 63%,
-    transparent 72%);
+    transparent 15%,
+    rgba(190, 198, 204, .02) 23%,
+    rgba(216, 222, 226, .12) 31%,
+    rgba(238, 241, 243, .34) 39%,
+    rgba(255, 255, 255, .72) 48%,
+    rgba(245, 247, 248, .52) 55%,
+    rgba(211, 217, 221, .22) 64%,
+    rgba(180, 188, 194, .05) 74%,
+    transparent 84%);
   content: "";
   inset: 0;
   pointer-events: none;

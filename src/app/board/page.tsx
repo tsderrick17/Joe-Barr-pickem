@@ -546,7 +546,9 @@ export default function BoardPage() {
   // Saved selections arrive asynchronously. Keep the receipt neutral until
   // they do so, rather than briefly presenting an incorrect OPEN ticket.
   const receiptIsLoading = isLoading;
-  const receiptNeedsSaving = hasUnsavedChanges;
+  // The receipt stays calm once it matches the saved record. Its sheen and
+  // tactile click are reserved for a new selection or a change to a saved one.
+  const receiptNeedsSaving = !receiptIsLoading && hasUnsavedChanges;
   const pickemReceiptStatus = receiptIsLoading
     ? "CHECKING"
     : pickemHasUnsavedChanges
