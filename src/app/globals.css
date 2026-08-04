@@ -232,7 +232,44 @@ body {
 
 /* The shared mini-nav has its own surface in narrow layouts. A receipt must
    stay transparent behind its physical punches regardless of that layout. */
-.slate-mini-nav.slate-receipt-strip { background: transparent; }
+.slate-mini-nav.slate-receipt-strip { background: var(--receipt-underlay); }
+
+/* CSS masks can disappear when this sticky receipt is moved onto a new
+   compositing layer during scroll. Use visible physical punches instead. */
+.slate-receipt-strip > * {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.slate-receipt-punch {
+  background: var(--receipt-underlay);
+  display: block;
+  height: var(--receipt-notch-radius);
+  pointer-events: none;
+  position: absolute;
+  width: var(--receipt-notch-diameter);
+  z-index: 8;
+}
+.slate-receipt-punch--divider-top-right {
+  border-radius: 0 0 999px 999px;
+  right: calc(var(--receipt-notch-radius) * -1);
+  top: 0;
+}
+.slate-receipt-punch--divider-bottom-right {
+  border-radius: 999px 999px 0 0;
+  bottom: 0;
+  right: calc(var(--receipt-notch-radius) * -1);
+}
+.slate-receipt-punch--outer-top-left,
+.slate-receipt-punch--outer-top-right,
+.slate-receipt-punch--outer-bottom-left,
+.slate-receipt-punch--outer-bottom-right {
+  height: var(--receipt-notch-radius);
+  width: var(--receipt-notch-radius);
+}
+.slate-receipt-punch--outer-top-left { border-radius: 0 0 999px 0; left: 0; top: 0; }
+.slate-receipt-punch--outer-bottom-left { border-radius: 0 999px 0 0; bottom: 0; left: 0; }
+.slate-receipt-punch--outer-top-right { border-radius: 0 0 0 999px; right: 0; top: 0; }
+.slate-receipt-punch--outer-bottom-right { border-radius: 999px 0 0 0; bottom: 0; right: 0; }
 
 .slate-receipt-strip > * + * { border-left: 0; }
 
