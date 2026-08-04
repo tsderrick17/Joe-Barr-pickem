@@ -47,7 +47,7 @@ export default function MyTicket({
     survivorPickMade: Boolean(survivorPick),
     survivorStatus,
   });
-  const status = isFilled ? "FILLED" : "OPEN";
+  const status = isFilled ? "SUBMITTED" : "OPEN";
 
   return (
     <section className="my-ticket" aria-label={`Your current ticket for ${week}`} id="my-ticket">

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,7 +10,10 @@ import {
 import { supabase } from "@/lib/supabase";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
-import { helmetShellColor } from "@/lib/nfl-helmet-colors";
+import {
+  reconcileAtsDraftAtKickoff,
+  reconcileSurvivorDraftAtKickoff,
+} from "@/lib/slate-draft-locks";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
@@ -125,118 +127,8 @@ function easternCalendarDate(value: string | number | Date) {
   return `${read("year")}-${read("month")}-${read("day")}`;
 }
 
-function easternTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  }).format(new Date(value));
-}
-
 function isEarlyGame(game: BoardGame) {
   return game.isInternational;
-}
-
-// Retained for the adjacent Survivor rendering branch until that presentation is extracted.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function easternLockLabel(value: string) {
-  const date = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    month: "numeric",
-    day: "numeric",
-  }).format(new Date(value));
-  const time = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-
-  return `${date} · ${time.replace(":00", "")}`;
-}
-
-// Retained for the adjacent Survivor rendering branch until that presentation is extracted.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function resultMarker(result: "win" | "loss" | null) {
-  if (!result) return null;
-
-  return (
-    <strong
-      aria-label={`Against the spread: ${result}`}
-      className={`relative -top-1 -ml-px inline-block -rotate-[10deg] text-sm font-black leading-none sm:text-base ${
-        result === "win" ? "text-green-700" : "text-red-700"
-      }`}
-    >
-      {result === "win" ? "W" : "L"}
-    </strong>
-  );
-}
-
-function teamLogoUrl(abbreviation: string) {
-  return `/team-logos/${abbreviation}.png`;
-}
-
-function HelmetIcon({
-  abbreviation,
-  faces,
-  unavailable = false,
-}: {
-  abbreviation: string;
-  faces: "left" | "right";
-  unavailable?: boolean;
-}) {
-  const flipped = faces === "left";
-  const shellColor = helmetShellColor(abbreviation, "#ffffff");
-  return (
-    <span aria-hidden="true" className={`relative block h-12 w-[3.9rem] shrink-0 ${flipped ? "-scale-x-100" : ""} ${unavailable ? "grayscale" : ""}`}>
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: shellColor,
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "#ffffff",
-          clipPath: "polygon(27% 57%, 100% 57%, 100% 100%, 27% 100%)",
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "#ffffff",
-          clipPath: "polygon(53% 29%, 100% 29%, 100% 62%, 69% 62%, 59% 53%, 52% 48%)",
-          maskImage: "url(/helmet-newspaper-template.png)",
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: "url(/helmet-newspaper-template.png)",
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-      <Image alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply" height={48} src="/helmet-newspaper-template.png" width={63} />
-      <Image alt="" className="absolute left-[15%] top-[18%] h-[42%] w-[38%] object-contain" height={24} src={teamLogoUrl(abbreviation)} width={24} />
-    </span>
-  );
 }
 
 export default function BoardPage() {
@@ -252,13 +144,11 @@ export default function BoardPage() {
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
-  const [survivorNotice, setSurvivorNotice] = useState<string | null>(null);
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
-  const [submissionMessage, setSubmissionMessage] = useState("");
   const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep"; token: number } | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
@@ -276,7 +166,6 @@ export default function BoardPage() {
     setIsLoading(true);
     setErrorMessage("");
     setSelectionWarning("");
-    setSubmissionMessage("");
     setPlayoffEliminated(false);
     setWeek(period);
 
@@ -306,7 +195,6 @@ export default function BoardPage() {
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
       setSurvivorStatus(data.survivor.status);
-      setSurvivorNotice(data.survivor.notice);
     } catch (error) {
       if (requestId === boardRequestId.current) {
         if (error instanceof SessionUnavailableError) {
@@ -439,7 +327,10 @@ export default function BoardPage() {
   }, [actionOnlyActive, gamesByDay]);
 
   const selectedTeams = useMemo(() => {
-    return selectedPicks
+    const gameOrder = new Map(games.map((game, index) => [game.id, index]));
+
+    return [...selectedPicks]
+      .sort((left, right) => (gameOrder.get(left.gameId) ?? Number.MAX_SAFE_INTEGER) - (gameOrder.get(right.gameId) ?? Number.MAX_SAFE_INTEGER))
       .map((pick) => {
         const game = games.find((item) => item.id === pick.gameId);
 
@@ -477,12 +368,12 @@ export default function BoardPage() {
           abbreviation,
           lineValue,
           isLineLocked: hasFinalLine,
-          canRemove: new Date(game.kickoffAt) > new Date(),
+          canRemove: new Date(game.kickoffAt).getTime() > currentTime,
           isSaved,
         };
       })
       .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lineValue: string | null; isLineLocked: boolean; canRemove: boolean; isSaved: boolean }[];
-  }, [games, savedPicks, selectedPicks]);
+  }, [currentTime, games, savedPicks, selectedPicks]);
 
   const pickemHasUnsavedChanges = useMemo(() => {
     if (selectedPicks.length !== savedPicks.length) return true;
@@ -518,31 +409,26 @@ export default function BoardPage() {
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
     : null;
+  const savedSurvivorGame = savedSurvivorPick
+    ? games.find((game) => game.id === savedSurvivorPick.gameId) ?? null
+    : null;
+  const survivorLockGame = savedSurvivorGame ?? survivorSelectedGame;
   const survivorControlsEnabled = isSurvivorSlateEditable({
     periodType: week?.period_type,
     periodStatus: week?.status,
     survivorAvailable,
     survivorStatus,
-    selectedGameKickoffAt: survivorSelectedGame?.kickoffAt ?? null,
+    selectedGameKickoffAt: survivorLockGame?.kickoffAt ?? null,
     now: new Date(currentTime),
   });
+  const showSurvivorReceipt = week?.period_type === "regular" &&
+    survivorAvailable && survivorStatus === "active";
   const survivorTeamName = (pick: SelectedPick | null) => {
     if (!pick) return "";
     const game = games.find((item) => item.id === pick.gameId);
     return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
   };
-  const pickemReceipt = selectedTeams.map((team) => team.abbreviation).join(" · ") || "OPEN";
-  const pickemReceiptShort = selectedTeams.map((team) => team.abbreviation).join(", ") || "OPEN";
   const survivorReceipt = survivorTeamName(survivorPick) || (survivorStatus === "complete" ? "COMPLETE" : survivorStatus === "eliminated" ? "OUT" : "OPEN");
-  const survivorReceiptShort = (() => {
-    if (!survivorPick) return survivorReceipt;
-    const game = games.find((item) => item.id === survivorPick.gameId);
-    return survivorPick.teamId === game?.awayTeamId
-      ? game.awayTeamAbbreviation
-      : survivorPick.teamId === game?.homeTeamId
-        ? game.homeTeamAbbreviation
-        : survivorReceipt;
-  })();
   // Saved selections arrive asynchronously. Keep the receipt neutral until
   // they do so, rather than briefly presenting an incorrect OPEN ticket.
   const receiptIsLoading = isLoading;
@@ -565,6 +451,19 @@ export default function BoardPage() {
         : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE"
           ? survivorReceipt
           : "FILLED";
+  const receiptStatusLabel = (status: string) => {
+    if (status === "FILLED") return "SUBMITTED";
+    if (status === "CHANGED") return "CHANGED - HIT SUBMIT";
+    return status;
+  };
+  const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
+  const openPickCount = selectedTeams.length - sealedPickCount;
+  const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
+  const pickemReceiptStateDetail = [
+    sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
+    openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} EDITABLE` : "",
+    duePickCount > 0 ? `${duePickCount} DUE` : "",
+  ].filter(Boolean).join(" · ");
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -578,6 +477,37 @@ export default function BoardPage() {
     };
   })();
   const hasEarlyGame = games.some(isEarlyGame);
+
+  useEffect(() => {
+    if (isLoading || games.length === 0) return;
+
+    const now = new Date(currentTime);
+    const atsDraft = reconcileAtsDraftAtKickoff({
+      games,
+      selections: selectedPicks,
+      savedPicks,
+      now,
+    });
+    const survivorDraft = reconcileSurvivorDraftAtKickoff({
+      games,
+      selection: survivorPick,
+      savedPick: savedSurvivorPick,
+      now,
+    });
+
+    if (!atsDraft.changed && !survivorDraft.changed) return;
+
+    const reconcileTimer = window.setTimeout(() => {
+      if (atsDraft.changed) setSelectedPicks(atsDraft.selections);
+      if (survivorDraft.changed) setSurvivorPick(survivorDraft.selection);
+      setSelectionWarning(
+        "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed.",
+      );
+    }, 0);
+
+    return () => window.clearTimeout(reconcileTimer);
+  }, [currentTime, games, isLoading, savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
+
   function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
     setSelectionFeedback({ gameId, teamId, type, token: selectionFeedbackToken.current });
@@ -587,7 +517,12 @@ export default function BoardPage() {
     if (isReadOnly) return;
 
     setSelectionWarning("");
-    setSubmissionMessage("");
+
+    const game = games.find((item) => item.id === gameId);
+    if (!game || new Date(game.kickoffAt).getTime() <= currentTime) {
+      setSelectionWarning("That game has kicked off. Its submitted pick is sealed.");
+      return;
+    }
 
     const existingPick = selectedPicks.find((pick) => pick.gameId === gameId);
 
@@ -641,13 +576,16 @@ export default function BoardPage() {
     }
 
     setSelectionWarning("");
-    setSubmissionMessage("");
     setSurvivorPick({ gameId, teamId });
   }
 
   function removeSelection(gameId: string) {
     setSelectionWarning("");
-    setSubmissionMessage("");
+    const game = games.find((item) => item.id === gameId);
+    if (!game || new Date(game.kickoffAt).getTime() <= currentTime) {
+      setSelectionWarning("That game has kicked off. Its submitted pick is sealed.");
+      return;
+    }
     setSelectedPicks((current) =>
       current.filter((pick) => pick.gameId !== gameId),
     );
@@ -673,7 +611,6 @@ export default function BoardPage() {
 
   async function submitPicks() {
     setSelectionWarning("");
-    setSubmissionMessage("");
 
     if (!week) {
       return;
@@ -711,7 +648,6 @@ export default function BoardPage() {
         return;
       }
 
-      setSubmissionMessage(data.message ?? "Your picks have been saved.");
       setSavedPicks(selectedPicks);
       if (survivorAvailable) {
         setSavedSurvivorPick(survivorPick);
@@ -797,7 +733,7 @@ export default function BoardPage() {
               <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] sm:text-xs ${survivorControlsEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
                 <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
                 {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
-                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SUBMIT</strong>Review your choices, then click <span className="font-black">Submit</span> to save the picks currently shown.</p>
+                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SUBMIT</strong>Review your choices, then click <span className="font-black">SUBMIT</span> to save the picks currently shown.</p>
               </div>
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
                 <div className="md:pl-4">
@@ -819,66 +755,10 @@ export default function BoardPage() {
 
         </header>
 
-        <section aria-label="Your weekly receipt" className={`slate-mini-nav slate-receipt-strip ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
-          <svg aria-hidden="true" className="slate-receipt-paper" focusable="false" preserveAspectRatio="none">
-            <defs>
-              <mask
-                id="slate-receipt-paper-mask"
-                maskUnits="userSpaceOnUse"
-                x="0"
-                y="0"
-                width="100%"
-                height="100%"
-                style={{ maskType: "luminance" }}
-              >
-                <rect fill="white" width="100%" height="100%" />
-                {[0, 21, 67, 100].flatMap((x) => [
-                  <circle cx={`${x}%`} cy="0" fill="black" key={`${x}-top`} r="9" />,
-                  <circle cx={`${x}%`} cy="100%" fill="black" key={`${x}-bottom`} r="9" />,
-                ])}
-                {[12, 22, 32, 42, 52, 62, 72, 82, 92].flatMap((y) => [
-                  <circle cx="0" cy={`${y}%`} fill="black" key={`left-${y}`} r="3.25" />,
-                  <circle cx="100%" cy={`${y}%`} fill="black" key={`right-${y}`} r="3.25" />,
-                ])}
-              </mask>
-            </defs>
-            <g mask="url(#slate-receipt-paper-mask)">
-              <rect className="slate-receipt-paper-fill" width="100%" height="100%" />
-              <line className="slate-receipt-paper-rule" x1="21%" x2="21%" y1="0" y2="100%" />
-              <line className="slate-receipt-paper-rule" x1="67%" x2="67%" y1="0" y2="100%" />
-              <line className="slate-receipt-paper-rule slate-receipt-paper-rule--bottom" x1="0" x2="100%" y1="100%" y2="100%" />
-            </g>
-          </svg>
-          {false ? (<>
-          <Link href="/#my-ticket">
-            <span>YOUR RECEIPT</span>
-            <strong>VIEW FULL TICKET</strong>
-          </Link>
-          <a href="#slate-matchups">
-            <span>PICK&apos;EM</span>
-            <strong className={receiptIsLoading ? "is-quiet" : pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>
-              <span className="slate-receipt-picks-full">{receiptIsLoading ? "CHECKING" : pickemReceipt}</span>
-              <span className="slate-receipt-picks-short">{receiptIsLoading ? "CHECKING" : pickemReceiptShort}</span>
-            </strong>
-            <em>{selectedPicks.length}/{selectionLimit} SELECTED · {pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "SAVED" : "PICK DUE"}</em>
-          </a>
-          {week?.period_type === "playoff" ? (
-            <a href="#slate-matchups">
-              <span>PLAYOFF ROUND</span>
-              <strong className={receiptIsLoading ? "is-quiet" : pickemHasUnsavedChanges ? "is-unsaved" : selectedPicks.length === selectionLimit ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
-              <em>{pickemHasUnsavedChanges ? "UNSAVED CHANGE" : selectedPicks.length === selectionLimit ? "ROUND FILLED" : "GAMES DUE"}</em>
-            </a>
-          ) : (
-            <a href="#slate-matchups">
-              <span>SURVIVOR</span>
-              <strong className={receiptIsLoading ? "is-quiet" : survivorHasUnsavedChanges ? "is-unsaved" : survivorReceipt === "OPEN" ? "is-due" : survivorReceipt === "OUT" ? "is-out" : survivorReceipt === "COMPLETE" ? "is-quiet" : "is-complete"}>
-                <span className="slate-receipt-picks-full">{receiptIsLoading ? "CHECKING" : survivorReceipt}</span>
-                <span className="slate-receipt-picks-short">{receiptIsLoading ? "CHECKING" : survivorReceiptShort}</span>
-              </strong>
-              <em>{survivorHasUnsavedChanges ? "UNSAVED CHANGE" : survivorReceipt === "OPEN" ? "PICK DUE" : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE" ? "" : "SAVED"}</em>
-            </a>
-          )}
-          </>) : null}
+        <section
+          aria-label="Your weekly receipt"
+          className={`slate-mini-nav slate-receipt-strip ${showSurvivorReceipt ? "has-survivor" : "is-pickem-only"} ${week?.period_type === "playoff" ? "is-playoff" : ""} ${sealedPickCount > 0 && openPickCount > 0 ? "has-mixed-locks" : ""} ${receiptIsLoading ? "receipt-is-loading" : ""}`}
+        >
           <div className="slate-receipt-ticket">
             <span>YOUR RECEIPT</span>
             <Link href="/#my-ticket">VIEW FULL TICKET</Link>
@@ -890,38 +770,32 @@ export default function BoardPage() {
             >
               SUBMIT
             </button>
-            <i aria-hidden="true" className="slate-receipt-bottom-perf" />
           </div>
-          <div className="slate-receipt-pool">
+          <div className="slate-receipt-pool slate-receipt-pickem">
             <span>PICK&apos;EM</span>
-            <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"}`} style={{ "--selection-slot-count": selectionLimit } as CSSProperties}>
+            <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"} slate-receipt-selection-chips--slots-${Math.min(selectionLimit, 6)}`} style={{ "--selection-slot-count": Math.min(selectionLimit, 6) } as CSSProperties}>
               {receiptIsLoading ? <strong className="is-quiet">CHECKING</strong> : selectedTeams.length ? selectedTeams.map((team, index) => (
-                <span className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"}`} key={team.gameId}>
+                <span
+                  className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} ${team.canRemove ? "is-editable" : "is-sealed"}`}
+                  key={team.gameId}
+                  title={team.canRemove ? `${team.name} may be changed until kickoff` : `${team.name} is sealed because its game has kicked off`}
+                >
                   <span>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
-                  {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : null}
+                  {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : <span aria-label="Sealed at kickoff" className="slate-receipt-lock-mark" role="img">🔒</span>}
                 </span>
               )) : <strong className="is-due">PICK DUE</strong>}
             </div>
-            <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} · ${pickemReceiptStatus}`}</em>
-            <i aria-hidden="true" className="slate-receipt-bottom-perf" />
+            <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPicks.length}/{selectionLimit} · {receiptStatusLabel(pickemReceiptStatus)}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
           </div>
-          {week?.period_type === "playoff" ? (
-            <div className="slate-receipt-pool">
-              <span>PLAYOFF ROUND</span>
-              <strong className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : "is-due"}>{receiptIsLoading ? "CHECKING" : `${selectedPicks.length}/${selectionLimit} GAMES`}</strong>
-              <em>{pickemReceiptStatus === "CHANGED" ? "UNSAVED CHANGE" : pickemReceiptStatus === "FILLED" ? "ROUND FILLED" : "GAMES DUE"}</em>
-              <i aria-hidden="true" className="slate-receipt-bottom-perf" />
-            </div>
-          ) : (
+          {showSurvivorReceipt ? (
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
               <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
                 {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
-              <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : survivorReceiptStatus}</em>
-              <i aria-hidden="true" className="slate-receipt-bottom-perf" />
+              <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
             </div>
-          )}
+          ) : null}
           {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
         </section>
 
@@ -947,56 +821,6 @@ export default function BoardPage() {
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
           <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 sm:mt-8 sm:space-y-7" id="slate-matchups">
-            {false ? (
-              <section className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
-                <h2 className="font-serif text-xl font-bold">
-                  Survivor is temporarily unavailable
-                </h2>
-                <p className="mt-1 text-sm font-semibold">
-                  {survivorNotice ??
-                    "Your ATS slate is still available and can be saved safely."}
-                </p>
-              </section>
-            ) : false ? (
-              <section aria-labelledby="survivor-wire-heading" className="newspaper-clipping survivor-clipping p-2.5 sm:p-3">
-                <div className="flex items-center justify-between gap-3 border-b-2 border-[#1d1d1f] pb-1.5">
-                  <h2 className="font-serif text-xl font-black leading-none sm:text-2xl" id="survivor-wire-heading">Survivor Table</h2>
-                  <p className="text-right text-[9px] font-black uppercase tracking-[0.1em] text-[#29251d] sm:text-[10px]">Straight-up · {week?.display_name}</p>
-                </div>
-                <div className="mt-2 divide-y divide-[#1d1d1f] border-y border-[#1d1d1f]">
-                  {games.map((game) => {
-                    const gameHasStarted = new Date(game.kickoffAt) <= new Date();
-                    const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
-                    const leftTeamId = favoriteIsHome ? game.homeTeamId : game.awayTeamId;
-                    const leftTeamName = favoriteIsHome ? game.homeTeam : game.awayTeam;
-                    const leftTeamAbbreviation = favoriteIsHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation;
-                    const rightTeamId = favoriteIsHome ? game.awayTeamId : game.homeTeamId;
-                    const rightTeamName = favoriteIsHome ? game.awayTeam : game.homeTeam;
-                    const rightTeamAbbreviation = favoriteIsHome ? game.awayTeamAbbreviation : game.homeTeamAbbreviation;
-                    const leftSelected = survivorPick?.teamId === leftTeamId;
-                    const rightSelected = survivorPick?.teamId === rightTeamId;
-                    const leftUsed = survivorUsedTeamIds.includes(leftTeamId) && !leftSelected;
-                    const rightUsed = survivorUsedTeamIds.includes(rightTeamId) && !rightSelected;
-                    const leftUnavailable = leftUsed || gameHasStarted;
-                    const rightUnavailable = rightUsed || gameHasStarted;
-                    return (
-                      <article className="relative py-1" key={game.id}>
-                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ backgroundImage: `linear-gradient(90deg, ${helmetShellColor(leftTeamAbbreviation)} 0 50%, ${helmetShellColor(rightTeamAbbreviation)} 50% 100%)` }} />
-                        <p className="sr-only">{easternTime(game.kickoffAt)}</p>
-                        <div className="grid grid-cols-2 divide-x divide-[#1d1d1f]">
-                          <button aria-label={`Choose ${leftTeamName} as your straight-up Survivor winner`} aria-pressed={leftSelected} className={`flex min-h-14 items-center justify-center px-2 py-1.5 transition ${leftSelected ? "survivor-team-selection bg-[#1d1d1f]" : "bg-white hover:bg-zinc-100"} disabled:cursor-not-allowed`} disabled={leftUnavailable} onClick={() => setSurvivorPick(leftSelected ? null : { gameId: game.id, teamId: leftTeamId })} title={leftUnavailable ? `${leftTeamName} is unavailable` : `Choose ${leftTeamName}`} type="button">
-                            <HelmetIcon abbreviation={leftTeamAbbreviation} faces="right" unavailable={leftUnavailable} />
-                          </button>
-                          <button aria-label={`Choose ${rightTeamName} as your straight-up Survivor winner`} aria-pressed={rightSelected} className={`flex min-h-14 items-center justify-center px-2 py-1.5 transition ${rightSelected ? "survivor-team-selection bg-[#1d1d1f]" : "bg-white hover:bg-zinc-100"} disabled:cursor-not-allowed`} disabled={rightUnavailable} onClick={() => setSurvivorPick(rightSelected ? null : { gameId: game.id, teamId: rightTeamId })} title={rightUnavailable ? `${rightTeamName} is unavailable` : `Choose ${rightTeamName}`} type="button">
-                            <HelmetIcon abbreviation={rightTeamAbbreviation} faces="left" unavailable={rightUnavailable} />
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
             {actionOnlyActive && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}
@@ -1037,109 +861,6 @@ export default function BoardPage() {
         )}
       </div>
 
-      {false ? (
-        <aside className="slate-selection-footer fixed inset-x-0 bottom-0 z-[60] border-t-2 border-[#1d1d1f] bg-[#f5f0e6] shadow-[0_-8px_24px_rgba(0,0,0,0.1)]">
-          <div className="slate-selection-footer-inner mx-auto max-w-5xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="slate-selection-footer-heading">
-                <p className="text-[11px] font-black tracking-[0.14em] text-slate-600">
-                  YOUR PICKS · {selectedPicks.length} OF {selectionLimit}
-                </p>
-                <p className={`slate-selection-footer-state ${hasUnsavedChanges ? "is-unsaved" : "is-saved"}`}>
-                  {hasUnsavedChanges ? "UNSAVED CHANGES" : "SAVED"}
-                </p>
-                </div>
-
-                <ol
-                  className={`slate-selection-footer-picks ${week?.period_type === "playoff" ? "slate-selection-footer-picks--playoff" : "slate-selection-footer-picks--regular"} mt-1 flex flex-wrap gap-1.5 text-xs text-slate-700 sm:mt-2 sm:gap-2 sm:text-sm`}
-                  style={{ "--selection-slot-count": selectionLimit } as CSSProperties}
-                >
-                  {selectedTeams.length ? (
-                    selectedTeams.map((team, index) => (
-                      <li className={`selection-chip slate-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} flex items-center gap-1 border border-slate-400 bg-white py-1 pl-2 pr-1`} key={team.gameId}>
-                        <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap" aria-label={`${index + 1}. ${team.name}${team.lineValue ? `, ${team.lineValue}` : ""}`} title={team.name}>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
-                        <small>{team.isSaved ? "SAVED" : "NEW"}</small>
-                        {team.canRemove ? (
-                          <button
-                            aria-label={`Remove ${team.name}`}
-                            className="ml-auto inline-flex size-6 shrink-0 items-center justify-center rounded border border-slate-300 bg-slate-50 text-lg font-black leading-none text-slate-600 shadow-sm transition hover:border-red-400 hover:bg-red-50 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800"
-                            onClick={() => removeSelection(team.gameId)}
-                            type="button"
-                          >
-                            ×
-                          </button>
-                        ) : null}
-                      </li>
-                    ))
-                  ) : (
-                    <li>Tap teams above to make your selections.</li>
-                  )}
-                </ol>
-
-                {week?.period_type === "regular" && survivorAvailable ? (
-                  <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-slate-700 sm:text-sm">
-                    <span className="font-black tracking-[0.12em] text-slate-600">SURVIVOR</span>
-                    {survivorPickDetails ? (
-                      <>
-                        <SurvivorPokerChip
-                          abbreviation={survivorPickDetails?.abbreviation ?? ""}
-                          official={survivorPick?.teamId === savedSurvivorPick?.teamId}
-                          selected
-                          size="summary"
-                          teamName={survivorPickDetails?.name ?? ""}
-                        />
-                        <span className="font-semibold">{survivorPickDetails?.name}</span>
-                      </>
-                    ) : (
-                      <span>{savedSurvivorPick ? "Survivor pick cleared" : "Survivor pick due"}</span>
-                    )}
-                  </div>
-                ) : null}
-
-                {selectionWarning ? (
-                  <p className="mt-2 font-semibold text-red-700">
-                    {selectionWarning}
-                  </p>
-                ) : null}
-
-                {submissionMessage ? (
-                  <div className="mt-2">
-                    <p className="font-semibold text-green-800">
-                      {submissionMessage}
-                    </p>
-
-                    {selectedPicks.length === 1 ? (
-                      <p className="mt-1 text-sm font-semibold text-slate-700">
-                        You still owe one pick this week.
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                {hasUnsavedChanges ? (
-                  <p className="text-xs font-bold text-amber-800 sm:text-sm">
-                    Unsaved changes
-                  </p>
-                ) : null}
-
-                {hasUnsavedChanges ? <button
-                  className="min-h-11 bg-[#1d1d1f] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-400 sm:min-h-12 sm:px-6 sm:text-base"
-                  disabled={isSubmitting}
-                  onClick={submitPicks}
-                  type="button"
-                >
-                {isSubmitting
-                  ? "Saving…"
-                  : "Save selections"}
-                </button> : null}
-              </div>
-            </div>
-          </div>
-        </aside>
-      ) : null}
     </main>
   );
 }

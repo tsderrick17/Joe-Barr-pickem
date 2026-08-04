@@ -135,16 +135,16 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await page.getByRole("button", { name: "Los Angeles Rams", exact: true }).click();
   await page.getByRole("button", { name: "Choose Seattle Seahawks as your Survivor winner" }).click();
   const firstSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
-  await page.getByRole("button", { name: "Save selections" }).click();
+  await page.getByRole("button", { name: "SUBMIT" }).click();
   expect((await firstSave).status()).toBe(200);
   const receipt = page.getByRole("navigation", { name: "Your weekly controls" });
   await expect(receipt.getByText(/2\/2 SELECTED.*SAVED/)).toBeVisible();
   await expect(receipt.getByText(/Seattle Seahawks.*SAVED/)).toBeVisible();
 
   await page.getByRole("button", { name: "Choose Los Angeles Rams as your Survivor winner" }).click();
-  await expect(receipt.getByRole("link", { name: /SURVIVOR.*UNSAVED CHANGE/ })).toBeVisible();
+  await expect(receipt.getByText(/CHANGED.*HIT SUBMIT/)).toBeVisible();
   const replacementSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
-  await page.getByRole("button", { name: "Save selections" }).click();
+  await page.getByRole("button", { name: "SUBMIT" }).click();
   expect((await replacementSave).status()).toBe(200);
   await expect(receipt.getByText(/Los Angeles Rams.*SAVED/)).toBeVisible();
 

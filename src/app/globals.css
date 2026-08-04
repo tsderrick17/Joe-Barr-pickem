@@ -149,22 +149,16 @@ body {
 .slate-mini-nav strong.is-quiet { color: #5d6470; }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
-/* The Slate receipt is a single thin tear-off strip: selections live here, and
-   the only save action appears here. The faint offset sheet gives it a used
-   receipt feel without affecting layout or accessibility. */
+/* The Slate receipt is one fixed-height register. Its information hierarchy
+   stays stable while the internal columns adapt to the pools that are actually
+   in play: stub / Pick'em / Survivor in season, stub / Pick'em otherwise. */
 .slate-receipt-strip {
   --receipt-paper: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
-  /* Corner notches are quarter circles; divider notches are half circles.
-     Sharing one radius keeps the former exactly half the latter by area. */
-  --receipt-notch-radius: .52rem;
-  --receipt-notch-diameter: 1.04rem;
-  /* The child paper panels are masked. This exposed underlay is what becomes
-     visible through each corner/divider punch, rather than a painted circle. */
-  /* The parent stays transparent. The child paper panels below are genuinely
-     masked, so a punch reveals whatever is physically beneath the receipt. */
-  background: transparent;
+  background: var(--receipt-paper);
+  border-bottom: 1px solid var(--receipt-rule);
+  border-top: 1px solid var(--receipt-rule);
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
@@ -176,7 +170,11 @@ body {
   z-index: 7;
 }
 
-.slate-receipt-strip > :not(.slate-receipt-paper) {
+.slate-receipt-strip.is-pickem-only {
+  grid-template-columns: 21% minmax(0, 79%);
+}
+
+.slate-receipt-strip > * {
   background: transparent;
   min-width: 0;
   padding: .46rem .68rem .42rem;
@@ -184,30 +182,7 @@ body {
   z-index: 1;
 }
 
-.slate-receipt-paper {
-  box-sizing: border-box;
-  display: block;
-  height: 100%;
-  inset: 0;
-  overflow: visible;
-  padding: 0;
-  pointer-events: none;
-  position: absolute;
-  width: 100%;
-  z-index: 0;
-}
-
-.slate-receipt-paper-fill { fill: var(--receipt-paper); }
-.slate-receipt-paper mask { mask-type: luminance; }
-.slate-receipt-paper-rule {
-  stroke: var(--receipt-rule);
-  stroke-dasharray: 2 4;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.slate-receipt-paper-rule--bottom { stroke-dasharray: 2 5; }
-
-.slate-receipt-strip > :not(.slate-receipt-paper) + :not(.slate-receipt-paper) { border-left: 0; }
+.slate-receipt-pool { border-left: 1px dashed var(--receipt-rule); }
 
 .slate-receipt-ticket,
 .slate-receipt-pool {
@@ -215,12 +190,6 @@ body {
   display: grid;
   gap: .18rem;
   z-index: 3;
-}
-
-/* Each segment owns its bottom perforation, with clearance at both ends so
-   the nearby circular punches are true cut-outs, never dots in the line. */
-.slate-receipt-bottom-perf {
-  display: none;
 }
 
 /* Both pools share fixed label, selection, and status tracks. That keeps the
@@ -243,23 +212,6 @@ body {
   position: relative;
 }
 
-/* Punched paper, not a generic card: each receipt section is separated by a
-   fine tear line. The circular cuts belong only at the ends of that line,
-   rather than repeating down the middle like a column of dots. */
-.slate-receipt-ticket::before {
-  content: none;
-}
-.slate-receipt-ticket::after {
-  content: none;
-}
-
-.slate-receipt-pool::before {
-  content: none;
-}
-
-.slate-receipt-pool::after {
-  content: none;
-}
 .slate-receipt-pool > span { align-self: start; }
 .slate-receipt-pool > em { align-self: end; margin-left: .46rem; }
 .slate-receipt-selection-chips,
@@ -391,7 +343,24 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.slate-receipt-selection-chips--playoff { grid-template-columns: repeat(var(--selection-slot-count), minmax(0, 1fr)); }
+.slate-receipt-selection-chips--playoff { grid-auto-rows: minmax(0, 1fr); }
+.slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-3, .slate-receipt-selection-chips--slots-4) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* A regular two-pick receipt should not inflate simply because Survivor is no
+   longer present. Playoff rounds deliberately use the entire register so all
+   games—including six-game Wild Card weekends—remain visible together. */
+.slate-receipt-strip.is-pickem-only:not(.is-playoff) .slate-receipt-selection-chips {
+  max-width: 42rem;
+}
+
+.slate-receipt-strip.is-playoff .slate-receipt-selection-chips {
+  width: 100%;
+}
 
 .slate-receipt-selection-chip {
   align-items: center;
@@ -408,6 +377,12 @@ body {
 }
 
 .slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
+.slate-receipt-selection-chip.is-sealed {
+  background: #eef4f1;
+  border-color: #8aa7a1;
+  border-left-color: #0f766e;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, .08);
+}
 .slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slate-receipt-selection-chip small {
   color: #243248;
@@ -427,6 +402,13 @@ body {
   padding: 0 .03rem;
 }
 .slate-receipt-selection-chip button:hover { color: #9d1e1e; }
+.slate-receipt-lock-mark {
+  color: #0f766e;
+  flex: 0 0 auto;
+  font-size: .7rem;
+  line-height: 1;
+  margin-left: auto;
+}
 
 .slate-receipt-pool > em {
   color: #5d6470;
@@ -434,7 +416,11 @@ body {
   font-style: normal;
   font-weight: 900;
   letter-spacing: .1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.slate-receipt-pool > em small { font-size: inherit; font-weight: inherit; }
 .slate-receipt-pool > em.is-complete { color: #08764e; }
 .slate-receipt-pool > em.is-unsaved { color: #a86008; }
 
@@ -459,8 +445,9 @@ body {
 .slate-receipt-success { color: #08764e; }
 
 @media (max-width: 639px) {
-  .slate-receipt-strip { grid-template-columns: 21% 46% 33%; }
-  .slate-receipt-strip > :not(.slate-receipt-paper) { padding: .38rem .34rem; }
+  .slate-receipt-strip.has-survivor { grid-template-columns: 21% 46% 33%; }
+  .slate-receipt-strip.is-pickem-only { grid-template-columns: 21% minmax(0, 79%); }
+  .slate-receipt-strip > * { padding: .38rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;
     padding-left: .5rem;
@@ -472,7 +459,12 @@ body {
   .slate-receipt-print { font-size: .58rem; min-height: 1.62rem; padding: .15rem .22rem; width: calc(100% - .2rem); }
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
+  .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) .slate-receipt-selection-chip {
+    font-size: .48rem;
+    padding-block: .08rem;
+  }
   .slate-receipt-selection-chip button { font-size: .84rem; }
+  .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
   .slate-receipt-pool { grid-template-rows: .58rem 2.42rem .58rem; }
   .slate-receipt-survivor-pick { gap: .16rem; }
@@ -1684,7 +1676,7 @@ html[data-theme="night"] .slate-receipt-strip {
   box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
 }
 
-html[data-theme="night"] .slate-receipt-strip > :not(.slate-receipt-paper) {
+html[data-theme="night"] .slate-receipt-strip > * {
   background-color: transparent;
 }
 
@@ -1695,6 +1687,12 @@ html[data-theme="night"] .slate-receipt-selection-chip {
   background: linear-gradient(135deg, #57203e, #321d32) !important;
   border-color: #ec81ba !important;
   color: #fff1f8;
+}
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
+  background: linear-gradient(135deg, #17383a, #142e32) !important;
+  border-color: #66b9b1 !important;
+  border-left-color: #72ddd1 !important;
+  box-shadow: inset 0 0 0 1px rgba(114, 221, 209, .14) !important;
 }
 html[data-theme="night"] .slate-receipt-selection-chip small { color: #f3d9e8; }
 html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
