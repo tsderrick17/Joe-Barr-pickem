@@ -154,9 +154,8 @@ body {
    receipt feel without affecting layout or accessibility. */
 .slate-receipt-strip {
   --receipt-paper: #fffdf8;
-  /* The receipt lives on the same warm stock as its page column. Cutouts are
-     painted with that exact surface so they visually disappear; they are not
-     a third beige decoration. */
+  /* The underlay is retained only for the edge scallops. The divider notches
+     below are real masks, so their centers are genuinely transparent. */
   --receipt-underlay: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
@@ -164,7 +163,7 @@ body {
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
   --receipt-notch-diameter: 1.04rem;
-  background: var(--receipt-underlay);
+  background: transparent;
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
@@ -202,35 +201,35 @@ body {
 
 .slate-receipt-strip > * {
   /* Every paper segment owns four quarter-circle punches. At a divider, the
-     neighboring quarters meet to form one exact semicircle. The page-colored
-     centers have no outline, so they read as absent paper rather than dots. */
+     neighboring quarters meet to form one exact semicircle. These are masks,
+     not painted beige circles, so the page behind the receipt is visible. */
   background-color: var(--receipt-paper);
-  background-image:
-    radial-gradient(circle at 0 0,
-      var(--receipt-underlay) 0 var(--receipt-notch-radius),
-      transparent calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 0 100%,
-      var(--receipt-underlay) 0 var(--receipt-notch-radius),
-      transparent calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 0,
-      var(--receipt-underlay) 0 var(--receipt-notch-radius),
-      transparent calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 100%,
-      var(--receipt-underlay) 0 var(--receipt-notch-radius),
-      transparent calc(var(--receipt-notch-radius) + .5px)),
-    linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
-  background-position: left top, left bottom, right top, right bottom, center top;
+  background-image: linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
+  background-position: center top;
   background-repeat: no-repeat;
-  background-size:
-    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
-    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
-    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
-    var(--receipt-notch-diameter) var(--receipt-notch-diameter),
-    calc(100% - var(--receipt-notch-diameter)) 1px;
+  background-size: calc(100% - var(--receipt-notch-diameter)) 1px;
+  /* Intersect four "paper except this circle" masks. Any corner hole removes
+     the element itself—including its rule—rather than covering it with color. */
+  -webkit-mask-composite: source-in, source-in, source-in;
+  -webkit-mask-image:
+    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px));
+  mask-composite: intersect, intersect, intersect;
+  mask-image:
+    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
+    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px));
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
 }
+
+/* The shared mini-nav has its own surface in narrow layouts. A receipt must
+   stay transparent behind its physical punches regardless of that layout. */
+.slate-mini-nav.slate-receipt-strip { background: transparent; }
 
 .slate-receipt-strip > * + * { border-left: 0; }
 
