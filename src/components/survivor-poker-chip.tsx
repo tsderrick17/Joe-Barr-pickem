@@ -11,6 +11,7 @@ type Props = {
   idleSpin?: boolean;
   unavailable?: boolean;
   size?: "wire" | "summary" | "ticket" | "slate";
+  tooltip?: string;
 };
 
 // The source marks have different amounts of transparent canvas around them.
@@ -31,7 +32,7 @@ const chipLogoScales: Record<string, number> = {
   WAS: 1.18,
 };
 
-export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire" }: Props) {
+export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
   // Normalize at the asset boundary so presentation casing can never break a
@@ -42,7 +43,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const state = official ? "official" : selected ? "picked" : "available";
 
   return (
-    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={teamName}>
+    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={tooltip ?? teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${idleSpin ? " is-idle-spinning" : ""}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
         <span className="survivor-poker-chip-rim survivor-poker-chip-rim-front" />

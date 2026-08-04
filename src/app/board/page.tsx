@@ -778,7 +778,7 @@ export default function BoardPage() {
                 <span
                   className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} ${team.canRemove ? "is-editable" : "is-sealed"}`}
                   key={team.gameId}
-                  title={team.canRemove ? `${team.name} may be changed until kickoff` : `${team.name} is sealed because its game has kicked off`}
+                  title={team.abbreviation}
                 >
                   <span>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
                   {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : <span aria-label="Sealed at kickoff" className="slate-receipt-lock-mark" role="img">🔒</span>}
@@ -791,7 +791,7 @@ export default function BoardPage() {
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
               <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
-                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
+                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.abbreviation} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
             </div>
