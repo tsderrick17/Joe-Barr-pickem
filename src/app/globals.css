@@ -268,7 +268,12 @@ body {
 }
 .slate-receipt-ticket {
   background-color: var(--receipt-paper);
-  grid-template-rows: .72rem .88rem minmax(1.98rem, 1fr);
+  /* This is the tear-off stub, not a tall empty card. Keep its three pieces
+     grouped as one compact printed instruction regardless of the taller pool
+     cells beside it. The button's row remains reserved when it is hidden. */
+  align-content: start;
+  grid-template-rows: auto auto 2rem;
+  gap: .34rem;
   padding-left: .68rem;
   position: relative;
 }
@@ -318,7 +323,7 @@ body {
 }
 
 .slate-receipt-ticket a {
-  align-self: center;
+  align-self: start;
   border-bottom: 1px dashed rgba(29, 53, 81, .44);
   color: #1d3551;
   display: inline-flex;
@@ -339,68 +344,82 @@ body {
 }
 
 .slate-receipt-print {
-  align-self: end;
+  align-self: start;
   appearance: none;
-  background:
-    linear-gradient(105deg, transparent 0 36%, rgba(255, 255, 255, .52) 47%, transparent 58%),
-    linear-gradient(#fafafa, #c6c8c6);
-  background-position: -150% 0, 0 0;
-  background-repeat: no-repeat;
-  background-size: 55% 100%, 100% 100%;
+  background: linear-gradient(#fafafa, #c6c8c6);
   border: 2px outset #f9f9f9;
   box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
   color: #15191b;
   cursor: pointer;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: .55rem;
+  font-size: .52rem;
   font-weight: 900;
   letter-spacing: .07em;
-  margin-top: .14rem;
-  overflow: visible;
-  padding: .32rem .42rem;
+  margin-top: 0;
+  min-height: 1.78rem;
+  overflow: hidden;
+  padding: .25rem .38rem;
   position: relative;
+  isolation: isolate;
   text-transform: uppercase;
+  width: min(100%, 11.6rem);
 }
 
+.slate-receipt-print::before {
+  /* One quick inspection beam, like a light catching across polished metal.
+     It is clipped inside the button so it never reads as a second outline. */
+  background: linear-gradient(105deg,
+    transparent 22%,
+    rgba(116, 239, 230, .08) 35%,
+    rgba(255, 255, 255, .9) 48%,
+    rgba(118, 240, 232, .48) 55%,
+    transparent 70%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-165%);
+  z-index: 1;
+}
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
 .slate-receipt-print:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
+.slate-receipt-print:not(:disabled)::before { animation: receipt-print-inspection-beam 10s ease-in-out infinite; }
 .slate-receipt-print.is-placeholder {
   pointer-events: none;
   visibility: hidden;
 }
 
 @keyframes receipt-print-attention {
-  /* A quick copier-glass glare, followed by two tactile 1990s button taps.
-     The full cue is over in well under a second; the button then rests. */
-  0%, 1.2%, 5.56%, 100% {
-    background-position: -150% 0, 0 0;
+  /* The light passes first, then the familiar two tactile 1990s button taps.
+     The rest of the ten-second cycle is intentionally still. */
+  0%, 4.2%, 7.2%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  2.8% {
-    background-position: 250% 0, 0 0;
-    box-shadow: 1px 1px 0 #6f7474, 0 0 10px rgba(76, 228, 216, .22), inset 0 1px rgba(255, 255, 255, .98);
-    filter: brightness(1.12) saturate(1.04);
-    transform: translate(0, 0);
-  }
-  3.35%, 4.85% {
-    background-position: 250% 0, 0 0;
+  4.65%, 6.1% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  4.05%, 5.55% {
-    background-position: 250% 0, 0 0;
+  5.25%, 6.7% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
   }
 }
 
+@keyframes receipt-print-inspection-beam {
+  0%, .5% { opacity: 0; transform: translateX(-165%); }
+  1% { opacity: 1; }
+  3.85% { opacity: 1; transform: translateX(165%); }
+  4.2%, 100% { opacity: 0; transform: translateX(165%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .slate-receipt-print:not(:disabled),
+  .slate-receipt-print:not(:disabled)::before,
   .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
   .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
 }
@@ -480,12 +499,16 @@ body {
 @media (max-width: 639px) {
   .slate-receipt-strip { grid-template-columns: minmax(6.1rem, .7fr) minmax(9rem, 1.28fr) minmax(7rem, .88fr); }
   .slate-receipt-strip > * { padding: .38rem .34rem; }
-  .slate-receipt-ticket { grid-template-rows: .58rem .68rem minmax(1.74rem, 1fr); padding-left: .5rem; }
+  .slate-receipt-ticket {
+    gap: .25rem;
+    grid-template-rows: auto auto 1.68rem;
+    padding-left: .5rem;
+  }
   .slate-receipt-ticket > span,
   .slate-receipt-pool > span { font-size: .46rem; }
   .slate-receipt-ticket a { font-size: .54rem; }
   .slate-receipt-ticket > span small { display: none; }
-  .slate-receipt-print { font-size: .45rem; padding: .26rem .28rem; }
+  .slate-receipt-print { font-size: .43rem; min-height: 1.56rem; padding: .2rem .25rem; }
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
   .slate-receipt-selection-chip button { font-size: .84rem; }
