@@ -343,27 +343,23 @@ body {
 }
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
-.slate-receipt-print:not(:disabled) { animation: receipt-print-attention 8s ease-in-out infinite; }
-.slate-receipt-print:not(:disabled)::before { animation: receipt-print-inspection-beam 8s ease-in-out infinite; }
-.slate-receipt-print.is-placeholder {
-  pointer-events: none;
-  visibility: hidden;
-}
+.slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
+.slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 10s ease-in-out infinite; }
 
 @keyframes receipt-print-attention {
   /* The complete sheen ends at 2s. Leave a clean half-second beat before one
-     tactile press, then keep the button still until the next 8s cycle. */
-  0%, 31.25%, 35%, 100% {
+     tactile press, then keep the button still until the next 10s cycle. */
+  0%, 25%, 28%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  32.5% {
+  26% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  34% {
+  27.2% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
@@ -371,15 +367,15 @@ body {
 }
 
 @keyframes receipt-print-inspection-beam {
-  0%, 1% { opacity: 0; transform: translateX(-165%); }
-  1.5% { opacity: 1; }
-  24.5% { opacity: 1; transform: translateX(165%); }
-  25%, 100% { opacity: 0; transform: translateX(165%); }
+  0%, .8% { opacity: 0; transform: translateX(-165%); }
+  1.2% { opacity: 1; }
+  19.6% { opacity: 1; transform: translateX(165%); }
+  20%, 100% { opacity: 0; transform: translateX(165%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slate-receipt-print:not(:disabled),
-  .slate-receipt-print:not(:disabled)::before,
+  .slate-receipt-print.needs-attention:not(:disabled),
+  .slate-receipt-print.needs-attention:not(:disabled)::before,
   .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
   .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
 }
