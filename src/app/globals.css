@@ -352,19 +352,19 @@ body {
 .slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 15s ease-in-out infinite; }
 
 @keyframes receipt-print-attention {
-  /* The sheen clears at 20%; the press follows roughly half a second later,
+  /* The sheen clears at 20%; the press follows roughly .2 seconds later,
      while the 15-second cycle still governs click-to-click timing. */
-  0%, 22%, 25%, 100% {
+  0%, 20.35%, 23%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  23.35% {
+  21.25% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  24.2% {
+  22.1% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
