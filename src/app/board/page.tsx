@@ -850,11 +850,7 @@ export default function BoardPage() {
           )}
           </>) : null}
           <div className="slate-receipt-ticket">
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--outer-top-left" />
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--outer-bottom-left" />
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--divider-top-right" />
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--divider-bottom-right" />
-          <span>YOUR RECEIPT</span>
+            <span>YOUR RECEIPT</span>
             <Link href="/#my-ticket">VIEW FULL TICKET</Link>
             <button
               aria-hidden={!receiptNeedsSaving}
@@ -869,8 +865,6 @@ export default function BoardPage() {
             <i aria-hidden="true" className="slate-receipt-bottom-perf" />
           </div>
           <div className="slate-receipt-pool">
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--divider-top-right" />
-            <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--divider-bottom-right" />
             <span>PICK&apos;EM</span>
             <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"}`} style={{ "--selection-slot-count": selectionLimit } as CSSProperties}>
               {receiptIsLoading ? <strong className="is-quiet">CHECKING</strong> : selectedTeams.length ? selectedTeams.map((team, index) => (
@@ -892,8 +886,6 @@ export default function BoardPage() {
             </div>
           ) : (
             <div className="slate-receipt-pool slate-receipt-survivor">
-              <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--outer-top-right" />
-              <i aria-hidden="true" className="slate-receipt-punch slate-receipt-punch--outer-bottom-right" />
               <span>SURVIVOR</span>
               <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
                 {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
