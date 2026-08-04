@@ -479,6 +479,7 @@ body {
 
 .slate-receipt-survivor-pick { align-items: center; display: flex; gap: .35rem; min-width: 0; }
 .slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.receipt-team-name-short { display: none; }
 .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex: 0 0 3.19rem; height: 3.19rem; width: 3.19rem; }
 .slate-receipt-survivor .is-due { color: #a82820; }
 .slate-receipt-survivor .is-out { color: #b42318; }
@@ -516,6 +517,8 @@ body {
   .slate-receipt-pool { grid-template-rows: .58rem 2.42rem .58rem; }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
+  .receipt-team-name-full { display: none; }
+  .receipt-team-name-short { display: inline; }
   .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary { flex-basis: 2.23rem; height: 2.23rem; width: 2.23rem; }
 }
 
