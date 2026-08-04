@@ -352,19 +352,19 @@ body {
 .slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 15s ease-in-out infinite; }
 
 @keyframes receipt-print-attention {
-  /* One tactile press per 15-second cycle; the rest state supplies a full
-     fifteen seconds from one click cue to the next. */
-  0%, 25%, 28%, 100% {
+  /* The sheen clears at 20%; the press follows roughly half a second later,
+     while the 15-second cycle still governs click-to-click timing. */
+  0%, 22%, 25%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  26% {
+  23.35% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  27.2% {
+  24.2% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
