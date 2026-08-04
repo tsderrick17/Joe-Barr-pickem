@@ -196,7 +196,7 @@ body {
    printed receipt aligned even when the Survivor chip is larger than an ATS
    selection chip. */
 .slate-receipt-pool {
-  grid-template-rows: .72rem 3.48rem .68rem;
+  grid-template-rows: .72rem 3.48rem minmax(.68rem, auto);
 }
 .slate-receipt-ticket {
   /* This is a compact tear-off stub. Keep the receipt title, link, and print
@@ -235,7 +235,6 @@ body {
 
 .slate-receipt-ticket a {
   align-self: start;
-  border-bottom: 1px dashed rgba(29, 53, 81, .44);
   color: #1d3551;
   display: inline-flex;
   font-size: .66rem;
@@ -416,9 +415,9 @@ body {
   font-style: normal;
   font-weight: 900;
   letter-spacing: .1em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .slate-receipt-pool > em small { font-size: inherit; font-weight: inherit; }
 .slate-receipt-pool > em.is-complete { color: #08764e; }
@@ -466,7 +465,7 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
-  .slate-receipt-pool { grid-template-rows: .58rem 2.42rem .58rem; }
+  .slate-receipt-pool { grid-template-rows: .58rem 2.42rem minmax(.58rem, auto); }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
   .receipt-team-name-full { display: none; }

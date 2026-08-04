@@ -129,6 +129,26 @@ test("reconciles a six-game browser draft as individual games lock", () => {
   assert.equal(result.selections[4].teamId, "draft-playoff-5");
 });
 
+test("does not treat future picks clicked out of Slate order as kicked off", () => {
+  const futureGames = [
+    { id: "first", kickoffAt: "2026-09-10T00:35:00Z" },
+    { id: "second", kickoffAt: "2026-09-13T17:00:00Z" },
+  ];
+  const selections = [
+    { gameId: "second", teamId: "second-team" },
+    { gameId: "first", teamId: "first-team" },
+  ];
+
+  const result = reconcileAtsDraftAtKickoff({
+    games: futureGames,
+    selections,
+    savedPicks: [],
+    now: new Date("2026-08-04T18:00:00Z"),
+  });
+
+  assert.deepEqual(result, { selections: [selections[1], selections[0]], changed: false });
+});
+
 test("restores a submitted Survivor pick when its game kicks off during an unsaved replacement", () => {
   const savedPick = { gameId: "early", teamId: "a" };
   const result = reconcileSurvivorDraftAtKickoff({

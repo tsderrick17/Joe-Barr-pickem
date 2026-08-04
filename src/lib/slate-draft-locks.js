@@ -2,6 +2,12 @@ function samePick(left, right) {
   return left?.gameId === right?.gameId && left?.teamId === right?.teamId;
 }
 
+function samePickSet(left, right) {
+  if (left.length !== right.length) return false;
+
+  return left.every((pick) => right.some((candidate) => samePick(pick, candidate)));
+}
+
 /**
  * Reconcile the browser's ATS draft when time advances across one or more
  * kickoffs. Submitted picks become the authority for kicked games; unsaved
@@ -18,8 +24,12 @@ export function reconcileAtsDraftAtKickoff({ games, selections, savedPicks, now 
     return pick ? [pick] : [];
   });
 
-  const changed = reconciled.length !== selections.length ||
-    reconciled.some((pick, index) => !samePick(pick, selections[index]));
+  // Draft order reflects the order in which a player clicked teams, while the
+  // reconciled list follows the Slate's game order. A different array order is
+  // not a kickoff event and must never discard a valid future draft or show the
+  // kickoff warning. Only a real difference in the selected game/team set is a
+  // change here.
+  const changed = !samePickSet(reconciled, selections);
 
   return { selections: reconciled, changed };
 }
