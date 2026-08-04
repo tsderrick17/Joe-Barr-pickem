@@ -154,7 +154,10 @@ body {
    receipt feel without affecting layout or accessibility. */
 .slate-receipt-strip {
   --receipt-paper: #fffdf8;
-  --receipt-underlay: #f5f0e6;
+  /* The receipt lives on the same warm stock as its page column. Cutouts are
+     painted with that exact surface so they visually disappear; they are not
+     a third beige decoration. */
+  --receipt-underlay: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
   /* Corner notches are quarter circles; divider notches are half circles.
@@ -174,35 +177,46 @@ body {
 }
 
 .slate-receipt-strip::before {
-  content: none;
+  background: radial-gradient(circle at 0 50%,
+    var(--receipt-underlay) 0 .17rem,
+    transparent .18rem) left center / .36rem .64rem repeat-y;
+  content: "";
+  inset: var(--receipt-notch-radius) auto var(--receipt-notch-radius) -1px;
+  pointer-events: none;
+  position: absolute;
+  width: .36rem;
+  z-index: 6;
 }
 
 .slate-receipt-strip::after {
-  content: none;
+  background: radial-gradient(circle at 100% 50%,
+    var(--receipt-underlay) 0 .17rem,
+    transparent .18rem) right center / .36rem .64rem repeat-y;
+  content: "";
+  inset: var(--receipt-notch-radius) -1px var(--receipt-notch-radius) auto;
+  pointer-events: none;
+  position: absolute;
+  width: .36rem;
+  z-index: 6;
 }
 
 .slate-receipt-strip > * {
   /* Every paper segment owns four quarter-circle punches. At a divider, the
-     neighboring quarters meet to form one exact semicircle. This is ordinary
-     background geometry rather than a browser-dependent mask, so the punches
-     cannot silently disappear. */
+     neighboring quarters meet to form one exact semicircle. The page-colored
+     centers have no outline, so they read as absent paper rather than dots. */
   background-color: var(--receipt-paper);
   background-image:
     radial-gradient(circle at 0 0,
-      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
-      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      var(--receipt-underlay) 0 var(--receipt-notch-radius),
       transparent calc(var(--receipt-notch-radius) + .5px)),
     radial-gradient(circle at 0 100%,
-      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
-      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      var(--receipt-underlay) 0 var(--receipt-notch-radius),
       transparent calc(var(--receipt-notch-radius) + .5px)),
     radial-gradient(circle at 100% 0,
-      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
-      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      var(--receipt-underlay) 0 var(--receipt-notch-radius),
       transparent calc(var(--receipt-notch-radius) + .5px)),
     radial-gradient(circle at 100% 100%,
-      var(--receipt-underlay) 0 calc(var(--receipt-notch-radius) - 1px),
-      var(--receipt-rule) calc(var(--receipt-notch-radius) - 1px) var(--receipt-notch-radius),
+      var(--receipt-underlay) 0 var(--receipt-notch-radius),
       transparent calc(var(--receipt-notch-radius) + .5px)),
     linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
   background-position: left top, left bottom, right top, right bottom, center top;
