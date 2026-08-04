@@ -154,16 +154,19 @@ body {
    receipt feel without affecting layout or accessibility. */
 .slate-receipt-strip {
   --receipt-paper: #fffdf8;
-  /* The underlay is retained only for the edge scallops. The divider notches
-     below are real masks, so their centers are genuinely transparent. */
-  --receipt-underlay: #fffdf8;
+  /* This is the page showing through a physically punched receipt. It must
+     differ subtly from the paper itself; otherwise real transparent holes
+     disappear against the identical white page behind them. */
+  --receipt-underlay: #f5f0e6;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
   /* Corner notches are quarter circles; divider notches are half circles.
      Sharing one radius keeps the former exactly half the latter by area. */
   --receipt-notch-radius: .52rem;
   --receipt-notch-diameter: 1.04rem;
-  background: transparent;
+  /* The child paper panels are masked. This exposed underlay is what becomes
+     visible through each corner/divider punch, rather than a painted circle. */
+  background: var(--receipt-underlay);
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
