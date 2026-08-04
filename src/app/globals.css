@@ -168,7 +168,7 @@ body {
   box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
   color: var(--receipt-ink);
   display: grid;
-  grid-template-columns: minmax(8rem, .68fr) minmax(17rem, 1.5fr) minmax(12rem, 1.08fr);
+  grid-template-columns: 21% 46% 33%;
   margin: 0;
   overflow: visible;
   position: relative;
@@ -176,35 +176,37 @@ body {
   z-index: 7;
 }
 
-.slate-receipt-strip > * {
-  /* Every paper segment owns four quarter-circle punches. At a divider, the
-     neighboring quarters meet to form one exact semicircle. These are masks,
-     not painted beige circles, so the page behind the receipt is visible. */
-  background-color: var(--receipt-paper);
-  background-image: linear-gradient(rgba(86, 71, 48, .75), rgba(86, 71, 48, .75));
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: calc(100% - var(--receipt-notch-diameter)) 1px;
-  /* Intersect four "paper except this circle" masks. Any corner hole removes
-     the element itself—including its rule—rather than covering it with color. */
-  -webkit-mask-composite: source-in, source-in, source-in;
-  -webkit-mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px));
-  mask-composite: intersect, intersect, intersect;
-  mask-image:
-    radial-gradient(circle at 0 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 0 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 0, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px)),
-    radial-gradient(circle at 100% 100%, transparent 0 var(--receipt-notch-radius), #000 calc(var(--receipt-notch-radius) + .5px));
+.slate-receipt-strip > :not(.slate-receipt-paper) {
+  background: transparent;
   min-width: 0;
   padding: .46rem .68rem .42rem;
   position: relative;
+  z-index: 1;
 }
 
-.slate-receipt-strip > * + * { border-left: 0; }
+.slate-receipt-paper {
+  box-sizing: border-box;
+  display: block;
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+  padding: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+.slate-receipt-paper-fill { fill: var(--receipt-paper); }
+.slate-receipt-paper-rule {
+  stroke: var(--receipt-rule);
+  stroke-dasharray: 2 4;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.slate-receipt-paper-rule--bottom { stroke-dasharray: 2 5; }
+
+.slate-receipt-strip > :not(.slate-receipt-paper) + :not(.slate-receipt-paper) { border-left: 0; }
 
 .slate-receipt-ticket,
 .slate-receipt-pool {
@@ -217,19 +219,7 @@ body {
 /* Each segment owns its bottom perforation, with clearance at both ends so
    the nearby circular punches are true cut-outs, never dots in the line. */
 .slate-receipt-bottom-perf {
-  background-image: radial-gradient(circle, rgba(119, 103, 77, .74) 0 1px, transparent 1.12px);
-  background-repeat: repeat-x;
-  background-size: 6px 2px;
-  bottom: -1px;
-  box-shadow: 0 1px rgba(255, 255, 255, .58);
-  height: 1px;
-  /* This clearance is deliberately larger than the half-circle radius: no
-     dotted or solid rule may be visible inside a perforation. */
-  left: .66rem;
-  pointer-events: none;
-  position: absolute;
-  right: .66rem;
-  z-index: 1;
+  display: none;
 }
 
 /* Both pools share fixed label, selection, and status tracks. That keeps the
@@ -239,7 +229,6 @@ body {
   grid-template-rows: .72rem 3.48rem .68rem;
 }
 .slate-receipt-ticket {
-  background-color: var(--receipt-paper);
   /* This is a compact tear-off stub. Keep the receipt title, link, and print
      action together at the top instead of spreading them across the taller
      adjacent pool cells. The invisible print placeholder still reserves its
@@ -264,13 +253,7 @@ body {
 }
 
 .slate-receipt-pool::before {
-  background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 2px, transparent 2px 5px);
-  content: "";
-  inset: .58rem auto .58rem 0;
-  pointer-events: none;
-  position: absolute;
-  width: 1px;
-  z-index: 2;
+  content: none;
 }
 
 .slate-receipt-pool::after {
@@ -474,8 +457,8 @@ body {
 .slate-receipt-success { color: #08764e; }
 
 @media (max-width: 639px) {
-  .slate-receipt-strip { grid-template-columns: minmax(6.1rem, .7fr) minmax(9rem, 1.28fr) minmax(7rem, .88fr); }
-  .slate-receipt-strip > * { padding: .38rem .34rem; }
+  .slate-receipt-strip { grid-template-columns: 21% 46% 33%; }
+  .slate-receipt-strip > :not(.slate-receipt-paper) { padding: .38rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;
     padding-left: .5rem;
@@ -1692,8 +1675,8 @@ html[data-theme="night"] .slate-receipt-strip {
   box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
 }
 
-html[data-theme="night"] .slate-receipt-strip > * {
-  background-color: var(--receipt-paper);
+html[data-theme="night"] .slate-receipt-strip > :not(.slate-receipt-paper) {
+  background-color: transparent;
 }
 
 html[data-theme="night"] .slate-receipt-ticket > span,

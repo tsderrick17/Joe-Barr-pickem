@@ -819,6 +819,27 @@ export default function BoardPage() {
         </header>
 
         <section aria-label="Your weekly receipt" className={`slate-mini-nav slate-receipt-strip ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
+          <svg aria-hidden="true" className="slate-receipt-paper" focusable="false" preserveAspectRatio="none">
+            <defs>
+              <mask id="slate-receipt-paper-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+                <rect fill="white" width="100%" height="100%" />
+                {[0, 21, 67, 100].flatMap((x) => [
+                  <circle cx={`${x}%`} cy="0" fill="black" key={`${x}-top`} r="9" />,
+                  <circle cx={`${x}%`} cy="100%" fill="black" key={`${x}-bottom`} r="9" />,
+                ])}
+                {[12, 22, 32, 42, 52, 62, 72, 82, 92].flatMap((y) => [
+                  <circle cx="0" cy={`${y}%`} fill="black" key={`left-${y}`} r="3.25" />,
+                  <circle cx="100%" cy={`${y}%`} fill="black" key={`right-${y}`} r="3.25" />,
+                ])}
+              </mask>
+            </defs>
+            <g mask="url(#slate-receipt-paper-mask)">
+              <rect className="slate-receipt-paper-fill" width="100%" height="100%" />
+              <line className="slate-receipt-paper-rule" x1="21%" x2="21%" y1="0" y2="100%" />
+              <line className="slate-receipt-paper-rule" x1="67%" x2="67%" y1="0" y2="100%" />
+              <line className="slate-receipt-paper-rule slate-receipt-paper-rule--bottom" x1="0" x2="100%" y1="100%" y2="100%" />
+            </g>
+          </svg>
           {false ? (<>
           <Link href="/#my-ticket">
             <span>YOUR RECEIPT</span>
