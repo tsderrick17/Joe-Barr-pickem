@@ -137,16 +137,19 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   const firstSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
   await page.getByRole("button", { name: "SUBMIT" }).click();
   expect((await firstSave).status()).toBe(200);
-  const receipt = page.getByRole("navigation", { name: "Your weekly controls" });
-  await expect(receipt.getByText(/2\/2 SELECTED.*SAVED/)).toBeVisible();
-  await expect(receipt.getByText(/Seattle Seahawks.*SAVED/)).toBeVisible();
+  const receipt = page.getByRole("region", { name: "Your weekly receipt" });
+  await expect(receipt.locator(".slate-receipt-pickem > em")).toContainText("2/2");
+  await expect(receipt.locator(".slate-receipt-pickem > em")).toContainText("SUBMITTED");
+  await expect(receipt.locator(".slate-receipt-survivor-pick > strong")).toHaveAttribute("aria-label", "Seattle Seahawks");
+  await expect(receipt.locator(".slate-receipt-survivor > em")).toContainText("SUBMITTED");
 
   await page.getByRole("button", { name: "Choose Los Angeles Rams as your Survivor winner" }).click();
   await expect(receipt.getByText(/CHANGED.*HIT SUBMIT/)).toBeVisible();
   const replacementSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
   await page.getByRole("button", { name: "SUBMIT" }).click();
   expect((await replacementSave).status()).toBe(200);
-  await expect(receipt.getByText(/Los Angeles Rams.*SAVED/)).toBeVisible();
+  await expect(receipt.locator(".slate-receipt-survivor-pick > strong")).toHaveAttribute("aria-label", "Los Angeles Rams");
+  await expect(receipt.locator(".slate-receipt-survivor > em")).toContainText("SUBMITTED");
 
   const { data: savedAts, error: savedAtsError } = await fixture.admin
     .from("picks")

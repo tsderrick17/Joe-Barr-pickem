@@ -12,6 +12,7 @@
     "test:integration": "node --test --test-concurrency=1 test/integration/**/*.test.mjs",
     "test:e2e": "playwright test",
     "test:season-drill": "node scripts/season-drill.mjs",
+    "test:isolated": "node --env-file-if-exists=.env.test.local scripts/season-drill.mjs",
     "test:all": "npm run test && npm run test:integration"
   },
   "dependencies": {
