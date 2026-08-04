@@ -359,27 +359,27 @@ body {
 }
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
-.slate-receipt-print:not(:disabled) { animation: receipt-print-attention 10s ease-in-out infinite; }
-.slate-receipt-print:not(:disabled)::before { animation: receipt-print-inspection-beam 10s ease-in-out infinite; }
+.slate-receipt-print:not(:disabled) { animation: receipt-print-attention 8s ease-in-out infinite; }
+.slate-receipt-print:not(:disabled)::before { animation: receipt-print-inspection-beam 8s ease-in-out infinite; }
 .slate-receipt-print.is-placeholder {
   pointer-events: none;
   visibility: hidden;
 }
 
 @keyframes receipt-print-attention {
-  /* The slower light has time to travel across the whole face before the familiar
-     two tactile 1990s button taps. The rest of the cycle is still. */
-  0%, 27.8%, 30.8%, 100% {
+  /* The complete sheen ends at 2s. Leave a clean half-second beat before the
+     two tactile presses, then keep the button still until the next 8s cycle. */
+  0%, 31.25%, 38%, 100% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
-  28.25%, 29.7% {
+  32%, 35% {
     box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
     filter: brightness(.96);
     transform: translate(1px, 1px);
   }
-  28.85%, 30.3% {
+  33%, 36% {
     box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
@@ -389,8 +389,8 @@ body {
 @keyframes receipt-print-inspection-beam {
   0%, 1% { opacity: 0; transform: translateX(-165%); }
   1.5% { opacity: 1; }
-  27.35% { opacity: 1; transform: translateX(165%); }
-  27.8%, 100% { opacity: 0; transform: translateX(165%); }
+  24.5% { opacity: 1; transform: translateX(165%); }
+  25%, 100% { opacity: 0; transform: translateX(165%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
