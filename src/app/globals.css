@@ -1500,14 +1500,18 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .selection-chip {
   border-color: #d979ae !important;
-  background: linear-gradient(135deg, #fff5fa, #f8dbe9) !important;
-  color: #4b1532;
-  box-shadow: inset 3px 0 0 #cf2879, 0 1px 2px rgba(95, 20, 61, 0.14);
+  border-left-color: #ad235f !important;
+  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(95, 20, 61, 0.12);
 }
 
 .selection-chip button {
-  color: #7c2a58 !important;
+  color: #181116 !important;
 }
+
+.selection-chip small { color: #111; }
+.selection-chip small.is-official { color: #0f766e; }
 
 .pickem-eliminated-stamp {
   border: 3px solid #b42318;
@@ -1683,9 +1687,10 @@ html[data-theme="night"] .slate-receipt-ticket > span,
 html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
 html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
 html[data-theme="night"] .slate-receipt-selection-chip {
-  background: linear-gradient(135deg, #57203e, #321d32) !important;
+  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
   border-color: #ec81ba !important;
-  color: #fff1f8;
+  border-left-color: #ad235f !important;
+  color: #111;
 }
 html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
   background: linear-gradient(135deg, #17383a, #142e32) !important;
@@ -1693,27 +1698,31 @@ html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
   border-left-color: #72ddd1 !important;
   box-shadow: inset 0 0 0 1px rgba(114, 221, 209, .14) !important;
 }
-html[data-theme="night"] .slate-receipt-selection-chip small { color: #f3d9e8; }
+html[data-theme="night"] .slate-receipt-selection-chip small { color: #111; }
 html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small { color: #edf7f5; }
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small.is-official { color: #66d8cc; }
 html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
 html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: #edf7f5; }
 
 html[data-theme="night"] .selection-chip {
   border-color: #ec81ba !important;
-  background: linear-gradient(135deg, #57203e, #321d32) !important;
-  color: #fff1f8;
-  box-shadow: inset 2px 0 0 #ff78ba;
+  border-left-color: #ad235f !important;
+  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .28);
 }
 
 html[data-theme="night"] .selection-chip button {
-  color: #ffc1df !important;
+  color: #181116 !important;
 }
 
 html[data-theme="night"] .selection-chip button:hover {
   background-color: #472d35 !important;
   color: #ffb4bd !important;
 }
-html[data-theme="night"] .selection-chip small.is-official { color: #66d8cc; }
+html[data-theme="night"] .selection-chip small { color: #111; }
+html[data-theme="night"] .selection-chip small.is-official { color: #0f766e; }
 
 html[data-theme="night"] .week-status-pick {
   border-color: #5fc8bb;
