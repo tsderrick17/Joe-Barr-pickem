@@ -138,7 +138,9 @@ function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
         label: visible ? label : null,
         abbreviation: abbreviations[label],
         isHidden: !visible,
-        resultMark: scenario.final ? resultFor(game, selection, true) ?? "" : "",
+                resultMark: scenario.finalGames.includes(index)
+                  ? resultFor(game, selection, true) ?? ""
+                  : "",
         spread: visible ? `${selection === "left" ? "-" : "+"}${spread.toFixed(1)}` : null,
         isLineLocked: scenario.lockedGames.includes(index),
       };
