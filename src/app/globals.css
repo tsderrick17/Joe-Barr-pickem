@@ -198,6 +198,7 @@ body {
 }
 
 .slate-receipt-paper-fill { fill: var(--receipt-paper); }
+.slate-receipt-paper mask { mask-type: luminance; }
 .slate-receipt-paper-rule {
   stroke: var(--receipt-rule);
   stroke-dasharray: 2 4;

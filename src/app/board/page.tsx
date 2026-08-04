@@ -821,7 +821,15 @@ export default function BoardPage() {
         <section aria-label="Your weekly receipt" className={`slate-mini-nav slate-receipt-strip ${receiptIsLoading ? "receipt-is-loading" : ""}`}>
           <svg aria-hidden="true" className="slate-receipt-paper" focusable="false" preserveAspectRatio="none">
             <defs>
-              <mask id="slate-receipt-paper-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+              <mask
+                id="slate-receipt-paper-mask"
+                maskUnits="userSpaceOnUse"
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                style={{ maskType: "luminance" }}
+              >
                 <rect fill="white" width="100%" height="100%" />
                 {[0, 21, 67, 100].flatMap((x) => [
                   <circle cx={`${x}%`} cy="0" fill="black" key={`${x}-top`} r="9" />,
