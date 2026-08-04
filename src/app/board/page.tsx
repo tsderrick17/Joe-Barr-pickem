@@ -75,10 +75,10 @@ function SlateLoadingShell() {
   return (
     <main aria-busy="true" className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
-        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
           <div className="slate-header-grid grid gap-5 md:gap-0">
             <div className="min-w-0 md:pr-7">
-              <h1 className="font-serif text-3xl font-bold sm:text-4xl">The Slate</h1>
+              <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">The Slate</h1>
               <p className="mt-4 text-xs font-bold tracking-[0.16em] text-slate-600">VIEW WEEK</p>
               <div className="mt-1 h-9 w-28 border border-[#1d1d1f] bg-white" />
             </div>
@@ -754,10 +754,10 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
-        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
           <div className="slate-header-grid grid gap-5 md:gap-0">
             <div className="min-w-0 md:pr-7">
-              <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+              <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">
                 The Slate
               </h1>
               <label
