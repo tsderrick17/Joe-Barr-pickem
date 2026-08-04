@@ -981,7 +981,9 @@ body {
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
 .survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary.is-idle-spinning {
-  animation: survivor-receipt-chip-idle-spin 7.2s linear infinite;
+  /* Keep the receipt chip readable long enough to enjoy the team mark before
+     it turns through its narrow edge. */
+  animation: survivor-receipt-chip-idle-spin 14s linear infinite;
 }
 
 /* The receipt chip rotates slowly, so its profile has to read as one molded
