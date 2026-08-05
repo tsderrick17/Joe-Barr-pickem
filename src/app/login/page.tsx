@@ -85,6 +85,17 @@ export default function LoginPage() {
         return;
       }
 
+      // Confirm the browser can read its saved session before leaving this
+      // screen. This prevents a just-signed-in player from bouncing straight
+      // back to the PIN page on a slow browser or phone.
+      const verifiedSession = await getFreshSession();
+      if (!verifiedSession) {
+        setErrorMessage(
+          "Your PIN was accepted, but the session did not finish. Please try once more.",
+        );
+        return;
+      }
+
       router.replace("/");
     } catch {
       setErrorMessage(

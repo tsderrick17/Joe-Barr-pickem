@@ -396,6 +396,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
+    serverTime: currentTime.toISOString(),
     games: (games as GameRow[]).map((game) => {
       const lockedLine = lockedLineByGameId.get(game.id);
 

@@ -58,6 +58,7 @@ type SelectedPick = {
 };
 
 type BoardResponse = {
+  serverTime: string;
   games: BoardGame[];
   myPicks: SelectedPick[];
   pickem: {
@@ -138,6 +139,7 @@ export default function BoardPage() {
   const [games, setGames] = useState<BoardGame[]>([]);
   const [showActionOnly, setShowActionOnly] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [clockSynchronized, setClockSynchronized] = useState(false);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
@@ -155,6 +157,7 @@ export default function BoardPage() {
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
   const selectionFeedbackToken = useRef(0);
+  const serverClockOffset = useRef(0);
 
   async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
@@ -169,6 +172,7 @@ export default function BoardPage() {
     setErrorMessage("");
     setSelectionWarning("");
     setPlayoffEliminated(false);
+    setClockSynchronized(false);
     setWeek(period);
 
     try {
@@ -188,6 +192,15 @@ export default function BoardPage() {
         return;
       }
 
+      const serverTime = Date.parse(data.serverTime);
+      if (!Number.isFinite(serverTime)) {
+        setErrorMessage("The Slate clock could not be verified safely.");
+        return;
+      }
+
+      serverClockOffset.current = serverTime - Date.now();
+      setCurrentTime(serverTime);
+
       setGames(data.games);
       setPlayoffEliminated(data.pickem.playoffEliminated);
       setSelectedPicks(data.myPicks);
@@ -198,6 +211,7 @@ export default function BoardPage() {
       setSurvivorAvailable(data.survivor.available);
       setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
       setSurvivorStatus(data.survivor.status);
+      setClockSynchronized(true);
     } catch (error) {
       if (requestId === boardRequestId.current) {
         if (error instanceof SessionUnavailableError) {
@@ -273,7 +287,10 @@ export default function BoardPage() {
   }, []);
 
   useEffect(() => {
-    const refreshTime = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    const refreshTime = window.setInterval(
+      () => setCurrentTime(Date.now() + serverClockOffset.current),
+      60_000,
+    );
     return () => window.clearInterval(refreshTime);
   }, []);
 
@@ -482,7 +499,7 @@ export default function BoardPage() {
   const hasEarlyGame = games.some(isEarlyGame);
 
   useEffect(() => {
-    if (isLoading || games.length === 0) return;
+    if (isLoading || !clockSynchronized || games.length === 0) return;
 
     const now = new Date(currentTime);
     const atsDraft = reconcileAtsDraftAtKickoff({
@@ -509,7 +526,7 @@ export default function BoardPage() {
     }, 0);
 
     return () => window.clearTimeout(reconcileTimer);
-  }, [currentTime, games, isLoading, savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
+  }, [clockSynchronized, currentTime, games, isLoading, savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
 
   function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
     selectionFeedbackToken.current += 1;
