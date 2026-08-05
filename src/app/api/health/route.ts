@@ -1,29 +1,29 @@
 import { NextResponse } from "next/server";
-import { checkAutomationHealth } from "@/lib/automation-health";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
- * Public, monitor-friendly availability check. It intentionally returns no
- * provider details, secrets, or player data: a non-200 response is enough for
- * an uptime service to alert the Commissioner.
+ * Public, monitor-friendly availability check. It confirms that the site can
+ * reach the player-facing database with the same configuration the app uses.
+ * Detailed automation readiness intentionally lives in the Commissioner
+ * dashboard: a stale reminder must be actionable there, not falsely reported
+ * to UptimeRobot as an outage of the public site.
  */
 export async function GET() {
   try {
-    const health = await checkAutomationHealth();
-    if (health.status !== "healthy") {
-      console.error("Public health detected automation trouble.", {
-        problemCount: health.problems.length,
-      });
-      return NextResponse.json(
-        { status: "degraded", checkedAt: health.checkedAt },
-        { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } },
-      );
+    const { error } = await supabase
+      .from("seasons")
+      .select("id")
+      .limit(1);
+
+    if (error) {
+      throw error;
     }
 
     return NextResponse.json(
-      { status: "ok", checkedAt: health.checkedAt },
+      { status: "ok", checkedAt: new Date().toISOString() },
       { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
   } catch (error) {
