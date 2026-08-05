@@ -163,6 +163,9 @@ export async function GET(request: NextRequest) {
   const { data: players, error: playersError } = playersResult;
 
   if (gamesError || !games) {
+    console.error("Slate games query failed.", {
+      code: gamesError?.code,
+    });
     return NextResponse.json(
       { error: "The games for this week could not be loaded." },
       { status: 500 },
@@ -170,6 +173,14 @@ export async function GET(request: NextRequest) {
   }
 
   if (picksError || periodError || !period || publicPicksError || playersError || !players) {
+    console.error("Slate bootstrap query failed.", {
+      picksCode: picksError?.code,
+      periodCode: periodError?.code,
+      publicPicksCode: publicPicksError?.code,
+      playersCode: playersError?.code,
+      missingPeriod: !period,
+      missingPlayers: !players,
+    });
     return NextResponse.json(
       { error: "Your submitted picks could not be loaded." },
       { status: 500 },
@@ -186,6 +197,10 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (seasonError || !season) {
+    console.error("Slate season query failed.", {
+      code: seasonError?.code,
+      missingSeason: !season,
+    });
     return NextResponse.json(
       { error: "The current season could not be loaded safely." },
       { status: 503 },
@@ -204,7 +219,10 @@ export async function GET(request: NextRequest) {
     try {
       const eligibility = await loadPlayoffEligibility(period.season_id, scoringPeriodId, players);
       playoffEliminated = eligibility.eliminatedPlayerIds.has(player.id);
-    } catch {
+    } catch (error) {
+      console.error("Playoff eligibility check failed on The Slate.", {
+        message: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json({ error: "Playoff eligibility could not be verified safely." }, { status: 503 });
     }
   }

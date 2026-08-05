@@ -131,6 +131,10 @@ export async function GET(request: NextRequest) {
   ]);
 
   if (viewerResult.error || seasonResult.error) {
+    console.error("Home bootstrap query failed.", {
+      viewerCode: viewerResult.error?.code,
+      seasonCode: seasonResult.error?.code,
+    });
     return NextResponse.json(
       { error: "The current pool could not be loaded safely." },
       { status: 503 },
