@@ -338,13 +338,13 @@ export default function BoardPage() {
       .map(([day, dayGames]) => [
         day,
         dayGames.filter((game) => {
-          const stillOpenForSelection = new Date(game.kickoffAt) > new Date();
+        const stillOpenForSelection = new Date(game.kickoffAt).getTime() > currentTime;
           const hasPublishedPoolAction = game.awayPickers.length > 0 || game.homePickers.length > 0;
           return stillOpenForSelection || hasPublishedPoolAction;
         }),
       ] as const)
       .filter(([, dayGames]) => dayGames.length > 0);
-  }, [actionOnlyActive, gamesByDay]);
+}, [actionOnlyActive, currentTime, gamesByDay]);
 
   const selectedTeams = useMemo(() => {
     const gameOrder = new Map(games.map((game, index) => [game.id, index]));
