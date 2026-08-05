@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function SiteNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const navRef = useRef<HTMLElement | null>(null);
 
   const [playerName, setPlayerName] = useState("");
@@ -120,7 +121,7 @@ export default function SiteNav() {
       setPlayerName("");
       setIsCommissioner(false);
       setIsSigningOut(false);
-      window.location.assign("/login");
+      router.replace("/login");
     }
   }
 

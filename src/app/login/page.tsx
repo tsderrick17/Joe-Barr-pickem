@@ -1,11 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthApiError } from "@supabase/supabase-js";
 import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [pin, setPin] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,7 +18,7 @@ export default function LoginPage() {
     async function redirectSignedInPlayer() {
       const session = await getFreshSession();
       if (active && session) {
-        window.location.replace("/");
+        router.replace("/");
       }
     }
 
@@ -24,7 +26,7 @@ export default function LoginPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,7 +85,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.assign("/");
+      router.replace("/");
     } catch {
       setErrorMessage(
         "Sign-in could not reach the server. Check your connection and try again.",
