@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import AtsResultStamp from "@/components/ats-result-stamp";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import PlayerTrophyName from "@/components/player-trophy-name";
@@ -35,6 +35,7 @@ type ScoreboardRow = {
 };
 
 type HomeData = {
+  serverTime: string;
   viewerPlayerId: string;
   showSurvivorStandings: boolean;
   showPoolChat: boolean;
@@ -115,6 +116,7 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
   const [savingDisplay, setSavingDisplay] = useState(false);
+  const serverClockOffset = useRef(0);
 
   useEffect(() => {
     let revealTimer: number | null = null;
@@ -144,6 +146,14 @@ export default function HomePage() {
           return;
         }
 
+        const serverTimestamp = new Date(result.serverTime).getTime();
+        if (!Number.isFinite(serverTimestamp)) {
+          setErrorMessage("The Standings clock could not be verified safely.");
+          return;
+        }
+
+        serverClockOffset.current = serverTimestamp - Date.now();
+
         setErrorMessage("");
         setData(result);
         hasLoaded = true;
@@ -155,7 +165,9 @@ export default function HomePage() {
         if (result.nextRevealAt) {
           const refreshDelay = Math.max(
             250,
-            new Date(result.nextRevealAt).getTime() - Date.now() + 250,
+            new Date(result.nextRevealAt).getTime() -
+              (Date.now() + serverClockOffset.current) +
+              250,
           );
 
           revealTimer = window.setTimeout(() => {

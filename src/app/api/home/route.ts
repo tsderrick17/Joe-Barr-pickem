@@ -555,6 +555,10 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
+    // Player-facing privacy refreshes must use the same authoritative clock as
+    // the reveal decision above. A device with the wrong time must never make
+    // another player's selection appear early or remain hidden after kickoff.
+    serverTime: currentTime.toISOString(),
     viewerPlayerId: viewer.id,
     showSurvivorStandings: viewer.show_survivor_standings,
     showPoolChat: viewer.show_pool_chat,
