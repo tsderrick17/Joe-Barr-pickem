@@ -69,6 +69,7 @@ type Props = {
   onChoose?: (gameId: string, teamId: string) => void;
   survivor?: {
     enabled: boolean;
+    interactive: boolean;
     selectedTeamId: string | null;
     savedTeamId: string | null;
     usedTeamIds: string[];
@@ -126,7 +127,10 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const survivorUsed = survivor.usedTeamIds.includes(team.id)
       && !survivorSelected
       && team.id !== survivor.savedTeamId;
-    const survivorUnavailable = hasStarted || survivorUsed;
+    // A started game is closed to input, not unavailable. Its colored chip is
+    // intentionally retained as the public audit record until grading.
+    const survivorUnavailable = survivorUsed;
+    const survivorLocked = hasStarted || !survivor.interactive;
 
     const replayChip = () => {
       setChipReplay((current) => ({
@@ -137,10 +141,10 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
 
     const teamAbbreviation = compactTeamAbbreviation(team.name, team.abbreviation);
     return <div className="slate-survivor-chip-slot"><button
-      aria-label={survivorOfficial ? `Flip your saved Survivor ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable for Survivor` : `Choose ${team.name} as your Survivor winner`}
+      aria-label={survivorUnavailable ? `${team.name} is unavailable for Survivor` : survivorLocked ? `${team.name} is locked for Survivor` : survivorOfficial ? `Flip your saved Survivor ${team.name} chip` : `Choose ${team.name} as your Survivor winner`}
       aria-pressed={survivorSelected}
       className="slate-survivor-chip-button"
-      disabled={survivorUnavailable}
+      disabled={survivorUnavailable || survivorLocked}
       onClick={() => {
         if (survivorOfficial) {
           // Clicking the saved team while another team is staged restores the
@@ -154,7 +158,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
         survivor.onChoose(game.id, team.id);
         replayChip();
       }}
-      title={survivorOfficial ? `Flip your saved ${team.name} chip` : survivorUnavailable ? `${team.name} is unavailable` : `Choose ${team.name} for Survivor`}
+      title={survivorUnavailable ? `${team.name} is unavailable` : survivorLocked ? `${team.name} is locked` : survivorOfficial ? `Flip your saved ${team.name} chip` : `Choose ${team.name} for Survivor`}
       type="button"
     >
       <SurvivorPokerChip

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
@@ -175,6 +176,29 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Survivor remains visible as a colored, static audit surface for the rest
+  // of the Eastern day on which a champion is crowned. The following day it
+  // leaves The Slate for everybody, while the finished pool stays in history.
+  const { data: season, error: seasonError } = await supabaseAdmin
+    .from("seasons")
+    .select("survivor_champion_player_id, survivor_champion_crowned_at")
+    .eq("id", period.season_id)
+    .maybeSingle();
+
+  if (seasonError || !season) {
+    return NextResponse.json(
+      { error: "The current season could not be loaded safely." },
+      { status: 503 },
+    );
+  }
+
+  const survivorChipsVisible = shouldShowSurvivorSlateChips({
+    periodType: period.period_type,
+    championCrownedAt: season.survivor_champion_player_id
+      ? season.survivor_champion_crowned_at
+      : null,
+  });
+
   let playoffEliminated = false;
   if (period.period_type === "playoff" && period.status === "active") {
     try {
@@ -187,12 +211,14 @@ export async function GET(request: NextRequest) {
 
   let survivor: {
     available: boolean;
+    chipsVisible: boolean;
     notice: string | null;
     status: "active" | "eliminated" | "complete";
     pick: SurvivorPickRow | null;
     usedTeamIds: string[];
   } = {
     available: false,
+    chipsVisible: survivorChipsVisible,
     notice:
       "Survivor is temporarily unavailable. ATS picks remain available.",
     status: "active",
@@ -251,8 +277,9 @@ export async function GET(request: NextRequest) {
       } else {
         survivor = {
           available: true,
+          chipsVisible: survivorChipsVisible,
           notice: null,
-          status: survivorEntry.status,
+          status: season.survivor_champion_player_id ? "complete" : survivorEntry.status,
           pick: survivorPick as SurvivorPickRow | null,
           usedTeamIds: (usedSurvivorPicks ?? []).map(
             (pick) => pick.selected_team_id,
@@ -360,6 +387,7 @@ export async function GET(request: NextRequest) {
   if (period.period_type === "playoff") {
     survivor = {
       available: false,
+      chipsVisible: false,
       notice: "Survivor has concluded for the season.",
       status: "complete",
       pick: null,

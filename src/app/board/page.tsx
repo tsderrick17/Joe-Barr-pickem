@@ -65,6 +65,7 @@ type BoardResponse = {
   };
   survivor: {
     available: boolean;
+    chipsVisible: boolean;
     notice: string | null;
     status: "active" | "eliminated" | "complete";
     pick: { game_id: string; selected_team_id: string } | null;
@@ -143,6 +144,7 @@ export default function BoardPage() {
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
+  const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -194,6 +196,7 @@ export default function BoardPage() {
       setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
+      setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
       setSurvivorStatus(data.survivor.status);
     } catch (error) {
       if (requestId === boardRequestId.current) {
@@ -839,13 +842,14 @@ export default function BoardPage() {
                         allowSelection={!isReadOnly}
                         alternate={index % 2 === 0}
                         game={game}
-                        hasStarted={new Date(game.kickoffAt) <= new Date()}
+                        hasStarted={new Date(game.kickoffAt).getTime() <= currentTime}
                         key={game.id}
                         onChoose={chooseTeam}
                         selectedTeamId={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId}
                         selectionFeedback={selectionFeedback?.gameId === game.id ? selectionFeedback : null}
-                        survivor={survivorControlsEnabled ? {
+                        survivor={survivorChipsVisible && survivorStatus !== "eliminated" ? {
                           enabled: true,
+                          interactive: survivorControlsEnabled,
                           selectedTeamId: survivorPick?.teamId ?? null,
                           savedTeamId: savedSurvivorPick?.teamId ?? null,
                           usedTeamIds: survivorUsedTeamIds,

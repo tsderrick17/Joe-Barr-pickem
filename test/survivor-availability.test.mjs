@@ -73,7 +73,7 @@ test("exposes Slate Survivor chips for an editable upcoming or active regular-se
   assert.equal(isSurvivorSlateEditable({ ...activeEntry, survivorAvailable: false }), false);
 });
 
-test("removes Survivor chips once the chosen matchup reaches kickoff", () => {
+test("stops Survivor selection once the chosen matchup reaches kickoff", () => {
   const activeEntry = {
     periodType: "regular",
     periodStatus: "active",
