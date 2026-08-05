@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Playwright's disposable Next.js build used by the isolated browser suite.
+    ".next-e2e/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

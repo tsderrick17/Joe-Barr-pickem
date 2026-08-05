@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "test:season-drill": "node scripts/season-drill.mjs",
     "test:isolated": "node --env-file-if-exists=.env.test.local scripts/season-drill.mjs",
-    "test:all": "npm run test && npm run test:integration"
+    "test:all": "npm run test && npm run test:integration",
+    "test:migrations": "node scripts/check-migration-versions.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.68.0",
