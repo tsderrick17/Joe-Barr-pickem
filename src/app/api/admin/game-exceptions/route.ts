@@ -8,7 +8,7 @@ type GameRow = {
   home_team_id: string;
   scoring_period_id: string;
   kickoff_at: string;
-  status: "postponed" | "cancelled" | "final";
+  status: "postponed" | "cancelled" | "no_contest" | "final";
 };
 
 export async function GET(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("games")
       .select("id, away_team_id, home_team_id, scoring_period_id, kickoff_at, status")
-      .in("status", ["postponed", "cancelled"])
+      .in("status", ["postponed", "cancelled", "no_contest"])
       .order("kickoff_at"),
     supabaseAdmin.from("picks").select("game_id").eq("result", "pending"),
     supabaseAdmin

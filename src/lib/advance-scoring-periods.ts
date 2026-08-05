@@ -13,7 +13,7 @@ type PeriodRow = {
 type GameRow = {
   id: string;
   kickoff_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
   finalized_at: string | null;
 };
 
@@ -116,7 +116,11 @@ export async function advanceScoringPeriods(
     };
   }
 
-  const unfinishedGames = activeGames.filter((game) => game.status !== "final");
+  // A declared no-contest is settled by the scorer as a void or loss rather
+  // than waiting forever for a final score. It must not hold up the handoff.
+  const unfinishedGames = activeGames.filter(
+    (game) => game.status !== "final" && game.status !== "no_contest",
+  );
 
   if (activeGames.length === 0 || unfinishedGames.length > 0) {
     return {
@@ -149,21 +153,27 @@ export async function advanceScoringPeriods(
     };
   }
 
-  const finalizationTimes = activeGames
-    .map((game) => game.finalized_at)
-    .filter((finalizedAt): finalizedAt is string => Boolean(finalizedAt));
+  // A declared no-contest is an official settlement without a box score. Its
+  // kickoff is a stable lower bound for the weekly handoff; ordinary finals
+  // still use the official finalized timestamp.
+  const settlementTimes = activeGames
+    .map((game) =>
+      game.finalized_at ??
+      (game.status === "no_contest" ? game.kickoff_at : null),
+    )
+    .filter((settledAt): settledAt is string => Boolean(settledAt));
 
-  if (finalizationTimes.length !== activeGames.length) {
+  if (settlementTimes.length !== activeGames.length) {
     return {
       action: "blocked",
       currentWeek: activePeriod.display_name,
       nextWeek: nextPeriod?.display_name ?? null,
       rolloverAt: null,
-      reason: "A final-score timestamp is unavailable for the active week.",
+      reason: "A game settlement timestamp is unavailable for the active week.",
     };
   }
 
-  const lastFinalizedAt = finalizationTimes.sort().at(-1)!;
+  const lastFinalizedAt = settlementTimes.sort().at(-1)!;
   let nextKickoffAt: string | null = null;
 
   if (nextPeriod) {

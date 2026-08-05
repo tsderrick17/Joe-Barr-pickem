@@ -1,4 +1,4 @@
-const SETTLED_GAME_STATUSES = new Set(["final", "postponed", "cancelled"]);
+const SETTLED_GAME_STATUSES = new Set(["final", "postponed", "cancelled", "no_contest"]);
 
 function check(id, label, detail, state = "pass") {
   return { id, label, detail, state };
@@ -46,7 +46,7 @@ export function assessSeasonReadiness({ seasonState, periods, games, reminders, 
   const scheduledPlayoffPeriods = playoffPeriods.filter((period) => games.some((game) => game.scoring_period_id === period.id));
   const capacityProblems = scheduledPlayoffPeriods.filter((period) => {
     const playableGames = games.filter((game) =>
-      game.scoring_period_id === period.id && !["postponed", "cancelled"].includes(game.status),
+      game.scoring_period_id === period.id && !["postponed", "cancelled", "no_contest"].includes(game.status),
     ).length;
     return playableGames !== period.max_picks;
   });

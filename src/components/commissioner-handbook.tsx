@@ -6,16 +6,18 @@ const runbook = [
   ["3. At kickoff", "Do not publish or edit selections. The site reveals each game automatically at its own kickoff, leaving the full receipt in place for audit."],
   ["4. When a game is final", "Wait for the score window, then use score sync. It imports a completed score, grades ATS and Survivor separately, and only advances a settled period."],
   ["5. If a provider is late", "Keep the game pending. Do not estimate a score or replace an official line from memory. Refresh health and retry the relevant check. A final-score correction is intentionally an audited database workflow, never a casual page edit."],
-  ["6. If a game is postponed or cancelled", "Open Game Exceptions, select the verified game, and confirm the status. Pending picks are voided, preserved in the audit trail, and the weekly handoff stays blocked until reviewed."],
+  ["6. If a game is moved, postponed, cancelled, or no contest", "Open Game Exceptions, select the verified game, and confirm the status. A rescheduled game keeps its existing pick but receives its new lock time; cancelled and no-contest selections follow the published settlement policy and remain in the audit trail."],
 ];
 
 const rules = [
   ["ATS grading", "The saved official line is permanent. A selected team that covers is a win; a push is recorded as a Pick’em loss."],
   ["Survivor", "One outright winner is required each active week. A tie is a loss. Teams may be used only once, and a missed required weekly pick is OUT."],
+  ["No contest", "A declared no contest never advances Survivor. Pending selections may be replaced while a legal option remains; otherwise the ATS result is a loss, just like a push, and Survivor is OUT."],
   ["Privacy", "Choices remain private until the selected game’s kickoff. After that, names and picks remain visible as the permanent public receipt."],
   ["Playoffs", "Eligibility is snapshotted at the start of each Eastern game day. Anyone who can still tie the leader at that point may pick that day; players already unable to tie are excluded and their later picks are not counted."],
   ["Season tie", "The site never invents a tiebreaker. Every player tied for the final Pick'em lead is crowned a co-champion automatically and receives the same permanent trophy-history record."],
   ["Survivor finish", "When one active entry remains, Survivor crowns that player automatically, records the trophy history, stops Survivor reminders, and leaves the table available for audit."],
+  ["Annual handoff", "The next season is created automatically on August 1 in Eastern time. Completed seasons stay intact for all-time ATS wins and win percentage; Survivor results never count toward those totals."],
 ];
 
 export default function CommissionerHandbook() {

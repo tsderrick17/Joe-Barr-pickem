@@ -32,12 +32,12 @@ build succeeds.
 
 ## Normal automated flow
 
-1. Supabase refreshes the NFL schedule and preliminary spreads before the 8 AM Eastern line lock during NFL months without changing final, postponed, or cancelled game statuses.
+1. Supabase refreshes the NFL schedule and preliminary spreads before the 8 AM Eastern line lock during NFL months without changing final, postponed, cancelled, or no-contest game statuses. A verified kickoff move recalculates that game's line lock; the existing pick stays attached and becomes editable again only while the new kickoff rules permit it.
 2. Supabase checks official lines every minute and locks them at each game's assigned line-lock time.
 3. Players can edit a pick until that game's kickoff; picks reveal at kickoff.
 4. Starting three hours after kickoff, the score check runs every 15 minutes.
 5. Only completed games are saved and graded. ATS pushes are losses.
-6. Once every game in the active week is final and every final-game pick is graded, that week remains on the Standings for at least 24 hours. The normal handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. Postponed, cancelled, or ungraded final-game picks block the automatic handoff for commissioner review.
+6. Once every game in the active week is final or officially settled as no contest and every applicable pick is graded, that week remains on the Standings for at least 24 hours. The normal handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. Postponed, cancelled, or ungraded final-game picks block the automatic handoff for commissioner review.
 
 ## Before the season
 
@@ -107,7 +107,8 @@ If a final score appears missing:
 - Do not edit a locked official line without recording the reason.
 - Do not manually change a final score unless the provider is wrong and the correction is documented.
 - A postponed or cancelled game automatically voids its pending ATS and Survivor picks. The original receipt remains in the audit log; it is not a loss and does not consume an ATS slot or Survivor team. Players may replace it only with a game that has not started. These games still block automatic weekly handoff for commissioner review.
-- In **Commissioner → Game Exceptions**, record verified postponed or cancelled games. This is intentionally a commissioner action: schedule refreshes never silently overwrite a game's final or disruption status.
+- A declared **no contest** never advances Survivor. A pending pick remains changeable if a legal replacement exists; when no legal replacement remains, ATS settles as a loss (the pool's push rule) and the Survivor entry is eliminated. No-contest games are excluded from future playoff-win capacity and never wait forever for a final-score feed.
+- In **Commissioner → Game Exceptions**, record verified postponed, cancelled, or no-contest games. This is intentionally a commissioner action: schedule refreshes never silently overwrite a game's final or disruption status.
 - Once a week is rubber-stamped, its period, games, picks, and official lines are database-locked. Complete any correction process before the automated handoff.
 - Audit records are append-only. Record a correction as a new audit event; never rewrite the original history.
 - Every ATS and Survivor save has a separate audit event. ATS records use `against_spread`; Survivor records use `straight_up` with `spread_applied: false`.
@@ -118,4 +119,5 @@ If a final score appears missing:
 - A player selects one straight-up winner per scoring period and cannot reuse a team.
 - A Survivor pick can be changed or cleared until its game's kickoff.
 - Final scores are evaluated by the existing final-score job. A loss or tie eliminates the entry.
+- A missed required weekly Survivor pick is an automatic elimination after the final eligible kickoff. A no-contest game does not create a Survivor advancement or a false no-pick elimination.
 - Run migrations 027 through 030 before publishing Survivor. Together they add automatic enrollment, atomic Slate saves, separate ATS and straight-up Survivor audit records, append-only history, completed-week protection, and irreversible elimination records.

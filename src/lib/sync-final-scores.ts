@@ -11,6 +11,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
+import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
 
 type Score = { name: string; score: string | number | null };
 type ScoreEvent = {
@@ -25,7 +26,7 @@ type GameRow = {
   away_team_id: string;
   home_team_id: string;
   kickoff_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
 };
 type TeamRow = { id: string; full_name: string };
 type LockedLineRow = {
@@ -208,7 +209,14 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   const checkedAt = new Date().toISOString();
   const now = new Date(checkedAt);
   const warnings: string[] = [];
+  await ensureAnnualSeasonRollover(checkedAt);
   await voidDisruptedPicks();
+  const { error: noContestError } = await supabaseAdmin.rpc("settle_no_contest_picks", {
+    evaluated_at: checkedAt,
+  });
+  if (noContestError) {
+    throw new Error("Declared no-contest picks could not be settled safely.");
+  }
   const noPickResult = await eliminateSurvivorNoPicks(checkedAt);
   const recoveredGrades = await recoverPendingFinalPickGrades();
   const weekRollover = await advanceScoringPeriods(now);

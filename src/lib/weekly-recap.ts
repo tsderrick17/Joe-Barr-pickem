@@ -267,7 +267,7 @@ export async function ensureFreshSlateSnapshot(reminderId: string, existing: unk
     .from("games")
     .select("id, away_team_id, home_team_id, kickoff_at")
     .eq("scoring_period_id", period.id)
-    .not("status", "in", "(postponed,cancelled)")
+    .not("status", "in", "(postponed,cancelled,no_contest)")
     .order("kickoff_at");
   if (gamesError || !(games ?? []).length) throw new Error("The fresh Slate could not be prepared.");
   const teamIds = [...new Set((games ?? []).flatMap((game) => [game.away_team_id, game.home_team_id]))];
@@ -368,7 +368,7 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   const revealGames = (games ?? []).filter((game) => {
     const kickoff = new Date(game.kickoff_at);
     const hour = easternHour(game.kickoff_at);
-    return easternWeekday(game.kickoff_at) === "Sunday" && hour >= range[0] && hour < range[1] && kickoff <= now && !["postponed", "cancelled"].includes(game.status);
+    return easternWeekday(game.kickoff_at) === "Sunday" && hour >= range[0] && hour < range[1] && kickoff <= now && !["postponed", "cancelled", "no_contest"].includes(game.status);
   });
   if (!revealGames.length) throw new Error("The selected Sunday kickoff window is not public yet.");
 
@@ -432,9 +432,9 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   ]);
   if (gamesError || periodsError || playersError) throw new Error("The featured-game reveal could not be prepared.");
 
-  const featuredGames = (games ?? []).filter((game) => isFeaturedGame(game) && new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status));
+  const featuredGames = (games ?? []).filter((game) => isFeaturedGame(game) && new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status));
   if (!featuredGames.length) throw new Error("No featured game has reached kickoff yet.");
-  const publicGameIds = new Set((games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status)).map((game) => game.id));
+  const publicGameIds = new Set((games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status)).map((game) => game.id));
   const periodIds = (periods ?? []).map((item) => item.id);
   const { data: picks, error: picksError } = periodIds.length
     ? await supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void")
@@ -491,7 +491,7 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
   ]);
   if (gamesError || periodsError || playersError) throw new Error("The playoff public-pick update could not be prepared.");
 
-  const publicGames = (games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled"].includes(game.status));
+  const publicGames = (games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status));
   if (!publicGames.length) throw new Error("No playoff games have reached kickoff yet.");
 
   const periodIds = (seasonPeriods ?? []).map((item) => item.id);

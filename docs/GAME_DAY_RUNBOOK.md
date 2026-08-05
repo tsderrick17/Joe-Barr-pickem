@@ -29,8 +29,8 @@ change player picks or scores directly.
 ## If a score, schedule, or result changes
 
 - **Official correction:** use the existing score reconciliation/control. The
-  app recalculates affected grades atomically and posts the league-impact
-  notice.
+  app recalculates affected grades atomically and posts a week-specific
+  league-impact notice.
 - **Postponed or cancelled / declared no contest:** record the verified game
   exception. Eligible future selections stay changeable; a pick that cannot be
   replaced settles as the published pool rule requires. Survivor does not

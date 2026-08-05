@@ -9,7 +9,7 @@ type GameException = {
   homeTeam: string;
   week: string;
   kickoffAt: string;
-  status: "postponed" | "cancelled" | "pending_grade";
+  status: "postponed" | "cancelled" | "no_contest" | "pending_grade";
 };
 
 type RecordableGame = Omit<GameException, "status">;
@@ -96,7 +96,7 @@ export default function GameExceptions() {
     }
   }
 
-  async function recordDisruption(status: "postponed" | "cancelled") {
+  async function recordDisruption(status: "postponed" | "cancelled" | "no_contest") {
     if (!selectedGameId) return;
     const selectedGame = recordableGames.find((game) => game.id === selectedGameId);
     if (!selectedGame || !window.confirm(`Record ${selectedGame.awayTeam} at ${selectedGame.homeTeam} as ${status}? Pending picks will be voided immediately and remain in the audit history.`)) return;
@@ -130,8 +130,9 @@ export default function GameExceptions() {
         <div>
           <h2 className="font-serif text-2xl font-bold">Game Exceptions</h2>
           <p className="mt-2 text-zinc-700">
-            Record a verified postponement or cancellation here. Pending picks
-            are voided immediately and retained in the audit trail.
+            Record a verified postponement, cancellation, or no contest here.
+            Pending picks are retained in the audit trail and settled by the
+            published pool rules.
           </p>
         </div>
 
@@ -160,6 +161,7 @@ export default function GameExceptions() {
             </select>
             <button className="border border-amber-800 px-3 py-2 text-sm font-bold text-amber-950 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("postponed")} type="button">Mark postponed</button>
             <button className="bg-red-800 px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
+            <button className="border border-red-800 px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>
           </div>
         </div>
       ) : null}

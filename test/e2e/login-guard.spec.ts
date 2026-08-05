@@ -8,6 +8,12 @@ test("player login rejects an unknown PIN without leaving the sign-in screen", a
   await page.goto("/login");
   await page.getByLabel("FOUR-DIGIT PIN").fill("0000");
   await page.getByRole("button", { name: "Enter Pick'em" }).click();
-  await expect(page.getByText("That PIN was not recognized. Please try again.")).toBeVisible();
+  // Supabase intentionally does password work even for an unknown account so
+  // that login timing does not reveal which PINs exist. Leave enough room for
+  // that protection on the isolated project instead of treating it as a UI
+  // failure.
+  await expect(
+    page.getByText("That PIN was not recognized. Please try again."),
+  ).toBeVisible({ timeout: 20_000 });
   await expect(page).toHaveURL(/\/login$/);
 });

@@ -59,7 +59,7 @@ async function gameDaySlateReady(): Promise<ReminderReadiness> {
     .from("games")
     .select("id, kickoff_at")
     .eq("scoring_period_id", period.id)
-    .not("status", "in", "(postponed,cancelled)");
+    .not("status", "in", "(postponed,cancelled,no_contest)");
   if (error) throw new Error("Today’s Slate could not be checked before sending a reminder.");
   const today = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
   if (!today.length) return { ready: false, reason: "There are no games on today’s Slate." };
@@ -77,7 +77,7 @@ async function earlyLockReady(): Promise<ReminderReadiness> {
     .eq("scoring_period_id", period.id)
     .eq("is_international", true)
     .lte("line_lock_at", new Date().toISOString())
-    .not("status", "in", "(postponed,cancelled)")
+    .not("status", "in", "(postponed,cancelled,no_contest)")
     .order("line_lock_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -167,7 +167,7 @@ async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
     .select("id", { count: "exact", head: true })
     .eq("scoring_period_id", period.id)
     .lte("kickoff_at", new Date().toISOString())
-    .not("status", "in", "(postponed,cancelled)");
+    .not("status", "in", "(postponed,cancelled,no_contest)");
   if (error) throw new Error("The playoff kickoff window could not be checked before sending a public update.");
   return (count ?? 0) > 0
     ? { ready: true, reason: null }
@@ -190,7 +190,7 @@ async function featuredWindowRevealReady(): Promise<ReminderReadiness> {
     .eq("scoring_period_id", period.id);
   if (error) throw new Error("Featured kickoff status could not be checked before sending a reveal.");
   const hasStartedFeaturedGame = (games ?? []).some((game) =>
-    isFeaturedKickoff(game) && new Date(game.kickoff_at) <= new Date() && !["postponed", "cancelled"].includes(game.status),
+    isFeaturedKickoff(game) && new Date(game.kickoff_at) <= new Date() && !["postponed", "cancelled", "no_contest"].includes(game.status),
   );
   return hasStartedFeaturedGame
     ? { ready: true, reason: null }
