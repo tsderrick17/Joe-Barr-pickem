@@ -1,0 +1,49 @@
+name: Encrypted database backup
+
+on:
+  schedule:
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: weekly-production-backup
+      cancel-in-progress: false
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Verify backup configuration
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test -n "$BACKUP_ENCRYPTION_KEY"
+      - name: Export production database
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+          supabase db dump --linked --file production-backup.sql
+      - name: Encrypt export
+        run: |
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
+            -in production-backup.sql -out production-backup.sql.enc \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          rm production-backup.sql
+      - name: Retain encrypted backup for 90 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: pickem-production-backup-${{ github.run_id }}
+          path: production-backup.sql.enc
+          retention-days: 90

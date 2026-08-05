@@ -141,7 +141,15 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await page.getByRole("button", { name: "Enter Pick'em" }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 12_000 });
 
+  // Supabase persists the browser session asynchronously. Wait for that
+  // durable receipt before asking the next page to make an authenticated API
+  // request; this mirrors a real player pausing briefly after sign-in.
+  await page.waitForFunction(() =>
+    Object.keys(window.localStorage).some((key) => key.includes("auth-token")),
+  );
+
   await page.getByRole("link", { name: "The Slate" }).click();
+  await page.waitForTimeout(750);
   await expect(page).toHaveURL(/\/board$/, { timeout: 12_000 });
   await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible({ timeout: 12_000 });
 

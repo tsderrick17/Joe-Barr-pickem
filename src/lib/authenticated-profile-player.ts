@@ -9,7 +9,9 @@ export async function authenticatedProfilePlayer(request: NextRequest) {
   if (!url || !key || !authorization?.startsWith("Bearer ")) return null;
 
   const client = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await client.auth.getUser();
+  const { data: { user } } = await client.auth.getUser(
+    authorization.slice("Bearer ".length),
+  );
   if (!user) return null;
 
   const { data: player } = await supabaseAdmin

@@ -4,6 +4,10 @@ import {
   type WeekRolloverResult,
 } from "@/lib/advance-scoring-periods";
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
+import {
+  nextScoreCheckAt,
+  shouldHoldScorePollingForQuota,
+} from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
@@ -31,6 +35,11 @@ type LockedLineRow = {
 };
 type PickRow = { id: string; game_id: string; selected_team_id: string };
 type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
+type ScoreCheckBackoffRow = {
+  game_id: string;
+  attempts: number;
+  next_check_at: string;
+};
 
 export type ScoreSyncResult = {
   checkedAt: string;
@@ -44,7 +53,33 @@ export type ScoreSyncResult = {
   warnings: string[];
   weekRollover: WeekRolloverResult;
   survivorNoPickEliminations: number;
+  quotaProtected?: boolean;
 };
+
+async function deferUnfinishedScoreChecks(
+  games: GameRow[],
+  previousChecks: Map<string, ScoreCheckBackoffRow>,
+  checkedAt: string,
+) {
+  if (games.length === 0) return;
+
+  const checked = new Date(checkedAt);
+  const rows = games.map((game) => {
+    const previous = previousChecks.get(game.id);
+    const attempts = (previous?.attempts ?? 0) + 1;
+    return {
+      game_id: game.id,
+      attempts,
+      last_checked_at: checkedAt,
+      next_check_at: nextScoreCheckAt(attempts, checked),
+      updated_at: checkedAt,
+    };
+  });
+  const { error } = await supabaseAdmin
+    .from("score_check_backoff")
+    .upsert(rows, { onConflict: "game_id" });
+  if (error) throw new Error("Delayed score checks could not be rescheduled safely.");
+}
 
 function parseScore(value: string | number | null | undefined) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
@@ -195,12 +230,29 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     throw new Error("Games awaiting final scores could not be loaded.");
   }
 
-  const eligibleGames = (unfinishedGames as GameRow[]).filter((game) =>
-    isDueForFinalScoreCheck(
-      { kickoffAt: game.kickoff_at, status: game.status },
-      now,
-    ),
+  const scoreDueGames = (unfinishedGames as GameRow[]).filter((game) =>
+    isDueForFinalScoreCheck({ kickoffAt: game.kickoff_at, status: game.status }, now),
   );
+  const { data: scoreCheckBackoffs, error: scoreCheckBackoffsError } =
+    scoreDueGames.length
+      ? await supabaseAdmin
+          .from("score_check_backoff")
+          .select("game_id, attempts, next_check_at")
+          .in("game_id", scoreDueGames.map((game) => game.id))
+      : { data: [], error: null };
+  if (scoreCheckBackoffsError) {
+    throw new Error("Delayed score checks could not be loaded safely.");
+  }
+  const backoffByGameId = new Map(
+    ((scoreCheckBackoffs ?? []) as ScoreCheckBackoffRow[]).map((row) => [
+      row.game_id,
+      row,
+    ]),
+  );
+  const eligibleGames = scoreDueGames.filter((game) => {
+    const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
+    return !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
+  });
 
   const noScoreResult = {
     checkedAt,
@@ -222,6 +274,44 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
 
   if (eligibleGames.length === 0 && !shouldRecordRollover) {
     return noScoreResult;
+  }
+
+  const { data: latestSuccessfulScoreRun, error: latestSuccessfulScoreRunError } =
+    await supabaseAdmin
+      .from("sync_runs")
+      .select("details, completed_at, started_at")
+      .eq("job_type", "scores")
+      .eq("status", "success")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  if (latestSuccessfulScoreRunError) {
+    throw new Error("Recent score-provider usage could not be loaded.");
+  }
+  const lastRemainingRaw = (latestSuccessfulScoreRun?.details as { requestsRemaining?: string | null } | null)
+    ?.requestsRemaining;
+  const lastRemaining = lastRemainingRaw !== null && lastRemainingRaw !== undefined && /^\d+$/.test(lastRemainingRaw)
+    ? Number(lastRemainingRaw)
+    : null;
+  const lastObservedAt = latestSuccessfulScoreRun?.completed_at ?? latestSuccessfulScoreRun?.started_at ?? null;
+  const onlyRepeatedDelayedGames = eligibleGames.every(
+    (game) => (backoffByGameId.get(game.id)?.attempts ?? 0) >= 2,
+  );
+  if (
+    eligibleGames.length > 0 &&
+    onlyRepeatedDelayedGames &&
+    shouldHoldScorePollingForQuota(lastRemaining, lastObservedAt, now)
+  ) {
+    warnings.push(
+      `Score polling is conserving the remaining Odds API allowance (${lastRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,
+    );
+    return {
+      ...noScoreResult,
+      eligibleGames: eligibleGames.length,
+      requestsRemaining: String(lastRemaining),
+      warnings,
+      quotaProtected: true,
+    };
   }
 
   const run = await supabaseAdmin
@@ -269,6 +359,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     );
 
     if (completedEvents.length === 0) {
+      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
       const result = {
         checkedAt,
         eligibleGames: eligibleGames.length,
@@ -336,6 +427,17 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       if (atomicError || !atomicRows?.[0]) {
         throw new Error("Final scores could not be finalized safely.");
       }
+      const { error: clearBackoffError } = await supabaseAdmin
+        .from("score_check_backoff")
+        .delete()
+        .in("game_id", finalizedGames.map((game) => game.id));
+      if (clearBackoffError) {
+        throw new Error("Final-score polling state could not be cleared safely.");
+      }
+      const stillUnfinished = eligibleGames.filter(
+        (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
+      );
+      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt);
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;

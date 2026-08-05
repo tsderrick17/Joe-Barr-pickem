@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
   if (new Set(selections.map((selection) => selection.gameId)).size !== selections.length) return NextResponse.json({ error: "You may only select one team from each game." }, { status: 400 });
 
   const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await authClient.auth.getUser();
+  const { data: { user } } = await authClient.auth.getUser(
+    authorization.slice("Bearer ".length),
+  );
   if (!user) return NextResponse.json({ error: "Your sign-in session could not be verified." }, { status: 401 });
 
   const { data: player } = await supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle();

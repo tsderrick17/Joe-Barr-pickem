@@ -37,8 +37,6 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await supabase.auth.signOut({ scope: "local" });
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email: `pin-${pin}@pickemjb.app`,
         password: `pickem-${pin}`,
@@ -63,6 +61,22 @@ export default function LoginPage() {
       }
 
       if (!data.session) {
+        setErrorMessage(
+          "Your PIN was accepted, but the session did not finish. Please try once more.",
+        );
+        return;
+      }
+
+      // signInWithPassword normally persists this automatically. Writing the
+      // returned session once more makes that handoff deterministic before the
+      // app navigates, which prevents a newly signed-in player from bouncing
+      // back to the PIN screen on a slow browser or phone.
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
+      if (sessionError) {
         setErrorMessage(
           "Your PIN was accepted, but the session did not finish. Please try once more.",
         );

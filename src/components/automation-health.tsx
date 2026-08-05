@@ -9,6 +9,8 @@ type Health = {
   latestLocks: { completed_at: string | null } | null;
   latestScores: { completed_at: string | null } | null;
   reminderHealth: { overdueScheduled: number; staleSending: number; recentEmailFailures: number };
+  providerAllowance: number | null;
+  retention: { candidates: number; cutoff: string };
 };
 
 async function fetchHealth() {
@@ -97,6 +99,10 @@ export default function AutomationHealth() {
             Latest score sync: {health.latestScores?.completed_at ? new Date(health.latestScores.completed_at).toLocaleString() : "not recorded"}
             {" / "}
             Reminder queue: {health.reminderHealth.overdueScheduled} held, {health.reminderHealth.staleSending} sending, {health.reminderHealth.recentEmailFailures} recent failures
+            {" / "}
+            Odds allowance: {health.providerAllowance === null ? "not yet reported" : `${health.providerAllowance} credits remaining`}
+            {" / "}
+            Retention review: {health.retention.candidates.toLocaleString()} operational records older than 180 days
           </p>
         </div>
       ) : null}

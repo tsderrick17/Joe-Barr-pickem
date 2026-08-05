@@ -44,7 +44,9 @@ async function authenticatedPlayer(
   const authClient = createClient(url, key, {
     global: { headers: { Authorization: authorization } },
   });
-  const { data: { user }, error: userError } = await authClient.auth.getUser();
+  const { data: { user }, error: userError } = await authClient.auth.getUser(
+    authorization.slice("Bearer ".length),
+  );
   if (userError || !user) {
     const serviceUnavailable =
       userError ? (userError.status ?? 500) >= 500 : false;

@@ -7,113 +7,123 @@ export type AutomationRun = {
   started_at: string;
   completed_at: string | null;
   error_message: string | null;
+  details: { requestsRemaining?: string | null; quotaProtected?: boolean } | null;
 };
 
-function latestByJob(
-  runs: AutomationRun[],
-  job: AutomationRun["job_type"],
-) {
+function latestByJob(runs: AutomationRun[], job: AutomationRun["job_type"]) {
   return runs.find((run) => run.job_type === job) ?? null;
 }
 
 export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
-  const scoreDueAt = new Date(
-    // Final-score checks begin three hours after kickoff and run every
-    // 15 minutes. Give the first scheduled check one full interval plus a
-    // small execution buffer before declaring the automation stale.
-    now.getTime() - (3 * 60 + 20) * 60 * 1000,
-  ).toISOString();
-  const lineHealthDueAt = new Date(
-    now.getTime() - 5 * 60 * 1000,
-  ).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth] =
-    await Promise.all([
-      supabaseAdmin
-        .from("sync_runs")
-        .select(
-          "job_type, status, started_at, completed_at, error_message",
-        )
-        .in("job_type", ["line_locks", "scores"])
-        .order("started_at", { ascending: false })
-        .limit(20),
-      supabaseAdmin
-        .from("games")
-        .select("id")
-        .in("status", ["scheduled", "live"])
-        .lte("line_lock_at", lineHealthDueAt),
-      supabaseAdmin
-        .from("games")
-        .select("id")
-        .in("status", ["scheduled", "live"])
-        .lte("kickoff_at", scoreDueAt),
-      checkReminderHealth(now),
-    ]);
+  const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
+  const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth] = await Promise.all([
+    supabaseAdmin
+      .from("sync_runs")
+      .select("job_type, status, started_at, completed_at, error_message, details")
+      .in("job_type", ["line_locks", "scores"])
+      .order("started_at", { ascending: false })
+      .limit(20),
+    supabaseAdmin
+      .from("games")
+      .select("id")
+      .in("status", ["scheduled", "live"])
+      .lte("line_lock_at", lineHealthDueAt),
+    supabaseAdmin
+      .from("games")
+      .select("id")
+      .in("status", ["scheduled", "live"])
+      .lte("kickoff_at", scoreDueAt),
+    checkReminderHealth(now),
+  ]);
 
-  if (
-    runsResult.error ||
-    lineCandidatesResult.error ||
-    scoreGamesResult.error
-  ) {
+  if (runsResult.error || lineCandidatesResult.error || scoreGamesResult.error) {
     throw new Error("Automation health could not be prepared.");
   }
 
-  const lineCandidateIds = (lineCandidatesResult.data ?? []).map(
-    (game) => game.id,
-  );
-  const { data: lines, error: linesError } = lineCandidateIds.length
-    ? await supabaseAdmin
-        .from("game_lines")
-        .select("game_id")
-        .in("game_id", lineCandidateIds)
-    : { data: [], error: null };
+  const lineCandidateIds = (lineCandidatesResult.data ?? []).map((game) => game.id);
+  const scoreCandidateIds = (scoreGamesResult.data ?? []).map((game) => game.id);
+  const retentionCutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString();
+  const [linesResult, scoreBackoffsResult, oldSyncRunsResult, oldEmailDeliveriesResult, oldPushDeliveriesResult] = await Promise.all([
+    lineCandidateIds.length
+      ? supabaseAdmin.from("game_lines").select("game_id").in("game_id", lineCandidateIds)
+      : Promise.resolve({ data: [], error: null }),
+    scoreCandidateIds.length
+      ? supabaseAdmin.from("score_check_backoff").select("game_id, next_check_at").in("game_id", scoreCandidateIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabaseAdmin.from("sync_runs").select("id", { count: "exact", head: true }).lt("started_at", retentionCutoff),
+    supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).lt("created_at", retentionCutoff),
+    supabaseAdmin.from("push_reminder_deliveries").select("id", { count: "exact", head: true }).lt("created_at", retentionCutoff),
+  ]);
 
-  if (linesError) {
-    throw new Error("Automation health could not verify official lines.");
+  if (
+    linesResult.error || scoreBackoffsResult.error || oldSyncRunsResult.error ||
+    oldEmailDeliveriesResult.error || oldPushDeliveriesResult.error
+  ) {
+    throw new Error("Automation health could not inspect operational retention.");
   }
 
   const runs = (runsResult.data ?? []) as AutomationRun[];
   const latestLocks = latestByJob(runs, "line_locks");
   const latestScores = latestByJob(runs, "scores");
-  const lockedIds = new Set((lines ?? []).map((line) => line.game_id));
-  const missingOfficialLines = lineCandidateIds.filter(
-    (id) => !lockedIds.has(id),
-  ).length;
-  const scoreCandidates = (scoreGamesResult.data ?? []).length;
+  const providerRemainingRaw = latestScores?.details?.requestsRemaining;
+  const providerAllowance =
+    typeof providerRemainingRaw === "string" && /^\d+$/.test(providerRemainingRaw)
+      ? Number(providerRemainingRaw)
+      : null;
+  const lockedIds = new Set((linesResult.data ?? []).map((line) => line.game_id));
+  const missingOfficialLines = lineCandidateIds.filter((id) => !lockedIds.has(id)).length;
+  const scoreCandidates = scoreCandidateIds.length;
+  const backoffByGame = new Map(
+    (scoreBackoffsResult.data ?? []).map((backoff) => [backoff.game_id, backoff.next_check_at]),
+  );
+  // A newly overdue game has no backoff row yet. Treat it as due immediately
+  // so a failed score worker cannot hide behind the cooldown safeguard.
+  const scoreChecksDueNow = scoreCandidateIds.filter((gameId) => {
+    const nextCheckAt = backoffByGame.get(gameId);
+    return !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
+  }).length;
   const problems: string[] = [];
 
   if (latestLocks?.status === "failed" && missingOfficialLines > 0) {
-    problems.push(
-      "The most recent official-line lock failed while a game needs an official line.",
-    );
+    problems.push("The most recent official-line lock failed while a game needs an official line.");
   }
-  if (latestScores?.status === "failed" && scoreCandidates > 0) {
-    problems.push(
-      "The most recent final-score sync failed while games are awaiting review.",
-    );
+  if (latestScores?.status === "failed" && scoreChecksDueNow > 0) {
+    problems.push("The most recent final-score sync failed while games are awaiting review.");
   }
   if (missingOfficialLines > 0) {
-    problems.push(
-      `${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`,
-    );
+    problems.push(`${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`);
   }
 
+  const quotaProtected = latestScores?.details?.quotaProtected === true ||
+    (providerAllowance !== null && providerAllowance < 25);
   const latestScoreFinishedAt = latestScores
     ? new Date(latestScores.completed_at ?? latestScores.started_at).getTime()
     : 0;
   if (
-    scoreCandidates > 0 &&
-    (!latestScores ||
-      latestScores.status !== "success" ||
-      now.getTime() - latestScoreFinishedAt > 30 * 60 * 1000)
+    scoreChecksDueNow > 0 &&
+    !quotaProtected &&
+    (!latestScores || latestScores.status !== "success" || now.getTime() - latestScoreFinishedAt > 30 * 60 * 1000)
   ) {
-    problems.push(
-      "Final-score sync is stale while games are awaiting review.",
-    );
+    problems.push("Final-score sync is stale while games are awaiting review.");
+  }
+  if (quotaProtected) {
+    problems.push(`Odds API allowance is being protected${providerAllowance !== null ? ` (${providerAllowance} credits reported)` : ""}; delayed final-score polling is in cooldown.`);
+  }
+
+  const retention = {
+    cutoff: retentionCutoff,
+    syncRuns: oldSyncRunsResult.count ?? 0,
+    emailDeliveries: oldEmailDeliveriesResult.count ?? 0,
+    pushDeliveries: oldPushDeliveriesResult.count ?? 0,
+  };
+  const retentionCandidates = retention.syncRuns + retention.emailDeliveries + retention.pushDeliveries;
+  if (retentionCandidates > 20_000) {
+    problems.push(`${retentionCandidates.toLocaleString()} operational records are older than 180 days; review archival storage before the database grows further.`);
   }
 
   problems.push(...reminderHealth.problems);
-
   return {
     checkedAt,
     status: problems.length ? ("attention" as const) : ("healthy" as const),
@@ -122,6 +132,9 @@ export async function checkAutomationHealth(now = new Date()) {
     latestScores,
     missingOfficialLines,
     scoreCandidates,
+    scoreChecksDueNow,
+    providerAllowance,
+    retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,
   };
 }

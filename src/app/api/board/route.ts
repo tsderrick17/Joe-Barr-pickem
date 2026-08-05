@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 
   const {
     data: { user },
-  } = await authClient.auth.getUser();
+  } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
 
   if (!user) {
     return NextResponse.json(

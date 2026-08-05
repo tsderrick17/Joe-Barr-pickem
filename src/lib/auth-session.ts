@@ -13,12 +13,26 @@ export class SessionUnavailableError extends Error {
 }
 
 export async function getFreshSession(): Promise<Session | null> {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  // A browser navigation immediately after PIN sign-in can race Supabase's
+  // local-session hydration. Read a few times before treating the player as
+  // signed out; this prevents a valid, newly-created session from bouncing
+  // between the Slate and the PIN page on a slow phone or connection.
+  let session: Session | null = null;
 
-  if (error || !session) return null;
+  // Supabase restores a persisted browser session asynchronously. Give that
+  // handoff a short, bounded window so a newly signed-in player is never
+  // redirected just because the next route rendered a fraction too quickly.
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const result = await supabase.auth.getSession();
+    session = result.data.session;
+    // A just-created browser session may briefly report a storage/read-lock
+    // error while the auth client finishes persisting it. Treat that exactly
+    // like an empty read and retry within the bounded hydration window.
+    if (session || attempt === 7) break;
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+  }
+
+  if (!session) return null;
 
   const expiresAt = (session.expires_at ?? 0) * 1000;
   if (expiresAt - Date.now() > SESSION_REFRESH_WINDOW_MS) {

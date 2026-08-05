@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
   const {
     data: { user },
     error: userError,
-  } = await authClient.auth.getUser();
+  } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
 
   if (userError || !user) {
     return NextResponse.json(
