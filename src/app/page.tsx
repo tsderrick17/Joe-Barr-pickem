@@ -38,6 +38,8 @@ type HomeData = {
   viewerPlayerId: string;
   showSurvivorStandings: boolean;
   showPoolChat: boolean;
+  hidePickemEliminatedRows: boolean;
+  hideSurvivorEliminatedRows: boolean;
   isPlayoff: boolean;
   week: string;
   weekStatus: "upcoming" | "active" | "complete";
@@ -259,6 +261,24 @@ export default function HomePage() {
     }
   }
 
+  async function setEliminatedRowsHidden(pool: "pickem" | "survivor", hidden: boolean) {
+    setSavingDisplay(true);
+    const field = pool === "pickem" ? "hidePickemEliminatedRows" : "hideSurvivorEliminatedRows";
+    try {
+      const response = await fetchWithSession("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: hidden }),
+      });
+      if (!response.ok) throw new Error("Unable to save that display choice.");
+      setData((current) => current ? { ...current, [field]: hidden } : current);
+    } catch {
+      setErrorMessage("That display choice could not be saved. Please try again.");
+    } finally {
+      setSavingDisplay(false);
+    }
+  }
+
   if (errorMessage && !data) {
     return (
       <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
@@ -306,8 +326,10 @@ export default function HomePage() {
         />
 
         <PickemScoreboard
+          hideEliminatedRows={data.hidePickemEliminatedRows}
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
+          onToggleEliminatedRows={() => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}
           rows={data.rows}
           viewerPlayerId={data.viewerPlayerId}
           week={data.week}
@@ -395,7 +417,7 @@ export default function HomePage() {
         ) : null}
 
         {!data.isPlayoff ? <section className="pickem-ledger survivor-ledger py-6 sm:py-7">
-          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button></div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
+          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>{data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
           {data.showSurvivorStandings && data.survivorAvailable ? (
             <div className="overflow-x-auto border-y-2 border-[#1d1d1f]">
@@ -405,7 +427,7 @@ export default function HomePage() {
                   <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
                   {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
                 </div>
-                {data.survivorRows.map((row, rowIndex) => {
+                {data.survivorRows.filter((row) => !data.hideSurvivorEliminatedRows || row.status !== "eliminated").map((row, rowIndex) => {
                   const isViewer = row.playerId === data.viewerPlayerId;
 
                   return (

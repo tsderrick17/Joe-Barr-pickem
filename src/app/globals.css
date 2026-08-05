@@ -1262,6 +1262,15 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .survivor-title-toggle:disabled { opacity: .55; }
 
+.survivor-elimination-toggle {
+  border-radius: .22rem;
+  font-size: .56rem;
+  letter-spacing: .06em;
+  min-width: 2.35rem;
+  padding: 0 .28rem;
+  width: auto;
+}
+
 .pickem-ledger-table {
   background: var(--ledger-paper);
   border-top: 0;
