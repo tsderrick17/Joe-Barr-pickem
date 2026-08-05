@@ -26,8 +26,14 @@ export async function GET() {
       { status: "ok", checkedAt: health.checkedAt },
       { headers: { "Cache-Control": "no-store, max-age=0" } },
     );
-  } catch {
-    console.error("Public health check could not be completed.");
+  } catch (error) {
+    // Keep the public response deliberately opaque, but include the safe
+    // failure shape in server logs so the Commissioner can diagnose a
+    // database/configuration mismatch without exposing it to uptime probes.
+    console.error("Public health check could not be completed.", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      message: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { status: "unavailable", checkedAt: new Date().toISOString() },
       {
