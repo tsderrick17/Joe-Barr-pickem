@@ -231,19 +231,42 @@ export default function BoardPage() {
   }
 
   useEffect(() => {
+    let disposed = false;
+
+    async function retryInitialRead<T>(
+      read: () => PromiseLike<T>,
+      shouldRetry: (result: T) => boolean,
+    ): Promise<T> {
+      const firstResult = await read();
+      if (!shouldRetry(firstResult)) return firstResult;
+
+      // Schedule bootstrapping is read-only. One short retry protects the
+      // first Slate render from a momentary database/network handoff without
+      // replaying any player action.
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+      return read();
+    }
+
     async function loadBoard() {
       const session = await getFreshSession();
+
+      if (disposed) return;
 
       if (!session) {
         window.location.replace("/login");
         return;
       }
 
-      const { data: season, error: seasonError } = await supabase
-        .from("seasons")
-        .select("id")
-        .eq("year", CURRENT_SEASON_YEAR)
-        .maybeSingle();
+      const { data: season, error: seasonError } = await retryInitialRead(
+        () => supabase
+          .from("seasons")
+          .select("id")
+          .eq("year", CURRENT_SEASON_YEAR)
+          .maybeSingle(),
+        (result) => Boolean(result.error || !result.data),
+      );
+
+      if (disposed) return;
 
       if (seasonError || !season) {
         setErrorMessage("The current season could not be loaded.");
@@ -251,13 +274,18 @@ export default function BoardPage() {
         return;
       }
 
-      const { data: periods, error: periodsError } = await supabase
-        .from("scoring_periods")
-        .select(
-          "id, display_name, display_order, status, period_type, max_picks",
-        )
-        .eq("season_id", season.id)
-        .order("display_order");
+      const { data: periods, error: periodsError } = await retryInitialRead(
+        () => supabase
+          .from("scoring_periods")
+          .select(
+            "id, display_name, display_order, status, period_type, max_picks",
+          )
+          .eq("season_id", season.id)
+          .order("display_order"),
+        (result) => Boolean(result.error || !result.data?.length),
+      );
+
+      if (disposed) return;
 
       if (periodsError || !periods?.length) {
         setErrorMessage("The weekly schedule could not be loaded.");
@@ -284,6 +312,10 @@ export default function BoardPage() {
     }
 
     void loadBoard();
+
+    return () => {
+      disposed = true;
+    };
   }, []);
 
   useEffect(() => {
