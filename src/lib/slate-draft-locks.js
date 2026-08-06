@@ -30,8 +30,12 @@ export function reconcileAtsDraftAtKickoff({ games, selections, savedPicks, now 
   // kickoff warning. Only a real difference in the selected game/team set is a
   // change here.
   const changed = !samePickSet(reconciled, selections);
+  const discardedAtKickoff = games.some((game) => {
+    if (new Date(game.kickoffAt).getTime() > nowTime) return false;
+    return !samePick(selectedByGame.get(game.id), savedByGame.get(game.id));
+  });
 
-  return { selections: reconciled, changed };
+  return { selections: reconciled, changed, discardedAtKickoff };
 }
 
 /**
@@ -41,7 +45,7 @@ export function reconcileAtsDraftAtKickoff({ games, selections, savedPicks, now 
  */
 export function reconcileSurvivorDraftAtKickoff({ games, selection, savedPick, now }) {
   if (samePick(selection, savedPick)) {
-    return { selection, changed: false };
+    return { selection, changed: false, discardedAtKickoff: false };
   }
 
   const savedGame = savedPick
@@ -54,7 +58,9 @@ export function reconcileSurvivorDraftAtKickoff({ games, selection, savedPick, n
   const savedGameKicked = Boolean(savedGame && new Date(savedGame.kickoffAt).getTime() <= nowTime);
   const selectedGameKicked = Boolean(selectedGame && new Date(selectedGame.kickoffAt).getTime() <= nowTime);
 
-  return savedGameKicked || selectedGameKicked
-    ? { selection: savedPick ?? null, changed: true }
-    : { selection, changed: false };
+  const discardedAtKickoff = savedGameKicked || selectedGameKicked;
+
+  return discardedAtKickoff
+    ? { selection: savedPick ?? null, changed: true, discardedAtKickoff: true }
+    : { selection, changed: false, discardedAtKickoff: false };
 }

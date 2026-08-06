@@ -552,9 +552,11 @@ export default function BoardPage() {
     const reconcileTimer = window.setTimeout(() => {
       if (atsDraft.changed) setSelectedPicks(atsDraft.selections);
       if (survivorDraft.changed) setSurvivorPick(survivorDraft.selection);
-      setSelectionWarning(
-        "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed.",
-      );
+      if (atsDraft.discardedAtKickoff || survivorDraft.discardedAtKickoff) {
+        setSelectionWarning(
+          "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed.",
+        );
+      }
     }, 0);
 
     return () => window.clearTimeout(reconcileTimer);

@@ -146,7 +146,11 @@ test("does not treat future picks clicked out of Slate order as kicked off", () 
     now: new Date("2026-08-04T18:00:00Z"),
   });
 
-  assert.deepEqual(result, { selections: [selections[1], selections[0]], changed: false });
+  assert.deepEqual(result, {
+    selections: [selections[1], selections[0]],
+    changed: false,
+    discardedAtKickoff: false,
+  });
 });
 
 test("restores a submitted Survivor pick when its game kicks off during an unsaved replacement", () => {
@@ -161,7 +165,7 @@ test("restores a submitted Survivor pick when its game kicks off during an unsav
     now: new Date("2026-09-13T18:00:00Z"),
   });
 
-  assert.deepEqual(result, { selection: savedPick, changed: true });
+  assert.deepEqual(result, { selection: savedPick, changed: true, discardedAtKickoff: true });
 });
 
 test("keeps a Survivor replacement editable while the submitted game remains open", () => {
@@ -176,7 +180,7 @@ test("keeps a Survivor replacement editable while the submitted game remains ope
     now: new Date("2026-09-13T16:00:00Z"),
   });
 
-  assert.deepEqual(result, { selection, changed: false });
+  assert.deepEqual(result, { selection, changed: false, discardedAtKickoff: false });
 });
 
 test("restores a submitted Survivor pick when the unsaved replacement kicks first", () => {
@@ -191,7 +195,7 @@ test("restores a submitted Survivor pick when the unsaved replacement kicks firs
     now: new Date("2026-09-13T18:00:00Z"),
   });
 
-  assert.deepEqual(result, { selection: savedPick, changed: true });
+  assert.deepEqual(result, { selection: savedPick, changed: true, discardedAtKickoff: true });
 });
 
 test("clears an unsubmitted Survivor pick when its game kicks off", () => {
@@ -202,5 +206,5 @@ test("clears an unsubmitted Survivor pick when its game kicks off", () => {
     now: new Date("2026-09-13T17:00:00Z"),
   });
 
-  assert.deepEqual(result, { selection: null, changed: true });
+  assert.deepEqual(result, { selection: null, changed: true, discardedAtKickoff: true });
 });
