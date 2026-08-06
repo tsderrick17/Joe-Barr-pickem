@@ -4,12 +4,39 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 const SESSION_REFRESH_WINDOW_MS = 60_000;
+const TRANSIENT_READ_RETRY_DELAY_MS = 650;
+const TRANSIENT_READ_STATUS_CODES = new Set([502, 503, 504]);
 
 export class SessionUnavailableError extends Error {
   constructor(message = "Your sign-in session is unavailable.") {
     super(message);
     this.name = "SessionUnavailableError";
   }
+}
+
+function isReadRequest(init: RequestInit): boolean {
+  return (init.method ?? "GET").toUpperCase() === "GET";
+}
+
+async function waitForTransientReadRetry(signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) {
+    throw signal.reason ?? new DOMException("Request was cancelled.", "AbortError");
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const cancel = () => {
+      window.clearTimeout(timer);
+      signal?.removeEventListener("abort", cancel);
+      reject(signal?.reason ?? new DOMException("Request was cancelled.", "AbortError"));
+    };
+
+    const timer = window.setTimeout(() => {
+      signal?.removeEventListener("abort", cancel);
+      resolve();
+    }, TRANSIENT_READ_RETRY_DELAY_MS);
+
+    signal?.addEventListener("abort", cancel, { once: true });
+  });
 }
 
 export async function getFreshSession(): Promise<Session | null> {
@@ -61,7 +88,28 @@ export async function fetchWithSession(
     return fetch(input, { ...init, headers });
   };
 
-  const response = await request(session.access_token);
+  const retrySafeRead = isReadRequest(init);
+  let response: Response;
+
+  try {
+    response = await request(session.access_token);
+  } catch (error) {
+    // This is intentionally limited to safe reads. A short retry makes a
+    // temporary browser/network handoff recover without ever replaying a
+    // selection, save, or commissioner action.
+    if (!retrySafeRead || (error instanceof DOMException && error.name === "AbortError")) {
+      throw error;
+    }
+
+    await waitForTransientReadRetry(init.signal ?? undefined);
+    response = await request(session.access_token);
+  }
+
+  if (retrySafeRead && TRANSIENT_READ_STATUS_CODES.has(response.status)) {
+    await waitForTransientReadRetry(init.signal ?? undefined);
+    response = await request(session.access_token);
+  }
+
   if (response.status !== 401) return response;
 
   const {
