@@ -20,8 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: isolated-test
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.PICKEM_TEST_SUPABASE_DB_PASSWORD }}
+      # The test project uses the newer API-key format, which some Supabase
+      # CLI releases cannot inspect during `supabase link`. A direct database
+      # URL avoids that lookup completely while remaining isolated.
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
       - uses: actions/checkout@v4
@@ -32,10 +34,15 @@ jobs:
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
           echo "Using isolated test project only."
-      - name: Link isolated test project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Confirm isolated database URL
+        run: |
+          test -n "$PICKEM_TEST_DATABASE_URL"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) echo "Using isolated test database only." ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
       - name: Preview pending migrations
-        run: supabase db push --linked --dry-run
+        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --dry-run
   deploy:
     needs: preview
     if: ${{ inputs.apply }}
@@ -45,8 +52,7 @@ jobs:
       group: supabase-isolated-test-migrations
       cancel-in-progress: false
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.PICKEM_TEST_SUPABASE_DB_PASSWORD }}
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +63,12 @@ jobs:
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
           echo "Using isolated test project only."
-      - name: Link isolated test project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Confirm isolated database URL
+        run: |
+          test -n "$PICKEM_TEST_DATABASE_URL"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) echo "Using isolated test database only." ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
       - name: Apply pending migrations
-        run: supabase db push --linked
+        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL"
