@@ -1,0 +1,63 @@
+name: Isolated Supabase migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply pending migrations to the isolated test database (leave off for a dry run)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+# This workflow is intentionally separate from production. It can never use the
+# production project reference, and it needs an explicit manual run before it
+# changes the disposable test database.
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    environment: isolated-test
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.PICKEM_TEST_SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Confirm isolated target
+        run: |
+          test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
+          echo "Using isolated test project only."
+      - name: Link isolated test project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Preview pending migrations
+        run: supabase db push --linked --dry-run
+  deploy:
+    needs: preview
+    if: ${{ inputs.apply }}
+    runs-on: ubuntu-latest
+    environment: isolated-test
+    concurrency:
+      group: supabase-isolated-test-migrations
+      cancel-in-progress: false
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.PICKEM_TEST_SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Confirm isolated target
+        run: |
+          test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
+          echo "Using isolated test project only."
+      - name: Link isolated test project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Apply pending migrations
+        run: supabase db push --linked
