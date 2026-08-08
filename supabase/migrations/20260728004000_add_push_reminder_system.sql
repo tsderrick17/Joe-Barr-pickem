@@ -117,7 +117,7 @@ $$;
 
 -- A five-minute check makes Commissioner-selected times flexible without a
 -- paid scheduler. It is idle until a reminder is explicitly scheduled.
-select cron.unschedule(jobid)
+select cron.unschedule(jobid::integer)
 from cron.job
 where jobname = 'send-pickem-browser-reminders-every-five-minutes';
 
