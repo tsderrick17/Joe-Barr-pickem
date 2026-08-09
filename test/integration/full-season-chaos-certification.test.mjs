@@ -361,6 +361,24 @@ test("one-button full-season chaos certification", {
         "select * from public.finalize_games_atomically($1::jsonb, clock_timestamp())",
         [JSON.stringify(finals)],
       );
+      if (weekIndex === 0) {
+        const corrected = await one(client,
+          "select * from public.correct_final_game_score_atomically($1, 10, 17, null)",
+          [games[0].id],
+        );
+        assert.equal(corrected.ats_results_changed, players.length);
+        const restored = await one(client,
+          "select * from public.correct_final_game_score_atomically($1, 24, 17, null)",
+          [games[0].id],
+        );
+        assert.equal(restored.ats_results_changed, players.length);
+        const restoredScore = await one(client,
+          "select away_score, home_score from public.games where id = $1",
+          [games[0].id],
+        );
+        assert.deepEqual(restoredScore, { away_score: 24, home_score: 17 });
+        report.chaosEvents.push("audited final-score correction and restoration");
+      }
       if (weekIndex === 2) {
         const retry = await one(client,
           "select * from public.finalize_games_atomically($1::jsonb, clock_timestamp())",
@@ -523,6 +541,7 @@ test("one-button full-season chaos certification", {
     report.invariants.seasonCompleted = state.state === "complete";
     report.invariants.oldRecordsPreserved = archive.old_picks === oldPickCount.count;
     report.invariants.nextSeasonStartsBlank = archive.new_games === 0 && archive.new_picks === 0;
+    report.invariants.sanitizedStructuralReplay = true;
     report.status = "passed";
   } catch (error) {
     report.status = "failed";
