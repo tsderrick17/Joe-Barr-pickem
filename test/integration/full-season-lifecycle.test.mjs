@@ -131,6 +131,33 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     );
     const playoffSeason = await insertOne(client, "select state from public.seasons where id = $1", [season.id]);
     assert.equal(playoffSeason.state, "playoffs");
+    const transitionedPeriods = await client.query(
+      "select id, status from public.scoring_periods where id = any($1::uuid[]) order by id",
+      [[regular.id, playoff.id]],
+    );
+    assert.deepEqual(
+      new Map(transitionedPeriods.rows.map((period) => [period.id, period.status])),
+      new Map([[regular.id, "complete"], [playoff.id, "active"]]),
+      "the handoff must leave exactly one active period",
+    );
+
+    // A rescheduled future game must reopen its official line without
+    // touching any settled pick. The subsequent score run must still be able
+    // to lock a fresh line and finish the season.
+    const rescheduled = await insertOne(client, `
+      select * from public.reschedule_game_atomically($1, $2, $3, null)
+    `, [playoffGames[2].id, iso(48 * 60 * 60 * 1000), iso(47 * 60 * 60 * 1000)]);
+    assert.equal(rescheduled.line_reopened, true);
+    const removedLine = await insertOne(client,
+      "select count(*)::integer as count from public.game_lines where game_id = $1",
+      [playoffGames[2].id],
+    );
+    assert.equal(removedLine.count, 0, "a reschedule cannot reuse a stale official line");
+    await client.query(`
+      insert into public.game_lines
+        (game_id, favorite_team_id, locked_spread, source, source_captured_at)
+      values ($1, $2, 0.5, 'full-season-lifecycle-rescheduled', clock_timestamp())
+    `, [playoffGames[2].id, playoffGames[2].away_team_id]);
 
     await client.query(
       "select * from public.snapshot_playoff_day_eligibility($1, $2)",
