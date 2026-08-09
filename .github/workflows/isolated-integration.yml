@@ -35,6 +35,9 @@ jobs:
       - name: Confirm isolated test environment
         run: |
           test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
+          test -n "$PICKEM_TEST_SUPABASE_URL"
+          test -n "$PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY"
+          test -n "$PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY"
           echo "Using the explicitly confirmed isolated test environment."
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
