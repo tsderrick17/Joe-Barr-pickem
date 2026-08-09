@@ -41,25 +41,42 @@ function easternDateTimeToUtc(year, month, day, hour) {
   return new Date(utcGuess.getTime() - offset);
 }
 
-export function normalWednesdayChangeoverAt(lastFinalizedAt) {
+export function normalThursdayChangeoverAt(lastFinalizedAt) {
   const finalizedAt = new Date(lastFinalizedAt);
   const eastern = getEasternParts(finalizedAt);
   const easternDate = new Date(
     Date.UTC(eastern.year, eastern.month - 1, eastern.day),
   );
-  const daysUntilWednesday = (3 - easternDate.getUTCDay() + 7) % 7;
+  const weekday = easternDate.getUTCDay();
+  let daysToThursday = (4 - weekday + 7) % 7;
 
-  if (daysUntilWednesday === 0 && eastern.hour >= 3) {
-    easternDate.setUTCDate(easternDate.getUTCDate() + 7);
-  } else {
-    easternDate.setUTCDate(easternDate.getUTCDate() + daysUntilWednesday);
-  }
+  // A result finalized after this week's Thursday boundary falls back to the
+  // separate 24-hour minimum; it must not postpone the handoff a whole week.
+  if (weekday === 5 || weekday === 6) daysToThursday = 4 - weekday;
+  easternDate.setUTCDate(easternDate.getUTCDate() + daysToThursday);
 
   return easternDateTimeToUtc(
     easternDate.getUTCFullYear(),
     easternDate.getUTCMonth() + 1,
     easternDate.getUTCDate(),
     3,
+  ).toISOString();
+}
+
+// The next Slate may be opened manually on the next Eastern calendar day,
+// without changing which week players see by default.
+export function nextWeekManualAccessAt(lastFinalizedAt) {
+  const finalizedAt = new Date(lastFinalizedAt);
+  const eastern = getEasternParts(finalizedAt);
+  const nextEasternDate = new Date(
+    Date.UTC(eastern.year, eastern.month - 1, eastern.day + 1),
+  );
+
+  return easternDateTimeToUtc(
+    nextEasternDate.getUTCFullYear(),
+    nextEasternDate.getUTCMonth() + 1,
+    nextEasternDate.getUTCDate(),
+    0,
   ).toISOString();
 }
 
@@ -76,7 +93,7 @@ export function weekRolloverAt({ lastFinalizedAt, nextKickoffAt }) {
 
   const fullDayAt = new Date(finalizedAt.getTime() + oneDayMilliseconds);
   const normalChangeoverAt = new Date(
-    normalWednesdayChangeoverAt(finalizedAt),
+    normalThursdayChangeoverAt(finalizedAt),
   );
 
   return new Date(
