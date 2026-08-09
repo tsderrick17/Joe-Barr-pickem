@@ -25,9 +25,10 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
+          github-token: ${{ github.token }}
       - name: Verify production migration target
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"
@@ -51,9 +52,10 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
+          github-token: ${{ github.token }}
       - name: Verify production migration target
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"

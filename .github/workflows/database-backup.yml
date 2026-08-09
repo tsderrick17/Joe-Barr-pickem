@@ -34,9 +34,10 @@ jobs:
       BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
     steps:
       - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
+          github-token: ${{ github.token }}
       - name: Verify backup configuration
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"
