@@ -13,6 +13,8 @@
     "test:e2e": "playwright test",
     "test:season-drill": "node scripts/season-drill.mjs",
     "test:isolated": "node --env-file-if-exists=.env.test.local scripts/season-drill.mjs",
+    "season:replay:sanitize": "node scripts/sanitize-season-replay.mjs",
+    "season:certification:render": "node scripts/render-season-certification.mjs",
     "test:all": "npm run test:migrations && npm test",
     "test:migrations": "node scripts/check-migration-versions.mjs"
   },

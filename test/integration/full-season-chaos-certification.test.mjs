@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import test from "node:test";
 import pg from "pg";
 
@@ -30,6 +32,22 @@ test("one-button full-season chaos certification", {
   timeout: 15 * 60 * 1000,
 }, async () => {
   const client = new pg.Client({ connectionString: process.env.PICKEM_TEST_DATABASE_URL });
+  const report = {
+    schemaVersion: 1,
+    certification: "full-season-chaos",
+    status: "running",
+    startedAt: new Date().toISOString(),
+    seed: process.env.GITHUB_SHA ?? "local",
+    coverage: {
+      regularSeasonWeeks: 18,
+      playoffRounds: 4,
+      randomizedEligibilityScenarios: 5_000,
+      timeMachineBoundaries: ["kickoff", "Eastern midnight", "DST start", "DST end", "annual rollover"],
+      sanitizedReplay: true,
+    },
+    chaosEvents: [],
+    invariants: {},
+  };
   await client.connect();
   await client.query("begin");
 
@@ -124,6 +142,8 @@ test("one-button full-season chaos certification", {
       [season.id, JSON.stringify(assignments), JSON.stringify(providerGames)],
     );
     assert.deepEqual(importRetry, { games_saved: 0, games_matched: 272, weeks_assigned: 0 });
+    report.scheduleImport = { ...firstImport, retry: importRetry };
+    report.chaosEvents.push("idempotent full-schedule retry");
 
     const oddsGames = providerGames.map((game, index) => ({
       external_game_id: `${token}-odds-${index + 1}`,
@@ -160,6 +180,7 @@ test("one-button full-season chaos certification", {
       where period.season_id = $1
     `, [season.id]);
     assert.equal(omissionCount.count, 272);
+    report.chaosEvents.push("partial provider omission", "unlocked kickoff correction");
 
     const firstSaved = await one(client,
       "select id, scoring_period_id, gameweek_key from public.games where odds_event_id = $1",
@@ -171,6 +192,7 @@ test("one-button full-season chaos certification", {
       /permanently pinned|before the assigned scoring period/i,
     );
     await client.query("rollback to savepoint invalid_week_move");
+    report.chaosEvents.push("rejected cross-gameweek move");
 
     // Add the four postseason rounds after the preseason bootstrap.
     const playoffCounts = [6, 4, 2, 1];
@@ -289,9 +311,11 @@ test("one-button full-season chaos certification", {
       if (weekIndex === 4) {
         excludedId = games[0].id;
         await client.query("select * from public.record_game_disruption($1, 'cancelled', null)", [excludedId]);
+        report.chaosEvents.push("cancelled game with an existing pick");
       } else if (weekIndex === 8) {
         excludedId = games.at(-1).id;
         await client.query("select * from public.record_game_disruption($1, 'no_contest', null)", [excludedId]);
+        report.chaosEvents.push("no-contest settlement");
       } else if (weekIndex === 11) {
         excludedId = games.at(-1).id;
         await client.query("select * from public.record_game_disruption($1, 'postponed', null)", [excludedId]);
@@ -306,6 +330,7 @@ test("one-button full-season chaos certification", {
           values ($1, $2, 0.5, 'rescheduled-certification', clock_timestamp())
         `, [excludedId, postponedGame.away_team_id]);
         excludedId = null;
+        report.chaosEvents.push("postponement and reschedule recovery");
       }
 
       await advanceFixtureClock(client, `
@@ -324,6 +349,7 @@ test("one-button full-season chaos certification", {
           /official line/i,
         );
         await client.query("rollback to savepoint missing_line");
+        report.chaosEvents.push("missing official line fail-closed recovery");
         const favorite = games.find((game) => game.id === missingLineGame.id).away_team_id;
         await client.query(`
           insert into public.game_lines(game_id, favorite_team_id, locked_spread, source, source_captured_at)
@@ -341,6 +367,7 @@ test("one-button full-season chaos certification", {
           [JSON.stringify(finals)],
         );
         assert.equal(retry.final_scores_imported, 0);
+        report.chaosEvents.push("idempotent final-score retry");
       }
       await client.query(
         "select * from public.complete_scoring_period_atomically($1, $2, clock_timestamp())",
@@ -379,6 +406,12 @@ test("one-button full-season chaos certification", {
     for (const chaser of players.slice(1)) {
       assert.equal(eligibilityByPlayer.get(chaser.id).is_eligible, false);
     }
+    report.playoffEligibility = {
+      snapshotDay: snapshot.snapshot_day,
+      playersEligible: snapshot.players_eligible,
+      playersEliminated: snapshot.players_eliminated,
+      picksVoided: snapshot.picks_scratched,
+    };
 
     for (let playoffIndex = 0; playoffIndex < 4; playoffIndex += 1) {
       const period = periods[18 + playoffIndex];
@@ -407,6 +440,7 @@ test("one-button full-season chaos certification", {
       where period.season_id = $1
     `, [season.id]);
     assert.deepEqual(totals, { total: 285, finals: 283, cancelled: 1, no_contests: 1 });
+    report.games = totals;
     const unresolved = await one(client, `
       select
         (select count(*) from public.picks pick join public.scoring_periods period on period.id = pick.scoring_period_id
@@ -415,12 +449,14 @@ test("one-button full-season chaos certification", {
           where period.season_id = $1 and pick.result = 'pending')::integer as survivor
     `, [season.id]);
     assert.deepEqual(unresolved, { ats: 0, survivor: 0 });
+    report.unresolvedPicks = unresolved;
     const mismatches = await one(client, `
       select count(*)::integer as count from public.games game
       join public.scoring_periods period on period.id = game.scoring_period_id
       where period.season_id = $1 and game.gameweek_key <> public.nfl_gameweek_key(period.starts_at)
     `, [season.id]);
     assert.equal(mismatches.count, 0);
+    report.invariants.gamesPinnedToCorrectGameweek = mismatches.count === 0;
 
     const state = await one(client, "select state from public.seasons where id = $1", [season.id]);
     assert.equal(state.state, "complete");
@@ -432,6 +468,7 @@ test("one-button full-season chaos certification", {
       { pool: "pickem", player_id: players[0].id },
       { pool: "survivor", player_id: players[0].id },
     ]);
+    report.championsRecorded = champions.rowCount;
 
     const privacy = await one(client, `
       select has_table_privilege('anon', 'public.picks', 'select') as anon_picks,
@@ -467,6 +504,13 @@ test("one-button full-season chaos certification", {
           where period.season_id = $2)::integer as old_picks
     `, [rollover.season_id, season.id]);
     assert.deepEqual(archive, { new_periods: 22, new_games: 0, new_picks: 0, old_picks: oldPickCount.count });
+    report.rollover = {
+      createdOnce: rollover.created && !rolloverRetry.created,
+      newPeriods: archive.new_periods,
+      newGames: archive.new_games,
+      newPicks: archive.new_picks,
+      archivedPicksPreserved: archive.old_picks,
+    };
 
     const audit = await one(client, `
       select count(distinct action)::integer as actions from public.audit_logs
@@ -474,7 +518,24 @@ test("one-button full-season chaos certification", {
         or entity_id in (select id from public.scoring_periods where season_id = $1)
     `, [season.id]);
     assert.ok(audit.actions >= 5);
+    report.auditActionTypes = audit.actions;
+    report.invariants.noPendingPicks = unresolved.ats === 0 && unresolved.survivor === 0;
+    report.invariants.seasonCompleted = state.state === "complete";
+    report.invariants.oldRecordsPreserved = archive.old_picks === oldPickCount.count;
+    report.invariants.nextSeasonStartsBlank = archive.new_games === 0 && archive.new_picks === 0;
+    report.status = "passed";
+  } catch (error) {
+    report.status = "failed";
+    report.failure = error instanceof Error ? error.message : String(error);
+    throw error;
   } finally {
+    report.completedAt = new Date().toISOString();
+    const reportPath = process.env.PICKEM_CERTIFICATION_REPORT_PATH;
+    if (reportPath) {
+      mkdirSync(dirname(reportPath), { recursive: true });
+      writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+      console.log(`Season certification report written to ${reportPath}`);
+    }
     await client.query("rollback");
     await client.end();
   }

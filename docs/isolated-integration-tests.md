@@ -34,4 +34,28 @@ Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_T
 - `npm run test:isolated` loads only `.env.test.local` and runs the complete season drill. This is the recommended local command.
 - `PICKEM_E2E_ENABLED=true npm run test:e2e` launches the application against the isolated project and verifies an actual player can sign in, save two ATS picks, save a Survivor pick, change that Survivor pick, and leave only the final selections behind. It refuses a production URL.
 
+## Full-season certification
+
+Run **Isolated integration checks** manually with `full_season_drill` enabled. The certification fast-forwards a disposable 22-period, 285-game season through schedule import, every regular week, all playoff rounds, scoring, Survivor, championship recording, historical preservation, and annual rollover.
+
+The same run deliberately exercises partial provider responses, kickoff changes, a rejected cross-gameweek move, cancellation, no-contest, postponement and recovery, a missing official line, and retrying schedule imports, final scores, and rollover. Its fast test layer also performs 5,000 seeded comparisons against an independent playoff-eligibility oracle and checks Eastern midnight plus both daylight-saving transitions.
+
+Every requested full-season run publishes:
+
+- A readable report in the GitHub Actions run summary.
+- A `full-season-certification-*` JSON artifact retained for 30 days.
+- An explicit PASS/FAIL for gameweek pins, pending picks, season completion, old-record preservation, and a blank next season.
+
+### Sanitized structural replay
+
+Schedule and scoring incidents from a real season can be rehearsed without copying players or picks. Export an array of structural events and run:
+
+```text
+npm run season:replay:sanitize -- raw-events.json sanitized-events.json
+```
+
+Only these structural fields survive: event type, external game id, gameweek, kickoff/line-lock timestamps, team abbreviations, game status, scores, and event timestamp. Unknown fields—including names, emails, player ids, picks, and free-form payloads—are dropped. The command also replays the sanitized sequence locally and rejects events that arrive before the game is scheduled or try to move it to a different gameweek.
+
+Supported event types are `scheduled`, `rescheduled`, `disrupted`, `final`, and `score_corrected`. This artifact is suitable as a regression fixture for the isolated project; it is not imported into production.
+
 The integration test creates records with an `integration-` identifier and removes them after every run. No local `.env.local` value is read by the test harness.

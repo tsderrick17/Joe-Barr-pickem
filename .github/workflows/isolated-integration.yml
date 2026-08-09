@@ -30,6 +30,7 @@ jobs:
       PICKEM_RLS_AUDIT: "true"
       PICKEM_E2E_ENABLED: "false"
       PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
+      PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/season-certification.json
     steps:
       - name: Confirm isolated test environment
         run: |
@@ -70,3 +71,14 @@ jobs:
               echo "- Coverage: 18 regular weeks, 4 playoff rounds, 285 games, schedule reconciliation, disruptions, scoring, eligibility, Survivor, archive, and annual rollover"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$PICKEM_CERTIFICATION_REPORT_PATH" ]; then
+            node scripts/render-season-certification.mjs "$PICKEM_CERTIFICATION_REPORT_PATH"
+          fi
+      - name: Preserve full-season certification report
+        if: always() && inputs.full_season_drill
+        uses: actions/upload-artifact@v7
+        with:
+          name: full-season-certification-${{ github.run_number }}
+          path: artifacts/season-certification.json
+          if-no-files-found: error
+          retention-days: 30
