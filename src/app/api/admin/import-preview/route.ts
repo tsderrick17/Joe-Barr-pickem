@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -64,6 +64,7 @@ function getWeekStartKey(kickoff: Date) {
 }
 
 export async function GET(request: NextRequest) {
+  const seasonYear = seasonYearAt();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -116,12 +117,12 @@ export async function GET(request: NextRequest) {
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", seasonYear)
     .maybeSingle();
 
   if (!season) {
     return NextResponse.json(
-      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up yet.` },
+      { error: `The ${seasonYear} season has not been set up yet.` },
       { status: 500 },
     );
   }
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
 
   if (periodsError || !periods) {
     return NextResponse.json(
-      { error: `The ${CURRENT_SEASON_YEAR} season weeks could not be loaded.` },
+      { error: `The ${seasonYear} season weeks could not be loaded.` },
       { status: 500 },
     );
   }

@@ -1,75 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-async function verifyCommissioner(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-
-  if (!supabaseUrl || !publishableKey) {
-    return {
-      error: "The server is missing required configuration.",
-      status: 500,
-    };
-  }
-
-  if (!authorization?.startsWith("Bearer ")) {
-    return {
-      error: "You must be signed in.",
-      status: 401,
-    };
-  }
-
-  const authClient = createClient(supabaseUrl, publishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
-      },
-    },
-  });
-
-  const {
-    data: { user },
-    error: userError,
-  } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
-
-  if (userError || !user) {
-    return {
-      error: "Your sign-in session could not be verified.",
-      status: 401,
-    };
-  }
-
-  const { data: commissioner } = await supabaseAdmin
-    .from("players")
-    .select("id, first_name, is_commissioner, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (
-    !commissioner ||
-    !commissioner.active ||
-    !commissioner.is_commissioner
-  ) {
-    return {
-      error: "Commissioner access is required.",
-      status: 403,
-    };
-  }
-
-  return { commissioner };
-}
-
 export async function GET(request: NextRequest) {
-  const verification = await verifyCommissioner(request);
-
-  if ("error" in verification) {
-    return NextResponse.json(
-      { error: verification.error },
-      { status: verification.status },
-    );
+  if (!(await requireCommissioner(request))) {
+    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   }
 
   const { data: players, error } = await supabaseAdmin
@@ -99,13 +34,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const verification = await verifyCommissioner(request);
-
-  if ("error" in verification) {
-    return NextResponse.json(
-      { error: verification.error },
-      { status: verification.status },
-    );
+  const commissioner = await requireCommissioner(request);
+  if (!commissioner) {
+    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   }
 
   let body: {
@@ -207,7 +138,7 @@ export async function POST(request: NextRequest) {
   const { error: auditError } = await supabaseAdmin
     .from("audit_logs")
     .insert({
-      actor_player_id: verification.commissioner.id,
+      actor_player_id: commissioner.id,
       action: "player_created",
       entity_type: "player",
       entity_id: newPlayer.id,

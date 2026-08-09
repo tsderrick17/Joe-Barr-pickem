@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "test:season-drill": "node scripts/season-drill.mjs",
     "test:isolated": "node --env-file-if-exists=.env.test.local scripts/season-drill.mjs",
-    "test:all": "npm run test:migrations && npm run test && npm run test:integration",
+    "season:replay:sanitize": "node scripts/sanitize-season-replay.mjs",
+    "season:certification:render": "node scripts/render-season-certification.mjs",
+    "test:all": "npm run test:migrations && npm test",
     "test:migrations": "node scripts/check-migration-versions.mjs"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.3.0",
+    "pg": "^8.23.0",
     "tailwindcss": "^4",
     "typescript": "5.9.3"
   }

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calculatePlayoffEligibility } from "@/lib/playoff-math.js";
+import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -139,15 +140,20 @@ export async function buildPlayoffDayRecapSnapshot(): Promise<PlayoffDayRecapSna
   };
 }
 
-export async function buildWeeklyRecapSnapshot(): Promise<WeeklyRecapSnapshot> {
-  const { data: period, error: periodError } = await supabaseAdmin
-    .from("scoring_periods")
-    .select("id, season_id, display_name, display_order")
-    .eq("status", "complete")
-    .order("display_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (periodError || !period) throw new Error("A completed week is not available for the recap.");
+export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): Promise<WeeklyRecapSnapshot> {
+  let period;
+  if (targetPeriodId) {
+    const { data, error } = await supabaseAdmin
+      .from("scoring_periods")
+      .select("id, season_id, display_name, display_order")
+      .eq("id", targetPeriodId)
+      .maybeSingle();
+    if (error) throw new Error("The weekly recap source week could not be loaded.");
+    period = data;
+  } else {
+    period = await findLatestSettledWeeklyRecapPeriod();
+  }
+  if (!period) throw new Error("A settled week is not available for the recap.");
 
   const { data: seasonPeriods, error: seasonPeriodsError } = await supabaseAdmin.from("scoring_periods").select("id, display_order").eq("season_id", period.season_id);
   if (seasonPeriodsError) throw new Error("Season records could not be prepared for the recap.");
@@ -172,8 +178,9 @@ export async function buildWeeklyRecapSnapshot(): Promise<WeeklyRecapSnapshot> {
 
   const wins = new Map<string, number>();
   for (const pick of picks ?? []) if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
-  const survivorByEntry = new Map((survivorPicks ?? []).map((pick) => [pick.survivor_entry_id, pick.result]));
-  const latest = [...survivorByEntry.values()].filter((result) => result === "win").length;
+  const latest = (survivorPicks ?? []).filter(
+    (pick) => pick.scoring_period_id === period.id && pick.result === "win",
+  ).length;
   const weeklyPicksByPlayer = new Map<string, Array<{ selected_team_id: string; result: string }>>();
   for (const pick of picks ?? []) if (pick.scoring_period_id === period.id) weeklyPicksByPlayer.set(pick.player_id, [...(weeklyPicksByPlayer.get(pick.player_id) ?? []), pick]);
   const orderByPeriod = new Map((seasonPeriods ?? []).map((item) => [item.id, item.display_order]));
@@ -323,7 +330,13 @@ export async function ensureEarlyLockSnapshot(reminderId: string, existing: unkn
 
 export async function ensureWeeklyRecapSnapshot(reminderId: string, existing: unknown) {
   if (existing && typeof existing === "object") return existing as WeeklyRecapSnapshot;
-  const snapshot = await buildWeeklyRecapSnapshot();
+  const { data: reminder, error: reminderError } = await supabaseAdmin
+    .from("push_reminders")
+    .select("source_scoring_period_id")
+    .eq("id", reminderId)
+    .maybeSingle();
+  if (reminderError) throw new Error("The weekly recap source week could not be loaded.");
+  const snapshot = await buildWeeklyRecapSnapshot(reminder?.source_scoring_period_id);
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The weekly recap receipt could not be saved.");
   return snapshot;

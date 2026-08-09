@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, display_name, status, period_type, max_picks")
+    .select("id, display_name, status, period_type, max_picks, starts_at")
     .eq("season_id", season.id)
     .order("display_order");
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const periodIds = (periods ?? []).map((period) => period.id);
   const [gamesResult, remindersResult, deliveryFailuresResult] = await Promise.all([
     periodIds.length
-      ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, line_lock_at, away_team_id, home_team_id, status").in("scoring_period_id", periodIds)
+      ? supabaseAdmin.from("games").select("id, scoring_period_id, gameweek_key, kickoff_at, line_lock_at, away_team_id, home_team_id, status").in("scoring_period_id", periodIds)
       : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("push_reminders").select("id, status, processing_started_at").in("status", ["scheduled", "sending", "failed"]),
     supabaseAdmin

@@ -11,9 +11,11 @@ export function buildScheduleGame({
   kickoffAt,
   lineLockAt,
   isInternational,
+  oddsEventId = externalGameId,
 }) {
   return {
     external_game_id: externalGameId,
+    odds_event_id: oddsEventId,
     scoring_period_id: scoringPeriodId,
     away_team_id: awayTeamId,
     home_team_id: homeTeamId,

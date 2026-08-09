@@ -1,0 +1,100 @@
+name: Monthly upgrade rehearsal
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 15 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monthly-upgrade-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse-latest-tooling:
+    runs-on: ubuntu-24.04
+    environment: isolated-test
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "build-only-publishable-key"
+      SUPABASE_SECRET_KEY: "build-only-secret-key"
+      PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+      PICKEM_RLS_AUDIT: "true"
+      PICKEM_E2E_ENABLED: "false"
+      PICKEM_FULL_SEASON_DRILL: "true"
+      PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/monthly-season-certification.json
+    steps:
+      - name: Select the first Monday or a manual run
+        id: calendar
+        shell: bash
+        run: |
+          day_of_month=$((10#$(date -u +%d)))
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || (( day_of_month <= 7 )); then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.calendar.outputs.run == 'true'
+      - uses: actions/setup-node@v5
+        if: steps.calendar.outputs.run == 'true'
+        with:
+          node-version: 24
+          cache: npm
+      - uses: supabase/setup-cli@v2
+        if: steps.calendar.outputs.run == 'true'
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+      - name: Confirm isolated rehearsal target
+        if: steps.calendar.outputs.run == 'true'
+        run: |
+          test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
+      - if: steps.calendar.outputs.run == 'true'
+        run: npm ci
+      - name: Install latest direct dependencies ephemerally
+        if: steps.calendar.outputs.run == 'true'
+        run: node scripts/prepare-upgrade-rehearsal.mjs
+      - name: Apply schema with latest Supabase CLI
+        if: steps.calendar.outputs.run == 'true'
+        run: |
+          node scripts/prepare-isolated-schema.mjs
+          supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+      - name: Rehearse full application and season lifecycle
+        if: steps.calendar.outputs.run == 'true'
+        run: |
+          npm run test:season-drill
+          npm run lint
+          npm run build
+      - name: Publish rehearsal summary
+        if: always() && steps.calendar.outputs.run == 'true'
+        run: |
+          {
+            echo "## Monthly upgrade rehearsal"
+            echo
+            echo "No dependency, lockfile, database, or deployment change was committed."
+            echo
+            echo "- Latest direct dependency installation: attempted"
+            echo "- Latest Supabase CLI: $(supabase --version 2>/dev/null || echo unavailable)"
+            echo "- Full isolated season certification: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$PICKEM_CERTIFICATION_REPORT_PATH" ]; then
+            node scripts/render-season-certification.mjs "$PICKEM_CERTIFICATION_REPORT_PATH"
+          fi
+      - name: Preserve rehearsal evidence
+        if: always() && steps.calendar.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: monthly-upgrade-rehearsal-${{ github.run_number }}
+          path: artifacts/*.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const cutoff = new Date(checkedAt.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
   const { data: games, error: gamesError } = await supabaseAdmin
     .from("games")
-    .select("id, external_game_id, away_team_id, home_team_id, away_score, home_score")
+    .select("id, external_game_id, odds_event_id, away_team_id, home_team_id, away_score, home_score")
     .eq("status", "final")
     .gte("finalized_at", cutoff);
   if (gamesError || !games) return NextResponse.json({ error: "Stored final scores could not be loaded." }, { status: 500 });
@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
   const providerById = new Map(providerEvents.map((event) => [event.id, event]));
 
   const storedFinals = games.map((game) => {
-    const event = providerById.get(game.external_game_id);
+    const event = game.odds_event_id ? providerById.get(game.odds_event_id) : undefined;
     return {
       id: game.id,
-      externalGameId: game.external_game_id,
+      externalGameId: game.odds_event_id ?? game.external_game_id,
       matchup: `${nameByTeamId.get(game.away_team_id) ?? "Unknown"} at ${nameByTeamId.get(game.home_team_id) ?? "Unknown"}`,
       awayScore: game.away_score,
       homeScore: game.home_score,

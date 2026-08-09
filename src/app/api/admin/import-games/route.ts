@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  AutomationAlreadyRunningError,
+  runWithAutomationLease,
+} from "@/lib/automation-execution-lease";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
+import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
+import { seasonYearAt } from "@/lib/season";
+import {
+  clearScheduleProviderCircuit,
+  getScheduleProviderCircuit,
+  recordScheduleProviderFailure,
+} from "@/lib/schedule-provider-circuit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -41,127 +52,6 @@ type WeekAssignment = {
   isNew: boolean;
 };
 
-const easternTimeZone = "America/New_York";
-
-function getEasternParts(date: Date) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: easternTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-    hour: "2-digit",
-    hourCycle: "h23",
-  });
-
-  const parts = formatter.formatToParts(date);
-  const value = (type: string) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: value("year"),
-    month: value("month"),
-    day: value("day"),
-    hour: value("hour"),
-    weekday: parts.find((part) => part.type === "weekday")?.value ?? "",
-  };
-}
-
-function getEasternOffsetMilliseconds(date: Date) {
-  const eastern = getEasternParts(date);
-
-  const easternClockReadAsUtc = Date.UTC(
-    eastern.year,
-    eastern.month - 1,
-    eastern.day,
-    eastern.hour,
-  );
-
-  return easternClockReadAsUtc - date.getTime();
-}
-
-function easternDateTimeToUtc(
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-) {
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour));
-  const offset = getEasternOffsetMilliseconds(utcGuess);
-
-  return new Date(utcGuess.getTime() - offset);
-}
-
-function getWeekStartKey(kickoff: Date) {
-  const eastern = getEasternParts(kickoff);
-  const date = new Date(
-    Date.UTC(eastern.year, eastern.month - 1, eastern.day),
-  );
-
-  const daysSinceTuesday = (date.getUTCDay() - 2 + 7) % 7;
-  date.setUTCDate(date.getUTCDate() - daysSinceTuesday);
-
-  return date.toISOString().slice(0, 10);
-}
-
-function getWeekWindow(weekStartKey: string) {
-  const [year, month, day] = weekStartKey.split("-").map(Number);
-
-  const start = easternDateTimeToUtc(year, month, day, 0);
-
-  const nextTuesday = new Date(Date.UTC(year, month - 1, day));
-  nextTuesday.setUTCDate(nextTuesday.getUTCDate() + 7);
-
-  const end = easternDateTimeToUtc(
-    nextTuesday.getUTCFullYear(),
-    nextTuesday.getUTCMonth() + 1,
-    nextTuesday.getUTCDate(),
-    0,
-  );
-
-  return {
-    startsAt: start.toISOString(),
-    endsAt: end.toISOString(),
-  };
-}
-
-function getLineLock(kickoff: Date) {
-  const eastern = getEasternParts(kickoff);
-  // The provider does not expose venue country. NFL international games are
-  // the Sunday morning ET window; retaining this narrow rule avoids treating
-  // ordinary early domestic kickoffs as international exceptions.
-  const isEarlyInternationalGame =
-    eastern.weekday === "Sun" && eastern.hour < 12;
-
-  if (isEarlyInternationalGame) {
-    const priorDay = new Date(
-      Date.UTC(eastern.year, eastern.month - 1, eastern.day),
-    );
-
-    priorDay.setUTCDate(priorDay.getUTCDate() - 1);
-
-    return {
-      isInternational: true,
-      lineLockAt: easternDateTimeToUtc(
-        priorDay.getUTCFullYear(),
-        priorDay.getUTCMonth() + 1,
-        priorDay.getUTCDate(),
-        18,
-      ).toISOString(),
-    };
-  }
-
-  return {
-    isInternational: false,
-    lineLockAt: easternDateTimeToUtc(
-      eastern.year,
-      eastern.month,
-      eastern.day,
-      8,
-    ).toISOString(),
-  };
-}
-
 export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
@@ -197,6 +87,59 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  try {
+    return await runWithAutomationLease("schedule_refresh", () =>
+      refreshSchedule({ oddsApiKey, isAutomation }),
+    );
+  } catch (error) {
+    if (error instanceof AutomationAlreadyRunningError) {
+      return NextResponse.json(
+        isAutomation
+          ? { success: true, skipped: true, message: error.message }
+          : { error: error.message },
+        { status: isAutomation ? 200 : 409 },
+      );
+    }
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The NFL schedule refresh failed." },
+      { status: 500 },
+    );
+  }
+}
+
+async function refreshSchedule({
+  oddsApiKey,
+  isAutomation,
+}: {
+  oddsApiKey: string;
+  isAutomation: boolean;
+}) {
+  if (isAutomation) {
+    const circuit = await getScheduleProviderCircuit();
+    if (circuit.blocked) {
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "provider_cooldown",
+        message: "The NFL schedule provider is in automatic cooldown after repeated failures.",
+        retryAt: circuit.retryAt,
+        consecutiveFailures: circuit.consecutiveFailures,
+      });
+    }
+  }
+
+  const seasonYear = seasonYearAt();
+  // The complete schedule provider owns kickoff times after preseason. Its
+  // result is intentionally independent of the Odds API, which is only used
+  // below for current market snapshots.
+  let canonicalSchedule: Awaited<ReturnType<typeof reconcileFullSeasonSchedule>> | null = null;
+  let canonicalScheduleWarning: string | null = null;
+  try {
+    canonicalSchedule = await reconcileFullSeasonSchedule();
+  } catch (error) {
+    canonicalScheduleWarning = error instanceof Error ? error.message : "The canonical NFL schedule could not be reconciled.";
+  }
+
   let oddsResponse: Response;
 
   try {
@@ -204,31 +147,56 @@ export async function POST(request: NextRequest) {
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
       { cache: "no-store", signal: AbortSignal.timeout(20_000) },
     );
-  } catch {
+  } catch (error) {
+    const cooldown = await recordScheduleProviderFailure(error);
     return NextResponse.json(
-      { error: "The NFL odds feed could not be reached right now." },
+      {
+        error: "The NFL odds feed could not be reached right now.",
+        retryAt: cooldown.retryAt,
+      },
       { status: 502 },
     );
   }
 
   if (!oddsResponse.ok) {
+    const cooldown = await recordScheduleProviderFailure(
+      new Error(`The NFL odds feed returned HTTP ${oddsResponse.status}.`),
+    );
     return NextResponse.json(
-      { error: "The NFL odds feed could not be reached right now." },
+      {
+        error: "The NFL odds feed could not be reached right now.",
+        retryAt: cooldown.retryAt,
+      },
       { status: 502 },
     );
   }
 
-  const events = (await oddsResponse.json()) as OddsEvent[];
+  let events: OddsEvent[];
+  try {
+    const payload: unknown = await oddsResponse.json();
+    if (!Array.isArray(payload)) throw new Error("The NFL odds feed returned an invalid response.");
+    events = payload as OddsEvent[];
+    await clearScheduleProviderCircuit();
+  } catch (error) {
+    const cooldown = await recordScheduleProviderFailure(error);
+    return NextResponse.json(
+      {
+        error: "The NFL odds feed returned an invalid response.",
+        retryAt: cooldown.retryAt,
+      },
+      { status: 502 },
+    );
+  }
 
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", seasonYear)
     .maybeSingle();
 
   if (!season) {
     return NextResponse.json(
-      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up yet.` },
+      { error: `The ${seasonYear} season has not been set up yet.` },
       { status: 500 },
     );
   }
@@ -253,7 +221,7 @@ export async function POST(request: NextRequest) {
 
   if (periodsError || !periods || periods.length === 0) {
     return NextResponse.json(
-      { error: `No scoring periods are configured for ${CURRENT_SEASON_YEAR}.` },
+      { error: `No scoring periods are configured for ${seasonYear}.` },
       { status: 500 },
     );
   }
@@ -453,9 +421,16 @@ export async function POST(request: NextRequest) {
   );
 
   if (importError || !importRows?.[0]) {
+    const requiresReview = importError?.message.includes(
+      "Schedule review required",
+    );
     return NextResponse.json(
-      { error: "The schedule import could not be completed safely. No changes were saved." },
-      { status: 500 },
+      {
+        error: requiresReview
+          ? "A saved game changed after its line locked, after settlement, or across scoring weeks. Nothing was changed; review that game before continuing."
+          : "The schedule import could not be completed safely. No changes were saved.",
+      },
+      { status: requiresReview ? 409 : 500 },
     );
   }
 
@@ -467,12 +442,14 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     message:
-      "Schedule and preliminary spread refresh completed as one protected operation. Existing week assignments were preserved and no official lines were changed.",
+      "Schedule and preliminary spread refresh completed as one protected operation. New games were added; any pre-lock kickoff correction reopened only that game's official line.",
     importedGames: importResult.games_saved,
     preliminarySpreadsSaved: importResult.preliminary_spreads_saved,
     newWeeksAssigned: importResult.new_weeks_assigned,
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ??
       "unknown",
+    canonicalSchedule,
+    canonicalScheduleWarning,
   });
 }

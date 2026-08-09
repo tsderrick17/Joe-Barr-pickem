@@ -17,3 +17,27 @@ export function selectDefaultScoringPeriod(periods) {
 
   return completedPeriods.at(-1) ?? periods[0] ?? null;
 }
+
+export function selectAvailableScoringPeriods(
+  periods,
+  { now, nextWeekAvailableAt },
+) {
+  const currentPeriod = selectDefaultScoringPeriod(periods);
+  const nextPeriod = currentPeriod
+    ? periods.find(
+        (period) => period.display_order === currentPeriod.display_order + 1,
+      )
+    : null;
+  const nextPeriodIsAvailable = Boolean(
+    nextPeriod &&
+      nextWeekAvailableAt !== null &&
+      now >= nextWeekAvailableAt,
+  );
+
+  return periods.filter(
+    (period) =>
+      period.status === "complete" ||
+      period.id === currentPeriod?.id ||
+      (period.id === nextPeriod?.id && nextPeriodIsAvailable),
+  );
+}

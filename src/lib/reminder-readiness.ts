@@ -1,9 +1,9 @@
 import type { ReminderCategory } from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import {
   isFreshSlateReady,
   isPlayoffDayRecapReady,
-  isRecapReady,
   isSundayWindowReady,
 } from "@/lib/reminder-readiness-rules.js";
 
@@ -89,28 +89,9 @@ async function earlyLockReady(): Promise<ReminderReadiness> {
 }
 
 async function recapReady(): Promise<ReminderReadiness> {
-  const { data: period, error: periodError } = await supabaseAdmin
-    .from("scoring_periods")
-    .select("id")
-    .eq("status", "complete")
-    .order("display_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (periodError) throw new Error("The completed week could not be checked before sending a recap.");
+  const period = await findLatestSettledWeeklyRecapPeriod();
   if (!period) return { ready: false, reason: "The completed week has not been finalized yet." };
-
-  const [gamesResult, picksResult, survivorResult] = await Promise.all([
-    supabaseAdmin.from("games").select("status").eq("scoring_period_id", period.id),
-    supabaseAdmin.from("picks").select("id", { count: "exact", head: true }).eq("scoring_period_id", period.id).eq("result", "pending"),
-    supabaseAdmin.from("survivor_picks").select("id", { count: "exact", head: true }).eq("scoring_period_id", period.id).eq("result", "pending"),
-  ]);
-  if (gamesResult.error || picksResult.error || survivorResult.error) throw new Error("Final grades could not be checked before sending a recap.");
-  return isRecapReady({
-    period,
-    games: gamesResult.data ?? [],
-    pendingAtsCount: picksResult.count ?? 0,
-    pendingSurvivorCount: survivorResult.count ?? 0,
-  });
+  return { ready: true, reason: null };
 }
 
 async function playoffDayRecapReady(): Promise<ReminderReadiness> {

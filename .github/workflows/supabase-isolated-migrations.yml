@@ -17,7 +17,7 @@ permissions:
 # changes the disposable test database.
 jobs:
   preview:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: isolated-test
     env:
       # The test project uses the newer API-key format, which some Supabase
@@ -26,10 +26,11 @@ jobs:
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.113.0
+          github-token: ${{ github.token }}
       - name: Prepare isolated schema bootstrap
         run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target
@@ -50,7 +51,7 @@ jobs:
   deploy:
     needs: preview
     if: ${{ inputs.apply }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: isolated-test
     concurrency:
       group: supabase-isolated-test-migrations
@@ -59,10 +60,11 @@ jobs:
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.113.0
+          github-token: ${{ github.token }}
       - name: Prepare isolated schema bootstrap
         run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target

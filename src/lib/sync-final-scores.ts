@@ -22,6 +22,7 @@ type ScoreEvent = {
 type GameRow = {
   id: string;
   external_game_id: string;
+  odds_event_id: string | null;
   scoring_period_id: string;
   away_team_id: string;
   home_team_id: string;
@@ -109,7 +110,7 @@ async function recoverPendingFinalPickGrades() {
     await Promise.all([
       supabaseAdmin
         .from("games")
-        .select("id, external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score")
+        .select("id, external_game_id, odds_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score")
         .in("id", gameIds)
         .eq("status", "final"),
       supabaseAdmin
@@ -199,7 +200,11 @@ async function snapshotActivePlayoffEligibility() {
   }
 }
 
-export async function syncFinalScores(): Promise<ScoreSyncResult> {
+export async function syncFinalScores({
+  bypassProviderCooldown = false,
+}: {
+  bypassProviderCooldown?: boolean;
+} = {}): Promise<ScoreSyncResult> {
   const oddsApiKey = process.env.ODDS_API_KEY;
 
   if (!oddsApiKey) {
@@ -228,7 +233,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     await supabaseAdmin
       .from("games")
       .select(
-        "id, external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status",
+        "id, external_game_id, odds_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status",
       )
       .in("status", ["scheduled", "live"])
       .lte("kickoff_at", checkedAt)
@@ -259,7 +264,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   );
   const eligibleGames = scoreDueGames.filter((game) => {
     const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
-    return !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
+    return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
   });
 
   const noScoreResult = {
@@ -344,6 +349,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     return noScoreResult;
   }
 
+  let providerResponseAccepted = false;
   try {
     const query = new URLSearchParams({ apiKey: oddsApiKey, daysFrom: "3" });
     const response = await fetch(
@@ -356,10 +362,16 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       throw new Error("The NFL score feed could not be reached right now.");
     }
 
+    const providerPayload: unknown = await response.json();
+    if (!Array.isArray(providerPayload)) {
+      throw new Error("The NFL score feed returned an invalid response.");
+    }
+    providerResponseAccepted = true;
+
     const eligibleGameByExternalId = new Map(
-      eligibleGames.map((game) => [game.external_game_id, game]),
+      eligibleGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
     );
-    const completedEvents = ((await response.json()) as ScoreEvent[]).filter(
+    const completedEvents = (providerPayload as ScoreEvent[]).filter(
       (event) =>
         eligibleGameByExternalId.has(event.id) &&
         event.completed &&
@@ -390,7 +402,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
 
     const eventByExternalId = new Map(completedEvents.map((event) => [event.id, event]));
     const savedGames = eligibleGames.filter((game) =>
-      eventByExternalId.has(game.external_game_id),
+      Boolean(game.odds_event_id && eventByExternalId.has(game.odds_event_id)),
     );
     const teamIds = [...new Set(savedGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
     const { data: teams, error: teamsError } = teamIds.length
@@ -405,7 +417,9 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     const finalizedGames: FinalGameRow[] = [];
 
     for (const game of savedGames) {
-      const scores = eventByExternalId.get(game.external_game_id)?.scores ?? [];
+      const scores = game.odds_event_id
+        ? eventByExternalId.get(game.odds_event_id)?.scores ?? []
+        : [];
       const scoreByTeamId = new Map(
         scores.map((score) => [teamIdByName.get(score.name), parseScore(score.score)]),
       );
@@ -496,6 +510,21 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "The score sync failed.";
+    if (!providerResponseAccepted) {
+      try {
+        // Network failures, timeouts, HTTP errors, and malformed payloads use
+        // the same persistent per-game exponential backoff as a delayed final.
+        // The 15-minute cron can then exit without spending another credit.
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+      } catch {
+        await supabaseAdmin.from("sync_runs").update({
+          status: "failed",
+          completed_at: new Date().toISOString(),
+          error_message: `${message} The polling cooldown could not be saved safely.`,
+        }).eq("id", run.data.id);
+        throw new Error(`${message} The polling cooldown could not be saved safely.`);
+      }
+    }
     await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.data.id);
     throw error;
   }

@@ -8,8 +8,12 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
-import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
+import {
+  selectAvailableScoringPeriods,
+  selectDefaultScoringPeriod,
+} from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
@@ -136,6 +140,7 @@ function isEarlyGame(game: BoardGame) {
 export default function BoardPage() {
   const [weeks, setWeeks] = useState<ScoringPeriod[]>([]);
   const [week, setWeek] = useState<ScoringPeriod | null>(null);
+  const [nextWeekAvailableAt, setNextWeekAvailableAt] = useState<number | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
   const [showActionOnly, setShowActionOnly] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -296,11 +301,54 @@ export default function BoardPage() {
       const loadedWeeks = periods as ScoringPeriod[];
       setWeeks(loadedWeeks);
 
+      const activePeriod = loadedWeeks.find((period) => period.status === "active");
+      let manualAccessAt: number | null = null;
+
+      if (activePeriod) {
+        const { data: activeGames, error: activeGamesError } = await supabase
+          .from("games")
+          .select("kickoff_at, status, finalized_at")
+          .eq("scoring_period_id", activePeriod.id);
+
+        if (
+          !activeGamesError &&
+          activeGames?.length &&
+          activeGames.every((game) =>
+            ["final", "cancelled", "no_contest"].includes(game.status),
+          )
+        ) {
+          const settlementTimes = activeGames.map((game) =>
+            game.finalized_at ??
+            (["cancelled", "no_contest"].includes(game.status)
+              ? game.kickoff_at
+              : null),
+          );
+
+          if (settlementTimes.every((value): value is string => Boolean(value))) {
+            manualAccessAt = Date.parse(
+              nextWeekManualAccessAt(settlementTimes.sort().at(-1)!),
+            );
+          }
+        }
+      }
+
+      setNextWeekAvailableAt(manualAccessAt);
+
       const requestedWeekId = new URLSearchParams(window.location.search).get("week");
+      const defaultWeek = selectDefaultScoringPeriod(loadedWeeks);
+      const availableWeekIds = new Set(
+        (selectAvailableScoringPeriods(loadedWeeks, {
+          now: Date.now(),
+          nextWeekAvailableAt: manualAccessAt,
+        }) as ScoringPeriod[]).map((period) => period.id),
+      );
       const requestedWeek = requestedWeekId
-        ? loadedWeeks.find((period) => period.id === requestedWeekId && period.status === "complete")
+        ? loadedWeeks.find(
+            (period) =>
+              period.id === requestedWeekId && availableWeekIds.has(period.id),
+          )
         : null;
-      const initialWeek = requestedWeek ?? selectDefaultScoringPeriod(loadedWeeks);
+      const initialWeek = requestedWeek ?? defaultWeek;
 
       if (!initialWeek) {
         setErrorMessage("The weekly schedule could not be loaded.");
@@ -326,15 +374,12 @@ export default function BoardPage() {
     return () => window.clearInterval(refreshTime);
   }, []);
 
-  const availableWeeks = useMemo(() => {
-    const currentWeek = selectDefaultScoringPeriod(weeks);
-
-    return weeks.filter(
-      (period) =>
-        period.status === "complete" ||
-        period.id === currentWeek?.id,
-    );
-  }, [weeks]);
+  const availableWeeks = useMemo<ScoringPeriod[]>(() => {
+    return selectAvailableScoringPeriods(weeks, {
+      now: currentTime,
+      nextWeekAvailableAt,
+    }) as ScoringPeriod[];
+  }, [currentTime, nextWeekAvailableAt, weeks]);
 
   const gamesByDay = useMemo(() => {
     const grouped = new Map<string, BoardGame[]>();

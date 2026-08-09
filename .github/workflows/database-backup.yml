@@ -10,8 +10,20 @@ permissions:
 
 jobs:
   backup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
+    services:
+      restore-check:
+        image: postgres:16
+        env:
+          POSTGRES_DB: restore_check
+          POSTGRES_PASSWORD: restore-check-only
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d restore_check"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     concurrency:
       group: weekly-production-backup
       cancel-in-progress: false
@@ -21,16 +33,18 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
       BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v2
         with:
-          version: latest
+          version: 2.113.0
+          github-token: ${{ github.token }}
       - name: Verify backup configuration
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_PROJECT_ID"
           test -n "$BACKUP_ENCRYPTION_KEY"
+          test "$SUPABASE_PROJECT_ID" = "qtuycmgjiizrahfchsxe"
       - name: Export production database
         run: |
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
@@ -41,6 +55,21 @@ jobs:
             -in production-backup.sql -out production-backup.sql.enc \
             -pass env:BACKUP_ENCRYPTION_KEY
           rm production-backup.sql
+      - name: Verify encrypted export can be decrypted
+        run: |
+          set -o pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
+            -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | sha256sum
+      - name: Restore encrypted export into a disposable database
+        env:
+          PGPASSWORD: restore-check-only
+        run: |
+          set -o pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
+            -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | \
+            psql --set ON_ERROR_STOP=1 --host localhost --username postgres --dbname restore_check
+          psql --tuples-only --no-align --host localhost --username postgres --dbname restore_check \
+            --command "select count(*) from pg_catalog.pg_tables where schemaname = 'public';" | grep -Eq '^[1-9][0-9]*$'
       - name: Retain encrypted backup for 90 days
         uses: actions/upload-artifact@v4
         with:

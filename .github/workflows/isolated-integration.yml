@@ -2,6 +2,12 @@ name: Isolated integration checks
 
 on:
   workflow_dispatch:
+    inputs:
+      full_season_drill:
+        description: Run the 22-period, 285-game full-season chaos certification
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "17 14 * * 3"
 
@@ -13,27 +19,66 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  database-and-browser:
-    runs-on: ubuntu-latest
+  database-lifecycle:
+    runs-on: ubuntu-24.04
     environment: isolated-test
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
       PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
-      PICKEM_TEST_SUPABASE_URL: ${{ secrets.PICKEM_TEST_SUPABASE_URL }}
-      PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY }}
-      PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
-      PICKEM_E2E_ENABLED: "true"
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+      PICKEM_RLS_AUDIT: "true"
+      PICKEM_E2E_ENABLED: "false"
+      PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
+      PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/season-certification.json
     steps:
       - name: Confirm isolated test environment
         run: |
           test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
+          test -n "$PICKEM_TEST_DATABASE_URL"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
           echo "Using the explicitly confirmed isolated test environment."
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.113.0
+          github-token: ${{ github.token }}
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:season-drill
+      - name: Apply pending isolated migrations
+        run: |
+          node scripts/prepare-isolated-schema.mjs
+          supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+      - name: Run isolated season certification
+        id: certification
+        run: npm run test:season-drill
+      - name: Publish certification summary
+        if: always()
+        run: |
+          {
+            echo "## Pick'em season certification"
+            echo
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Isolated database lifecycle: **${{ steps.certification.outcome }}**"
+            echo "- Full-season chaos drill requested: **${PICKEM_FULL_SEASON_DRILL}**"
+            if [ "$PICKEM_FULL_SEASON_DRILL" = "true" ]; then
+              echo "- Coverage: 18 regular weeks, 4 playoff rounds, 285 games, schedule reconciliation, disruptions, scoring, eligibility, Survivor, archive, and annual rollover"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$PICKEM_CERTIFICATION_REPORT_PATH" ]; then
+            node scripts/render-season-certification.mjs "$PICKEM_CERTIFICATION_REPORT_PATH"
+          fi
+      - name: Preserve full-season certification report
+        if: always() && inputs.full_season_drill
+        uses: actions/upload-artifact@v7
+        with:
+          name: full-season-certification-${{ github.run_number }}
+          path: artifacts/season-certification.json
+          if-no-files-found: warn
+          retention-days: 30

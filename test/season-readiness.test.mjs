@@ -83,3 +83,17 @@ test("season readiness flags failed provider delivery receipts", () => {
   assert.equal(result.status, "attention");
   assert.match(result.checks.find((check) => check.id === "reminder-queue")?.detail ?? "", /2 failed email deliveries/i);
 });
+
+test("season readiness flags a gameweek pin that disagrees with its period", () => {
+  const result = assessSeasonReadiness({
+    periods: [{
+      id: "week-1", display_name: "Week 1", status: "active",
+      period_type: "regular", max_picks: 2, starts_at: "2026-09-08T04:00:00Z",
+    }],
+    games: [{ ...game("misfiled", "week-1"), gameweek_key: "2026-09-15" }],
+    reminders: [],
+  });
+
+  assert.equal(result.status, "attention");
+  assert.equal(result.checks.find((check) => check.id === "gameweek-pins")?.state, "attention");
+});

@@ -104,3 +104,30 @@ if (
 }
 
 await writeFile(pushReminderMigration, sanitizedPushReminderSql);
+
+// Keep the new alert and lease schema in isolated tests, but never install the
+// production-facing preseason bootstrap or watchdog schedules there.
+const operationsMigration = resolve(
+  migrationsDirectory,
+  "20260809010000_add_schedule_bootstrap_and_watchdog.sql",
+);
+const operationsSql = await readFile(operationsMigration, "utf8");
+const operationsScheduleStart = operationsSql.indexOf(
+  "-- The NFL schedule is normally complete well before August.",
+);
+const operationsPreflightStart = operationsSql.indexOf(
+  "create or replace function public.automation_preflight()",
+);
+const sanitizedOperationsSql =
+  operationsScheduleStart >= 0 && operationsPreflightStart > operationsScheduleStart
+    ? `${operationsSql.slice(0, operationsScheduleStart)}-- Isolated test databases never schedule requests to the live deployment.\n\n${operationsSql.slice(operationsPreflightStart)}`
+    : operationsSql;
+
+if (
+  sanitizedOperationsSql === operationsSql &&
+  !operationsSql.includes("-- Isolated test databases never schedule requests to the live deployment.")
+) {
+  throw new Error("Could not remove the production bootstrap and watchdog schedules.");
+}
+
+await writeFile(operationsMigration, sanitizedOperationsSql);
