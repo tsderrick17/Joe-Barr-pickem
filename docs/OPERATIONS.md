@@ -51,6 +51,14 @@ retains both recovery paths:
 Both automatic and manual imports use the same validation and atomic database
 function, so the recovery path cannot bypass gameweek-pinning protections.
 
+After the full schedule is loaded, the canonical 272-game provider is checked
+throughout the season (at most once every four hours). It can move an unlocked
+future kickoff and reopen only that game's unfinalized line. A postponed game
+may cross a calendar-week boundary but remains pinned to its original scoring
+period and gameweek. Changes involving a locked or settled game, different
+teams, or a different scoring period are quarantined for commissioner review;
+the rest of the schedule continues reconciling normally.
+
 ## Quiet operations watchdog
 
 The watchdog evaluates operations every five minutes but sends email only when

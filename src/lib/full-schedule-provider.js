@@ -43,7 +43,7 @@ function kickoffFromEastern(gameday, gametime) {
   );
 }
 
-export function parseNflverseRegularSeason(csv, seasonYear) {
+export function parseNflverseRegularSeason(csv, seasonYear, { allowWeekGameweekDrift = false } = {}) {
   const rows = parseCsv(csv);
   const headers = rows.shift() ?? [];
   const required = ["game_id", "season", "game_type", "week", "gameday", "gametime", "away_team", "home_team"];
@@ -81,7 +81,7 @@ export function parseNflverseRegularSeason(csv, seasonYear) {
   for (let week = 1; week <= 18; week += 1) {
     const weekGames = games.filter((game) => game.week === week);
     const keys = new Set(weekGames.map((game) => game.gameweekKey));
-    if (weekGames.length < 13 || weekGames.length > 16 || keys.size !== 1) {
+    if (weekGames.length < 13 || weekGames.length > 16 || (!allowWeekGameweekDrift && keys.size !== 1)) {
       throw new Error(`Week ${week} is incomplete or spans multiple pool gameweeks. Import stopped.`);
     }
   }

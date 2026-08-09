@@ -441,8 +441,7 @@ export default function AdminPage() {
           </div>
 
           <p className="mt-2 text-zinc-700">
-            During the season, preview the live odds schedule here. This reconciles changes, adds newly known playoff games, and
-            preliminary DraftKings line history, but never locks official lines.
+            During the season, each import checks the complete canonical NFL schedule first, then refreshes current DraftKings line history. Safe future kickoff changes apply automatically; anything locked, settled, or cross-week is held for review without stopping the rest of the refresh.
           </p>
 
           <button

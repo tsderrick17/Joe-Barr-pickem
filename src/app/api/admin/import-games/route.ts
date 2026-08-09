@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
+import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
 import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -77,6 +78,18 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const seasonYear = seasonYearAt();
+  // The complete schedule provider owns kickoff times after preseason. Its
+  // result is intentionally independent of the Odds API, which is only used
+  // below for current market snapshots.
+  let canonicalSchedule: Awaited<ReturnType<typeof reconcileFullSeasonSchedule>> | null = null;
+  let canonicalScheduleWarning: string | null = null;
+  try {
+    canonicalSchedule = await reconcileFullSeasonSchedule();
+  } catch (error) {
+    canonicalScheduleWarning = error instanceof Error ? error.message : "The canonical NFL schedule could not be reconciled.";
+  }
+
   let oddsResponse: Response;
 
   try {
@@ -103,12 +116,12 @@ export async function POST(request: NextRequest) {
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", seasonYear)
     .maybeSingle();
 
   if (!season) {
     return NextResponse.json(
-      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up yet.` },
+      { error: `The ${seasonYear} season has not been set up yet.` },
       { status: 500 },
     );
   }
@@ -133,7 +146,7 @@ export async function POST(request: NextRequest) {
 
   if (periodsError || !periods || periods.length === 0) {
     return NextResponse.json(
-      { error: `No scoring periods are configured for ${CURRENT_SEASON_YEAR}.` },
+      { error: `No scoring periods are configured for ${seasonYear}.` },
       { status: 500 },
     );
   }
@@ -361,5 +374,7 @@ export async function POST(request: NextRequest) {
     requestsRemaining:
       oddsResponse.headers.get("x-requests-remaining") ??
       "unknown",
+    canonicalSchedule,
+    canonicalScheduleWarning,
   });
 }

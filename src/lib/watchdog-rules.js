@@ -27,6 +27,13 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       detail: `${health.reminderHealth.overdueScheduled} overdue and ${health.reminderHealth.staleSending} stuck sending. Individual bad email addresses do not trigger this alert.`,
     });
   }
+  if (health.pendingScheduleReviews > 0) {
+    signals.push({
+      key: "schedule-change-review-needed", severity: "critical",
+      title: "An NFL schedule change needs review",
+      detail: `${health.pendingScheduleReviews} changed game${health.pendingScheduleReviews === 1 ? " is" : "s are"} locked, settled, re-paired, or assigned to another scoring period. Safe schedule corrections continue automatically; these games remain pinned until reviewed.`,
+    });
+  }
   const eastern = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" })
     .formatToParts(now);
   const month = Number(eastern.find((part) => part.type === "month")?.value);

@@ -18,7 +18,7 @@ export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
   const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth] = await Promise.all([
+  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult] = await Promise.all([
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
@@ -36,9 +36,10 @@ export async function checkAutomationHealth(now = new Date()) {
       .in("status", ["scheduled", "live"])
       .lte("kickoff_at", scoreDueAt),
     checkReminderHealth(now),
+    supabaseAdmin.from("schedule_change_reviews").select("id", { count: "exact", head: true }).is("resolved_at", null),
   ]);
 
-  if (runsResult.error || lineCandidatesResult.error || scoreGamesResult.error) {
+  if (runsResult.error || lineCandidatesResult.error || scoreGamesResult.error || scheduleReviewsResult.error) {
     throw new Error("Automation health could not be prepared.");
   }
 
@@ -111,6 +112,10 @@ export async function checkAutomationHealth(now = new Date()) {
   if (quotaProtected) {
     problems.push(`Odds API allowance is being protected${providerAllowance !== null ? ` (${providerAllowance} credits reported)` : ""}; delayed final-score polling is in cooldown.`);
   }
+  const pendingScheduleReviews = scheduleReviewsResult.count ?? 0;
+  if (pendingScheduleReviews > 0) {
+    problems.push(`${pendingScheduleReviews} provider schedule change${pendingScheduleReviews === 1 ? " needs" : "s need"} commissioner review.`);
+  }
 
   const retention = {
     cutoff: retentionCutoff,
@@ -134,6 +139,7 @@ export async function checkAutomationHealth(now = new Date()) {
     scoreCandidates,
     scoreChecksDueNow,
     providerAllowance,
+    pendingScheduleReviews,
     retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,
   };

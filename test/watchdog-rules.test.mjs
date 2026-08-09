@@ -6,7 +6,7 @@ function healthy(overrides = {}) {
   return {
     missingOfficialLines: 0, scoreChecksDueNow: 0, providerAllowance: 100,
     latestScores: { status: "success", started_at: "2026-08-20T12:00:00Z", completed_at: "2026-08-20T12:01:00Z" },
-    reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, ...overrides,
+    reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, pendingScheduleReviews: 0, ...overrides,
   };
 }
 
@@ -40,14 +40,14 @@ test("watchdog emits only actionable line, scoring, queue, schedule, and configu
     health: healthy({
       missingOfficialLines: 2, scoreChecksDueNow: 1,
       latestScores: { status: "failed", started_at: "2026-08-20T10:00:00Z", completed_at: "2026-08-20T10:01:00Z" },
-      reminderHealth: { overdueScheduled: 1, staleSending: 0, recentEmailFailures: 0 },
+      reminderHealth: { overdueScheduled: 1, staleSending: 0, recentEmailFailures: 0 }, pendingScheduleReviews: 1,
     }),
     bootstrap: { ...completeBootstrap, loadedGames: 0, complete: false },
     preflightChecks: [{ label: "Watchdog cron", passed: false }],
     now: new Date("2026-08-20T13:00:00Z"),
   });
   assert.deepEqual(signals.map((signal) => signal.key), [
-    "missing-official-lines", "stalled-final-scores", "stalled-reminders",
+    "missing-official-lines", "stalled-final-scores", "stalled-reminders", "schedule-change-review-needed",
     "season-schedule-missing", "automation-configuration-missing",
   ]);
 });

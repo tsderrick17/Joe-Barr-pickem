@@ -29,3 +29,11 @@ test("full-season provider fails closed when even one game is missing", () => {
   const rows = completeSchedule().split("\n");
   assert.throws(() => parseNflverseRegularSeason(rows.slice(0, -1).join("\n"), 2026), /271.*expected 272/);
 });
+
+test("live reconciliation tolerates a rescheduled game crossing the pool-week date boundary", () => {
+  const csv = completeSchedule().replace(",2026,REG,1,2026-09-13,13:00,ARI,WAS", ",2026,REG,1,2026-09-15,13:00,ARI,WAS");
+  assert.throws(() => parseNflverseRegularSeason(csv, 2026), /spans multiple pool gameweeks/);
+  const games = parseNflverseRegularSeason(csv, 2026, { allowWeekGameweekDrift: true });
+  assert.equal(games.length, 272);
+  assert.equal(games.find((game) => game.providerEventId.includes("ARI_WAS"))?.week, 1);
+});
