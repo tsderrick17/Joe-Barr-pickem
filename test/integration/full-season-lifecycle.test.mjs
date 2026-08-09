@@ -1,282 +1,245 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  createIsolatedClients,
-  isolatedTestConfig,
-  testToken,
-} from "./test-supabase.mjs";
+import pg from "pg";
 
-const config = isolatedTestConfig();
-const enabled = Boolean(config) && process.env.PICKEM_FULL_SEASON_DRILL === "true";
+const enabled = process.env.PICKEM_FULL_SEASON_DRILL === "true"
+  && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
+  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
 
 function iso(offsetMs) {
   return new Date(Date.now() + offsetMs).toISOString();
 }
 
-test("isolated full season preserves scoring, day-start playoff eligibility, history, and rollover", {
+async function insertOne(client, sql, values = []) {
+  const result = await client.query(sql, values);
+  assert.equal(result.rowCount, 1);
+  return result.rows[0];
+}
+
+test("isolated full season preserves scoring, day-start playoff eligibility, history, privacy, and rollover", {
   skip: !enabled && "Run the manual isolated workflow with full_season_drill enabled.",
 }, async () => {
-  const { admin, publicClient } = createIsolatedClients(config);
-  const token = testToken();
-  const seasonYear = 6000 + Math.floor(Math.random() * 1000);
-  const teamRows = Array.from({ length: 12 }, (_, index) => ({
-    abbreviation: `${token.slice(-2)}${index.toString(36)}`.toUpperCase(),
-    city: "Lifecycle",
-    mascot: `Team ${index + 1} ${token}`,
-    full_name: `Lifecycle Team ${index + 1} ${token}`,
-  }));
+  const client = new pg.Client({ connectionString: process.env.PICKEM_TEST_DATABASE_URL });
+  await client.connect();
+  await client.query("begin");
 
-  const { data: players, error: playersError } = await admin
-    .from("players")
-    .insert([
-      { first_name: `Lifecycle Leader ${token}` },
-      { first_name: `Lifecycle Chaser ${token}` },
-    ])
-    .select("id, first_name");
-  assert.equal(playersError, null, playersError?.message);
-  const leaderId = players[0].id;
-  const chaserId = players[1].id;
+  try {
+    const token = `lifecycle-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const seasonYear = 6000 + Math.floor(Math.random() * 1000);
+    const leader = await insertOne(client,
+      "insert into public.players(first_name) values ($1) returning id",
+      [`Lifecycle Leader ${token}`],
+    );
+    const chaser = await insertOne(client,
+      "insert into public.players(first_name) values ($1) returning id",
+      [`Lifecycle Chaser ${token}`],
+    );
+    const season = await insertOne(client,
+      "insert into public.seasons(year, state) values ($1, 'preseason') returning id",
+      [seasonYear],
+    );
+    const regular = await insertOne(client, `
+      insert into public.scoring_periods
+        (season_id, display_name, period_type, max_picks, status, display_order)
+      values ($1, 'Lifecycle Regular Season', 'regular', 3, 'active', 1)
+      returning id
+    `, [season.id]);
+    const playoff = await insertOne(client, `
+      insert into public.scoring_periods
+        (season_id, display_name, period_type, max_picks, status, display_order)
+      values ($1, 'Lifecycle Playoff Weekend', 'playoff', 3, 'upcoming', 2)
+      returning id
+    `, [season.id]);
 
-  const { data: season, error: seasonError } = await admin
-    .from("seasons")
-    .insert({ year: seasonYear, state: "preseason" })
-    .select("id, state")
-    .single();
-  assert.equal(seasonError, null, seasonError?.message);
+    const startedSeason = await insertOne(client,
+      "select state from public.seasons where id = $1",
+      [season.id],
+    );
+    assert.equal(startedSeason.state, "regular_season");
 
-  const { data: regularPeriod, error: regularError } = await admin
-    .from("scoring_periods")
-    .insert({
-      season_id: season.id,
-      display_name: "Lifecycle Regular Season",
-      period_type: "regular",
-      max_picks: 3,
-      status: "active",
-      display_order: 1,
-    })
-    .select("id")
-    .single();
-  assert.equal(regularError, null, regularError?.message);
+    const teams = [];
+    for (let index = 0; index < 12; index += 1) {
+      teams.push(await insertOne(client, `
+        insert into public.teams(abbreviation, city, mascot, full_name)
+        values ($1, 'Lifecycle', $2, $3)
+        returning id
+      `, [
+        `${token.slice(-4)}${index.toString(36)}`.toUpperCase(),
+        `Team ${index + 1} ${token}`,
+        `Lifecycle Team ${index + 1} ${token}`,
+      ]));
+    }
 
-  const { data: playoffPeriod, error: playoffError } = await admin
-    .from("scoring_periods")
-    .insert({
-      season_id: season.id,
-      display_name: "Lifecycle Playoff Weekend",
-      period_type: "playoff",
-      max_picks: 3,
-      status: "upcoming",
-      display_order: 2,
-    })
-    .select("id")
-    .single();
-  assert.equal(playoffError, null, playoffError?.message);
+    const games = [];
+    for (let index = 0; index < 6; index += 1) {
+      const periodId = index < 3 ? regular.id : playoff.id;
+      const game = await insertOne(client, `
+        insert into public.games
+          (external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, line_lock_at)
+        values ($1, $2, $3, $4, $5, $6)
+        returning id, scoring_period_id, away_team_id, home_team_id
+      `, [
+        `${token}-game-${index + 1}`,
+        periodId,
+        teams[index * 2].id,
+        teams[index * 2 + 1].id,
+        iso(48 * 60 * 60 * 1000),
+        iso(47 * 60 * 60 * 1000),
+      ]);
+      games.push(game);
+      await client.query(`
+        insert into public.game_lines
+          (game_id, favorite_team_id, locked_spread, source, source_captured_at)
+        values ($1, $2, 0.5, 'full-season-lifecycle-drill', clock_timestamp())
+      `, [game.id, game.away_team_id]);
+      await client.query(`
+        insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id)
+        values ($1, $2, $3, $4), ($5, $2, $3, $6)
+      `, [leader.id, periodId, game.id, game.away_team_id, chaser.id, game.home_team_id]);
+    }
 
-  const { data: startedSeason } = await admin
-    .from("seasons")
-    .select("state")
-    .eq("id", season.id)
-    .single();
-  assert.equal(startedSeason.state, "regular_season", "activating a regular period must start the season automatically");
+    const regularGames = games.slice(0, 3);
+    const playoffGames = games.slice(3);
+    await client.query(`
+      update public.games
+      set kickoff_at = $1, line_lock_at = $2
+      where id = any($3::uuid[])
+    `, [iso(-72 * 60 * 60 * 1000), iso(-73 * 60 * 60 * 1000), regularGames.map((game) => game.id)]);
 
-  const { data: teams, error: teamsError } = await admin
-    .from("teams")
-    .insert(teamRows)
-    .select("id");
-  assert.equal(teamsError, null, teamsError?.message);
+    const regularFinal = await insertOne(client,
+      "select * from public.finalize_games_atomically($1::jsonb, $2::timestamptz)",
+      [JSON.stringify(regularGames.map((game) => ({ game_id: game.id, away_score: 24, home_score: 17 }))), new Date().toISOString()],
+    );
+    assert.deepEqual(regularFinal, {
+      final_scores_imported: 3,
+      ats_picks_graded: 6,
+      survivor_picks_graded: 0,
+    });
 
-  const futureKickoff = iso(48 * 60 * 60 * 1000);
-  const gamesToInsert = Array.from({ length: 6 }, (_, index) => ({
-    external_game_id: `${token}-game-${index + 1}`,
-    scoring_period_id: index < 3 ? regularPeriod.id : playoffPeriod.id,
-    away_team_id: teams[index * 2].id,
-    home_team_id: teams[index * 2 + 1].id,
-    kickoff_at: futureKickoff,
-    line_lock_at: iso(47 * 60 * 60 * 1000),
-  }));
-  const { data: games, error: gamesError } = await admin
-    .from("games")
-    .insert(gamesToInsert)
-    .select("id, scoring_period_id, away_team_id, home_team_id")
-    .order("external_game_id");
-  assert.equal(gamesError, null, gamesError?.message);
+    await client.query(`
+      update public.games
+      set kickoff_at = $1, line_lock_at = $2
+      where id = any($3::uuid[])
+    `, [iso(-24 * 60 * 60 * 1000), iso(-25 * 60 * 60 * 1000), playoffGames.slice(0, 2).map((game) => game.id)]);
+    await client.query(`
+      update public.games set kickoff_at = $1, line_lock_at = $2 where id = $3
+    `, [iso(24 * 60 * 60 * 1000), iso(23 * 60 * 60 * 1000), playoffGames[2].id]);
 
-  const { error: linesError } = await admin.from("game_lines").insert(
-    games.map((game) => ({
-      game_id: game.id,
-      favorite_team_id: game.away_team_id,
-      locked_spread: 0.5,
-      source: "full-season-lifecycle-drill",
-      source_captured_at: new Date().toISOString(),
-    })),
-  );
-  assert.equal(linesError, null, linesError?.message);
+    await client.query(
+      "select * from public.complete_scoring_period_atomically($1, $2, $3)",
+      [regular.id, playoff.id, new Date().toISOString()],
+    );
+    const playoffSeason = await insertOne(client, "select state from public.seasons where id = $1", [season.id]);
+    assert.equal(playoffSeason.state, "playoffs");
 
-  const picks = games.flatMap((game) => [
-    {
-      player_id: leaderId,
-      scoring_period_id: game.scoring_period_id,
-      game_id: game.id,
-      selected_team_id: game.away_team_id,
-    },
-    {
-      player_id: chaserId,
-      scoring_period_id: game.scoring_period_id,
-      game_id: game.id,
-      selected_team_id: game.home_team_id,
-    },
-  ]);
-  const { error: picksError } = await admin.from("picks").insert(picks);
-  assert.equal(picksError, null, picksError?.message);
+    await client.query(
+      "select * from public.snapshot_playoff_day_eligibility($1, $2)",
+      [playoff.id, iso(-36 * 60 * 60 * 1000)],
+    );
+    const firstEligibility = await client.query(`
+      select player_id, is_eligible
+      from public.playoff_day_eligibility
+      where scoring_period_id = $1 and player_id = any($2::uuid[])
+    `, [playoff.id, [leader.id, chaser.id]]);
+    assert.equal(firstEligibility.rowCount, 2);
+    assert.ok(firstEligibility.rows.every((row) => row.is_eligible));
 
-  const regularGames = games.filter((game) => game.scoring_period_id === regularPeriod.id);
-  const playoffGames = games.filter((game) => game.scoring_period_id === playoffPeriod.id);
-  const { error: moveRegularError } = await admin
-    .from("games")
-    .update({ kickoff_at: iso(-72 * 60 * 60 * 1000), line_lock_at: iso(-73 * 60 * 60 * 1000) })
-    .in("id", regularGames.map((game) => game.id));
-  assert.equal(moveRegularError, null, moveRegularError?.message);
+    const dayOneFinal = await insertOne(client,
+      "select * from public.finalize_games_atomically($1::jsonb, $2::timestamptz)",
+      [JSON.stringify(playoffGames.slice(0, 2).map((game) => ({ game_id: game.id, away_score: 27, home_score: 10 }))), new Date().toISOString()],
+    );
+    assert.equal(dayOneFinal.ats_picks_graded, 4);
+    const chaserDayOne = await client.query(`
+      select result from public.picks
+      where player_id = $1 and game_id = any($2::uuid[])
+      order by game_id
+    `, [chaser.id, playoffGames.slice(0, 2).map((game) => game.id)]);
+    assert.deepEqual(chaserDayOne.rows.map((row) => row.result), ["loss", "loss"]);
 
-  const { data: regularFinal, error: regularFinalError } = await admin.rpc("finalize_games_atomically", {
-    final_games: regularGames.map((game) => ({ game_id: game.id, away_score: 24, home_score: 17 })),
-    accepted_at: new Date().toISOString(),
-  });
-  assert.equal(regularFinalError, null, regularFinalError?.message);
-  assert.deepEqual(regularFinal[0], { final_scores_imported: 3, ats_picks_graded: 6, survivor_picks_graded: 0 });
+    await client.query(
+      "select * from public.snapshot_playoff_day_eligibility($1, $2)",
+      [playoff.id, new Date().toISOString()],
+    );
+    const latestEligibility = await client.query(`
+      select distinct on (player_id) player_id, is_eligible
+      from public.playoff_day_eligibility
+      where scoring_period_id = $1 and player_id = any($2::uuid[])
+      order by player_id, game_day desc
+    `, [playoff.id, [leader.id, chaser.id]]);
+    const latestByPlayer = new Map(latestEligibility.rows.map((row) => [row.player_id, row.is_eligible]));
+    assert.equal(latestByPlayer.get(leader.id), true);
+    assert.equal(latestByPlayer.get(chaser.id), false);
 
-  const { error: movePlayoffError } = await admin
-    .from("games")
-    .update({ kickoff_at: iso(-24 * 60 * 60 * 1000), line_lock_at: iso(-25 * 60 * 60 * 1000) })
-    .in("id", playoffGames.slice(0, 2).map((game) => game.id));
-  assert.equal(movePlayoffError, null, movePlayoffError?.message);
-  const { error: moveFinalPlayoffError } = await admin
-    .from("games")
-    .update({ kickoff_at: iso(24 * 60 * 60 * 1000), line_lock_at: iso(23 * 60 * 60 * 1000) })
-    .eq("id", playoffGames[2].id);
-  assert.equal(moveFinalPlayoffError, null, moveFinalPlayoffError?.message);
+    const chaserVoided = await insertOne(client,
+      "select result from public.picks where player_id = $1 and game_id = $2",
+      [chaser.id, playoffGames[2].id],
+    );
+    assert.equal(chaserVoided.result, "void");
 
-  const { error: regularHandoffError } = await admin.rpc("complete_scoring_period_atomically", {
-    target_scoring_period_id: regularPeriod.id,
-    next_scoring_period_id: playoffPeriod.id,
-    rollover_at: new Date().toISOString(),
-  });
-  assert.equal(regularHandoffError, null, regularHandoffError?.message);
+    const privacy = await insertOne(client, `
+      select
+        has_table_privilege('anon', 'public.picks', 'select') as anon_can_read_picks,
+        has_table_privilege('authenticated', 'public.playoff_day_eligibility', 'select') as members_can_read_private_eligibility,
+        has_function_privilege('anon', 'public.finalize_games_atomically(jsonb,timestamptz)', 'execute') as anon_can_finalize
+    `);
+    assert.deepEqual(privacy, {
+      anon_can_read_picks: false,
+      members_can_read_private_eligibility: false,
+      anon_can_finalize: false,
+    });
 
-  const { data: playoffSeason } = await admin.from("seasons").select("state").eq("id", season.id).single();
-  assert.equal(playoffSeason.state, "playoffs", "activating the playoff period must transition the season automatically");
+    await client.query(
+      "update public.games set kickoff_at = $1, line_lock_at = $2 where id = $3",
+      [iso(-60 * 1000), iso(-2 * 60 * 1000), playoffGames[2].id],
+    );
+    await client.query(
+      "select * from public.finalize_games_atomically($1::jsonb, $2::timestamptz)",
+      [JSON.stringify([{ game_id: playoffGames[2].id, away_score: 20, home_score: 13 }]), new Date().toISOString()],
+    );
+    await client.query(
+      "select * from public.complete_scoring_period_atomically($1, null, $2)",
+      [playoff.id, new Date().toISOString()],
+    );
 
-  const { error: firstSnapshotError } = await admin.rpc("snapshot_playoff_day_eligibility", {
-    target_scoring_period_id: playoffPeriod.id,
-    evaluated_at: iso(-36 * 60 * 60 * 1000),
-  });
-  assert.equal(firstSnapshotError, null, firstSnapshotError?.message);
-  const { data: firstEligibility, error: firstEligibilityError } = await admin
-    .from("playoff_day_eligibility")
-    .select("player_id, is_eligible")
-    .eq("scoring_period_id", playoffPeriod.id)
-    .in("player_id", [leaderId, chaserId])
-    .order("player_id");
-  assert.equal(firstEligibilityError, null, firstEligibilityError?.message);
-  assert.equal(firstEligibility.length, 2);
-  assert.ok(firstEligibility.every((row) => row.is_eligible), "both players can still tie at the first playoff day start");
+    const closedSeason = await insertOne(client, "select state from public.seasons where id = $1", [season.id]);
+    assert.equal(closedSeason.state, "complete");
+    const championship = await insertOne(client, `
+      select season_year, pool, player_id
+      from public.pool_championships
+      where season_year = $1 and pool = 'pickem'
+    `, [seasonYear]);
+    assert.deepEqual(championship, { season_year: seasonYear, pool: "pickem", player_id: leader.id });
 
-  const { data: dayOneFinal, error: dayOneFinalError } = await admin.rpc("finalize_games_atomically", {
-    final_games: playoffGames.slice(0, 2).map((game) => ({ game_id: game.id, away_score: 27, home_score: 10 })),
-    accepted_at: new Date().toISOString(),
-  });
-  assert.equal(dayOneFinalError, null, dayOneFinalError?.message);
-  assert.equal(dayOneFinal[0].ats_picks_graded, 4);
+    const rollover = await insertOne(client,
+      "select * from public.ensure_annual_season_rollover($1::timestamptz)",
+      [`${seasonYear + 1}-08-01T12:00:00.000Z`],
+    );
+    assert.equal(rollover.created, true);
+    assert.equal(rollover.season_year, seasonYear + 1);
 
-  const { data: chaserDayOnePicks } = await admin
-    .from("picks")
-    .select("result")
-    .eq("player_id", chaserId)
-    .in("game_id", playoffGames.slice(0, 2).map((game) => game.id));
-  assert.deepEqual(chaserDayOnePicks.map((pick) => pick.result).sort(), ["loss", "loss"], "every game on an eligible day remains official");
+    const nextPeriods = await client.query(`
+      select status, starts_at, ends_at
+      from public.scoring_periods
+      where season_id = $1
+      order by display_order
+    `, [rollover.season_id]);
+    assert.equal(nextPeriods.rowCount, 2);
+    assert.ok(nextPeriods.rows.every((period) => period.status === "upcoming" && period.starts_at === null && period.ends_at === null));
 
-  const { error: secondSnapshotError } = await admin.rpc("snapshot_playoff_day_eligibility", {
-    target_scoring_period_id: playoffPeriod.id,
-    evaluated_at: new Date().toISOString(),
-  });
-  assert.equal(secondSnapshotError, null, secondSnapshotError?.message);
-  const { data: latestEligibility, error: latestEligibilityError } = await admin
-    .from("playoff_day_eligibility")
-    .select("player_id, is_eligible, game_day")
-    .eq("scoring_period_id", playoffPeriod.id)
-    .in("player_id", [leaderId, chaserId])
-    .order("game_day", { ascending: false });
-  assert.equal(latestEligibilityError, null, latestEligibilityError?.message);
-  const latestByPlayer = new Map(latestEligibility.map((row) => [row.player_id, row]));
-  assert.equal(latestByPlayer.get(leaderId).is_eligible, true);
-  assert.equal(latestByPlayer.get(chaserId).is_eligible, false, "a player unable to tie at the next day start is eliminated");
-
-  const { data: chaserVoidedPick } = await admin
-    .from("picks")
-    .select("result")
-    .eq("player_id", chaserId)
-    .eq("game_id", playoffGames[2].id)
-    .single();
-  assert.equal(chaserVoidedPick.result, "void", "future playoff picks are voided once the player is out at day start");
-
-  const { error: hidePrivatePicksError, data: anonymousPicks } = await publicClient
-    .from("picks")
-    .select("id")
-    .in("player_id", [leaderId, chaserId]);
-  assert.ok(hidePrivatePicksError || anonymousPicks.length === 0, "the public key must not expose private pick rows");
-
-  const { error: startFinalGameError } = await admin
-    .from("games")
-    .update({ kickoff_at: iso(-60 * 1000), line_lock_at: iso(-2 * 60 * 1000) })
-    .eq("id", playoffGames[2].id);
-  assert.equal(startFinalGameError, null, startFinalGameError?.message);
-  const { error: finalGameError } = await admin.rpc("finalize_games_atomically", {
-    final_games: [{ game_id: playoffGames[2].id, away_score: 20, home_score: 13 }],
-    accepted_at: new Date().toISOString(),
-  });
-  assert.equal(finalGameError, null, finalGameError?.message);
-
-  const { error: finalHandoffError } = await admin.rpc("complete_scoring_period_atomically", {
-    target_scoring_period_id: playoffPeriod.id,
-    next_scoring_period_id: null,
-    rollover_at: new Date().toISOString(),
-  });
-  assert.equal(finalHandoffError, null, finalHandoffError?.message);
-
-  const { data: closedSeason } = await admin.from("seasons").select("state").eq("id", season.id).single();
-  assert.equal(closedSeason.state, "complete", "the final settled playoff period must close the season automatically");
-
-  const { data: championship, error: championshipError } = await admin
-    .from("pool_championships")
-    .select("season_year, pool, player_id")
-    .eq("season_year", seasonYear)
-    .eq("pool", "pickem")
-    .single();
-  assert.equal(championshipError, null, championshipError?.message);
-  assert.deepEqual(championship, { season_year: seasonYear, pool: "pickem", player_id: leaderId });
-
-  const rolloverAt = `${seasonYear + 1}-08-01T12:00:00.000Z`;
-  const { data: rollover, error: rolloverError } = await admin.rpc("ensure_annual_season_rollover", { evaluated_at: rolloverAt });
-  assert.equal(rolloverError, null, rolloverError?.message);
-  assert.equal(rollover[0].created, true);
-  const nextSeasonId = rollover[0].season_id;
-
-  const { data: nextPeriods, error: nextPeriodsError } = await admin
-    .from("scoring_periods")
-    .select("display_name, period_type, max_picks, status, starts_at, ends_at")
-    .eq("season_id", nextSeasonId)
-    .order("display_order");
-  assert.equal(nextPeriodsError, null, nextPeriodsError?.message);
-  assert.equal(nextPeriods.length, 2);
-  assert.ok(nextPeriods.every((period) => period.status === "upcoming" && period.starts_at === null && period.ends_at === null));
-
-  const { count: oldPickCount } = await admin
-    .from("picks")
-    .select("id", { count: "exact", head: true })
-    .in("player_id", [leaderId, chaserId]);
-  assert.equal(oldPickCount, 12, "the completed season's individual records remain available");
-  const { count: copiedPickCount } = await admin
-    .from("picks")
-    .select("id, scoring_periods!inner(season_id)", { count: "exact", head: true })
-    .eq("scoring_periods.season_id", nextSeasonId);
-  assert.equal(copiedPickCount, 0, "the new season receives configuration only, never old picks");
+    const oldRecords = await insertOne(client, `
+      select count(*)::integer as count
+      from public.picks where player_id = any($1::uuid[])
+    `, [[leader.id, chaser.id]]);
+    assert.equal(oldRecords.count, 12);
+    const copiedRecords = await insertOne(client, `
+      select count(*)::integer as count
+      from public.picks pick
+      join public.scoring_periods period on period.id = pick.scoring_period_id
+      where period.season_id = $1
+    `, [rollover.season_id]);
+    assert.equal(copiedRecords.count, 0);
+  } finally {
+    await client.query("rollback");
+    await client.end();
+  }
 });

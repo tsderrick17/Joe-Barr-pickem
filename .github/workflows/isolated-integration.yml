@@ -19,25 +19,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  database-and-browser:
+  database-lifecycle:
     runs-on: ubuntu-latest
     environment: isolated-test
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
       PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
-      PICKEM_TEST_SUPABASE_URL: ${{ secrets.PICKEM_TEST_SUPABASE_URL }}
-      PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY }}
-      PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
-      PICKEM_E2E_ENABLED: "true"
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+      PICKEM_E2E_ENABLED: "false"
       PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
     steps:
       - name: Confirm isolated test environment
         run: |
           test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
-          test -n "$PICKEM_TEST_SUPABASE_URL"
-          test -n "$PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY"
-          test -n "$PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY"
+          test -n "$PICKEM_TEST_DATABASE_URL"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
           echo "Using the explicitly confirmed isolated test environment."
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,5 +45,4 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:season-drill
