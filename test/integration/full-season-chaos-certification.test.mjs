@@ -349,12 +349,23 @@ test("one-button full-season chaos certification", {
     }
 
     const wildcard = periods[18];
+    const playoffBoundary = await one(client, `
+      select period.status,
+        (select count(*) from public.picks where player_id = $2 and result = 'win')::integer as leader_wins,
+        (select count(*) from public.picks where player_id = $3 and result = 'win')::integer as chaser_wins,
+        (select count(*) from public.games game
+          join public.scoring_periods future on future.id = game.scoring_period_id
+          where future.season_id = $1 and future.period_type = 'playoff'
+            and game.status = 'scheduled')::integer as remaining_games
+      from public.scoring_periods period where period.id = $4
+    `, [season.id, players[0].id, players[1].id, wildcard.id]);
+    assert.deepEqual(playoffBoundary, {
+      status: "active", leader_wins: 35, chaser_wins: 0, remaining_games: 13,
+    });
     const snapshot = await one(client,
       "select * from public.snapshot_playoff_day_eligibility($1, clock_timestamp())",
       [wildcard.id],
     );
-    assert.ok(snapshot.players_eliminated >= 3);
-    assert.equal(snapshot.picks_scratched, 3 * 13);
     const eligibility = await client.query(`
       select player_id, wins_at_day_start, leader_wins_at_day_start,
         remaining_possible_wins, is_eligible
@@ -362,6 +373,8 @@ test("one-button full-season chaos certification", {
       where scoring_period_id = $1 and player_id = any($2::uuid[])
     `, [wildcard.id, players.map((player) => player.id)]);
     const eligibilityByPlayer = new Map(eligibility.rows.map((row) => [row.player_id, row]));
+    assert.ok(snapshot.players_eliminated >= 3, JSON.stringify({ snapshot, rows: eligibility.rows }));
+    assert.equal(snapshot.picks_scratched, 3 * 13);
     assert.equal(eligibilityByPlayer.get(players[0].id).is_eligible, true);
     for (const chaser of players.slice(1)) {
       assert.equal(eligibilityByPlayer.get(chaser.id).is_eligible, false);
