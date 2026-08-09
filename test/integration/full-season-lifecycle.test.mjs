@@ -217,6 +217,16 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     assert.equal(rollover.created, true);
     assert.equal(rollover.season_year, seasonYear + 1);
 
+    const rolloverRetry = await insertOne(client,
+      "select * from public.ensure_annual_season_rollover($1::timestamptz)",
+      [`${seasonYear + 1}-08-01T12:00:00.000Z`],
+    );
+    assert.deepEqual(rolloverRetry, {
+      season_id: rollover.season_id,
+      season_year: seasonYear + 1,
+      created: false,
+    });
+
     const nextPeriods = await client.query(`
       select status, starts_at, ends_at
       from public.scoring_periods
