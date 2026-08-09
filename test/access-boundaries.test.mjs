@@ -30,12 +30,24 @@ test("every commissioner route uses the shared commissioner gate", async () => {
 test("scheduled mutation routes require their automation secret before doing work", async () => {
   const cronDirectory = path.join(root, "src", "app", "api", "cron");
   const routes = await routeFiles(cronDirectory);
-  assert.deepEqual(routes.map((route) => path.basename(path.dirname(route))).sort(), ["lock-lines", "send-reminders", "sync-scores"]);
+  assert.deepEqual(routes.map((route) => path.basename(path.dirname(route))).sort(), ["bootstrap-season", "lock-lines", "send-reminders", "sync-scores", "watchdog"]);
 
   for (const route of routes) {
     const source = await readFile(route, "utf8");
     assert.match(source, /authorization/, `${path.relative(root, route)} must read Authorization`);
     assert.match(source, /Bearer/, `${path.relative(root, route)} must require the bearer secret`);
     assert.match(source, /runWithAutomationLease/, `${path.relative(root, route)} must prevent overlapping runs`);
+  }
+});
+
+test("manual recovery controls share the same overlap protection as automation", async () => {
+  const protectedRoutes = [
+    "src/app/api/admin/import-full-schedule/route.ts",
+    "src/app/api/admin/season-bootstrap-status/route.ts",
+    "src/app/api/admin/watchdog/route.ts",
+  ];
+  for (const route of protectedRoutes) {
+    const source = await readFile(path.join(root, route), "utf8");
+    assert.match(source, /runWithAutomationLease/, `${route} must prevent overlap with a scheduled run`);
   }
 });

@@ -17,6 +17,8 @@ import SentryVerification from "@/components/sentry-verification";
 import SeasonReadiness from "@/components/season-readiness";
 import OpeningWeekChecklist from "@/components/opening-week-checklist";
 import CommissionerHandbook from "@/components/commissioner-handbook";
+import AutomationWatchdog from "@/components/automation-watchdog";
+import SeasonBootstrapStatus from "@/components/season-bootstrap-status";
 
 type Spread = {
   team: string;
@@ -287,6 +289,7 @@ export default function AdminPage() {
           </div>
         </section>
         <OpeningWeekChecklist />
+        <AutomationWatchdog />
         <AutomationHealth />
         <SeasonReadiness />
         <section className="border-b-2 border-zinc-900 py-7">
@@ -339,6 +342,7 @@ export default function AdminPage() {
         </> : null}
 
         {activePanel === "season-setup" ? <>
+        <SeasonBootstrapStatus />
         <section className="mt-8 border-y-2 border-zinc-900 py-8">
           <h2 className="font-serif text-2xl font-bold">Odds Feed</h2>
 
