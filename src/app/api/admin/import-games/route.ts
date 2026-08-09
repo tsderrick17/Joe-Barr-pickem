@@ -453,9 +453,16 @@ export async function POST(request: NextRequest) {
   );
 
   if (importError || !importRows?.[0]) {
+    const requiresReview = importError?.message.includes(
+      "Schedule review required",
+    );
     return NextResponse.json(
-      { error: "The schedule import could not be completed safely. No changes were saved." },
-      { status: 500 },
+      {
+        error: requiresReview
+          ? "A saved game changed after its line locked, after settlement, or across scoring weeks. Nothing was changed; review that game before continuing."
+          : "The schedule import could not be completed safely. No changes were saved.",
+      },
+      { status: requiresReview ? 409 : 500 },
     );
   }
 
@@ -467,7 +474,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     message:
-      "Schedule and preliminary spread refresh completed as one protected operation. Existing week assignments were preserved and no official lines were changed.",
+      "Schedule and preliminary spread refresh completed as one protected operation. New games were added; any pre-lock kickoff correction reopened only that game's official line.",
     importedGames: importResult.games_saved,
     preliminarySpreadsSaved: importResult.preliminary_spreads_saved,
     newWeeksAssigned: importResult.new_weeks_assigned,
