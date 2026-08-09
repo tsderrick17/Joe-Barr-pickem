@@ -2,6 +2,12 @@ name: Isolated integration checks
 
 on:
   workflow_dispatch:
+    inputs:
+      full_season_drill:
+        description: Run the one-time fictional full-season lifecycle exercise
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "17 14 * * 3"
 
@@ -24,6 +30,7 @@ jobs:
       PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY }}
       PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
       PICKEM_E2E_ENABLED: "true"
+      PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
     steps:
       - name: Confirm isolated test environment
         run: |
