@@ -162,7 +162,7 @@ test("one-button full-season chaos certification", {
     await client.query("savepoint invalid_week_move");
     await assert.rejects(
       client.query("update public.games set scoring_period_id = $1 where id = $2", [periods[1].id, firstSaved.id]),
-      /permanently pinned/i,
+      /permanently pinned|before the assigned scoring period/i,
     );
     await client.query("rollback to savepoint invalid_week_move");
 
