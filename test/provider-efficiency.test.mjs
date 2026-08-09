@@ -27,3 +27,12 @@ test("a rejected score-provider call persists per-game backoff before failing", 
   assert.match(failureHandler, /if \(!providerResponseAccepted\)/);
   assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt\)/);
 });
+
+test("only the Commissioner score route explicitly bypasses automatic cooldown", async () => {
+  const [adminRoute, cronRoute] = await Promise.all([
+    readFile(path.join(root, "src/app/api/admin/sync-scores/route.ts"), "utf8"),
+    readFile(path.join(root, "src/app/api/cron/sync-scores/route.ts"), "utf8"),
+  ]);
+  assert.match(adminRoute, /bypassProviderCooldown: true/);
+  assert.doesNotMatch(cronRoute, /bypassProviderCooldown/);
+});

@@ -74,7 +74,9 @@ export async function checkAutomationHealth(now = new Date()) {
   const runs = (runsResult.data ?? []) as AutomationRun[];
   const latestLocks = latestByJob(runs, "line_locks");
   const latestScores = latestByJob(runs, "scores");
-  const providerRemainingRaw = latestScores?.details?.requestsRemaining;
+  const latestSuccessfulLocks = runs.find((run) => run.job_type === "line_locks" && run.status === "success") ?? null;
+  const latestSuccessfulScores = runs.find((run) => run.job_type === "scores" && run.status === "success") ?? null;
+  const providerRemainingRaw = latestSuccessfulScores?.details?.requestsRemaining;
   const providerAllowance =
     typeof providerRemainingRaw === "string" && /^\d+$/.test(providerRemainingRaw)
       ? Number(providerRemainingRaw)
@@ -94,6 +96,10 @@ export async function checkAutomationHealth(now = new Date()) {
   const scoreProviderFailureStreak = latestScores?.status === "failed"
     ? Math.max(0, ...(scoreBackoffsResult.data ?? []).map((backoff) => backoff.attempts))
     : 0;
+  const scoreRetryTimes = (scoreBackoffsResult.data ?? [])
+    .map((backoff) => backoff.next_check_at)
+    .filter(Boolean)
+    .sort();
   const problems: string[] = [];
 
   if (latestLocks?.status === "failed" && missingOfficialLines > 0) {
@@ -106,7 +112,7 @@ export async function checkAutomationHealth(now = new Date()) {
     problems.push(`${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`);
   }
 
-  const quotaProtected = latestScores?.details?.quotaProtected === true ||
+  const quotaProtected = latestSuccessfulScores?.details?.quotaProtected === true ||
     (providerAllowance !== null && providerAllowance < 25);
   const latestScoreFinishedAt = latestScores
     ? new Date(latestScores.completed_at ?? latestScores.started_at).getTime()
@@ -144,12 +150,19 @@ export async function checkAutomationHealth(now = new Date()) {
     problems,
     latestLocks,
     latestScores,
+    latestSuccessfulLocks,
+    latestSuccessfulScores,
     missingOfficialLines,
     scoreCandidates,
     scoreChecksDueNow,
     scoreProviderFailureStreak,
+    scoreProviderRetryAt: scoreProviderFailureStreak > 0 ? scoreRetryTimes[0] ?? null : null,
     providerAllowance,
     scheduleProviderCircuit: scheduleCircuitResult.data,
+    scheduleProviderCooldownActive: Boolean(
+      scheduleCircuitResult.data &&
+      new Date(scheduleCircuitResult.data.next_retry_at).getTime() > now.getTime(),
+    ),
     pendingScheduleReviews,
     retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,

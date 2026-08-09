@@ -200,7 +200,11 @@ async function snapshotActivePlayoffEligibility() {
   }
 }
 
-export async function syncFinalScores(): Promise<ScoreSyncResult> {
+export async function syncFinalScores({
+  bypassProviderCooldown = false,
+}: {
+  bypassProviderCooldown?: boolean;
+} = {}): Promise<ScoreSyncResult> {
   const oddsApiKey = process.env.ODDS_API_KEY;
 
   if (!oddsApiKey) {
@@ -260,7 +264,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
   );
   const eligibleGames = scoreDueGames.filter((game) => {
     const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
-    return !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
+    return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
   });
 
   const noScoreResult = {

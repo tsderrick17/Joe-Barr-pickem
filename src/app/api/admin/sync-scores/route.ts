@@ -10,7 +10,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await runWithAutomationLease("scores", syncFinalScores);
+    const result = await runWithAutomationLease("scores", () =>
+      syncFinalScores({ bypassProviderCooldown: true }),
+    );
     return NextResponse.json({
       message:
         result.weekRollover.action === "completed"
