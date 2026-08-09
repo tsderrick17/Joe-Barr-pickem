@@ -39,8 +39,8 @@ jobs:
             *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
           esac
           echo "Using the explicitly confirmed isolated test environment."
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
