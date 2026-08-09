@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  AutomationAlreadyRunningError,
+  runWithAutomationLease,
+} from "@/lib/automation-execution-lease";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
 import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
 import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
 import { seasonYearAt } from "@/lib/season";
+import {
+  clearScheduleProviderCircuit,
+  getScheduleProviderCircuit,
+  recordScheduleProviderFailure,
+} from "@/lib/schedule-provider-circuit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type OddsOutcome = {
@@ -78,6 +87,47 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  try {
+    return await runWithAutomationLease("schedule_refresh", () =>
+      refreshSchedule({ oddsApiKey, isAutomation }),
+    );
+  } catch (error) {
+    if (error instanceof AutomationAlreadyRunningError) {
+      return NextResponse.json(
+        isAutomation
+          ? { success: true, skipped: true, message: error.message }
+          : { error: error.message },
+        { status: isAutomation ? 200 : 409 },
+      );
+    }
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The NFL schedule refresh failed." },
+      { status: 500 },
+    );
+  }
+}
+
+async function refreshSchedule({
+  oddsApiKey,
+  isAutomation,
+}: {
+  oddsApiKey: string;
+  isAutomation: boolean;
+}) {
+  if (isAutomation) {
+    const circuit = await getScheduleProviderCircuit();
+    if (circuit.blocked) {
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "provider_cooldown",
+        message: "The NFL schedule provider is in automatic cooldown after repeated failures.",
+        retryAt: circuit.retryAt,
+        consecutiveFailures: circuit.consecutiveFailures,
+      });
+    }
+  }
+
   const seasonYear = seasonYearAt();
   // The complete schedule provider owns kickoff times after preseason. Its
   // result is intentionally independent of the Odds API, which is only used
@@ -97,21 +147,46 @@ export async function POST(request: NextRequest) {
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
       { cache: "no-store", signal: AbortSignal.timeout(20_000) },
     );
-  } catch {
+  } catch (error) {
+    const cooldown = await recordScheduleProviderFailure(error);
     return NextResponse.json(
-      { error: "The NFL odds feed could not be reached right now." },
+      {
+        error: "The NFL odds feed could not be reached right now.",
+        retryAt: cooldown.retryAt,
+      },
       { status: 502 },
     );
   }
 
   if (!oddsResponse.ok) {
+    const cooldown = await recordScheduleProviderFailure(
+      new Error(`The NFL odds feed returned HTTP ${oddsResponse.status}.`),
+    );
     return NextResponse.json(
-      { error: "The NFL odds feed could not be reached right now." },
+      {
+        error: "The NFL odds feed could not be reached right now.",
+        retryAt: cooldown.retryAt,
+      },
       { status: 502 },
     );
   }
 
-  const events = (await oddsResponse.json()) as OddsEvent[];
+  let events: OddsEvent[];
+  try {
+    const payload: unknown = await oddsResponse.json();
+    if (!Array.isArray(payload)) throw new Error("The NFL odds feed returned an invalid response.");
+    events = payload as OddsEvent[];
+    await clearScheduleProviderCircuit();
+  } catch (error) {
+    const cooldown = await recordScheduleProviderFailure(error);
+    return NextResponse.json(
+      {
+        error: "The NFL odds feed returned an invalid response.",
+        retryAt: cooldown.retryAt,
+      },
+      { status: 502 },
+    );
+  }
 
   const { data: season } = await supabaseAdmin
     .from("seasons")

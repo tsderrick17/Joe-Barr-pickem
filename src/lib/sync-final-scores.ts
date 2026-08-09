@@ -345,6 +345,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     return noScoreResult;
   }
 
+  let providerResponseAccepted = false;
   try {
     const query = new URLSearchParams({ apiKey: oddsApiKey, daysFrom: "3" });
     const response = await fetch(
@@ -357,10 +358,16 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
       throw new Error("The NFL score feed could not be reached right now.");
     }
 
+    const providerPayload: unknown = await response.json();
+    if (!Array.isArray(providerPayload)) {
+      throw new Error("The NFL score feed returned an invalid response.");
+    }
+    providerResponseAccepted = true;
+
     const eligibleGameByExternalId = new Map(
       eligibleGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
     );
-    const completedEvents = ((await response.json()) as ScoreEvent[]).filter(
+    const completedEvents = (providerPayload as ScoreEvent[]).filter(
       (event) =>
         eligibleGameByExternalId.has(event.id) &&
         event.completed &&
@@ -499,6 +506,21 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "The score sync failed.";
+    if (!providerResponseAccepted) {
+      try {
+        // Network failures, timeouts, HTTP errors, and malformed payloads use
+        // the same persistent per-game exponential backoff as a delayed final.
+        // The 15-minute cron can then exit without spending another credit.
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+      } catch {
+        await supabaseAdmin.from("sync_runs").update({
+          status: "failed",
+          completed_at: new Date().toISOString(),
+          error_message: `${message} The polling cooldown could not be saved safely.`,
+        }).eq("id", run.data.id);
+        throw new Error(`${message} The polling cooldown could not be saved safely.`);
+      }
+    }
     await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.data.id);
     throw error;
   }

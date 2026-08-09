@@ -12,12 +12,15 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     : 0;
   const scoreWorkerStale = !latestScoreTime || now.getTime() - latestScoreTime > 45 * 60 * 1000;
   const quotaProtected = health.providerAllowance !== null && health.providerAllowance < 25;
-  if (health.scoreChecksDueNow > 0 && !quotaProtected
-    && (health.latestScores?.status === "failed" || scoreWorkerStale)) {
+  if (!quotaProtected && (
+    (health.scoreChecksDueNow > 0 && (health.latestScores?.status === "failed" || scoreWorkerStale)) ||
+    health.scoreProviderFailureStreak >= 3
+  )) {
+    const affectedGames = Math.max(health.scoreChecksDueNow, health.scoreCandidates ?? 0);
     signals.push({
       key: "stalled-final-scores", severity: "critical",
       title: "Final-score automation is stalled",
-      detail: `${health.scoreChecksDueNow} game${health.scoreChecksDueNow === 1 ? " needs" : "s need"} a score check and the worker has not completed successfully within 45 minutes.`,
+      detail: `${affectedGames} game${affectedGames === 1 ? " needs" : "s need"} a score check and the worker has not completed successfully. Automatic retries are conserving provider credits between attempts.`,
     });
   }
   if (health.reminderHealth.overdueScheduled > 0 || health.reminderHealth.staleSending > 0) {
@@ -32,6 +35,13 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       key: "schedule-change-review-needed", severity: "critical",
       title: "An NFL schedule change needs review",
       detail: `${health.pendingScheduleReviews} changed game${health.pendingScheduleReviews === 1 ? " is" : "s are"} locked, settled, re-paired, or assigned to another scoring period. Safe schedule corrections continue automatically; these games remain pinned until reviewed.`,
+    });
+  }
+  if ((health.scheduleProviderCircuit?.consecutive_failures ?? 0) >= 3) {
+    signals.push({
+      key: "schedule-provider-cooldown", severity: "warning",
+      title: "The NFL schedule provider is repeatedly unavailable",
+      detail: `${health.scheduleProviderCircuit.consecutive_failures} consecutive refresh attempts failed. Automatic requests are paused until ${health.scheduleProviderCircuit.next_retry_at}; the Commissioner can still run an emergency refresh.`,
     });
   }
   const eastern = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" })

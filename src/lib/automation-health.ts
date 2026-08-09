@@ -18,7 +18,7 @@ export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
   const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult] = await Promise.all([
+  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult] = await Promise.all([
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
@@ -37,9 +37,15 @@ export async function checkAutomationHealth(now = new Date()) {
       .lte("kickoff_at", scoreDueAt),
     checkReminderHealth(now),
     supabaseAdmin.from("schedule_change_reviews").select("id", { count: "exact", head: true }).is("resolved_at", null),
+    supabaseAdmin.from("provider_failure_circuits")
+      .select("consecutive_failures, next_retry_at, last_error")
+      .eq("provider_job", "schedule_refresh").maybeSingle(),
   ]);
 
-  if (runsResult.error || lineCandidatesResult.error || scoreGamesResult.error || scheduleReviewsResult.error) {
+  if (
+    runsResult.error || lineCandidatesResult.error || scoreGamesResult.error ||
+    scheduleReviewsResult.error || scheduleCircuitResult.error
+  ) {
     throw new Error("Automation health could not be prepared.");
   }
 
@@ -51,7 +57,7 @@ export async function checkAutomationHealth(now = new Date()) {
       ? supabaseAdmin.from("game_lines").select("game_id").in("game_id", lineCandidateIds)
       : Promise.resolve({ data: [], error: null }),
     scoreCandidateIds.length
-      ? supabaseAdmin.from("score_check_backoff").select("game_id, next_check_at").in("game_id", scoreCandidateIds)
+      ? supabaseAdmin.from("score_check_backoff").select("game_id, attempts, next_check_at").in("game_id", scoreCandidateIds)
       : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("sync_runs").select("id", { count: "exact", head: true }).lt("started_at", retentionCutoff),
     supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).lt("created_at", retentionCutoff),
@@ -85,6 +91,9 @@ export async function checkAutomationHealth(now = new Date()) {
     const nextCheckAt = backoffByGame.get(gameId);
     return !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
   }).length;
+  const scoreProviderFailureStreak = latestScores?.status === "failed"
+    ? Math.max(0, ...(scoreBackoffsResult.data ?? []).map((backoff) => backoff.attempts))
+    : 0;
   const problems: string[] = [];
 
   if (latestLocks?.status === "failed" && missingOfficialLines > 0) {
@@ -138,7 +147,9 @@ export async function checkAutomationHealth(now = new Date()) {
     missingOfficialLines,
     scoreCandidates,
     scoreChecksDueNow,
+    scoreProviderFailureStreak,
     providerAllowance,
+    scheduleProviderCircuit: scheduleCircuitResult.data,
     pendingScheduleReviews,
     retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,

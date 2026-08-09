@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export type AutomationJob = "line_locks" | "scores" | "reminders" | "season_bootstrap" | "watchdog";
+export type AutomationJob = "line_locks" | "scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
 export class AutomationAlreadyRunningError extends Error {
   constructor(job: AutomationJob) {
@@ -8,6 +8,8 @@ export class AutomationAlreadyRunningError extends Error {
       ? "Official line locking"
       : job === "scores"
         ? "Final-score sync"
+        : job === "schedule_refresh"
+          ? "NFL schedule refresh"
         : job === "season_bootstrap"
           ? "Season schedule bootstrap"
           : job === "watchdog"

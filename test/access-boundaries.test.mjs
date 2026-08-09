@@ -43,6 +43,7 @@ test("scheduled mutation routes require their automation secret before doing wor
 test("manual recovery controls share the same overlap protection as automation", async () => {
   const protectedRoutes = [
     "src/app/api/admin/import-full-schedule/route.ts",
+    "src/app/api/admin/import-games/route.ts",
     "src/app/api/admin/season-bootstrap-status/route.ts",
     "src/app/api/admin/watchdog/route.ts",
   ];
