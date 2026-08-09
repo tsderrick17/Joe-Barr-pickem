@@ -30,7 +30,12 @@ test("one-button full-season chaos certification", {
   try {
     const token = `chaos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const seasonYear = 8000 + Math.floor(Math.random() * 900);
-    const baseTuesday = Date.now() + 60 * DAY;
+    const calendarAnchor = new Date(Date.now() + 60 * DAY);
+    calendarAnchor.setUTCHours(12, 0, 0, 0);
+    calendarAnchor.setUTCDate(
+      calendarAnchor.getUTCDate() + ((2 - calendarAnchor.getUTCDay() + 7) % 7),
+    );
+    const baseTuesday = calendarAnchor.getTime();
     const players = [];
     for (const label of ["Leader", "Chaser One", "Chaser Two", "Chaser Three"]) {
       players.push(await one(client,
@@ -86,7 +91,7 @@ test("one-button full-season chaos certification", {
       for (let gameIndex = 0; gameIndex < gameCount; gameIndex += 1) {
         const away = teams[(weekIndex + gameIndex * 2) % 32];
         const home = teams[(weekIndex + gameIndex * 2 + 1) % 32];
-        const kickoff = baseTuesday + weekIndex * 7 * DAY + 5 * DAY + 18 * HOUR + gameIndex * 5 * 60 * 1000;
+        const kickoff = baseTuesday + weekIndex * 7 * DAY + 5 * DAY + 6 * HOUR + gameIndex * 5 * 60 * 1000;
         providerGames.push({
           external_game_id: `${token}-nfl-${weekIndex + 1}-${gameIndex + 1}`,
           schedule_source: "nflverse",
@@ -172,7 +177,7 @@ test("one-button full-season chaos certification", {
         [iso(start), iso(start + 7 * DAY), period.id],
       );
       for (let gameIndex = 0; gameIndex < playoffCounts[playoffIndex]; gameIndex += 1) {
-        const kickoff = start + 5 * DAY + 18 * HOUR + gameIndex * 10 * 60 * 1000;
+        const kickoff = start + 5 * DAY + 6 * HOUR + gameIndex * 10 * 60 * 1000;
         await client.query(`
           insert into public.games
             (external_game_id, odds_event_id, schedule_source, schedule_source_event_id,
