@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
 
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, display_name, display_order, status, period_type, max_picks")
+    .select("id, display_name, display_order, status, period_type, max_picks, starts_at")
     .eq("season_id", season.id)
     .order("display_order");
   if (periodsError) return NextResponse.json({ error: "The opening-week checklist could not read scoring periods." }, { status: 500 });
 
   const periodIds = (periods ?? []).map((period) => period.id);
   const [gamesResult, playersResult, remindersResult, deliveryFailuresResult, automationResult] = await Promise.all([
-    periodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, line_lock_at, away_team_id, home_team_id, status").in("scoring_period_id", periodIds) : Promise.resolve({ data: [], error: null }),
+    periodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, gameweek_key, kickoff_at, line_lock_at, away_team_id, home_team_id, status").in("scoring_period_id", periodIds) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
     supabaseAdmin.from("push_reminders").select("id, status, processing_started_at").in("status", ["scheduled", "sending", "failed"]),
     supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).in("status", ["failed", "suppressed"]).gte("attempted_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),

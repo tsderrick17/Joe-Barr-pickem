@@ -4,6 +4,19 @@ function check(id, label, detail, state = "pass") {
   return { id, label, detail, state };
 }
 
+function gameweekKey(value) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+  const number = (type) => Number(parts.find((part) => part.type === type)?.value);
+  const day = new Date(Date.UTC(number("year"), number("month") - 1, number("day")));
+  day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() - 2 + 7) % 7));
+  return day.toISOString().slice(0, 10);
+}
+
 /**
  * A read-only, data-shape audit for the season's operational prerequisites.
  * It intentionally does not make schedule, pick, or reminder changes.
@@ -41,6 +54,17 @@ export function assessSeasonReadiness({ seasonState, periods, games, reminders, 
   checks.push(invalidGames.length === 0
     ? check("game-timing", "Game timing and matchups", "Every game has a valid matchup and an official line lock no later than kickoff.")
     : check("game-timing", "Game timing and matchups", `${invalidGames.length} game${invalidGames.length === 1 ? " has" : "s have"} invalid timing or matchup data.`, "attention"));
+
+  const periodById = new Map(periods.map((period) => [period.id, period]));
+  const pinnedGames = games.filter((game) => game.gameweek_key !== undefined);
+  const gameweekMismatches = pinnedGames.filter((game) => {
+    const period = periodById.get(game.scoring_period_id);
+    return !game.gameweek_key || !period ||
+      (period.starts_at && game.gameweek_key !== gameweekKey(period.starts_at));
+  });
+  checks.push(gameweekMismatches.length === 0
+    ? check("gameweek-pins", "Permanent gameweek assignments", "Every game is pinned to the scoring period where it was originally scheduled.")
+    : check("gameweek-pins", "Permanent gameweek assignments", `${gameweekMismatches.length} game${gameweekMismatches.length === 1 ? " is" : "s are"} pinned to the wrong scoring period.`, "attention"));
 
   const playoffPeriods = periods.filter((period) => period.period_type === "playoff");
   const scheduledPlayoffPeriods = playoffPeriods.filter((period) => games.some((game) => game.scoring_period_id === period.id));

@@ -56,13 +56,50 @@ test("isolated schedule reconciliation preserves history and only moves unlocked
       [season.rows[0].id, "[]", JSON.stringify(payload), "[]"],
     );
     const saved = await client.query(
-      "select kickoff_at, line_lock_at from public.games where id = $1",
+      "select scoring_period_id, gameweek_key, kickoff_at, line_lock_at from public.games where id = $1",
       [game.rows[0].id],
     );
     assert.equal(saved.rows[0].kickoff_at.toISOString(), movedKickoff);
     assert.equal(saved.rows[0].line_lock_at.toISOString(), movedLock);
     const released = await client.query("select count(*)::integer as count from public.game_lines where game_id = $1", [game.rows[0].id]);
     assert.equal(released.rows[0].count, 0, "a reschedule must release the obsolete official line");
+
+    const nextPeriod = await client.query(`
+      insert into public.scoring_periods
+        (season_id, display_name, period_type, max_picks, status, display_order)
+      values ($1, 'Schedule Sync Next Week', 'regular', 3, 'upcoming', 2) returning id
+    `, [season.rows[0].id]);
+    await client.query("savepoint wrong_gameweek");
+    await assert.rejects(
+      client.query("update public.games set scoring_period_id = $1 where id = $2", [nextPeriod.rows[0].id, game.rows[0].id]),
+      /permanently pinned to its original scoring period/,
+    );
+    await client.query("rollback to savepoint wrong_gameweek");
+
+    const player = await client.query("insert into public.players(first_name) values ($1) returning id", [`Schedule Sync Player ${token}`]);
+    await client.query("savepoint mismatched_pick");
+    await assert.rejects(
+      client.query(`
+        insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id)
+        values ($1, $2, $3, $4)
+      `, [player.rows[0].id, nextPeriod.rows[0].id, game.rows[0].id, teams[0].id]),
+      /scoring period permanently pinned to its game/,
+    );
+    await client.query("rollback to savepoint mismatched_pick");
+
+    const crossWeekKickoff = new Date(kickoff.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString();
+    const crossWeekLock = new Date(lock.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString();
+    await client.query(
+      "select * from public.reschedule_game_atomically($1, $2, $3, null)",
+      [game.rows[0].id, crossWeekKickoff, crossWeekLock],
+    );
+    const pinnedAfterPostponement = await client.query(
+      "select scoring_period_id, gameweek_key, kickoff_at from public.games where id = $1",
+      [game.rows[0].id],
+    );
+    assert.equal(pinnedAfterPostponement.rows[0].scoring_period_id, period.rows[0].id);
+    assert.equal(pinnedAfterPostponement.rows[0].gameweek_key.toISOString?.().slice(0, 10) ?? pinnedAfterPostponement.rows[0].gameweek_key, saved.rows[0].gameweek_key.toISOString?.().slice(0, 10) ?? saved.rows[0].gameweek_key);
+    assert.equal(pinnedAfterPostponement.rows[0].kickoff_at.toISOString(), crossWeekKickoff);
 
     await client.query("update public.games set line_lock_at = clock_timestamp() - interval '1 minute' where id = $1", [game.rows[0].id]);
     await assert.rejects(
