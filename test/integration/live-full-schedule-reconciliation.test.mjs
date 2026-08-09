@@ -42,9 +42,9 @@ test("canonical schedule reconciliation moves safe games and quarantines locked 
         payload.push(row);
         await client.query(`
           insert into public.games(external_game_id, schedule_source, schedule_source_event_id, scoring_period_id,
-            away_team_id, home_team_id, kickoff_at, line_lock_at, is_international)
-          values ($1, 'nflverse', $2, $3, $4, $5, $6, $7, false)
-        `, [`nflverse:${eventId}`, eventId, row.scoring_period_id, row.away_team_id, row.home_team_id, row.kickoff_at, row.line_lock_at]);
+            away_team_id, home_team_id, kickoff_at, line_lock_at, is_international, gameweek_key)
+          values ($1, 'nflverse', $2, $3, $4, $5, $6, $7, false, public.nfl_gameweek_key($8))
+        `, [`nflverse:${eventId}`, eventId, row.scoring_period_id, row.away_team_id, row.home_team_id, row.kickoff_at, row.line_lock_at, periods[week].start]);
       }
     }
     assert.equal(payload.length, 272);
