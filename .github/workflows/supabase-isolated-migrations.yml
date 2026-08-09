@@ -89,4 +89,4 @@ jobs:
             echo "Isolated database already has public tables; leaving migration history unchanged."
           fi
       - name: Apply pending migrations
-        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL"
+        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
