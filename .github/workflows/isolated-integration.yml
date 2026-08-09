@@ -14,8 +14,8 @@ concurrency:
 
 jobs:
   database-and-browser:
-    if: vars.PICKEM_TEST_DATABASE_CONFIRMATION == 'isolated'
     runs-on: ubuntu-latest
+    environment: isolated-test
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
@@ -25,6 +25,10 @@ jobs:
       PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
       PICKEM_E2E_ENABLED: "true"
     steps:
+      - name: Confirm isolated test environment
+        run: |
+          test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
+          echo "Using the explicitly confirmed isolated test environment."
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
