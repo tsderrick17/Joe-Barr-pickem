@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       full_season_drill:
-        description: Run the one-time fictional full-season lifecycle exercise
+        description: Run the 22-period, 285-game full-season chaos certification
         required: false
         default: false
         type: boolean
@@ -53,4 +53,19 @@ jobs:
         run: |
           node scripts/prepare-isolated-schema.mjs
           supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
-      - run: npm run test:season-drill
+      - name: Run isolated season certification
+        id: certification
+        run: npm run test:season-drill
+      - name: Publish certification summary
+        if: always()
+        run: |
+          {
+            echo "## Pick'em season certification"
+            echo
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Isolated database lifecycle: **${{ steps.certification.outcome }}**"
+            echo "- Full-season chaos drill requested: **${PICKEM_FULL_SEASON_DRILL}**"
+            if [ "$PICKEM_FULL_SEASON_DRILL" = "true" ]; then
+              echo "- Coverage: 18 regular weeks, 4 playoff rounds, 285 games, schedule reconciliation, disruptions, scoring, eligibility, Survivor, archive, and annual rollover"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

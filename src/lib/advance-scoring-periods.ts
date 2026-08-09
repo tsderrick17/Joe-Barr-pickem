@@ -103,7 +103,7 @@ export async function advanceScoringPeriods(
 
   const activeGames = games as GameRow[];
   const exceptionGames = activeGames.filter(
-    (game) => game.status === "postponed" || game.status === "cancelled",
+    (game) => game.status === "postponed",
   );
 
   if (exceptionGames.length > 0) {
@@ -112,14 +112,15 @@ export async function advanceScoringPeriods(
       currentWeek: activePeriod.display_name,
       nextWeek: nextPeriod?.display_name ?? null,
       rolloverAt: null,
-      reason: "A postponed or cancelled game requires commissioner review.",
+      reason: "A postponed game requires commissioner review or rescheduling.",
     };
   }
 
-  // A declared no-contest is settled by the scorer as a void or loss rather
-  // than waiting forever for a final score. It must not hold up the handoff.
+  // Declared cancellations and no-contests are terminal, audited outcomes.
+  // They settle their affected picks through the disruption workflow instead
+  // of waiting forever for a box score that will never exist.
   const unfinishedGames = activeGames.filter(
-    (game) => game.status !== "final" && game.status !== "no_contest",
+    (game) => !["final", "cancelled", "no_contest"].includes(game.status),
   );
 
   if (activeGames.length === 0 || unfinishedGames.length > 0) {
@@ -128,7 +129,7 @@ export async function advanceScoringPeriods(
       currentWeek: activePeriod.display_name,
       nextWeek: nextPeriod?.display_name ?? null,
       rolloverAt: null,
-      reason: "Waiting for every game in the active week to be final.",
+      reason: "Waiting for every game in the active week to be settled.",
     };
   }
 
@@ -153,13 +154,15 @@ export async function advanceScoringPeriods(
     };
   }
 
-  // A declared no-contest is an official settlement without a box score. Its
-  // kickoff is a stable lower bound for the weekly handoff; ordinary finals
-  // still use the official finalized timestamp.
+  // Terminal disruptions have no final-score timestamp. Their kickoff is a
+  // stable lower bound for the handoff; ordinary finals still use the
+  // accepted final-score timestamp.
   const settlementTimes = activeGames
     .map((game) =>
       game.finalized_at ??
-      (game.status === "no_contest" ? game.kickoff_at : null),
+      (["cancelled", "no_contest"].includes(game.status)
+        ? game.kickoff_at
+        : null),
     )
     .filter((settledAt): settledAt is string => Boolean(settledAt));
 
