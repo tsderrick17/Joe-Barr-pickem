@@ -44,7 +44,7 @@ begin
       or (saved.odds_event_id is null and saved.scoring_period_id=g.scoring_period_id and saved.away_team_id=g.away_team_id and saved.home_team_id=g.home_team_id)
     where saved.schedule_source is distinct from 'nflverse' and (saved.scoring_period_id<>g.scoring_period_id or saved.away_team_id<>g.away_team_id or saved.home_team_id<>g.home_team_id
       or ((saved.kickoff_at is distinct from g.kickoff_at or saved.line_lock_at is distinct from g.line_lock_at)
-        and (saved.status<>'scheduled' or saved.line_lock_at<=imported_at)))
+        and (saved.status<>'scheduled' or saved.line_lock_at<=imported_at))))
     then raise exception 'Schedule review required: a saved game is locked, settled, re-paired, or assigned to a different scoring period.'; end if;
 
   update public.scoring_periods p set starts_at=a.starts_at, ends_at=a.ends_at
