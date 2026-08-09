@@ -4,6 +4,7 @@ import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 type DueGame = {
   id: string;
   external_game_id: string;
+  odds_event_id: string | null;
   away_team_id: string;
   home_team_id: string;
   kickoff_at: string;
@@ -108,7 +109,7 @@ async function lockDueLinesInternal(
     await supabaseAdmin
       .from("games")
       .select(
-        "id, external_game_id, away_team_id, home_team_id, kickoff_at, line_lock_at",
+        "id, external_game_id, odds_event_id, away_team_id, home_team_id, kickoff_at, line_lock_at",
       )
       .eq("status", "scheduled")
       .lte("line_lock_at", checkedAt)
@@ -282,7 +283,9 @@ async function lockDueLinesInternal(
   const missingGames: string[] = [];
 
   for (const game of dueGames) {
-    const event = eventByExternalId.get(game.external_game_id);
+    const event = game.odds_event_id
+      ? eventByExternalId.get(game.odds_event_id)
+      : undefined;
     const draftKings = event?.bookmakers?.find(
       (bookmaker) => bookmaker.key === "draftkings",
     );

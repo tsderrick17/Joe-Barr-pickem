@@ -69,6 +69,38 @@ test("isolated schedule reconciliation preserves history and only moves unlocked
         (season_id, display_name, period_type, max_picks, status, display_order)
       values ($1, 'Schedule Sync Next Week', 'regular', 3, 'upcoming', 2) returning id
     `, [season.rows[0].id]);
+
+    const bootstrapKickoff = new Date(kickoff.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const bootstrapLock = new Date(lock.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const bootstrap = await client.query(`
+      insert into public.games
+        (external_game_id, schedule_source, schedule_source_event_id, scoring_period_id,
+         away_team_id, home_team_id, kickoff_at, line_lock_at)
+      values ($1, 'nflverse', $2, $3, $4, $5, $6, $7) returning id
+    `, [`nflverse:${token}-bootstrap`, `${token}-bootstrap`, nextPeriod.rows[0].id,
+      teams[1].id, teams[0].id, bootstrapKickoff, bootstrapLock]);
+    const oddsIdentity = `${token}-odds-event`;
+    await client.query(
+      "select * from public.import_schedule_atomically($1, $2::jsonb, $3::jsonb, $4::jsonb)",
+      [season.rows[0].id, "[]", JSON.stringify([{
+        external_game_id: oddsIdentity, scoring_period_id: nextPeriod.rows[0].id,
+        away_team_id: teams[1].id, home_team_id: teams[0].id,
+        kickoff_at: bootstrapKickoff.toISOString(), line_lock_at: bootstrapLock.toISOString(),
+        is_international: false,
+      }]), "[]"],
+    );
+    const identityHandoff = await client.query(
+      "select external_game_id, odds_event_id from public.games where id = $1",
+      [bootstrap.rows[0].id],
+    );
+    assert.equal(identityHandoff.rows[0].external_game_id, `nflverse:${token}-bootstrap`);
+    assert.equal(identityHandoff.rows[0].odds_event_id, oddsIdentity);
+    const duplicateCount = await client.query(
+      "select count(*)::integer count from public.games where scoring_period_id = $1 and away_team_id = $2 and home_team_id = $3",
+      [nextPeriod.rows[0].id, teams[1].id, teams[0].id],
+    );
+    assert.equal(duplicateCount.rows[0].count, 1, "the live odds identity must attach without duplicating the preseason game");
+
     await client.query("savepoint wrong_gameweek");
     await assert.rejects(
       client.query("update public.games set scoring_period_id = $1 where id = $2", [nextPeriod.rows[0].id, game.rows[0].id]),

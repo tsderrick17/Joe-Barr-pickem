@@ -15,6 +15,7 @@ test("daily schedule refresh never upserts a game status", () => {
 
   assert.deepEqual(game, {
     external_game_id: "event-1",
+    odds_event_id: "event-1",
     scoring_period_id: "week-1",
     away_team_id: "away-team",
     home_team_id: "home-team",

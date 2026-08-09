@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
+import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -40,127 +41,6 @@ type WeekAssignment = {
   period: PeriodRow;
   isNew: boolean;
 };
-
-const easternTimeZone = "America/New_York";
-
-function getEasternParts(date: Date) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: easternTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-    hour: "2-digit",
-    hourCycle: "h23",
-  });
-
-  const parts = formatter.formatToParts(date);
-  const value = (type: string) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: value("year"),
-    month: value("month"),
-    day: value("day"),
-    hour: value("hour"),
-    weekday: parts.find((part) => part.type === "weekday")?.value ?? "",
-  };
-}
-
-function getEasternOffsetMilliseconds(date: Date) {
-  const eastern = getEasternParts(date);
-
-  const easternClockReadAsUtc = Date.UTC(
-    eastern.year,
-    eastern.month - 1,
-    eastern.day,
-    eastern.hour,
-  );
-
-  return easternClockReadAsUtc - date.getTime();
-}
-
-function easternDateTimeToUtc(
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-) {
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour));
-  const offset = getEasternOffsetMilliseconds(utcGuess);
-
-  return new Date(utcGuess.getTime() - offset);
-}
-
-function getWeekStartKey(kickoff: Date) {
-  const eastern = getEasternParts(kickoff);
-  const date = new Date(
-    Date.UTC(eastern.year, eastern.month - 1, eastern.day),
-  );
-
-  const daysSinceTuesday = (date.getUTCDay() - 2 + 7) % 7;
-  date.setUTCDate(date.getUTCDate() - daysSinceTuesday);
-
-  return date.toISOString().slice(0, 10);
-}
-
-function getWeekWindow(weekStartKey: string) {
-  const [year, month, day] = weekStartKey.split("-").map(Number);
-
-  const start = easternDateTimeToUtc(year, month, day, 0);
-
-  const nextTuesday = new Date(Date.UTC(year, month - 1, day));
-  nextTuesday.setUTCDate(nextTuesday.getUTCDate() + 7);
-
-  const end = easternDateTimeToUtc(
-    nextTuesday.getUTCFullYear(),
-    nextTuesday.getUTCMonth() + 1,
-    nextTuesday.getUTCDate(),
-    0,
-  );
-
-  return {
-    startsAt: start.toISOString(),
-    endsAt: end.toISOString(),
-  };
-}
-
-function getLineLock(kickoff: Date) {
-  const eastern = getEasternParts(kickoff);
-  // The provider does not expose venue country. NFL international games are
-  // the Sunday morning ET window; retaining this narrow rule avoids treating
-  // ordinary early domestic kickoffs as international exceptions.
-  const isEarlyInternationalGame =
-    eastern.weekday === "Sun" && eastern.hour < 12;
-
-  if (isEarlyInternationalGame) {
-    const priorDay = new Date(
-      Date.UTC(eastern.year, eastern.month - 1, eastern.day),
-    );
-
-    priorDay.setUTCDate(priorDay.getUTCDate() - 1);
-
-    return {
-      isInternational: true,
-      lineLockAt: easternDateTimeToUtc(
-        priorDay.getUTCFullYear(),
-        priorDay.getUTCMonth() + 1,
-        priorDay.getUTCDate(),
-        18,
-      ).toISOString(),
-    };
-  }
-
-  return {
-    isInternational: false,
-    lineLockAt: easternDateTimeToUtc(
-      eastern.year,
-      eastern.month,
-      eastern.day,
-      8,
-    ).toISOString(),
-  };
-}
 
 export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

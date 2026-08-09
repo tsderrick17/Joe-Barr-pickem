@@ -68,6 +68,15 @@ type ImportResult = {
   requestsRemaining: string | null;
 };
 
+type FullSchedulePreview = {
+  season: number;
+  games: number;
+  weeks: number;
+  weekCounts: Record<string, number>;
+  source: string;
+  note: string;
+};
+
 const commissionerPanels = [
   ["overview", "Today", "Start here: launch status and common tasks"],
   ["game-day", "Game day", "Locks, scores, and the normal operating order"],
@@ -89,6 +98,10 @@ export default function AdminPage() {
   const [isImportLoading, setIsImportLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [fullSchedulePreview, setFullSchedulePreview] = useState<FullSchedulePreview | null>(null);
+  const [fullScheduleMessage, setFullScheduleMessage] = useState("");
+  const [fullScheduleError, setFullScheduleError] = useState("");
+  const [fullScheduleBusy, setFullScheduleBusy] = useState(false);
 
   async function readResponse(response: Response) {
     const text = await response.text();
@@ -190,6 +203,31 @@ export default function AdminPage() {
     } finally {
       setIsImporting(false);
     }
+  }
+
+  async function previewFullSchedule() {
+    setFullScheduleBusy(true); setFullScheduleError(""); setFullScheduleMessage("");
+    try {
+      const response = await fetchWithSession("/api/admin/import-full-schedule");
+      const data = await readResponse(response);
+      if (!response.ok) throw new Error(data.error ?? "The full-season schedule could not be validated.");
+      setFullSchedulePreview(data);
+    } catch (error) {
+      setFullScheduleError(error instanceof Error ? error.message : "The full-season schedule could not be validated.");
+    } finally { setFullScheduleBusy(false); }
+  }
+
+  async function importFullSchedule() {
+    if (!fullSchedulePreview || !window.confirm(`Load and permanently pin all ${fullSchedulePreview.games} regular-season games for ${fullSchedulePreview.season}?`)) return;
+    setFullScheduleBusy(true); setFullScheduleError(""); setFullScheduleMessage("");
+    try {
+      const response = await fetchWithSession("/api/admin/import-full-schedule", { method: "POST" });
+      const data = await readResponse(response);
+      if (!response.ok) throw new Error(data.error ?? "The full-season schedule could not be imported.");
+      setFullScheduleMessage(data.message);
+    } catch (error) {
+      setFullScheduleError(error instanceof Error ? error.message : "The full-season schedule could not be imported.");
+    } finally { setFullScheduleBusy(false); }
   }
 
   return (
@@ -389,8 +427,17 @@ export default function AdminPage() {
         <section className="border-b-2 border-zinc-900 py-8">
           <h2 className="font-serif text-2xl font-bold">Import Games</h2>
 
+          <div className="mt-5 border-2 border-zinc-900 bg-white p-5">
+            <h3 className="font-serif text-xl font-bold">Preseason full-schedule bootstrap</h3>
+            <p className="mt-2 text-sm text-zinc-700">Run once during preseason. It validates all 272 regular-season games and all 18 weeks before saving anything, then permanently pins every matchup to its pool week.</p>
+            <button className="mt-4 bg-zinc-900 px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={previewFullSchedule}>{fullScheduleBusy ? "Checking..." : "Validate full season"}</button>
+            {fullSchedulePreview ? <div className="mt-4"><p className="font-semibold">{fullSchedulePreview.games} games across {fullSchedulePreview.weeks} weeks passed provider validation. {fullSchedulePreview.note}</p><button className="mt-3 bg-red-800 px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={importFullSchedule}>Load and pin full season</button></div> : null}
+            {fullScheduleMessage ? <p className="mt-4 font-semibold text-green-800">{fullScheduleMessage}</p> : null}
+            {fullScheduleError ? <p className="mt-4 font-semibold text-red-700">{fullScheduleError}</p> : null}
+          </div>
+
           <p className="mt-2 text-zinc-700">
-            Preview the live schedule first. Importing adds scheduled games and
+            During the season, preview the live odds schedule here. This reconciles changes, adds newly known playoff games, and
             preliminary DraftKings line history, but never locks official lines.
           </p>
 

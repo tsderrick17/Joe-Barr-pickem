@@ -22,6 +22,7 @@ type ScoreEvent = {
 type GameRow = {
   id: string;
   external_game_id: string;
+  odds_event_id: string | null;
   scoring_period_id: string;
   away_team_id: string;
   home_team_id: string;
@@ -109,7 +110,7 @@ async function recoverPendingFinalPickGrades() {
     await Promise.all([
       supabaseAdmin
         .from("games")
-        .select("id, external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score")
+        .select("id, external_game_id, odds_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score")
         .in("id", gameIds)
         .eq("status", "final"),
       supabaseAdmin
@@ -228,7 +229,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     await supabaseAdmin
       .from("games")
       .select(
-        "id, external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status",
+        "id, external_game_id, odds_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status",
       )
       .in("status", ["scheduled", "live"])
       .lte("kickoff_at", checkedAt)
@@ -357,7 +358,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     }
 
     const eligibleGameByExternalId = new Map(
-      eligibleGames.map((game) => [game.external_game_id, game]),
+      eligibleGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
     );
     const completedEvents = ((await response.json()) as ScoreEvent[]).filter(
       (event) =>
@@ -390,7 +391,7 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
 
     const eventByExternalId = new Map(completedEvents.map((event) => [event.id, event]));
     const savedGames = eligibleGames.filter((game) =>
-      eventByExternalId.has(game.external_game_id),
+      Boolean(game.odds_event_id && eventByExternalId.has(game.odds_event_id)),
     );
     const teamIds = [...new Set(savedGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
     const { data: teams, error: teamsError } = teamIds.length
@@ -405,7 +406,9 @@ export async function syncFinalScores(): Promise<ScoreSyncResult> {
     const finalizedGames: FinalGameRow[] = [];
 
     for (const game of savedGames) {
-      const scores = eventByExternalId.get(game.external_game_id)?.scores ?? [];
+      const scores = game.odds_event_id
+        ? eventByExternalId.get(game.odds_event_id)?.scores ?? []
+        : [];
       const scoreByTeamId = new Map(
         scores.map((score) => [teamIdByName.get(score.name), parseScore(score.score)]),
       );
