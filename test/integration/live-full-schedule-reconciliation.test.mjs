@@ -14,7 +14,7 @@ test("canonical schedule reconciliation moves safe games and quarantines locked 
   await client.query("begin");
   try {
     const token = `full-reconcile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const season = await client.query("insert into public.seasons(year, state) values ($1, 'regular') returning id", [8000 + Math.floor(Math.random() * 1000)]);
+    const season = await client.query("insert into public.seasons(year, state) values ($1, 'regular_season') returning id", [8000 + Math.floor(Math.random() * 1000)]);
     const teamResult = await client.query("select id from public.teams where active order by abbreviation limit 32");
     assert.equal(teamResult.rows.length, 32, "isolated schema must have all NFL teams");
     const periods = [];
