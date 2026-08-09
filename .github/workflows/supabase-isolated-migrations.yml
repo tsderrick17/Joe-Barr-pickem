@@ -30,6 +30,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Prepare isolated schema bootstrap
+        run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
@@ -59,6 +61,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Prepare isolated schema bootstrap
+        run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
