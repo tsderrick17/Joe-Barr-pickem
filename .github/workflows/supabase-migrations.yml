@@ -28,6 +28,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Verify production migration target
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "qtuycmgjiizrahfchsxe"
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
       - name: Preview pending migrations
@@ -49,6 +54,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Verify production migration target
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "qtuycmgjiizrahfchsxe"
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
       - name: Apply pending migrations

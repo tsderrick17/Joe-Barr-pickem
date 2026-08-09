@@ -31,6 +31,7 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_PROJECT_ID"
           test -n "$BACKUP_ENCRYPTION_KEY"
+          test "$SUPABASE_PROJECT_ID" = "qtuycmgjiizrahfchsxe"
       - name: Export production database
         run: |
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
@@ -41,6 +42,11 @@ jobs:
             -in production-backup.sql -out production-backup.sql.enc \
             -pass env:BACKUP_ENCRYPTION_KEY
           rm production-backup.sql
+      - name: Verify encrypted export can be decrypted
+        run: |
+          set -o pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
+            -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | sha256sum
       - name: Retain encrypted backup for 90 days
         uses: actions/upload-artifact@v4
         with:
