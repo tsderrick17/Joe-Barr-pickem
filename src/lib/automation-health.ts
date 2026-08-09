@@ -60,8 +60,8 @@ export async function checkAutomationHealth(now = new Date()) {
       ? supabaseAdmin.from("score_check_backoff").select("game_id, attempts, next_check_at").in("game_id", scoreCandidateIds)
       : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("sync_runs").select("id", { count: "exact", head: true }).lt("started_at", retentionCutoff),
-    supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).lt("created_at", retentionCutoff),
-    supabaseAdmin.from("push_reminder_deliveries").select("id", { count: "exact", head: true }).lt("created_at", retentionCutoff),
+    supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).lt("attempted_at", retentionCutoff),
+    supabaseAdmin.from("push_reminder_deliveries").select("id", { count: "exact", head: true }).lt("attempted_at", retentionCutoff),
   ]);
 
   if (
