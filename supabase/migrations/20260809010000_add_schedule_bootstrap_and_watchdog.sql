@@ -62,7 +62,9 @@ $$;
 -- The NFL schedule is normally complete well before August. Starting on the
 -- pool's August 1 season boundary gives the provider a daily retry path while
 -- retaining several weeks of safety margin before Week 1.
-delete from cron.job where jobname = 'bootstrap-full-nfl-season-daily';
+select cron.unschedule(jobid::integer)
+from cron.job
+where jobname = 'bootstrap-full-nfl-season-daily';
 select cron.schedule(
   'bootstrap-full-nfl-season-daily',
   '15 12 * 8,9 *',
@@ -79,7 +81,9 @@ select cron.schedule(
   $$
 );
 
-delete from cron.job where jobname = 'pickem-operations-watchdog-every-five-minutes';
+select cron.unschedule(jobid::integer)
+from cron.job
+where jobname = 'pickem-operations-watchdog-every-five-minutes';
 select cron.schedule(
   'pickem-operations-watchdog-every-five-minutes',
   '*/5 * * * *',
