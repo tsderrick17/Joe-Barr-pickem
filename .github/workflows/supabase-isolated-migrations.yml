@@ -30,6 +30,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Prepare isolated schema bootstrap
+        run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
@@ -42,7 +44,9 @@ jobs:
             *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
           esac
       - name: Preview pending migrations
-        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --dry-run
+        # Include a newly generated baseline even when a previous failed
+        # isolated run left later migration receipts behind.
+        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --dry-run --include-all
   deploy:
     needs: preview
     if: ${{ inputs.apply }}
@@ -59,6 +63,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Prepare isolated schema bootstrap
+        run: node scripts/prepare-isolated-schema.mjs
       - name: Confirm isolated target
         run: |
           test "$SUPABASE_PROJECT_ID" = "lrimviwfflrisshmgnsh"
@@ -70,5 +76,17 @@ jobs:
             *"lrimviwfflrisshmgnsh"*) echo "Using isolated test database only." ;;
             *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
           esac
+      - name: Repair empty isolated migration history
+        # Older failed setup attempts recorded migrations without ever creating
+        # the public schema. Only an entirely empty isolated database is
+        # repaired; a database with application tables is never rewritten here.
+        run: |
+          public_table_count="$(psql "$PICKEM_TEST_DATABASE_URL" -tAc "select count(*) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE';")"
+          if [ "$public_table_count" = "0" ]; then
+            versions="$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sed -E 's/^([0-9]+)_.*/\1/' | tr '\n' ' ')"
+            supabase migration repair --db-url "$PICKEM_TEST_DATABASE_URL" --status reverted $versions
+          else
+            echo "Isolated database already has public tables; leaving migration history unchanged."
+          fi
       - name: Apply pending migrations
-        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL"
+        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
