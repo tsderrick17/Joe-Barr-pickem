@@ -15,6 +15,12 @@ async function one(client, sql, values = []) {
   return result.rows[0];
 }
 
+async function advanceFixtureClock(client, sql, values = []) {
+  await client.query("set local session_replication_role = replica");
+  await client.query(sql, values);
+  await client.query("set local session_replication_role = origin");
+}
+
 function iso(value) {
   return new Date(value).toISOString();
 }
@@ -263,14 +269,10 @@ test("one-button full-season chaos certification", {
       const games = gamesByPeriod.get(period.id);
       if (weekIndex === 2) {
         const nearKickoff = Date.now() + 5 * 60 * 1000;
-        await client.query(
-          "select * from public.reschedule_game_atomically($1, $2, $3, null)",
-          [games[0].id, iso(nearKickoff), iso(nearKickoff - 60 * 1000)],
+        await advanceFixtureClock(client,
+          "update public.games set kickoff_at = $1, line_lock_at = $2 where id = $3",
+          [iso(nearKickoff), iso(nearKickoff - 60 * 1000), games[0].id],
         );
-        await client.query(`
-          insert into public.game_lines(game_id, favorite_team_id, locked_spread, source, source_captured_at)
-          values ($1, $2, 0.5, 'near-kickoff-certification', clock_timestamp())
-        `, [games[0].id, games[0].away_team_id]);
       }
       for (const [playerIndex, player] of players.entries()) {
         for (const game of games.slice(0, 2)) {
@@ -293,7 +295,7 @@ test("one-button full-season chaos certification", {
       } else if (weekIndex === 11) {
         excludedId = games.at(-1).id;
         await client.query("select * from public.record_game_disruption($1, 'postponed', null)", [excludedId]);
-        const revisedKickoff = Date.now() - 2 * HOUR;
+        const revisedKickoff = new Date(games.at(-1).kickoff_at).getTime() + HOUR;
         await client.query(
           "select * from public.reschedule_game_atomically($1, $2, $3, null)",
           [excludedId, iso(revisedKickoff), iso(revisedKickoff - HOUR)],
@@ -306,7 +308,7 @@ test("one-button full-season chaos certification", {
         excludedId = null;
       }
 
-      await client.query(`
+      await advanceFixtureClock(client, `
         update public.games set kickoff_at = clock_timestamp() - interval '2 hours',
           line_lock_at = clock_timestamp() - interval '3 hours'
         where scoring_period_id = $1 and status = 'scheduled'
@@ -368,7 +370,7 @@ test("one-button full-season chaos certification", {
     for (let playoffIndex = 0; playoffIndex < 4; playoffIndex += 1) {
       const period = periods[18 + playoffIndex];
       const games = gamesByPeriod.get(period.id);
-      await client.query(`
+      await advanceFixtureClock(client, `
         update public.games set kickoff_at = clock_timestamp() - interval '2 hours',
           line_lock_at = clock_timestamp() - interval '3 hours'
         where scoring_period_id = $1
