@@ -32,17 +32,19 @@ build succeeds.
 
 ## Normal automated flow
 
-1. Supabase refreshes the NFL schedule and preliminary spreads before the 8 AM Eastern line lock during NFL months without changing final, postponed, cancelled, or no-contest game statuses. A verified kickoff move recalculates that game's line lock; the existing pick stays attached and becomes editable again only while the new kickoff rules permit it.
-2. Supabase checks official lines every minute and locks them at each game's assigned line-lock time.
-3. Players can edit a pick until that game's kickoff; picks reveal at kickoff.
-4. Starting three hours after kickoff, the score check runs every 15 minutes.
-5. Only completed games are saved and graded. ATS pushes are losses.
-6. Once every game in the active week is final or officially settled as no contest and every applicable pick is graded, that week remains on the Standings for at least 24 hours. The normal handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. Postponed, cancelled, or ungraded final-game picks block the automatic handoff for commissioner review.
+1. In preseason, the annual bootstrap creates the new season when needed and imports only a complete, validated 272-game regular-season schedule. Every game is pinned to its original scoring period and gameweek.
+2. During the season, canonical schedule reconciliation updates only unlocked timing changes. It never deletes an omitted game or silently moves a game between pool weeks; unsafe changes are quarantined for review.
+3. Supabase refreshes preliminary spreads before games lock without changing final, postponed, cancelled, or no-contest statuses.
+4. Supabase checks official lines every minute and locks them at each game's assigned line-lock time.
+5. Players can edit a pick until that game's kickoff; picks reveal individually at kickoff.
+6. Starting three hours after kickoff, the score check runs every 15 minutes. Only verified completed games are saved and graded atomically. ATS pushes are losses.
+7. The major weekly recap becomes eligible Tuesday at 8 AM Eastern after every result is trustworthy. A late result sends as soon as it settles.
+8. Once every game and applicable pick is settled, the completed week stays visible for at least 24 hours. The normal default handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. The next period is manually selectable on the next Eastern day, and every completed week remains accessible. Postponed, cancelled, missing-line, or ungraded records block an unsafe automatic handoff for commissioner review.
 
 ## Before the season
 
-1. In Commissioner, preview and import the available games.
-2. Confirm each game is assigned to the correct scoring week.
+1. In Commissioner, confirm automatic bootstrap reports all 272 regular-season games across 18 weeks. Use the preview-first manual import only if the guarded automatic path needs recovery.
+2. Confirm each game is assigned and pinned to the correct scoring week.
 3. Confirm playoff scoring periods retain their configured pick counts: Wild Card 6, Divisional Round 4, Conference Championships 2, and Super Bowl 1.
 4. Confirm active players can sign in and make a pick.
 5. Confirm the automatic jobs are active in Supabase:
@@ -51,30 +53,10 @@ build succeeds.
    - `refresh-nfl-schedule-and-spreads-prelock-standard`
    - `refresh-final-nfl-scores-every-15-minutes`
 
-   Run these files once in the Supabase SQL Editor to create or restore the automated jobs:
-   - `supabase/019_schedule_final_score_refresh.sql`
-   - `supabase/020_schedule_daily_nfl_refresh.sql`
-   - `supabase/021_schedule_official_line_locking.sql`
-   - `supabase/022_add_line_lock_sync_runs.sql`
-   - `supabase/023_freeze_completed_scoring_periods.sql`
-   - `supabase/024_add_runtime_query_indexes.sql`
-   - `supabase/025_store_game_finalization_times.sql`
-   - `supabase/026_replace_unlocked_picks_atomically.sql`
-   - `supabase/027_add_survivor_pick_integrity.sql`
-   - `supabase/028_save_slate_selections_atomically.sql`
-   - `supabase/029_harden_survivor_and_audit_history.sql`
-   - `supabase/030_separate_ats_and_survivor_audits.sql`
-   - `supabase/031_repair_ats_atomic_replacements.sql`
-   - `supabase/033_repair_completed_change_delete_guards.sql`
-   - `supabase/034_schedule_prelock_spread_refresh.sql`
-   - `supabase/035_restore_mode_specific_audits.sql`
-   - `supabase/036_harden_scoring_period_continuity.sql`
-   - `supabase/037_add_automation_execution_leases.sql`
-   - `supabase/038_finalize_games_atomically.sql`
-   - `supabase/039_add_automation_preflight.sql`
-   - `supabase/040_void_disrupted_game_picks.sql`
-   - `supabase/041_record_game_disruptions_atomically.sql`
-   - `supabase/042_repair_disrupted_pick_voiding.sql`
+   Run **Automation Preflight** to verify these schedules and their shared
+   secret. The root-level numbered SQL files are historical build evidence and
+   must not be replayed. Restore missing database behavior only through a new
+   timestamped migration and the guarded Supabase migration workflow.
 
 ## Weekly dress rehearsal
 
@@ -120,4 +102,4 @@ If a final score appears missing:
 - A Survivor pick can be changed or cleared until its game's kickoff.
 - Final scores are evaluated by the existing final-score job. A loss or tie eliminates the entry.
 - A missed required weekly Survivor pick is an automatic elimination after the final eligible kickoff. A no-contest game does not create a Survivor advancement or a false no-pick elimination.
-- Run migrations 027 through 030 before publishing Survivor. Together they add automatic enrollment, atomic Slate saves, separate ATS and straight-up Survivor audit records, append-only history, completed-week protection, and irreversible elimination records.
+- Survivor database changes follow the current timestamped migration workflow and isolated lifecycle tests. Never replay the historical root-level migrations 027 through 030.
