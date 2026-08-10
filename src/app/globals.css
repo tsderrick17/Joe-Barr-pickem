@@ -428,6 +428,7 @@ body {
   align-items: center;
   display: flex;
   gap: .35rem;
+  height: 100%;
   min-height: 0;
   min-width: 0;
 }
