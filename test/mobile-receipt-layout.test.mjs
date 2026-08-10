@@ -17,4 +17,8 @@ test("the Survivor receipt pick is constrained by its grid track", () => {
     css,
     /@media \(max-width: 639px\)[\s\S]*\.slate-receipt-survivor-pick \.survivor-poker-chip-wrap-summary\s*\{[^}]*height:[^}]*width:\s*auto;/s,
   );
+  assert.match(
+    css,
+    /@media \(max-width: 639px\)[\s\S]*\.slate-receipt-pool\s*\{[^}]*grid-template-rows:\s*\.58rem 3\.39rem minmax\(\.58rem, auto\);/s,
+  );
 });
