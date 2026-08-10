@@ -24,6 +24,8 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
+        ports:
+          - 5432:5432
     concurrency:
       group: weekly-production-backup
       cancel-in-progress: false
