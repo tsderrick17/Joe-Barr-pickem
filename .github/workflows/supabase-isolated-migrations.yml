@@ -47,7 +47,12 @@ jobs:
       - name: Preview pending migrations
         # Include a newly generated baseline even when a previous failed
         # isolated run left later migration receipts behind.
-        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --dry-run --include-all
+        env:
+          PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+          PICKEM_TEST_DB_PASSWORD: ${{ secrets.PICKEM_TEST_DB_PASSWORD }}
+        run: |
+          TEST_DATABASE_URL="$(node -e 'const value = process.env.PICKEM_TEST_DATABASE_URL; const password = process.env.PICKEM_TEST_DB_PASSWORD; if (!value) throw new Error("Missing PICKEM_TEST_DATABASE_URL."); if (!password) throw new Error("Missing PICKEM_TEST_DB_PASSWORD."); const connection = new URL(value); connection.password = password; process.stdout.write(connection.toString());')"
+          supabase db push --db-url "$TEST_DATABASE_URL" --dry-run --include-all
   deploy:
     needs: preview
     if: ${{ inputs.apply }}
@@ -82,13 +87,21 @@ jobs:
         # Older failed setup attempts recorded migrations without ever creating
         # the public schema. Only an entirely empty isolated database is
         # repaired; a database with application tables is never rewritten here.
+        env:
+          PICKEM_TEST_DB_PASSWORD: ${{ secrets.PICKEM_TEST_DB_PASSWORD }}
         run: |
-          public_table_count="$(psql "$PICKEM_TEST_DATABASE_URL" -tAc "select count(*) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE';")"
+          TEST_DATABASE_URL="$(node -e 'const value = process.env.PICKEM_TEST_DATABASE_URL; const password = process.env.PICKEM_TEST_DB_PASSWORD; if (!value) throw new Error("Missing PICKEM_TEST_DATABASE_URL."); if (!password) throw new Error("Missing PICKEM_TEST_DB_PASSWORD."); const connection = new URL(value); connection.password = password; process.stdout.write(connection.toString());')"
+          public_table_count="$(psql "$TEST_DATABASE_URL" -tAc "select count(*) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE';")"
           if [ "$public_table_count" = "0" ]; then
             versions="$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sed -E 's/^([0-9]+)_.*/\1/' | tr '\n' ' ')"
-            supabase migration repair --db-url "$PICKEM_TEST_DATABASE_URL" --status reverted $versions
+            supabase migration repair --db-url "$TEST_DATABASE_URL" --status reverted $versions
           else
             echo "Isolated database already has public tables; leaving migration history unchanged."
           fi
       - name: Apply pending migrations
-        run: supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+        env:
+          PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+          PICKEM_TEST_DB_PASSWORD: ${{ secrets.PICKEM_TEST_DB_PASSWORD }}
+        run: |
+          TEST_DATABASE_URL="$(node -e 'const value = process.env.PICKEM_TEST_DATABASE_URL; const password = process.env.PICKEM_TEST_DB_PASSWORD; if (!value) throw new Error("Missing PICKEM_TEST_DATABASE_URL."); if (!password) throw new Error("Missing PICKEM_TEST_DB_PASSWORD."); const connection = new URL(value); connection.password = password; process.stdout.write(connection.toString());')"
+          supabase db push --db-url "$TEST_DATABASE_URL" --include-all
