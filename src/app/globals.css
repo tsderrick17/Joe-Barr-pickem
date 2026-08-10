@@ -485,7 +485,10 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
-  .slate-receipt-pool { grid-template-rows: .58rem 2.42rem minmax(.58rem, auto); }
+  /* Give the Survivor chip the unused middle of the receipt instead of
+     leaving that space in the flexible status row. The label and status keep
+     their own tracks, so the larger chip cannot cover either one. */
+  .slate-receipt-pool { grid-template-rows: .58rem 3.39rem minmax(.58rem, auto); }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
   .receipt-team-name-full { display: none; }
