@@ -493,7 +493,7 @@ body {
   .slate-receipt-survivor-pick { --receipt-chip-buffer: .1rem; }
   .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
     height: min(3.19rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
-    width: min(3.19rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+    width: auto;
   }
 }
 
