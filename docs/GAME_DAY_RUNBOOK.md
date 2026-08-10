@@ -14,6 +14,9 @@ change player picks or scores directly.
    remaining allowance.
 3. Confirm the next slate has games, kickoff times, and official line-lock
    times. International games should show their earlier schedule naturally.
+4. Treat automatic full-schedule bootstrap and reconciliation as the primary
+   schedule path. Use preview/import controls only for a diagnosed recovery;
+   they retain the same validation and gameweek pins.
 
 ## Game day
 
@@ -35,16 +38,24 @@ change player picks or scores directly.
   exception. Eligible future selections stay changeable; a pick that cannot be
   replaced settles as the published pool rule requires. Survivor does not
   advance on a no contest.
-- **Moved kickoff:** update the game schedule through the commissioner flow.
-  The new lock time governs availability; previously selected eligible picks
-  remain visible and may be changed while still open.
+- **Moved kickoff:** allow canonical schedule reconciliation to apply an
+  unlocked timing-only move. The new lock time governs availability;
+  previously selected eligible picks remain attached and may be changed while
+  still open. A locked, settled, re-paired, or cross-period change is
+  quarantined for commissioner review instead of being forced through.
 
 ## Weekly close
 
 1. Check Automation Health after the final game grades.
-2. Confirm reminder delivery is healthy before relying on the weekly recap.
-3. The Wednesday handoff presents the fresh slate once the next period has a
-   usable schedule, while the completed week remains archived and auditable.
+2. The major recap becomes eligible Tuesday at 8:00 AM Eastern and sends once
+   every result is trustworthy. If it is late, distinguish an unsettled week
+   from a reminder-delivery failure before intervening.
+3. The next period is manually selectable on the next Eastern day when its
+   slate is loaded. The default view normally changes Wednesday at 3:00 AM
+   Eastern and at least 24 hours after settlement, unless the next kickoff is
+   less than 24 hours away.
+4. Confirm the completed week remains available in the archive/week selector;
+   changing the default never hides historical weeks.
 
 ## Recovery
 
