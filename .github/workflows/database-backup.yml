@@ -16,11 +16,11 @@ jobs:
       restore-check:
         image: ghcr.io/supabase/postgres:17.6.1.147
         env:
-          POSTGRES_DB: restore_check
+          POSTGRES_DB: postgres
           POSTGRES_PASSWORD: restore-check-only
           POSTGRES_USER: supabase_admin
         options: >-
-          --health-cmd "pg_isready -U supabase_admin -d restore_check"
+          --health-cmd "pg_isready -U supabase_admin -d postgres"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
@@ -69,8 +69,8 @@ jobs:
           set -o pipefail
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
             -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | \
-            psql --set ON_ERROR_STOP=1 --host localhost --username supabase_admin --dbname restore_check
-          psql --tuples-only --no-align --host localhost --username supabase_admin --dbname restore_check \
+            psql --set ON_ERROR_STOP=1 --host localhost --username supabase_admin --dbname postgres
+          psql --tuples-only --no-align --host localhost --username supabase_admin --dbname postgres \
             --command "select count(*) from pg_catalog.pg_tables where schemaname = 'public';" | grep -Eq '^[1-9][0-9]*$'
       - name: Retain encrypted backup for 90 days
         uses: actions/upload-artifact@v4
