@@ -1,6 +1,9 @@
 name: Isolated integration checks
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       full_season_drill:
