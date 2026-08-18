@@ -27,7 +27,7 @@ jobs:
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
       - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
@@ -63,7 +63,7 @@ jobs:
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
       - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
