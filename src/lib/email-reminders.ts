@@ -246,7 +246,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
       method: "POST",
       headers: { "api-key": key, "Content-Type": "application/json" },
       body: JSON.stringify({
-        sender: { name: "Joe Barr Memorial Pick'em", email: sender },
+        sender: { name: "PickemJB", email: sender },
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
