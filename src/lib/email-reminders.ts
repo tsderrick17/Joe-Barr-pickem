@@ -3,6 +3,7 @@ import {
   type ReminderAudience,
   type ReminderCategory,
 } from "@/lib/reminder-audience";
+import { easternCalendarDayWindow, isRoutineEmailCategory, routineEmailCategories } from "@/lib/email-delivery-plan";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
@@ -110,7 +111,40 @@ async function recipientsForReminder(reminder: Reminder) {
     .map((player) => ({ playerId: player.id, email: player.notification_email! }));
 }
 
+async function routineEmailLimitReached(reminder: Reminder, recipient: EmailRecipient) {
+  if (!isRoutineEmailCategory(reminder.category)) return false;
+  const window = easternCalendarDayWindow();
+  const { data, error } = await supabaseAdmin
+    .from("email_reminder_deliveries")
+    .select("id, push_reminders!inner(category)")
+    .eq("player_id", recipient.playerId)
+    .eq("status", "sent")
+    .gte("delivered_at", window.start)
+    .lt("delivered_at", window.end)
+    .in("push_reminders.category", routineEmailCategories)
+    .limit(1);
+  if (error) throw new ReminderPreparationError("The routine email limit could not be checked safely.");
+  return (data?.length ?? 0) > 0;
+}
+
+async function recordRoutineEmailHold(reminder: Reminder, recipient: EmailRecipient) {
+  const { error } = await supabaseAdmin
+    .from("email_reminder_deliveries")
+    .upsert({
+      reminder_id: reminder.id,
+      player_id: recipient.playerId,
+      email_address: recipient.email,
+      status: "suppressed",
+      error_message: "Routine email limit reached for this Eastern calendar day.",
+    }, { onConflict: "reminder_id,player_id", ignoreDuplicates: true });
+  if (error) throw new ReminderPreparationError("The held email receipt could not be recorded.");
+}
+
 async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
+  if (await routineEmailLimitReached(reminder, recipient)) {
+    await recordRoutineEmailHold(reminder, recipient);
+    return { skipped: true, sent: false, failed: false, retryable: false, errorMessage: null };
+  }
   const { data: createdDelivery, error: createError } = await supabaseAdmin
     .from("email_reminder_deliveries")
     .insert({ reminder_id: reminder.id, player_id: recipient.playerId, email_address: recipient.email })

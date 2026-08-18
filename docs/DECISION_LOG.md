@@ -109,3 +109,15 @@ Lifecycle certification runs only against the confirmed isolated project. It
 covers the full 285-game season, dynamic scheduling, disruptions, line and
 score failures, privacy, playoff eligibility, Survivor, archives, championship
 recording, and a blank annual rollover. Production never receives fixtures.
+
+## 2026-08-17 — REF-013 — Player-controlled email plans with a routine inbox limit
+
+**Status:** Accepted
+
+Keep the existing self-service email choices, expressed as Essentials, Regular,
+and Full Card plans with optional detailed controls. Existing player choices are
+preserved until that player changes them. Deliver no more than one routine pool
+email per player per Eastern calendar day; deadline reminders and material
+early-lock or schedule-change notices remain eligible because they can require
+timely action. Record intentionally held routine messages as receipts so the
+Commissioner can distinguish them from delivery failures.

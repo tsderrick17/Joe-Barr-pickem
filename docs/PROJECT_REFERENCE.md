@@ -230,6 +230,13 @@ may enrich spreads but cannot override canonical schedule assignments.
   on due records.
 - Operational logs and delivery receipts are retained and reviewed separately
   from permanent competitive history.
+- Players choose one of three email plans: **Essentials**, **Regular**, or
+  **Full Card**. Each remains individually adjustable in Preferences; existing
+  choices are never changed just because the plan labels evolve.
+- At most one routine pool email is delivered to a player in an Eastern
+  calendar day. Pick-due reminders and material early-lock/schedule notices
+  bypass that limit. A held routine email is retained as a receipt, not counted
+  as a delivery failure, and is visible to the Commissioner.
 
 ## Action-only watchdog
 
@@ -258,6 +265,11 @@ The Commissioner Desk is the operational control plane. Its intended order is:
    once when recovery is required.
 5. Use final-score reconciliation or Game Exceptions for verified anomalies.
 6. Use Season Recovery Rehearsal before a rare lifecycle recovery.
+
+The Reminders view is an action queue, not a health score: it plainly lists
+scheduled messages, items needing attention, and routine emails intentionally
+held for inbox space. The built-in email test sends only to the signed-in
+Commissioner's opted-in address, never the player pool.
 
 Manual controls are recovery paths, not alternate implementations.
 

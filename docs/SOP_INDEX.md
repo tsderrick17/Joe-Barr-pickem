@@ -71,7 +71,10 @@ lease, quota, pin, and atomic safeguards. See [OPERATIONS.md](OPERATIONS.md).
 Open **Commissioner → Reminders**, check the scheduled delivery and provider
 receipt, and send only the safe test email when diagnosing configuration. The
 Tuesday recap waits for accurate results, so first distinguish an unsettled
-week from a delivery failure.
+week from a delivery failure. A receipt marked **held** means the routine
+one-email-per-Eastern-day limit intentionally protected that player's inbox;
+it is not a failed delivery. Pick-due and material early-lock notices bypass
+that routine limit.
 
 ### A deployment changes database behavior
 

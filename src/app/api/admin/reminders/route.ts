@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
         cancelledAt: reminder.cancelled_at,
         createdAt: reminder.created_at,
         emailDelivered: emailDeliveries.filter((delivery) => delivery.status === "sent").length,
-        emailFailed: emailDeliveries.filter((delivery) => delivery.status === "failed" || delivery.status === "suppressed").length,
+        emailFailed: emailDeliveries.filter((delivery) => delivery.status === "failed").length,
+        emailSuppressed: emailDeliveries.filter((delivery) => delivery.status === "suppressed").length,
       };
     }),
   });
