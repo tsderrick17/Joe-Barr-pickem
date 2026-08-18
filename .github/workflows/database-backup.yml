@@ -73,7 +73,7 @@ jobs:
           psql --tuples-only --no-align --host localhost --username supabase_admin --dbname postgres \
             --command "select count(*) from pg_catalog.pg_tables where schemaname = 'public';" | grep -Eq '^[1-9][0-9]*$'
       - name: Retain encrypted backup for 90 days
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pickem-production-backup-${{ github.run_id }}
           path: production-backup.sql.enc
