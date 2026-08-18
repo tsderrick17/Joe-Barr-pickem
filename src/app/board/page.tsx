@@ -817,15 +817,15 @@ export default function BoardPage() {
               ))}
               </select>
 
-              <div className="slate-view-switch-slot">
-                {actionSwitchAvailable ? (
+              {actionSwitchAvailable ? (
+                <div className="slate-view-switch-slot">
                   <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
                     <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
                     <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
                     <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
                   </div>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
