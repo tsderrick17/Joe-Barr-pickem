@@ -1539,7 +1539,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .selection-chip {
   border-color: #d979ae !important;
   border-left-color: #ad235f !important;
-  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
+  background: #f8d8e7 !important;
   color: #111;
   box-shadow: 0 1px 2px rgba(95, 20, 61, 0.12);
 }
@@ -1725,7 +1725,7 @@ html[data-theme="night"] .slate-receipt-ticket > span,
 html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
 html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
 html[data-theme="night"] .slate-receipt-selection-chip {
-  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
+  background: #f8d8e7 !important;
   border-color: #ec81ba !important;
   border-left-color: #ad235f !important;
   color: #111;
@@ -1746,7 +1746,7 @@ html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: #edf7f5;
 html[data-theme="night"] .selection-chip {
   border-color: #ec81ba !important;
   border-left-color: #ad235f !important;
-  background: linear-gradient(90deg, #f3b4d1 0%, #f8d8e7 48%, #fff4f8 100%) !important;
+  background: #f8d8e7 !important;
   color: #111;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .28);
 }

@@ -6,12 +6,16 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export async function POST(request: NextRequest) {
   const commissioner = await requireCommissioner(request);
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const body = await request.json().catch(() => ({})) as { template?: unknown };
+  const selectionPreview = body.template === "selections";
   const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders").insert({
     created_by_player_id: commissioner.id,
     category: "custom",
     audience: "all_active",
-    title: "Joe Barr Pick'em test",
-    body: "Email reminders are working for your Pick'em account.",
+    title: selectionPreview ? "Selections still to be made" : "Joe Barr Pick'em test",
+    body: selectionPreview
+      ? "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready."
+      : "Email reminders are working for your Pick'em account.",
     scheduled_for: new Date().toISOString(),
     status: "test",
     sent_at: new Date().toISOString(),
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: email.errors[0] ?? "Brevo did not accept the test email." }, { status: 502 });
   }
   return NextResponse.json({
-    message: `Test email sent: ${email.sent} delivery.`,
+    message: `${selectionPreview ? "Selections preview" : "Test email"} sent: ${email.sent} delivery.`,
     email,
   });
 }
