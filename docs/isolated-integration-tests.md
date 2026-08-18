@@ -19,12 +19,19 @@ Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_T
    ```
 
    This file is never committed and must point only to the separate test project. Do not put these values in Vercel.
-4. In GitHub repository secrets, add:
-   - `PICKEM_TEST_SUPABASE_URL`
-   - `PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY`
-   - `PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY`
-5. Add the repository variable `PICKEM_TEST_DATABASE_CONFIRMATION` with the exact value `isolated`.
-6. Install the Playwright Chromium browser once in the CI workflow or locally with `npx playwright install chromium`.
+4. In GitHub repository secrets, add `PICKEM_TEST_DATABASE_URL`: the complete
+   session-pooler connection URI for the isolated project, including its
+   password. This is the one database connection secret used by isolated
+   migrations, lifecycle checks, and the monthly rehearsal. Update this one
+   secret after rotating the test database password.
+5. In the GitHub `isolated-test` environment, add the variable
+   `PICKEM_TEST_DATABASE_CONFIRMATION` with the exact value `isolated`.
+6. The optional `PICKEM_TEST_SUPABASE_URL`,
+   `PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY`, and
+   `PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY` values are only for explicit
+   browser/E2E rehearsals; they are not required for the normal migration or
+   lifecycle workflows.
+7. Install the Playwright Chromium browser once in the CI workflow or locally with `npx playwright install chromium`.
 
 ## Commands
 
