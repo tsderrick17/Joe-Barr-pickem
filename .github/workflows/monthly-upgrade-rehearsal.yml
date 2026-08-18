@@ -46,11 +46,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - uses: supabase/setup-cli@v2
-        if: steps.calendar.outputs.run == 'true'
-        with:
-          version: latest
-          github-token: ${{ github.token }}
       - name: Confirm isolated rehearsal target
         if: steps.calendar.outputs.run == 'true'
         run: |
@@ -64,11 +59,25 @@ jobs:
       - name: Install latest direct dependencies ephemerally
         if: steps.calendar.outputs.run == 'true'
         run: node scripts/prepare-upgrade-rehearsal.mjs
+      - name: Install latest Supabase CLI with retry
+        if: steps.calendar.outputs.run == 'true'
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if npm install --no-save --no-package-lock supabase@latest; then
+              exit 0
+            fi
+            if (( attempt == 3 )); then
+              echo "Supabase CLI installation failed after three attempts." >&2
+              exit 1
+            fi
+            sleep $((attempt * 15))
+          done
       - name: Apply schema with latest Supabase CLI
         if: steps.calendar.outputs.run == 'true'
         run: |
           node scripts/prepare-isolated-schema.mjs
-          supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+          npx --no-install supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
       - name: Rehearse full application and season lifecycle
         if: steps.calendar.outputs.run == 'true'
         run: |
@@ -84,7 +93,7 @@ jobs:
             echo "No dependency, lockfile, database, or deployment change was committed."
             echo
             echo "- Latest direct dependency installation: attempted"
-            echo "- Latest Supabase CLI: $(supabase --version 2>/dev/null || echo unavailable)"
+            echo "- Latest Supabase CLI: $(npx --no-install supabase --version 2>/dev/null || echo unavailable)"
             echo "- Full isolated season certification: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ -f "$PICKEM_CERTIFICATION_REPORT_PATH" ]; then

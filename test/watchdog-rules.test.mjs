@@ -8,7 +8,7 @@ function healthy(overrides = {}) {
     scoreProviderFailureStreak: 0, providerAllowance: 100,
     latestScores: { status: "success", started_at: "2026-08-20T12:00:00Z", completed_at: "2026-08-20T12:01:00Z" },
     reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 },
-    pendingScheduleReviews: 0, scheduleProviderCircuit: null, ...overrides,
+    pendingScheduleReviews: 0, scheduleProviderCircuit: null, pinAttackIncidents: [], ...overrides,
   };
 }
 
@@ -21,6 +21,18 @@ test("watchdog stays quiet for healthy automation and isolated email failures", 
     now: new Date("2026-08-20T12:10:00Z"),
   });
   assert.deepEqual(signals, []);
+});
+
+test("watchdog alerts the Commissioner when ten distinct invalid PINs are tried", () => {
+  const signals = evaluateWatchdogSignals({
+    health: healthy({ pinAttackIncidents: [{ id: "security-incident", attempted_pins: 10 }] }),
+    bootstrap: completeBootstrap, preflightChecks: [], now: new Date("2026-08-20T12:10:00Z"),
+  });
+  assert.deepEqual(signals, [{
+    key: "suspicious-pin-attempts-security-incident", severity: "critical",
+    title: "Suspicious PIN guessing detected",
+    detail: "10 different invalid PINs were tried from one privacy-safe source fingerprint within 15 minutes. No raw PINs, network addresses, or player picks were stored in the alert.",
+  }]);
 });
 
 test("watchdog stays quiet while provider quota protection intentionally pauses score checks", () => {

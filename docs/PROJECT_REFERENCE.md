@@ -65,6 +65,11 @@ be replayed.
 ## Player identity and privacy
 
 - Players authenticate with their assigned pool identity and PIN/session flow.
+- PIN sign-in is routed through the application. Ten different invalid PINs
+  from one privacy-safe source fingerprint in 15 minutes open a Commissioner
+  incident and email alert. Successful login clears prior failures, no player
+  is locked out by this alert, and raw PINs or network addresses are never
+  retained in the security audit.
 - A player can always see their own selections.
 - Another player's selection remains hidden until that selected game's kickoff.
   Reveal is per game, not all-at-once for the week.
@@ -233,6 +238,10 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Players choose one of three email plans: **Essentials**, **Regular**, or
   **Full Card**. Each remains individually adjustable in Preferences; existing
   choices are never changed just because the plan labels evolve.
+- Those plans are operational schedules, not just presets. The reminder worker
+  queues each promised occurrence from the live NFL schedule, safely replaces
+  unsent occurrences after a flex or cancellation, and preserves sent wording
+  plus the exact source-game receipt.
 - At most one routine pool email is delivered to a player in an Eastern
   calendar day. Pick-due reminders and material early-lock/schedule notices
   bypass that limit. A held routine email is retained as a receipt, not counted

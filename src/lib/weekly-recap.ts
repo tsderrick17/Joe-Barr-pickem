@@ -236,11 +236,18 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "game_day") return existing as GameDaySlateSnapshot;
   const now = new Date();
   const day = easternDate(now);
-  const { data: period, error: periodError } = await supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle();
+  const [{ data: period, error: periodError }, { data: reminder, error: reminderError }] = await Promise.all([
+    supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle(),
+    supabaseAdmin.from("push_reminders").select("source_game_ids").eq("id", reminderId).maybeSingle(),
+  ]);
   if (periodError || !period) throw new Error("An active week is not available for the gameday Slate.");
+  if (reminderError) throw new Error("The gameday Slate source could not be loaded.");
   const { data: games, error: gamesError } = await supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at").eq("scoring_period_id", period.id).order("kickoff_at");
   if (gamesError) throw new Error("Today’s Slate could not be prepared.");
-  const dayGames = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
+  const sourceIds = new Set(reminder?.source_game_ids ?? []);
+  const dayGames = sourceIds.size
+    ? (games ?? []).filter((game) => sourceIds.has(game.id))
+    : (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
   if (!dayGames.length) throw new Error("There are no games on today’s Slate.");
   const ids = [...new Set(dayGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
   const [{ data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
@@ -314,7 +321,11 @@ export async function ensureEarlyLockSnapshot(reminderId: string, existing: unkn
   const now = new Date();
   const { data: period, error: periodError } = await supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle();
   if (periodError || !period) throw new Error("An active week is not available for the early-lock reminder.");
-  const { data: game, error: gameError } = await supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at").eq("scoring_period_id", period.id).eq("is_international", true).lte("line_lock_at", now.toISOString()).order("line_lock_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders").select("source_game_ids").eq("id", reminderId).maybeSingle();
+  if (reminderError) throw new Error("The international-game source could not be loaded.");
+  let gameQuery = supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at").eq("scoring_period_id", period.id).eq("is_international", true).lte("line_lock_at", now.toISOString());
+  if (reminder?.source_game_ids?.length) gameQuery = gameQuery.in("id", reminder.source_game_ids);
+  const { data: game, error: gameError } = await gameQuery.order("line_lock_at", { ascending: false }).limit(1).maybeSingle();
   if (gameError || !game) throw new Error("A recently locked international game is not available.");
   const [{ data: teams, error: teamsError }, { data: line, error: lineError }] = await Promise.all([
     supabaseAdmin.from("teams").select("id, full_name").in("id", [game.away_team_id, game.home_team_id]),

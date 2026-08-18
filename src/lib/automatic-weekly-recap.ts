@@ -23,9 +23,18 @@ export async function ensureAutomaticWeeklyRecap(now = new Date()) {
     .eq("template_id", "weekly_recap")
     .maybeSingle();
 
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("push_reminders")
+    .select("id")
+    .eq("category", "weekly_recap")
+    .eq("source_scoring_period_id", period.id)
+    .maybeSingle();
+  if (existingError) throw new Error("The existing Tuesday recap could not be checked.");
+  if (existing) return { created: false, reason: "already_queued" };
+
   const { data, error } = await supabaseAdmin
     .from("push_reminders")
-    .upsert({
+    .insert({
       created_by_player_id: commissioner.id,
       category: "weekly_recap",
       audience: "all_active",
@@ -33,9 +42,11 @@ export async function ensureAutomaticWeeklyRecap(now = new Date()) {
       body: template?.body || "The final results, updated Pick'em standings, and Survivor recap are ready.",
       scheduled_for: now.toISOString(),
       source_scoring_period_id: period.id,
-    }, { onConflict: "category,source_scoring_period_id", ignoreDuplicates: true })
+      automation_key: `plan:${period.id}:weekly_recap`,
+    })
     .select("id")
     .maybeSingle();
+  if (error?.code === "23505") return { created: false, reason: "already_queued" };
   if (error) throw new Error("The automatic Tuesday recap could not be queued.");
   return { created: Boolean(data), reason: data ? null : "already_queued" };
 }

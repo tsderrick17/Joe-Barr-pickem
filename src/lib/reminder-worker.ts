@@ -3,6 +3,7 @@ import {
   ReminderPreparationError,
 } from "@/lib/email-reminders";
 import { ensureAutomaticWeeklyRecap } from "@/lib/automatic-weekly-recap";
+import { ensureAutomaticEmailPlanMessages } from "@/lib/automatic-email-plan";
 import type {
   ReminderAudience,
   ReminderCategory,
@@ -16,6 +17,7 @@ type Reminder = {
   audience: ReminderAudience;
   title: string;
   body: string;
+  source_game_ids?: string[];
 };
 
 type ClaimedReminderUpdate = {
@@ -44,6 +46,7 @@ async function updateClaimedReminder(
 }
 
 export async function sendDueReminders() {
+  await ensureAutomaticEmailPlanMessages();
   await ensureAutomaticWeeklyRecap();
   // The table/RPC retain their historical push-oriented names so this cleanup
   // does not risk a destructive production data migration.
@@ -62,7 +65,7 @@ export async function sendDueReminders() {
   for (const reminder of (reminders ?? []) as Reminder[]) {
     let deliveryStarted = false;
     try {
-      const readiness = await reminderReadiness(reminder.category);
+      const readiness = await reminderReadiness(reminder.category, reminder.source_game_ids);
       if (!readiness.ready) {
         await updateClaimedReminder(reminder.id, {
           status: "scheduled",

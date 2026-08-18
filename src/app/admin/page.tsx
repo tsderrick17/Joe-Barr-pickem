@@ -19,6 +19,7 @@ import OpeningWeekChecklist from "@/components/opening-week-checklist";
 import CommissionerHandbook from "@/components/commissioner-handbook";
 import AutomationWatchdog from "@/components/automation-watchdog";
 import SeasonBootstrapStatus from "@/components/season-bootstrap-status";
+import CommissionerOperationsMap from "@/components/commissioner-operations-map";
 
 type Spread = {
   team: string;
@@ -90,6 +91,7 @@ type CommissionerPanel = (typeof commissionerPanels)[number][0];
 
 export default function AdminPage() {
   const [activePanel, setActivePanel] = useState<CommissionerPanel>("overview");
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [preview, setPreview] = useState<OddsPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -251,47 +253,44 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold underline sm:justify-end">
-            <Link href="/preview">Season rehearsal</Link>
             <Link href="/admin/players">Players</Link>
-            <Link href="/admin/reminders">Reminders</Link>
+            <Link href="/admin/reminders">Emails</Link>
+            <Link href="/archive">Archive</Link>
+            <Link href="/preview">Rehearsal</Link>
           </div>
         </header>
 
-        <nav aria-label="Commissioner sections" className="mt-6 grid grid-cols-2 gap-2 border-b-2 border-zinc-900 pb-6 sm:grid-cols-4">
-          {commissionerPanels.map(([panel, label, description]) => (
+        <nav aria-label="Commissioner sections" className="mt-5 border-b-2 border-zinc-900 pb-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {commissionerPanels.map(([panel, label]) => (
             <button
               aria-pressed={activePanel === panel}
-              className={`min-h-20 border px-4 py-3 text-left transition ${activePanel === panel ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-400 bg-white hover:border-zinc-900"}`}
+              className={`border-b-4 px-1 py-2 text-left font-serif text-xl font-bold transition ${activePanel === panel ? "border-zinc-900 text-zinc-950" : "border-transparent text-zinc-500 hover:border-zinc-400 hover:text-zinc-900"}`}
               key={panel}
               onClick={() => setActivePanel(panel)}
               type="button"
             >
-              <span className="block font-serif text-xl font-bold">{label}</span>
-              <span className={`mt-1 block text-xs leading-4 ${activePanel === panel ? "text-zinc-200" : "text-zinc-600"}`}>{description}</span>
+              {label}
             </button>
           ))}
+          </div>
+          <p className="mt-2 text-sm text-zinc-600">{commissionerPanels.find(([panel]) => panel === activePanel)?.[2]}</p>
         </nav>
 
         {activePanel === "overview" ? <>
+        <CommissionerOperationsMap />
         <section className="border-b-2 border-zinc-900 py-7">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-black tracking-[0.16em] text-zinc-600">START HERE</p>
-              <h2 className="mt-1 font-serif text-2xl font-bold">Today&apos;s commissioner desk</h2>
-              <p className="mt-1 text-sm text-zinc-700">Run the read-only launch checks first. Use the cards below only when there is something specific to do.</p>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/players"><span className="block font-bold">Players</span><span className="mt-1 block text-sm text-zinc-700">Roster, PINs, and commissioner access.</span></Link>
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/admin/reminders"><span className="block font-bold">Reminders</span><span className="mt-1 block text-sm text-zinc-700">Preferences, delivery, and a safe test email.</span></Link>
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/preview"><span className="block font-bold">Season rehearsal</span><span className="mt-1 block text-sm text-zinc-700">See game states without live records.</span></Link>
-            <Link className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href="/archive"><span className="block font-bold">Week archive</span><span className="mt-1 block text-sm text-zinc-700">Review settled slates and public receipts.</span></Link>
-          </div>
+          <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>
+            <summary className="cursor-pointer font-serif text-xl font-bold">Detailed diagnostics and manual recovery</summary>
+            <p className="mt-2 text-sm text-zinc-700">Open this only when the operations map points to a hold, or when you want the full launch and season-readiness reports.</p>
+            {showDiagnostics ? <>
+              <OpeningWeekChecklist />
+              <AutomationWatchdog />
+              <AutomationHealth />
+              <SeasonReadiness />
+            </> : null}
+          </details>
         </section>
-        <OpeningWeekChecklist />
-        <AutomationWatchdog />
-        <AutomationHealth />
-        <SeasonReadiness />
         <section className="border-b-2 border-zinc-900 py-7">
           <details>
             <summary className="cursor-pointer font-serif text-xl font-bold">Connected systems</summary>
