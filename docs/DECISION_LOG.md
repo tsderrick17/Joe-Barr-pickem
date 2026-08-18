@@ -121,3 +121,14 @@ email per player per Eastern calendar day; deadline reminders and material
 early-lock or schedule-change notices remain eligible because they can require
 timely action. Record intentionally held routine messages as receipts so the
 Commissioner can distinguish them from delivery failures.
+
+## 2026-08-18 — REF-015 — Reproduce and independently monitor critical automation
+
+**Status:** Accepted
+
+Keep line locking, score refresh, and pre-lock spread refresh in one idempotent
+timestamped migration. Launch preflight validates exact schedules, endpoints,
+authorization, external providers, sender readiness, and Commissioner alert
+delivery without consuming odds credits or sending email. A separate public,
+opaque heartbeat lets an external monitor prove the internal watchdog itself
+is still completing.

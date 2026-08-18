@@ -79,6 +79,28 @@ Individual bad email addresses and intentional low-provider-quota cooldowns do
 not alert. Open incidents and a manual **Run watchdog now** control are visible
 on the Commissioner Desk overview.
 
+An external UptimeRobot monitor must also check
+`https://pickemjb.vercel.app/api/health/automation` every five minutes. The
+endpoint returns 200 only when the watchdog has completed successfully within
+12 minutes, so a broken watchdog cannot silently report itself as healthy. This
+monitor is separate from the existing public-site monitor.
+
+## Reproducible critical schedules and launch preflight
+
+Migration `20260818013000_rebuild_critical_automation.sql` is the canonical,
+idempotent definition for the three game-critical workflows: official line
+locking every minute, final-score refresh every 15 minutes, and the two
+daylight/standard-safe pre-lock spread refresh windows. It replaces any older
+jobs with those names, then recreates the expected definitions.
+
+Before opening Week 1—and after any deployment or secret rotation—run
+**Commissioner → Launch preflight**. It reads rather than mutates. A passing
+result proves the full cron definitions and Vault authorization, the deployed
+cron secret matches Vault, the zero-credit Odds API authentication check can
+see the NFL feed, Brevo can list an active configured PickemJB sender, and at
+least one active Commissioner has a valid alert address. The same checks are
+included in the Opening Week checklist.
+
 ## Monthly upgrade rehearsal
 
 On the first Monday of each month, GitHub Actions builds an isolated database,

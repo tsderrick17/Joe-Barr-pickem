@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assessOpeningWeekChecklist } from "@/lib/opening-week-checklist";
 import { assessSeasonReadiness } from "@/lib/season-readiness";
+import { runLaunchPreflight } from "@/lib/launch-preflight";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
     supabaseAdmin.from("push_reminders").select("id, status, processing_started_at").in("status", ["scheduled", "sending", "failed"]),
     supabaseAdmin.from("email_reminder_deliveries").select("id", { count: "exact", head: true }).in("status", ["failed", "suppressed"]).gte("attempted_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    supabaseAdmin.rpc("automation_preflight"),
+    runLaunchPreflight().catch(() => null),
   ]);
   if (gamesResult.error || playersResult.error || remindersResult.error || deliveryFailuresResult.error) return NextResponse.json({ error: "The opening-week checklist could not read the current records." }, { status: 500 });
 
@@ -39,10 +40,10 @@ export async function GET(request: NextRequest) {
     reminders: remindersResult.data ?? [],
     emailDeliveryFailures: deliveryFailuresResult.count ?? 0,
   });
-  const automationChecks = automationResult.error ? [] : (automationResult.data ?? []);
+  const automationChecks = automationResult?.checks ?? [];
   return NextResponse.json({
     checkedAt: new Date().toISOString(),
-    automationAvailable: !automationResult.error,
+    automationAvailable: Boolean(automationResult),
     ...assessOpeningWeekChecklist({
       periods: periods ?? [],
       games: gamesResult.data ?? [],
