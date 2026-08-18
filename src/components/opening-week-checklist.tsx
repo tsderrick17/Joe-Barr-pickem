@@ -35,7 +35,7 @@ export default function OpeningWeekChecklist() {
   }, []);
   return <section className="border-b-2 border-zinc-900 py-8" id="opening-week-checklist">
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div><h2 className="font-serif text-2xl font-bold">Opening Week checklist</h2><p className="mt-2 text-zinc-700">A read-only launch rehearsal. It never activates a period, changes a pick, imports games, or sends email.</p></div>
+      <div><h2 className="font-serif text-2xl font-bold">Opening Week checklist</h2><p className="mt-2 text-zinc-700">A read-only launch rehearsal that also verifies schedules, authorization, Odds API, Brevo, sender settings, and Commissioner alerts. It never activates a period, changes a pick, imports games, or sends email.</p></div>
       <button className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={run} type="button">{loading ? "Checking..." : "Refresh checklist"}</button>
     </div>
     {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
