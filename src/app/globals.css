@@ -609,6 +609,16 @@ body {
   }
 }
 
+@media (max-width: 767px) {
+  /* Once the title rail stacks above the instructions, avoid reserving a
+     second separator lane between the week selector and the instruction card. */
+  .slate-header-grid { gap: .55rem; }
+  .slate-header-grid > aside {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
 @media (min-width: 768px) {
   /* Keep the saved/draft receipt available while a player works through a
      long Slate. Desktop navigation scrolls away, so this owns the top edge
