@@ -9,7 +9,7 @@ guarded recovery tools for a specific observed condition.
 | When | Expected automatic behavior | Human check |
 | --- | --- | --- |
 | Preseason | Create the new preseason, validate 272 games, import and pin 18 regular weeks | Review Season Readiness and bootstrap status |
-| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Automation Preflight |
+| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm both UptimeRobot monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
 | Tuesday, 8:00 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
@@ -93,6 +93,14 @@ rehearsal. Never turn a rehearsal result into an automatic production upgrade.
 Check the public health endpoint and hosting/database status. Follow
 [uptime-monitoring.md](uptime-monitoring.md). Availability alerts and pool
 integrity alerts are intentionally separate.
+
+### The site works but automation heartbeat is down
+
+Open UptimeRobot's **PickemJB automation heartbeat** incident, then check
+Commissioner Automation Health and the watchdog receipt. A non-200 response at
+`/api/health/automation` means the five-minute watchdog has failed or has not
+completed successfully within 12 minutes; it does not mean the player-facing
+site itself is unavailable.
 
 ### A backup or disaster recovery is required
 

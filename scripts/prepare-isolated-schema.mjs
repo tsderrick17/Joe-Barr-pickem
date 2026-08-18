@@ -131,3 +131,28 @@ if (
 }
 
 await writeFile(operationsMigration, sanitizedOperationsSql);
+
+// The reproducibility migration must be exercised in isolation, but an
+// isolated database must never schedule calls to the production deployment.
+// Remove only the marked cron block and keep the stricter preflight functions.
+const criticalAutomationMigration = resolve(
+  migrationsDirectory,
+  "20260818013000_rebuild_critical_automation.sql",
+);
+const criticalAutomationSql = await readFile(criticalAutomationMigration, "utf8");
+const criticalScheduleStart = criticalAutomationSql.indexOf(
+  "-- BEGIN PRODUCTION CRITICAL SCHEDULES",
+);
+const criticalScheduleEnd = criticalAutomationSql.indexOf(
+  "-- END PRODUCTION CRITICAL SCHEDULES",
+);
+const sanitizedCriticalAutomationSql =
+  criticalScheduleStart >= 0 && criticalScheduleEnd > criticalScheduleStart
+    ? `${criticalAutomationSql.slice(0, criticalScheduleStart)}-- Isolated test databases never schedule requests to the live deployment.\n${criticalAutomationSql.slice(criticalScheduleEnd + "-- END PRODUCTION CRITICAL SCHEDULES".length)}`
+    : criticalAutomationSql;
+
+if (sanitizedCriticalAutomationSql === criticalAutomationSql) {
+  throw new Error("Could not remove the production critical automation schedules.");
+}
+
+await writeFile(criticalAutomationMigration, sanitizedCriticalAutomationSql);

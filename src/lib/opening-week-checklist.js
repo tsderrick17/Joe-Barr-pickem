@@ -43,7 +43,7 @@ export function assessOpeningWeekChecklist({ periods, games, activePlayerCount, 
     ? item("automation", "Automation is armed", "Run Automation Preflight once its Supabase schedules are available.", "setup")
     : failedAutomation.length
       ? item("automation", "Automation is armed", failedAutomation.map((check) => check.label).join(", ") + " needs attention.", "attention")
-      : item("automation", "Automation is armed", "Line locks, score sync, and reminder jobs are configured."));
+      : item("automation", "Automation is armed", "Critical schedules, cron authorization, Odds API, Brevo sender, and Commissioner alerts are ready."));
 
   const reminderReadiness = readinessChecks.find((check) => check.id === "reminder-queue");
   checks.push(!reminderReadiness
