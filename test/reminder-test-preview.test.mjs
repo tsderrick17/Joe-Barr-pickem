@@ -9,7 +9,8 @@ test("Commissioner can preview the selections reminder without emailing the pool
   ]);
   assert.match(page, /Preview selections email/);
   assert.match(page, /test\("selections"\)/);
-  assert.match(route, /selectionPreview \? "Selections still to be made"/);
+  assert.match(route, /selectionTemplate\?\.title \|\| "Selections still to be made"/);
+  assert.match(route, /selectionTemplate\?\.body \|\| "A friendly reminder/);
   assert.match(route, /deliverEmailTest\(reminder, commissioner\.id, player\.notification_email\)/);
   assert.doesNotMatch(route, /eligiblePlayerIds/);
 });

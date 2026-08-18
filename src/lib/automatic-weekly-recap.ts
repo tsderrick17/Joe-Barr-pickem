@@ -17,14 +17,20 @@ export async function ensureAutomaticWeeklyRecap(now = new Date()) {
     .maybeSingle();
   if (commissionerError || !commissioner) throw new Error("The weekly recap needs an active commissioner sender.");
 
+  const { data: template } = await supabaseAdmin
+    .from("reminder_templates")
+    .select("title, body")
+    .eq("template_id", "weekly_recap")
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from("push_reminders")
     .upsert({
       created_by_player_id: commissioner.id,
       category: "weekly_recap",
       audience: "all_active",
-      title: `${period.display_name} results and standings`,
-      body: "The final results, updated Pick'em standings, and Survivor recap are ready.",
+      title: template?.title || `${period.display_name} results and standings`,
+      body: template?.body || "The final results, updated Pick'em standings, and Survivor recap are ready.",
       scheduled_for: now.toISOString(),
       source_scoring_period_id: period.id,
     }, { onConflict: "category,source_scoring_period_id", ignoreDuplicates: true })

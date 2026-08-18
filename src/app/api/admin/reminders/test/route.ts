@@ -8,13 +8,16 @@ export async function POST(request: NextRequest) {
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   const body = await request.json().catch(() => ({})) as { template?: unknown };
   const selectionPreview = body.template === "selections";
+  const { data: selectionTemplate } = selectionPreview
+    ? await supabaseAdmin.from("reminder_templates").select("title, body").eq("template_id", "pick_due_sunday_11").maybeSingle()
+    : { data: null };
   const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders").insert({
     created_by_player_id: commissioner.id,
     category: "custom",
     audience: "all_active",
-    title: selectionPreview ? "Selections still to be made" : "Joe Barr Pick'em test",
+    title: selectionPreview ? selectionTemplate?.title || "Selections still to be made" : "Joe Barr Pick'em test",
     body: selectionPreview
-      ? "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready."
+      ? selectionTemplate?.body || "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready."
       : "Email reminders are working for your Pick'em account.",
     scheduled_for: new Date().toISOString(),
     status: "test",

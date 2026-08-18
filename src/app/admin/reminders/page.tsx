@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { reminderTemplates, type ReminderTemplate } from "@/lib/reminder-templates";
 
 type Reminder = { id: string; category: string; audience: string; title: string; body: string; scheduledFor: string; status: string; emailDelivered: number; emailFailed: number; emailSuppressed: number };
 
@@ -60,22 +61,6 @@ const initialTime = () => {
   return easternInput(date);
 };
 
-const presets = [
-  { category: "weekly", audience: "all_active", title: "A fresh slate is ready", body: "The full preliminary slate is ready for the week, with black lines throughout. Take a look whenever you have a moment and make your selections before kickoff.", label: "Wednesday fresh slate" },
-  { category: "final_lines", audience: "all_active", title: "Today's official lines are set", body: "The final lines are posted for today's games. Take a quick look at The Slate before the day gets moving.", label: "ALL final gameday lines — 8:30 AM" },
-  { category: "sunday_final_lines", audience: "all_active", title: "Sunday's official lines are set", body: "The final lines are posted for today's games. Take a quick look at The Slate before the day gets moving.", label: "Sunday-only final lines — 8:30 AM" },
-  { category: "early_lock", audience: "all_active", title: "International game locked early", body: "The international matchup has its official line early. Take a look at The Slate when you have a moment.", label: "International early lock" },
-  { category: "pick_due", audience: "pick_due", title: "Selections still to be made", body: "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready.", label: "Sunday selections reminder — 11 AM" },
-  { category: "pick_due", audience: "pick_due", title: "Selections still to be made", body: "A friendly reminder: there is still time to take care of anything waiting for you. Open the pool when you are ready.", label: "Sunday selections reminder — 3 PM" },
-  { category: "pick_due", audience: "pick_due", title: "Selections still to be made", body: "A final reminder before tonight's game: please take a moment to look over anything still waiting for you.", label: "Monday selections reminder — 5 PM" },
-  { category: "sunday_early_reveal", audience: "all_active", title: "Sunday early window picks are public", body: "The early games are underway. The public Pick'em board is ready to look over whenever you have a moment.", label: "Sunday early window reveal" },
-  { category: "sunday_late_reveal", audience: "all_active", title: "Sunday late window picks are public", body: "The late games are underway. The updated public Pick'em board is ready to look over whenever you have a moment.", label: "Sunday late window reveal" },
-  { category: "featured_window_reveal", audience: "all_active", title: "Featured-game picks are public", body: "The featured game window is underway. Public Pick'em selections are now available on the standings page.", label: "Primetime or international reveal" },
-  { category: "weekly_recap", audience: "all_active", title: "This week in Joe Barr Pick'em", body: "The final slate, current standings, and Survivor recap are ready to look over. Thanks for being part of the pool.", label: "Weekly recap — Tuesday morning" },
-  { category: "playoff_day_recap", audience: "all_active", title: "Today in the playoff race", body: "Today’s playoff card is final and the updated Pick'em race is ready to look over. Good luck in the next round.", label: "Playoff day recap — after final grades" },
-  { category: "playoff_public_reveal", audience: "all_active", title: "Playoff picks are public", body: "This playoff window is underway. Public Pick'em receipts are ready to look over whenever you have a moment.", label: "Playoff public pick window — at kickoff" },
-] as const;
-
 const reminderTypes = [
   ["weekly", "Fresh slate"],
   ["final_lines", "ALL final gameday lines"],
@@ -97,7 +82,14 @@ export default function ReminderAdminPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ category: "weekly", audience: "all_active", title: "A fresh slate is ready", body: "The full preliminary slate is ready for the week, with black lines throughout. Take a look whenever you have a moment and make your selections before kickoff.", scheduledFor: initialTime() });
+  const [templateOverrides, setTemplateOverrides] = useState<Record<string, { title: string; body: string }>>({});
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateDraft, setTemplateDraft] = useState({ title: "", body: "" });
+  const [form, setForm] = useState({ category: reminderTemplates[0].category, audience: reminderTemplates[0].audience, title: reminderTemplates[0].title, body: reminderTemplates[0].body, scheduledFor: initialTime() });
+
+  function resolvedTemplate(template: ReminderTemplate) {
+    return { ...template, ...(templateOverrides[template.id] ?? {}) };
+  }
 
   async function load() {
     setLoading(true);
@@ -112,13 +104,65 @@ export default function ReminderAdminPage() {
     } finally { setLoading(false); }
   }
 
+  async function loadTemplates() {
+    try {
+      const response = await fetchWithSession("/api/admin/reminder-templates");
+      const data = await response.json() as { templates?: Array<{ id: string; title: string; body: string }>; error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Standard email wording could not be loaded.");
+      setTemplateOverrides(Object.fromEntries((data.templates ?? []).map((template) => [template.id, { title: template.title, body: template.body }])));
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+      else setError(reason instanceof Error ? reason.message : "Standard email wording could not be loaded.");
+    }
+  }
+
   useEffect(() => {
-    const timer = window.setTimeout(() => { void load(); }, 0);
+    const timer = window.setTimeout(() => { void load(); void loadTemplates(); }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
-  function applyPreset(preset: typeof presets[number]) {
-    setForm((current) => ({ ...current, category: preset.category, audience: preset.audience, title: preset.title, body: preset.body }));
+  function applyPreset(preset: ReminderTemplate) {
+    const resolved = resolvedTemplate(preset);
+    setForm((current) => ({ ...current, category: resolved.category, audience: resolved.audience, title: resolved.title, body: resolved.body }));
+  }
+
+  function beginTemplateEdit(template: ReminderTemplate) {
+    const resolved = resolvedTemplate(template);
+    setEditingTemplateId(template.id);
+    setTemplateDraft({ title: resolved.title, body: resolved.body });
+    setMessage(""); setError("");
+  }
+
+  async function saveTemplate() {
+    if (!editingTemplateId) return;
+    setSaving(true); setMessage(""); setError("");
+    try {
+      const response = await fetchWithSession("/api/admin/reminder-templates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: editingTemplateId, title: templateDraft.title, message: templateDraft.body }) });
+      const data = await response.json() as { error?: string; message?: string };
+      if (!response.ok) throw new Error(data.error ?? "Standard email wording could not be saved.");
+      setTemplateOverrides((current) => ({ ...current, [editingTemplateId]: { title: templateDraft.title.trim(), body: templateDraft.body.trim() } }));
+      setMessage(data.message ?? "Standard email wording saved.");
+      setEditingTemplateId(null);
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+      else setError(reason instanceof Error ? reason.message : "Standard email wording could not be saved.");
+    } finally { setSaving(false); }
+  }
+
+  async function resetTemplate() {
+    if (!editingTemplateId) return;
+    setSaving(true); setMessage(""); setError("");
+    try {
+      const response = await fetchWithSession(`/api/admin/reminder-templates?id=${encodeURIComponent(editingTemplateId)}`, { method: "DELETE" });
+      const data = await response.json() as { error?: string; message?: string };
+      if (!response.ok) throw new Error(data.error ?? "Standard email wording could not be reset.");
+      setTemplateOverrides((current) => { const next = { ...current }; delete next[editingTemplateId]; return next; });
+      setMessage(data.message ?? "Standard wording restored.");
+      setEditingTemplateId(null);
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+      else setError(reason instanceof Error ? reason.message : "Standard email wording could not be reset.");
+    } finally { setSaving(false); }
   }
 
   async function schedule(event: FormEvent<HTMLFormElement>) {
@@ -172,7 +216,8 @@ export default function ReminderAdminPage() {
     <header className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-zinc-900 pb-6"><div><p className="text-sm font-semibold tracking-[0.2em] text-zinc-600">COMMISSIONER</p><h1 className="mt-2 font-serif text-4xl font-bold">Player reminders</h1><p className="mt-2 max-w-2xl text-zinc-700">Schedule opt-in-only email reminders. Messages never include private selections, and every attempted delivery is retained as a receipt.</p></div><Link className="font-semibold underline" href="/admin">Back to Commissioner</Link></header>
     <section className="grid gap-3 border-b-2 border-zinc-900 py-6 sm:grid-cols-3"><div className="border border-zinc-300 bg-white p-4"><p className="text-xs font-bold tracking-[.12em] text-zinc-600">SCHEDULED</p><p className="mt-1 text-3xl font-serif font-bold">{scheduledCount}</p><p className="mt-1 text-sm text-zinc-700">Upcoming player messages</p></div><div className="border border-zinc-300 bg-white p-4"><p className="text-xs font-bold tracking-[.12em] text-zinc-600">NEEDS YOU NOW</p><p className="mt-1 text-3xl font-serif font-bold">{attentionCount}</p><p className="mt-1 text-sm text-zinc-700">Failed or failed-to-send items</p></div><div className="border border-zinc-300 bg-white p-4"><p className="text-xs font-bold tracking-[.12em] text-zinc-600">HELD FOR INBOX SPACE</p><p className="mt-1 text-3xl font-serif font-bold">{heldCount}</p><p className="mt-1 text-sm text-zinc-700">Routine emails intentionally not sent</p></div></section>
     <section className="border-b-2 border-zinc-900 py-8"><div className="flex flex-wrap items-center justify-between gap-4"><div><h2 className="font-serif text-2xl font-bold">Send yourself a test</h2><p className="mt-1 text-sm text-zinc-700">Both previews send only to your enabled email address—never the pool.</p></div><div className="flex flex-wrap gap-3"><button className="border border-zinc-900 bg-white px-5 py-3 font-bold text-zinc-900 disabled:opacity-50" disabled={saving} onClick={() => void test()} type="button">Send delivery test</button><button className="bg-zinc-900 px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} onClick={() => void test("selections")} type="button">Preview selections email</button></div></div></section>
-    <form className="border-b-2 border-zinc-900 py-8" onSubmit={schedule}><h2 className="font-serif text-2xl font-bold">Schedule a reminder</h2><p className="mt-1 text-sm text-zinc-700">Start with a season-ready note below, then choose the exact Eastern time. The delivery worker checks every five minutes.</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{presets.map((preset) => <button className="border border-zinc-400 bg-white p-3 text-left text-sm hover:border-zinc-900" key={preset.label} onClick={() => applyPreset(preset)} type="button"><strong className="block">{preset.label}</strong><span className="mt-1 block text-zinc-700">Use this wording</span></button>)}</div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="text-sm font-bold">REMINDER TYPE<select className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} value={form.category}>{reminderTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="text-sm font-bold">AUDIENCE<select className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, audience: event.target.value }))} value={form.audience}><option value="all_active">All active players</option><option value="pick_due">Only players who still need to act</option></select></label><label className="text-sm font-bold sm:col-span-2">TITLE<input className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" maxLength={80} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} value={form.title} /></label><label className="text-sm font-bold sm:col-span-2">MESSAGE<textarea className="mt-2 min-h-24 w-full border border-zinc-500 bg-white px-3 py-2 font-normal" maxLength={220} onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))} value={form.body} /></label><label className="text-sm font-bold">SEND AT (EASTERN TIME)<input className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, scheduledFor: event.target.value }))} type="datetime-local" value={form.scheduledFor} /></label></div><button className="mt-6 bg-zinc-900 px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Schedule reminder"}</button></form>
+    <section className="border-b-2 border-zinc-900 py-8"><h2 className="font-serif text-2xl font-bold">Standard email wording</h2><p className="mt-1 text-sm text-zinc-700">Choose a message to edit its subject and wording for future use. Previously sent emails stay preserved exactly as delivered.</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{reminderTemplates.map((template) => <article className="border border-zinc-400 bg-white p-3" key={template.id}><strong className="block">{template.label}</strong><p className="mt-1 line-clamp-2 text-sm text-zinc-700">{resolvedTemplate(template).title}</p><button className="mt-3 font-bold underline" onClick={() => beginTemplateEdit(template)} type="button">Edit standard wording</button></article>)}</div>{editingTemplateId ? <div className="mt-5 border-2 border-zinc-900 bg-white p-4"><p className="font-bold">Editing {reminderTemplates.find((template) => template.id === editingTemplateId)?.label}</p><label className="mt-4 block text-sm font-bold">SUBJECT<input className="mt-2 min-h-11 w-full border border-zinc-500 px-3 font-normal" maxLength={80} onChange={(event) => setTemplateDraft((current) => ({ ...current, title: event.target.value }))} value={templateDraft.title} /></label><label className="mt-4 block text-sm font-bold">MESSAGE<textarea className="mt-2 min-h-24 w-full border border-zinc-500 px-3 py-2 font-normal" maxLength={220} onChange={(event) => setTemplateDraft((current) => ({ ...current, body: event.target.value }))} value={templateDraft.body} /></label><div className="mt-4 flex flex-wrap gap-3"><button className="bg-zinc-900 px-4 py-2 font-bold text-white disabled:opacity-50" disabled={saving} onClick={() => void saveTemplate()} type="button">Save standard wording</button><button className="border border-zinc-900 px-4 py-2 font-bold disabled:opacity-50" disabled={saving} onClick={() => void resetTemplate()} type="button">Restore original</button><button className="px-2 py-2 font-bold underline" disabled={saving} onClick={() => setEditingTemplateId(null)} type="button">Cancel</button></div></div> : null}</section>
+    <form className="border-b-2 border-zinc-900 py-8" onSubmit={schedule}><h2 className="font-serif text-2xl font-bold">Schedule a reminder</h2><p className="mt-1 text-sm text-zinc-700">Start with a season-ready note below, then choose the exact Eastern time. The delivery worker checks every five minutes.</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{reminderTemplates.map((preset) => <button className="border border-zinc-400 bg-white p-3 text-left text-sm hover:border-zinc-900" key={preset.id} onClick={() => applyPreset(preset)} type="button"><strong className="block">{preset.label}</strong><span className="mt-1 block text-zinc-700">Use this wording</span></button>)}</div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="text-sm font-bold">REMINDER TYPE<select className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as typeof form.category }))} value={form.category}>{reminderTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="text-sm font-bold">AUDIENCE<select className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, audience: event.target.value as typeof form.audience }))} value={form.audience}><option value="all_active">All active players</option><option value="pick_due">Only players who still need to act</option></select></label><label className="text-sm font-bold sm:col-span-2">TITLE<input className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" maxLength={80} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} value={form.title} /></label><label className="text-sm font-bold sm:col-span-2">MESSAGE<textarea className="mt-2 min-h-24 w-full border border-zinc-500 bg-white px-3 py-2 font-normal" maxLength={220} onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))} value={form.body} /></label><label className="text-sm font-bold">SEND AT (EASTERN TIME)<input className="mt-2 min-h-11 w-full border border-zinc-500 bg-white px-3 font-normal" onChange={(event) => setForm((current) => ({ ...current, scheduledFor: event.target.value }))} type="datetime-local" value={form.scheduledFor} /></label></div><button className="mt-6 bg-zinc-900 px-5 py-3 font-bold text-white disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving..." : "Schedule reminder"}</button></form>
     {error ? <p className="mt-5 font-semibold text-red-700">{error}</p> : null}{message ? <p className="mt-5 font-semibold text-green-800">{message}</p> : null}
     <section className="py-8"><h2 className="font-serif text-2xl font-bold">Reminder receipt log</h2><p className="mt-1 text-sm text-zinc-700">A scheduled item can be cancelled until delivery begins. Each email attempt is retained as a receipt; a held routine email is not an error.</p>{loading ? <p className="mt-5">Loading reminders...</p> : reminders.length === 0 ? <p className="mt-5 text-zinc-700">No reminders have been scheduled yet.</p> : <div className="mt-5 space-y-3">{reminders.map((reminder) => <article className="border border-zinc-400 bg-white p-4" key={reminder.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wide text-zinc-600">{reminder.category.replaceAll("_", " ")} · {reminder.audience.replaceAll("_", " ")} · {reminder.status}</p><h3 className="mt-1 font-bold">{reminder.title}</h3><p className="mt-1 text-sm text-zinc-700">{reminder.body}</p><p className="mt-3 text-sm text-zinc-600">Scheduled {easternDateTime(reminder.scheduledFor)} · Email: {reminder.emailDelivered} delivered, {reminder.emailFailed} failed, {reminder.emailSuppressed} held</p></div>{reminder.status === "scheduled" ? <button className="border border-red-800 px-3 py-2 text-sm font-bold text-red-800 disabled:opacity-50" disabled={saving} onClick={() => void cancel(reminder.id)} type="button">Cancel</button> : null}</div></article>)}</div>}</section>
   </div></main>;
