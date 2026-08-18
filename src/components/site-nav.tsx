@@ -204,7 +204,10 @@ export default function SiteNav() {
     <nav aria-label="Account navigation" className="mobile-account-nav relative border-b border-zinc-700 bg-[#171719] text-[#f5f0e6] md:hidden">
       <div className="mx-auto max-w-6xl px-3 py-2">
         <div className="flex items-center justify-between gap-3">
-          <Link className="min-w-0 font-serif text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]" href="/">Joe Barr Memorial</Link>
+          <Link className="min-w-0 font-serif leading-none text-[#f5f0e6]" href="/">
+            <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]">Joe Barr Memorial</span>
+            <span className="mt-1 block text-base font-bold">Lead Pipe Locks</span>
+          </Link>
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
