@@ -44,6 +44,13 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       detail: `${health.scheduleProviderCircuit.consecutive_failures} consecutive refresh attempts failed. Automatic requests are paused until ${health.scheduleProviderCircuit.next_retry_at}; the Commissioner can still run an emergency refresh.`,
     });
   }
+  for (const incident of health.pinAttackIncidents ?? []) {
+    signals.push({
+      key: `suspicious-pin-attempts-${incident.id}`, severity: "critical",
+      title: "Suspicious PIN guessing detected",
+      detail: `${incident.attempted_pins} different invalid PINs were tried from one privacy-safe source fingerprint within 15 minutes. No raw PINs, network addresses, or player picks were stored in the alert.`,
+    });
+  }
   const eastern = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" })
     .formatToParts(now);
   const month = Number(eastern.find((part) => part.type === "month")?.value);

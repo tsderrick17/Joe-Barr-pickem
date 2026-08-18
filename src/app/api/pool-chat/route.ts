@@ -28,7 +28,10 @@ async function loadMessages(seasonId: string, viewer: { id: string; is_commissio
     .from("pool_chat_messages")
     .select("id, player_id, body, created_at, deleted_at, is_moderator")
     .eq("season_id", seasonId);
-  if (!viewer.is_commissioner) query = query.is("deleted_at", null);
+  // A deleted note is no longer part of the live chat for anyone, including
+  // the Commissioner. The soft-deleted database record remains available for
+  // recovery and audit without cluttering the conversation.
+  query = query.is("deleted_at", null);
   const { data: messages, error } = await query.order("created_at", { ascending: false }).limit(50);
 
   if (error) return { error: true as const, messages: [] };

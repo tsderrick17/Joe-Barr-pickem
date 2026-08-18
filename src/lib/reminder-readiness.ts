@@ -51,7 +51,7 @@ async function freshSlateReady(): Promise<ReminderReadiness> {
   return isFreshSlateReady({ activePeriod: period, gameCount: count ?? 0 });
 }
 
-async function gameDaySlateReady(): Promise<ReminderReadiness> {
+async function gameDaySlateReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   const period = await activePeriod();
   if (!period) return { ready: false, reason: "There is no active week for today’s Slate." };
   const day = easternDate(new Date());
@@ -61,23 +61,28 @@ async function gameDaySlateReady(): Promise<ReminderReadiness> {
     .eq("scoring_period_id", period.id)
     .not("status", "in", "(postponed,cancelled,no_contest)");
   if (error) throw new Error("Today’s Slate could not be checked before sending a reminder.");
-  const today = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
+  const sourceIds = new Set(sourceGameIds);
+  const today = sourceIds.size
+    ? (games ?? []).filter((game) => sourceIds.has(game.id))
+    : (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
   if (!today.length) return { ready: false, reason: "There are no games on today’s Slate." };
   return await hasOfficialLines(today.map((game) => game.id))
     ? { ready: true, reason: null }
     : { ready: false, reason: "Today’s official lines are still being finalized." };
 }
 
-async function earlyLockReady(): Promise<ReminderReadiness> {
+async function earlyLockReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   const period = await activePeriod();
   if (!period) return { ready: false, reason: "There is no active week for the international-game reminder." };
-  const { data: game, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("games")
     .select("id")
     .eq("scoring_period_id", period.id)
     .eq("is_international", true)
     .lte("line_lock_at", new Date().toISOString())
-    .not("status", "in", "(postponed,cancelled,no_contest)")
+    .not("status", "in", "(postponed,cancelled,no_contest)");
+  if (sourceGameIds.length) query = query.in("id", sourceGameIds);
+  const { data: game, error } = await query
     .order("line_lock_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -204,10 +209,10 @@ async function sundayRevealReady(window: "early" | "late"): Promise<ReminderRead
   });
 }
 
-export async function reminderReadiness(category: ReminderCategory): Promise<ReminderReadiness> {
+export async function reminderReadiness(category: ReminderCategory, sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   if (category === "weekly") return freshSlateReady();
-  if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady();
-  if (category === "early_lock") return earlyLockReady();
+  if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady(sourceGameIds);
+  if (category === "early_lock") return earlyLockReady(sourceGameIds);
   if (category === "weekly_recap") return recapReady();
   if (category === "playoff_day_recap") return playoffDayRecapReady();
   if (category === "playoff_public_reveal") return playoffPublicRevealReady();

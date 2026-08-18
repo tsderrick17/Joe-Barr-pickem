@@ -18,7 +18,7 @@ export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
   const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult] = await Promise.all([
+  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult] = await Promise.all([
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
@@ -40,11 +40,14 @@ export async function checkAutomationHealth(now = new Date()) {
     supabaseAdmin.from("provider_failure_circuits")
       .select("consecutive_failures, next_retry_at, last_error")
       .eq("provider_job", "schedule_refresh").maybeSingle(),
+    supabaseAdmin.from("pin_login_incidents")
+      .select("id, attempted_pins")
+      .gt("alert_until", now.toISOString()),
   ]);
 
   if (
     runsResult.error || lineCandidatesResult.error || scoreGamesResult.error ||
-    scheduleReviewsResult.error || scheduleCircuitResult.error
+    scheduleReviewsResult.error || scheduleCircuitResult.error || pinAttackIncidentsResult.error
   ) {
     throw new Error("Automation health could not be prepared.");
   }
@@ -164,6 +167,7 @@ export async function checkAutomationHealth(now = new Date()) {
       new Date(scheduleCircuitResult.data.next_retry_at).getTime() > now.getTime(),
     ),
     pendingScheduleReviews,
+    pinAttackIncidents: pinAttackIncidentsResult.data ?? [],
     retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,
   };

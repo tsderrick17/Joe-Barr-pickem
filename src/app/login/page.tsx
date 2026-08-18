@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthApiError } from "@supabase/supabase-js";
 import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
@@ -39,43 +38,23 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: `pin-${pin}@pickemjb.app`,
-        password: `pickem-${pin}`,
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
       });
-
-      if (error) {
-        if (
-          error instanceof AuthApiError &&
-          (error.status === 400 || error.status === 401)
-        ) {
-          setErrorMessage("That PIN was not recognized. Please try again.");
-        } else if (error instanceof AuthApiError && error.status === 429) {
-          setErrorMessage(
-            "Too many attempts were made. Wait a minute, then try again.",
-          );
-        } else {
-          setErrorMessage(
-            "Sign-in is temporarily unavailable. Check your connection and try again.",
-          );
-        }
+      const result = await response.json() as { error?: string; session?: { access_token: string; refresh_token: string } };
+      if (!response.ok || !result.session) {
+        setErrorMessage(result.error ?? "Sign-in is temporarily unavailable. Check your connection and try again.");
         return;
       }
 
-      if (!data.session) {
-        setErrorMessage(
-          "Your PIN was accepted, but the session did not finish. Please try once more.",
-        );
-        return;
-      }
-
-      // signInWithPassword normally persists this automatically. Writing the
-      // returned session once more makes that handoff deterministic before the
-      // app navigates, which prevents a newly signed-in player from bouncing
-      // back to the PIN screen on a slow browser or phone.
+      // The server verifies the PIN without persisting a browser session.
+      // Save the returned session before navigating so slow browsers cannot
+      // bounce a newly signed-in player back to this screen.
       const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
       });
 
       if (sessionError) {
