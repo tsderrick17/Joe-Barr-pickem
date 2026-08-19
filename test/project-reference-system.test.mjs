@@ -63,8 +63,8 @@ test("durable lifecycle rules remain anchored to executable implementation", asy
   );
   const migrationPolicy = await repositoryFile("docs/supabase-github-cutover.md");
 
-  assert.match(reference, /Tuesday at 8:00 AM Eastern/);
-  assert.match(recapTiming, /getUTCDate\(\), 8\)\.toISOString\(\)/);
+  assert.match(reference, /Tuesday at 6:30 AM Eastern/);
+  assert.match(recapTiming, /getUTCDate\(\), 6, 30\)\.toISOString\(\)/);
 
   assert.match(reference, /Wednesday at 3:00 AM Eastern/);
   assert.match(weekRollover, /getUTCDate\(\),\s*3,\s*\)\.toISOString\(\)/);

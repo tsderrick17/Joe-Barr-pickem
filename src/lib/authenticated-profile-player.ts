@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 export async function authenticatedProfilePlayer(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,5 +21,7 @@ export async function authenticatedProfilePlayer(request: NextRequest) {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  return player?.active ? player : null;
+  if (!player?.active) return null;
+  await recordPlayerActivity(player.id);
+  return player;
 }

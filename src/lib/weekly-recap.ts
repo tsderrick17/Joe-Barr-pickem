@@ -20,6 +20,7 @@ export type PlayoffDayRecapSnapshot = {
   generatedAt: string;
   standings: Array<{ name: string; wins: number }>;
   weeklySummary: Array<{ name: string; wins: number; picks: string[] }>;
+  eliminatedToday: string[];
   // Kept empty: it makes recap-image's shared summary shape safe while
   // playoff-day recaps intentionally contain Pick'em only.
   survivor: WeeklyRecapSnapshot["survivor"];
@@ -70,15 +71,15 @@ export type EarlyLockSnapshot = {
   games: GameDaySlateSnapshot["games"];
 };
 
-export async function buildPlayoffDayRecapSnapshot(): Promise<PlayoffDayRecapSnapshot> {
-  const { data: period, error: periodError } = await supabaseAdmin
+export async function buildPlayoffDayRecapSnapshot({ sourcePeriodId = null, sourceGameIds = [] }: { sourcePeriodId?: string | null; sourceGameIds?: string[] } = {}): Promise<PlayoffDayRecapSnapshot> {
+  let periodQuery = supabaseAdmin
     .from("scoring_periods")
     .select("id, season_id, display_name, display_order, period_type, status, max_picks")
     .eq("period_type", "playoff")
-    .in("status", ["active", "complete"])
-    .order("display_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .in("status", ["active", "complete"]);
+  if (sourcePeriodId) periodQuery = periodQuery.eq("id", sourcePeriodId);
+  else periodQuery = periodQuery.order("display_order", { ascending: false }).limit(1);
+  const { data: period, error: periodError } = await periodQuery.maybeSingle();
   if (periodError || !period) throw new Error("A playoff round is not available for this recap.");
 
   const { data: periods, error: periodsError } = await supabaseAdmin
@@ -96,16 +97,20 @@ export async function buildPlayoffDayRecapSnapshot(): Promise<PlayoffDayRecapSna
   if (gamesError || picksError || playersError) throw new Error("The playoff recap could not be prepared.");
 
   const now = new Date();
+  const sourceIds = new Set(sourceGameIds);
   const playedGames = (games ?? []).filter((game) => game.scoring_period_id === period.id && new Date(game.kickoff_at) <= now);
   if (!playedGames.length) throw new Error("A completed playoff day is not available for this recap.");
   const latestDay = playedGames.reduce((latest, game) => easternDate(new Date(game.kickoff_at)) > latest ? easternDate(new Date(game.kickoff_at)) : latest, easternDate(new Date(playedGames[0].kickoff_at)));
-  const dayGames = playedGames.filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
-  if (dayGames.some((game) => game.status !== "final")) throw new Error("The latest playoff day is still being finalized.");
+  const dayGames = sourceIds.size
+    ? (games ?? []).filter((game) => sourceIds.has(game.id) && game.scoring_period_id === period.id)
+    : playedGames.filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
+  if (!dayGames.length) throw new Error("This playoff recap does not have a scheduled game day.");
+  if (dayGames.some((game) => game.status !== "final")) throw new Error("This playoff day is still being finalized.");
 
   // A day may be fully graded just before the round status flips to complete.
   // Evaluate it as the day began, while its remaining games were still live.
   const dayStartPeriods = periods.map((item) => item.id === period.id ? { ...item, status: "active" } : item);
-  const eligibility = calculatePlayoffEligibility({
+  const eligibilityAtDayStart = calculatePlayoffEligibility({
     players: players ?? [],
     periods: dayStartPeriods,
     games: games ?? [],
@@ -113,7 +118,24 @@ export async function buildPlayoffDayRecapSnapshot(): Promise<PlayoffDayRecapSna
     targetPeriodId: period.id,
     now: new Date(dayGames[0].kickoff_at),
   });
-  const includedPlayers = (players ?? []).filter((player) => !eligibility.eliminatedPlayerIds.has(player.id));
+  // Check the next Eastern day after every result from this scheduled card is
+  // final. That turns the day-end email into a durable record of who was
+  // newly eliminated by those results, while the pre-day snapshot remains the
+  // rule that governed which players could make selections that day.
+  const latestKickoff = Math.max(...dayGames.map((game) => new Date(game.kickoff_at).getTime()));
+  const eligibilityAfterDay = calculatePlayoffEligibility({
+    players: players ?? [],
+    periods: dayStartPeriods,
+    games: games ?? [],
+    picks: picks ?? [],
+    targetPeriodId: period.id,
+    now: new Date(latestKickoff + 18 * 60 * 60_000),
+  });
+  const eliminatedToday = (players ?? [])
+    .filter((player) => eligibilityAfterDay.eliminatedPlayerIds.has(player.id) && !eligibilityAtDayStart.eliminatedPlayerIds.has(player.id))
+    .map((player) => player.first_name)
+    .sort((left, right) => left.localeCompare(right));
+  const includedPlayers = (players ?? []).filter((player) => !eligibilityAfterDay.eliminatedPlayerIds.has(player.id));
   const includedIds = new Set(includedPlayers.map((player) => player.id));
   const dayGameIds = new Set(dayGames.map((game) => game.id));
   const teamIds = [...new Set((picks ?? []).filter((pick) => dayGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
@@ -136,6 +158,7 @@ export async function buildPlayoffDayRecapSnapshot(): Promise<PlayoffDayRecapSna
     generatedAt: now.toISOString(),
     standings: includedPlayers.map((player) => ({ name: player.first_name, wins: seasonWins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
     weeklySummary: includedPlayers.map((player) => ({ name: player.first_name, wins: (dayPicks.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (dayPicks.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })),
+    eliminatedToday,
     survivor: { in: 0, out: 0, latest: null, championName: null, championCrownedInRecapWeek: false, visibleWeeks: 10, rows: [] },
   };
 }
@@ -355,7 +378,16 @@ export async function ensureWeeklyRecapSnapshot(reminderId: string, existing: un
 
 export async function ensurePlayoffDayRecapSnapshot(reminderId: string, existing: unknown) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "playoff_day_recap") return existing as PlayoffDayRecapSnapshot;
-  const snapshot = await buildPlayoffDayRecapSnapshot();
+  const { data: reminder, error: reminderError } = await supabaseAdmin
+    .from("push_reminders")
+    .select("source_scoring_period_id, source_game_ids")
+    .eq("id", reminderId)
+    .maybeSingle();
+  if (reminderError) throw new Error("The playoff recap source games could not be loaded.");
+  const snapshot = await buildPlayoffDayRecapSnapshot({
+    sourcePeriodId: reminder?.source_scoring_period_id,
+    sourceGameIds: reminder?.source_game_ids ?? [],
+  });
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The playoff day recap receipt could not be saved.");
   return snapshot;

@@ -163,6 +163,7 @@ export default function BoardPage() {
   const boardRequestId = useRef(0);
   const selectionFeedbackToken = useRef(0);
   const serverClockOffset = useRef(0);
+  const kickoffVisibilityRefreshedGameIds = useRef(new Set<string>());
 
   async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
@@ -178,6 +179,7 @@ export default function BoardPage() {
     setSelectionWarning("");
     setPlayoffEliminated(false);
     setClockSynchronized(false);
+    kickoffVisibilityRefreshedGameIds.current.clear();
     setWeek(period);
 
     try {
@@ -205,6 +207,11 @@ export default function BoardPage() {
 
       serverClockOffset.current = serverTime - Date.now();
       setCurrentTime(serverTime);
+      kickoffVisibilityRefreshedGameIds.current = new Set(
+        data.games
+          .filter((game) => Date.parse(game.kickoffAt) <= serverTime)
+          .map((game) => game.id),
+      );
 
       setGames(data.games);
       setPlayoffEliminated(data.pickem.playoffEliminated);
@@ -373,6 +380,63 @@ export default function BoardPage() {
     );
     return () => window.clearInterval(refreshTime);
   }, []);
+
+  useEffect(() => {
+    if (!week || isLoading || !clockSynchronized || games.length === 0) return;
+
+    const requestId = boardRequestId.current;
+    const dueGameIds = games
+      .filter((game) => new Date(game.kickoffAt).getTime() <= currentTime && !kickoffVisibilityRefreshedGameIds.current.has(game.id))
+      .map((game) => game.id);
+
+    const refreshPublicVisibility = async (gameIds: string[]) => {
+      gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.add(gameId));
+
+      try {
+        const response = await fetchWithSession(`/api/board?scoringPeriodId=${week.id}`);
+        const data = (await response.json()) as BoardResponse;
+        if (requestId !== boardRequestId.current) return;
+        if (!response.ok) {
+          gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
+          return;
+        }
+
+        const serverTime = Date.parse(data.serverTime);
+        if (!Number.isFinite(serverTime)) {
+          gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
+          return;
+        }
+
+        serverClockOffset.current = serverTime - Date.now();
+        setCurrentTime(serverTime);
+        setGames(data.games);
+        setPlayoffEliminated(data.pickem.playoffEliminated);
+      } catch {
+        // The next minute tick retries a harmless read. Keep player drafts in
+        // memory rather than resetting the entire Slate after a brief outage.
+        gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
+      }
+    };
+
+    if (dueGameIds.length) {
+      void refreshPublicVisibility(dueGameIds);
+      return;
+    }
+
+    const nextKickoff = games
+      .map((game) => new Date(game.kickoffAt).getTime())
+      .filter((kickoffAt) => kickoffAt > currentTime)
+      .sort((left, right) => left - right)[0];
+    if (!nextKickoff) return;
+
+    // A small cushion lets the kickoff boundary settle server-side before the
+    // public receipt is read. The same server clock governs both behaviors.
+    const timer = window.setTimeout(
+      () => void refreshPublicVisibility(games.filter((game) => new Date(game.kickoffAt).getTime() === nextKickoff).map((game) => game.id)),
+      Math.max(nextKickoff - currentTime, 0) + 500,
+    );
+    return () => window.clearTimeout(timer);
+  }, [clockSynchronized, currentTime, games, isLoading, week]);
 
   const availableWeeks = useMemo<ScoringPeriod[]>(() => {
     return selectAvailableScoringPeriods(weeks, {

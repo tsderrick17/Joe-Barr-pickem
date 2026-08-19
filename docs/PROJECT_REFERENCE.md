@@ -131,7 +131,7 @@ across daylight-saving changes.
 4. Final-score eligibility begins three hours after kickoff. Automation polls
    only eligible unfinished games, imports verified finals, and grades ATS and
    Survivor atomically.
-5. The major weekly recap becomes eligible Tuesday at 8:00 AM Eastern. It sends
+5. The major weekly recap becomes eligible Tuesday at 6:30 AM Eastern. It sends
    only after the week is trustworthy; a late result sends as soon as it settles
    rather than waiting another week.
 6. The normal default-week handoff is Wednesday at 3:00 AM Eastern and at least

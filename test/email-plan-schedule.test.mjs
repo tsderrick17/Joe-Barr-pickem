@@ -25,7 +25,8 @@ test("regular email plans create one deterministic occurrence for each promised 
   assert.equal(templates.filter((id) => id === "sunday_early_reveal").length, 1);
   assert.equal(templates.filter((id) => id === "sunday_late_reveal").length, 1);
   assert.equal(templates.filter((id) => id === "featured_window_reveal").length, 4);
-  assert.equal(schedule.find((item) => item.templateId === "weekly").scheduledFor, "2026-09-09T12:00:00.000Z");
+  assert.equal(schedule.find((item) => item.templateId === "weekly").scheduledFor, "2026-09-09T10:30:00.000Z");
+  assert.equal(schedule.find((item) => item.templateId === "final_lines" && item.automationKey.endsWith(":2026-09-10")).scheduledFor, "2026-09-11T00:20:00.000Z");
   assert.equal(new Set(schedule.map((item) => item.automationKey)).size, schedule.length);
 });
 

@@ -59,6 +59,13 @@ function survivorIsStillRunning(snapshot: unknown) {
   return Boolean(survivor && typeof survivor === "object" && (("in" in survivor && typeof survivor.in === "number" && survivor.in > 1) || ("championCrownedInRecapWeek" in survivor && survivor.championCrownedInRecapWeek === true)));
 }
 
+function playoffEliminationCopy(snapshot: unknown) {
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "playoff_day_recap" || !("eliminatedToday" in snapshot) || !Array.isArray(snapshot.eliminatedToday) || snapshot.eliminatedToday.length === 0) return "";
+  const names = snapshot.eliminatedToday.filter((name): name is string => typeof name === "string");
+  if (!names.length) return "";
+  return `Eliminated from Pick'em today: ${names.join(", ")}.`;
+}
+
 function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
     ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Pick'em standings and this week's picks" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"></a>${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? `<a href="${siteUrl}/board#slate-matchups" style="display:block"><img alt="Active Survivor board" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></a>` : ""}</div>`
@@ -75,7 +82,9 @@ function messageHtml(reminder: Reminder) {
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
   const destination = isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
   const callToAction = isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
-  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count: Pick'em pushes and Survivor ties are losses.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+  const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
+  const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
+  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${eliminationBlock}${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count: Pick'em pushes and Survivor ties are losses.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
@@ -233,7 +242,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count: Pick'em pushes and Survivor ties are losses.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
+        textContent: `${reminder.title}\n\n${reminder.body}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count: Pick'em pushes and Survivor ties are losses.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),

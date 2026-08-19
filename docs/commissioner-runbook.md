@@ -38,7 +38,7 @@ build succeeds.
 4. Supabase checks official lines every minute and locks them at each game's assigned line-lock time.
 5. Players can edit a pick until that game's kickoff; picks reveal individually at kickoff.
 6. Starting three hours after kickoff, the score check runs every 15 minutes. Only verified completed games are saved and graded atomically. ATS pushes are losses.
-7. The major weekly recap becomes eligible Tuesday at 8 AM Eastern after every result is trustworthy. A late result sends as soon as it settles.
+7. The major weekly recap becomes eligible Tuesday at 6:30 AM Eastern after every result is trustworthy. A late result sends as soon as it settles.
 8. Once every game and applicable pick is settled, the completed week stays visible for at least 24 hours. The normal default handoff is Wednesday at 3 AM Eastern; a next-week kickoff within 24 hours advances immediately. The next period is manually selectable on the next Eastern day, and every completed week remains accessible. Postponed, cancelled, missing-line, or ungraded records block an unsafe automatic handoff for commissioner review.
 
 ## Before the season

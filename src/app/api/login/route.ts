@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 export const runtime = "nodejs";
 
@@ -66,6 +67,12 @@ export async function POST(request: NextRequest) {
   // A successful player sign-in clears prior failures from the same source so
   // a shared household or office cannot create a false security incident.
   await supabaseAdmin.rpc("clear_failed_pin_logins", { attempt_source_fingerprint: sourceFingerprint });
+  const { data: player } = await supabaseAdmin
+    .from("players")
+    .select("id")
+    .eq("auth_user_id", data.user.id)
+    .maybeSingle();
+  if (player) await recordPlayerActivity(player.id);
 
   return response({
     session: {

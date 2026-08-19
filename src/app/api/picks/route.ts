@@ -4,6 +4,7 @@ import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 type Selection = { gameId: string; teamId: string };
 type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string };
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
 
   const { data: player } = await supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle();
   if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
+  await recordPlayerActivity(player.id);
 
   const { data: period } = await supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle();
   if (!period) return NextResponse.json({ error: "That week could not be found." }, { status: 404 });

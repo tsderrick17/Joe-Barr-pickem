@@ -100,15 +100,15 @@ async function recapReady(): Promise<ReminderReadiness> {
   return { ready: true, reason: null };
 }
 
-async function playoffDayRecapReady(): Promise<ReminderReadiness> {
-  const { data: period, error: periodError } = await supabaseAdmin
+async function playoffDayRecapReady(sourceGameIds: string[] = [], sourcePeriodId?: string | null): Promise<ReminderReadiness> {
+  let periodQuery = supabaseAdmin
     .from("scoring_periods")
     .select("id")
     .eq("period_type", "playoff")
-    .in("status", ["active", "complete"])
-    .order("display_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .in("status", ["active", "complete"]);
+  if (sourcePeriodId) periodQuery = periodQuery.eq("id", sourcePeriodId);
+  else periodQuery = periodQuery.order("display_order", { ascending: false }).limit(1);
+  const { data: period, error: periodError } = await periodQuery.maybeSingle();
   if (periodError) throw new Error("The playoff day could not be checked before sending a recap.");
   if (!period) return { ready: false, reason: "A playoff round is not active yet." };
 
@@ -119,9 +119,13 @@ async function playoffDayRecapReady(): Promise<ReminderReadiness> {
     .lte("kickoff_at", new Date().toISOString());
   if (gamesError) throw new Error("Playoff scores could not be checked before sending a recap.");
   if (!(games ?? []).length) return { ready: false, reason: "No playoff games have started yet." };
+  const sourceIds = new Set(sourceGameIds);
   const latestDay = (games ?? []).reduce((latest, game) => easternDate(new Date(game.kickoff_at)) > latest ? easternDate(new Date(game.kickoff_at)) : latest, easternDate(new Date(games![0].kickoff_at)));
-  const dayGames = (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
-  if (dayGames.some((game) => game.status !== "final")) return { ready: false, reason: "The latest playoff day is still in progress." };
+  const dayGames = sourceIds.size
+    ? (games ?? []).filter((game) => sourceIds.has(game.id))
+    : (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
+  if (!dayGames.length) return { ready: false, reason: "This playoff recap has no scheduled game day." };
+  if (dayGames.some((game) => game.status !== "final")) return { ready: false, reason: "This playoff day is still in progress." };
   const { count, error: picksError } = await supabaseAdmin
     .from("picks")
     .select("id", { count: "exact", head: true })
@@ -229,12 +233,12 @@ async function sundayRevealReady(window: "early" | "late", sourceGameIds: string
   return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
 }
 
-export async function reminderReadiness(category: ReminderCategory, sourceGameIds: string[] = []): Promise<ReminderReadiness> {
+export async function reminderReadiness(category: ReminderCategory, sourceGameIds: string[] = [], sourcePeriodId?: string | null): Promise<ReminderReadiness> {
   if (category === "weekly") return freshSlateReady();
   if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady(sourceGameIds);
   if (category === "early_lock") return earlyLockReady(sourceGameIds);
   if (category === "weekly_recap") return recapReady();
-  if (category === "playoff_day_recap") return playoffDayRecapReady();
+  if (category === "playoff_day_recap") return playoffDayRecapReady(sourceGameIds, sourcePeriodId);
   if (category === "playoff_public_reveal") return playoffPublicRevealReady(sourceGameIds);
   if (category === "featured_window_reveal") return featuredWindowRevealReady(sourceGameIds);
   if (category === "sunday_early_reveal") return sundayRevealReady("early", sourceGameIds);
