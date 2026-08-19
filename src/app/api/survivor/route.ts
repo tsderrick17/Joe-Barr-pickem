@@ -5,6 +5,7 @@ import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,7 @@ async function authenticatedPlayer(
       status: 401 as const,
     };
   }
+  await recordPlayerActivity(player.id);
   return { ok: true, player };
 }
 

@@ -7,6 +7,7 @@ import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 export const dynamic = "force-dynamic";
 
@@ -142,6 +143,7 @@ export async function GET(request: NextRequest) {
   }
 
   const viewer = viewerResult.data;
+  if (viewer) await recordPlayerActivity(viewer.id);
 
   if (!viewer) {
     return NextResponse.json(

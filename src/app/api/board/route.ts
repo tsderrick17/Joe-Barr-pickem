@@ -6,6 +6,7 @@ import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 type TeamRow = {
   id: string;
@@ -124,6 +125,7 @@ export async function GET(request: NextRequest) {
       { status: 403 },
     );
   }
+  await recordPlayerActivity(player.id);
 
   const [gamesResult, picksResult, periodResult, publicPicksResult, playersResult] = await Promise.all([
     supabaseAdmin

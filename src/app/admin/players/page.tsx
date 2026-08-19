@@ -11,7 +11,18 @@ type Player = {
   active: boolean;
   isCommissioner: boolean;
   createdAt?: string;
+  lastActiveAt?: string | null;
 };
+
+function lastActiveLabel(value: string | null | undefined) {
+  if (!value) return "Not yet signed in";
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
+  if (elapsedMinutes < 1) return "Last active just now";
+  if (elapsedMinutes < 60) return `Last active ${elapsedMinutes}m ago`;
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return `Last active ${elapsedHours}h ago`;
+  return `Last active ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value))}`;
+}
 
 export default function PlayerManagementPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -298,9 +309,14 @@ PINs are unique login identifiers and may be viewed here at any time.
                     className="flex items-center justify-between gap-4 border-b border-slate-400 py-4 last:border-b-0"
                     key={player.id}
                   >
-                    <span className="font-serif text-2xl">
-                      {player.firstName}
-                    </span>
+                    <div>
+                      <span className="font-serif text-2xl">
+                        {player.firstName}
+                      </span>
+                      <p className="mt-1 text-xs font-semibold text-slate-600">
+                        {lastActiveLabel(player.lastActiveAt)}
+                      </p>
+                    </div>
 
 <div className="text-right">
   <p className="font-mono text-lg font-bold tracking-[0.18em]">

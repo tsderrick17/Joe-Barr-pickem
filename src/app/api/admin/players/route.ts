@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const { data: players, error } = await supabaseAdmin
     .from("players")
     .select(
-      "id, first_name, login_pin, active, is_commissioner, created_at",
+      "id, first_name, login_pin, active, is_commissioner, created_at, last_active_at",
     )
     .order("first_name");
 
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
       active: player.active,
       isCommissioner: player.is_commissioner,
       createdAt: player.created_at,
+      lastActiveAt: player.last_active_at,
     })),
   });
 }
