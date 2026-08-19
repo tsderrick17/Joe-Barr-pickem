@@ -4,6 +4,7 @@ import {
   type ReminderCategory,
 } from "@/lib/reminder-audience";
 import { easternCalendarDayWindow, isRoutineEmailCategory, routineEmailCategories } from "@/lib/email-delivery-plan";
+import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
@@ -13,6 +14,7 @@ type Reminder = {
   audience: ReminderAudience;
   title: string;
   body: string;
+  automation_key?: string | null;
   recap_snapshot?: unknown;
 };
 
@@ -45,25 +47,6 @@ class ReminderDeliveryUncertainError extends Error {}
 const MAX_EMAIL_ATTEMPTS = 3;
 const EMAIL_TIMEOUT_MS = 15_000;
 
-function preferenceColumn(category: ReminderCategory) {
-  return {
-    weekly: "email_weekly_enabled",
-    final_lines: "email_final_lines_enabled",
-    sunday_final_lines: "email_sunday_final_lines_enabled",
-    early_lock: "email_early_lock_enabled",
-    pick_due: "email_pick_due_enabled",
-    weekly_recap: "email_weekly_recap_enabled",
-    playoff_day_recap: "email_playoff_day_recap_enabled",
-    playoff_public_reveal: "email_playoff_public_reveal_enabled",
-    sunday_early_reveal: "email_sunday_early_reveal_enabled",
-    sunday_late_reveal: "email_sunday_late_reveal_enabled",
-    featured_window_reveal: "email_featured_window_reveal_enabled",
-    ats_due: "email_ats_due_enabled",
-    survivor_due: "email_survivor_due_enabled",
-    custom: "email_notifications_enabled",
-  }[category];
-}
-
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
 }
@@ -92,13 +75,13 @@ function messageHtml(reminder: Reminder) {
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
   const destination = isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
   const callToAction = isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
-  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Preferences.</a></p></main>`;
+  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count: Pick'em pushes and Survivor ties are losses.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
   const playerIds = await eligiblePlayerIds(reminder.audience);
   if (playerIds.length === 0) return [] as EmailRecipient[];
-  const preference = preferenceColumn(reminder.category);
+  const preference = emailPreferenceColumn(reminder.category, reminder.automation_key);
   const { data, error } = await supabaseAdmin
     .from("players")
     .select(`id, notification_email, email_notifications_enabled, ${preference}`)
@@ -250,7 +233,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}`,
+        textContent: `${reminder.title}\n\n${reminder.body}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count: Pick'em pushes and Survivor ties are losses.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),

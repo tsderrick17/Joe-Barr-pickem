@@ -4,6 +4,7 @@ import { getWatchdogStatus } from "@/lib/automation-watchdog";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { weekRolloverAt } from "@/lib/week-rollover";
 
 type StageState = "complete" | "active" | "waiting" | "attention";
 type GameRow = {
@@ -11,6 +12,7 @@ type GameRow = {
   kickoff_at: string;
   line_lock_at: string;
   status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
+  finalized_at: string | null;
 };
 
 function nextTime(values: string[], now: Date) {
@@ -53,8 +55,21 @@ export async function GET(request: NextRequest) {
           stage("lines", "Line locks", "waiting", "Official lines wait for scheduled games.", "Begins before each game locks."),
           stage("scores", "Games & scoring", "waiting", "Scoring waits for games to begin.", "Begins at kickoff."),
           stage("results", "Results & recap", "waiting", "Results wait for final scores.", "Begins after the games settle."),
+          stage("handoff", "Week / round handoff", "waiting", "Turnover waits for a settled scoring period.", "Begins after results and grades are trustworthy."),
         ],
       });
+    }
+
+    if (season.state === "complete") {
+      const completedStages = [
+        stage("schedule", "Schedule", "complete", "The season schedule is complete.", "Historical slates remain available."),
+        stage("selections", "Selections", "complete", "All selection windows are closed.", "Submitted picks remain preserved."),
+        stage("lines", "Line locks", "complete", "All official line windows are complete.", "Locked lines remain permanent."),
+        stage("scores", "Games & scoring", "complete", "All games and grades are settled.", "Final records remain preserved."),
+        stage("results", "Results & recap", "complete", "The final results are complete.", "Recap receipts remain available."),
+        stage("handoff", "Season finish", "complete", "The final playoff round turned over successfully.", "The next automatic lifecycle step is the new-season bootstrap."),
+      ];
+      return NextResponse.json({ checkedAt: now.toISOString(), overall: "healthy", headline: "The season is complete", summary: "Every operational gate is settled and the full season remains preserved.", currentStageId: "handoff", openIncidentCount: watchdog.openAlerts.length, providerAllowance: health.providerAllowance, stages: completedStages });
     }
 
     const { data: periods, error: periodsError } = await supabaseAdmin
@@ -66,13 +81,15 @@ export async function GET(request: NextRequest) {
     if (periodsError) throw new Error("The scoring periods could not be read.");
 
     const period = periods?.find((item) => item.status === "active") ?? periods?.[0] ?? null;
-    const [gamesResult, picksResult] = period
+    const nextPeriod = period ? periods?.find((item) => item.display_order === period.display_order + 1) ?? null : null;
+    const [gamesResult, picksResult, nextGamesResult] = period
       ? await Promise.all([
-          supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status").eq("scoring_period_id", period.id).order("kickoff_at"),
-          supabaseAdmin.from("picks").select("player_id").eq("scoring_period_id", period.id).neq("result", "void"),
+          supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status, finalized_at").eq("scoring_period_id", period.id).order("kickoff_at"),
+          supabaseAdmin.from("picks").select("player_id, result").eq("scoring_period_id", period.id).neq("result", "void"),
+          nextPeriod ? supabaseAdmin.from("games").select("kickoff_at").eq("scoring_period_id", nextPeriod.id).order("kickoff_at").limit(1) : Promise.resolve({ data: [], error: null }),
         ])
-      : [{ data: [], error: null }, { data: [], error: null }];
-    if (gamesResult.error || picksResult.error) throw new Error("The active pool stage could not be read.");
+      : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    if (gamesResult.error || picksResult.error || nextGamesResult.error) throw new Error("The active pool stage could not be read.");
 
     const games = (gamesResult.data ?? []) as GameRow[];
     const gameIds = games.map((game) => game.id);
@@ -102,6 +119,40 @@ export async function GET(request: NextRequest) {
     const scoreProblem = health.problems.find((problem) => /score|final/i.test(problem));
     const reminderProblem = health.reminderHealth.overdueScheduled > 0 || health.reminderHealth.staleSending > 0;
     const lineProblem = health.missingOfficialLines > 0;
+    const pendingPickCount = (picksResult.data ?? []).filter((pick) => pick.result === "pending").length;
+    const postponedCount = games.filter((game) => game.status === "postponed").length;
+    const terminalGames = games.length > 0 && games.every((game) => ["final", "cancelled", "no_contest"].includes(game.status));
+    const settlementTimes = games.map((game) => game.finalized_at ?? (["cancelled", "no_contest"].includes(game.status) ? game.kickoff_at : null));
+    const settlementTimestampsReady = settlementTimes.every((value): value is string => Boolean(value));
+    const settled = terminalGames && pendingPickCount === 0 && settlementTimestampsReady;
+    const nextKickoffAt = nextGamesResult.data?.[0]?.kickoff_at ?? null;
+    const rolloverAt = settled ? weekRolloverAt({ lastFinalizedAt: [...settlementTimes].sort().at(-1)!, nextKickoffAt }) : null;
+    const handoffLabel = period?.period_type === "playoff" ? (nextPeriod ? "Round handoff" : "Season finish") : "Week handoff";
+    const handoffState: StageState = postponedCount || (terminalGames && (pendingPickCount > 0 || !settlementTimestampsReady))
+      ? "attention"
+      : settled
+        ? "active"
+        : "waiting";
+    const handoffDetail = postponedCount
+      ? `${postponedCount} postponed game${postponedCount === 1 ? " requires" : "s require"} review before ${handoffLabel.toLowerCase()}.`
+      : terminalGames && pendingPickCount > 0
+        ? `${pendingPickCount} final pick grade${pendingPickCount === 1 ? " is" : "s are"} still pending.`
+        : terminalGames && !settlementTimestampsReady
+          ? "A settlement timestamp is missing, so turnover is safely blocked."
+          : settled && rolloverAt && now < new Date(rolloverAt)
+            ? `${period?.display_name} is settled and remains the default view until ${formatEvent(rolloverAt)}.`
+            : settled
+              ? `${period?.display_name} is eligible for automatic ${handoffLabel.toLowerCase()} now.`
+              : `Turnover waits for every game and applicable pick in ${period?.display_name ?? "the current period"} to settle.`;
+    const handoffNext = handoffState === "attention"
+      ? "Resolve the displayed integrity hold; the system will not force the transition."
+      : settled && nextPeriod
+        ? `${nextPeriod.display_name} becomes the default automatically at the safe handoff time.`
+        : settled
+          ? "The season closes automatically after the final playoff period is preserved."
+          : period?.period_type === "playoff"
+            ? "The next playoff round or season finish follows the same settlement gates."
+            : "The next week opens automatically after settlement and the display minimum.";
 
     const stages = [
       stage(
@@ -135,10 +186,11 @@ export async function GET(request: NextRequest) {
       stage(
         "results",
         "Results & recap",
-        reminderProblem ? "attention" : period?.status === "active" && playable.length > 0 && finals.length === playable.length ? "active" : period?.status === "upcoming" ? "waiting" : "waiting",
+        reminderProblem ? "attention" : settled ? "complete" : period?.status === "active" && playable.length > 0 && finals.length === playable.length ? "active" : "waiting",
         reminderProblem ? `${health.reminderHealth.overdueScheduled} overdue and ${health.reminderHealth.staleSending} stuck message${health.reminderHealth.staleSending === 1 ? "" : "s"}.` : finals.length === playable.length && playable.length > 0 ? "All games are final; the safe handoff and recap are next." : "Results and the preserved recap wait for every game and grade to settle.",
         reminderProblem ? "Clear the delivery hold before relying on the recap." : "After settlement, the next period opens and the Tuesday recap is preserved by email.",
       ),
+      stage("handoff", handoffLabel, handoffState, handoffDetail, handoffNext),
     ];
 
     const attentionStage = stages.find((item) => item.state === "attention");

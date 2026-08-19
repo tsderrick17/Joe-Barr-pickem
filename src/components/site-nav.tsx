@@ -181,7 +181,7 @@ export default function SiteNav() {
             <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
               <div className="flex items-center justify-end gap-3">
                 <a className={linkStyle("/profile")} href="/profile">
-                  Preferences
+                  Notifications
                 </a>
 
                 <button
@@ -224,7 +224,7 @@ export default function SiteNav() {
           {playerName ? (
             <>
             {isCommissioner ? <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/admin">Comish</Link> : null}
-            <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/profile">Preferences</Link>
+            <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/profile">Notifications</Link>
             <button className="whitespace-nowrap font-bold text-white underline underline-offset-2 disabled:opacity-50" disabled={isSigningOut} onClick={signOut} type="button">{isSigningOut ? "Signing out..." : "Sign out"}</button>
             <span className="whitespace-nowrap text-[#f5f0e6]">{playerName}</span>
             </>

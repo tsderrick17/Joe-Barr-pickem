@@ -1,6 +1,6 @@
 # Joe Barr Memorial Pick'em project reference
 
-Last verified against `main`: 2026-08-09.
+Last verified against `main`: 2026-08-18.
 
 This is the durable product and system reference for the Joe Barr Memorial
 Pick'em application. It explains what must remain true across code changes,
@@ -65,6 +65,8 @@ be replayed.
 ## Player identity and privacy
 
 - Players authenticate with their assigned pool identity and PIN/session flow.
+- Concurrent page and navigation startup share one in-flight session read. The
+  result is not cached after completion, so sign-out and expiry remain immediate.
 - PIN sign-in is routed through the application. Ten different invalid PINs
   from one privacy-safe source fingerprint in 15 minutes open a Commissioner
   incident and email alert. Successful login clears prior failures, no player
@@ -236,12 +238,24 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Operational logs and delivery receipts are retained and reviewed separately
   from permanent competitive history.
 - Players choose one of three email plans: **Essentials**, **Regular**, or
-  **Full Card**. Each remains individually adjustable in Preferences; existing
+  **Full Card**. Each remains individually adjustable in Notifications; existing
   choices are never changed just because the plan labels evolve.
+- Final gameday lines use one explicit choice: every gameday, Sundays only, or
+  none. Selection reminders use three independent choices: Sunday 11:00 AM,
+  Sunday 3:00 PM, and the combined Sunday 6:00 PM/Monday 5:00 PM primetime set.
+  All times are Eastern, and a reminder sends only while that player can still
+  make a needed selection.
 - Those plans are operational schedules, not just presets. The reminder worker
   queues each promised occurrence from the live NFL schedule, safely replaces
   unsent occurrences after a flex or cancellation, and preserves sent wording
   plus the exact source-game receipt.
+- Public-pick emails are scoped to their kickoff window and are intentionally
+  suppressed when nobody selected a represented game. Playoff reveals normally
+  become one message per game because playoff kickoff times rarely match.
+- Wednesday Slate and Tuesday recap subjects include the scoring-period name.
+  Playoff reveal and day-recap subjects include the represented Eastern game
+  date. After Survivor concludes, weekly recaps automatically use Pick'em-only
+  wording; the championship-week recap may still memorialize the champion.
 - At most one routine pool email is delivered to a player in an Eastern
   calendar day. Pick-due reminders and material early-lock/schedule notices
   bypass that limit. A held routine email is retained as a receipt, not counted
@@ -276,9 +290,11 @@ The Commissioner Desk is the operational control plane. Its intended order is:
 6. Use Season Recovery Rehearsal before a rare lifecycle recovery.
 
 The Reminders view is an action queue, not a health score: it plainly lists
-scheduled messages, items needing attention, and routine emails intentionally
-held for inbox space. The built-in email test sends only to the signed-in
-Commissioner's opted-in address, never the player pool.
+automatic messages, items needing attention, empty reveal windows intentionally
+suppressed, and routine emails held for inbox space. The Commissioner may edit
+standard future wording but cannot create an ad-hoc scheduled pool blast. The
+built-in email test sends only to the signed-in Commissioner's opted-in address,
+never the player pool.
 
 Manual controls are recovery paths, not alternate implementations.
 

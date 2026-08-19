@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 const SESSION_REFRESH_WINDOW_MS = 60_000;
 const TRANSIENT_READ_RETRY_DELAY_MS = 650;
 const TRANSIENT_READ_STATUS_CODES = new Set([502, 503, 504]);
+let inFlightSessionRead: Promise<Session | null> | null = null;
 
 export class SessionUnavailableError extends Error {
   constructor(message = "Your sign-in session is unavailable.") {
@@ -39,7 +40,7 @@ async function waitForTransientReadRetry(signal?: AbortSignal): Promise<void> {
   });
 }
 
-export async function getFreshSession(): Promise<Session | null> {
+async function loadFreshSession(): Promise<Session | null> {
   // A browser navigation immediately after PIN sign-in can race Supabase's
   // local-session hydration. Read a few times before treating the player as
   // signed out; this prevents a valid, newly-created session from bouncing
@@ -73,6 +74,19 @@ export async function getFreshSession(): Promise<Session | null> {
 
   if (refreshError || !refreshedSession) return null;
   return refreshedSession;
+}
+
+export async function getFreshSession(): Promise<Session | null> {
+  // The navigation and the page commonly mount together. Share that one
+  // local/session refresh instead of making both wait on duplicate auth work.
+  // This is deliberately in-flight-only: sign-out and expiry are never cached.
+  if (inFlightSessionRead) return inFlightSessionRead;
+  inFlightSessionRead = loadFreshSession();
+  try {
+    return await inFlightSessionRead;
+  } finally {
+    inFlightSessionRead = null;
+  }
 }
 
 export async function fetchWithSession(

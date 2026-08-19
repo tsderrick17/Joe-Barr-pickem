@@ -50,6 +50,15 @@ export async function eligiblePlayerIds(audience: ReminderAudience) {
   const period = await activePeriod();
   if (!period) return [];
 
+  const { count: selectableGameCount, error: selectableGamesError } = await supabaseAdmin
+    .from("games")
+    .select("id", { count: "exact", head: true })
+    .eq("scoring_period_id", period.id)
+    .gt("kickoff_at", new Date().toISOString())
+    .not("status", "in", "(postponed,cancelled,no_contest)");
+  if (selectableGamesError) throw new Error("Open selection windows could not be read.");
+  if ((selectableGameCount ?? 0) === 0) return [];
+
   const atsPlayersDue = async () => {
     const { data: picks, error: picksError } = await supabaseAdmin
       .from("picks")

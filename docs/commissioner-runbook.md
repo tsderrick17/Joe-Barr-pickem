@@ -74,6 +74,14 @@ Use test player accounts before Week 1 to verify:
 10. A week with a pending final-game pick does not rubber-stamp until that pick is resolved.
 11. Confirm the imported preview assigns future postseason games, in order, to Wild Card, Divisional Round, Conference Championships, and Super Bowl.
 
+## Email controls
+
+The Commissioner **Emails** page edits standard future wording, sends a private
+test to the Commissioner, and displays automatic delivery receipts. It does not
+schedule ad-hoc pool messages or change the timetable. Players control timing
+sets and content categories from **Notifications**. Subjects retain dynamic
+week/date context even when their standard wording is customized.
+
 ## Score recovery
 
 If a final score appears missing:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type StageState = "complete" | "active" | "waiting" | "attention";
@@ -87,7 +87,7 @@ export default function CommissionerOperationsMap() {
           <div className="commissioner-map-pulse" aria-hidden="true"><span /></div>
         </div>
 
-        <ol className="commissioner-flow mt-8" aria-label="Current pool operations flow">
+        <ol className="commissioner-flow mt-8" aria-label="Current pool operations flow" style={{ "--commissioner-step-count": map.stages.length } as CSSProperties}>
           {map.stages.map((stage, index) => {
             const selectedStage = selected?.id === stage.id;
             const current = map.currentStageId === stage.id;

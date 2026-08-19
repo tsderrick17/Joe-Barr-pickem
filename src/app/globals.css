@@ -2595,7 +2595,7 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 
 .commissioner-flow {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--commissioner-step-count, 5), minmax(0, 1fr));
   list-style: none;
   margin-left: 0;
   padding-left: 0;
@@ -2676,6 +2676,14 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 .commissioner-map-detail.is-active { background: #edf7f4; border-left-color: #08764e; }
 .commissioner-map-detail.is-attention { background: #fff0ea; border-left-color: #a33c29; }
 .commissioner-map-next { border-left: 1px solid #c7c0b5; padding-left: 1.25rem; }
+
+.slate-winner-rule {
+  border-top: 1px solid #b7aea0;
+  color: #7a2e24;
+  font-weight: 800;
+  margin-top: .15rem;
+  padding-top: .55rem;
+}
 
 html[data-theme="night"] .commissioner-map-banner,
 html[data-theme="night"] .commissioner-map-detail.is-active {

@@ -20,7 +20,8 @@ test("regular email plans create one deterministic occurrence for each promised 
   assert.equal(templates.filter((id) => id === "final_lines").length, 3);
   assert.equal(templates.filter((id) => id === "sunday_final_lines").length, 1);
   assert.equal(templates.filter((id) => id === "early_lock").length, 1);
-  assert.equal(templates.filter((id) => id.startsWith("pick_due_")).length, 3);
+  assert.equal(templates.filter((id) => id.startsWith("pick_due_")).length, 4);
+  assert.equal(schedule.find((item) => item.templateId === "pick_due_sunday_6").scheduledFor, "2026-09-13T22:00:00.000Z");
   assert.equal(templates.filter((id) => id === "sunday_early_reveal").length, 1);
   assert.equal(templates.filter((id) => id === "sunday_late_reveal").length, 1);
   assert.equal(templates.filter((id) => id === "featured_window_reveal").length, 4);

@@ -4,10 +4,11 @@ import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import {
   isFreshSlateReady,
   isPlayoffDayRecapReady,
+  publicRevealSelectionReadiness,
   isSundayWindowReady,
 } from "@/lib/reminder-readiness-rules.js";
 
-type ReminderReadiness = { ready: boolean; reason: string | null };
+type ReminderReadiness = { ready: boolean; reason: string | null; terminal?: boolean };
 
 function easternDate(value: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -136,7 +137,18 @@ async function playoffDayRecapReady(): Promise<ReminderReadiness> {
   });
 }
 
-async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
+async function selectedPickCount(sourceGameIds: string[]) {
+  if (!sourceGameIds.length) return 0;
+  const { count, error } = await supabaseAdmin
+    .from("picks")
+    .select("id", { count: "exact", head: true })
+    .in("game_id", sourceGameIds)
+    .neq("result", "void");
+  if (error) throw new Error("Public selections could not be checked before sending a reveal.");
+  return count ?? 0;
+}
+
+async function playoffPublicRevealReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   const { data: period, error: periodError } = await supabaseAdmin
     .from("scoring_periods")
     .select("id")
@@ -148,16 +160,19 @@ async function playoffPublicRevealReady(): Promise<ReminderReadiness> {
   if (periodError) throw new Error("The playoff kickoff window could not be checked before sending a public update.");
   if (!period) return { ready: false, reason: "A playoff round is not active yet." };
 
-  const { count, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("games")
     .select("id", { count: "exact", head: true })
     .eq("scoring_period_id", period.id)
     .lte("kickoff_at", new Date().toISOString())
     .not("status", "in", "(postponed,cancelled,no_contest)");
+  if (sourceGameIds.length) query = query.in("id", sourceGameIds);
+  const { count, error } = await query;
   if (error) throw new Error("The playoff kickoff window could not be checked before sending a public update.");
-  return (count ?? 0) > 0
+  const kickoffReady = (count ?? 0) > 0
     ? { ready: true, reason: null }
     : { ready: false, reason: "The selected playoff window has not reached kickoff yet." };
+  return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
 }
 
 function isFeaturedKickoff(game: { is_international: boolean; kickoff_at: string }) {
@@ -167,20 +182,23 @@ function isFeaturedKickoff(game: { is_international: boolean; kickoff_at: string
   return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
 }
 
-async function featuredWindowRevealReady(): Promise<ReminderReadiness> {
+async function featuredWindowRevealReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   const period = await activePeriod();
   if (!period) return { ready: false, reason: "There is no active week for the featured-game reveal." };
   const { data: games, error } = await supabaseAdmin
     .from("games")
-    .select("kickoff_at, is_international, status")
+    .select("id, kickoff_at, is_international, status")
     .eq("scoring_period_id", period.id);
   if (error) throw new Error("Featured kickoff status could not be checked before sending a reveal.");
+  const sourceIds = new Set(sourceGameIds);
   const hasStartedFeaturedGame = (games ?? []).some((game) =>
+    (!sourceIds.size || sourceIds.has(game.id)) &&
     isFeaturedKickoff(game) && new Date(game.kickoff_at) <= new Date() && !["postponed", "cancelled", "no_contest"].includes(game.status),
   );
-  return hasStartedFeaturedGame
+  const kickoffReady = hasStartedFeaturedGame
     ? { ready: true, reason: null }
     : { ready: false, reason: "The selected primetime or international game has not reached kickoff yet." };
+  return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
 }
 
 function easternWeekday(value: string) {
@@ -191,22 +209,24 @@ function easternHour(value: string) {
   return Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(value)));
 }
 
-async function sundayRevealReady(window: "early" | "late"): Promise<ReminderReadiness> {
+async function sundayRevealReady(window: "early" | "late", sourceGameIds: string[] = []): Promise<ReminderReadiness> {
   const period = await activePeriod();
   if (!period) return { ready: false, reason: "There is no active week for the Sunday reveal." };
   const { data: games, error } = await supabaseAdmin
     .from("games")
-    .select("kickoff_at, status")
+    .select("id, kickoff_at, status")
     .eq("scoring_period_id", period.id);
   if (error) throw new Error("Sunday kickoff status could not be checked before sending a reveal.");
-  return isSundayWindowReady({
+  const sourceIds = new Set(sourceGameIds);
+  const kickoffReady = isSundayWindowReady({
     activePeriod: period,
-    games: games ?? [],
+    games: (games ?? []).filter((game) => !sourceIds.size || sourceIds.has(game.id)),
     window,
     now: new Date(),
     easternWeekday,
     easternHour,
   });
+  return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
 }
 
 export async function reminderReadiness(category: ReminderCategory, sourceGameIds: string[] = []): Promise<ReminderReadiness> {
@@ -215,9 +235,9 @@ export async function reminderReadiness(category: ReminderCategory, sourceGameId
   if (category === "early_lock") return earlyLockReady(sourceGameIds);
   if (category === "weekly_recap") return recapReady();
   if (category === "playoff_day_recap") return playoffDayRecapReady();
-  if (category === "playoff_public_reveal") return playoffPublicRevealReady();
-  if (category === "featured_window_reveal") return featuredWindowRevealReady();
-  if (category === "sunday_early_reveal") return sundayRevealReady("early");
-  if (category === "sunday_late_reveal") return sundayRevealReady("late");
+  if (category === "playoff_public_reveal") return playoffPublicRevealReady(sourceGameIds);
+  if (category === "featured_window_reveal") return featuredWindowRevealReady(sourceGameIds);
+  if (category === "sunday_early_reveal") return sundayRevealReady("early", sourceGameIds);
+  if (category === "sunday_late_reveal") return sundayRevealReady("late", sourceGameIds);
   return { ready: true, reason: null };
 }
