@@ -20,6 +20,7 @@ import CommissionerHandbook from "@/components/commissioner-handbook";
 import AutomationWatchdog from "@/components/automation-watchdog";
 import SeasonBootstrapStatus from "@/components/season-bootstrap-status";
 import CommissionerOperationsMap from "@/components/commissioner-operations-map";
+import AccountCapacityPanel from "@/components/account-capacity";
 
 type Spread = {
   team: string;
@@ -312,6 +313,7 @@ export default function AdminPage() {
               </a>
             ))}
             </div>
+            <AccountCapacityPanel />
             <SentryVerification />
           </details>
         </section>
