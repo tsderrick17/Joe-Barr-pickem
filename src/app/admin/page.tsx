@@ -292,31 +292,8 @@ export default function AdminPage() {
             </> : null}
           </details>
         </section>
-        <section className="border-b-2 border-zinc-900 py-7">
-          <details>
-            <summary className="cursor-pointer font-serif text-xl font-bold">Connected systems</summary>
-            <p className="mt-2 text-sm text-zinc-700">Open one only when you need that service&apos;s own dashboard. The sign-in hint tells you which account button to try first.</p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Vercel", "Live site and deployments", "https://vercel.com/tsderrick/pickem", "GitHub"],
-              ["Supabase", "Database, sign-in, and scheduled automation", "https://supabase.com/dashboard/project/qtuycmgjiizrahfchsxe", "GitHub"],
-              ["GitHub Actions", "Migration deployment history", "https://github.com/tsderrick17/Joe-Barr-pickem/actions", "GitHub"],
-              ["Brevo", "Reminder email delivery", "https://app.brevo.com/", "Google"],
-              ["Sentry", "Application error reports", "https://sentry.io/", "GitHub"],
-              ["UptimeRobot", "External health alerts", "https://dashboard.uptimerobot.com/", "Google"],
-              ["The Odds API", "NFL odds source", "https://the-odds-api.com/", "Google"],
-            ].map(([name, description, href, signIn]) => (
-              <a className="border border-zinc-400 bg-white px-4 py-3 transition hover:border-zinc-900 hover:bg-[#fffaf0]" href={href} key={name} rel="noreferrer" target="_blank">
-                <span className="block font-bold">{name} ↗</span>
-                <span className="mt-1 block text-sm text-zinc-700">{description}</span>
-                <span className="mt-2 block text-[11px] font-black tracking-[.1em] text-[#007e72]">START WITH {signIn.toUpperCase()}</span>
-              </a>
-            ))}
-            </div>
-            <AccountCapacityPanel />
-            <SentryVerification />
-          </details>
-        </section>
+        <AccountCapacityPanel />
+        <SentryVerification />
         </> : null}
 
         {activePanel === "game-day" ? <>
