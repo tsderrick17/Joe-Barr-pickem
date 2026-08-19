@@ -99,7 +99,7 @@ $$;
 
 -- Run off-hours once each week. This uses database-local time and does not
 -- call a paid provider or require an application secret.
-select cron.unschedule(jobid::integer)
+select cron.unschedule(jobid)
 from cron.job
 where jobname = 'prune-pickem-operational-storage-weekly';
 
