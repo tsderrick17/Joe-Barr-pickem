@@ -24,6 +24,9 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /UPTIMEROBOT_READ_ONLY_API_KEY/);
   assert.match(capacity, /getAccountDetails/);
   assert.match(capacity, /cached for five minutes/);
+  assert.match(capacity, /GITHUB_USAGE_TOKEN/);
+  assert.match(capacity, /settings\/billing\/usage\/summary/);
+  assert.match(capacity, /GITHUB_FREE_ACTIONS_MINUTES/);
   assert.match(route, /storageTables/);
   assert.match(guardrails, /skip_duplicate_preliminary_spread_snapshot/);
   assert.match(guardrails, /prune_operational_storage/);
