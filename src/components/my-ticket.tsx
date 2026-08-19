@@ -125,6 +125,7 @@ export default function MyTicket({
           <div className="my-ticket-instructions">
             <p>Official spreads appear on Ticket once final.</p>
             <p>Selections are revealed to others at kickoff.</p>
+            <p>Only winners count: Pick&apos;em pushes and Survivor ties are losses.</p>
           </div>
         </div> : null}
       </div>
