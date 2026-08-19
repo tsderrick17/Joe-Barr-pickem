@@ -34,5 +34,5 @@ export function automaticWeeklyRecapAt(lastSettledAt) {
   // worker sends immediately once every score and grade is trustworthy.
   const daysToTuesday = 2 - weekdayNumber;
   date.setUTCDate(date.getUTCDate() + daysToTuesday);
-  return easternToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), 8).toISOString();
+  return easternToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), 6).toISOString();
 }
