@@ -8,15 +8,23 @@ function easternParts(date) {
     day: "2-digit",
     weekday: "long",
     hour: "2-digit",
+    minute: "2-digit",
     hourCycle: "h23",
   }).formatToParts(date);
   const read = (type) => parts.find((part) => part.type === type)?.value ?? "";
-  return { year: Number(read("year")), month: Number(read("month")), day: Number(read("day")), weekday: read("weekday") };
+  return {
+    year: Number(read("year")),
+    month: Number(read("month")),
+    day: Number(read("day")),
+    weekday: read("weekday"),
+    hour: Number(read("hour")),
+    minute: Number(read("minute")),
+  };
 }
 
 function offsetMilliseconds(date) {
   const parts = easternParts(date);
-  return Date.UTC(parts.year, parts.month - 1, parts.day, Number(new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(date))) - date.getTime();
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute) - date.getTime();
 }
 
 function easternToUtc(year, month, day, hour, minute = 0) {
