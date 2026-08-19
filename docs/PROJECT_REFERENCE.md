@@ -237,8 +237,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   on due records.
 - Operational logs and delivery receipts are retained and reviewed separately
   from permanent competitive history.
-- A weekly storage guardrail removes only routine `sync_runs` plus resolved
-  watchdog and schedule-review incidents after 180 days. Picks, final scores,
+- A weekly storage guardrail runs through the protected Monday watchdog and
+  removes only routine `sync_runs` plus resolved watchdog and schedule-review
+  incidents after 180 days. Picks, final scores,
   official lines, audit history, championships, and email receipts are never
   part of this cleanup. Repeated unchanged preliminary spreads are stored at
   most once per Eastern day; meaningful line changes remain visible.

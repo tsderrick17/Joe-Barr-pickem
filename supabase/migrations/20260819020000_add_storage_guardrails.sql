@@ -97,17 +97,9 @@ begin
 end;
 $$;
 
--- Run off-hours once each week. This uses database-local time and does not
--- call a paid provider or require an application secret.
-select cron.unschedule(jobid)
-from cron.job
-where jobname = 'prune-pickem-operational-storage-weekly';
-
-select cron.schedule(
-  'prune-pickem-operational-storage-weekly',
-  '17 13 * * 1',
-  $$ select public.prune_operational_storage(); $$
-);
+-- The protected five-minute watchdog runs this once each Monday. Keeping the
+-- cadence in the application avoids adding a second scheduler dependency and
+-- lets a fresh installation reproduce the guardrail in its isolated database.
 
 revoke all on function public.skip_duplicate_preliminary_spread_snapshot() from public, anon, authenticated;
 revoke all on function public.storage_table_usage() from public, anon, authenticated;

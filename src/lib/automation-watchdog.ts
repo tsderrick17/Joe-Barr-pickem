@@ -6,6 +6,10 @@ import { evaluateWatchdogSignals } from "@/lib/watchdog-rules";
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
 type AlertRow = { id: string; signal_key: string; notified_at: string | null; notification_attempted_at: string | null };
 
+function isWeeklyStoragePruneDue(now: Date) {
+  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 5;
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
 }
@@ -52,10 +56,14 @@ export async function runAutomationWatchdog(now = new Date()) {
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
   try {
-    const [health, bootstrap, preflight] = await Promise.all([
+    const [health, bootstrap, preflight, storagePrune] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
+      isWeeklyStoragePruneDue(now)
+        ? supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
+        : Promise.resolve({ data: null, error: null }),
     ]);
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
+    if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
     const signals = evaluateWatchdogSignals({ health, bootstrap, preflightChecks: preflight.data ?? [], now }) as Signal[];
     const { data: openAlerts, error: alertsError } = await supabaseAdmin.from("automation_alerts")
       .select("id, signal_key, notified_at, notification_attempted_at").is("resolved_at", null);
@@ -91,7 +99,7 @@ export async function runAutomationWatchdog(now = new Date()) {
         }
       }
     }
-    const details = { signals: signals.length, opened, resolved: resolvedIds.length, notified };
+    const details = { signals: signals.length, opened, resolved: resolvedIds.length, notified, storagePruned: storagePrune.data ?? undefined };
     await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details }).eq("id", run.id);
     return details;
   } catch (error) {
