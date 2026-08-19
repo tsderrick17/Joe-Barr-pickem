@@ -17,11 +17,14 @@ The existing `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, and
 **Encrypted database backup** → **Run workflow**. Do not download or decrypt a
 backup unless recovery is genuinely required.
 
-Retention policy: scoring, picks, locks, seasons, championships, and audit
-history are never automatically deleted. Operational delivery records and sync
-logs are kept while the Commissioner dashboard reports their age and volume;
-they are reviewed before any archival deletion so a disputed season always has
-its full record.
+Retention policy: scoring, picks, locks, seasons, championships, audit history,
+and email receipts are never automatically deleted. A weekly database-local
+guardrail removes only `sync_runs` and resolved watchdog/schedule-review
+operational records after 180 days. It never calls a provider or needs an app
+secret. Unchanged preliminary spread snapshots are kept at most once per
+Eastern day; official locked lines and changed snapshots remain intact. The
+Commissioner Connected systems section includes a read-only per-table size
+breakdown for review.
 
 ## Provider allowance
 

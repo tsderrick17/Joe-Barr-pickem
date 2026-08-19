@@ -147,6 +147,19 @@ relevant week or playoff date, and weekly recap wording drops Survivor after
 that pool is no longer relevant. Remove ad-hoc Commissioner scheduling so the
 automatic timetable and player self-service choices remain the only delivery
 controls.
+
+## 2026-08-19 — REF-018 — Bound operational storage without deleting pool history
+
+**Status:** Accepted
+
+Keep every competitive and player-facing historical record, including picks,
+official lines, final results, audit entries, championships, and email
+receipts. Weekly storage cleanup may delete only routine `sync_runs` and
+resolved automation or schedule-review records after 180 days. Store unchanged
+preliminary spread snapshots no more than once per Eastern day while preserving
+all changed snapshots. A service-role-only per-table size report makes the
+remaining database use visible to the Commissioner without opening metadata to
+players.
 ### REF-017 — Harden advisor findings without opening data access (2026-08-18)
 
 **Decision:** Pin the `search_path` of every public-schema function that does
