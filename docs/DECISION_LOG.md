@@ -147,3 +147,13 @@ relevant week or playoff date, and weekly recap wording drops Survivor after
 that pool is no longer relevant. Remove ad-hoc Commissioner scheduling so the
 automatic timetable and player self-service choices remain the only delivery
 controls.
+### REF-017 — Harden advisor findings without opening data access (2026-08-18)
+
+**Decision:** Pin the `search_path` of every public-schema function that does
+not already declare one, and make the legacy `rls_auto_enable()` helper
+service-role-only if it exists.
+
+**Why:** The security advisor correctly identified mutable lookup paths and a
+publicly executable `SECURITY DEFINER` helper. This remediation is idempotent,
+preserves explicit `cron`/`vault` paths, and never adds a client-facing table
+policy merely to dismiss RLS informational findings.
