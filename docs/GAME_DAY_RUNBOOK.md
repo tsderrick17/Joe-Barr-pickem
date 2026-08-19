@@ -47,7 +47,7 @@ change player picks or scores directly.
 ## Weekly close
 
 1. Check Automation Health after the final game grades.
-2. The major recap becomes eligible Tuesday at 6:00 AM Eastern and sends once
+2. The major recap becomes eligible Tuesday at 6:30 AM Eastern and sends once
    every result is trustworthy. If it is late, distinguish an unsettled week
    from a reminder-delivery failure before intervening.
 3. The next period is manually selectable on the next Eastern day when its

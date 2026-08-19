@@ -12,7 +12,7 @@ guarded recovery tools for a specific observed condition.
 | Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm both UptimeRobot monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
-| Tuesday, 8:00 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
+| Tuesday, 6:30 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
 | Weekly | Create an encrypted database backup | Review failures only |
 | Monthly | Run isolated dependency/migration/lifecycle rehearsal | Review the artifact if it fails |

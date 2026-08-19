@@ -52,7 +52,7 @@ are voided rather than graded as losses.
 
 **Status:** Accepted
 
-The major recap becomes eligible Tuesday at 6:00 AM Eastern after accurate
+The major recap becomes eligible Tuesday at 6:30 AM Eastern after accurate
 settlement. The default week normally changes Wednesday at 3:00 AM Eastern and
 at least 24 hours after the prior week settled. The next week can be selected
 manually on the next Eastern day, and all completed weeks remain accessible.

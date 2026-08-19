@@ -85,13 +85,13 @@ export function buildEmailPlanSchedule(period, rawGames) {
   const first = easternParts(games[0].kickoff_at);
   const daysBackToWednesday = (weekdayIndex[first.weekday] - weekdayIndex.Wednesday + 7) % 7;
   const wednesday = shiftEasternDate(first, -daysBackToWednesday);
-  result.push(candidate(period, "weekly", "weekly", "all_active", easternWallTime(wednesday.year, wednesday.month, wednesday.day, 8), keyDate(wednesday), games.map((game) => game.id)));
+  result.push(candidate(period, "weekly", "weekly", "all_active", easternWallTime(wednesday.year, wednesday.month, wednesday.day, 6, 30), keyDate(wednesday), games.map((game) => game.id)));
 
   for (const [date, group] of dayGroups) {
     const { parts, games: dayGames } = group;
-    result.push(candidate(period, "final_lines", "final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 8, 30), date, dayGames.map((game) => game.id)));
+    result.push(candidate(period, "final_lines", "final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 6, 30), date, dayGames.map((game) => game.id)));
     if (parts.weekday === "Sunday") {
-      result.push(candidate(period, "sunday_final_lines", "sunday_final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 8, 30), date, dayGames.map((game) => game.id)));
+      result.push(candidate(period, "sunday_final_lines", "sunday_final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 6, 30), date, dayGames.map((game) => game.id)));
       result.push(candidate(period, "pick_due_sunday_11", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 11), `${date}:11`));
       result.push(candidate(period, "pick_due_sunday_3", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 15), `${date}:15`));
       result.push(candidate(period, "pick_due_sunday_6", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 18), `${date}:18`));

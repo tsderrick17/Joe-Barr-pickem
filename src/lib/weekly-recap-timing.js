@@ -19,8 +19,8 @@ function offsetMilliseconds(date) {
   return Date.UTC(parts.year, parts.month - 1, parts.day, Number(new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(date))) - date.getTime();
 }
 
-function easternToUtc(year, month, day, hour) {
-  const guess = new Date(Date.UTC(year, month - 1, day, hour));
+function easternToUtc(year, month, day, hour, minute = 0) {
+  const guess = new Date(Date.UTC(year, month - 1, day, hour, minute));
   return new Date(guess.getTime() - offsetMilliseconds(guess));
 }
 
@@ -34,5 +34,5 @@ export function automaticWeeklyRecapAt(lastSettledAt) {
   // worker sends immediately once every score and grade is trustworthy.
   const daysToTuesday = 2 - weekdayNumber;
   date.setUTCDate(date.getUTCDate() + daysToTuesday);
-  return easternToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), 6).toISOString();
+  return easternToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), 6, 30).toISOString();
 }
