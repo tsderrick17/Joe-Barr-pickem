@@ -45,3 +45,13 @@ export function isSundayWindowReady({ activePeriod, games, window, now, easternW
   if (gamesInWindow.some((game) => new Date(game.kickoff_at) > now)) return { ready: false, reason: "The selected Sunday games have not all reached kickoff yet." };
   return { ready: true, reason: null };
 }
+
+export function publicRevealSelectionReadiness({ kickoffReady, selectedPickCount }) {
+  if (!kickoffReady.ready) return kickoffReady;
+  if (selectedPickCount > 0) return { ready: true, reason: null };
+  return {
+    ready: false,
+    terminal: true,
+    reason: "No player selected a game in this public-pick window.",
+  };
+}

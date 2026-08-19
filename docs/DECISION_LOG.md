@@ -132,3 +132,18 @@ authorization, external providers, sender readiness, and Commissioner alert
 delivery without consuming odds credits or sending email. A separate public,
 opaque heartbeat lets an external monitor prove the internal watchdog itself
 is still completing.
+
+## 2026-08-18 — REF-016 — Make notification timing explicit and suppress empty reveals
+
+**Status:** Accepted
+
+Replace the single selection-reminder preference with three preserved player
+choices: Sunday early, Sunday afternoon, and the combined Sunday/Monday
+primetime set. Add the 6:00 PM Sunday occurrence, but send every reminder only
+when a legal selection can still be made. Public reveal occurrences with no
+represented selections end as explicit suppressions rather than deliveries,
+failures, or indefinite retries. Automatic subjects always identify the
+relevant week or playoff date, and weekly recap wording drops Survivor after
+that pool is no longer relevant. Remove ad-hoc Commissioner scheduling so the
+automatic timetable and player self-service choices remain the only delivery
+controls.

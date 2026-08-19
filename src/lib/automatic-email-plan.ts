@@ -1,11 +1,12 @@
 import { buildEmailPlanSchedule } from "@/lib/email-plan-schedule.js";
+import { automaticEmailSubject } from "@/lib/email-subjects.js";
 import { reminderTemplates } from "@/lib/reminder-templates";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function ensureAutomaticEmailPlanMessages() {
   const { data: period, error: periodError } = await supabaseAdmin
     .from("scoring_periods")
-    .select("id, period_type")
+    .select("id, period_type, display_name")
     .eq("status", "active")
     .order("display_order")
     .limit(1)
@@ -26,14 +27,16 @@ export async function ensureAutomaticEmailPlanMessages() {
   if (!schedule.length) return { created: 0, reason: "no_games" };
   const overrideById = new Map((overrides ?? []).map((item) => [item.template_id, item]));
   const defaultById = new Map(reminderTemplates.map((item) => [item.id, item]));
+  const gameById = new Map((games ?? []).map((game) => [game.id, game]));
   const rows = schedule.map((item) => {
     const wording = overrideById.get(item.templateId) ?? defaultById.get(item.templateId);
     if (!wording) throw new Error(`Automatic email wording is missing for ${item.templateId}.`);
+    const sourceKickoff = item.sourceGameIds.map((id) => gameById.get(id)?.kickoff_at).filter((value): value is string => Boolean(value)).sort()[0] ?? null;
     return {
       created_by_player_id: commissioner.id,
       category: item.category,
       audience: item.audience,
-      title: wording.title,
+      title: automaticEmailSubject({ templateId: item.templateId, title: wording.title, periodName: period.display_name, eventAt: sourceKickoff }),
       body: wording.body,
       scheduled_for: item.scheduledFor,
       source_scoring_period_id: item.sourceScoringPeriodId,

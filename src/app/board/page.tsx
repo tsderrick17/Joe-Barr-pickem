@@ -843,6 +843,7 @@ export default function BoardPage() {
                   <p>Favorites left; home team ALL CAPS.</p>
                   <p className="mt-1">Changes allowed until kickoff time.</p>
                 </div>
+                <p className="slate-winner-rule sm:col-span-2">Only winners count: Pick&apos;em pushes and Survivor ties are losses.</p>
               </div>
               {hasEarlyGame ? (
                 <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold md:pl-4">

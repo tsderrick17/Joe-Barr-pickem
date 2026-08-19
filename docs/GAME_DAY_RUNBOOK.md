@@ -57,6 +57,24 @@ change player picks or scores directly.
 4. Confirm the completed week remains available in the archive/week selector;
    changing the default never hides historical weeks.
 
+The live operations map shows this as a separate **Week handoff** gate during
+the regular season. In the playoffs it becomes **Round handoff** or **Season
+finish**. A red gate identifies the exact final, grade, timestamp, or disruption
+holding the transition; never force the next period past that gate.
+
+## Player email rhythm
+
+- Selection reminders run Sunday at 11:00 AM, 3:00 PM, and 6:00 PM Eastern,
+  then Monday at 5:00 PM Eastern. Players control the first two individually;
+  Sunday and Monday primetime share one choice.
+- A reminder is sent only when the player still owes a selection and a legal
+  unstarted game remains.
+- Public-pick updates send only after the represented kickoff and only when at
+  least one player selected one of those games. An empty window is recorded as
+  suppressed rather than retried.
+- Tuesday recap subjects name the completed week, Wednesday Slate subjects name
+  the incoming week, and playoff updates name the represented game date.
+
 ## Recovery
 
 The weekly encrypted database backup is a last resort. It retains 90 days of

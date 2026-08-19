@@ -76,6 +76,12 @@ one-email-per-Eastern-day limit intentionally protected that player's inbox;
 it is not a failed delivery. Pick-due and material early-lock notices bypass
 that routine limit.
 
+Automatic selection reminders are grouped into three player choices: Sunday
+11:00 AM, Sunday 3:00 PM, and Sunday 6:00 PM plus Monday 5:00 PM. Empty public
+reveal windows appear as intentionally suppressed and require no action. The
+Reminders page edits future standard wording and shows receipts; it does not
+create one-off scheduled pool messages or alter the automatic timetable.
+
 ### A deployment changes database behavior
 
 Follow [supabase-github-cutover.md](supabase-github-cutover.md). Add a new

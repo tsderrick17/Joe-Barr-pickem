@@ -17,15 +17,17 @@ type Reminder = {
   audience: ReminderAudience;
   title: string;
   body: string;
+  automation_key?: string | null;
   source_game_ids?: string[];
 };
 
 type ClaimedReminderUpdate = {
-  status: "scheduled" | "sent" | "failed";
+  status: "scheduled" | "sent" | "failed" | "suppressed";
   scheduled_for?: string;
   processing_started_at: null;
   updated_at: string;
-  sent_at?: string;
+  sent_at?: string | null;
+  suppression_reason?: string | null;
 };
 
 async function updateClaimedReminder(
@@ -58,6 +60,7 @@ export async function sendDueReminders() {
   const result = {
     reminders: 0,
     deferred: 0,
+    suppressed: 0,
     emailSent: 0,
     emailFailed: 0,
   };
@@ -67,6 +70,16 @@ export async function sendDueReminders() {
     try {
       const readiness = await reminderReadiness(reminder.category, reminder.source_game_ids);
       if (!readiness.ready) {
+        if (readiness.terminal) {
+          await updateClaimedReminder(reminder.id, {
+            status: "suppressed",
+            processing_started_at: null,
+            suppression_reason: readiness.reason,
+            updated_at: new Date().toISOString(),
+          });
+          result.suppressed += 1;
+          continue;
+        }
         await updateClaimedReminder(reminder.id, {
           status: "scheduled",
           processing_started_at: null,
