@@ -106,7 +106,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const content = <>
       <span className="block min-w-0 break-normal [hyphens:none]"><span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>{isFinal && team.score !== null ? <span className="ml-1 font-mono font-black tabular-nums">{team.score}</span> : null}<AtsResultStamp className={isFinal && team.score !== null ? "ml-1" : ""} result={isFinal ? team.result : null} /></span>
-      {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[10px] font-semibold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
+      {hasStarted && team.pickers.length ? <span className={`mt-0.5 block text-[11px] font-bold leading-3 ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
     const pickemControl = allowSelection
