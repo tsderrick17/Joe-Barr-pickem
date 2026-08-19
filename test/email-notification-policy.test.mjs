@@ -16,7 +16,7 @@ test("maps the four pick reminders to three independent player choices", () => {
 test("automatic subjects retain custom wording while adding week or playoff date context", () => {
   assert.equal(automaticEmailSubject({ templateId: "weekly", title: "{{week}} Slate is ready", periodName: "Week 8" }), "Week 8 Slate is ready");
   assert.equal(automaticEmailSubject({ templateId: "weekly_recap", title: "Pool recap", periodName: "Week 7" }), "Pool recap — Week 7");
-  assert.equal(automaticEmailSubject({ templateId: "playoff_day_recap", title: "Playoff recap — {{date}}", periodName: "Wild Card", eventAt: "2027-01-17T21:30:00.000Z" }), "Playoff recap — January 17");
+  assert.equal(automaticEmailSubject({ templateId: "playoff_day_recap", title: "Playoff recap — {{date}}", periodName: "Wild Card", eventAt: "2027-01-17T21:30:00.000Z" }), "Playoff recap — Sunday, Jan 17");
 });
 
 test("an empty public-pick window is a terminal suppression rather than a retry", () => {

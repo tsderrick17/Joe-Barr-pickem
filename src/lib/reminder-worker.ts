@@ -19,6 +19,7 @@ type Reminder = {
   body: string;
   automation_key?: string | null;
   source_game_ids?: string[];
+  source_scoring_period_id?: string | null;
 };
 
 type ClaimedReminderUpdate = {
@@ -68,7 +69,7 @@ export async function sendDueReminders() {
   for (const reminder of (reminders ?? []) as Reminder[]) {
     let deliveryStarted = false;
     try {
-      const readiness = await reminderReadiness(reminder.category, reminder.source_game_ids);
+      const readiness = await reminderReadiness(reminder.category, reminder.source_game_ids, reminder.source_scoring_period_id);
       if (!readiness.ready) {
         if (readiness.terminal) {
           await updateClaimedReminder(reminder.id, {
