@@ -25,6 +25,7 @@ export type StorageTableUsage = {
 const ODDS_API_FREE_MONTHLY_CREDITS = 500;
 const BREVO_FREE_DAILY_EMAILS = 300;
 const SUPABASE_FREE_DATABASE_MB = 500;
+let uptimeRobotCache: { expiresAt: number; account: AccountCapacity } | null = null;
 
 function wholeNumber(value: unknown) {
   const numeric = typeof value === "number" ? value : Number(value);
@@ -45,9 +46,55 @@ export function usageHealth(used: number | null, limit: number | null) {
   return "healthy" as const;
 }
 
+async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
+  const key = process.env.UPTIMEROBOT_READ_ONLY_API_KEY;
+  if (!key) {
+    return {
+      id: "uptimerobot", service: "UptimeRobot", metric: "Monitors", used: null, limit: null,
+      unit: "monitors", period: "current account", observedAt: null,
+      detail: "Add a read-only UptimeRobot API key to show active monitors against the free allowance.",
+      connection: "awaiting_connection",
+    };
+  }
+
+  if (uptimeRobotCache && uptimeRobotCache.expiresAt > now.getTime()) return uptimeRobotCache.account;
+
+  try {
+    const response = await fetch("https://api.uptimerobot.com/v2/getAccountDetails", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ api_key: key, format: "json" }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error(`UptimeRobot returned ${response.status}.`);
+    const payload = await response.json() as { stat?: string; account?: Record<string, unknown> };
+    const account = payload.account ?? {};
+    const used = ["up_monitors", "down_monitors", "paused_monitors"]
+      .map((field) => wholeNumber(account[field]) ?? 0)
+      .reduce((total, count) => total + count, 0);
+    const limit = wholeNumber(account.monitor_limit);
+    if (payload.stat !== "ok" || limit === null) throw new Error("UptimeRobot returned an incomplete account summary.");
+    const result: AccountCapacity = {
+      id: "uptimerobot", service: "UptimeRobot", metric: "Monitors", used, limit,
+      unit: "monitors", period: "current account", observedAt: now.toISOString(),
+      detail: `${used} of ${limit} monitor slots are in use. This read-only check is cached for five minutes.`,
+      connection: "live",
+    };
+    uptimeRobotCache = { expiresAt: now.getTime() + 5 * 60 * 1000, account: result };
+    return result;
+  } catch {
+    return {
+      id: "uptimerobot", service: "UptimeRobot", metric: "Monitors", used: null, limit: null,
+      unit: "monitors", period: "current account", observedAt: null,
+      detail: "UptimeRobot did not return a usable account summary. The monitor itself remains unchanged.",
+      connection: "not_reported",
+    };
+  }
+}
+
 export async function loadAccountCapacity(now = new Date()): Promise<AccountCapacity[]> {
   const day = easternCalendarDayWindow(now);
-  const [databaseResult, emailResult, oddsResult] = await Promise.all([
+  const [databaseResult, emailResult, oddsResult, uptimeRobot] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
       .from("email_reminder_deliveries")
@@ -62,6 +109,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .eq("status", "success")
       .order("completed_at", { ascending: false })
       .limit(8),
+    loadUptimeRobotCapacity(now),
   ]);
 
   const databaseBytes = databaseResult.error ? null : wholeNumber(databaseResult.data);
@@ -149,18 +197,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       detail: "Add an org-read Sentry token to show the account’s actual current usage.",
       connection: "awaiting_connection",
     },
-    {
-      id: "uptimerobot",
-      service: "UptimeRobot",
-      metric: "Monitors",
-      used: null,
-      limit: null,
-      unit: "monitors",
-      period: "current account",
-      observedAt: null,
-      detail: "Add a read-only UptimeRobot API key to show active monitors against the free allowance.",
-      connection: "awaiting_connection",
-    },
+    uptimeRobot,
   ];
 }
 
