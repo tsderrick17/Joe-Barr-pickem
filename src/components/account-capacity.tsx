@@ -16,6 +16,14 @@ type AccountCapacity = {
   connection: "live" | "awaiting_connection" | "not_reported";
 };
 
+type StorageTableUsage = {
+  relation_name: string;
+  total_bytes: number;
+  table_bytes: number;
+  index_bytes: number;
+  estimated_rows: number;
+};
+
 const serviceAccess: Record<string, { href: string; purpose: string; signIn: string }> = {
   "odds-api": { href: "https://the-odds-api.com/", purpose: "NFL odds source", signIn: "Start with Google" },
   brevo: { href: "https://app.brevo.com/", purpose: "Reminder email delivery", signIn: "Start with Google" },
@@ -29,6 +37,10 @@ const serviceAccess: Record<string, { href: string; purpose: string; signIn: str
 function label(value: number | null) {
   if (value === null) return "—";
   return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(1);
+}
+
+function megabytes(value: number) {
+  return `${(value / (1024 * 1024)).toFixed(value >= 10 * 1024 * 1024 ? 1 : 2)} MB`;
 }
 
 function dialColor(ratio: number) {
@@ -62,6 +74,7 @@ function CapacityDial({ account }: { account: AccountCapacity }) {
 
 export default function AccountCapacityPanel() {
   const [accounts, setAccounts] = useState<AccountCapacity[] | null>(null);
+  const [storageTables, setStorageTables] = useState<StorageTableUsage[]>([]);
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,6 +87,7 @@ export default function AccountCapacityPanel() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Account capacity could not be loaded.");
       setAccounts(data.accounts ?? []);
+      setStorageTables(data.storageTables ?? []);
       setCheckedAt(data.checkedAt ?? null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Account capacity could not be loaded.");
@@ -100,6 +114,6 @@ export default function AccountCapacityPanel() {
         <div className="mt-4"><CapacityDial account={account} /></div>
         <p className="mt-3 border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-600">{account.detail}</p>
       </article>;
-    })}</div><p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} A dial is never shown as zero when its service is not connected.</p></> : null}
+    })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{table.estimated_rows.toLocaleString()}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} A dial is never shown as zero when its service is not connected.</p></> : null}
   </section>;
 }

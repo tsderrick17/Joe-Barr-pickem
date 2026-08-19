@@ -14,6 +14,14 @@ export type AccountCapacity = {
   connection: "live" | "awaiting_connection" | "not_reported";
 };
 
+export type StorageTableUsage = {
+  relation_name: string;
+  total_bytes: number;
+  table_bytes: number;
+  index_bytes: number;
+  estimated_rows: number;
+};
+
 const ODDS_API_FREE_MONTHLY_CREDITS = 500;
 const BREVO_FREE_DAILY_EMAILS = 300;
 const SUPABASE_FREE_DATABASE_MB = 500;
@@ -154,4 +162,22 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       connection: "awaiting_connection",
     },
   ];
+}
+
+export async function loadStorageTableUsage(): Promise<StorageTableUsage[]> {
+  const { data, error } = await supabaseAdmin.rpc("storage_table_usage");
+  if (error) throw new Error("Database storage details could not be loaded.");
+  return (data ?? []).map((row: {
+    relation_name: unknown;
+    total_bytes: unknown;
+    table_bytes: unknown;
+    index_bytes: unknown;
+    estimated_rows: unknown;
+  }) => ({
+    relation_name: String(row.relation_name),
+    total_bytes: wholeNumber(row.total_bytes) ?? 0,
+    table_bytes: wholeNumber(row.table_bytes) ?? 0,
+    index_bytes: wholeNumber(row.index_bytes) ?? 0,
+    estimated_rows: wholeNumber(row.estimated_rows) ?? 0,
+  }));
 }
