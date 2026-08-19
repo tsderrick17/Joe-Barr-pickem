@@ -9,5 +9,5 @@ test("email reminders identify PickemJB as the visible sender", async () => {
 
 test("Notifications shows the safe-sender address only after email opt-in", async () => {
   const source = await readFile(new URL("../src/app/profile/page.tsx", import.meta.url), "utf8");
-  assert.match(source, /\{enabled \? <aside[^>]*>.*Keep PickemJB out of spam.*senderEmail.*safe-senders list.*<\/aside> : null\}/s);
+  assert.match(source, /\{enabled \? <aside[^>]*>.*Keep PickemJB out of spam.*PickemJB.*senderEmail.*This is the pool’s delivery address.*<\/aside> : null\}/s);
 });
