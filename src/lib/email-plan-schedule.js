@@ -89,9 +89,13 @@ export function buildEmailPlanSchedule(period, rawGames) {
 
   for (const [date, group] of dayGroups) {
     const { parts, games: dayGames } = group;
-    result.push(candidate(period, "final_lines", "final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 6, 30), date, dayGames.map((game) => game.id)));
+    // Final-line mail starts watching when the first game-day line locks. The
+    // delivery worker then waits until every playable game that day has its
+    // official locked line, rather than sending at an arbitrary clock time.
+    const finalLineReadyAt = dayGames.map((game) => game.line_lock_at).sort()[0] ?? easternWallTime(parts.year, parts.month, parts.day, 6, 30);
+    result.push(candidate(period, "final_lines", "final_lines", "all_active", finalLineReadyAt, date, dayGames.map((game) => game.id)));
     if (parts.weekday === "Sunday") {
-      result.push(candidate(period, "sunday_final_lines", "sunday_final_lines", "all_active", easternWallTime(parts.year, parts.month, parts.day, 6, 30), date, dayGames.map((game) => game.id)));
+      result.push(candidate(period, "sunday_final_lines", "sunday_final_lines", "all_active", finalLineReadyAt, date, dayGames.map((game) => game.id)));
       result.push(candidate(period, "pick_due_sunday_11", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 11), `${date}:11`));
       result.push(candidate(period, "pick_due_sunday_3", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 15), `${date}:15`));
       result.push(candidate(period, "pick_due_sunday_6", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 18), `${date}:18`));
