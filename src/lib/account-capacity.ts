@@ -28,6 +28,7 @@ const SUPABASE_FREE_DATABASE_MB = 500;
 const GITHUB_FREE_ACTIONS_MINUTES = 2_000;
 let uptimeRobotCache: { expiresAt: number; account: AccountCapacity } | null = null;
 let githubUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
+let sentryUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 
 function wholeNumber(value: unknown) {
   const numeric = typeof value === "number" ? value : Number(value);
@@ -139,9 +140,60 @@ async function loadGitHubCapacity(now: Date): Promise<AccountCapacity> {
   }
 }
 
+async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
+  const token = process.env.SENTRY_USAGE_TOKEN;
+  if (!token) {
+    return {
+      id: "sentry", service: "Sentry", metric: "Error events", used: null, limit: null,
+      unit: "events", period: "this month", observedAt: null,
+      detail: "Add an org-read Sentry token to show actual error-event usage.",
+      connection: "awaiting_connection",
+    };
+  }
+
+  if (sentryUsageCache && sentryUsageCache.expiresAt > now.getTime()) return sentryUsageCache.account;
+
+  try {
+    const headers = { Authorization: `Bearer ${token}` };
+    const organizationsResponse = await fetch("https://sentry.io/api/0/organizations/", { headers, signal: AbortSignal.timeout(10_000) });
+    if (!organizationsResponse.ok) throw new Error(`Sentry returned ${organizationsResponse.status}.`);
+    const organizations = await organizationsResponse.json() as Array<{ slug?: unknown }>;
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const end = now.toISOString();
+    const responses = await Promise.all((organizations ?? []).map(async (organization) => {
+      const slug = typeof organization.slug === "string" ? organization.slug : null;
+      if (!slug) return null;
+      const query = new URLSearchParams({ field: "sum(times_seen)", category: "error", outcome: "accepted", start, end });
+      const response = await fetch(`https://sentry.io/api/0/organizations/${encodeURIComponent(slug)}/stats-summary/?${query}`, { headers, signal: AbortSignal.timeout(10_000) });
+      if (!response.ok) throw new Error(`Sentry statistics returned ${response.status}.`);
+      return response.json() as Promise<{ projects?: Array<{ stats?: Array<{ outcomes?: Record<string, unknown> }> }> }>;
+    }));
+    const used = responses.filter(Boolean).reduce((total, response) => total + (response?.projects ?? []).reduce((projectTotal, project) =>
+      projectTotal + (project.stats ?? []).reduce((statsTotal, stat) => statsTotal + (wholeNumber(stat.outcomes?.accepted) ?? 0), 0), 0), 0);
+    const limit = wholeNumber(process.env.SENTRY_ERROR_EVENT_LIMIT);
+    const result: AccountCapacity = {
+      id: "sentry", service: "Sentry", metric: "Error events", used, limit,
+      unit: "events", period: "this month", observedAt: now.toISOString(),
+      detail: limit === null
+        ? "Actual accepted error events this month. Sentry does not expose the plan quota through this read-only API."
+        : `Actual accepted error events this month against your configured Sentry plan limit of ${limit.toLocaleString()}.`,
+      connection: "live",
+    };
+    sentryUsageCache = { expiresAt: now.getTime() + 5 * 60 * 1000, account: result };
+    return result;
+  } catch {
+    return {
+      id: "sentry", service: "Sentry", metric: "Error events", used: null, limit: null,
+      unit: "events", period: "this month", observedAt: null,
+      detail: "Sentry did not return a usable error-event summary. It has not changed any Sentry settings.",
+      connection: "not_reported",
+    };
+  }
+}
+
 export async function loadAccountCapacity(now = new Date()): Promise<AccountCapacity[]> {
   const day = easternCalendarDayWindow(now);
-  const [databaseResult, emailResult, oddsResult, uptimeRobot, github] = await Promise.all([
+  const [databaseResult, emailResult, oddsResult, uptimeRobot, github, sentry] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
       .from("email_reminder_deliveries")
@@ -158,6 +210,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .limit(8),
     loadUptimeRobotCapacity(now),
     loadGitHubCapacity(now),
+    loadSentryCapacity(now),
   ]);
 
   const databaseBytes = databaseResult.error ? null : wholeNumber(databaseResult.data);
@@ -222,18 +275,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       connection: "awaiting_connection",
     },
     github,
-    {
-      id: "sentry",
-      service: "Sentry",
-      metric: "Error events",
-      used: null,
-      limit: null,
-      unit: "events",
-      period: "this month",
-      observedAt: null,
-      detail: "Add an org-read Sentry token to show the account’s actual current usage.",
-      connection: "awaiting_connection",
-    },
+    sentry,
     uptimeRobot,
   ];
 }

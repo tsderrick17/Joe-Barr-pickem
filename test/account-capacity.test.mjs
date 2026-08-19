@@ -27,6 +27,9 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /GITHUB_USAGE_TOKEN/);
   assert.match(capacity, /settings\/billing\/usage\/summary/);
   assert.match(capacity, /GITHUB_FREE_ACTIONS_MINUTES/);
+  assert.match(capacity, /SENTRY_USAGE_TOKEN/);
+  assert.match(capacity, /stats-summary/);
+  assert.match(capacity, /SENTRY_ERROR_EVENT_LIMIT/);
   assert.match(route, /storageTables/);
   assert.match(guardrails, /skip_duplicate_preliminary_spread_snapshot/);
   assert.match(guardrails, /prune_operational_storage/);
