@@ -4,16 +4,12 @@ import Link from "next/link";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchWithSession,
-  getFreshSession,
   SessionUnavailableError,
 } from "@/lib/auth-session";
-import { supabase } from "@/lib/supabase";
 import {
   selectAvailableScoringPeriods,
   selectDefaultScoringPeriod,
 } from "@/lib/scoring-period";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
-import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
@@ -76,6 +72,10 @@ type BoardResponse = {
     pick: { game_id: string; selected_team_id: string } | null;
     usedTeamIds: string[];
   };
+  bootstrap?: {
+    weeks: ScoringPeriod[];
+    nextWeekAvailableAt: string | null;
+  } | null;
   error?: string;
 };
 
@@ -245,125 +245,69 @@ export default function BoardPage() {
   useEffect(() => {
     let disposed = false;
 
-    async function retryInitialRead<T>(
-      read: () => PromiseLike<T>,
-      shouldRetry: (result: T) => boolean,
-    ): Promise<T> {
-      const firstResult = await read();
-      if (!shouldRetry(firstResult)) return firstResult;
-
-      // Schedule bootstrapping is read-only. One short retry protects the
-      // first Slate render from a momentary database/network handoff without
-      // replaying any player action.
-      await new Promise((resolve) => window.setTimeout(resolve, 650));
-      return read();
-    }
-
     async function loadBoard() {
-      const session = await getFreshSession();
-
-      if (disposed) return;
-
-      if (!session) {
-        window.location.replace("/login");
-        return;
-      }
-
-      const { data: season, error: seasonError } = await retryInitialRead(
-        () => supabase
-          .from("seasons")
-          .select("id")
-          .eq("year", CURRENT_SEASON_YEAR)
-          .maybeSingle(),
-        (result) => Boolean(result.error || !result.data),
-      );
-
-      if (disposed) return;
-
-      if (seasonError || !season) {
-        setErrorMessage("The current season could not be loaded.");
-        setIsLoading(false);
-        return;
-      }
-
-      const { data: periods, error: periodsError } = await retryInitialRead(
-        () => supabase
-          .from("scoring_periods")
-          .select(
-            "id, display_name, display_order, status, period_type, max_picks",
-          )
-          .eq("season_id", season.id)
-          .order("display_order"),
-        (result) => Boolean(result.error || !result.data?.length),
-      );
-
-      if (disposed) return;
-
-      if (periodsError || !periods?.length) {
-        setErrorMessage("The weekly schedule could not be loaded.");
-        setIsLoading(false);
-        return;
-      }
-
-      const loadedWeeks = periods as ScoringPeriod[];
-      setWeeks(loadedWeeks);
-
-      const activePeriod = loadedWeeks.find((period) => period.status === "active");
-      let manualAccessAt: number | null = null;
-
-      if (activePeriod) {
-        const { data: activeGames, error: activeGamesError } = await supabase
-          .from("games")
-          .select("kickoff_at, status, finalized_at")
-          .eq("scoring_period_id", activePeriod.id);
-
-        if (
-          !activeGamesError &&
-          activeGames?.length &&
-          activeGames.every((game) =>
-            ["final", "cancelled", "no_contest"].includes(game.status),
-          )
-        ) {
-          const settlementTimes = activeGames.map((game) =>
-            game.finalized_at ??
-            (["cancelled", "no_contest"].includes(game.status)
-              ? game.kickoff_at
-              : null),
-          );
-
-          if (settlementTimes.every((value): value is string => Boolean(value))) {
-            manualAccessAt = Date.parse(
-              nextWeekManualAccessAt(settlementTimes.sort().at(-1)!),
-            );
-          }
-        }
-      }
-
-      setNextWeekAvailableAt(manualAccessAt);
-
       const requestedWeekId = new URLSearchParams(window.location.search).get("week");
-      const defaultWeek = selectDefaultScoringPeriod(loadedWeeks);
-      const availableWeekIds = new Set(
-        (selectAvailableScoringPeriods(loadedWeeks, {
-          now: Date.now(),
+      const params = new URLSearchParams({ bootstrap: "1" });
+      if (requestedWeekId) params.set("week", requestedWeekId);
+
+      try {
+        const response = await fetchWithSession(`/api/board?${params}`);
+        const data = (await response.json()) as BoardResponse;
+
+        if (disposed) return;
+        if (!response.ok || !data.bootstrap) {
+          setErrorMessage(data.error ?? "The Slate could not be loaded.");
+          return;
+        }
+
+        const loadedWeeks = data.bootstrap.weeks;
+        const manualAccessAt = data.bootstrap.nextWeekAvailableAt
+          ? Date.parse(data.bootstrap.nextWeekAvailableAt)
+          : null;
+        const availableWeeks = selectAvailableScoringPeriods(loadedWeeks, {
+          now: Date.parse(data.serverTime),
           nextWeekAvailableAt: manualAccessAt,
-        }) as ScoringPeriod[]).map((period) => period.id),
-      );
-      const requestedWeek = requestedWeekId
-        ? loadedWeeks.find(
-            (period) =>
-              period.id === requestedWeekId && availableWeekIds.has(period.id),
-          )
-        : null;
-      const initialWeek = requestedWeek ?? defaultWeek;
+        }) as ScoringPeriod[];
+        const initialWeek = requestedWeekId
+          ? availableWeeks.find((period) => period.id === requestedWeekId) ??
+            selectDefaultScoringPeriod(loadedWeeks)
+          : selectDefaultScoringPeriod(loadedWeeks);
 
-      if (!initialWeek) {
-        setErrorMessage("The weekly schedule could not be loaded.");
-        setIsLoading(false);
-        return;
+        if (!initialWeek) {
+          setErrorMessage("The weekly schedule could not be loaded.");
+          return;
+        }
+
+        serverClockOffset.current = Date.parse(data.serverTime) - Date.now();
+        setCurrentTime(Date.parse(data.serverTime));
+        kickoffVisibilityRefreshedGameIds.current = new Set(
+          data.games
+            .filter((game) => Date.parse(game.kickoffAt) <= Date.parse(data.serverTime))
+            .map((game) => game.id),
+        );
+        setWeeks(loadedWeeks);
+        setNextWeekAvailableAt(manualAccessAt);
+        setWeek(initialWeek);
+        setGames(data.games);
+        setPlayoffEliminated(data.pickem.playoffEliminated);
+        setSelectedPicks(data.myPicks);
+        setSavedPicks(data.myPicks);
+        setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
+        setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
+        setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
+        setSurvivorAvailable(data.survivor.available);
+        setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+        setSurvivorStatus(data.survivor.status);
+        setClockSynchronized(true);
+      } catch (error) {
+        if (error instanceof SessionUnavailableError) {
+          window.location.replace("/login");
+          return;
+        }
+        setErrorMessage("The Slate is taking too long to load. Please try again.");
+      } finally {
+        if (!disposed) setIsLoading(false);
       }
-
-      await loadWeek(initialWeek);
     }
 
     void loadBoard();
