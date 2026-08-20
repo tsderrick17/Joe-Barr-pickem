@@ -205,11 +205,14 @@ async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
     };
     sentryUsageCache = { expiresAt: now.getTime() + 5 * 60 * 1000, account: result };
     return result;
-  } catch {
+  } catch (error) {
+    const reason = error instanceof Error && /Sentry (returned|statistics returned) \d{3}/.test(error.message)
+      ? error.message
+      : "Sentry did not provide a readable usage response.";
     return {
       id: "sentry", service: "Sentry", metric: "Error events", used: null, limit: null,
       unit: "events", period: "this month", observedAt: null,
-      detail: "Sentry did not return a usable error-event summary. It has not changed any Sentry settings.",
+      detail: `${reason} No Sentry settings were changed.`,
       connection: "not_reported",
     };
   }

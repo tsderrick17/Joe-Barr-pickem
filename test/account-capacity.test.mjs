@@ -30,6 +30,7 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /SENTRY_USAGE_TOKEN/);
   assert.match(capacity, /stats_v2/);
   assert.match(capacity, /SENTRY_ERROR_EVENT_LIMIT/);
+  assert.match(capacity, /Sentry did not provide a readable usage response/);
   assert.match(route, /storageTables/);
   assert.match(guardrails, /skip_duplicate_preliminary_spread_snapshot/);
   assert.match(guardrails, /prune_operational_storage/);
