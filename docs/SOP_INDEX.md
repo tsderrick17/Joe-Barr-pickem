@@ -14,9 +14,9 @@ guarded recovery tools for a specific observed condition.
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
 | Tuesday, 6:30 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
-| Weekly | Create an encrypted database backup | Review failures only |
+| Weekly | Export, encrypt, restore-check, and retain a database backup; then send its private heartbeat | Review only a failed workflow or missed heartbeat |
 | Monthly | Run isolated dependency/migration/lifecycle rehearsal | Review the artifact if it fails |
-| August 1 onward | Ensure the next annual season exists, retrying safely | Intervene only if bootstrap remains incomplete |
+| August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |
 
 ## Choose the right procedure
 
@@ -107,6 +107,21 @@ Commissioner Automation Health and the watchdog receipt. A non-200 response at
 `/api/health/automation` means the five-minute watchdog has failed or has not
 completed successfully within 12 minutes; it does not mean the player-facing
 site itself is unavailable.
+
+### The critical-worker heartbeat is down
+
+Open UptimeRobot's **PickemJB critical workers** incident, then open
+Commissioner Automation Health. The public endpoint intentionally does not name
+the failing worker. The Commissioner view distinguishes a stale or failed line
+lock, score refresh, or reminder pass. Recover only the named worker; do not
+manually run every job.
+
+### The encrypted-backup heartbeat is missed
+
+Open GitHub Actions → **Encrypted database backup**. A ping is sent only after
+the encrypted export passed its decrypt-and-restore check and the artifact was
+uploaded. Correct the reported failure, then rerun that workflow once. Never
+replace the private heartbeat URL with a public endpoint.
 
 ### A backup or disaster recovery is required
 

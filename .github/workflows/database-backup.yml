@@ -78,3 +78,10 @@ jobs:
           name: pickem-production-backup-${{ github.run_id }}
           path: production-backup.sql.enc
           retention-days: 90
+      - name: Confirm successful backup to the external monitor
+        env:
+          UPTIMEROBOT_BACKUP_HEARTBEAT_URL: ${{ secrets.UPTIMEROBOT_BACKUP_HEARTBEAT_URL }}
+        run: |
+          test -n "$UPTIMEROBOT_BACKUP_HEARTBEAT_URL"
+          curl --fail --silent --show-error --max-time 20 --retry 2 \
+            "$UPTIMEROBOT_BACKUP_HEARTBEAT_URL"

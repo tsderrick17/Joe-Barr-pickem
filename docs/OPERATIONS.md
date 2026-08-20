@@ -17,14 +17,15 @@ The existing `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, and
 **Encrypted database backup** → **Run workflow**. Do not download or decrypt a
 backup unless recovery is genuinely required.
 
-Retention policy: scoring, picks, locks, seasons, championships, audit history,
-and email receipts are never automatically deleted. A weekly database-local
-guardrail removes only `sync_runs` and resolved watchdog/schedule-review
-operational records after 180 days. It never calls a provider or needs an app
-secret. Unchanged preliminary spread snapshots are kept at most once per
-Eastern day; official locked lines and changed snapshots remain intact. The
-Commissioner Connected systems section includes a read-only per-table size
-breakdown for review.
+Retention policy: scoring, official picks, locks, seasons, championships, final
+save receipts, and email receipts are never automatically deleted. A weekly
+database-local guardrail removes only `sync_runs` and resolved
+watchdog/schedule-review operational records after 180 days. At the certified
+August 1 turnover, earlier pre-kickoff pick-save snapshots that a later save
+replaced and redundant preliminary spread snapshots are removed; the final
+snapshot and every official competition record remain. It never calls a
+provider or needs an app secret. The Commissioner Connected systems section
+includes a read-only per-table size breakdown for review.
 
 ## Provider allowance
 
@@ -54,6 +55,16 @@ retains both recovery paths:
 Both automatic and manual imports use the same validation and atomic database
 function, so the recovery path cannot bypass gameweek-pinning protections.
 
+The first safe run on or after August 1 also certifies the prior season before
+annual cleanup. It refuses cleanup while a period, game, grade, schedule review,
+or championship remains unfinished. After certification it removes replaced
+pre-kickoff save snapshots, redundant preliminary spreads, old score backoffs,
+expired leases/circuit state/PIN-attempt records, and the existing 180-day
+operational records. It creates any missing new-season Survivor entries and
+stores one permanent receipt. Retries return that receipt without repeating
+the cleanup. The Schedule panel shows either the certification or each exact
+blocker, and the watchdog alerts only when review is required.
+
 After the full schedule is loaded, the canonical 272-game provider is checked
 throughout the season (at most once every four hours). It can move an unlocked
 future kickoff and reopen only that game's unfinalized line. A postponed game
@@ -76,6 +87,7 @@ The only alert conditions are:
 - final scores are due and the score worker is failed or stale for 45 minutes;
 - a scheduled pool message is overdue or stuck sending;
 - the full season schedule is still incomplete after August 15; or
+- the certified annual turnover is blocked by unfinished prior-season work; or
 - a required production cron/preflight check is missing.
 
 Individual bad email addresses and intentional low-provider-quota cooldowns do
@@ -87,6 +99,17 @@ An external UptimeRobot monitor must also check
 endpoint returns 200 only when the watchdog has completed successfully within
 12 minutes, so a broken watchdog cannot silently report itself as healthy. This
 monitor is separate from the existing public-site monitor.
+
+A third UptimeRobot monitor must check
+`https://pickemjb.vercel.app/api/health/workers` every five minutes. It confirms
+recent successful line-lock, reminder, and final-score worker executions using
+three fixed-size heartbeat rows. Public responses stay opaque; use Automation
+Health to identify the affected worker.
+
+The weekly encrypted-backup workflow sends a private success ping only after
+export, encryption, decrypt/restore verification, and artifact upload all
+succeed. Store that private heartbeat URL only in the GitHub Production
+environment secret `UPTIMEROBOT_BACKUP_HEARTBEAT_URL`.
 
 ## Reproducible critical schedules and launch preflight
 

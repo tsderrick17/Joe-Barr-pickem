@@ -14,17 +14,35 @@ export type SeasonBootstrapStatus = {
   loadedGames: number;
   complete: boolean;
   lastRun: { status: string; started_at: string; completed_at: string | null; error_message: string | null; details: Record<string, unknown> } | null;
+  turnover: {
+    status: "blocked" | "completed";
+    completed_at: string | null;
+    blockers: string[];
+    preserved_counts: Record<string, number>;
+    deleted_counts: Record<string, number>;
+  } | null;
 };
 
 export async function getSeasonBootstrapStatus(now = new Date()): Promise<SeasonBootstrapStatus> {
   const seasonYear = seasonYearAt(now);
-  const [{ data: season, error: seasonError }, { data: lastRun, error: runError }] = await Promise.all([
+  const [
+    { data: season, error: seasonError },
+    { data: lastRun, error: runError },
+    { data: turnover, error: turnoverError },
+  ] = await Promise.all([
     supabaseAdmin.from("seasons").select("id, state").eq("year", seasonYear).maybeSingle(),
     supabaseAdmin.from("sync_runs").select("status, started_at, completed_at, error_message, details")
       .eq("job_type", "season_bootstrap").order("started_at", { ascending: false }).limit(1).maybeSingle(),
+    supabaseAdmin.from("season_turnover_runs")
+      .select("status, completed_at, blockers, preserved_counts, deleted_counts")
+      .eq("target_year", seasonYear).maybeSingle(),
   ]);
-  if (seasonError || runError) throw new Error("Season bootstrap status could not be loaded.");
-  if (!season) return { seasonYear, seasonId: null, seasonState: null, regularPeriods: 0, loadedGames: 0, complete: false, lastRun };
+  if (seasonError || runError || turnoverError) throw new Error("Season bootstrap status could not be loaded.");
+  const turnoverStatus = turnover as SeasonBootstrapStatus["turnover"];
+  if (!season) return {
+    seasonYear, seasonId: null, seasonState: null, regularPeriods: 0,
+    loadedGames: 0, complete: false, lastRun, turnover: turnoverStatus,
+  };
   const { data: periods, error: periodsError } = await supabaseAdmin.from("scoring_periods")
     .select("id").eq("season_id", season.id).eq("period_type", "regular");
   if (periodsError) throw new Error("Season bootstrap periods could not be loaded.");
@@ -39,6 +57,7 @@ export async function getSeasonBootstrapStatus(now = new Date()): Promise<Season
     regularPeriods: periodIds.length, loadedGames,
     complete: periodIds.length === 18 && loadedGames === 272,
     lastRun: lastRun as SeasonBootstrapStatus["lastRun"],
+    turnover: turnoverStatus,
   };
 }
 export async function prepareFullSchedule(now = new Date()) {

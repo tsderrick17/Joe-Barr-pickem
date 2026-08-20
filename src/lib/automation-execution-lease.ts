@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 
 export type AutomationJob = "line_locks" | "scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
@@ -24,21 +25,29 @@ export async function runWithAutomationLease<T>(
   job: AutomationJob,
   task: () => Promise<T>,
 ): Promise<T> {
+  await recordAutomationWorkerHeartbeat(job, "started");
   const { data: token, error } = await supabaseAdmin.rpc(
     "claim_automation_execution_lease",
     { target_job_name: job, lease_seconds: 120 },
   );
 
   if (error) {
+    await recordAutomationWorkerHeartbeat(job, "failed");
     throw new Error("The automation execution lease could not be acquired.");
   }
 
   if (!token) {
+    await recordAutomationWorkerHeartbeat(job, "skipped");
     throw new AutomationAlreadyRunningError(job);
   }
 
   try {
-    return await task();
+    const result = await task();
+    await recordAutomationWorkerHeartbeat(job, "success");
+    return result;
+  } catch (error) {
+    await recordAutomationWorkerHeartbeat(job, "failed");
+    throw error;
   } finally {
     const { error: releaseError } = await supabaseAdmin.rpc(
       "release_automation_execution_lease",

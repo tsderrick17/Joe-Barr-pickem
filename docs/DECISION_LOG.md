@@ -170,3 +170,32 @@ service-role-only if it exists.
 publicly executable `SECURITY DEFINER` helper. This remediation is idempotent,
 preserves explicit `cron`/`vault` paths, and never adds a client-facing table
 policy merely to dismiss RLS informational findings.
+
+## 2026-08-20 — REF-019 — Certify annual turnover before cleanup
+
+**Status:** Accepted
+
+On and after the August 1 Eastern season boundary, create the new blank season
+first, then clean only after the previous season is complete, every game and
+selection is settled, schedule reviews are resolved, and required champions
+are recorded. Preserve official games, lines, picks, scores, championships,
+delivery receipts, and the final save snapshot for every player/period/mode.
+The only selection history eligible for deletion is an earlier pre-kickoff save
+that was superseded by a later save. Also collapse preliminary line history to
+the final snapshot per old-season game, expire transient worker/security state,
+run the existing 180-day operational retention, and create next-season
+Survivor entries. Record one permanent retry-safe receipt with the exact kept
+and removed counts. A failed certification blocks cleanup, not scoring or
+schedule preparation, and opens one actionable Commissioner alert.
+
+## 2026-08-20 — REF-020 — Monitor execution and verified backups externally
+
+**Status:** Accepted
+
+Keep the existing public-site and watchdog monitors, then add two independent
+proofs: a fixed-size critical-worker heartbeat for line locks, scores, and
+reminders, and a private weekly ping sent only after the encrypted backup has
+passed export, encryption, decrypt/restore verification, and artifact upload.
+Public worker health stays deliberately opaque, while the Commissioner view
+retains actionable detail. Monitoring records update in place and therefore do
+not create a new source of database growth.
