@@ -83,9 +83,28 @@ test("isolated annual rollover creates one audited season and preserves retry co
     assert.equal(retryRun[0].season_id, seasonId);
     assert.equal(retryRun[0].season_year, targetYear);
     assert.equal(retryRun[0].created, false, "a retry must not create a second season or rewrite history");
+
+    const { data: turnover, error: turnoverError } = await admin.rpc("perform_annual_season_turnover", {
+      evaluated_at: evaluatedAt,
+    });
+    assert.equal(turnoverError, null, turnoverError?.message);
+    assert.equal(turnover.status, "completed");
+    assert.equal(turnover.targetYear, targetYear);
+    assert.equal(turnover.retry, false);
+    assert.deepEqual(turnover.blockers, []);
+
+    const { data: turnoverRetry, error: turnoverRetryError } = await admin.rpc("perform_annual_season_turnover", {
+      evaluated_at: evaluatedAt,
+    });
+    assert.equal(turnoverRetryError, null, turnoverRetryError?.message);
+    assert.equal(turnoverRetry.status, "completed");
+    assert.equal(turnoverRetry.targetYear, targetYear);
+    assert.equal(turnoverRetry.retry, true, "a retry must return the permanent turnover receipt without cleaning twice");
   } finally {
+    await admin.from("season_turnover_runs").delete().eq("target_year", targetYear);
     if (seasonId) {
-      await admin.from("audit_logs").delete().eq("action", "season_created").eq("entity_id", seasonId);
+      // Audit history is deliberately immutable in production. Isolated test
+      // teardown relies on season deletion cascading only through season data.
       await admin.from("seasons").delete().eq("id", seasonId);
     }
     if (templateSeasonId) {

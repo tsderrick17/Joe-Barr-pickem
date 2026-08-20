@@ -1,5 +1,12 @@
 export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [], now = new Date() }) {
   const signals = [];
+  if (bootstrap.turnover?.status === "blocked") {
+    signals.push({
+      key: "annual-season-turnover-blocked", severity: "critical",
+      title: "Annual season turnover needs review",
+      detail: bootstrap.turnover.blockers.join(" ") || "The previous season could not be certified for cleanup.",
+    });
+  }
   if (health.missingOfficialLines > 0) {
     signals.push({
       key: "missing-official-lines", severity: "critical",

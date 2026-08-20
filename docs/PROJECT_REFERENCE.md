@@ -221,6 +221,16 @@ may enrich spreads but cannot override canonical schedule assignments.
   player season results, and prior audit history are not copied.
 - Old seasons remain queryable for personal records, archives, championships,
   and dispute resolution.
+- Annual cleanup runs only after the prior season, every scoring period, game,
+  pick grade, schedule review, and required championship is certified complete.
+  A blocker is recorded and alerted; it never causes automation to guess.
+- Certified cleanup removes only superseded pre-kickoff save snapshots,
+  redundant preliminary spreads, expired worker/security state, and eligible
+  180-day operational records. The final player save snapshot and every
+  official game, line, pick, score, championship, and delivery receipt remain.
+- The turnover creates missing active-player Survivor entries for the new
+  season and stores one permanent kept/deleted-count receipt. Retrying returns
+  that receipt without cleaning twice.
 
 ## Automation safety and efficiency
 
@@ -239,10 +249,12 @@ may enrich spreads but cannot override canonical schedule assignments.
   from permanent competitive history.
 - A weekly storage guardrail runs through the protected Monday watchdog and
   removes only routine `sync_runs` plus resolved watchdog and schedule-review
-  incidents after 180 days. Picks, final scores,
-  official lines, audit history, championships, and email receipts are never
-  part of this cleanup. Repeated unchanged preliminary spreads are stored at
-  most once per Eastern day; meaningful line changes remain visible.
+  incidents after 180 days. The certified annual cleanup may additionally
+  remove superseded pre-kickoff save snapshots and redundant preliminary
+  spreads from the completed season. Final save snapshots, picks, final scores,
+  official lines, championships, and email receipts are never part of cleanup.
+  During the live season, repeated unchanged preliminary spreads are stored at
+  most once per Eastern day.
 - Players choose one of three email plans: **Essentials**, **Regular**, or
   **Full Card**. Each remains individually adjustable in Notifications; existing
   choices are never changed just because the plan labels evolve.

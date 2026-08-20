@@ -7,7 +7,15 @@ type Status = {
   seasonYear: number; seasonState: string | null; regularPeriods: number;
   loadedGames: number; complete: boolean;
   lastRun: { status: string; completed_at: string | null; error_message: string | null; details: { outcome?: string } } | null;
+  turnover: {
+    status: "blocked" | "completed"; completed_at: string | null; blockers: string[];
+    preserved_counts: Record<string, number>; deleted_counts: Record<string, number>;
+  } | null;
 };
+
+function countValues(counts: Record<string, number>) {
+  return Object.values(counts).reduce((sum, count) => sum + (Number(count) || 0), 0);
+}
 
 export default function SeasonBootstrapStatus() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -59,6 +67,15 @@ export default function SeasonBootstrapStatus() {
         <p className="font-bold">{status.complete ? `${status.seasonYear} schedule is fully loaded` : `${status.seasonYear} is waiting safely`}</p>
         <p className="mt-1 text-sm">{status.loadedGames}/272 games pinned · {status.regularPeriods}/18 regular weeks ready · season state: {status.seasonState ?? "not created yet"}</p>
         <p className="mt-2 text-xs text-zinc-600">Last automatic attempt: {status.lastRun?.completed_at ? new Date(status.lastRun.completed_at).toLocaleString() : "not run yet"}{status.lastRun?.details?.outcome ? ` · ${status.lastRun.details.outcome.replaceAll("_", " ")}` : ""}</p>
+      </div> : null}
+      {status?.turnover ? <div className={`mt-3 border p-4 ${status.turnover.status === "completed" ? "border-green-800 bg-green-50" : "border-red-800 bg-red-50"}`}>
+        <p className="font-bold">{status.turnover.status === "completed" ? `${status.seasonYear} season turnover is certified` : "Season turnover needs Commissioner review"}</p>
+        {status.turnover.status === "completed" ? <>
+          <p className="mt-1 text-sm">Official games, lines, picks, championships, and message receipts were preserved. {countValues(status.turnover.deleted_counts).toLocaleString()} disposable record{countValues(status.turnover.deleted_counts) === 1 ? "" : "s"} were cleared.</p>
+          <p className="mt-2 text-xs text-zinc-600">Completed: {status.turnover.completed_at ? new Date(status.turnover.completed_at).toLocaleString() : "recorded"}</p>
+        </> : <ul className="mt-2 list-disc pl-5 text-sm">
+          {status.turnover.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+        </ul>}
       </div> : null}
     </section>
   );
