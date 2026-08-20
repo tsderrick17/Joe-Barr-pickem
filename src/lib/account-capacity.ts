@@ -259,7 +259,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       period: "this month",
       observedAt: latestOddsRun?.completed_at ?? latestOddsRun?.started_at ?? null,
       detail: remainingOddsCredits === null
-        ? "Waiting for the next normal provider response; this screen never spends a credit to check."
+        ? "The next successful line or score update will capture this reading automatically; this screen never spends an Odds API credit to check."
         : `${remainingOddsCredits} credits remain from the latest normal provider response.`,
       connection: remainingOddsCredits === null ? "not_reported" : "live",
     },

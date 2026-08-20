@@ -57,3 +57,13 @@ test("watchdog raises one actionable alert when annual turnover is blocked", () 
     detail: "The previous season is not marked complete.",
   }]);
 });
+
+test("annual turnover uses an explicit guard for its one-time provider-circuit reset", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/20260820012000_guard_turnover_circuit_cleanup.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /provider_failure_circuits where true/);
+  assert.match(migration, /pg_get_functiondef/);
+  assert.match(migration, /perform_annual_season_turnover\(timestamptz\)/);
+});

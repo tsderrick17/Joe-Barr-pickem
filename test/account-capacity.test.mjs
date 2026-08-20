@@ -19,7 +19,9 @@ test("account capacity gauges use existing provider records and database details
   assert.match(migration, /pg_database_size/);
   assert.match(migration, /revoke all.*from public, anon, authenticated/i);
   assert.match(panel, /Setup needed/);
-  assert.match(panel, /never shown as zero/);
+  assert.match(panel, /Unknown plan limits show a live count/);
+  assert.match(panel, /Dashboard only/);
+  assert.match(panel, /liveCountWithoutLimit/);
   assert.match(capacity, /storage_table_usage/);
   assert.match(capacity, /UPTIMEROBOT_READ_ONLY_API_KEY/);
   assert.match(capacity, /getAccountDetails/);

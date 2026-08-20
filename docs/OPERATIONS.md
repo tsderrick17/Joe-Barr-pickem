@@ -106,10 +106,11 @@ recent successful line-lock, reminder, and final-score worker executions using
 three fixed-size heartbeat rows. Public responses stay opaque; use Automation
 Health to identify the affected worker.
 
-The weekly encrypted-backup workflow sends a private success ping only after
-export, encryption, decrypt/restore verification, and artifact upload all
-succeed. Store that private heartbeat URL only in the GitHub Production
-environment secret `UPTIMEROBOT_BACKUP_HEARTBEAT_URL`.
+A fourth free HTTP monitor must check
+`https://pickemjb.vercel.app/api/health/backup` every five minutes. The endpoint
+uses the existing server-only GitHub read token to inspect the latest completed
+encrypted-backup workflow and returns 200 only for a recent success. It does
+not expose GitHub details or require UptimeRobot's paid push-heartbeat feature.
 
 ## Reproducible critical schedules and launch preflight
 

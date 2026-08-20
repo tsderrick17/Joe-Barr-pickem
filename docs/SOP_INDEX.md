@@ -14,7 +14,7 @@ guarded recovery tools for a specific observed condition.
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
 | Tuesday, 6:30 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
-| Weekly | Export, encrypt, restore-check, and retain a database backup; then send its private heartbeat | Review only a failed workflow or missed heartbeat |
+| Weekly | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
 | Monthly | Run isolated dependency/migration/lifecycle rehearsal | Review the artifact if it fails |
 | August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |
 
@@ -116,12 +116,12 @@ the failing worker. The Commissioner view distinguishes a stale or failed line
 lock, score refresh, or reminder pass. Recover only the named worker; do not
 manually run every job.
 
-### The encrypted-backup heartbeat is missed
+### The encrypted-backup health monitor is down
 
-Open GitHub Actions → **Encrypted database backup**. A ping is sent only after
-the encrypted export passed its decrypt-and-restore check and the artifact was
-uploaded. Correct the reported failure, then rerun that workflow once. Never
-replace the private heartbeat URL with a public endpoint.
+Open GitHub Actions → **Encrypted database backup**. The health endpoint is
+green only when the latest completed run succeeded recently; that workflow
+uploads its artifact only after the decrypt-and-restore check. Correct the
+reported failure, then rerun that workflow once.
 
 ### A backup or disaster recovery is required
 
