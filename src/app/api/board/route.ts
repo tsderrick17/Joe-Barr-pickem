@@ -7,6 +7,12 @@ import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import {
+  selectAvailableScoringPeriods,
+  selectDefaultScoringPeriod,
+} from "@/lib/scoring-period";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 
 type TeamRow = {
   id: string;
@@ -44,6 +50,15 @@ type GameRow = {
 type SurvivorPickRow = { game_id: string; selected_team_id: string };
 type PublicPickRow = { player_id: string; game_id: string; selected_team_id: string };
 
+type ScoringPeriodRow = {
+  id: string;
+  display_name: string;
+  display_order: number;
+  status: "upcoming" | "active" | "complete";
+  period_type: "regular" | "playoff";
+  max_picks: number;
+};
+
 function atsResultForTeam(
   game: GameRow,
   lockedLine: LockedLineRow | undefined,
@@ -77,8 +92,9 @@ export async function GET(request: NextRequest) {
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authorization = request.headers.get("authorization");
-  const scoringPeriodId =
-    new URL(request.url).searchParams.get("scoringPeriodId");
+  const query = new URL(request.url).searchParams;
+  let scoringPeriodId = query.get("scoringPeriodId");
+  const bootstrapRequested = query.get("bootstrap") === "1";
 
   if (!supabaseUrl || !supabasePublishableKey) {
     return NextResponse.json(
@@ -87,7 +103,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (!authorization?.startsWith("Bearer ") || !scoringPeriodId) {
+  if (!authorization?.startsWith("Bearer ")) {
     return NextResponse.json(
       { error: "You must be signed in to view the board." },
       { status: 401 },
@@ -126,6 +142,102 @@ export async function GET(request: NextRequest) {
     );
   }
   await recordPlayerActivity(player.id);
+
+  let bootstrap: {
+    weeks: ScoringPeriodRow[];
+    nextWeekAvailableAt: string | null;
+  } | null = null;
+
+  // The normal player entry point deliberately resolves its week on the
+  // server. That replaces three browser-to-database setup reads with this one
+  // authenticated request, while the eventual Slate data remains live.
+  if (bootstrapRequested && !scoringPeriodId) {
+    const { data: season, error: seasonError } = await supabaseAdmin
+      .from("seasons")
+      .select("id")
+      .eq("year", CURRENT_SEASON_YEAR)
+      .maybeSingle();
+
+    if (seasonError || !season) {
+      return NextResponse.json(
+        { error: "The current season could not be loaded." },
+        { status: 503 },
+      );
+    }
+
+    const { data: periodRows, error: periodsError } = await supabaseAdmin
+      .from("scoring_periods")
+      .select("id, display_name, display_order, status, period_type, max_picks")
+      .eq("season_id", season.id)
+      .order("display_order");
+
+    const weeks = (periodRows ?? []) as ScoringPeriodRow[];
+    if (periodsError || weeks.length === 0) {
+      return NextResponse.json(
+        { error: "The weekly schedule could not be loaded." },
+        { status: 503 },
+      );
+    }
+
+    const activePeriod = weeks.find((period) => period.status === "active");
+    let nextWeekAvailableAt: string | null = null;
+
+    if (activePeriod) {
+      const { data: activeGames } = await supabaseAdmin
+        .from("games")
+        .select("kickoff_at, status, finalized_at")
+        .eq("scoring_period_id", activePeriod.id);
+
+      if (
+        activeGames?.length &&
+        activeGames.every((game) =>
+          ["final", "cancelled", "no_contest"].includes(game.status),
+        )
+      ) {
+        const settlementTimes = activeGames.map((game) =>
+          game.finalized_at ??
+          (["cancelled", "no_contest"].includes(game.status)
+            ? game.kickoff_at
+            : null),
+        );
+
+        if (settlementTimes.every((value): value is string => Boolean(value))) {
+          nextWeekAvailableAt = nextWeekManualAccessAt(
+            settlementTimes.sort().at(-1)!,
+          );
+        }
+      }
+    }
+
+    const availableWeeks = selectAvailableScoringPeriods(weeks, {
+      now: Date.now(),
+      nextWeekAvailableAt: nextWeekAvailableAt
+        ? Date.parse(nextWeekAvailableAt)
+        : null,
+    }) as ScoringPeriodRow[];
+    const requestedWeekId = query.get("week");
+    const requestedWeek = requestedWeekId
+      ? availableWeeks.find((period) => period.id === requestedWeekId)
+      : null;
+    const selectedWeek = requestedWeek ?? selectDefaultScoringPeriod(weeks);
+
+    if (!selectedWeek) {
+      return NextResponse.json(
+        { error: "The weekly schedule could not be loaded." },
+        { status: 503 },
+      );
+    }
+
+    scoringPeriodId = selectedWeek.id;
+    bootstrap = { weeks, nextWeekAvailableAt };
+  }
+
+  if (!scoringPeriodId) {
+    return NextResponse.json(
+      { error: "You must choose a week before viewing the board." },
+      { status: 400 },
+    );
+  }
 
   const [gamesResult, picksResult, periodResult, publicPicksResult, playersResult] = await Promise.all([
     supabaseAdmin
@@ -468,5 +580,6 @@ export async function GET(request: NextRequest) {
       playoffEliminated,
     },
     survivor,
+    bootstrap,
   });
 }

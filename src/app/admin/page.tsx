@@ -1,26 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
-import GameExceptions from "@/components/game-exceptions";
-import LineLockChecker from "@/components/line-lock-checker";
-import ScoreSyncChecker from "@/components/score-sync-checker";
-import AutomationHealth from "@/components/automation-health";
-import IntegrityRehearsal from "@/components/integrity-rehearsal";
-import SeasonRecoveryRehearsal from "@/components/season-recovery-rehearsal";
-import GameDayPlaybook from "@/components/game-day-playbook";
-import AutomationPreflight from "@/components/automation-preflight";
-import FinalScoreReconciliation from "@/components/final-score-reconciliation";
-import SentryVerification from "@/components/sentry-verification";
-import SeasonReadiness from "@/components/season-readiness";
-import OpeningWeekChecklist from "@/components/opening-week-checklist";
-import CommissionerHandbook from "@/components/commissioner-handbook";
-import AutomationWatchdog from "@/components/automation-watchdog";
-import SeasonBootstrapStatus from "@/components/season-bootstrap-status";
-import CommissionerOperationsMap from "@/components/commissioner-operations-map";
-import AccountCapacityPanel from "@/components/account-capacity";
+
+const GameExceptions = dynamic(() => import("@/components/game-exceptions"));
+const LineLockChecker = dynamic(() => import("@/components/line-lock-checker"));
+const ScoreSyncChecker = dynamic(() => import("@/components/score-sync-checker"));
+const AutomationHealth = dynamic(() => import("@/components/automation-health"));
+const IntegrityRehearsal = dynamic(() => import("@/components/integrity-rehearsal"));
+const SeasonRecoveryRehearsal = dynamic(() => import("@/components/season-recovery-rehearsal"));
+const GameDayPlaybook = dynamic(() => import("@/components/game-day-playbook"));
+const AutomationPreflight = dynamic(() => import("@/components/automation-preflight"));
+const FinalScoreReconciliation = dynamic(() => import("@/components/final-score-reconciliation"));
+const SentryVerification = dynamic(() => import("@/components/sentry-verification"));
+const SeasonReadiness = dynamic(() => import("@/components/season-readiness"));
+const OpeningWeekChecklist = dynamic(() => import("@/components/opening-week-checklist"));
+const CommissionerHandbook = dynamic(() => import("@/components/commissioner-handbook"));
+const AutomationWatchdog = dynamic(() => import("@/components/automation-watchdog"));
+const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstrap-status"));
+const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
+const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 
 type Spread = {
   team: string;
