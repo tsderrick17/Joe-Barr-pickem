@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     notificationEmail: player.notification_email ?? "",
-    senderEmail: process.env.BREVO_SENDER_EMAIL ?? "",
+    // Brevo can replace a free-address sender with its compliant delivery
+    // address. Show recipients the address they will actually see, while the
+    // private verified address remains server-only.
+    senderEmail: process.env.BREVO_PUBLIC_SENDER_EMAIL ?? process.env.BREVO_SENDER_EMAIL ?? "",
     emailNotificationsEnabled: player.email_notifications_enabled,
     emailWeeklyEnabled: player.email_weekly_enabled,
     emailFinalLinesEnabled: player.email_final_lines_enabled,

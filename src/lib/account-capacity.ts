@@ -66,7 +66,7 @@ async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
     const response = await fetch("https://api.uptimerobot.com/v2/getAccountDetails", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ api_key: key, format: "json" }),
+      body: new URLSearchParams({ api_key: key.trim(), format: "json" }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error(`UptimeRobot returned ${response.status}.`);
@@ -76,7 +76,28 @@ async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
       .map((field) => wholeNumber(account[field]) ?? 0)
       .reduce((total, count) => total + count, 0);
     const limit = wholeNumber(account.monitor_limit);
-    if (payload.stat !== "ok" || limit === null) throw new Error("UptimeRobot returned an incomplete account summary.");
+    if (payload.stat !== "ok" || limit === null) {
+      // Some read-only keys can list monitors but cannot read the optional
+      // account summary. Fall back without granting the app any write scope.
+      const monitorsResponse = await fetch("https://api.uptimerobot.com/v2/getMonitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ api_key: key.trim(), format: "json", limit: "50" }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!monitorsResponse.ok) throw new Error(`UptimeRobot returned ${monitorsResponse.status}.`);
+      const monitorsPayload = await monitorsResponse.json() as { stat?: string; monitors?: unknown[]; pagination?: { total?: unknown } };
+      if (monitorsPayload.stat !== "ok" || !Array.isArray(monitorsPayload.monitors)) throw new Error("UptimeRobot did not return monitors.");
+      const monitorCount = wholeNumber(monitorsPayload.pagination?.total) ?? monitorsPayload.monitors.length;
+      const result: AccountCapacity = {
+        id: "uptimerobot", service: "UptimeRobot", metric: "Monitors", used: monitorCount, limit: 50,
+        unit: "monitors", period: "current account", observedAt: now.toISOString(),
+        detail: `${monitorCount} of 50 free monitor slots are in use. This read-only fallback is cached for five minutes.`,
+        connection: "live",
+      };
+      uptimeRobotCache = { expiresAt: now.getTime() + 5 * 60 * 1000, account: result };
+      return result;
+    }
     const result: AccountCapacity = {
       id: "uptimerobot", service: "UptimeRobot", metric: "Monitors", used, limit,
       unit: "monitors", period: "current account", observedAt: now.toISOString(),
@@ -164,12 +185,15 @@ async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
       const slug = typeof organization.slug === "string" ? organization.slug : null;
       if (!slug) return null;
       const query = new URLSearchParams({ field: "sum(times_seen)", category: "error", outcome: "accepted", start, end });
-      const response = await fetch(`https://sentry.io/api/0/organizations/${encodeURIComponent(slug)}/stats-summary/?${query}`, { headers, signal: AbortSignal.timeout(10_000) });
+      query.append("groupBy", "outcome");
+      const response = await fetch(`https://sentry.io/api/0/organizations/${encodeURIComponent(slug)}/stats_v2/?${query}`, { headers, signal: AbortSignal.timeout(10_000) });
       if (!response.ok) throw new Error(`Sentry statistics returned ${response.status}.`);
-      return response.json() as Promise<{ projects?: Array<{ stats?: Array<{ outcomes?: Record<string, unknown> }> }> }>;
+      return response.json() as Promise<{ groups?: Array<{ totals?: Record<string, unknown> }> }>;
     }));
-    const used = responses.filter(Boolean).reduce((total, response) => total + (response?.projects ?? []).reduce((projectTotal, project) =>
-      projectTotal + (project.stats ?? []).reduce((statsTotal, stat) => statsTotal + (wholeNumber(stat.outcomes?.accepted) ?? 0), 0), 0), 0);
+    const used = responses.filter(Boolean).reduce((total, response) => total + (response?.groups ?? []).reduce(
+      (groupTotal, group) => groupTotal + (wholeNumber(group.totals?.["sum(times_seen)"]) ?? 0),
+      0,
+    ), 0);
     const limit = wholeNumber(process.env.SENTRY_ERROR_EVENT_LIMIT);
     const result: AccountCapacity = {
       id: "sentry", service: "Sentry", metric: "Error events", used, limit,
@@ -271,8 +295,8 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       unit: "usage",
       period: "current billing cycle",
       observedAt: null,
-      detail: "Add a read-only Vercel usage token to show the account’s actual current usage.",
-      connection: "awaiting_connection",
+      detail: "Vercel does not provide Hobby-plan billing usage to this read-only app connection. Check Usage in the Vercel dashboard.",
+      connection: "not_reported",
     },
     github,
     sentry,

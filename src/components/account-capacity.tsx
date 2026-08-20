@@ -66,7 +66,7 @@ function CapacityDial({ account }: { account: AccountCapacity }) {
     </div>
     <div className="min-w-0">
       <p className="text-[11px] font-black tracking-[.12em] text-zinc-600">{account.metric.toUpperCase()}</p>
-      {account.used !== null && account.limit !== null ? <p className="mt-1 text-lg font-bold tabular-nums">{label(account.used)} <span className="text-zinc-500">/ {label(account.limit)}</span> {account.unit}</p> : <p className="mt-1 font-bold text-zinc-700">Awaiting connection</p>}
+      {account.used !== null ? <p className="mt-1 text-lg font-bold tabular-nums">{label(account.used)} {account.limit !== null ? <span className="text-zinc-500">/ {label(account.limit)}</span> : null} {account.unit}</p> : <p className="mt-1 font-bold text-zinc-700">{account.connection === "awaiting_connection" ? "Setup needed" : "No reading yet"}</p>}
       <p className="mt-1 text-xs text-zinc-600">{account.period}</p>
     </div>
   </div>;
