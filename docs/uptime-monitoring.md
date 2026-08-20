@@ -12,6 +12,10 @@ The critical-worker heartbeat URL is:
 
 `https://pickemjb.vercel.app/api/health/workers`
 
+The encrypted-backup health URL is:
+
+`https://pickemjb.vercel.app/api/health/backup`
+
 All three health endpoints return only an opaque HTTP 200 or 503 response.
 They never expose database, worker, or application details publicly.
 
@@ -22,9 +26,8 @@ They never expose database, worker, or application details publicly.
    `/api/health/automation` with a five-minute interval.
 3. Create **PickemJB critical workers**, pointed at `/api/health/workers` with
    a five-minute interval.
-4. Create a weekly heartbeat monitor named **PickemJB encrypted backup** and
-   store its private ping URL as the GitHub Production environment secret
-   `UPTIMEROBOT_BACKUP_HEARTBEAT_URL`. Never publish that URL.
+4. Create **PickemJB encrypted backup**, pointed at `/api/health/backup` with a
+   five-minute interval. This stays on UptimeRobot's free HTTP-monitor tier.
 5. Treat any non-200 response, timeout, or missed heartbeat as down.
 6. Add Tyler's email and text/push destination as the alert contacts.
 7. Set recovery notifications so an outage and its resolution are both visible.
@@ -40,7 +43,9 @@ five minutes, reminder processing within 12 minutes, and final-score processing
 within 35 minutes. Its database table has exactly one row per worker, so the
 monitor itself cannot create unbounded operational history.
 
-The encrypted-backup heartbeat is sent only after the weekly export is
-encrypted, decrypted, restored into the verification database, and retained as
-a workflow artifact. A missed ping therefore means the complete backup proof
-did not finish—not merely that GitHub Actions started the job.
+The encrypted-backup URL reads the latest completed GitHub workflow through the
+existing server-only read token. It returns 200 only when that latest run
+succeeded recently. Because the workflow uploads its artifact only after
+encryption and the decrypt/restore check, this proves the complete backup—not
+merely that GitHub Actions started the job. It uses no paid push-heartbeat
+feature and exposes no workflow details publicly.

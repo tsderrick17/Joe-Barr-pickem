@@ -27,11 +27,10 @@ test("critical worker heartbeat fails closed for missing, stale, or later failed
 });
 
 test("worker receipts stay constant-size and the public route remains opaque", async () => {
-  const [migration, lease, route, backup] = await Promise.all([
+  const [migration, lease, route] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820011000_add_critical_worker_heartbeats.sql", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/automation-execution-lease.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/app/api/health/workers/route.ts", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/database-backup.yml", import.meta.url), "utf8"),
   ]);
   assert.match(migration, /job_name text primary key/);
   assert.match(migration, /on conflict \(job_name\) do update/);
@@ -41,6 +40,4 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
   assert.match(route, /status: result\.healthy \? 200 : 503/);
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
-  assert.match(backup, /UPTIMEROBOT_BACKUP_HEARTBEAT_URL/);
-  assert.match(backup, /curl --fail/);
 });

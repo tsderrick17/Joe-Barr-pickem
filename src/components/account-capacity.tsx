@@ -53,20 +53,39 @@ function CapacityDial({ account }: { account: AccountCapacity }) {
   const ratio = account.used !== null && account.limit !== null && account.limit > 0
     ? Math.min(1, account.used / account.limit)
     : null;
+  const liveCountWithoutLimit = account.connection === "live" && account.used !== null && account.limit === null;
+  const dashboardOnly = account.id === "vercel" && account.connection === "not_reported";
   const color = ratio === null ? "#a8a29e" : dialColor(ratio);
-  const dialStyle = ratio === null
+  const dialStyle = liveCountWithoutLimit
+    ? { background: "conic-gradient(#007e72 0deg 4deg, #e7e5e4 4deg 360deg)" }
+    : ratio === null
     ? { background: "conic-gradient(#d6d3d1 0deg 360deg)" }
     : { background: `conic-gradient(${color} 0deg ${Math.max(4, ratio * 360)}deg, #e7e5e4 ${Math.max(4, ratio * 360)}deg 360deg)` };
 
+  const dialLabel = ratio !== null
+    ? `${Math.round(ratio * 100)}%`
+    : liveCountWithoutLimit
+      ? label(account.used)
+      : dashboardOnly
+        ? "↗"
+        : "—";
+  const ariaLabel = ratio !== null
+    ? `${label(account.used)} of ${label(account.limit)} ${account.unit} used`
+    : liveCountWithoutLimit
+      ? `${label(account.used)} ${account.unit} reported; plan limit is not available`
+      : dashboardOnly
+        ? "Usage is available in the Vercel dashboard"
+        : "Usage reading is not available yet";
+
   return <div className="flex items-center gap-4">
-    <div aria-label={ratio === null ? "Usage awaiting connection" : `${label(account.used)} of ${label(account.limit)} ${account.unit} used`} className="relative grid size-20 shrink-0 place-items-center rounded-full" role="img" style={dialStyle}>
+    <div aria-label={ariaLabel} className="relative grid size-20 shrink-0 place-items-center rounded-full" role="img" style={dialStyle}>
       <div className="grid size-[4.1rem] place-items-center rounded-full bg-white text-center">
-        <span className="font-serif text-lg font-bold leading-none">{ratio === null ? "—" : `${Math.round(ratio * 100)}%`}</span>
+        <span className="font-serif text-lg font-bold leading-none">{dialLabel}</span>
       </div>
     </div>
     <div className="min-w-0">
       <p className="text-[11px] font-black tracking-[.12em] text-zinc-600">{account.metric.toUpperCase()}</p>
-      {account.used !== null ? <p className="mt-1 text-lg font-bold tabular-nums">{label(account.used)} {account.limit !== null ? <span className="text-zinc-500">/ {label(account.limit)}</span> : null} {account.unit}</p> : <p className="mt-1 font-bold text-zinc-700">{account.connection === "awaiting_connection" ? "Setup needed" : "No reading yet"}</p>}
+      {account.used !== null ? <p className="mt-1 text-lg font-bold tabular-nums">{label(account.used)} {account.limit !== null ? <span className="text-zinc-500">/ {label(account.limit)}</span> : null} {account.unit}</p> : <p className="mt-1 font-bold text-zinc-700">{account.connection === "awaiting_connection" ? "Setup needed" : dashboardOnly ? "Dashboard only" : "No reading yet"}</p>}
       <p className="mt-1 text-xs text-zinc-600">{account.period}</p>
     </div>
   </div>;
@@ -114,6 +133,6 @@ export default function AccountCapacityPanel() {
         <div className="mt-4"><CapacityDial account={account} /></div>
         <p className="mt-3 border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-600">{account.detail}</p>
       </article>;
-    })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{table.estimated_rows.toLocaleString()}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} A dial is never shown as zero when its service is not connected.</p></> : null}
+    })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{table.estimated_rows.toLocaleString()}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} Unknown plan limits show a live count instead of a made-up percentage.</p></> : null}
   </section>;
 }

@@ -194,8 +194,9 @@ schedule preparation, and opens one actionable Commissioner alert.
 
 Keep the existing public-site and watchdog monitors, then add two independent
 proofs: a fixed-size critical-worker heartbeat for line locks, scores, and
-reminders, and a private weekly ping sent only after the encrypted backup has
-passed export, encryption, decrypt/restore verification, and artifact upload.
-Public worker health stays deliberately opaque, while the Commissioner view
-retains actionable detail. Monitoring records update in place and therefore do
-not create a new source of database growth.
+reminders, and a free HTTP endpoint that verifies the latest encrypted-backup
+workflow completed successfully. The backup workflow uploads an artifact only
+after export, encryption, and decrypt/restore verification. Public health stays
+deliberately opaque, while the Commissioner and GitHub views retain actionable
+detail. Monitoring records update in place and therefore do not create a new
+source of database growth or require UptimeRobot's paid push-heartbeat tier.
