@@ -20,3 +20,25 @@ test("Opening Week checklist consumes the full live launch preflight", async () 
   assert.match(source, /runLaunchPreflight/);
   assert.doesNotMatch(source, /rpc\("automation_preflight"\)/);
 });
+
+test("watchdog reuses external preflight checks on a daily drift cadence", async () => {
+  const watchdog = await readFile(new URL("../src/lib/automation-watchdog.ts", import.meta.url), "utf8");
+  const rules = await readFile(new URL("../src/lib/watchdog-rules.js", import.meta.url), "utf8");
+  assert.match(watchdog, /runExternalConfigurationChecks/);
+  assert.match(watchdog, /job_type:\s*"configuration_drift"/);
+  assert.match(watchdog, /configurationChecks/);
+  assert.match(rules, /America\/New_York/);
+  assert.match(rules, /60 \* 60 \* 1000/);
+});
+
+test("scheduled isolated certification includes the live-week database rehearsal", async () => {
+  const workflow = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
+  const drill = await readFile(new URL("../scripts/season-drill.mjs", import.meta.url), "utf8");
+  const packageSource = await readFile(new URL("../package.json", import.meta.url), "utf8");
+  const rehearsal = await readFile(new URL("./integration/weekly-live-week-rehearsal.test.mjs", import.meta.url), "utf8");
+  assert.match(workflow, /PICKEM_WEEKLY_REHEARSAL:\s*"true"/);
+  assert.match(drill, /run\("test:all"\)/);
+  assert.match(packageSource, /node --test test\/\*\*\/\*\.test\.mjs/);
+  assert.match(rehearsal, /PICKEM_WEEKLY_REHEARSAL === "true"/);
+  assert.match(rehearsal, /PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"/);
+});

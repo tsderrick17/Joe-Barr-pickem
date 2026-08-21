@@ -12,6 +12,8 @@ change player picks or scores directly.
    sync are healthy. A low provider allowance is a warning, not a scoring
    change—the app automatically slows delayed-score polling to protect the
    remaining allowance.
+   The daily configuration receipt should also be healthy; if it is not, use
+   the single watchdog incident rather than repeatedly testing providers.
 3. Confirm the next slate has games, kickoff times, and official line-lock
    times. International games should show their earlier schedule naturally.
 4. Treat automatic full-schedule bootstrap and reconciliation as the primary

@@ -1,3 +1,11 @@
+/**
+ * @param {{
+ *   health: any,
+ *   bootstrap: any,
+ *   preflightChecks?: Array<{ label: string, passed: boolean }>,
+ *   now?: Date,
+ * }} input
+ */
 export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [], now = new Date() }) {
   const signals = [];
   if (bootstrap.turnover?.status === "blocked") {
@@ -79,4 +87,22 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     });
   }
   return signals;
+}
+
+function easternDayKey(value) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
+}
+
+export function isConfigurationDriftCheckDue(latestRun, now = new Date()) {
+  if (!latestRun?.started_at) return true;
+  const startedAt = new Date(latestRun.started_at);
+  if (Number.isNaN(startedAt.getTime())) return true;
+  if (easternDayKey(startedAt) !== easternDayKey(now)) return true;
+  return latestRun.status !== "success"
+    && now.getTime() - startedAt.getTime() >= 60 * 60 * 1000;
 }

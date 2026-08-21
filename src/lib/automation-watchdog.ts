@@ -1,10 +1,17 @@
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { getSeasonBootstrapStatus } from "@/lib/full-schedule-bootstrap";
+import { runExternalConfigurationChecks, type LaunchPreflightCheck } from "@/lib/launch-preflight";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { evaluateWatchdogSignals } from "@/lib/watchdog-rules";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "@/lib/watchdog-rules";
 
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
 type AlertRow = { id: string; signal_key: string; notified_at: string | null; notification_attempted_at: string | null };
+type ConfigurationRun = {
+  id?: string;
+  status: string;
+  started_at: string;
+  details?: { checks?: LaunchPreflightCheck[] } | null;
+};
 
 function isWeeklyStoragePruneDue(now: Date) {
   return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 5;
@@ -40,6 +47,42 @@ async function notifyCommissioners(signal: Signal) {
   return recipients.length;
 }
 
+async function checkConfigurationDrift(now: Date, latestRun: ConfigurationRun | null) {
+  if (!isConfigurationDriftCheckDue(latestRun, now)) {
+    return Array.isArray(latestRun?.details?.checks) ? latestRun.details.checks : [];
+  }
+  const { data: run, error: runError } = await supabaseAdmin.from("sync_runs")
+    .insert({ provider: "internal", job_type: "configuration_drift", status: "started", started_at: now.toISOString() })
+    .select("id").single();
+  if (runError || !run) throw new Error("The configuration-drift check could not be recorded.");
+  try {
+    const checks = await runExternalConfigurationChecks();
+    const healthy = checks.every((item) => item.passed);
+    const { error: completionError } = await supabaseAdmin.from("sync_runs").update({
+      status: healthy ? "success" : "failed",
+      completed_at: new Date().toISOString(),
+      details: { checks, status: healthy ? "healthy" : "attention" },
+      error_message: healthy ? null : "One or more external configuration checks need attention.",
+    }).eq("id", run.id);
+    if (completionError) throw new Error("The configuration-drift receipt could not be completed.");
+    return checks;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Configuration drift could not be checked.";
+    const checks: LaunchPreflightCheck[] = [{
+      check_id: "configuration-drift-run",
+      label: "Daily configuration drift check",
+      passed: false,
+      detail: message,
+      group: "providers",
+    }];
+    const { error: failureError } = await supabaseAdmin.from("sync_runs").update({
+      status: "failed", completed_at: new Date().toISOString(), error_message: message, details: { checks, status: "attention" },
+    }).eq("id", run.id);
+    if (failureError) throw new Error(`${message} The failed configuration-drift receipt could not be saved.`);
+    return checks;
+  }
+}
+
 export async function getWatchdogStatus() {
   const [{ data: alerts, error }, { data: lastRun, error: runError }] = await Promise.all([
     supabaseAdmin.from("automation_alerts").select("id, signal_key, severity, title, detail, detected_at, last_seen_at, notified_at, resolved_at, notification_error")
@@ -56,15 +99,24 @@ export async function runAutomationWatchdog(now = new Date()) {
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
   try {
-    const [health, bootstrap, preflight, storagePrune] = await Promise.all([
+    const [health, bootstrap, preflight, storagePrune, configurationRun] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
       isWeeklyStoragePruneDue(now)
         ? supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
         : Promise.resolve({ data: null, error: null }),
+      supabaseAdmin.from("sync_runs").select("status, started_at, details")
+        .eq("job_type", "configuration_drift").order("started_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
     if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
-    const signals = evaluateWatchdogSignals({ health, bootstrap, preflightChecks: preflight.data ?? [], now }) as Signal[];
+    if (configurationRun.error) throw new Error("The latest configuration-drift check could not be loaded.");
+    const configurationChecks = await checkConfigurationDrift(now, configurationRun.data as ConfigurationRun | null);
+    const signals = evaluateWatchdogSignals({
+      health,
+      bootstrap,
+      preflightChecks: [...(preflight.data ?? []), ...configurationChecks],
+      now,
+    }) as Signal[];
     const { data: openAlerts, error: alertsError } = await supabaseAdmin.from("automation_alerts")
       .select("id, signal_key, notified_at, notification_attempted_at").is("resolved_at", null);
     if (alertsError) throw new Error("Open watchdog incidents could not be loaded.");
@@ -99,7 +151,14 @@ export async function runAutomationWatchdog(now = new Date()) {
         }
       }
     }
-    const details = { signals: signals.length, opened, resolved: resolvedIds.length, notified, storagePruned: storagePrune.data ?? undefined };
+    const details = {
+      signals: signals.length,
+      opened,
+      resolved: resolvedIds.length,
+      notified,
+      configurationChecks: configurationChecks.length,
+      storagePruned: storagePrune.data ?? undefined,
+    };
     await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details }).eq("id", run.id);
     return details;
   } catch (error) {

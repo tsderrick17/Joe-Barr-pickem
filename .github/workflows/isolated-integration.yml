@@ -31,6 +31,7 @@ jobs:
       PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       PICKEM_RLS_AUDIT: "true"
+      PICKEM_WEEKLY_REHEARSAL: "true"
       PICKEM_E2E_ENABLED: "false"
       PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
       PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/season-certification.json
@@ -69,6 +70,7 @@ jobs:
             echo
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Isolated database lifecycle: **${{ steps.certification.outcome }}**"
+            echo "- Weekly live-week rehearsal: **enabled**"
             echo "- Full-season chaos drill requested: **${PICKEM_FULL_SEASON_DRILL}**"
             if [ "$PICKEM_FULL_SEASON_DRILL" = "true" ]; then
               echo "- Coverage: 18 regular weeks, 4 playoff rounds, 285 games, schedule reconciliation, disruptions, scoring, eligibility, Survivor, archive, and annual rollover"

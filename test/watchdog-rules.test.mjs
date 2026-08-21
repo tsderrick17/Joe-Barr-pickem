@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateWatchdogSignals } from "../src/lib/watchdog-rules.js";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "../src/lib/watchdog-rules.js";
 
 function healthy(overrides = {}) {
   return {
@@ -92,4 +92,15 @@ test("watchdog waits for repeated provider failures before raising one actionabl
     now: new Date("2026-08-20T12:10:00Z"),
   });
   assert.deepEqual(scheduleSignal.map((signal) => signal.key), ["schedule-provider-cooldown"]);
+});
+
+test("configuration drift runs once per Eastern day and retries failures hourly", () => {
+  const now = new Date("2026-08-20T16:00:00Z");
+  assert.equal(isConfigurationDriftCheckDue(null, now), true);
+  assert.equal(isConfigurationDriftCheckDue({ status: "success", started_at: "2026-08-20T12:00:00Z" }, now), false);
+  assert.equal(isConfigurationDriftCheckDue({ status: "success", started_at: "2026-08-19T23:59:00-04:00" }, now), true);
+  assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "2026-08-20T15:30:00Z" }, now), false);
+  assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "2026-08-20T14:59:00Z" }, now), true);
+  assert.equal(isConfigurationDriftCheckDue({ status: "started", started_at: "2026-08-20T14:59:00Z" }, now), true);
+  assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "not-a-date" }, now), true);
 });
