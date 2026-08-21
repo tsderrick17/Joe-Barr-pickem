@@ -36,10 +36,16 @@ Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_T
 ## Commands
 
 - `npm run test` runs the fast logic suite.
-- `npm run test:integration` exercises the real database procedures when the isolated settings exist; otherwise it reports one intentional skip.
-- `npm run test:season-drill` runs every fast rule check and the isolated browser player flow when the isolated settings are present. Without those settings it reports that browser checks are intentionally waiting, rather than touching production.
+- `npm run test:integration` exercises the real database procedures when the isolated settings exist; otherwise its guarded tests report intentional skips.
+- `npm run test:season-drill` runs every fast rule check, the isolated database integration suite when its database URL is present, and the isolated browser player flow when its separate browser settings are present. Without those settings it reports what is intentionally waiting rather than touching production.
 - `npm run test:isolated` loads only `.env.test.local` and runs the complete season drill. This is the recommended local command.
 - `PICKEM_E2E_ENABLED=true npm run test:e2e` launches the application against the isolated project and verifies an actual player can sign in, save two ATS picks, save a Survivor pick, change that Survivor pick, and leave only the final selections behind. It refuses a production URL.
+
+The scheduled Wednesday workflow sets `PICKEM_WEEKLY_REHEARSAL=true`. That
+guard enables a transactional live-week rehearsal that revises picks, grades a
+completed slate, verifies permanent history, activates the next week, and then
+rolls every fixture back. The flag is ineffective unless the database
+confirmation is exactly `isolated` and the isolated database URL is present.
 
 ## Full-season certification
 

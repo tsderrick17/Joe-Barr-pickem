@@ -200,3 +200,16 @@ after export, encryption, and decrypt/restore verification. Public health stays
 deliberately opaque, while the Commissioner and GitHub views retain actionable
 detail. Monitoring records update in place and therefore do not create a new
 source of database growth or require UptimeRobot's paid push-heartbeat tier.
+
+## 2026-08-20 — REF-021 — Rehearse a live week weekly and detect drift daily
+
+**Status:** Accepted
+
+Use the existing Wednesday isolated workflow to rehearse a realistic ATS and
+Survivor save/revision, slate finalization, grading, history check, and atomic
+week handoff inside an always-rolled-back transaction. Separately, reuse the
+existing leased five-minute watchdog to run Launch Preflight's external
+configuration checks once per Eastern day, retry failed checks no more than
+hourly, and surface one deduplicated incident. The daily check must not send a
+pool message, spend an Odds API credit, create another cron schedule, or run
+against test fixtures in production.

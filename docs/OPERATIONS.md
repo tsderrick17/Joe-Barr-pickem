@@ -94,6 +94,13 @@ Individual bad email addresses and intentional low-provider-quota cooldowns do
 not alert. Open incidents and a manual **Run watchdog now** control are visible
 on the Commissioner Desk overview.
 
+Once per Eastern day, the same leased watchdog also rechecks the external
+configuration that can drift without a deployment: the deployed cron secret,
+the zero-credit Odds API authentication endpoint, the configured active Brevo
+sender, and an active Commissioner alert address. A failed check retries no
+more than hourly and uses the existing deduplicated configuration incident.
+The check sends no pool email and consumes no Odds API credit.
+
 An external UptimeRobot monitor must also check
 `https://pickemjb.vercel.app/api/health/automation` every five minutes. The
 endpoint returns 200 only when the watchdog has completed successfully within
@@ -136,3 +143,12 @@ migrations, runs the deterministic full-season lifecycle drill, then runs lint
 and a production build. This rehearsal does not deploy or alter production. Its
 report is retained as a workflow artifact so an incompatible future dependency
 is discovered before an urgent in-season upgrade.
+
+## Weekly isolated live-week rehearsal
+
+Every Wednesday, **Isolated integration checks** uses only the confirmed
+isolated-test database to save and revise ATS and Survivor selections, finalize
+a full slate, verify grades and preserved history, and perform the atomic
+handoff to the next week. The rehearsal runs inside a database transaction and
+always rolls it back, so it leaves no fixture records behind. It never calls
+the Odds provider or Brevo and cannot run with production credentials.

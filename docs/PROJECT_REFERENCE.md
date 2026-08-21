@@ -247,6 +247,10 @@ may enrich spreads but cannot override canonical schedule assignments.
   on due records.
 - Operational logs and delivery receipts are retained and reviewed separately
   from permanent competitive history.
+- Once per Eastern day, the leased watchdog reuses Launch Preflight's
+  zero-credit external checks for cron authorization, Odds access, the active
+  Brevo sender, and a Commissioner alert address. A failed daily check retries
+  no more than hourly and becomes one deduplicated configuration incident.
 - A weekly storage guardrail runs through the protected Monday watchdog and
   removes only routine `sync_runs` plus resolved watchdog and schedule-review
   incidents after 180 days. The certified annual cleanup may additionally
@@ -330,6 +334,9 @@ Manual controls are recovery paths, not alternate implementations.
 - Full-season certification covers 18 regular weeks, four playoff rounds, 285
   games, schedule changes, disruptions, scoring, eligibility, privacy,
   Survivor, archives, and annual rollover.
+- The scheduled Wednesday isolated workflow also rehearses one realistic live
+  week: revised ATS and Survivor saves, final grading, historical retention,
+  and an atomic next-week handoff. Its transaction is always rolled back.
 - The monthly upgrade rehearsal updates dependencies only inside the isolated
   job, applies every migration, runs the lifecycle drill, lints, and builds. It
   never commits upgrades or deploys production.

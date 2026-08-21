@@ -12,8 +12,10 @@ guarded recovery tools for a specific observed condition.
 | Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm both UptimeRobot monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
+| Daily | Recheck cron authorization, Odds access, Brevo sender, and Commissioner alert delivery configuration | Act only if the watchdog opens one drift incident |
 | Tuesday, 6:30 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
+| Wednesday | Rehearse one complete save, revision, scoring, and week-handoff cycle in isolated-test | Review only a failed workflow |
 | Weekly | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
 | Monthly | Run isolated dependency/migration/lifecycle rehearsal | Review the artifact if it fails |
 | August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |

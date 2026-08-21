@@ -151,21 +151,28 @@ async function checkWatchdogHeartbeat(): Promise<LaunchPreflightCheck> {
 }
 
 export async function runLaunchPreflight() {
-  const [scheduleResult, cronAuthorization, watchdogHeartbeat, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+  const [scheduleResult, watchdogHeartbeat, externalChecks] = await Promise.all([
     supabaseAdmin.rpc("automation_preflight"),
-    checkCronAuthorization(),
     checkWatchdogHeartbeat(),
-    checkOddsProvider(),
-    checkBrevo(),
-    checkCommissionerAlerts(),
+    runExternalConfigurationChecks(),
   ]);
   const scheduleChecks: LaunchPreflightCheck[] = scheduleResult.error
     ? [check("schedule-preflight", "Supabase automation schedules", false, "The schedule preflight function is unavailable.", "schedules")]
     : (scheduleResult.data ?? []).map((item: { check_id: string; label: string; passed: boolean; detail: string }) => ({ ...item, group: item.check_id === "cron-secret" ? "authorization" as const : "schedules" as const }));
-  const checks = [...scheduleChecks, watchdogHeartbeat, cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
+  const checks = [...scheduleChecks, watchdogHeartbeat, ...externalChecks];
   return {
     checkedAt: new Date().toISOString(),
     status: checks.every((item) => item.passed) ? "healthy" as const : "attention" as const,
     checks,
   };
+}
+
+export async function runExternalConfigurationChecks() {
+  const [cronAuthorization, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+    checkCronAuthorization(),
+    checkOddsProvider(),
+    checkBrevo(),
+    checkCommissionerAlerts(),
+  ]);
+  return [cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
 }
