@@ -1,15 +1,13 @@
 import { createHmac } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabaseAdmin, supabaseServerKey } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
 export const runtime = "nodejs";
 
 function fingerprint(value: string, context: string) {
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!secret) throw new Error("PIN-login protection is not configured.");
-  return createHmac("sha256", secret).update(`${context}:${value}`).digest("hex");
+  return createHmac("sha256", supabaseServerKey).update(`${context}:${value}`).digest("hex");
 }
 
 function requestSource(request: NextRequest) {
