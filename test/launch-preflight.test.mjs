@@ -12,7 +12,16 @@ test("launch preflight verifies every external game-day dependency without sendi
   assert.match(source, /notification_email/);
   assert.match(source, /automation_cron_secret_matches/);
   assert.match(source, /assessAutomationHeartbeat/);
+  assert.match(source, /supabase-server-authorization/);
+  assert.match(source, /production server credential is accepted/);
   assert.doesNotMatch(source, /\/odds\/\?|\/smtp\/email|import-games/);
+});
+
+test("public health verifies both player and privileged database access", async () => {
+  const source = await readFile(new URL("../src/app/api/health/route.ts", import.meta.url), "utf8");
+  assert.match(source, /supabase\.from\("seasons"\)/);
+  assert.match(source, /supabaseAdmin\.from\("seasons"\)/);
+  assert.match(source, /Promise\.all/);
 });
 
 test("Opening Week checklist consumes the full live launch preflight", async () => {

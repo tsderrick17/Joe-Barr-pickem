@@ -115,6 +115,22 @@ async function checkCommissionerAlerts(): Promise<LaunchPreflightCheck> {
   );
 }
 
+async function checkSupabaseAuthorization(): Promise<LaunchPreflightCheck> {
+  const { error } = await supabaseAdmin
+    .from("seasons")
+    .select("id")
+    .limit(1);
+  return check(
+    "supabase-server-authorization",
+    "Supabase server authorization",
+    !error,
+    !error
+      ? "The production server credential is accepted by the Supabase Data API."
+      : "Supabase rejected the production server credential; automation and privileged reads cannot run.",
+    "authorization",
+  );
+}
+
 async function checkCronAuthorization(): Promise<LaunchPreflightCheck> {
   const secret = process.env.CRON_SECRET;
   if (!secret) return check("cron-authorization", "Cron authorization", false, "CRON_SECRET is missing from the deployment.", "authorization");
@@ -168,11 +184,12 @@ export async function runLaunchPreflight() {
 }
 
 export async function runExternalConfigurationChecks() {
-  const [cronAuthorization, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+  const [supabaseAuthorization, cronAuthorization, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+    checkSupabaseAuthorization(),
     checkCronAuthorization(),
     checkOddsProvider(),
     checkBrevo(),
     checkCommissionerAlerts(),
   ]);
-  return [cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
+  return [supabaseAuthorization, cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
 }
