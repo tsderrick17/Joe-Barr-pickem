@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { onlyPublicPickRows } from "@/lib/pool-action-visibility";
 import type { EarlyLockSnapshot, FeaturedWindowRevealSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
@@ -120,15 +121,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "reveal" && snapshot.kind === "sunday_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker={`SUNDAY ${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={snapshot.week} rows={snapshot.rows} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker={`SUNDAY ${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={snapshot.week} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
   }
 
   if (kind === "reveal" && snapshot.kind === "playoff_public_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker="PLAYOFF · PUBLIC RECEIPTS" title={`${snapshot.round} · ${snapshot.window}`} rows={snapshot.rows} note="Only selections from games already underway are shown. Later playoff picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker="PLAYOFF · PUBLIC RECEIPTS" title={`${snapshot.round} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Later playoff picks remain private." />, { width: 1200, height: 1200 });
   }
 
   if (kind === "reveal" && snapshot.kind === "featured_window_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker="FEATURED WINDOW · PUBLIC RECEIPTS" title={`${snapshot.week} · ${snapshot.window}`} rows={snapshot.rows} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker="FEATURED WINDOW · PUBLIC RECEIPTS" title={`${snapshot.week} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
   }
 
   if (snapshot.kind !== "weekly_recap" && snapshot.kind !== "playoff_day_recap") return new Response("Not found", { status: 404 });

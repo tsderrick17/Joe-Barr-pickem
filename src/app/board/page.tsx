@@ -14,6 +14,7 @@ import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
 } from "@/lib/slate-draft-locks";
+import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
@@ -119,18 +120,6 @@ function easternDate(value: string) {
     month: "long",
     day: "numeric",
   }).format(new Date(value));
-}
-
-function easternCalendarDate(value: string | number | Date) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/New_York",
-    year: "numeric",
-  }).formatToParts(new Date(value));
-  const read = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
-
-  return `${read("year")}-${read("month")}-${read("day")}`;
 }
 
 function isEarlyGame(game: BoardGame) {
@@ -405,16 +394,7 @@ export default function BoardPage() {
     return Array.from(grouped.entries());
   }, [games]);
 
-  const actionSwitchAvailable = useMemo(() => {
-    if (!games.length) return false;
-    const firstKickoff = games.reduce((earliest, game) =>
-      new Date(game.kickoffAt).getTime() < new Date(earliest.kickoffAt).getTime() ? game : earliest,
-    );
-
-    return easternCalendarDate(currentTime) >= easternCalendarDate(firstKickoff.kickoffAt);
-  }, [currentTime, games]);
-
-  const actionOnlyActive = actionSwitchAvailable && showActionOnly;
+  const actionOnlyActive = showActionOnly;
 
   const visibleGamesByDay = useMemo(() => {
     if (!actionOnlyActive) return gamesByDay;
@@ -422,11 +402,11 @@ export default function BoardPage() {
     return gamesByDay
       .map(([day, dayGames]) => [
         day,
-        dayGames.filter((game) => {
-        const stillOpenForSelection = new Date(game.kickoffAt).getTime() > currentTime;
-          const hasPublishedPoolAction = game.awayPickers.length > 0 || game.homePickers.length > 0;
-          return stillOpenForSelection || hasPublishedPoolAction;
-        }),
+        dayGames.filter((game) => shouldShowPoolActionMatchup({
+          kickoffAt: game.kickoffAt,
+          now: currentTime,
+          hasSelections: game.awayPickers.length > 0 || game.homePickers.length > 0,
+        })),
       ] as const)
       .filter(([, dayGames]) => dayGames.length > 0);
 }, [actionOnlyActive, currentTime, gamesByDay]);
@@ -825,15 +805,13 @@ export default function BoardPage() {
               ))}
               </select>
 
-              {actionSwitchAvailable ? (
-                <div className="slate-view-switch-slot">
-                  <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-                    <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
-                    <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
-                    <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
-                  </div>
+              <div className="slate-view-switch-slot">
+                <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
+                  <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
+                  <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
+                  <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
                 </div>
-              ) : null}
+              </div>
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
