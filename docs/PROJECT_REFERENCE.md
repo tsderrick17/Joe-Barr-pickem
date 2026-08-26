@@ -1,6 +1,6 @@
 # Joe Barr Memorial Pick'em project reference
 
-Last verified against `main`: 2026-08-25.
+Last verified against `main`: 2026-08-26.
 
 This is the durable product and system reference for the Joe Barr Memorial
 Pick'em application. It explains what must remain true across code changes,
@@ -361,7 +361,10 @@ Manual controls are recovery paths, not alternate implementations.
   and an atomic next-week handoff. Its transaction is always rolled back.
 - The monthly upgrade rehearsal updates dependencies only inside the isolated
   job, applies every migration, runs the lifecycle drill, lints, and builds. It
-  never commits upgrades or deploys production.
+  never commits upgrades or deploys production. Its scheduled gate uses the
+  canonical NFL calendar to choose the first available non-gameday each month,
+  includes playoff dates, fails closed on missing in-season schedule coverage,
+  and records one completion marker so it cannot repeat after success.
 
 ## Documentation maintenance contract
 

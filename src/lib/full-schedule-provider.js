@@ -33,6 +33,26 @@ function parseCsv(text) {
   return rows;
 }
 
+export function parseNflverseGameDates(csv) {
+  const rows = parseCsv(csv);
+  const headers = rows.shift() ?? [];
+  const gamedayColumn = headers.indexOf("gameday");
+  if (gamedayColumn < 0) {
+    throw new Error("The NFL schedule feed is missing its gameday column.");
+  }
+
+  const gameDates = new Set();
+  for (const row of rows) {
+    const gameday = row[gamedayColumn]?.trim() ?? "";
+    if (!gameday) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(gameday) || Number.isNaN(Date.parse(`${gameday}T12:00:00Z`))) {
+      throw new Error(`The NFL schedule feed contains an invalid gameday: ${gameday}.`);
+    }
+    gameDates.add(gameday);
+  }
+  return gameDates;
+}
+
 function kickoffFromEastern(gameday, gametime) {
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(gameday);
   const timeMatch = /^(\d{1,2}):(\d{2})$/.exec(gametime);
