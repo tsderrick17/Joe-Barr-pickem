@@ -1,4 +1,8 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import {
+  supabaseAdmin,
+  supabaseServerCredentialSource,
+  supabaseServerCredentialUsesFallback,
+} from "@/lib/supabase-admin";
 import { assessAutomationHeartbeat } from "@/lib/automation-heartbeat";
 
 export type LaunchPreflightCheck = {
@@ -120,13 +124,17 @@ async function checkSupabaseAuthorization(): Promise<LaunchPreflightCheck> {
     .from("seasons")
     .select("id")
     .limit(1);
+  const authorized = !error;
+  const authoritativeSource = !supabaseServerCredentialUsesFallback;
   return check(
     "supabase-server-authorization",
     "Supabase server authorization",
-    !error,
-    !error
-      ? "The production server credential is accepted by the Supabase Data API."
-      : "Supabase rejected the production server credential; automation and privileged reads cannot run.",
+    authorized && authoritativeSource,
+    !authorized
+      ? `Supabase rejected the ${supabaseServerCredentialSource} production credential; automation and privileged reads cannot run.`
+      : authoritativeSource
+        ? `The ${supabaseServerCredentialSource} production credential is accepted by the Supabase Data API.`
+        : `Supabase accepted ${supabaseServerCredentialSource}, but production is using the compatibility fallback instead of the managed server credential.`,
     "authorization",
   );
 }

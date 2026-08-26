@@ -12,8 +12,11 @@ gameweek-pin, audit, and atomicity protections.
 1. Run `npm run test:all`, `npm run lint`, and `npm run build`.
 2. Open a pull request and wait for application, Vercel, and relevant database
    checks.
-3. Merge only green work, wait for the production deployment, and smoke-test
-   the changed player or Commissioner path.
+3. The isolated browser check must pass for player/session work. It signs in
+   and writes fixtures only in `isolated-test`.
+4. Merge only green work and wait for **Production smoke gate** after Vercel
+   reports the live deployment. Smoke-test the changed player or Commissioner
+   path when the release is user-visible.
 
 ### Database change
 

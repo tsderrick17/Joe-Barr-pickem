@@ -9,6 +9,12 @@ const configuredSupabaseServerKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY
   || process.env.SUPABASE_SECRET_KEY;
 
+export const supabaseServerCredentialSource = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? "SUPABASE_SERVICE_ROLE_KEY" as const
+  : "SUPABASE_SECRET_KEY" as const;
+export const supabaseServerCredentialUsesFallback =
+  supabaseServerCredentialSource === "SUPABASE_SECRET_KEY";
+
 if (!supabaseUrl || !configuredSupabaseServerKey) {
   throw new Error("Missing server-side Supabase configuration.");
 }

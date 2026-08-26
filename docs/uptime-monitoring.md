@@ -50,5 +50,11 @@ without turning an ordinary provider delay into a whole-site outage.
    authorization before changing schedules. A valid-looking website can still
    have stale automation credentials.
 
+The GitHub **Production smoke gate** performs the same public checks immediately
+after a successful Vercel production deployment. Its retry window avoids a
+false alarm while the alias settles. If two or more contracts remain red, the
+run labels the result as a likely shared deployment or authorization problem;
+it does not imply that each worker independently broke.
+
 UptimeRobot monitor records do not consume Odds API credits or create growing
 pool-history tables. Critical worker heartbeat rows update in place.

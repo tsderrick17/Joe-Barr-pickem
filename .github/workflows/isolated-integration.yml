@@ -30,9 +30,12 @@ jobs:
       NEXT_TELEMETRY_DISABLED: "1"
       PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+      PICKEM_TEST_SUPABASE_URL: ${{ secrets.PICKEM_TEST_SUPABASE_URL }}
+      PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY }}
+      PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY }}
       PICKEM_RLS_AUDIT: "true"
       PICKEM_WEEKLY_REHEARSAL: "true"
-      PICKEM_E2E_ENABLED: "false"
+      PICKEM_E2E_ENABLED: "true"
       PICKEM_FULL_SEASON_DRILL: ${{ inputs.full_season_drill && 'true' || 'false' }}
       PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/season-certification.json
     steps:
@@ -40,9 +43,16 @@ jobs:
         run: |
           test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
           test -n "$PICKEM_TEST_DATABASE_URL"
+          test -n "$PICKEM_TEST_SUPABASE_URL"
+          test -n "$PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY"
+          test -n "$PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY"
           case "$PICKEM_TEST_DATABASE_URL" in
             *"lrimviwfflrisshmgnsh"*) ;;
             *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
+          case "$PICKEM_TEST_SUPABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) ;;
+            *) echo "Refusing a browser-test URL that is not the isolated test project." >&2; exit 1 ;;
           esac
           echo "Using the explicitly confirmed isolated test environment."
       - uses: actions/checkout@v5
@@ -55,6 +65,8 @@ jobs:
           version: 2.113.0
           github-token: ${{ github.token }}
       - run: npm ci
+      - name: Install isolated browser
+        run: npx playwright install --with-deps chromium
       - name: Apply pending isolated migrations
         run: |
           node scripts/prepare-isolated-schema.mjs
@@ -62,6 +74,14 @@ jobs:
       - name: Run isolated season certification
         id: certification
         run: npm run test:season-drill
+      - name: Preserve browser trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: isolated-browser-trace-${{ github.run_number }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Publish certification summary
         if: always()
         run: |
