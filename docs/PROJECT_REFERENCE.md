@@ -255,6 +255,11 @@ may enrich spreads but cannot override canonical schedule assignments.
   zero-credit external checks for cron authorization, Odds access, the active
   Brevo sender, and a Commissioner alert address. A failed daily check retries
   no more than hourly and becomes one deduplicated configuration incident.
+- Launch Preflight also reports the name—not the value—of the selected
+  Supabase server credential. Production is healthy only when the managed
+  `SUPABASE_SERVICE_ROLE_KEY` path is accepted. A working compatibility
+  fallback remains available for isolated/local recovery but opens a drift
+  incident in production instead of silently becoming authoritative.
 - A weekly storage guardrail runs through the protected Monday watchdog and
   removes only routine `sync_runs` plus resolved watchdog and schedule-review
   incidents after 180 days. The certified annual cleanup may additionally
@@ -332,6 +337,16 @@ Manual controls are recovery paths, not alternate implementations.
   exact confirmation value `isolated` is required before integration work.
 - Application changes pass tests, lint, build, GitHub quality checks, and a
   Vercel preview before merge.
+- Every pull request runs the real PIN/session/player flow against the confirmed
+  isolated project, including account navigation, a transient profile-read
+  failure, pick persistence, and Survivor replacement. Production is explicitly
+  rejected by the browser-test harness.
+- A successful Vercel production deployment starts an independent smoke gate.
+  It retries the canonical site plus the availability, watchdog, worker, and
+  backup contracts until all return HTTP 200 or the release is marked failed.
+- Client error reporting discards only exact, confirmed browser-extension
+  infrastructure noise; broad message classes are never suppressed. Player
+  identity remains excluded from every Sentry event.
 - Database changes are new timestamped migrations. The production migration
   workflow dry-runs before applying them; the isolated project receives them
   first for lifecycle-sensitive work.

@@ -100,7 +100,9 @@ rehearsal. Never turn a rehearsal result into an automatic production upgrade.
 
 Check the public health endpoint and hosting/database status. Follow
 [uptime-monitoring.md](uptime-monitoring.md). Availability alerts and pool
-integrity alerts are intentionally separate.
+integrity alerts are intentionally separate. After a deployment, also open
+GitHub Actions → **Production smoke gate**; it records the status of the site
+and every health contract without exposing their response bodies.
 
 ### The site works but automation heartbeat is down
 
@@ -117,6 +119,14 @@ Open UptimeRobot's **PickemJB critical workers** incident, then open
 not name the failing worker. The Commissioner view distinguishes a stale or
 failed line lock, score refresh, or reminder pass. Recover only the named
 worker; do not manually run every job.
+
+### Several health monitors fail together
+
+Treat simultaneous failures as one likely shared-dependency incident until
+proven otherwise. Check **PickemJB production** and the latest **Production
+smoke gate** first. If the public site works but the internal contracts fail,
+run Launch Preflight and inspect Supabase server authorization before touching
+cron schedules, reminders, line locks, or score jobs individually.
 
 ### The encrypted-backup health monitor is down
 

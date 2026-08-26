@@ -13,7 +13,9 @@ test("launch preflight verifies every external game-day dependency without sendi
   assert.match(source, /automation_cron_secret_matches/);
   assert.match(source, /assessAutomationHeartbeat/);
   assert.match(source, /supabase-server-authorization/);
-  assert.match(source, /production server credential is accepted/);
+  assert.match(source, /supabaseServerCredentialSource/);
+  assert.match(source, /authorized && authoritativeSource/);
+  assert.match(source, /compatibility fallback/);
   assert.doesNotMatch(source, /\/odds\/\?|\/smtp\/email|import-games/);
 });
 

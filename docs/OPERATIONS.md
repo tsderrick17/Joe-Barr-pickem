@@ -133,7 +133,29 @@ result proves the full cron definitions and Vault authorization, the deployed
 cron secret matches Vault, the zero-credit Odds API authentication check can
 see the NFL feed, Brevo can list an active configured PickemJB sender, and at
 least one active Commissioner has a valid alert address. The same checks are
-included in the Opening Week checklist.
+included in the Opening Week checklist. Launch Preflight also names the
+selected Supabase server credential variable without exposing its value and
+holds production in attention if only the compatibility fallback is active.
+
+## Release validation and correlated failures
+
+Pull requests run an isolated Chromium player flow in addition to the database
+lifecycle rehearsal. The browser creates a disposable commissioner, signs in
+with the real PIN path, reloads the saved session, verifies all account
+controls, simulates one temporary profile failure, saves ATS and Survivor
+picks, revises Survivor, and removes every fixture afterward. The harness
+refuses the production Supabase project before making a request.
+
+After Vercel reports a successful Production deployment, GitHub Actions retries
+the canonical page and all four public health contracts for up to two minutes.
+This proves the deployed environment—not merely the preview build—can use its
+real dependencies. The manual workflow is also safe to run after a secret
+rotation.
+
+If several health contracts fail in the same smoke pass, treat them as one
+likely shared-dependency incident. Check the deployment and Supabase server
+authorization before changing individual schedules. The failed smoke output
+lists only URLs and status codes; it never prints response bodies or secrets.
 
 ## Monthly upgrade rehearsal
 
