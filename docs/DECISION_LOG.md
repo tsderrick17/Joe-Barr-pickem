@@ -229,3 +229,15 @@ credential variable without exposing its value and treat the compatibility
 fallback as configuration drift. Drop only the exact confirmed
 `runtime.sendMessage` browser-extension error from client Sentry events; broad
 error classes and player identity remain excluded.
+
+## 2026-08-25 — REF-023 — Preserve the Data API schema boundary
+
+**Status:** Accepted
+
+Keep `USAGE` on the exposed `public` schema for `anon`, `authenticated`, and
+`service_role`. Preserve full table and sequence access for the trusted,
+server-only `service_role`, while continuing to control client access with
+explicit object-level grants and row-level security. Audit these prerequisites
+in the isolated database on every pull request so an advisor cleanup or manual
+grant change cannot silently disable player sessions or server automation
+again.
