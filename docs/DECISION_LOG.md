@@ -255,6 +255,8 @@ retain the complete isolated database and browser gate. Do not duplicate the
 database URL or service-role credential into Dependabot secrets merely to make
 the privileged test execute. Classify the change by the pull request author,
 not `github.actor`, because an owner can refresh a bot branch without changing
-who authored it. Serialize all isolated certifications through one repository-wide
-concurrency group because every branch targets the same disposable database;
-parallel rehearsals can otherwise collide while seeding fixtures.
+who authored it. Serialize only the privileged database-lifecycle jobs through
+one repository-wide concurrency group because every such branch targets the same
+disposable database; parallel rehearsals can otherwise collide while seeding
+fixtures. Keep no-secret Dependabot safety jobs outside that queue so concurrent
+bot updates cannot supersede and cancel one another while waiting.

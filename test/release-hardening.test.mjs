@@ -28,8 +28,9 @@ test("eligible pull requests run the real isolated browser flow", async () => {
 test("Dependabot pull requests never receive isolated database credentials", async () => {
   const workflow = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
 
-  assert.match(workflow, /group:\s*isolated-integration-shared-database/);
+  assert.match(workflow, /database-lifecycle:[\s\S]*?concurrency:\s*\n\s+group:\s*isolated-integration-shared-database/);
   assert.match(workflow, /cancel-in-progress:\s*false/);
+  assert.doesNotMatch(workflow, /^concurrency:/m);
   assert.match(workflow, /dependabot-safety:/);
   assert.match(
     workflow,
