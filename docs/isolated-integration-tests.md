@@ -58,10 +58,11 @@ that check run. The workflow identifies the pull request author rather than the
 person who last refreshed its branch, so an owner-initiated update cannot grant
 the bot-authored change access to isolated credentials.
 
-All privileged isolated runs share one workflow concurrency group. GitHub queues
+All privileged database-lifecycle jobs share one concurrency group. GitHub queues
 them instead of allowing two branches to seed and grade the same disposable
-database simultaneously. Queued runs are not cancelled when a newer run arrives,
-so every requested certification receives a clean turn. Browser setup also
+database simultaneously. The no-secret Dependabot safety job remains outside
+that queue, so simultaneous dependency updates cannot cancel one another while
+waiting for a database they never use. Browser setup also
 removes abandoned games carrying the explicit `e2e-` marker and retires abandoned
 `E2E ` player identities before reseeding. Player stubs remain only where the
 append-only audit history requires its foreign key; this lets the next run recover
