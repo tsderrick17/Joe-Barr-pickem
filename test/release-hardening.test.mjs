@@ -48,6 +48,7 @@ test("successful production deployments receive an independent smoke gate", asyn
   const workflow = await readFile(new URL("../.github/workflows/production-smoke.yml", import.meta.url), "utf8");
   const smoke = await readFile(new URL("../scripts/production-smoke.mjs", import.meta.url), "utf8");
 
+  assert.match(workflow, /group:\s*production-smoke-\$\{\{ github\.sha \}\}/);
   assert.match(workflow, /deployment_status/);
   assert.match(workflow, /deployment_status\.state == 'success'/);
   assert.match(workflow, /https:\/\/pickemjb\.vercel\.app/);
@@ -61,6 +62,13 @@ test("successful production deployments receive an independent smoke gate", asyn
   ]);
   assert.match(smoke, /Multiple health contracts failed together/);
   assert.match(smoke, /Supabase server authorization/);
+});
+
+test("application quality cancellation is scoped to one commit", async () => {
+  const workflow = await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8");
+
+  assert.match(workflow, /group:\s*application-quality-\$\{\{ github\.ref \}\}-\$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /cancel-in-progress:\s*true/);
 });
 
 test("Sentry drops only the confirmed runtime.sendMessage browser noise", async () => {
