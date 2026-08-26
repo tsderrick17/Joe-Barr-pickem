@@ -654,8 +654,9 @@ body {
 
 .slate-view-switch {
   align-items: center;
-  display: inline-flex;
-  gap: .22rem;
+  display: inline-grid;
+  gap: .38rem;
+  grid-template-columns: 2.82rem 1.62rem 2.82rem;
   position: relative;
   user-select: none;
   width: fit-content;
@@ -669,8 +670,8 @@ body {
 }
 
 .slate-view-switch--header {
-  display: flex;
-  gap: .22rem;
+  display: inline-grid;
+  gap: .38rem;
   margin-top: 0;
   width: fit-content;
 }
@@ -698,7 +699,7 @@ body {
   cursor: pointer;
   height: .44rem;
   padding: 0;
-  position: absolute;
+  position: relative;
   transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
   width: 1.62rem;
 }
