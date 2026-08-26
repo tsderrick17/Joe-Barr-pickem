@@ -3,9 +3,10 @@ name: Monthly upgrade rehearsal
 on:
   workflow_dispatch:
   schedule:
-    - cron: "23 15 * * 1"
+    - cron: "23 15 1-10 * *"
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -29,18 +30,32 @@ jobs:
       PICKEM_FULL_SEASON_DRILL: "true"
       PICKEM_CERTIFICATION_REPORT_PATH: ${{ github.workspace }}/artifacts/monthly-season-certification.json
     steps:
-      - name: Select the first Monday or a manual run
-        id: calendar
+      - name: Check for this month's completed rehearsal
+        id: month
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          day_of_month=$((10#$(date -u +%d)))
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || (( day_of_month <= 7 )); then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
+          month_key=$(TZ=America/New_York date +%Y-%m)
+          echo "month_key=$month_key" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "completed=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          artifact_name="monthly-upgrade-rehearsal-complete-$month_key"
+          completed=$(curl --fail --silent --show-error \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            | jq --arg name "$artifact_name" 'any(.artifacts[]; .name == $name and (.expired | not))')
+          echo "completed=$completed" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v5
-        if: steps.calendar.outputs.run == 'true'
+        if: steps.month.outputs.completed != 'true'
+      - name: Select the first available non-gameday or a manual run
+        id: calendar
+        if: steps.month.outputs.completed != 'true'
+        run: node scripts/select-upgrade-rehearsal-date.mjs
       - uses: actions/setup-node@v7
         if: steps.calendar.outputs.run == 'true'
         with:
@@ -92,6 +107,7 @@ jobs:
             echo
             echo "No dependency, lockfile, database, or deployment change was committed."
             echo
+            echo "- Selected Eastern non-gameday: ${{ steps.calendar.outputs.selected_date }}"
             echo "- Latest direct dependency installation: attempted"
             echo "- Latest Supabase CLI: $(npx --no-install supabase --version 2>/dev/null || echo unavailable)"
             echo "- Full isolated season certification: ${{ job.status }}"
@@ -107,3 +123,13 @@ jobs:
           path: artifacts/*.json
           if-no-files-found: warn
           retention-days: 30
+      - name: Record this month's successful rehearsal
+        if: success() && steps.calendar.outputs.run == 'true'
+        run: echo "completed ${{ steps.calendar.outputs.selected_date }}" > "artifacts/monthly-upgrade-rehearsal-complete.txt"
+      - name: Preserve monthly completion marker
+        if: success() && steps.calendar.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: monthly-upgrade-rehearsal-complete-${{ steps.month.outputs.month_key }}
+          path: artifacts/monthly-upgrade-rehearsal-complete.txt
+          retention-days: 45

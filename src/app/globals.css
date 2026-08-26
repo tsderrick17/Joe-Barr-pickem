@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --official-line-color: #008c82;
 }
 
 @theme inline {
@@ -17,6 +18,8 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.official-line-color { color: var(--official-line-color); }
 
 .theme-toggle {
   border: 1px solid #87cfc5;
@@ -388,7 +391,7 @@ body {
   font-size: inherit;
   font-weight: 900;
 }
-.slate-receipt-selection-chip small.is-official { color: #0f766e; }
+.slate-receipt-selection-chip small.is-official { color: var(--official-line-color); }
 .slate-receipt-selection-chip button {
   background: transparent;
   border: 0;
@@ -552,7 +555,7 @@ body {
   font-weight: 900;
   letter-spacing: .08em;
 }
-.slate-selection-chip small.is-official { color: #0f766e; }
+.slate-selection-chip small.is-official { color: var(--official-line-color); }
 
 /* Desktop can afford a touch more air around the receipt chips. Keep their
    grid footprint fixed so this remains a purely visual adjustment. */
@@ -654,8 +657,9 @@ body {
 
 .slate-view-switch {
   align-items: center;
-  display: inline-flex;
-  gap: .22rem;
+  display: inline-grid;
+  gap: .38rem;
+  grid-template-columns: 2.82rem 1.62rem 2.82rem;
   position: relative;
   user-select: none;
   width: fit-content;
@@ -669,8 +673,8 @@ body {
 }
 
 .slate-view-switch--header {
-  display: flex;
-  gap: .22rem;
+  display: inline-grid;
+  gap: .38rem;
   margin-top: 0;
   width: fit-content;
 }
@@ -698,7 +702,7 @@ body {
   cursor: pointer;
   height: .44rem;
   padding: 0;
-  position: absolute;
+  position: relative;
   transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
   width: 1.62rem;
 }
@@ -1559,7 +1563,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 .selection-chip small { color: #111; }
-.selection-chip small.is-official { color: #0f766e; }
+.selection-chip small.is-official { color: var(--official-line-color); }
 
 .pickem-eliminated-stamp {
   border: 3px solid #b42318;
@@ -2258,7 +2262,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-line.is-locked {
-  color: inherit;
+  color: var(--official-line-color);
   font-size: .78rem;
 }
 

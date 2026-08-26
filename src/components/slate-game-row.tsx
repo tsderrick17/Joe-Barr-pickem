@@ -186,7 +186,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     {teamCell(left, "left")}
     {survivorChip(left)}
     <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
-      {lockedSpread ? <span className="font-mono text-sm font-bold text-teal-700 sm:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">AWAITING LINE</p>}
+      {lockedSpread ? <span className="official-line-color font-mono text-sm font-bold sm:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">AWAITING LINE</p>}
       {showSpecialLockNote ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
     </div>
     {survivorChip(right)}

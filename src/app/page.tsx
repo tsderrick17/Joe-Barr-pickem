@@ -238,7 +238,7 @@ export default function HomePage() {
     gameId: `viewer-pick-${index}`,
     team: pick.label ?? "Selection",
     kickoff: ticketKickoff(pick.kickoffAt),
-    spread: pick.isLineLocked ? pick.spread ?? null : null,
+    spread: pick.spread ?? null,
     lineLocked: Boolean(pick.isLineLocked),
     resultMark: pick.resultMark === "W" || pick.resultMark === "L" ? pick.resultMark : "",
   }));
@@ -400,7 +400,7 @@ export default function HomePage() {
                                 {pick.label}
 
                                 {pick.spread ? (
-                                  <strong className={`ml-1 font-mono text-sm ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>
+                                  <strong className={`ml-1 font-mono text-sm ${pick.isLineLocked ? "official-line-color" : "text-slate-700"}`}>
                                     {pick.spread}
                                   </strong>
                                 ) : null}

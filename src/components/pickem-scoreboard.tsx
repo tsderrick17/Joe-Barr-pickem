@@ -83,7 +83,7 @@ export default function PickemScoreboard({
                         {pick?.label ? (
                           <span>
                             {isPlayoff ? (pick.abbreviation ? scorepadAbbreviation(pick.abbreviation) : pick.label) : <><span className="scoreboard-team-name-full">{pick.label}</span>{pick.abbreviation ? <span aria-label={pick.label} className="scoreboard-team-name-short">{scorepadAbbreviation(pick.abbreviation)}</span> : null}</>}
-                            {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "text-teal-700" : "text-slate-700"}`}>{pick.spread}</strong> : null}
+                            {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "official-line-color" : "text-slate-700"}`}>{pick.spread}</strong> : null}
                             <AtsResultStamp className="ml-1.5" result={pick.resultMark} />
                           </span>
                         ) : pick?.isHidden ? (

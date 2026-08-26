@@ -159,12 +159,21 @@ lists only URLs and status codes; it never prints response bodies or secrets.
 
 ## Monthly upgrade rehearsal
 
-On the first Monday of each month, GitHub Actions builds an isolated database,
-installs the latest direct package versions without committing them, applies all
-migrations, runs the deterministic full-season lifecycle drill, then runs lint
-and a production build. This rehearsal does not deploy or alter production. Its
-report is retained as a workflow artifact so an incompatible future dependency
-is discovered before an urgent in-season upgrade.
+During the first ten Eastern calendar days of each month, GitHub Actions checks
+the canonical NFL schedule and runs on the first day that has no NFL game. The
+calendar check includes preseason, regular-season, and playoff dates, makes no
+Odds API request, and fails closed when the schedule feed lacks coverage for an
+active football month. A successful completion marker prevents another
+scheduled run that month; a failed attempt may retry on a later non-gameday.
+Manual rehearsals remain available at any time.
+
+The selected run builds an isolated database, installs the latest direct package
+versions without committing them, applies all migrations, runs the deterministic
+full-season lifecycle drill, then runs lint and a production build. The rehearsal
+does not deploy, alter production, or create player-site downtime. Moving it off
+gamedays merely keeps optional CI load and failure alerts away from peak pool
+usage. Its report is retained as a workflow artifact so an incompatible future
+dependency is discovered before an urgent in-season upgrade.
 
 ## Weekly isolated live-week rehearsal
 

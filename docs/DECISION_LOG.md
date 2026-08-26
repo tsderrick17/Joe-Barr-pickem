@@ -260,3 +260,16 @@ one repository-wide concurrency group because every such branch targets the same
 disposable database; parallel rehearsals can otherwise collide while seeding
 fixtures. Keep no-secret Dependabot safety jobs outside that queue so concurrent
 bot updates cannot supersede and cancel one another while waiting.
+
+## 2026-08-26 — REF-025 — Schedule upgrade rehearsal on a non-gameday
+
+**Status:** Accepted
+
+Evaluate the monthly isolated upgrade rehearsal during the first ten Eastern
+calendar days and run it on the first available date with no NFL game. Use the
+canonical no-credit schedule feed across preseason, regular season, and
+playoffs; fail closed when an active football month lacks schedule coverage.
+Record a successful monthly completion artifact so later daily checks skip, but
+allow a failed attempt to retry on another non-gameday and preserve manual
+dispatch. This does not change production availability—the rehearsal has always
+been isolated—but it keeps optional CI work and alerts away from peak game use.

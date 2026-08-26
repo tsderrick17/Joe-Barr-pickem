@@ -11,7 +11,7 @@ const PAPER = "#fffdf8";
 const PARCHMENT = "#f0e5cf";
 const RULE_BLUE = "#9cc6ea";
 const MARGIN_RED = "#d56b66";
-const TEAL = "#007e72";
+const TEAL = "#008c82";
 const MUTED = "#596579";
 
 type SlateGame = { away: string; home: string; time: string; favorite: "away" | "home" | null; spread: number | null };

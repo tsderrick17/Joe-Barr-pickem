@@ -74,7 +74,7 @@ export default function MyTicket({
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
-            <strong>{isPlayoff ? "ROUND LINES" : "OFFICIAL LINES"}</strong>
+            <strong>{isPlayoff ? "ROUND LINES" : "GAME LINES"}</strong>
           </div>
           <ol className="my-ticket-picks">
             {Array.from({ length: maxPicks }, (_, index) => {
@@ -88,7 +88,7 @@ export default function MyTicket({
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
-                        {pick.lineLocked && pick.spread ? pick.spread : "—"}
+                        {pick.spread ?? "—"}
                       </span>
                     </>
                   ) : (
@@ -123,7 +123,7 @@ export default function MyTicket({
             <p className="my-ticket-survivor-state">NOT AVAILABLE</p>
           )}
           <div className="my-ticket-instructions">
-            <p>Official spreads appear on Ticket once final.</p>
+            <p>Current spreads appear here; teal lines are official.</p>
             <p>Selections are revealed to others at kickoff.</p>
             <p>Only winners count; pushes and ties are losers.</p>
           </div>
