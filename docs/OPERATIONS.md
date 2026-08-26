@@ -45,7 +45,7 @@ malformed provider response changes nothing and is retried the next day. Once
 all 18 regular-season periods and 272 games are present, later runs become safe
 no-ops.
 
-The Commissioner Desk **Schedule** panel shows the current handoff state and
+The Commissioner **Schedule** panel shows the current handoff state and
 retains both recovery paths:
 
 - **Run automatic check now** repeats the normal guarded handoff immediately.
@@ -92,7 +92,7 @@ The only alert conditions are:
 
 Individual bad email addresses and intentional low-provider-quota cooldowns do
 not alert. Open incidents and a manual **Run watchdog now** control are visible
-on the Commissioner Desk overview.
+on the Commissioner overview.
 
 Once per Eastern day, the same leased watchdog also rechecks the external
 configuration that can drift without a deployment: the deployed cron secret,
@@ -107,13 +107,13 @@ endpoint returns 200 only when the watchdog has completed successfully within
 12 minutes, so a broken watchdog cannot silently report itself as healthy. This
 monitor is separate from the existing public-site monitor.
 
-A third UptimeRobot monitor must check
+The third required UptimeRobot monitor must check
 `https://pickemjb.vercel.app/api/health/workers` every five minutes. It confirms
 recent successful line-lock, reminder, and final-score worker executions using
 three fixed-size heartbeat rows. Public responses stay opaque; use Automation
 Health to identify the affected worker.
 
-A fourth free HTTP monitor must check
+The fourth required free HTTP monitor must check
 `https://pickemjb.vercel.app/api/health/backup` every five minutes. The endpoint
 uses the existing server-only GitHub read token to inspect the latest completed
 encrypted-backup workflow and returns 200 only for a recent success. It does
