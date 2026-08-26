@@ -2258,12 +2258,14 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-line {
   color: #71695d;
-  font: 900 .62rem/1 "Courier New", monospace;
+  font: 900 .8rem/1 "Courier New", monospace;
+  min-width: 2.5rem;
+  text-align: right;
 }
 
 .my-ticket-line.is-locked {
   color: var(--official-line-color);
-  font-size: .78rem;
+  font-size: .9rem;
 }
 
 .my-ticket-open {

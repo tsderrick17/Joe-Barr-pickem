@@ -16,6 +16,8 @@ test("the ticket shows preliminary lines and distinguishes official lines", asyn
   assert.match(ticket, /\{pick\.spread \?\? "—"\}/);
   assert.match(ticket, /Current spreads appear here; teal lines are official\./);
   assert.match(styles, /--official-line-color: #008c82;/);
+  assert.match(styles, /\.my-ticket-line \{[\s\S]*?font: 900 \.8rem\/1 "Courier New", monospace;[\s\S]*?text-align: right;/);
   assert.match(styles, /\.my-ticket-line\.is-locked \{\s*color: var\(--official-line-color\);/);
+  assert.match(styles, /\.my-ticket-line\.is-locked \{[\s\S]*?font-size: \.9rem;/);
   assert.match(recapImage, /const TEAL = "#008c82";/);
 });
