@@ -41,7 +41,7 @@ jobs:
           fi
       - uses: actions/checkout@v5
         if: steps.calendar.outputs.run == 'true'
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         if: steps.calendar.outputs.run == 'true'
         with:
           node-version: 24
