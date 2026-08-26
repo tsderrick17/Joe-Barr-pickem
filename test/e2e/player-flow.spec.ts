@@ -36,8 +36,70 @@ async function teamId(admin: SupabaseClient, abbreviation: string) {
   return data.id as string;
 }
 
+function retiredFixtureName(playerId: string) {
+  return `Retired E2E ${playerId.slice(0, 8)}`;
+}
+
+async function cleanupStaleFixtures(admin: SupabaseClient) {
+  // A cancelled runner cannot reach afterAll. Since every privileged run is now
+  // serialized, it is safe to remove only records carrying the dedicated E2E
+  // markers before creating this run's fixture.
+  const { data: stalePlayers, error: playersError } = await admin
+    .from("players")
+    .select("id, auth_user_id")
+    .like("first_name", "E2E %");
+  if (playersError) throw new Error(`Could not inspect stale E2E players: ${playersError.message}`);
+
+  const playerIds = (stalePlayers ?? []).map((player) => player.id as string);
+  if (playerIds.length > 0) {
+    const { data: entries, error: entriesError } = await admin
+      .from("survivor_entries")
+      .select("id")
+      .in("player_id", playerIds);
+    if (entriesError) throw new Error(`Could not inspect stale E2E Survivor entries: ${entriesError.message}`);
+
+    const entryIds = (entries ?? []).map((entry) => entry.id as string);
+    if (entryIds.length > 0) {
+      const { error } = await admin.from("survivor_picks").delete().in("survivor_entry_id", entryIds);
+      if (error) throw new Error(`Could not remove stale E2E Survivor picks: ${error.message}`);
+    }
+    const { error: survivorError } = await admin.from("survivor_entries").delete().in("player_id", playerIds);
+    if (survivorError) throw new Error(`Could not remove stale E2E Survivor entries: ${survivorError.message}`);
+    const { error: picksError } = await admin.from("picks").delete().in("player_id", playerIds);
+    if (picksError) throw new Error(`Could not remove stale E2E picks: ${picksError.message}`);
+    // Audit rows are deliberately append-only and retain their player foreign
+    // key. Retire the fixture identity instead of deleting that durable receipt.
+    for (const player of stalePlayers ?? []) {
+      const playerId = player.id as string;
+      const { error: retirePlayerError } = await admin
+        .from("players")
+        .update({ first_name: retiredFixtureName(playerId), active: false, auth_user_id: null })
+        .eq("id", playerId);
+      if (retirePlayerError) throw new Error(`Could not retire stale E2E player: ${retirePlayerError.message}`);
+
+      if (!player.auth_user_id) continue;
+      const { error } = await admin.auth.admin.deleteUser(player.auth_user_id as string);
+      if (error && !error.message.toLowerCase().includes("not found")) {
+        throw new Error(`Could not remove a stale E2E login: ${error.message}`);
+      }
+    }
+  }
+
+  const { data: staleGames, error: gamesError } = await admin
+    .from("games")
+    .select("id")
+    .like("external_game_id", "e2e-%");
+  if (gamesError) throw new Error(`Could not inspect stale E2E games: ${gamesError.message}`);
+  const gameIds = (staleGames ?? []).map((game) => game.id as string);
+  if (gameIds.length > 0) {
+    const { error } = await admin.from("games").delete().in("id", gameIds);
+    if (error) throw new Error(`Could not remove stale E2E games: ${error.message}`);
+  }
+}
+
 async function prepareFixture(): Promise<Fixture> {
   const admin = requireIsolatedConfig();
+  await cleanupStaleFixtures(admin);
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const firstName = `E2E ${suffix}`;
   const pin = String(1000 + Math.floor(Math.random() * 8999));
@@ -119,7 +181,10 @@ async function cleanupFixture(fixture: Fixture | undefined) {
   await fixture.admin.from("survivor_entries").delete().eq("player_id", fixture.playerId);
   await fixture.admin.from("picks").delete().eq("player_id", fixture.playerId);
   await fixture.admin.from("games").delete().in("id", fixture.gameIds);
-  await fixture.admin.from("players").delete().eq("id", fixture.playerId);
+  await fixture.admin
+    .from("players")
+    .update({ first_name: retiredFixtureName(fixture.playerId), active: false, auth_user_id: null })
+    .eq("id", fixture.playerId);
   await fixture.admin.auth.admin.deleteUser(fixture.authUserId);
   for (const period of fixture.previousStatuses) {
     await fixture.admin.from("scoring_periods").update({ status: period.status }).eq("id", period.id);
