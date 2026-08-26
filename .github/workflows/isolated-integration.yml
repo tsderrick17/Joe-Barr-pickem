@@ -18,12 +18,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: isolated-integration-${{ github.ref }}
+  group: isolated-integration-shared-database
   cancel-in-progress: false
 
 jobs:
   dependabot-safety:
-    if: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' }}
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -39,7 +39,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   database-lifecycle:
-    if: ${{ github.event_name != 'pull_request' || github.actor != 'dependabot[bot]' }}
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
     environment: isolated-test
     timeout-minutes: 20
