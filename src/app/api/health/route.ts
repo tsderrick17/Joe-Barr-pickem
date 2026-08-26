@@ -1,26 +1,25 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
  * Public, monitor-friendly availability check. It confirms that the site can
- * reach the player-facing database with the same configuration the app uses.
- * Detailed automation readiness intentionally lives in the Commissioner
- * dashboard: a stale reminder must be actionable there, not falsely reported
- * to UptimeRobot as an outage of the public site.
+ * reach the database with both player-facing and privileged server
+ * credentials. The privileged check makes a stale or revoked production key
+ * visible to the main uptime monitor before it can silently stop automation.
  */
 export async function GET() {
   try {
-    const { error } = await supabase
-      .from("seasons")
-      .select("id")
-      .limit(1);
+    const [playerAccess, serverAccess] = await Promise.all([
+      supabase.from("seasons").select("id").limit(1),
+      supabaseAdmin.from("seasons").select("id").limit(1),
+    ]);
 
-    if (error) {
-      throw error;
-    }
+    if (playerAccess.error) throw playerAccess.error;
+    if (serverAccess.error) throw serverAccess.error;
 
     return NextResponse.json(
       { status: "ok", checkedAt: new Date().toISOString() },

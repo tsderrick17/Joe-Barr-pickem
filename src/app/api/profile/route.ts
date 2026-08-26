@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
+    firstName: player.first_name,
+    isCommissioner: player.is_commissioner,
     notificationEmail: player.notification_email ?? "",
     // Brevo can replace a free-address sender with its compliant delivery
     // address. Show recipients the address they will actually see, while the
