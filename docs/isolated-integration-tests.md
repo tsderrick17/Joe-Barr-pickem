@@ -47,9 +47,14 @@ guard enables a transactional live-week rehearsal that revises picks, grades a
 completed slate, verifies permanent history, activates the next week, and then
 rolls every fixture back. The flag is ineffective unless the database
 confirmation is exactly `isolated` and the isolated database URL is present.
-Every pull request also enables the Chromium flow. It verifies a real PIN
-session, account-control persistence through reload and one temporary profile
-failure, ATS saves, and Survivor replacement before the change can merge.
+Every human-authored pull request also enables the Chromium flow. It verifies a
+real PIN session, account-control persistence through reload and one temporary
+profile failure, ATS saves, and Survivor replacement before the change can
+merge. Dependabot pull requests do not receive the isolated database or browser
+credentials. Their isolated workflow records an intentional successful
+no-secret result while Application quality tests the dependency change. Never
+copy the database URL or service-role key into Dependabot secrets merely to make
+that check run.
 
 ## Full-season certification
 

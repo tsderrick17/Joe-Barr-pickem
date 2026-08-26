@@ -337,10 +337,13 @@ Manual controls are recovery paths, not alternate implementations.
   exact confirmation value `isolated` is required before integration work.
 - Application changes pass tests, lint, build, GitHub quality checks, and a
   Vercel preview before merge.
-- Every pull request runs the real PIN/session/player flow against the confirmed
-  isolated project, including account navigation, a transient profile-read
-  failure, pick persistence, and Survivor replacement. Production is explicitly
-  rejected by the browser-test harness.
+- Every human-authored pull request runs the real PIN/session/player flow
+  against the confirmed isolated project, including account navigation, a
+  transient profile-read failure, pick persistence, and Survivor replacement.
+  Dependabot pull requests receive an explicit successful no-secret gate because
+  GitHub intentionally withholds environment secrets from those events;
+  Application quality still validates them without privileged credentials.
+  Production is explicitly rejected by the browser-test harness.
 - A successful Vercel production deployment starts an independent smoke gate.
   It retries the canonical site plus the availability, watchdog, worker, and
   backup contracts until all return HTTP 200 or the release is marked failed.

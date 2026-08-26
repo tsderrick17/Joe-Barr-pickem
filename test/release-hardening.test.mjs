@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { PRODUCTION_SMOKE_PATHS } from "../scripts/production-smoke.mjs";
 
-test("pull requests run the real isolated browser flow", async () => {
+test("eligible pull requests run the real isolated browser flow", async () => {
   const workflow = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
   const browser = await readFile(new URL("./e2e/player-flow.spec.ts", import.meta.url), "utf8");
   const config = await readFile(new URL("../playwright.config.ts", import.meta.url), "utf8");
@@ -19,6 +19,15 @@ test("pull requests run the real isolated browser flow", async () => {
   assert.match(browser, /name:\s*"Notifications"/);
   assert.match(browser, /name:\s*"Sign out"/);
   assert.match(browser, /temporary profile failure/);
+});
+
+test("Dependabot pull requests never receive isolated database credentials", async () => {
+  const workflow = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
+
+  assert.match(workflow, /dependabot-safety:/);
+  assert.match(workflow, /github\.event_name == 'pull_request' && github\.actor == 'dependabot\[bot\]'/);
+  assert.match(workflow, /github\.event_name != 'pull_request' \|\| github\.actor != 'dependabot\[bot\]'/);
+  assert.match(workflow, /isolated database credentials are intentionally unavailable/);
 });
 
 test("successful production deployments receive an independent smoke gate", async () => {
