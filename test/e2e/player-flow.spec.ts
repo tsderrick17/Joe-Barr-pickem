@@ -19,6 +19,7 @@ type Fixture = {
   gameIds: string[];
   firstGame: { awayId: string; homeId: string };
   secondGame: { awayId: string; homeId: string };
+  firstName: string;
   pin: string;
 };
 
@@ -38,6 +39,7 @@ async function teamId(admin: SupabaseClient, abbreviation: string) {
 async function prepareFixture(): Promise<Fixture> {
   const admin = requireIsolatedConfig();
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const firstName = `E2E ${suffix}`;
   const pin = String(1000 + Math.floor(Math.random() * 8999));
   // The player-facing PIN screen deliberately derives this address; use the
   // same credential shape here so this is a true browser login, not a bypass.
@@ -66,7 +68,7 @@ async function prepareFixture(): Promise<Fixture> {
 
   const { data: player, error: playerError } = await admin
     .from("players")
-    .insert({ first_name: `E2E ${suffix}`, login_pin: pin, auth_user_id: authData.user.id, active: true })
+    .insert({ first_name: firstName, login_pin: pin, auth_user_id: authData.user.id, active: true, is_commissioner: true })
     .select("id")
     .single();
   if (playerError || !player) throw new Error(playerError?.message ?? "Could not create the isolated test player.");
@@ -96,6 +98,7 @@ async function prepareFixture(): Promise<Fixture> {
     gameIds: insertedGames.map((game) => game.id as string),
     firstGame: { awayId: insertedGames[0].away_team_id as string, homeId: insertedGames[0].home_team_id as string },
     secondGame: { awayId: insertedGames[1].away_team_id as string, homeId: insertedGames[1].home_team_id as string },
+    firstName,
     pin,
   };
 }
@@ -148,10 +151,32 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
     Object.keys(window.localStorage).some((key) => key.includes("auth-token")),
   );
 
+  // A durable session must restore the complete account strip after a reload.
+  await page.reload();
+  await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible({ timeout: 12_000 });
+  await expect(page.getByRole("link", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByText(`Signed in as ${fixture.firstName}`)).toBeVisible();
+
+  // Reproduce a temporary profile failure during navigation. Already verified
+  // controls must remain visible; only a real 401 is allowed to clear them.
+  let failNextProfileRead = true;
+  await page.route("**/api/profile", async (route) => {
+    if (failNextProfileRead) {
+      failNextProfileRead = false;
+      await route.fulfill({ status: 503, contentType: "application/json", body: '{"error":"temporary"}' });
+      return;
+    }
+    await route.fallback();
+  });
+
   await page.getByRole("link", { name: "The Slate" }).click();
   await page.waitForTimeout(750);
   await expect(page).toHaveURL(/\/board$/, { timeout: 12_000 });
   await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible({ timeout: 12_000 });
+  await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
 
   await page.getByRole("button", { name: "Seattle Seahawks", exact: true }).click();
   await page.getByRole("button", { name: "Los Angeles Rams", exact: true }).click();

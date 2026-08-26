@@ -48,7 +48,7 @@ rule, preserve user data, and update stale documentation in the same change.
   for every game on that day if they could tie the day-start leader. Once they
   cannot tie, future affected picks are voided and excluded from competitive
   totals rather than graded as losses.
-- The major weekly recap is eligible Tuesday at 8:00 AM Eastern once results
+- The major weekly recap is eligible Tuesday at 6:30 AM Eastern once results
   are trustworthy. The default week normally advances Wednesday at 3:00 AM
   Eastern and never earlier than 24 hours after the prior week settled, except
   when the next kickoff is less than 24 hours away. The next week is manually

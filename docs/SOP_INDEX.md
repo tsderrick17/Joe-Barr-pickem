@@ -9,7 +9,7 @@ guarded recovery tools for a specific observed condition.
 | When | Expected automatic behavior | Human check |
 | --- | --- | --- |
 | Preseason | Create the new preseason, validate 272 games, import and pin 18 regular weeks | Review Season Readiness and bootstrap status |
-| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm both UptimeRobot monitors are green |
+| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm all four required health monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
 | Daily | Recheck cron authorization, Odds access, Brevo sender, and Commissioner alert delivery configuration | Act only if the watchdog opens one drift incident |
@@ -29,7 +29,7 @@ score sync, recap, default-week handoff, and the safest recovery order.
 
 ### A score is late, wrong, or disagrees with the provider
 
-Use **Commissioner Desk → Final Score Check** once after the three-hour window.
+Use **Commissioner → Final Score Check** once after the three-hour window.
 If a saved final disagrees with the provider, run **Final Score Reconciliation**
 and follow the audited correction procedure in
 [commissioner-runbook.md](commissioner-runbook.md). Never type an estimated
@@ -39,7 +39,7 @@ score or repeatedly poll a failing provider.
 
 Let normal schedule reconciliation apply an unlocked timing-only correction.
 If the change is quarantined or the NFL officially disrupts the game, use
-**Commissioner Desk → Game Exceptions** and follow the disruption section in
+**Commissioner → Game Exceptions** and follow the disruption section in
 [commissioner-runbook.md](commissioner-runbook.md).
 
 ### An official line is missing
@@ -100,23 +100,33 @@ rehearsal. Never turn a rehearsal result into an automatic production upgrade.
 
 Check the public health endpoint and hosting/database status. Follow
 [uptime-monitoring.md](uptime-monitoring.md). Availability alerts and pool
-integrity alerts are intentionally separate.
+integrity alerts are intentionally separate. After a deployment, also open
+GitHub Actions → **Production smoke gate**; it records the status of the site
+and every health contract without exposing their response bodies.
 
 ### The site works but automation heartbeat is down
 
 Open UptimeRobot's **PickemJB automation heartbeat** incident, then check
-Commissioner Automation Health and the watchdog receipt. A non-200 response at
-`/api/health/automation` means the five-minute watchdog has failed or has not
-completed successfully within 12 minutes; it does not mean the player-facing
-site itself is unavailable.
+**Commissioner → Automation Health** and the watchdog receipt. A non-200
+response at `/api/health/automation` means the five-minute watchdog has failed
+or has not completed successfully within 12 minutes; it does not mean the
+player-facing site itself is unavailable.
 
 ### The critical-worker heartbeat is down
 
 Open UptimeRobot's **PickemJB critical workers** incident, then open
-Commissioner Automation Health. The public endpoint intentionally does not name
-the failing worker. The Commissioner view distinguishes a stale or failed line
-lock, score refresh, or reminder pass. Recover only the named worker; do not
-manually run every job.
+**Commissioner → Automation Health**. The public endpoint intentionally does
+not name the failing worker. The Commissioner view distinguishes a stale or
+failed line lock, score refresh, or reminder pass. Recover only the named
+worker; do not manually run every job.
+
+### Several health monitors fail together
+
+Treat simultaneous failures as one likely shared-dependency incident until
+proven otherwise. Check **PickemJB production** and the latest **Production
+smoke gate** first. If the public site works but the internal contracts fail,
+run Launch Preflight and inspect Supabase server authorization before touching
+cron schedules, reminders, line locks, or score jobs individually.
 
 ### The encrypted-backup health monitor is down
 
@@ -130,6 +140,16 @@ reported failure, then rerun that workflow once.
 Follow the backup section of [OPERATIONS.md](OPERATIONS.md). Restore into an
 isolated project first, preserve the current audit trail, and treat production
 restore as a last resort.
+
+### Signed-in controls disappear or the page looks half signed in
+
+Refresh once. A valid saved session should show **Commissioner** (for the
+commissioner), **Notifications**, **Sign out**, and the player's name. An
+expired or invalid session must return to PIN sign-in. If the page still shows
+pool data without account controls, treat it as an authentication regression:
+do not change player records or RLS policies. Check `/api/profile`, the shared
+session helper, and the latest production deployment, then use the release
+procedure in [commissioner-runbook.md](commissioner-runbook.md).
 
 ## Escalation rule
 

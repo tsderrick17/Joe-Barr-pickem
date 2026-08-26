@@ -26,11 +26,12 @@ Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_T
    secret after rotating the test database password.
 5. In the GitHub `isolated-test` environment, add the variable
    `PICKEM_TEST_DATABASE_CONFIRMATION` with the exact value `isolated`.
-6. The optional `PICKEM_TEST_SUPABASE_URL`,
+6. In the GitHub `isolated-test` environment, add
+   `PICKEM_TEST_SUPABASE_URL`,
    `PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY`, and
-   `PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY` values are only for explicit
-   browser/E2E rehearsals; they are not required for the normal migration or
-   lifecycle workflows.
+   `PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY` as environment secrets. They are
+   required by the pull-request browser gate and must belong to the same
+   isolated project named in the database URL.
 7. Install the Playwright Chromium browser once in the CI workflow or locally with `npx playwright install chromium`.
 
 ## Commands
@@ -46,6 +47,14 @@ guard enables a transactional live-week rehearsal that revises picks, grades a
 completed slate, verifies permanent history, activates the next week, and then
 rolls every fixture back. The flag is ineffective unless the database
 confirmation is exactly `isolated` and the isolated database URL is present.
+Every human-authored pull request also enables the Chromium flow. It verifies a
+real PIN session, account-control persistence through reload and one temporary
+profile failure, ATS saves, and Survivor replacement before the change can
+merge. Dependabot pull requests do not receive the isolated database or browser
+credentials. Their isolated workflow records an intentional successful
+no-secret result while Application quality tests the dependency change. Never
+copy the database URL or service-role key into Dependabot secrets merely to make
+that check run.
 
 ## Full-season certification
 
