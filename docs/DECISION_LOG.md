@@ -241,3 +241,16 @@ explicit object-level grants and row-level security. Audit these prerequisites
 in the isolated database on every pull request so an advisor cleanup or manual
 grant change cannot silently disable player sessions or server automation
 again.
+
+## 2026-08-26 — REF-024 — Keep isolated credentials away from Dependabot
+
+**Status:** Accepted
+
+Dependabot pull-request events intentionally cannot read the `isolated-test`
+environment secrets. Give those pull requests an explicit successful no-secret
+result instead of failing the environment confirmation with blank values.
+Application quality continues to validate dependency updates, while
+human-authored pull requests, scheduled rehearsals, and manual certifications
+retain the complete isolated database and browser gate. Do not duplicate the
+database URL or service-role credential into Dependabot secrets merely to make
+the privileged test execute.

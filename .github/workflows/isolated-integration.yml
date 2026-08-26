@@ -22,7 +22,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  dependabot-safety:
+    if: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Record intentional no-secret dependency check
+        run: |
+          {
+            echo "## Isolated integration checks"
+            echo
+            echo "- Dependabot pull request: **yes**"
+            echo "- Isolated database lifecycle: **not run by design**"
+            echo "- Reason: isolated database credentials are intentionally unavailable to dependency-update jobs"
+            echo "- Coverage: Application quality still validates the dependency update without privileged credentials"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   database-lifecycle:
+    if: ${{ github.event_name != 'pull_request' || github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
     environment: isolated-test
     timeout-minutes: 20
