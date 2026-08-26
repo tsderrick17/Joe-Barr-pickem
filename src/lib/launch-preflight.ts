@@ -1,4 +1,8 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import {
+  supabaseAdmin,
+  supabaseServerCredentialSource,
+  supabaseServerCredentialUsesFallback,
+} from "@/lib/supabase-admin";
 import { assessAutomationHeartbeat } from "@/lib/automation-heartbeat";
 
 export type LaunchPreflightCheck = {
@@ -115,6 +119,26 @@ async function checkCommissionerAlerts(): Promise<LaunchPreflightCheck> {
   );
 }
 
+async function checkSupabaseAuthorization(): Promise<LaunchPreflightCheck> {
+  const { error } = await supabaseAdmin
+    .from("seasons")
+    .select("id")
+    .limit(1);
+  const authorized = !error;
+  const authoritativeSource = !supabaseServerCredentialUsesFallback;
+  return check(
+    "supabase-server-authorization",
+    "Supabase server authorization",
+    authorized && authoritativeSource,
+    !authorized
+      ? `Supabase rejected the ${supabaseServerCredentialSource} production credential; automation and privileged reads cannot run.`
+      : authoritativeSource
+        ? `The ${supabaseServerCredentialSource} production credential is accepted by the Supabase Data API.`
+        : `Supabase accepted ${supabaseServerCredentialSource}, but production is using the compatibility fallback instead of the managed server credential.`,
+    "authorization",
+  );
+}
+
 async function checkCronAuthorization(): Promise<LaunchPreflightCheck> {
   const secret = process.env.CRON_SECRET;
   if (!secret) return check("cron-authorization", "Cron authorization", false, "CRON_SECRET is missing from the deployment.", "authorization");
@@ -168,11 +192,12 @@ export async function runLaunchPreflight() {
 }
 
 export async function runExternalConfigurationChecks() {
-  const [cronAuthorization, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+  const [supabaseAuthorization, cronAuthorization, oddsProvider, brevoChecks, commissionerAlerts] = await Promise.all([
+    checkSupabaseAuthorization(),
     checkCronAuthorization(),
     checkOddsProvider(),
     checkBrevo(),
     checkCommissionerAlerts(),
   ]);
-  return [cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
+  return [supabaseAuthorization, cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
 }

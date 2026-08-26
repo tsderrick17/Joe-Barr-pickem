@@ -1,51 +1,60 @@
 # Uptime monitoring
 
-The public health URL is:
+UptimeRobot is an independent alarm system. The app owns four public, opaque
+health contracts; additional page monitors are useful but do not replace them.
+The live monitor count is shown under **Commissioner → Connected systems**,
+while UptimeRobot remains the source of truth for exact monitor names, URLs,
+contacts, and current incidents.
 
-`https://pickemjb.vercel.app/api/health`
+## Required health monitors
 
-The background-automation heartbeat URL is:
+| Monitor | URL | A 200 proves | Where to diagnose a failure |
+| --- | --- | --- | --- |
+| PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
+| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The five-minute watchdog completed successfully within the last 12 minutes | **Commissioner → Automation Health** and the watchdog receipt |
+| PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking, reminder processing, and final-score processing are within their allowed freshness windows | **Commissioner → Automation Health** to identify the worker |
+| PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check recently | GitHub Actions → **Encrypted database backup** |
 
-`https://pickemjb.vercel.app/api/health/automation`
+Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
+timeout, or missed heartbeat as down. Configure both outage and recovery
+notifications. Keep the Commissioner alert destination current.
 
-The critical-worker heartbeat URL is:
+All four endpoints deliberately return only HTTP 200 or 503. They never expose
+database names, worker details, GitHub details, application secrets, or player
+information. Do not weaken that opacity to make an external status page more
+descriptive.
 
-`https://pickemjb.vercel.app/api/health/workers`
+## What each monitor does not prove
 
-The encrypted-backup health URL is:
+- The production check proves core availability, not that every background job
+  is progressing.
+- The automation heartbeat proves the watchdog is running, not that all
+  critical workers are healthy.
+- The worker heartbeat proves recent execution, not that the provider has
+  already published a late final.
+- The backup heartbeat proves the latest completed export, encryption, and
+  restore check; it does not replace a deliberate isolated restore rehearsal.
 
-`https://pickemjb.vercel.app/api/health/backup`
+This separation matters: one red monitor should identify the failed layer
+without turning an ordinary provider delay into a whole-site outage.
 
-All three health endpoints return only an opaque HTTP 200 or 503 response.
-They never expose database, worker, or application details publicly.
+## Incident sequence
 
-## Recommended setup
+1. Open the specific incident and record which URL is failing.
+2. Confirm whether the production health monitor is also down.
+3. Use the diagnosis location in the table; do not manually run every job.
+4. Recover only the named layer through the guarded Commissioner or GitHub
+   control.
+5. Confirm the endpoint returns 200 and UptimeRobot records the recovery.
+6. If multiple internal monitors fail together, check shared server
+   authorization before changing schedules. A valid-looking website can still
+   have stale automation credentials.
 
-1. Keep the existing site monitor pointed at `/api/health`.
-2. Keep **PickemJB automation heartbeat** pointed at
-   `/api/health/automation` with a five-minute interval.
-3. Create **PickemJB critical workers**, pointed at `/api/health/workers` with
-   a five-minute interval.
-4. Create **PickemJB encrypted backup**, pointed at `/api/health/backup` with a
-   five-minute interval. This stays on UptimeRobot's free HTTP-monitor tier.
-5. Treat any non-200 response, timeout, or missed heartbeat as down.
-6. Add Tyler's email and text/push destination as the alert contacts.
-7. Set recovery notifications so an outage and its resolution are both visible.
+The GitHub **Production smoke gate** performs the same public checks immediately
+after a successful Vercel production deployment. Its retry window avoids a
+false alarm while the alias settles. If two or more contracts remain red, the
+run labels the result as a likely shared deployment or authorization problem;
+it does not imply that each worker independently broke.
 
-The automation URL returns 200 only when the internal watchdog has completed
-successfully within the last 12 minutes. This independently proves the monitor
-that watches line locks, scores, schedules, and delivery is itself still
-running. Responses are intentionally opaque; investigate details in the
-Commissioner dashboard.
-
-The critical-worker URL separately proves that line locking succeeded within
-five minutes, reminder processing within 12 minutes, and final-score processing
-within 35 minutes. Its database table has exactly one row per worker, so the
-monitor itself cannot create unbounded operational history.
-
-The encrypted-backup URL reads the latest completed GitHub workflow through the
-existing server-only read token. It returns 200 only when that latest run
-succeeded recently. Because the workflow uploads its artifact only after
-encryption and the decrypt/restore check, this proves the complete backup—not
-merely that GitHub Actions started the job. It uses no paid push-heartbeat
-feature and exposes no workflow details publicly.
+UptimeRobot monitor records do not consume Odds API credits or create growing
+pool-history tables. Critical worker heartbeat rows update in place.

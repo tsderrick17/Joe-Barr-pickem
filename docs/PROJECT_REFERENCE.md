@@ -1,6 +1,6 @@
 # Joe Barr Memorial Pick'em project reference
 
-Last verified against `main`: 2026-08-18.
+Last verified against `main`: 2026-08-25.
 
 This is the durable product and system reference for the Joe Barr Memorial
 Pick'em application. It explains what must remain true across code changes,
@@ -50,7 +50,7 @@ be replayed.
 
 ## System boundaries
 
-- **Next.js/Vercel** serves the player pages, Commissioner Desk, API routes,
+- **Next.js/Vercel** serves the player pages, Commissioner tools, API routes,
   health endpoint, and manual recovery controls.
 - **Supabase/Postgres** owns durable state, row-level security, integrity
   triggers, atomic mutations, audit logs, execution leases, and scheduled jobs.
@@ -67,6 +67,10 @@ be replayed.
 - Players authenticate with their assigned pool identity and PIN/session flow.
 - Concurrent page and navigation startup share one in-flight session read. The
   result is not cached after completion, so sign-out and expiry remain immediate.
+- Header identity and Commissioner access use the same authenticated profile
+  route as the rest of the app. A temporary profile-read failure does not erase
+  an already verified identity; an invalid session returns the player to PIN
+  sign-in instead of leaving a half-signed-in page.
 - PIN sign-in is routed through the application. Ten different invalid PINs
   from one privacy-safe source fingerprint in 15 minutes open a Commissioner
   incident and email alert. Successful login clears prior failures, no player
@@ -251,6 +255,11 @@ may enrich spreads but cannot override canonical schedule assignments.
   zero-credit external checks for cron authorization, Odds access, the active
   Brevo sender, and a Commissioner alert address. A failed daily check retries
   no more than hourly and becomes one deduplicated configuration incident.
+- Launch Preflight also reports the name—not the value—of the selected
+  Supabase server credential. Production is healthy only when the managed
+  `SUPABASE_SERVICE_ROLE_KEY` path is accepted. A working compatibility
+  fallback remains available for isolated/local recovery but opens a drift
+  incident in production instead of silently becoming authoritative.
 - A weekly storage guardrail runs through the protected Monday watchdog and
   removes only routine `sync_runs` plus resolved watchdog and schedule-review
   incidents after 180 days. The certified annual cleanup may additionally
@@ -300,7 +309,7 @@ the condition genuinely recurs.
 
 ## Commissioner controls
 
-The Commissioner Desk is the operational control plane. Its intended order is:
+The Commissioner area is the operational control plane. Its intended order is:
 
 1. Read the quiet watchdog and Automation Health.
 2. Run Season Readiness, Opening Week Checklist, Automation Preflight, or the
@@ -328,6 +337,19 @@ Manual controls are recovery paths, not alternate implementations.
   exact confirmation value `isolated` is required before integration work.
 - Application changes pass tests, lint, build, GitHub quality checks, and a
   Vercel preview before merge.
+- Every human-authored pull request runs the real PIN/session/player flow
+  against the confirmed isolated project, including account navigation, a
+  transient profile-read failure, pick persistence, and Survivor replacement.
+  Dependabot pull requests receive an explicit successful no-secret gate because
+  GitHub intentionally withholds environment secrets from those events;
+  Application quality still validates them without privileged credentials.
+  Production is explicitly rejected by the browser-test harness.
+- A successful Vercel production deployment starts an independent smoke gate.
+  It retries the canonical site plus the availability, watchdog, worker, and
+  backup contracts until all return HTTP 200 or the release is marked failed.
+- Client error reporting discards only exact, confirmed browser-extension
+  infrastructure noise; broad message classes are never suppressed. Player
+  identity remains excluded from every Sentry event.
 - Database changes are new timestamped migrations. The production migration
   workflow dry-runs before applying them; the isolated project receives them
   first for lifecycle-sensitive work.

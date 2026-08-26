@@ -45,7 +45,7 @@ malformed provider response changes nothing and is retried the next day. Once
 all 18 regular-season periods and 272 games are present, later runs become safe
 no-ops.
 
-The Commissioner Desk **Schedule** panel shows the current handoff state and
+The Commissioner **Schedule** panel shows the current handoff state and
 retains both recovery paths:
 
 - **Run automatic check now** repeats the normal guarded handoff immediately.
@@ -92,7 +92,7 @@ The only alert conditions are:
 
 Individual bad email addresses and intentional low-provider-quota cooldowns do
 not alert. Open incidents and a manual **Run watchdog now** control are visible
-on the Commissioner Desk overview.
+on the Commissioner overview.
 
 Once per Eastern day, the same leased watchdog also rechecks the external
 configuration that can drift without a deployment: the deployed cron secret,
@@ -107,13 +107,13 @@ endpoint returns 200 only when the watchdog has completed successfully within
 12 minutes, so a broken watchdog cannot silently report itself as healthy. This
 monitor is separate from the existing public-site monitor.
 
-A third UptimeRobot monitor must check
+The third required UptimeRobot monitor must check
 `https://pickemjb.vercel.app/api/health/workers` every five minutes. It confirms
 recent successful line-lock, reminder, and final-score worker executions using
 three fixed-size heartbeat rows. Public responses stay opaque; use Automation
 Health to identify the affected worker.
 
-A fourth free HTTP monitor must check
+The fourth required free HTTP monitor must check
 `https://pickemjb.vercel.app/api/health/backup` every five minutes. The endpoint
 uses the existing server-only GitHub read token to inspect the latest completed
 encrypted-backup workflow and returns 200 only for a recent success. It does
@@ -133,7 +133,29 @@ result proves the full cron definitions and Vault authorization, the deployed
 cron secret matches Vault, the zero-credit Odds API authentication check can
 see the NFL feed, Brevo can list an active configured PickemJB sender, and at
 least one active Commissioner has a valid alert address. The same checks are
-included in the Opening Week checklist.
+included in the Opening Week checklist. Launch Preflight also names the
+selected Supabase server credential variable without exposing its value and
+holds production in attention if only the compatibility fallback is active.
+
+## Release validation and correlated failures
+
+Pull requests run an isolated Chromium player flow in addition to the database
+lifecycle rehearsal. The browser creates a disposable commissioner, signs in
+with the real PIN path, reloads the saved session, verifies all account
+controls, simulates one temporary profile failure, saves ATS and Survivor
+picks, revises Survivor, and removes every fixture afterward. The harness
+refuses the production Supabase project before making a request.
+
+After Vercel reports a successful Production deployment, GitHub Actions retries
+the canonical page and all four public health contracts for up to two minutes.
+This proves the deployed environment—not merely the preview build—can use its
+real dependencies. The manual workflow is also safe to run after a secret
+rotation.
+
+If several health contracts fail in the same smoke pass, treat them as one
+likely shared-dependency incident. Check the deployment and Supabase server
+authorization before changing individual schedules. The failed smoke output
+lists only URLs and status codes; it never prints response bodies or secrets.
 
 ## Monthly upgrade rehearsal
 

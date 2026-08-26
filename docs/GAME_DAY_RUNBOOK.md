@@ -1,7 +1,9 @@
 # Commissioner game-day runbook
 
-This is the short, repeatable operating routine. Nothing here asks you to
-change player picks or scores directly.
+This is the short, repeatable weekly checklist. Nothing here asks you to change
+player picks or scores directly. For an alert or unusual condition, stop here
+and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
+[Commissioner recovery runbook](commissioner-runbook.md).
 
 ## Before the week opens
 

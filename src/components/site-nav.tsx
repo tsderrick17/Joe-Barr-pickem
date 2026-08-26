@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getFreshSession } from "@/lib/auth-session";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 
 export default function SiteNav() {
@@ -31,25 +31,29 @@ export default function SiteNav() {
     let active = true;
 
     async function loadNavigation() {
-      const session = await getFreshSession();
+      try {
+        const response = await fetchWithSession("/api/profile");
+        if (response.status === 401) throw new SessionUnavailableError();
+        if (!response.ok) throw new Error("Account navigation could not be loaded.");
+        const player = await response.json() as { firstName?: string; isCommissioner?: boolean };
 
-      if (!session) {
         if (active) {
-          setPlayerName("");
-          setIsCommissioner(false);
+          setPlayerName(player.firstName ?? "");
+          setIsCommissioner(player.isCommissioner ?? false);
         }
-        return;
-      }
+      } catch (error) {
+        if (error instanceof SessionUnavailableError) {
+          if (active) {
+            setPlayerName("");
+            setIsCommissioner(false);
+            router.replace("/login");
+          }
+          return;
+        }
 
-      const { data: player, error } = await supabase
-        .from("players")
-        .select("first_name, is_commissioner")
-        .eq("auth_user_id", session.user.id)
-        .maybeSingle();
-
-      if (active) {
-        setPlayerName(error ? "" : player?.first_name ?? "");
-        setIsCommissioner(error ? false : player?.is_commissioner ?? false);
+        // Preserve any already-verified identity through a temporary read
+        // failure. A transient request must never make account controls blink
+        // out while the rest of the signed-in page remains on screen.
       }
     }
 
@@ -69,7 +73,7 @@ export default function SiteNav() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [pathname]);
+  }, [pathname, router]);
 
   // The Slate's small receipt bar sits directly beneath the sticky player
   // navigation on phones. The account strip intentionally scrolls away.
