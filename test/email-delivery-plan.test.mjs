@@ -2,18 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
-const deliveryPlan = await readFile(new URL("../src/lib/email-delivery-plan.ts", import.meta.url), "utf8");
 const emailReminders = await readFile(new URL("../src/lib/email-reminders.ts", import.meta.url), "utf8");
 
-test("routine email policy keeps deadline and schedule-change notices outside the daily limit", () => {
-  assert.match(deliveryPlan, /"weekly_recap"/);
-  assert.match(deliveryPlan, /"sunday_late_reveal"/);
-  assert.doesNotMatch(deliveryPlan, /"pick_due"/);
-  assert.doesNotMatch(deliveryPlan, /"early_lock"/);
+test("valid same-day pool emails are not discarded by a global daily limit", () => {
+  assert.doesNotMatch(emailReminders, /routineEmailLimitReached/);
+  assert.doesNotMatch(emailReminders, /Routine email limit reached/);
 });
 
-test("routine delivery holds are recorded rather than treated as failed sends", () => {
-  assert.match(emailReminders, /routineEmailLimitReached/);
-  assert.match(emailReminders, /status: "suppressed"/);
-  assert.match(emailReminders, /Routine email limit reached for this Eastern calendar day/);
+test("one reminder still has one durable delivery receipt per player", () => {
+  assert.match(emailReminders, /reminder_id: reminder\.id/);
+  assert.match(emailReminders, /onConflict|23505/);
+  assert.match(emailReminders, /delivery\.status === "sent" \|\| delivery\.status === "suppressed"/);
 });

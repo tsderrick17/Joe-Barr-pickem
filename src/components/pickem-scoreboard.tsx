@@ -40,9 +40,10 @@ export default function PickemScoreboard({
 }: Props) {
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
+  const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
 
   return (
-    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""}`}>
+    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""}`}>
       <div className="pickem-ledger-masthead">
         <div className="flex items-center gap-2">
           <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Pad"}</h2>
@@ -57,7 +58,7 @@ export default function PickemScoreboard({
         {isPlayoff ? <p className="pickem-ledger-period">{week.toUpperCase()}</p> : null}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
-        <table className={`${isPlayoff ? "min-w-[48rem]" : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
+        <table className={`${isPlayoff ? (isDensePlayoffRound ? "min-w-[40rem]" : "min-w-[48rem]") : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
           {!isPlayoff ? <colgroup>
             <col className="pickem-ledger-wins-column" />
             <col className="pickem-ledger-player-column" />

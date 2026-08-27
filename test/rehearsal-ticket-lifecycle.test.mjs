@@ -24,6 +24,10 @@ test("rehearsal emails visibly include representative Slate, reveal, and recap i
   assert.match(source, /emailImage: "recap"/);
   assert.match(source, /function EmailSampleImage/);
   assert.match(source, /Sample Slate image included in this email/);
+  assert.match(source, /Week 4 - final \+ weekly recap email/);
+  assert.match(source, /Tuesday - 6:30 AM ET/);
+  assert.match(source, /Sample Survivor recap image included in this email/);
+  assert.match(source, /ELIMINATED THIS WEEK: ZAC/);
   assert.match(source, /FINAL W\/L STAMPS REMAIN MEMORIALIZED/);
   assert.match(source, /pick\.resultMark === "win" \? " W" : pick\.resultMark === "loss" \? " L"/);
   assert.match(source, /<EmailSampleImage rows=\{rows\} scenario=\{scenario\}/);

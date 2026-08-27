@@ -112,7 +112,7 @@ recording, and a blank annual rollover. Production never receives fixtures.
 
 ## 2026-08-17 — REF-013 — Player-controlled email plans with a routine inbox limit
 
-**Status:** Accepted
+**Status:** Superseded in part by REF-026
 
 Keep the existing self-service email choices, expressed as Essentials, Regular,
 and Full Card plans with optional detailed controls. Existing player choices are
@@ -121,6 +121,9 @@ email per player per Eastern calendar day; deadline reminders and material
 early-lock or schedule-change notices remain eligible because they can require
 timely action. Record intentionally held routine messages as receipts so the
 Commissioner can distinguish them from delivery failures.
+
+The plan presets and self-service choices remain accepted. REF-026 supersedes
+only the cross-category one-message-per-day limit.
 
 ## 2026-08-18 — REF-015 — Reproduce and independently monitor critical automation
 
@@ -273,3 +276,22 @@ Record a successful monthly completion artifact so later daily checks skip, but
 allow a failed attempt to retry on another non-gameday and preserve manual
 dispatch. This does not change production availability—the rehearsal has always
 been isolated—but it keeps optional CI work and alerts away from peak game use.
+
+## 2026-08-26 — REF-026 — Treat playoff reveals and daily recaps as separate promises
+
+**Status:** Accepted
+
+Remove the global one-routine-email-per-Eastern-day limit because distinct live
+events—especially sequential playoff kickoffs followed by a final recap—are
+separate messages the player explicitly selected. Keep one immutable snapshot
+per scheduled occurrence and one unique reminder/player delivery receipt so
+retries cannot duplicate that occurrence. Regular includes the daily playoff
+recap; Full Card additionally includes every playoff kickoff reveal.
+
+At kickoff, reveal only that exact game group and combine games only when their
+kickoff timestamps match. The receipt lists every player eligible for those
+matchups, marks a missing required selection as a no-pick loss, and never includes
+an earlier or later game. Subjects name the round, matchup, and Eastern date.
+Daily recaps send only after final grading, explicitly list new eliminations,
+and crown the Pick'em champion or co-champions on the final day. Empty public
+windows remain terminal suppressions rather than retries.

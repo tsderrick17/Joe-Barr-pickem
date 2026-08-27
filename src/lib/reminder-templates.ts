@@ -24,7 +24,7 @@ export const reminderTemplates: ReminderTemplate[] = [
   { id: "weekly_recap", category: "weekly_recap", audience: "all_active", title: "{{week}} recap", body: "The final slate, current standings, and Survivor recap are ready to look over. Thanks for being part of the pool.", label: "Weekly recap with Survivor — Tuesday" },
   { id: "weekly_recap_pickem_only", category: "weekly_recap", audience: "all_active", title: "{{week}} recap", body: "The final Pick'em results and updated standings are ready to look over. Thanks for being part of the pool.", label: "Weekly recap after Survivor ends — Tuesday" },
   { id: "playoff_day_recap", category: "playoff_day_recap", audience: "all_active", title: "Playoff recap — {{date}}", body: "Today’s playoff card is final and the updated Pick'em race is ready to look over. Good luck in the next round.", label: "Playoff day recap — after final grades" },
-  { id: "playoff_public_reveal", category: "playoff_public_reveal", audience: "all_active", title: "Playoff picks are public — {{date}}", body: "This playoff game is underway. Public Pick'em receipts are ready to look over whenever you have a moment.", label: "Playoff public pick game — at kickoff" },
+  { id: "playoff_public_reveal", category: "playoff_public_reveal", audience: "all_active", title: "{{round}} picks: {{matchup}} — {{date}}", body: "This playoff game is underway. Public Pick'em receipts are ready to look over whenever you have a moment.", label: "All playoff picks — at each kickoff" },
 ];
 
 export function reminderTemplate(id: string) {

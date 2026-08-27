@@ -270,7 +270,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   most once per Eastern day.
 - Players choose one of three email plans: **Essentials**, **Regular**, or
   **Full Card**. Each remains individually adjustable in Notifications; existing
-  choices are never changed just because the plan labels evolve.
+  choices are never changed just because the plan labels evolve. Regular includes
+  the daily playoff recap; Full Card additionally includes every playoff kickoff
+  reveal.
 - Final gameday lines use one explicit choice: every gameday, Sundays only, or
   none. Selection reminders use three independent choices: Sunday 11:00 AM,
   Sunday 3:00 PM, and the combined Sunday 6:00 PM/Monday 5:00 PM primetime set.
@@ -280,17 +282,24 @@ may enrich spreads but cannot override canonical schedule assignments.
   queues each promised occurrence from the live NFL schedule, safely replaces
   unsent occurrences after a flex or cancellation, and preserves sent wording
   plus the exact source-game receipt.
-- Public-pick emails are scoped to their kickoff window and are intentionally
+- Public-pick emails are scoped to their exact kickoff window and are intentionally
   suppressed when nobody selected a represented game. Playoff reveals normally
-  become one message per game because playoff kickoff times rarely match.
+  become one message per game because playoff kickoff times rarely match; games
+  combine only when their kickoff timestamps match. Each playoff receipt shows
+  every player eligible for that matchup, including an explicit no-pick loss, but
+  never repeats picks from an earlier kickoff or exposes a later one.
 - Wednesday Slate and Tuesday recap subjects include the scoring-period name.
-  Playoff reveal and day-recap subjects include the represented Eastern game
-  date. After Survivor concludes, weekly recaps automatically use Pick'em-only
-  wording; the championship-week recap may still memorialize the champion.
-- At most one routine pool email is delivered to a player in an Eastern
-  calendar day. Pick-due reminders and material early-lock/schedule notices
-  bypass that limit. A held routine email is retained as a receipt, not counted
-  as a delivery failure, and is visible to the Commissioner.
+  Playoff reveal subjects include the round, matchup, and represented Eastern
+  game date; day-recap subjects include the date. Daily playoff recaps identify
+  eliminations, and the final recap explicitly crowns the Pick'em champion or
+  co-champions. After Survivor concludes, weekly recaps automatically use
+  Pick'em-only wording; the championship-week recap still memorializes the
+  Survivor champion.
+- Multiple valid pool emails may be delivered on one day when the live schedule
+  and the player's choices call for them. Every occurrence retains an immutable
+  source-game snapshot, and the unique reminder/player delivery receipt plus
+  uncertain-retry guard prevent duplicate copies without suppressing a different
+  valid message.
 
 ## Action-only watchdog
 
@@ -321,8 +330,8 @@ The Commissioner area is the operational control plane. Its intended order is:
 6. Use Season Recovery Rehearsal before a rare lifecycle recovery.
 
 The Reminders view is an action queue, not a health score: it plainly lists
-automatic messages, items needing attention, empty reveal windows intentionally
-suppressed, and routine emails held for inbox space. The Commissioner may edit
+automatic messages, items needing attention, and empty reveal windows intentionally
+suppressed. The Commissioner may edit
 standard future wording but cannot create an ad-hoc scheduled pool blast. The
 built-in email test sends only to the signed-in Commissioner's opted-in address,
 never the player pool.

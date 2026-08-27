@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { onlyPublicPickRows } from "@/lib/pool-action-visibility";
+import { slateImagePresentation } from "@/lib/slate-image-order";
 import type { EarlyLockSnapshot, FeaturedWindowRevealSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
@@ -16,15 +17,6 @@ const MUTED = "#596579";
 
 type SlateGame = { away: string; home: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
-
-function teamCode(name: string) {
-  return name.split(" ").map((word) => word[0]).join("").slice(0, 3).toUpperCase();
-}
-
-function officialLine(game: SlateGame) {
-  if (!game.favorite || game.spread === null) return "LINE PENDING";
-  return `${teamCode(game.favorite === "away" ? game.away : game.home)} -${game.spread}`;
-}
 
 function SlateImage({
   games,
@@ -52,14 +44,15 @@ function SlateImage({
         <span style={{ display: "flex", flex: 1 }}><b>SAVE</b>&nbsp; Save selections at the bottom.</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {games.map((game, index) => (
-          <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: 22, minHeight: 64, padding: "0 14px" }}>
+        {games.map((game, index) => {
+          const presentation = slateImagePresentation(game);
+          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: 22, minHeight: 64, padding: "0 14px" }}>
             <span style={{ color: MUTED, display: "flex", fontSize: 14, fontWeight: 800, width: 132 }}>{game.time}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.away}</span>
-            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: 21, fontWeight: 800, justifyContent: "center", width: 140 }}>{officialLine(game)}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", textAlign: "right" }}>{game.home}</span>
-          </div>
-        ))}
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", paddingRight: 14, textAlign: "right" }}>{presentation.leftTeam}</span>
+            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: 21, fontWeight: 800, justifyContent: "center", width: 92 }}>{presentation.line}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-start", paddingLeft: 14 }}>{presentation.rightTeam}</span>
+          </div>;
+        })}
       </div>
       <div style={{ borderTop: `3px solid ${INK}`, color: official ? TEAL : MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, marginTop: "auto", paddingTop: 14 }}>{footer}</div>
       <div style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, marginTop: 7 }}>Favorites left; home team ALL CAPS. Changes allowed until kickoff time.</div>
@@ -68,9 +61,9 @@ function SlateImage({
   );
 }
 
-function PadRows({ rows, compact = false }: { rows: PublicRow[]; compact?: boolean }) {
+function PadRows({ rows, compact = false, grow = false }: { rows: PublicRow[]; compact?: boolean; grow?: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>
+    <div style={{ display: "flex", flex: grow ? 1 : undefined, flexDirection: "column", marginTop: 8 }}>
       {rows.map((row) => (
         <div key={row.name} style={{ alignItems: "center", background: PAPER, borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: compact ? 18 : 21, minHeight: compact ? 40 : 48 }}>
           <span style={{ borderRight: `3px solid ${MARGIN_RED}`, color: INK, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 19, fontWeight: 800, justifyContent: "flex-end", paddingRight: 10, width: 64 }}>{row.wins}</span>
@@ -83,6 +76,10 @@ function PadRows({ rows, compact = false }: { rows: PublicRow[]; compact?: boole
 }
 
 function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; title: string; rows: PublicRow[]; note: string }) {
+  const compact = rows.length > 10;
+  const columns = rows.length > 16
+    ? [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))]
+    : [rows];
   return (
     <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "42px 52px", width: "100%" }}>
       <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
@@ -90,7 +87,9 @@ function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; titl
         <span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{kicker}</span>
       </div>
       <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 25, fontWeight: 800, marginTop: 12, paddingBottom: 4 }}>{title.toUpperCase()}</div>
-      <PadRows rows={rows} />
+      <div style={{ display: "flex", gap: columns.length > 1 ? 24 : 0 }}>
+        {columns.map((column, index) => <PadRows compact={compact} grow key={index} rows={column} />)}
+      </div>
       <div style={{ borderTop: `2px solid ${INK}`, color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 14 }}>{note}</div>
     </div>
   );
@@ -125,7 +124,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "reveal" && snapshot.kind === "playoff_public_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker="PLAYOFF · PUBLIC RECEIPTS" title={`${snapshot.round} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Later playoff picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker={`${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={`${snapshot.round} · ${snapshot.matchup ?? snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="This kickoff's selections are now public. Later playoff picks remain private." />, { width: 1200, height: 1200 });
   }
 
   if (kind === "reveal" && snapshot.kind === "featured_window_reveal") {
@@ -136,6 +135,7 @@ export async function GET(request: NextRequest) {
 
   if (kind === "summary") {
     const title = snapshot.kind === "playoff_day_recap" ? snapshot.day : snapshot.week;
+    const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned ?? [] : [];
     return new ImageResponse(
       <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 48px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
@@ -143,6 +143,7 @@ export async function GET(request: NextRequest) {
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, letterSpacing: 2 }}>FINAL RESULTS</span>
         </div>
         <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, marginTop: 12, paddingBottom: 3 }}>{title.toUpperCase()}</div>
+        {champions.length ? <div style={{ alignSelf: "center", background: "#e8f4f0", borderLeft: `5px solid ${TEAL}`, display: "flex", fontFamily: "Georgia", fontSize: 22, fontWeight: 800, marginTop: 14, padding: "10px 16px" }}>{champions.length === 1 ? `${champions[0]} · PICK'EM CHAMPION` : `${champions.join(" & ")} · PICK'EM CO-CHAMPIONS`}</div> : null}
         <PadRows rows={snapshot.weeklySummary} compact />
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", flexDirection: "column", marginTop: 18, paddingTop: 12 }}>
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 2 }}>STANDINGS</span>
