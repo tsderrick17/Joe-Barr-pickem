@@ -22,6 +22,7 @@ test("the ticket uses upright result stamps and aligned open states", async () =
   assert.doesNotMatch(stamp, /ats-result-stamp__wear/);
   assert.match(styles, /\.ats-result-stamp__ring \{[\s\S]*?stroke-width: 1\.3;/);
   assert.match(styles, /\.ats-result-stamp__letter \{[\s\S]*?font-family: Georgia/);
+  assert.match(styles, /\.ats-result-stamp__letter\.is-w \{\s*font-size: 19px;\s*letter-spacing: -1\.2px;/);
   assert.doesNotMatch(styles, /\.ats-result-stamp__letter \{[^}]*(?:opacity|stroke):/);
   assert.doesNotMatch(styles, /\.ats-result-stamp--ticket::(?:before|after)/);
   assert.match(styles, /\.my-ticket-open \{[\s\S]*?font: 900 \.84rem\/1 "Courier New", monospace;/);
