@@ -2261,9 +2261,8 @@ html[data-theme="night"] .newspaper-clipping::after {
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 
-/* One purpose-built ink mark replaces the layered CSS badge. The broken,
-   hand-drawn ring and worn serif letter read as a press on paper without
-   introducing a box, a second ring, or a rotated UI ornament. */
+/* A crisp circular result stamp: solid type, an even ring, and no decorative
+   distressing that could make the result look handwritten or partially erased. */
 .ats-result-stamp--ticket {
   height: 1.9rem;
   width: 1.9rem;
@@ -2278,11 +2277,8 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .ats-result-stamp__ring {
   fill: none;
-  opacity: .78;
   stroke: currentColor;
-  stroke-dasharray: 8.5 .65 12 .45 5 .8;
-  stroke-linecap: round;
-  stroke-width: 1.15;
+  stroke-width: 1.3;
 }
 
 .ats-result-stamp__letter {
@@ -2291,21 +2287,10 @@ html[data-theme="night"] .newspaper-clipping::after {
   font-size: 23px;
   font-weight: 900;
   letter-spacing: -1px;
-  paint-order: stroke fill;
-  stroke: currentColor;
-  stroke-width: .22px;
 }
 
 .ats-result-stamp__letter.is-l {
   font-size: 24px;
-}
-
-.ats-result-stamp__wear {
-  fill: none;
-  opacity: .88;
-  stroke: var(--ticket-paper);
-  stroke-linecap: round;
-  stroke-width: .9;
 }
 
 .my-ticket-selection small {
