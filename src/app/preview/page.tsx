@@ -232,7 +232,7 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
       <span className="text-[10px] font-black tracking-[0.14em] text-[#008c82]">{scenario.emailImage === "recap" ? "FINAL RESULTS" : "PUBLIC RECEIPTS"}</span>
     </div>
     {publicRows.map((row) => <div className="grid grid-cols-[2rem_5rem_1fr] items-center border-b border-[#9cc6ea] px-3 py-2 text-xs" key={row.id}>
-      <strong className="text-right">{row.wins}</strong><strong className="border-l-2 border-[#d56b66] pl-2 font-serif">{row.firstName}</strong><span className="font-semibold text-slate-700">{row.picks.map((pick) => `${pick.label} ${pick.spread ?? ""}${pick.resultMark ? ` ${pick.resultMark}` : ""}`).join(" · ") || "—"}</span>
+      <strong className="text-right">{row.wins}</strong><strong className="border-l-2 border-[#d56b66] pl-2 font-serif">{row.firstName}</strong><span className="font-semibold text-slate-700">{row.picks.map((pick) => `${pick.label} ${pick.spread ?? ""}${pick.resultMark === "win" ? " W" : pick.resultMark === "loss" ? " L" : ""}`).join(" · ") || "—"}</span>
     </div>)}
     <p className="px-4 py-3 text-[10px] text-slate-500">SAMPLE IMAGE · {scenario.emailImage === "recap" ? "FINAL W/L STAMPS REMAIN MEMORIALIZED" : "FUTURE SELECTIONS REMAIN PRIVATE"}</p>
   </div>;
