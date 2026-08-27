@@ -67,9 +67,10 @@ Never overwrite the original audit event or type an estimated score.
 2. Record it through **Commissioner → Game Exceptions**.
 3. Confirm pending ATS and Survivor selections become audited voids and remain
    replaceable only while a legal future game exists.
-4. A no contest never advances Survivor. If no legal replacement remains, the
-   published settlement rule applies.
-5. Resolve the disruption review before automatic week handoff.
+4. A disruption never advances Survivor and is not graded as a loss. If no
+   legal replacement remains, it does not eliminate the entry.
+5. Once the verified status is recorded and the picks are void, the disruption
+   is settled and does not hold the automatic week handoff.
 
 ## Official line did not lock
 
@@ -77,7 +78,9 @@ Never overwrite the original audit event or type an estimated score.
 2. Run **Check official spread locks** once.
 3. Preserve any line that already locked. Never substitute a later market line
    after the deadline.
-4. Let the affected pick remain pending if no trustworthy official line exists.
+4. A preliminary line no more than 24 hours old may be used automatically.
+   Older or unverified lines remain preliminary; let the affected pick remain
+   pending until Commissioner review provides a trustworthy official line.
 
 ## Reminder, reveal, or recap is late
 

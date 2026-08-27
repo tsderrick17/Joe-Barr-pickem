@@ -13,6 +13,7 @@ import {
 } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
+import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
 type TeamRow = {
   id: string;
@@ -190,13 +191,11 @@ export async function GET(request: NextRequest) {
 
       if (
         activeGames?.length &&
-        activeGames.every((game) =>
-          ["final", "cancelled", "no_contest"].includes(game.status),
-        )
+        activeGames.every((game) => isSettledGameStatus(game.status))
       ) {
         const settlementTimes = activeGames.map((game) =>
           game.finalized_at ??
-          (["cancelled", "no_contest"].includes(game.status)
+          (["postponed", "cancelled", "no_contest"].includes(game.status)
             ? game.kickoff_at
             : null),
         );

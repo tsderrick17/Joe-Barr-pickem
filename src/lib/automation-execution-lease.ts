@@ -3,6 +3,15 @@ import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat
 
 export type AutomationJob = "line_locks" | "scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
+const leaseSecondsByJob: Record<AutomationJob, number> = {
+  line_locks: 120,
+  scores: 120,
+  reminders: 600,
+  season_bootstrap: 600,
+  watchdog: 120,
+  schedule_refresh: 600,
+};
+
 export class AutomationAlreadyRunningError extends Error {
   constructor(job: AutomationJob) {
     const label = job === "line_locks"
@@ -28,7 +37,7 @@ export async function runWithAutomationLease<T>(
   await recordAutomationWorkerHeartbeat(job, "started");
   const { data: token, error } = await supabaseAdmin.rpc(
     "claim_automation_execution_lease",
-    { target_job_name: job, lease_seconds: 120 },
+    { target_job_name: job, lease_seconds: leaseSecondsByJob[job] },
   );
 
   if (error) {
