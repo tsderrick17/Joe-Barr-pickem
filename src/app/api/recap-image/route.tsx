@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { onlyPublicPickRows } from "@/lib/pool-action-visibility";
+import { slateImagePresentation } from "@/lib/slate-image-order";
 import type { EarlyLockSnapshot, FeaturedWindowRevealSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
 
 export const dynamic = "force-dynamic";
@@ -16,15 +17,6 @@ const MUTED = "#596579";
 
 type SlateGame = { away: string; home: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
-
-function teamCode(name: string) {
-  return name.split(" ").map((word) => word[0]).join("").slice(0, 3).toUpperCase();
-}
-
-function officialLine(game: SlateGame) {
-  if (!game.favorite || game.spread === null) return "LINE PENDING";
-  return `${teamCode(game.favorite === "away" ? game.away : game.home)} -${game.spread}`;
-}
 
 function SlateImage({
   games,
@@ -52,14 +44,15 @@ function SlateImage({
         <span style={{ display: "flex", flex: 1 }}><b>SAVE</b>&nbsp; Save selections at the bottom.</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {games.map((game, index) => (
-          <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: 22, minHeight: 64, padding: "0 14px" }}>
+        {games.map((game, index) => {
+          const presentation = slateImagePresentation(game);
+          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: 22, minHeight: 64, padding: "0 14px" }}>
             <span style={{ color: MUTED, display: "flex", fontSize: 14, fontWeight: 800, width: 132 }}>{game.time}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.away}</span>
-            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: 21, fontWeight: 800, justifyContent: "center", width: 140 }}>{officialLine(game)}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", textAlign: "right" }}>{game.home}</span>
-          </div>
-        ))}
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", paddingRight: 14, textAlign: "right" }}>{presentation.leftTeam}</span>
+            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: 21, fontWeight: 800, justifyContent: "center", width: 92 }}>{presentation.line}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-start", paddingLeft: 14 }}>{presentation.rightTeam}</span>
+          </div>;
+        })}
       </div>
       <div style={{ borderTop: `3px solid ${INK}`, color: official ? TEAL : MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, marginTop: "auto", paddingTop: 14 }}>{footer}</div>
       <div style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, marginTop: 7 }}>Favorites left; home team ALL CAPS. Changes allowed until kickoff time.</div>

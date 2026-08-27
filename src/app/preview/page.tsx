@@ -218,8 +218,8 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
         <strong className="font-serif text-xl">The Slate</strong>
         <span className="text-[10px] font-black tracking-[0.14em] text-slate-600">PRELIMINARY LINES</span>
       </div>
-      {games.slice(0, 4).map((game, index) => <div className={`grid grid-cols-[4.8rem_1fr_auto_1fr] items-center gap-2 border-b border-[#d8cfbf] px-3 py-2 text-[11px] ${index % 2 === 0 ? "bg-[#f0e5cf]" : ""}`} key={game.id}>
-        <span className="font-bold text-slate-500">{game.kickoff.replace(" ET", "")}</span><strong>{game.right}</strong><strong className="font-mono">{game.line}</strong><strong className="text-right">{game.left}</strong>
+      {games.slice(0, 4).map((game, index) => <div className={`grid grid-cols-[4.8rem_minmax(0,1fr)_3.4rem_minmax(0,1fr)] items-center gap-1 border-b border-[#d8cfbf] px-3 py-2 text-[11px] ${index % 2 === 0 ? "bg-[#f0e5cf]" : ""}`} key={game.id}>
+        <span className="font-bold text-slate-500">{game.kickoff.replace(" ET", "")}</span><strong className="pr-1 text-right">{game.left}</strong><strong className="text-center font-mono">{game.line.replace(/^[A-Z]+\s+/, "")}</strong><strong className="pl-1 text-left">{game.right}</strong>
       </div>)}
       <p className="px-4 py-3 text-[10px] font-bold text-slate-500">SAMPLE IMAGE · CURRENT LINES MAY MOVE BEFORE OFFICIAL LOCK</p>
     </div>;
