@@ -1,7 +1,13 @@
-export const TERMINAL_GAME_STATUSES = new Set(["final", "postponed", "cancelled"]);
+import {
+  DISRUPTED_GAME_STATUSES,
+  SETTLED_GAME_STATUSES,
+  isSettledGameStatus,
+} from "./game-status-policy.js";
+
+export const TERMINAL_GAME_STATUSES = SETTLED_GAME_STATUSES;
 
 export function isTerminalGameStatus(status) {
-  return TERMINAL_GAME_STATUSES.has(status);
+  return isSettledGameStatus(status);
 }
 
 export function isFreshSlateReady({ activePeriod, gameCount }) {
@@ -40,7 +46,7 @@ export function isPlayoffDayRecapReady({ period, games, pendingAtsCount, now, ea
 export function isSundayWindowReady({ activePeriod, games, window, now, easternWeekday, easternHour }) {
   if (!activePeriod) return { ready: false, reason: "There is no active week for the Sunday reveal." };
   const [startHour, endHour] = window === "early" ? [12, 16] : [16, 20];
-  const gamesInWindow = games.filter((game) => easternWeekday(game.kickoff_at) === "Sunday" && easternHour(game.kickoff_at) >= startHour && easternHour(game.kickoff_at) < endHour && !["postponed", "cancelled"].includes(game.status));
+  const gamesInWindow = games.filter((game) => easternWeekday(game.kickoff_at) === "Sunday" && easternHour(game.kickoff_at) >= startHour && easternHour(game.kickoff_at) < endHour && !DISRUPTED_GAME_STATUSES.has(game.status));
   if (!gamesInWindow.length) return { ready: false, reason: "There are no games in this Sunday kickoff window." };
   if (gamesInWindow.some((game) => new Date(game.kickoff_at) > now)) return { ready: false, reason: "The selected Sunday games have not all reached kickoff yet." };
   return { ready: true, reason: null };

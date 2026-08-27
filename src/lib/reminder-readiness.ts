@@ -7,6 +7,7 @@ import {
   publicRevealSelectionReadiness,
   isSundayWindowReady,
 } from "@/lib/reminder-readiness-rules.js";
+import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
 type ReminderReadiness = { ready: boolean; reason: string | null; terminal?: boolean };
 
@@ -125,7 +126,7 @@ async function playoffDayRecapReady(sourceGameIds: string[] = [], sourcePeriodId
     ? (games ?? []).filter((game) => sourceIds.has(game.id))
     : (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === latestDay);
   if (!dayGames.length) return { ready: false, reason: "This playoff recap has no scheduled game day." };
-  if (dayGames.some((game) => game.status !== "final")) return { ready: false, reason: "This playoff day is still in progress." };
+  if (dayGames.some((game) => !isSettledGameStatus(game.status))) return { ready: false, reason: "This playoff day is still in progress." };
   const { count, error: picksError } = await supabaseAdmin
     .from("picks")
     .select("id", { count: "exact", head: true })

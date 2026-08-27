@@ -7,7 +7,7 @@ import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
 type Selection = { gameId: string; teamId: string };
-type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string };
+type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string; status: string };
 
 function pickSaveMessage(selectionCount: number) {
   return selectionCount === 0 ? "Your unlocked selections have been cleared."
@@ -61,6 +61,16 @@ export async function POST(request: NextRequest) {
   if (!period) return NextResponse.json({ error: "That week could not be found." }, { status: 404 });
   if (period.status === "complete") return NextResponse.json({ error: "This completed week is read-only." }, { status: 400 });
   if (selections.length > period.max_picks) return NextResponse.json({ error: `You cannot submit more than ${period.max_picks} picks for this scoring period.` }, { status: 400 });
+  const { error: pickWindowError } = await supabaseAdmin.rpc(
+    "assert_scoring_period_accepts_picks",
+    { target_scoring_period_id: scoringPeriodId },
+  );
+  if (pickWindowError) {
+    return NextResponse.json(
+      { error: "That Slate is not open for selections yet." },
+      { status: 400 },
+    );
+  }
 
   if (period.period_type === "playoff" && period.status === "active") {
     const { data: activePlayers, error: activePlayersError } = await supabaseAdmin
@@ -83,12 +93,22 @@ export async function POST(request: NextRequest) {
 
   const survivorSelection = body.survivorSelection;
   const gameIds = [...new Set([...selections.map((selection) => selection.gameId), ...(existingPicks ?? []).map((pick) => pick.game_id), ...(survivorSelection ? [survivorSelection.gameId] : [])])];
-  const { data: games, error: gamesError } = await supabaseAdmin.from("games").select("id, scoring_period_id, away_team_id, home_team_id, kickoff_at").in("id", gameIds);
+  const { data: games, error: gamesError } = await supabaseAdmin.from("games").select("id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status").in("id", gameIds);
   if (gamesError || !games) return NextResponse.json({ error: "The selected games could not be loaded." }, { status: 500 });
   const gameById = new Map((games as GameRow[]).map((game) => [game.id, game]));
 
   if (selections.some((selection) => gameById.get(selection.gameId)?.scoring_period_id !== scoringPeriodId)) {
     return NextResponse.json({ error: "One of your selected games does not belong to this week." }, { status: 400 });
+  }
+  const submittedGameIds = new Set([
+    ...selections.map((selection) => selection.gameId),
+    ...(survivorSelection ? [survivorSelection.gameId] : []),
+  ]);
+  if ([...submittedGameIds].some((gameId) => gameById.get(gameId)?.status !== "scheduled")) {
+    return NextResponse.json(
+      { error: "One of those games is no longer open for selections." },
+      { status: 400 },
+    );
   }
   const preparedPicks = prepareAtsReplacements({ selections, existingPicks: existingPicks ?? [], games: games as GameRow[] });
   if (preparedPicks.error) return NextResponse.json({ error: preparedPicks.error }, { status: 400 });
