@@ -2265,11 +2265,11 @@ html[data-theme="night"] .newspaper-clipping::after {
    sizing for wins and losses, and no surrounding badge or stamp outline. */
 .ats-result-stamp--ticket {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.45rem;
+  font-size: 1.305rem;
   font-weight: 900;
-  height: 1.45rem;
+  height: 1.305rem;
   line-height: 1;
-  min-width: 1.45rem;
+  min-width: 1.305rem;
 }
 
 .my-ticket-selection small {
