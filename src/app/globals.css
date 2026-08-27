@@ -2800,9 +2800,16 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-picks li { min-height: 2.15rem; }
   .my-ticket-selection strong,
   .my-ticket-survivor-pick strong { font-size: .8rem; }
-  .my-ticket-footer { gap: .35rem; }
+  /* Keep the completion receipt and status stamp from visually merging on
+     narrow tickets, even when either label grows or wraps. */
+  .my-ticket-footer {
+    column-gap: .65rem;
+    grid-template-columns: minmax(0, 1fr) minmax(4.75rem, auto) 3.2rem;
+    row-gap: .35rem;
+  }
+  .my-ticket-footer > div { min-width: 4.75rem; }
   .my-ticket-change-note { font-size: .53rem; }
-.my-ticket-barcode { width: 3.2rem; }
+  .my-ticket-barcode { width: 3.2rem; }
 }
 
 /* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly

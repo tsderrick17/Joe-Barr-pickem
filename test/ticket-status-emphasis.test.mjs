@@ -16,4 +16,7 @@ test("the ticket uses upright result stamps and aligned open states", async () =
 
   assert.match(styles, /\.my-ticket-result \{[\s\S]*?font-size: 1\.05rem;[\s\S]*?transform: none;/);
   assert.match(styles, /\.my-ticket-open \{[\s\S]*?font: 900 \.84rem\/1 "Courier New", monospace;/);
+  assert.match(styles, /Keep the completion receipt and status stamp from visually merging/);
+  assert.match(styles, /\.my-ticket-footer \{\s*column-gap: \.65rem;\s*grid-template-columns: minmax\(0, 1fr\) minmax\(4\.75rem, auto\) 3\.2rem;/);
+  assert.match(styles, /\.my-ticket-footer > div \{ min-width: 4\.75rem; \}/);
 });
