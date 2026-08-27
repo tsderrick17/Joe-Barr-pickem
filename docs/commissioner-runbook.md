@@ -82,14 +82,16 @@ Never overwrite the original audit event or type an estimated score.
 ## Reminder, reveal, or recap is late
 
 1. Open **Commissioner → Reminders** and inspect the scheduled item and receipt.
-2. Distinguish `held` or `suppressed` from `failed`: routine inbox limits and
-   empty reveal windows are intentional.
+2. Distinguish `suppressed` from `failed`: an empty reveal window is intentional.
 3. For a Tuesday recap, confirm the source week is fully trustworthy first.
 4. Use the private Commissioner test only for configuration diagnosis. Do not
    recreate the automatic timetable with one-off messages.
 
 Players control delivery choices under **Notifications**. Commissioner wording
 changes apply to future messages; dynamic week/date context remains automatic.
+During playoffs, Regular receives the daily final recap and Full Card also
+receives each kickoff reveal. Several valid messages can therefore arrive on
+one day; investigate only missing, failed, or duplicate receipts.
 
 ## Account controls or sign-in disappear
 

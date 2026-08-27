@@ -17,6 +17,8 @@ test("automatic subjects retain custom wording while adding week or playoff date
   assert.equal(automaticEmailSubject({ templateId: "weekly", title: "{{week}} Slate is ready", periodName: "Week 8" }), "Week 8 Slate is ready");
   assert.equal(automaticEmailSubject({ templateId: "weekly_recap", title: "Pool recap", periodName: "Week 7" }), "Pool recap — Week 7");
   assert.equal(automaticEmailSubject({ templateId: "playoff_day_recap", title: "Playoff recap — {{date}}", periodName: "Wild Card", eventAt: "2027-01-17T21:30:00.000Z" }), "Playoff recap — Sunday, Jan 17");
+  assert.equal(automaticEmailSubject({ templateId: "playoff_public_reveal", title: "{{round}} picks: {{matchup}} — {{date}}", periodName: "Wild Card", eventAt: "2027-01-09T21:30:00.000Z", matchupLabel: "Steelers vs. Ravens" }), "Wild Card picks: Steelers vs. Ravens — Saturday, Jan 9");
+  assert.equal(automaticEmailSubject({ templateId: "playoff_public_reveal", title: "Playoff picks are public — {{date}}", periodName: "Wild Card", eventAt: "2027-01-09T21:30:00.000Z", matchupLabel: "Steelers vs. Ravens" }), "Playoff picks are public: Steelers vs. Ravens — Saturday, Jan 9");
 });
 
 test("an empty public-pick window is a terminal suppression rather than a retry", () => {

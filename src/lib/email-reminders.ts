@@ -3,7 +3,6 @@ import {
   type ReminderAudience,
   type ReminderCategory,
 } from "@/lib/reminder-audience";
-import { easternCalendarDayWindow, isRoutineEmailCategory, routineEmailCategories } from "@/lib/email-delivery-plan";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
@@ -66,6 +65,15 @@ function playoffEliminationCopy(snapshot: unknown) {
   return `Eliminated from Pick'em today: ${names.join(", ")}.`;
 }
 
+function playoffChampionCopy(snapshot: unknown) {
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "playoff_day_recap" || !("championsCrowned" in snapshot) || !Array.isArray(snapshot.championsCrowned)) return "";
+  const names = snapshot.championsCrowned.filter((name): name is string => typeof name === "string");
+  if (!names.length) return "";
+  return names.length === 1
+    ? `Congratulations, ${names[0]} — Pick'em Champion!`
+    : `Congratulations to our Pick'em co-champions: ${names.join(", ")}!`;
+}
+
 function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
     ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Pick'em standings and this week's picks" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"></a>${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? `<a href="${siteUrl}/board#slate-matchups" style="display:block"><img alt="Active Survivor board" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></a>` : ""}</div>`
@@ -84,7 +92,9 @@ function messageHtml(reminder: Reminder) {
   const callToAction = isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
-  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${eliminationBlock}${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+  const championCopy = playoffChampionCopy(reminder.recap_snapshot);
+  const championBlock = championCopy ? `<p style="background:#ecfdf5;border-left:4px solid #007e72;color:#064e3b;font:700 16px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(championCopy)}</p>` : "";
+  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
@@ -103,40 +113,7 @@ async function recipientsForReminder(reminder: Reminder) {
     .map((player) => ({ playerId: player.id, email: player.notification_email! }));
 }
 
-async function routineEmailLimitReached(reminder: Reminder, recipient: EmailRecipient) {
-  if (!isRoutineEmailCategory(reminder.category)) return false;
-  const window = easternCalendarDayWindow();
-  const { data, error } = await supabaseAdmin
-    .from("email_reminder_deliveries")
-    .select("id, push_reminders!inner(category)")
-    .eq("player_id", recipient.playerId)
-    .eq("status", "sent")
-    .gte("delivered_at", window.start)
-    .lt("delivered_at", window.end)
-    .in("push_reminders.category", routineEmailCategories)
-    .limit(1);
-  if (error) throw new ReminderPreparationError("The routine email limit could not be checked safely.");
-  return (data?.length ?? 0) > 0;
-}
-
-async function recordRoutineEmailHold(reminder: Reminder, recipient: EmailRecipient) {
-  const { error } = await supabaseAdmin
-    .from("email_reminder_deliveries")
-    .upsert({
-      reminder_id: reminder.id,
-      player_id: recipient.playerId,
-      email_address: recipient.email,
-      status: "suppressed",
-      error_message: "Routine email limit reached for this Eastern calendar day.",
-    }, { onConflict: "reminder_id,player_id", ignoreDuplicates: true });
-  if (error) throw new ReminderPreparationError("The held email receipt could not be recorded.");
-}
-
 async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
-  if (await routineEmailLimitReached(reminder, recipient)) {
-    await recordRoutineEmailHold(reminder, recipient);
-    return { skipped: true, sent: false, failed: false, retryable: false, errorMessage: null };
-  }
   const { data: createdDelivery, error: createError } = await supabaseAdmin
     .from("email_reminder_deliveries")
     .insert({ reminder_id: reminder.id, player_id: recipient.playerId, email_address: recipient.email })
@@ -242,7 +219,7 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         to: [{ email: recipient.email }],
         subject: reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
+        textContent: `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),

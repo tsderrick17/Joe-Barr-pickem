@@ -77,7 +77,12 @@ holding the transition; never force the next period past that gate.
   least one player selected one of those games. An empty window is recorded as
   suppressed rather than retried.
 - Tuesday recap subjects name the completed week, Wednesday Slate subjects name
-  the incoming week, and playoff updates name the represented game date.
+  the incoming week, and playoff reveals name the round, matchup, and represented
+  game date.
+- During playoffs, Regular receives one recap after each game day is final and
+  graded. It names eliminations and any champion crowned. Full Card additionally
+  receives one public receipt at every kickoff; only truly simultaneous games
+  share a receipt, and later selections remain private.
 
 ## Recovery
 

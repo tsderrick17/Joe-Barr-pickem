@@ -73,16 +73,17 @@ lease, quota, pin, and atomic safeguards. See [OPERATIONS.md](OPERATIONS.md).
 Open **Commissioner → Reminders**, check the scheduled delivery and provider
 receipt, and send only the safe test email when diagnosing configuration. The
 Tuesday recap waits for accurate results, so first distinguish an unsettled
-week from a delivery failure. A receipt marked **held** means the routine
-one-email-per-Eastern-day limit intentionally protected that player's inbox;
-it is not a failed delivery. Pick-due and material early-lock notices bypass
-that routine limit.
+week from a delivery failure. A receipt marked **suppressed** means an automatic
+public reveal had no represented selections; it is not a failed delivery.
+Multiple valid messages may send on the same day, especially during playoffs.
 
 Automatic selection reminders are grouped into three player choices: Sunday
 11:00 AM, Sunday 3:00 PM, and Sunday 6:00 PM plus Monday 5:00 PM. Empty public
 reveal windows appear as intentionally suppressed and require no action. The
 Reminders page edits future standard wording and shows receipts; it does not
 create one-off scheduled pool messages or alter the automatic timetable.
+Regular includes the daily playoff recap after final grading. Full Card adds
+every playoff kickoff reveal; exact simultaneous kickoffs share one message.
 
 ### A deployment changes database behavior
 

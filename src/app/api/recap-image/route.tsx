@@ -61,9 +61,9 @@ function SlateImage({
   );
 }
 
-function PadRows({ rows, compact = false }: { rows: PublicRow[]; compact?: boolean }) {
+function PadRows({ rows, compact = false, grow = false }: { rows: PublicRow[]; compact?: boolean; grow?: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>
+    <div style={{ display: "flex", flex: grow ? 1 : undefined, flexDirection: "column", marginTop: 8 }}>
       {rows.map((row) => (
         <div key={row.name} style={{ alignItems: "center", background: PAPER, borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: compact ? 18 : 21, minHeight: compact ? 40 : 48 }}>
           <span style={{ borderRight: `3px solid ${MARGIN_RED}`, color: INK, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 19, fontWeight: 800, justifyContent: "flex-end", paddingRight: 10, width: 64 }}>{row.wins}</span>
@@ -76,6 +76,10 @@ function PadRows({ rows, compact = false }: { rows: PublicRow[]; compact?: boole
 }
 
 function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; title: string; rows: PublicRow[]; note: string }) {
+  const compact = rows.length > 10;
+  const columns = rows.length > 16
+    ? [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))]
+    : [rows];
   return (
     <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "42px 52px", width: "100%" }}>
       <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
@@ -83,7 +87,9 @@ function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; titl
         <span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{kicker}</span>
       </div>
       <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 25, fontWeight: 800, marginTop: 12, paddingBottom: 4 }}>{title.toUpperCase()}</div>
-      <PadRows rows={rows} />
+      <div style={{ display: "flex", gap: columns.length > 1 ? 24 : 0 }}>
+        {columns.map((column, index) => <PadRows compact={compact} grow key={index} rows={column} />)}
+      </div>
       <div style={{ borderTop: `2px solid ${INK}`, color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 14 }}>{note}</div>
     </div>
   );
@@ -118,7 +124,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "reveal" && snapshot.kind === "playoff_public_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker="PLAYOFF · PUBLIC RECEIPTS" title={`${snapshot.round} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Later playoff picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker={`${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={`${snapshot.round} · ${snapshot.matchup ?? snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="This kickoff's selections are now public. Later playoff picks remain private." />, { width: 1200, height: 1200 });
   }
 
   if (kind === "reveal" && snapshot.kind === "featured_window_reveal") {
@@ -129,6 +135,7 @@ export async function GET(request: NextRequest) {
 
   if (kind === "summary") {
     const title = snapshot.kind === "playoff_day_recap" ? snapshot.day : snapshot.week;
+    const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned ?? [] : [];
     return new ImageResponse(
       <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 48px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
@@ -136,6 +143,7 @@ export async function GET(request: NextRequest) {
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, letterSpacing: 2 }}>FINAL RESULTS</span>
         </div>
         <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, marginTop: 12, paddingBottom: 3 }}>{title.toUpperCase()}</div>
+        {champions.length ? <div style={{ alignSelf: "center", background: "#e8f4f0", borderLeft: `5px solid ${TEAL}`, display: "flex", fontFamily: "Georgia", fontSize: 22, fontWeight: 800, marginTop: 14, padding: "10px 16px" }}>{champions.length === 1 ? `${champions[0]} · PICK'EM CHAMPION` : `${champions.join(" & ")} · PICK'EM CO-CHAMPIONS`}</div> : null}
         <PadRows rows={snapshot.weeklySummary} compact />
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", flexDirection: "column", marginTop: 18, paddingTop: 12 }}>
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 2 }}>STANDINGS</span>

@@ -1,23 +1,3 @@
-import type { ReminderCategory } from "@/lib/reminder-audience";
-
-export const routineEmailCategories: ReminderCategory[] = [
-  "weekly",
-  "final_lines",
-  "sunday_final_lines",
-  "weekly_recap",
-  "playoff_day_recap",
-  "playoff_public_reveal",
-  "sunday_early_reveal",
-  "sunday_late_reveal",
-  "featured_window_reveal",
-];
-
-const routineCategories = new Set<ReminderCategory>(routineEmailCategories);
-
-export function isRoutineEmailCategory(category: ReminderCategory) {
-  return routineCategories.has(category);
-}
-
 function easternParts(value: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
     day: "2-digit",

@@ -1,4 +1,4 @@
-import { easternCalendarDayWindow } from "@/lib/email-delivery-plan";
+import { easternCalendarDayWindow } from "@/lib/eastern-calendar-day";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type AccountCapacity = {
