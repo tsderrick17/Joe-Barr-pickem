@@ -98,10 +98,10 @@ const scenarios: Record<string, Scenario> = {
   final: {
     title: "Week 4 - Monday final",
     week: "Week 4",
-    timing: "Tuesday - 9:00 AM ET",
-    explanation: "Every score is final. W/L stamps and the public record remain visible permanently for an easy audit.",
+    timing: "Tuesday - 6:30 AM ET",
+    explanation: "Every score and grade is final. The weekly recap is now safe to send, while W/L stamps and the public record remain visible permanently for an easy audit.",
     activeGames: [0, 1, 2, 3, 4, 5], lockedGames: [0, 1, 2, 3, 4, 5], finalGames: [0, 1, 2, 3, 4, 5], final: true, maxPicks: 2,
-    emailTitle: "Week 4 recap", emailCopy: "The recap links to the finished Pick'em Pad, shows only players who began the week eligible, and includes Survivor only while it is still active.", emailImage: "recap", selections: regularSelections, survivorSelection: { gameIndex: 0, side: "left" },
+    emailTitle: "Week 4 recap", emailCopy: "The final slate, current standings, and Survivor recap are ready to look over. Thanks for being part of the pool.", emailImage: "recap", selections: regularSelections, survivorSelection: { gameIndex: 0, side: "left" },
   },
   handoff: {
     title: "Week 5 - safe handoff",
@@ -226,7 +226,7 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
   }
 
   const publicRows = rows.map((row) => ({ ...row, picks: row.picks.filter((pick) => pick.label && !pick.isHidden) })).filter((row) => scenario.emailImage === "recap" || row.picks.length > 0);
-  return <div aria-label={`Sample ${scenario.emailImage === "recap" ? "final recap" : "public picks"} image included in this email`} className="mt-6 overflow-hidden border border-[#b7aea0] bg-[#fffaf0]" role="img">
+  const pickemImage = <div aria-label={`Sample ${scenario.emailImage === "recap" ? "final recap" : "public picks"} image included in this email`} className="overflow-hidden border border-[#b7aea0] bg-[#fffaf0]" role="img">
     <div className="flex items-end justify-between border-b-2 border-[#171719] px-4 py-3">
       <strong className="font-serif text-xl">Pick&apos;em Pad</strong>
       <span className="text-[10px] font-black tracking-[0.14em] text-[#008c82]">{scenario.emailImage === "recap" ? "FINAL RESULTS" : "PUBLIC RECEIPTS"}</span>
@@ -235,6 +235,31 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
       <strong className="text-right">{row.wins}</strong><strong className="border-l-2 border-[#d56b66] pl-2 font-serif">{row.firstName}</strong><span className="font-semibold text-slate-700">{row.picks.map((pick) => `${pick.label} ${pick.spread ?? ""}${pick.resultMark === "win" ? " W" : pick.resultMark === "loss" ? " L" : ""}`).join(" · ") || "—"}</span>
     </div>)}
     <p className="px-4 py-3 text-[10px] text-slate-500">SAMPLE IMAGE · {scenario.emailImage === "recap" ? "FINAL W/L STAMPS REMAIN MEMORIALIZED" : "FUTURE SELECTIONS REMAIN PRIVATE"}</p>
+  </div>;
+
+  if (scenario.emailImage !== "recap") return <div className="mt-6">{pickemImage}</div>;
+
+  const survivorRows = [
+    { status: "IN", name: "Tyler", picks: ["JAX", "BUF", "BAL", "IND"] },
+    { status: "IN", name: "Gary", picks: ["SEA", "KC", "PIT", "JAX"] },
+    { status: "OUT", name: "Zac", picks: ["PHI", "DAL", "SF", "CHI"] },
+  ];
+
+  return <div className="mt-6 space-y-4">
+    {pickemImage}
+    <div aria-label="Sample Survivor recap image included in this email" className="overflow-hidden border border-[#b7aea0] bg-[#fffdf8]" role="img">
+      <div className="flex items-end justify-between border-b-2 border-[#171719] px-4 py-3">
+        <strong className="font-serif text-xl">Survivor Table</strong>
+        <span className="text-[10px] font-black tracking-[0.14em] text-slate-600">WEEK 4</span>
+      </div>
+      <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] border-b-2 border-[#171719] px-3 py-2 text-[9px] font-black tracking-[0.08em] text-slate-600">
+        <span>STATUS</span><span>PLAYER</span>{[1, 2, 3, 4].map((week) => <span className="text-center" key={week}>W{week}</span>)}
+      </div>
+      {survivorRows.map((row) => <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] items-center border-b border-[#9cc6ea] px-3 py-2 text-[11px]" key={row.name}>
+        <strong className={row.status === "IN" ? "text-emerald-700" : "text-red-700"}>{row.status}</strong><strong className="font-serif">{row.name}</strong>{row.picks.map((pick, index) => <span className="text-center font-bold text-slate-600" key={`${row.name}-${index}`}>{pick}</span>)}
+      </div>)}
+      <p className="px-4 py-3 text-[10px] font-bold text-slate-500">2 IN · 1 OUT · ELIMINATED THIS WEEK: ZAC</p>
+    </div>
   </div>;
 }
 
@@ -275,7 +300,7 @@ export default function PreviewPage() {
               <option value="open">Week 4 - fresh blank ticket</option>
               <option value="saturday">Week 4 - Saturday before kickoff</option>
               <option value="sunday">Week 4 - Sunday 3 PM ET</option>
-              <option value="final">Week 4 - Monday final</option>
+              <option value="final">Week 4 - final + weekly recap email</option>
               <option value="handoff">Week 5 - safe handoff</option>
               <option value="playoff">Wild Card Sunday - partial locks</option>
             </select>
