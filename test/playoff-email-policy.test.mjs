@@ -31,3 +31,11 @@ test("playoff recaps explicitly memorialize eliminations and champions", () => {
   assert.match(emailReminders, /Pick'em co-champions/);
   assert.match(emailReminders, /Eliminated from Pick'em today/);
 });
+
+test("weekly Survivor recap names new eliminations and reports only entries remaining", () => {
+  assert.match(emailReminders, /weeklySurvivorUpdateCopy/);
+  assert.match(emailReminders, /was" : "were"\} eliminated this week/);
+  assert.match(emailReminders, /entry remains" : "entries remain"/);
+  assert.match(recapImage, /const survivorFooter/);
+  assert.doesNotMatch(recapImage, /survivor\.in\} in · \$\{snapshot\.survivor\.out\} out/);
+});
