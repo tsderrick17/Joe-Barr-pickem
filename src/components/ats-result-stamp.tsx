@@ -15,20 +15,9 @@ export default function AtsResultStamp({ result, className = "", tilted = true, 
     return (
       <strong
         aria-label={label}
-        className={`ats-result-stamp ats-result-stamp--ticket relative inline-flex shrink-0 ${mark === "W" ? "text-green-700" : "text-red-700"} ${className}`}
+        className={`ats-result-stamp ats-result-stamp--ticket relative inline-flex shrink-0 items-center justify-center ${mark === "W" ? "text-green-700" : "text-red-700"} ${className}`}
       >
-        <svg aria-hidden="true" className="ats-result-stamp__art" viewBox="0 0 34 34">
-          <circle className="ats-result-stamp__ring" cx="17" cy="17" r="14.25" />
-          <text
-            className={`ats-result-stamp__letter is-${mark.toLowerCase()}`}
-            dominantBaseline="central"
-            textAnchor="middle"
-            x="17"
-            y="17.5"
-          >
-            {mark}
-          </text>
-        </svg>
+        {mark}
       </strong>
     );
   }
