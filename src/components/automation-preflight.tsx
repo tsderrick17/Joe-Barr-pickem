@@ -47,6 +47,24 @@ export default function AutomationPreflight() {
     return () => { cancelled = true; };
   }, []);
 
+  const passedChecks = result?.checks.filter((check) => check.passed).length ?? 0;
+  const reviewChecks = result?.checks.filter((check) => !check.passed).length ?? 0;
+  const detailGrid = result ? <div className="mt-4 grid gap-4 lg:grid-cols-2">
+    {(Object.keys(groupLabels) as Group[]).map((group) => {
+      const checks = result.checks.filter((item) => item.group === group);
+      if (!checks.length) return null;
+      return <section className="border border-zinc-300 bg-white p-4" key={group}>
+        <h3 className="text-xs font-black tracking-[0.14em] text-zinc-600">{groupLabels[group].toUpperCase()}</h3>
+        <ul className="mt-3 divide-y divide-zinc-200">
+          {checks.map((item) => <li className="py-3 first:pt-0 last:pb-0" key={item.check_id}>
+            <p className={`text-sm font-bold ${item.passed ? "text-green-800" : "text-red-800"}`}>{item.passed ? "READY" : "REVIEW"} · {item.label}</p>
+            <p className="mt-1 text-sm leading-5 text-zinc-700">{item.detail}</p>
+          </li>)}
+        </ul>
+      </section>;
+    })}
+  </div> : null;
+
   return <section className="border-b-2 border-zinc-900 py-8" id="automation-preflight">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
@@ -58,22 +76,10 @@ export default function AutomationPreflight() {
     </div>
     {error ? <p className="mt-4 border-l-4 border-red-700 bg-red-50 p-4 font-semibold text-red-900">{error}</p> : null}
     {result ? <div className={`mt-5 border-2 p-4 ${result.status === "healthy" ? "border-green-800 bg-green-50" : "border-red-700 bg-red-50"}`}>
-      <p className="font-serif text-xl font-bold">{result.status === "healthy" ? "Every launch dependency is ready" : "Launch dependencies need attention"}</p>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        {(Object.keys(groupLabels) as Group[]).map((group) => {
-          const checks = result.checks.filter((item) => item.group === group);
-          if (!checks.length) return null;
-          return <section className="border border-zinc-300 bg-white p-4" key={group}>
-            <h3 className="text-xs font-black tracking-[0.14em] text-zinc-600">{groupLabels[group].toUpperCase()}</h3>
-            <ul className="mt-3 divide-y divide-zinc-200">
-              {checks.map((item) => <li className="py-3 first:pt-0 last:pb-0" key={item.check_id}>
-                <p className={`text-sm font-bold ${item.passed ? "text-green-800" : "text-red-800"}`}>{item.passed ? "READY" : "REVIEW"} · {item.label}</p>
-                <p className="mt-1 text-sm leading-5 text-zinc-700">{item.detail}</p>
-              </li>)}
-            </ul>
-          </section>;
-        })}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><p className="font-serif text-xl font-bold">{result.status === "healthy" ? "Every launch dependency is ready" : "Launch dependencies need attention"}</p><p className={`mt-1 text-sm font-semibold ${result.status === "healthy" ? "text-green-800" : "text-red-800"}`}>{result.status === "healthy" ? `${passedChecks} checks passed — no action needed.` : `${reviewChecks} item${reviewChecks === 1 ? "" : "s"} need${reviewChecks === 1 ? "s" : ""} your attention.`}</p></div>
       </div>
+      {result.status === "healthy" ? <details className="mt-4"><summary className="cursor-pointer text-sm font-bold underline underline-offset-2">See all {passedChecks} passed checks</summary>{detailGrid}</details> : detailGrid}
       <p className="mt-4 text-xs text-zinc-600">Checked {new Date(result.checkedAt).toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" })}.</p>
     </div> : null}
   </section>;
