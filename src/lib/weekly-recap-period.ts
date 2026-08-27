@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-const settledStatuses = new Set(["final", "cancelled", "no_contest"]);
+import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
 export type WeeklyRecapPeriod = {
   id: string;
@@ -59,12 +58,12 @@ export async function findLatestSettledWeeklyRecapPeriod(): Promise<WeeklyRecapP
     const games = (gamesResult.data ?? []).filter((game) => game.scoring_period_id === period.id);
     if (
       games.length > 0 &&
-      games.every((game) => settledStatuses.has(game.status)) &&
+      games.every((game) => isSettledGameStatus(game.status)) &&
       !pendingAtsPeriods.has(period.id) &&
       !pendingSurvivorPeriods.has(period.id)
     ) {
       const settlementTimes = games.map((game) =>
-        game.finalized_at ?? (["cancelled", "no_contest"].includes(game.status) ? game.kickoff_at : null),
+        game.finalized_at ?? (["postponed", "cancelled", "no_contest"].includes(game.status) ? game.kickoff_at : null),
       );
       if (settlementTimes.every((value): value is string => Boolean(value))) {
         return { ...period, settled_at: settlementTimes.sort().at(-1)! } as WeeklyRecapPeriod;

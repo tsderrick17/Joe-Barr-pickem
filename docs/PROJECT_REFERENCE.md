@@ -71,11 +71,11 @@ be replayed.
   route as the rest of the app. A temporary profile-read failure does not erase
   an already verified identity; an invalid session returns the player to PIN
   sign-in instead of leaving a half-signed-in page.
-- PIN sign-in is routed through the application. Ten different invalid PINs
-  from one privacy-safe source fingerprint in 15 minutes open a Commissioner
-  incident and email alert. Successful login clears prior failures, no player
-  is locked out by this alert, and raw PINs or network addresses are never
-  retained in the security audit.
+- PIN sign-in is routed through the application. Five recent failures from one
+  privacy-safe source fingerprint start a one-minute cooldown; ten start a
+  15-minute cooldown and open a Commissioner incident and email alert.
+  Successful login clears prior failures, no individual player PIN is locked
+  by this protection, and raw PINs or network addresses are never retained.
 - A player can always see their own selections.
 - Another player's selection remains hidden until that selected game's kickoff.
   Reveal is per game, not all-at-once for the week.
@@ -112,11 +112,10 @@ be replayed.
 - A straight-up win advances the player. A loss or tie eliminates the entry.
 - Missing the required selection by the final eligible kickoff eliminates the
   active entry.
-- A postponed, cancelled, or no-contest selection never advances Survivor.
-  Voided selections do not consume the team and can be replaced while a legal
-  future game remains. If a no-contest has no legal replacement left, the
-  published settlement rule records the ATS selection as a loss and eliminates
-  the Survivor entry.
+- A postponed, cancelled, or no-contest selection is void, not a loss, and
+  never advances Survivor. Voided selections do not consume the team and can
+  be replaced while a legal future game remains. If no legal replacement
+  remains, the disruption does not eliminate the entry or hold week rollover.
 - Survivor results never count toward season-long ATS wins or ATS percentage.
 
 ## Weekly lifecycle
@@ -132,6 +131,9 @@ across daylight-saving changes.
    therefore lock earlier without special commissioner action.
 3. Official lines lock at their configured time. Picks remain editable until
    kickoff, not merely until the line locks.
+   If the provider is unavailable, the most recent preliminary line may lock
+   only when it is no more than 24 hours old. An older or unverified line stays
+   preliminary and opens an urgent Commissioner review instead of being guessed.
 4. Final-score eligibility begins three hours after kickoff. Automation polls
    only eligible unfinished games, imports verified finals, and grades ATS and
    Survivor atomically.
@@ -144,17 +146,18 @@ across daylight-saving changes.
 7. Default handoff never hides history. Every completed period remains
    available in the archive/week selector.
 
-Period completion is fail-closed: a postponed/cancelled review, missing line,
-pending grade, or other unresolved integrity condition prevents the automatic
-handoff and surfaces a commissioner review instead.
+Period completion is fail-closed for missing lines, pending grades, or other
+unresolved competitive records. Verified postponed, cancelled, and no-contest
+games settle as void disruptions and do not indefinitely hold the handoff.
 
 ## Playoff eligibility
 
 Playoff competition uses cumulative season ATS wins and the remaining possible
 playoff wins.
 
-- At the beginning of each Eastern game day, the database creates one immutable
-  eligibility snapshot for every active player.
+- At the beginning of each Eastern game day that actually contains a playoff
+  game, the database creates one immutable eligibility snapshot for every
+  active player. It waits for all earlier game days to finish reconciling first.
 - Wins from games on that same day do not change who may compete later that
   day. If a player could tie the leader at day start, every eligible game that
   day still counts for that player.
@@ -240,6 +243,9 @@ may enrich spreads but cannot override canonical schedule assignments.
 
 - Scheduled and commissioner-triggered mutation paths claim the same
   token-owned execution lease. A duplicate run exits instead of overlapping.
+- Reminder workers claim at most three due messages per pass. An interrupted
+  claim is reclaimed only after 20 minutes and only when no recipient receipt
+  exists, preventing both a stranded queue and uncertain duplicate delivery.
 - Score polling backs off per unfinished game at 15 minutes, 30 minutes, one
   hour, two hours, then six hours.
 - Low provider allowance reserves remaining credits for line integrity.

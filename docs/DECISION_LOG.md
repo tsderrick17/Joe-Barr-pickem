@@ -295,3 +295,22 @@ an earlier or later game. Subjects name the round, matchup, and Eastern date.
 Daily recaps send only after final grading, explicitly list new eliminations,
 and crown the Pick'em champion or co-champions on the final day. Empty public
 windows remain terminal suppressions rather than retries.
+
+## 2026-08-26 — REF-027 — Harden lifecycle edges without changing pool play
+
+**Status:** Accepted
+
+Enforce the current/next-week pick window inside the database as well as the
+application, including replacement and clear operations, and reject selections
+for any game no longer scheduled. Freeze playoff eligibility only on a real
+playoff game day after every earlier game day has reconciled. Bound reminder
+claims to three items, extend their worker lease, and reclaim a crashed claim
+only when no delivery receipt exists.
+
+Use a preliminary line as an automatic provider fallback only when it is no
+more than 24 hours old; older or invalid history remains preliminary and opens
+Commissioner review. For pick'em (`PK`), keep the home team in the pool's
+favorite-side position. Slow repeated PIN guesses by source fingerprint after
+five and ten failures without ever locking an individual player's valid PIN.
+Treat verified postponed, cancelled, and no-contest selections as audited
+voids—not losses—and allow those settled disruptions to stop holding rollover.

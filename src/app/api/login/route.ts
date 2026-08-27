@@ -16,8 +16,32 @@ function requestSource(request: NextRequest) {
     || "unknown";
 }
 
-function response(body: Record<string, unknown>, status = 200) {
-  return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+function response(
+  body: Record<string, unknown>,
+  status = 200,
+  headers: Record<string, string> = {},
+) {
+  return NextResponse.json(body, {
+    status,
+    headers: { "Cache-Control": "no-store", ...headers },
+  });
+}
+
+async function sourceCooldownSeconds(sourceFingerprint: string) {
+  const { data, error } = await supabaseAdmin.rpc(
+    "pin_login_cooldown_seconds",
+    { attempt_source_fingerprint: sourceFingerprint },
+  );
+  if (error) throw new Error("PIN cooldown could not be checked.");
+  return Math.max(0, Number(data ?? 0));
+}
+
+function cooldownResponse(retryAfter: number) {
+  return response(
+    { error: "Too many sign-in attempts. Please wait a few minutes and try again." },
+    429,
+    { "Retry-After": String(Math.max(1, Math.ceil(retryAfter))) },
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -44,6 +68,13 @@ export async function POST(request: NextRequest) {
     return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
   }
 
+  try {
+    const retryAfter = await sourceCooldownSeconds(sourceFingerprint);
+    if (retryAfter > 0) return cooldownResponse(retryAfter);
+  } catch {
+    return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
+  }
+
   const auth = createClient(url, publishableKey, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
     global: { headers: { "sb-forwarded-for": requestSource(request) } },
@@ -59,6 +90,12 @@ export async function POST(request: NextRequest) {
       attempt_pin_fingerprint: pinFingerprint,
     });
     if (recordError) return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
+    try {
+      const retryAfter = await sourceCooldownSeconds(sourceFingerprint);
+      if (retryAfter > 0) return cooldownResponse(retryAfter);
+    } catch {
+      return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
+    }
     return response({ error: "That PIN was not recognized. Please try again." }, 401);
   }
 

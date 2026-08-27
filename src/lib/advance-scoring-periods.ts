@@ -1,6 +1,7 @@
 import { weekRolloverAt } from "@/lib/week-rollover";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
 type PeriodRow = {
   id: string;
@@ -102,25 +103,13 @@ export async function advanceScoringPeriods(
   }
 
   const activeGames = games as GameRow[];
-  const exceptionGames = activeGames.filter(
-    (game) => game.status === "postponed",
-  );
-
-  if (exceptionGames.length > 0) {
-    return {
-      action: "blocked",
-      currentWeek: activePeriod.display_name,
-      nextWeek: nextPeriod?.display_name ?? null,
-      rolloverAt: null,
-      reason: "A postponed game requires commissioner review or rescheduling.",
-    };
-  }
-
-  // Declared cancellations and no-contests are terminal, audited outcomes.
+  // Disrupted games are terminal, audited outcomes unless the schedule
+  // provider reschedules them first. A reschedule changes the game back to
+  // scheduled and naturally returns it to this unfinished check.
   // They settle their affected picks through the disruption workflow instead
   // of waiting forever for a box score that will never exist.
   const unfinishedGames = activeGames.filter(
-    (game) => !["final", "cancelled", "no_contest"].includes(game.status),
+    (game) => !isSettledGameStatus(game.status),
   );
 
   if (activeGames.length === 0 || unfinishedGames.length > 0) {
@@ -160,7 +149,7 @@ export async function advanceScoringPeriods(
   const settlementTimes = activeGames
     .map((game) =>
       game.finalized_at ??
-      (["cancelled", "no_contest"].includes(game.status)
+      (["postponed", "cancelled", "no_contest"].includes(game.status)
         ? game.kickoff_at
         : null),
     )
