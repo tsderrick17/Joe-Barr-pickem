@@ -2251,70 +2251,61 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-result {
   display: inline-flex;
-  font-family: Arial, sans-serif;
-  font-size: .98rem;
-  font-weight: 900;
-  line-height: 1;
-  margin-left: .4rem;
+  margin-left: .34rem;
   position: relative;
-  top: -.14rem;
+  top: -.1rem;
   transform: none;
-  vertical-align: baseline;
+  vertical-align: middle;
 }
 
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 
-/* A settled result should feel physically pressed into the paper rather than
-   tacked on as an app icon. The uneven rings and broken ink keep each mark
-   readable while giving the ticket a small rubber-stamp imperfection. */
+/* One purpose-built ink mark replaces the layered CSS badge. The broken,
+   hand-drawn ring and worn serif letter read as a press on paper without
+   introducing a box, a second ring, or a rotated UI ornament. */
 .ats-result-stamp--ticket {
-  align-items: center;
-  background: transparent;
-  border: 1px solid currentColor;
-  border-radius: 49% 53% 47% 51% / 52% 46% 54% 48%;
-  box-sizing: border-box;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.08rem;
-  height: 1.72rem;
-  justify-content: center;
-  letter-spacing: -.03em;
-  min-width: 1.72rem;
+  height: 1.9rem;
+  width: 1.9rem;
+}
+
+.ats-result-stamp__art {
+  display: block;
+  height: 100%;
   overflow: visible;
-  text-indent: 0;
-  width: 1.72rem;
+  width: 100%;
 }
 
-.ats-result-stamp--ticket::before {
-  border: 1px solid currentColor;
-  border-radius: 53% 47% 51% 49% / 48% 55% 45% 52%;
-  content: "";
-  inset: 2.5px 2px 2px 2.5px;
-  opacity: .22;
-  pointer-events: none;
-  position: absolute;
-  transform: rotate(5deg);
+.ats-result-stamp__ring {
+  fill: none;
+  opacity: .78;
+  stroke: currentColor;
+  stroke-dasharray: 8.5 .65 12 .45 5 .8;
+  stroke-linecap: round;
+  stroke-width: 1.15;
 }
 
-.ats-result-stamp--ticket::after {
-  align-items: center;
-  background:
-    radial-gradient(circle at 30% 24%, var(--ticket-paper) 0 .55px, transparent .8px),
-    radial-gradient(circle at 68% 38%, var(--ticket-paper) 0 .45px, transparent .7px),
-    radial-gradient(circle at 42% 62%, var(--ticket-paper) 0 .6px, transparent .85px),
-    radial-gradient(circle at 73% 77%, var(--ticket-paper) 0 .5px, transparent .75px);
-  background-clip: text;
-  color: transparent;
-  content: attr(data-mark);
-  display: flex;
-  font: inherit;
-  inset: 0;
-  justify-content: center;
-  letter-spacing: inherit;
-  pointer-events: none;
-  position: absolute;
-  text-indent: 0;
-  -webkit-background-clip: text;
+.ats-result-stamp__letter {
+  fill: currentColor;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  paint-order: stroke fill;
+  stroke: currentColor;
+  stroke-width: .22px;
+}
+
+.ats-result-stamp__letter.is-l {
+  font-size: 24px;
+}
+
+.ats-result-stamp__wear {
+  fill: none;
+  opacity: .88;
+  stroke: var(--ticket-paper);
+  stroke-linecap: round;
+  stroke-width: .9;
 }
 
 .my-ticket-selection small {

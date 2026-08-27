@@ -15,10 +15,13 @@ test("the ticket uses upright result stamps and aligned open states", async () =
   assert.doesNotMatch(ticket, /ONE PICK DUE/);
 
   assert.match(ticket, /variant="ticket"/);
-  assert.match(styles, /\.ats-result-stamp--ticket \{[\s\S]*?border: 1px solid currentColor;[\s\S]*?font-family: Georgia/);
-  assert.match(styles, /\.ats-result-stamp--ticket::before \{[\s\S]*?opacity: \.22;/);
-  assert.match(styles, /\.ats-result-stamp--ticket::after \{[\s\S]*?content: attr\(data-mark\);/);
-  assert.doesNotMatch(styles, /\.ats-result-stamp--ticket::after \{[^}]*border-(?:left|right):/);
+  const stamp = await readFile(new URL("../src/components/ats-result-stamp.tsx", import.meta.url), "utf8");
+  assert.match(stamp, /className="ats-result-stamp__ring"/);
+  assert.match(stamp, /className=\{`ats-result-stamp__letter is-\$\{mark\.toLowerCase\(\)\}`\}/);
+  assert.match(stamp, /className="ats-result-stamp__wear"/);
+  assert.match(styles, /\.ats-result-stamp__ring \{[\s\S]*?stroke-width: 1\.15;/);
+  assert.match(styles, /\.ats-result-stamp__letter \{[\s\S]*?font-family: Georgia/);
+  assert.doesNotMatch(styles, /\.ats-result-stamp--ticket::(?:before|after)/);
   assert.match(styles, /\.my-ticket-open \{[\s\S]*?font: 900 \.84rem\/1 "Courier New", monospace;/);
   assert.match(styles, /Keep the completion receipt and status stamp from visually merging/);
   assert.match(styles, /\.my-ticket-footer \{\s*column-gap: \.65rem;\s*grid-template-columns: minmax\(0, 1fr\) minmax\(4\.75rem, auto\) 3\.2rem;/);
