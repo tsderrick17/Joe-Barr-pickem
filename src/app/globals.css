@@ -2289,6 +2289,11 @@ html[data-theme="night"] .newspaper-clipping::after {
   letter-spacing: -1px;
 }
 
+.ats-result-stamp__letter.is-w {
+  font-size: 19px;
+  letter-spacing: -1.2px;
+}
+
 .ats-result-stamp__letter.is-l {
   font-size: 24px;
 }
