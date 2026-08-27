@@ -2826,6 +2826,29 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   letter-spacing: .025em;
 }
 
+/* Wild Card and Divisional rounds carry six and four picks per player. Keep
+   those handwritten columns close enough to scan as one ledger rather than
+   stretching them across the broad regular-season rhythm. */
+.playoff-scoreboard--dense .pickem-ledger-row td {
+  padding-left: .2rem;
+  padding-right: .2rem;
+}
+
+.playoff-scoreboard--dense .pickem-ledger-wins {
+  padding-right: .24rem !important;
+  width: 2.4rem;
+}
+
+.playoff-scoreboard--dense .pickem-ledger-player {
+  padding-left: .3rem;
+  padding-right: .18rem;
+  width: 5.5rem;
+}
+
+.playoff-scoreboard--dense .playoff-scoreboard-pick {
+  white-space: nowrap;
+}
+
 @media (max-width: 639px) {
   .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
