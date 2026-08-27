@@ -12,6 +12,7 @@ export default function AtsResultStamp({ result, className = "", tilted = true, 
   return (
     <strong
       aria-label={`Against the spread: ${mark === "W" ? "win" : "loss"}`}
+      data-mark={variant === "ticket" ? mark : undefined}
       className={`ats-result-stamp relative -top-0.5 inline-block shrink-0 ${variant === "ticket" ? "ats-result-stamp--ticket" : ""} ${tilted ? "-rotate-[7deg]" : ""} text-sm font-black leading-none ${mark === "W" ? "text-green-700" : "text-red-700"} ${className}`}
     >
       {mark}
