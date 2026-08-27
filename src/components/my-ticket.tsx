@@ -74,9 +74,9 @@ export default function MyTicket({
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
-            <strong>{isPlayoff ? "ROUND LINES" : "GAME LINES"}</strong>
+            <strong>GAME LINES</strong>
           </div>
-          <ol className="my-ticket-picks">
+          <ol className={`my-ticket-picks ${isPlayoff ? `is-playoff-picks--${maxPicks}` : ""}`}>
             {Array.from({ length: maxPicks }, (_, index) => {
               const pick = picks[index];
               return (
@@ -84,7 +84,7 @@ export default function MyTicket({
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
-                        <strong>{pick.team}<AtsResultStamp className="my-ticket-result" result={pick.resultMark} tilted={false} /></strong>
+                        <strong>{pick.team}<AtsResultStamp className="my-ticket-result" result={pick.resultMark} tilted={false} variant="ticket" /></strong>
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
@@ -114,7 +114,7 @@ export default function MyTicket({
             <div className="my-ticket-survivor-pick">
               <div>
                 <small>OFFICIAL SELECTION</small>
-                <strong>{survivorPick.team}<AtsResultStamp className="my-ticket-result" result={survivorPick.resultMark} tilted={false} /></strong>
+                <strong>{survivorPick.team}<AtsResultStamp className="my-ticket-result" result={survivorPick.resultMark} tilted={false} variant="ticket" /></strong>
                 <small>{survivorPick.kickoff}</small>
               </div>
             </div>

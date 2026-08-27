@@ -2171,6 +2171,19 @@ html[data-theme="night"] .newspaper-clipping::after {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* In the two larger playoff rounds, read each stub straight down before
+   crossing to the next column—just like a printed bracket sheet. */
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4 {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, minmax(2.45rem, auto));
+}
+
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, minmax(2.45rem, auto));
+}
+
 .my-ticket-section {
   min-width: 0;
   padding: .68rem .75rem .58rem 0;
@@ -2236,20 +2249,66 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-result {
-  display: inline-block;
+  display: inline-flex;
   font-family: Arial, sans-serif;
-  font-size: 1.05rem;
+  font-size: .98rem;
   font-weight: 900;
   line-height: 1;
-  margin-left: .3rem;
+  margin-left: .4rem;
   position: relative;
-  top: -.08rem;
+  top: -.14rem;
   transform: none;
   vertical-align: baseline;
 }
 
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
+
+/* A settled result should feel physically pressed into the paper rather than
+   tacked on as an app icon. The uneven rings and broken ink keep each mark
+   readable while giving the ticket a small rubber-stamp imperfection. */
+.ats-result-stamp--ticket {
+  align-items: center;
+  background:
+    radial-gradient(circle at 18% 23%, currentColor 0 .7px, transparent .9px),
+    radial-gradient(circle at 79% 29%, currentColor 0 .55px, transparent .8px),
+    radial-gradient(circle at 28% 78%, currentColor 0 .55px, transparent .8px),
+    radial-gradient(circle at 73% 73%, currentColor 0 .7px, transparent .95px);
+  border: 2px solid currentColor;
+  border-radius: 49% 53% 47% 51% / 52% 46% 54% 48%;
+  box-sizing: border-box;
+  height: 1.72rem;
+  justify-content: center;
+  letter-spacing: -.08em;
+  min-width: 1.72rem;
+  overflow: visible;
+  text-indent: -.07em;
+  width: 1.72rem;
+}
+
+.ats-result-stamp--ticket::before {
+  border: 1px solid currentColor;
+  border-radius: 53% 47% 51% 49% / 48% 55% 45% 52%;
+  content: "";
+  inset: 2px;
+  opacity: .42;
+  pointer-events: none;
+  position: absolute;
+  transform: rotate(5deg);
+}
+
+.ats-result-stamp--ticket::after {
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  content: "";
+  height: 72%;
+  left: 18%;
+  opacity: .18;
+  pointer-events: none;
+  position: absolute;
+  transform: rotate(-3deg);
+  width: 64%;
+}
 
 .my-ticket-selection small {
   color: #665e51;
@@ -2785,8 +2844,10 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-section { padding: .58rem 0; }
 
   .my-ticket-columns.is-playoff .my-ticket-picks {
+    grid-auto-flow: row;
     column-gap: 0;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
   }
 
   .my-ticket-section + .my-ticket-section {
