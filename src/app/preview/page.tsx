@@ -162,11 +162,16 @@ function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
   const completedFinalGames = scenario.completedFinalGames ?? scenario.finalGames;
   return Object.keys(priorWins).map((name) => {
     const selections = scenario.selections[name];
-    const picks = Array.from({ length: scenario.maxPicks }, (_, index) => {
-      const selection = selections[index] ?? null;
-      if (!selection) return { label: null, isHidden: false, resultMark: "" };
-      const game = games[index];
-      const started = scenario.activeGames.includes(index) || scenario.finalGames.includes(index);
+    const selectedGames = selections
+      .map((selection, gameIndex) => ({ selection, gameIndex }))
+      .filter((item): item is { selection: Side; gameIndex: number } => item.selection !== null)
+      .slice(0, scenario.maxPicks);
+    const picks = Array.from({ length: scenario.maxPicks }, (_, slotIndex) => {
+      const selectedGame = selectedGames[slotIndex];
+      if (!selectedGame) return { label: null, isHidden: false, resultMark: "" };
+      const { selection, gameIndex } = selectedGame;
+      const game = games[gameIndex];
+      const started = scenario.activeGames.includes(gameIndex) || scenario.finalGames.includes(gameIndex);
       const visible = name === "Tyler" || started;
       const spread = Number(game.line.replace(/[^0-9.]/g, ""));
       const label = selection === "left" ? game.left : game.right;
@@ -174,11 +179,11 @@ function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
         label: visible ? label : null,
         abbreviation: abbreviations[label],
         isHidden: !visible,
-                resultMark: scenario.finalGames.includes(index)
-                  ? resultFor(game, selection, true) ?? ""
-                  : "",
+        resultMark: scenario.finalGames.includes(gameIndex)
+          ? resultFor(game, selection, true) ?? ""
+          : "",
         spread: visible ? `${selection === "left" ? "-" : "+"}${spread.toFixed(1)}` : null,
-        isLineLocked: scenario.lockedGames.includes(index),
+        isLineLocked: scenario.lockedGames.includes(gameIndex),
       };
     });
     const weekWins = countPickemWins(games.map((game, index) => {
@@ -267,7 +272,7 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
       {survivorRows.map((row) => <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] items-center border-b border-[#9cc6ea] px-3 py-2 text-[11px]" key={row.name}>
         <strong className={row.status === "IN" ? "text-emerald-700" : "text-red-700"}>{row.status}</strong><strong className="font-serif">{row.name}</strong>{row.picks.map((pick, index) => <span className="text-center font-bold text-slate-600" key={`${row.name}-${index}`}>{pick}</span>)}
       </div>)}
-      <p className="px-4 py-3 text-[10px] font-bold text-slate-500">2 IN · 1 OUT · ELIMINATED THIS WEEK: ZAC</p>
+      <p className="px-4 py-3 text-[10px] font-bold text-slate-500">ZAC WAS ELIMINATED THIS WEEK · 2 ENTRIES REMAIN</p>
     </div>
   </div>;
 }

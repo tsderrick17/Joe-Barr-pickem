@@ -156,12 +156,22 @@ export async function GET(request: NextRequest) {
 
   if (kind === "survivor" && snapshot.kind !== "weekly_recap") return new Response("Not found", { status: 404 });
   if (kind === "survivor") {
+    const eliminatedThisWeek = snapshot.survivor.rows.filter((row) => row.eliminatedInRecapWeek).map((row) => row.name);
+    const eliminationSummary = eliminatedThisWeek.length
+      ? `${eliminatedThisWeek.join(", ")} ${eliminatedThisWeek.length === 1 ? "was" : "were"} eliminated this week.`
+      : null;
+    const remainingSummary = `${snapshot.survivor.in} ${snapshot.survivor.in === 1 ? "entry remains" : "entries remain"}.`;
+    const survivorFooter = [
+      snapshot.survivor.championCrownedInRecapWeek ? `Congratulations, ${snapshot.survivor.championName ?? "champion"}!` : null,
+      eliminationSummary,
+      remainingSummary,
+    ].filter(Boolean).join(" · ");
     return new ImageResponse(
       <div style={{ background: PAPER, color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 40px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `3px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 13 }}><span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Survivor Table</span><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{snapshot.week.toUpperCase()}</span></div>
         <div style={{ alignItems: "center", borderBottom: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, marginTop: 16, padding: "0 8px 10px" }}><span style={{ display: "flex", width: 62 }}>STATUS</span><span style={{ display: "flex", width: 170 }}>PLAYER</span>{Array.from({ length: snapshot.survivor.visibleWeeks }, (_, index) => <span key={index} style={{ display: "flex", justifyContent: "center", width: 54 }}>{index + 1}</span>)}</div>
         {snapshot.survivor.rows.map((row) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 18, minHeight: 42, padding: "0 8px" }}><span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 13, fontWeight: 800, width: 62 }}>{row.status}</span><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span>{row.picks.map((pick, pickIndex) => <span key={pickIndex} style={{ color: "#334155", display: "flex", fontFamily: "Arial", fontSize: 12, fontWeight: 800, justifyContent: "center", width: 54 }}>{pick ?? "·"}</span>)}</div>)}
-        <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 13 }}>{snapshot.survivor.championCrownedInRecapWeek ? `Congratulations, ${snapshot.survivor.championName ?? "champion"}!` : `${snapshot.survivor.in} in · ${snapshot.survivor.out} out · The table begins with 10 weeks and expands with the season.`}</div>
+        <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 13 }}>{survivorFooter}</div>
       </div>,
       { width: 1200, height: 1200 },
     );
