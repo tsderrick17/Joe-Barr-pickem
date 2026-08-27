@@ -84,7 +84,7 @@ export default function MyTicket({
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
-                        <strong>{pick.team}<AtsResultStamp className="ml-1" result={pick.resultMark} /></strong>
+                        <strong>{pick.team}<AtsResultStamp className="my-ticket-result" result={pick.resultMark} tilted={false} /></strong>
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
@@ -92,7 +92,12 @@ export default function MyTicket({
                       </span>
                     </>
                   ) : (
-                    <span className="my-ticket-open">OPEN</span>
+                    <>
+                      <span className="my-ticket-selection">
+                        <strong className="my-ticket-open">OPEN</strong>
+                      </span>
+                      <span className="my-ticket-line">—</span>
+                    </>
                   )}
                 </li>
               );
@@ -109,7 +114,7 @@ export default function MyTicket({
             <div className="my-ticket-survivor-pick">
               <div>
                 <small>OFFICIAL SELECTION</small>
-                <strong>{survivorPick.team}<AtsResultStamp className="ml-1" result={survivorPick.resultMark} /></strong>
+                <strong>{survivorPick.team}<AtsResultStamp className="my-ticket-result" result={survivorPick.resultMark} tilted={false} /></strong>
                 <small>{survivorPick.kickoff}</small>
               </div>
             </div>
@@ -118,7 +123,9 @@ export default function MyTicket({
           ) : survivorStatus === "complete" ? (
             <p className="my-ticket-survivor-state">POOL COMPLETE</p>
           ) : survivorAvailable ? (
-            <p className="my-ticket-survivor-state">ONE PICK DUE</p>
+            <div className="my-ticket-survivor-pick is-open">
+              <strong className="my-ticket-open">OPEN</strong>
+            </div>
           ) : (
             <p className="my-ticket-survivor-state">NOT AVAILABLE</p>
           )}

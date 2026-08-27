@@ -2231,20 +2231,21 @@ html[data-theme="night"] .newspaper-clipping::after {
   min-width: 0;
 }
 
-.my-ticket-selection strong {
+.my-ticket-selection > strong {
   font: 900 .84rem/1.1 "Courier New", monospace;
 }
 
 .my-ticket-result {
   display: inline-block;
   font-family: Arial, sans-serif;
-  font-size: .9em;
+  font-size: 1.05rem;
   font-weight: 900;
   line-height: 1;
-  margin-left: .22rem;
+  margin-left: .3rem;
   position: relative;
-  top: -.12rem;
-  transform: rotate(-7deg);
+  top: -.08rem;
+  transform: none;
+  vertical-align: baseline;
 }
 
 .my-ticket-result.is-w { color: #16834e; }
@@ -2269,10 +2270,9 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .my-ticket-open {
-  color: #766e60;
-  font: 800 .64rem/1 Arial, sans-serif;
-  grid-column: 2 / 4;
-  letter-spacing: .09em;
+  color: #923c24;
+  font: 900 .84rem/1 "Courier New", monospace;
+  letter-spacing: .12em;
 }
 
 .my-ticket-due {
@@ -2300,9 +2300,18 @@ html[data-theme="night"] .newspaper-clipping::after {
   letter-spacing: .1em;
 }
 
-.my-ticket-survivor-pick strong {
+.my-ticket-survivor-pick > div > strong {
   font: 900 .84rem/1.15 "Courier New", monospace;
   margin-top: .16rem;
+}
+
+.my-ticket-survivor-pick.is-open {
+  min-height: 2.45rem;
+  padding: .72rem 0;
+}
+
+.my-ticket-survivor-pick.is-open .my-ticket-open {
+  margin: 0;
 }
 
 .my-ticket-survivor-state {
@@ -2432,6 +2441,10 @@ html[data-theme="night"] .my-ticket-number,
 html[data-theme="night"] .my-ticket-open,
 html[data-theme="night"] .my-ticket-instructions {
   color: #bdb19b;
+}
+
+html[data-theme="night"] .my-ticket-open {
+  color: #f1b38c;
 }
 
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
