@@ -26,9 +26,10 @@ test("withholds final-line mail until every playable game today has an official 
   assert.equal(isGameDaySlateReady({ activePeriod: active, games, officialLineGameIds: new Set(["a", "b"]), easternDay, now }).ready, true);
 });
 
-test("weekly recaps wait for all grades, but accept a settled postponed or cancelled game", () => {
+test("weekly recaps wait for all grades, while disrupted games settle without a box score", () => {
   const period = { id: "week-6" };
   assert.equal(isRecapReady({ period, games: [{ status: "final" }, { status: "postponed" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, true);
+  assert.equal(isRecapReady({ period, games: [{ status: "cancelled" }, { status: "no_contest" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, true);
   assert.equal(isRecapReady({ period, games: [{ status: "final" }], pendingAtsCount: 1, pendingSurvivorCount: 0 }).ready, false);
   assert.equal(isRecapReady({ period, games: [{ status: "live" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, false);
 });
@@ -39,6 +40,7 @@ test("playoff-day recaps wait for the latest started day to settle and grade", (
   assert.equal(isPlayoffDayRecapReady({ ...base, games: [{ kickoff_at: "2026-01-18T18:00:00.000Z", status: "live" }], pendingAtsCount: 0 }).ready, false);
   assert.equal(isPlayoffDayRecapReady({ ...base, games: [{ kickoff_at: "2026-01-18T18:00:00.000Z", status: "final" }], pendingAtsCount: 1 }).ready, false);
   assert.equal(isPlayoffDayRecapReady({ ...base, games: [{ kickoff_at: "2026-01-18T18:00:00.000Z", status: "final" }, { kickoff_at: "2026-01-17T21:00:00.000Z", status: "final" }], pendingAtsCount: 0 }).ready, true);
+  assert.equal(isPlayoffDayRecapReady({ ...base, games: [{ kickoff_at: "2026-01-18T18:00:00.000Z", status: "no_contest" }], pendingAtsCount: 0 }).ready, true);
 });
 
 test("Sunday reveal mail waits until every game in the selected window has kicked off", () => {

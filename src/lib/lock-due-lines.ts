@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
+import { isFallbackLineFresh } from "@/lib/line-fallback-policy.js";
 
 type DueGame = {
   id: string;
@@ -61,19 +62,6 @@ export type LockLinesResult = {
   requestsRemaining: string | null;
   warnings: string[];
 };
-
-function deterministicTeamId(game: DueGame) {
-  const characterTotal = game.external_game_id
-    .split("")
-    .reduce(
-      (total, character) => total + character.charCodeAt(0),
-      0,
-    );
-
-  return characterTotal % 2 === 0
-    ? game.away_team_id
-    : game.home_team_id;
-}
 
 export async function lockDueLines(
   currentTime = new Date(),
@@ -337,10 +325,9 @@ async function lockDueLinesInternal(
     }
 
     if (isPickEm) {
-      const previousLine = latestHistoryByGameId.get(game.id);
-      const favoriteTeamId =
-        previousLine?.favorite_team_id ??
-        deterministicTeamId(game);
+      // The pool's PK convention is home-team left. Keeping that designation
+      // stable also makes tickets, Slate rows, and immutable emails agree.
+      const favoriteTeamId = game.home_team_id;
 
       decisions.push({
         gameId: game.id,
@@ -365,7 +352,10 @@ async function lockDueLinesInternal(
 
     const previousLine = latestHistoryByGameId.get(game.id);
 
-    if (previousLine?.favorite_team_id) {
+    if (
+      previousLine?.favorite_team_id &&
+      isFallbackLineFresh(previousLine.captured_at, checkedAt)
+    ) {
       decisions.push({
         gameId: game.id,
         favoriteTeamId: previousLine.favorite_team_id,
@@ -385,6 +375,16 @@ async function lockDueLinesInternal(
       teamNameById.get(game.home_team_id) ?? "Unknown team";
 
     missingGames.push(`${awayTeam} at ${homeTeam}`);
+    if (previousLine?.favorite_team_id) {
+      const ageMilliseconds =
+        Date.parse(checkedAt) - Date.parse(previousLine.captured_at);
+      const ageDescription = Number.isFinite(ageMilliseconds)
+        ? `${Math.max(0, Math.floor(ageMilliseconds / (60 * 60 * 1000)))} hours old`
+        : "too old to verify";
+      warnings.push(
+        `${awayTeam} at ${homeTeam} was not locked because its last known line was ${ageDescription}. Commissioner review is required.`,
+      );
+    }
   }
 
   if (newHistoryRows.length > 0) {

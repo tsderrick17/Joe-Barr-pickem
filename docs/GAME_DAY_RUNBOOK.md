@@ -28,7 +28,9 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
    exposes picks at kickoff without a commissioner action.
 2. If an official line is unavailable at its scheduled lock, use the
    Commissioner line-lock review rather than changing game results. The audit
-   trail records the outcome.
+   trail records the outcome. A last-known line is accepted automatically only
+   when it is no more than 24 hours old; anything older stays preliminary and
+   triggers review.
 3. If a game ends late or is suspended, do not repeatedly run score sync. The
    system checks at a measured cadence and Automation Health will flag a truly
    overdue final.
@@ -39,9 +41,9 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
   app recalculates affected grades atomically and posts a week-specific
   league-impact notice.
 - **Postponed or cancelled / declared no contest:** record the verified game
-  exception. Eligible future selections stay changeable; a pick that cannot be
-  replaced settles as the published pool rule requires. Survivor does not
-  advance on a no contest.
+  exception. Affected selections are void, not losses. Eligible future
+  selections stay changeable, Survivor does not advance, and the disruption
+  does not hold the weekly handoff when no replacement remains.
 - **Moved kickoff:** allow canonical schedule reconciliation to apply an
   unlocked timing-only move. The new lock time governs availability;
   previously selected eligible picks remain attached and may be changed while
