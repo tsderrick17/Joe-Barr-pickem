@@ -2171,6 +2171,19 @@ html[data-theme="night"] .newspaper-clipping::after {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* In the two larger playoff rounds, read each stub straight down before
+   crossing to the next column—just like a printed bracket sheet. */
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4 {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, minmax(2.45rem, auto));
+}
+
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
+.my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, minmax(2.45rem, auto));
+}
+
 .my-ticket-section {
   min-width: 0;
   padding: .68rem .75rem .58rem 0;
@@ -2831,8 +2844,10 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-section { padding: .58rem 0; }
 
   .my-ticket-columns.is-playoff .my-ticket-picks {
+    grid-auto-flow: row;
     column-gap: 0;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
   }
 
   .my-ticket-section + .my-ticket-section {

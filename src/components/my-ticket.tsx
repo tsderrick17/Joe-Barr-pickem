@@ -74,9 +74,9 @@ export default function MyTicket({
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
-            <strong>{isPlayoff ? "ROUND LINES" : "GAME LINES"}</strong>
+            <strong>GAME LINES</strong>
           </div>
-          <ol className="my-ticket-picks">
+          <ol className={`my-ticket-picks ${isPlayoff ? `is-playoff-picks--${maxPicks}` : ""}`}>
             {Array.from({ length: maxPicks }, (_, index) => {
               const pick = picks[index];
               return (

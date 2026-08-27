@@ -11,6 +11,9 @@ test("the player rehearsal demonstrates every important personal-ticket stage", 
   assert.match(source, /Week 4 - Sunday 3 PM ET/);
   assert.match(source, /Week 4 - Monday final/);
   assert.match(source, /Week 5 - safe handoff/);
+  assert.match(source, /completedSelections: regularSelections/);
+  assert.match(source, /completedFinalGames: \[0, 1, 2, 3, 4, 5\]/);
+  assert.match(source, /const completedSelections = scenario\.completedSelections \?\? scenario\.selections/);
   assert.match(source, /Wild Card Sunday - partial locks/);
   assert.match(source, /Final selections keep their W\/L stamps until the safe handoff/);
   assert.match(source, /<MyTicket[\s\S]*?week=\{scenario\.week\}/);

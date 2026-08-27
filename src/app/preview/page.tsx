@@ -38,6 +38,8 @@ type Scenario = {
   emailCopy: string;
   emailImage: "slate" | "reveal" | "recap";
   selections: PlayerSelections;
+  completedSelections?: PlayerSelections;
+  completedFinalGames?: number[];
   survivorSelection?: { gameIndex: number; side: Side } | null;
 };
 
@@ -109,7 +111,7 @@ const scenarios: Record<string, Scenario> = {
     timing: "Wednesday - 3:05 AM ET",
     explanation: "Week 4 is complete and preserved in the historical Pad. One atomic handoff activates Week 5, so both the Slate and the personal ticket now show a fresh Week 5 together.",
     activeGames: [], lockedGames: [], finalGames: [], final: false, maxPicks: 2,
-    emailTitle: "Week 5 is open", emailCopy: "The next Slate is announced only after Week 5 is active and its schedule is loaded.", emailImage: "slate", selections: blankSelections, survivorSelection: null,
+    emailTitle: "Week 5 is open", emailCopy: "The next Slate is announced only after Week 5 is active and its schedule is loaded.", emailImage: "slate", selections: blankSelections, completedSelections: regularSelections, completedFinalGames: [0, 1, 2, 3, 4, 5], survivorSelection: null,
   },
   playoff: {
     title: "Wild Card - Sunday afternoon",
@@ -154,6 +156,10 @@ function rehearsalSlateGame(game: RehearsalGame, index: number, scenario: Scenar
 }
 
 function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
+  // A handoff opens a blank new ticket but never resets the standings. Keep
+  // using the completed Week 4 record for its already-earned wins.
+  const completedSelections = scenario.completedSelections ?? scenario.selections;
+  const completedFinalGames = scenario.completedFinalGames ?? scenario.finalGames;
   return Object.keys(priorWins).map((name) => {
     const selections = scenario.selections[name];
     const picks = Array.from({ length: scenario.maxPicks }, (_, index) => {
@@ -175,7 +181,10 @@ function rehearsalScoreboardRows(scenario: Scenario): PickemScoreboardRow[] {
         isLineLocked: scenario.lockedGames.includes(index),
       };
     });
-    const weekWins = countPickemWins(games.map((game, index) => ({ result: selections[index] ? resultFor(game, selections[index]!, scenario.finalGames.includes(index)) : null })));
+    const weekWins = countPickemWins(games.map((game, index) => {
+      const completedSelection = completedSelections[name]?.[index];
+      return { result: completedSelection ? resultFor(game, completedSelection, completedFinalGames.includes(index)) : null };
+    }));
     return { id: name.toLowerCase(), firstName: name, wins: priorWins[name] + weekWins, picks };
   }).sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName));
 }
