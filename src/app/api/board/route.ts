@@ -1,10 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
-import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
-import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import {
@@ -81,14 +79,9 @@ function atsResultForTeam(
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    await voidDisruptedPicks();
-    await eliminateSurvivorNoPicks();
-  } catch {
-    // Read-only board access must remain available. Pick saves still fail closed
-    // if this integrity check cannot run.
-    console.error("Disrupted-game check failed while loading the board.");
-  }
+  // Disruption voiding and Survivor no-pick settlement run in the protected
+  // line-lock and score workers. Keeping this endpoint read-only means a
+  // player never waits on pool-wide maintenance just to open The Slate.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -142,7 +135,9 @@ export async function GET(request: NextRequest) {
       { status: 403 },
     );
   }
-  await recordPlayerActivity(player.id);
+  // Presence is Commissioner-facing information, never a prerequisite for
+  // rendering a player's Slate. Run it after the response is handed back.
+  after(() => recordPlayerActivity(player.id));
 
   let bootstrap: {
     weeks: ScoringPeriodRow[];
@@ -238,7 +233,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const [gamesResult, picksResult, periodResult, publicPicksResult, playersResult] = await Promise.all([
+  const [gamesResult, picksResult, periodResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("games")
       .select(
@@ -259,11 +254,6 @@ export async function GET(request: NextRequest) {
       .eq("id", scoringPeriodId)
       .maybeSingle(),
     supabaseAdmin
-      .from("picks")
-      .select("player_id, game_id, selected_team_id")
-      .eq("scoring_period_id", scoringPeriodId)
-      .neq("result", "void"),
-    supabaseAdmin
       .from("players")
       .select("id, first_name")
       .eq("active", true),
@@ -272,7 +262,6 @@ export async function GET(request: NextRequest) {
   const { data: games, error: gamesError } = gamesResult;
   const { data: myPicks, error: picksError } = picksResult;
   const { data: period, error: periodError } = periodResult;
-  const { data: publicPicks, error: publicPicksError } = publicPicksResult;
   const { data: players, error: playersError } = playersResult;
 
   if (gamesError || !games) {
@@ -285,17 +274,42 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (picksError || periodError || !period || publicPicksError || playersError || !players) {
+  if (picksError || periodError || !period || playersError || !players) {
     console.error("Slate bootstrap query failed.", {
       picksCode: picksError?.code,
       periodCode: periodError?.code,
-      publicPicksCode: publicPicksError?.code,
       playersCode: playersError?.code,
       missingPeriod: !period,
       missingPlayers: !players,
     });
     return NextResponse.json(
       { error: "Your submitted picks could not be loaded." },
+      { status: 500 },
+    );
+  }
+
+  // Pick names are only public after kickoff. Skipping this query entirely for
+  // a fresh Slate avoids loading every player's upcoming selections, while a
+  // kickoff refresh fetches precisely the started games that need disclosure.
+  const currentTime = new Date();
+  const startedGameIds = (games as GameRow[])
+    .filter((game) => new Date(game.kickoff_at) <= currentTime)
+    .map((game) => game.id);
+  const { data: publicPicks, error: publicPicksError } = startedGameIds.length
+    ? await supabaseAdmin
+      .from("picks")
+      .select("player_id, game_id, selected_team_id")
+      .eq("scoring_period_id", scoringPeriodId)
+      .in("game_id", startedGameIds)
+      .neq("result", "void")
+    : { data: [], error: null };
+
+  if (publicPicksError) {
+    console.error("Slate public picks query failed.", {
+      publicPicksCode: publicPicksError.code,
+    });
+    return NextResponse.json(
+      { error: "The public picks for started games could not be loaded." },
       { status: 500 },
     );
   }
@@ -340,6 +354,38 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const teamIds = [
+    ...new Set(
+      games.flatMap((game) => [
+        game.away_team_id,
+        game.home_team_id,
+      ]),
+    ),
+  ];
+
+  const gameIds = games.map((game) => game.id);
+  const teamAndLineResults = Promise.all([
+    supabaseAdmin
+      .from("teams")
+      .select("id, full_name, abbreviation")
+      .in("id", teamIds),
+    gameIds.length > 0
+      ? supabaseAdmin
+        .from("spread_history")
+          .select("game_id, favorite_team_id, spread, captured_at")
+          .in("game_id", gameIds)
+          .order("captured_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    gameIds.length > 0
+      ? supabaseAdmin
+          .from("game_lines")
+          .select(
+            "game_id, favorite_team_id, locked_spread, source, locked_at",
+          )
+          .in("game_id", gameIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
   let survivor: {
     available: boolean;
     chipsVisible: boolean;
@@ -357,22 +403,36 @@ export async function GET(request: NextRequest) {
     usedTeamIds: [],
   };
 
-  const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
-    target_season_id: period.season_id,
-  });
-
-  if (ensuredEntries.error) {
-    console.error("Survivor enrollment failed on The Slate.", {
-      code: ensuredEntries.error.code,
-    });
-  } else {
-    const { data: survivorEntry, error: survivorEntryError } =
+  if (period.period_type !== "playoff") {
+    let { data: survivorEntry, error: survivorEntryError } =
       await supabaseAdmin
         .from("survivor_entries")
         .select("id, status")
         .eq("player_id", player.id)
         .eq("season_id", period.season_id)
         .maybeSingle();
+
+    // New or reactivated players are still enrolled automatically, but the
+    // common path does not perform a pool-wide upsert for every page view.
+    if (!survivorEntry && !survivorEntryError) {
+      const ensuredEntries = await supabaseAdmin.rpc("ensure_survivor_entries", {
+        target_season_id: period.season_id,
+      });
+      if (ensuredEntries.error) {
+        console.error("Survivor enrollment failed on The Slate.", {
+          code: ensuredEntries.error.code,
+        });
+      } else {
+        const retry = await supabaseAdmin
+          .from("survivor_entries")
+          .select("id, status")
+          .eq("player_id", player.id)
+          .eq("season_id", period.season_id)
+          .maybeSingle();
+        survivorEntry = retry.data;
+        survivorEntryError = retry.error;
+      }
+    }
 
     if (survivorEntryError || !survivorEntry) {
       console.error("Survivor entry query failed on The Slate.", {
@@ -420,38 +480,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const teamIds = [
-    ...new Set(
-      games.flatMap((game) => [
-        game.away_team_id,
-        game.home_team_id,
-      ]),
-    ),
-  ];
-
-  const gameIds = games.map((game) => game.id);
-
-  const [teamsResult, historyResult, lockedLinesResult] = await Promise.all([
-    supabaseAdmin
-      .from("teams")
-      .select("id, full_name, abbreviation")
-      .in("id", teamIds),
-    gameIds.length > 0
-      ? supabaseAdmin
-        .from("spread_history")
-          .select("game_id, favorite_team_id, spread, captured_at")
-          .in("game_id", gameIds)
-          .order("captured_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
-    gameIds.length > 0
-      ? supabaseAdmin
-          .from("game_lines")
-          .select(
-            "game_id, favorite_team_id, locked_spread, source, locked_at",
-          )
-          .in("game_id", gameIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  const [teamsResult, historyResult, lockedLinesResult] = await teamAndLineResults;
 
   const { data: teams, error: teamsError } = teamsResult;
   const { data: history, error: historyError } = historyResult;
@@ -511,8 +540,6 @@ export async function GET(request: NextRequest) {
     if (name) names.push(name);
     pickersByGameAndTeam.set(key, names);
   }
-  const currentTime = new Date();
-
   // Survivor is a regular-season competition. The playoff ticket uses this
   // reclaimed space for every Pick'em game in the active round instead.
   if (period.period_type === "playoff") {
