@@ -3,7 +3,7 @@ import {
   supabaseServerCredentialSource,
   supabaseServerCredentialUsesFallback,
 } from "@/lib/supabase-admin";
-import { assessAutomationHeartbeat } from "@/lib/automation-heartbeat";
+import { assessAutomationWorkerHeartbeat } from "@/lib/automation-heartbeat";
 
 export type LaunchPreflightCheck = {
   check_id: string;
@@ -156,13 +156,11 @@ async function checkCronAuthorization(): Promise<LaunchPreflightCheck> {
 
 async function checkWatchdogHeartbeat(): Promise<LaunchPreflightCheck> {
   const { data, error } = await supabaseAdmin
-    .from("sync_runs")
-    .select("status,started_at,completed_at")
-    .eq("job_type", "watchdog")
-    .order("started_at", { ascending: false })
-    .limit(1)
+    .from("automation_worker_heartbeats")
+    .select("last_succeeded_at,last_failed_at")
+    .eq("job_name", "watchdog")
     .maybeSingle();
-  const heartbeat = error ? { healthy: false } : assessAutomationHeartbeat(data);
+  const heartbeat = error ? { healthy: false } : assessAutomationWorkerHeartbeat(data);
   return check(
     "watchdog-heartbeat",
     "Internal automation heartbeat",
