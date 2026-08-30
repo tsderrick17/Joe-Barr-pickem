@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assessAutomationHeartbeat } from "@/lib/automation-heartbeat";
+import { assessAutomationWorkerHeartbeat } from "@/lib/automation-heartbeat";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -7,22 +7,21 @@ export const revalidate = 0;
 
 /**
  * Public, opaque heartbeat for an external monitor. A 200 proves the database
- * watchdog has completed recently; a 503 means the monitor itself has stopped
- * or failed. No run details, credentials, or operational state are exposed.
+ * watchdog worker has checked in recently; a 503 means the worker itself has
+ * stopped or failed. Heavy diagnostic failures do not poison this liveness
+ * signal. No run details, credentials, or operational state are exposed.
  */
 export async function GET() {
   const checkedAt = new Date();
   try {
     const { data, error } = await supabaseAdmin
-      .from("sync_runs")
-      .select("status,started_at,completed_at")
-      .eq("job_type", "watchdog")
-      .order("started_at", { ascending: false })
-      .limit(1)
+      .from("automation_worker_heartbeats")
+      .select("last_succeeded_at,last_failed_at")
+      .eq("job_name", "watchdog")
       .maybeSingle();
     if (error) throw error;
 
-    const heartbeat = assessAutomationHeartbeat(data, checkedAt);
+    const heartbeat = assessAutomationWorkerHeartbeat(data, checkedAt);
     return NextResponse.json(
       heartbeat.healthy
         ? { status: "ok", checkedAt: checkedAt.toISOString(), heartbeat: "current", ageSeconds: heartbeat.ageSeconds }

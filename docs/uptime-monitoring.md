@@ -11,7 +11,7 @@ contacts, and current incidents.
 | Monitor | URL | A 200 proves | Where to diagnose a failure |
 | --- | --- | --- | --- |
 | PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
-| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The five-minute watchdog completed successfully within the last 12 minutes | **Commissioner → Automation Health** and the watchdog receipt |
+| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The watchdog worker checked in successfully within the last 12 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
 | PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking, reminder processing, and final-score processing are within their allowed freshness windows | **Commissioner → Automation Health** to identify the worker |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check recently | GitHub Actions → **Encrypted database backup** |
 
@@ -56,5 +56,9 @@ false alarm while the alias settles. If two or more contracts remain red, the
 run labels the result as a likely shared deployment or authorization problem;
 it does not imply that each worker independently broke.
 
-UptimeRobot monitor records do not consume Odds API credits or create growing
-pool-history tables. Critical worker heartbeat rows update in place.
+The automation heartbeat uses a constant-size worker row that updates in place;
+diagnostic run failures therefore cannot create a false liveness outage. TLS
+errors from a local command-line client (such as Windows Schannel) are client
+environment failures, not application health results; UptimeRobot remains the
+external TLS authority. Monitor records do not consume Odds API credits or
+create growing pool-history tables.
