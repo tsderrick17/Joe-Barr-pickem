@@ -118,8 +118,10 @@ Health to identify the affected worker.
 The fourth required free HTTP monitor must check
 `https://pickemjb.vercel.app/api/health/backup` every five minutes. The endpoint
 uses the existing server-only GitHub read token to inspect the latest completed
-encrypted-backup workflow and returns 200 only for a recent success. It does
-not expose GitHub details or require UptimeRobot's paid push-heartbeat feature.
+encrypted-backup workflow and returns 200 only for a successful run within the
+last eight days. The wider window prevents a delayed weekly runner from causing
+a predictable false alarm at the schedule boundary. It does not expose GitHub
+details or require UptimeRobot's paid push-heartbeat feature.
 
 ## Reproducible critical schedules and launch preflight
 

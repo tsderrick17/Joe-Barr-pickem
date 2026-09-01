@@ -1,8 +1,9 @@
-const DEFAULT_MAX_AGE_MINUTES = (7 * 24 + 4) * 60;
+const DEFAULT_MAX_AGE_MINUTES = 8 * 24 * 60;
 
 /**
- * The backup runs weekly. Four hours of grace allows for a delayed GitHub
- * runner without hiding a missed or failed weekly restore verification.
+ * The backup runs weekly. An eight-day window allows a delayed GitHub runner
+ * without creating a predictable false alarm at the weekly boundary, while
+ * still surfacing a genuinely missed or failed backup.
  */
 export function assessBackupWorkflowRun(latestRun, now = new Date(), maxAgeMinutes = DEFAULT_MAX_AGE_MINUTES) {
   if (!latestRun) return { healthy: false, reason: "missing" };
