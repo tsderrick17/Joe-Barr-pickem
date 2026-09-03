@@ -39,5 +39,8 @@
     "pg": "^8.23.0",
     "tailwindcss": "^4",
     "typescript": "5.9.3"
+  },
+  "overrides": {
+    "fast-uri": "^4.1.4"
   }
 }
