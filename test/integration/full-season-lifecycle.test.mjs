@@ -92,7 +92,9 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
           (game_id, favorite_team_id, locked_spread, source, source_captured_at)
         values ($1, $2, 0.5, 'full-season-lifecycle-drill', clock_timestamp())
       `, [game.id, game.away_team_id]);
-      await client.query(`
+      // Seed the complete fixture, including the future playoff period,
+      // without exercising the player-facing pick-window gate here.
+      await advanceFixtureClock(client, `
         insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id)
         values ($1, $2, $3, $4), ($5, $2, $3, $6)
       `, [leader.id, periodId, game.id, game.away_team_id, chaser.id, game.home_team_id]);
