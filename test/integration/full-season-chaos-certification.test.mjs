@@ -258,7 +258,10 @@ test("one-button full-season chaos certification", {
     for (const period of periods.slice(18)) {
       for (const game of gamesByPeriod.get(period.id)) {
         for (const [playerIndex, player] of players.entries()) {
-          await client.query(`
+          // Seed future-round fixtures without exercising the player-facing
+          // pick-window gate; the lifecycle assertions below exercise that
+          // gate through normal writes.
+          await advanceFixtureClock(client, `
             insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id)
             values ($1, $2, $3, $4)
           `, [player.id, period.id, game.id, playerIndex === 0 ? game.away_team_id : game.home_team_id]);
