@@ -276,14 +276,14 @@ test("one-button full-season chaos certification", {
       const game = candidates.find((candidate) => !usedSurvivorTeams.has(candidate.away_team_id));
       assert.ok(game, `a fresh Survivor team must exist for ${period.display_order}`);
       usedSurvivorTeams.add(game.away_team_id);
-      await client.query(`
+      await advanceFixtureClock(client, `
         insert into public.survivor_picks(survivor_entry_id, scoring_period_id, game_id, selected_team_id)
         values ($1, $2, $3, $4)
       `, [survivorEntries[0].id, period.id, game.id, game.away_team_id]);
     }
     const weekOneGames = gamesByPeriod.get(periods[0].id);
     for (let index = 1; index < players.length; index += 1) {
-      await client.query(`
+      await advanceFixtureClock(client, `
         insert into public.survivor_picks(survivor_entry_id, scoring_period_id, game_id, selected_team_id)
         values ($1, $2, $3, $4)
       `, [survivorEntries[index].id, periods[0].id, weekOneGames[index].id, weekOneGames[index].home_team_id]);
@@ -301,7 +301,7 @@ test("one-button full-season chaos certification", {
       }
       for (const [playerIndex, player] of players.entries()) {
         for (const game of games.slice(0, 2)) {
-          await client.query(`
+          await advanceFixtureClock(client, `
             insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id)
             values ($1, $2, $3, $4)
           `, [player.id, period.id, game.id, playerIndex === 0 ? game.away_team_id : game.home_team_id]);

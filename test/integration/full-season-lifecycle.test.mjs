@@ -16,6 +16,12 @@ async function insertOne(client, sql, values = []) {
   return result.rows[0];
 }
 
+async function advanceFixtureClock(client, sql, values = []) {
+  await client.query("set local session_replication_role = replica");
+  await client.query(sql, values);
+  await client.query("set local session_replication_role = origin");
+}
+
 test("isolated full season preserves scoring, day-start playoff eligibility, history, privacy, and rollover", {
   skip: !enabled && "Run the manual isolated workflow with full_season_drill enabled.",
 }, async () => {
