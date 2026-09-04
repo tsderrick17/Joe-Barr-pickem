@@ -131,7 +131,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     `, [iso(-24 * 60 * 60 * 1000), iso(-25 * 60 * 60 * 1000), playoffGames.slice(0, 2).map((game) => game.id)]);
     await client.query(`
       update public.games set kickoff_at = $1, line_lock_at = $2 where id = $3
-    `, [iso(24 * 60 * 60 * 1000), iso(23 * 60 * 60 * 1000), playoffGames[2].id]);
+    `, [iso(60 * 60 * 1000), iso(0), playoffGames[2].id]);
 
     await client.query(
       "select * from public.complete_scoring_period_atomically($1, $2, $3)",
@@ -169,7 +169,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
 
     await client.query(
       "select * from public.snapshot_playoff_day_eligibility($1, $2)",
-      [playoff.id, iso(-36 * 60 * 60 * 1000)],
+      [playoff.id, playoffGames[0].kickoff_at],
     );
     const firstEligibility = await client.query(`
       select player_id, is_eligible

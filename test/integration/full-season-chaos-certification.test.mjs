@@ -397,6 +397,15 @@ test("one-button full-season chaos certification", {
     }
 
     const wildcard = periods[18];
+    // Move the first playoff day into the current clock window so the
+    // production snapshot guard evaluates a real game day rather than
+    // correctly refusing a future-day page read.
+    await advanceFixtureClock(client, `
+      update public.games
+      set kickoff_at = clock_timestamp() - interval '2 hours',
+          line_lock_at = clock_timestamp() - interval '3 hours'
+      where scoring_period_id = $1
+    `, [wildcard.id]);
     const playoffBoundary = await one(client, `
       select period.status,
         (select count(*) from public.picks where player_id = $2 and result = 'win')::integer as leader_wins,
