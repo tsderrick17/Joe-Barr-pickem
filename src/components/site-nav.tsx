@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
+import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
+import { CURRENT_SEASON_YEAR } from "@/lib/season";
 
 export default function SiteNav() {
   const pathname = usePathname();
@@ -15,6 +17,7 @@ export default function SiteNav() {
   const [isCommissioner, setIsCommissioner] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
+  const [isBowlPoolLaunched, setIsBowlPoolLaunched] = useState(false);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("pickem-theme");
@@ -98,6 +101,13 @@ export default function SiteNav() {
     };
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setIsBowlPoolLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(CURRENT_SEASON_YEAR)));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   if (pathname === "/login") {
     return null;
   }
@@ -159,6 +169,12 @@ export default function SiteNav() {
           <Link className={linkStyle("/board")} href="/board">
             The Slate
           </Link>
+
+          {isCommissioner || isBowlPoolLaunched ? (
+            <Link className={linkStyle("/bowl-pool")} href="/bowl-pool">
+              NCAA Bowls
+            </Link>
+          ) : null}
 
           {isCommissioner ? (
             <Link className={linkStyle("/admin")} href="/admin">
@@ -240,6 +256,7 @@ export default function SiteNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link className={linkStyle("/")} href="/">Standings</Link>
         <Link className={linkStyle("/board")} href="/board">The Slate</Link>
+        {isCommissioner || isBowlPoolLaunched ? <Link className={linkStyle("/bowl-pool")} href="/bowl-pool">NCAA Bowls</Link> : null}
       </div>
     </nav>
   </>;
