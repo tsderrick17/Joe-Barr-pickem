@@ -41,17 +41,43 @@ export async function checkCriticalWorkerHealth(checkedAt = new Date()) {
       .in("status", ["scheduled", "live"]);
   if (dueGamesError) throw dueGamesError;
 
-  const { data: dueReminders, error: dueRemindersError } = await supabaseAdmin
-    .from("push_reminders")
-    .select("id")
-    .in("status", ["scheduled", "sending"])
-    .gte("scheduled_for", new Date(checkedAt.getTime() - 24 * 60 * 60 * 1000).toISOString())
-    .lte("scheduled_for", checkedAt.toISOString())
-    .limit(1);
+  // A passed timestamp is not itself worker work. Require a missing official
+  // line or a score check that has passed both its normal settlement window and
+  // any provider backoff. This matches the Commissioner’s operational health
+  // rules and prevents completed games from keeping the public contract red.
+  const lineCandidateIds = (dueGames ?? [])
+    .filter((game) => new Date(game.line_lock_at).getTime() <= checkedAt.getTime())
+    .map((game) => game.id);
+  const scoreDueAt = new Date(checkedAt.getTime() - (3 * 60 + 20) * 60 * 1000).getTime();
+  const scoreCandidateIds = (dueGames ?? [])
+    .filter((game) => new Date(game.kickoff_at).getTime() <= scoreDueAt)
+    .map((game) => game.id);
+  const [{ data: lockedLines, error: lockedLinesError }, { data: scoreBackoffs, error: scoreBackoffsError }, { data: dueReminders, error: dueRemindersError }] = await Promise.all([
+    lineCandidateIds.length
+      ? supabaseAdmin.from("game_lines").select("game_id").in("game_id", lineCandidateIds)
+      : Promise.resolve({ data: [], error: null }),
+    scoreCandidateIds.length
+      ? supabaseAdmin.from("score_check_backoff").select("game_id,next_check_at").in("game_id", scoreCandidateIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabaseAdmin
+      .from("push_reminders")
+      .select("id")
+      .in("status", ["scheduled", "sending"])
+      .gte("scheduled_for", new Date(checkedAt.getTime() - 24 * 60 * 60 * 1000).toISOString())
+      .lte("scheduled_for", checkedAt.toISOString())
+      .limit(1),
+  ]);
+  if (lockedLinesError) throw lockedLinesError;
+  if (scoreBackoffsError) throw scoreBackoffsError;
   if (dueRemindersError) throw dueRemindersError;
 
-  const lineLocksDue = (dueGames ?? []).some((game) => new Date(game.line_lock_at).getTime() <= checkedAt.getTime());
-  const scoresDue = (dueGames ?? []).some((game) => new Date(game.kickoff_at).getTime() <= checkedAt.getTime());
+  const lockedGameIds = new Set((lockedLines ?? []).map((line) => line.game_id));
+  const scoreBackoffByGameId = new Map((scoreBackoffs ?? []).map((backoff) => [backoff.game_id, backoff.next_check_at]));
+  const lineLocksDue = lineCandidateIds.some((gameId) => !lockedGameIds.has(gameId));
+  const scoresDue = scoreCandidateIds.some((gameId) => {
+    const nextCheckAt = scoreBackoffByGameId.get(gameId);
+    return !nextCheckAt || new Date(nextCheckAt).getTime() <= checkedAt.getTime();
+  });
   const result = assessCriticalWorkerHeartbeats(heartbeats, checkedAt, {
     lineLocksDue,
     scoresDue,
