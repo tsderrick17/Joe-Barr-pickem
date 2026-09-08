@@ -78,9 +78,9 @@ export default function BowlPoolPage() {
             </div>
             {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "" }))).map((game) => (
               <div className="grid min-h-14 grid-cols-[minmax(8rem,1fr)_minmax(4rem,6rem)_minmax(8rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
-                <span className="text-sm font-semibold text-slate-700">{game.bowl_name || <span className="h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank bowl" />}</span>
-                <span className="mx-auto text-center text-xs text-slate-500">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : "—"}</span>
-                <span className="ml-auto text-sm text-slate-400">Teams and line TBD</span>
+                <span className="text-sm font-semibold text-slate-700">{game.bowl_name || <span className="h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank favorite team" />}</span>
+                <span className="mx-auto text-center text-xs text-slate-500" aria-label="Blank spread">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : "—"}</span>
+                <span className="ml-auto text-sm text-slate-400" aria-label="Blank underdog team">Teams and line TBD</span>
               </div>
             ))}
           </div>
