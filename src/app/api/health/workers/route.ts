@@ -16,13 +16,19 @@ export async function GET() {
         .in("job_name", ["line_locks", "scores", "reminders"]),
       supabaseAdmin
         .from("scoring_periods")
-        .select("id")
+        .select("id, starts_at, ends_at")
         .eq("status", "active"),
     ]);
     if (error) throw error;
     if (activePeriodsError) throw activePeriodsError;
 
-    const activePeriodIds = (activePeriods ?? []).map((period) => period.id);
+    const activePeriodIds = (activePeriods ?? [])
+      .filter((period) => {
+        const startsAt = period.starts_at ? new Date(period.starts_at).getTime() : Number.NEGATIVE_INFINITY;
+        const endsAt = period.ends_at ? new Date(period.ends_at).getTime() : Number.POSITIVE_INFINITY;
+        return startsAt <= checkedAt.getTime() && endsAt >= checkedAt.getTime();
+      })
+      .map((period) => period.id);
     const { data: dueGames, error: dueGamesError } = activePeriodIds.length === 0
       ? { data: [], error: null }
       : await supabaseAdmin
