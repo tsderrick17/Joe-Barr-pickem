@@ -353,3 +353,13 @@ implementation and retains every worker's lease, provider allowance, backoff,
 idempotency, and delivery protections. The watchdog re-evaluates health after
 the attempt and preserves an incident when recovery fails or remains in
 progress; it never treats an attempted repair as a successful one.
+
+## 2026-09-08 — REF-031 — Keep legacy recap duplicates from blocking the reminder worker
+
+**Status:** Accepted
+
+Weekly recap scheduling needs only one existing recap record to prove that the
+period is already queued. It therefore reads at most one matching record and
+leaves any legacy duplicates untouched. This avoids a harmless historical
+duplicate turning into a worker-wide failure while preserving all delivery and
+audit records.
