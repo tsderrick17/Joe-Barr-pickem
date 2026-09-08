@@ -76,7 +76,7 @@ export default function BowlPoolPage() {
             <div className="grid grid-cols-[minmax(10rem,1.2fr)_minmax(7rem,0.9fr)_minmax(5rem,0.5fr)_minmax(7rem,0.9fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
               <span>Date / bowl</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span><span className="text-right">Location</span>
             </div>
-            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "" }))).map((game) => (
+            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game) => (
               <div className="grid min-h-16 grid-cols-[minmax(10rem,1.2fr)_minmax(7rem,0.9fr)_minmax(5rem,0.5fr)_minmax(7rem,0.9fr)_minmax(8rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}{game.time_confirmed === false ? " · time TBD" : game.kickoff_at ? ` · ${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</small></span>
                 <span className="text-sm" aria-label="Blank favorite team">TBD</span>
