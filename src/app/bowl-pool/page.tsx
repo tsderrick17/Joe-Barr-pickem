@@ -11,10 +11,11 @@ export default function BowlPoolPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLaunched, setHasLaunched] = useState(false);
-  const [csv, setCsv] = useState("order,bowl_name,kickoff_at,game_key,away_team,home_team,spread,is_cfp\n");
-  const [importMessage, setImportMessage] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
   const [optedIn, setOptedIn] = useState(false);
+  const [selections, setSelections] = useState<Record<string, "favorite" | "underdog">>({});
+  const [savedSelections, setSavedSelections] = useState<Record<string, "favorite" | "underdog">>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [standingsMinimized, setStandingsMinimized] = useState(false);
   const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string; venue_city?: string; venue_state?: string; time_confirmed?: boolean }>>([]);
 
   useEffect(() => {
@@ -45,53 +46,67 @@ export default function BowlPoolPage() {
   }, []);
 
   const canView = profile?.isCommissioner === true || hasLaunched;
-  async function importSchedule() {
-    setImporting(true); setImportMessage(null);
-    try {
-      const response = await fetchWithSession("/api/admin/bowl-pool/schedule", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seasonYear: CURRENT_SEASON_YEAR, csv }) });
-      const result = await response.json() as { imported?: number; error?: string };
-      if (!response.ok) throw new Error(result.error || "Import failed.");
-      setImportMessage(`${result.imported ?? 0} schedule rows staged. Team names and lines can be filled in later.`);
-    } catch (error) { setImportMessage(error instanceof Error ? error.message : "Import failed."); }
-    finally { setImporting(false); }
+  const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections);
+  function chooseTeam(gameId: string, side: "favorite" | "underdog") {
+    setSelections((current) => current[gameId] === side
+      ? Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId))
+      : { ...current, [gameId]: side });
+  }
+  async function submitSelections() {
+    setIsSubmitting(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+    setSavedSelections(selections);
+    setIsSubmitting(false);
   }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-600">Separate competition</p>
       <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">NCAA Bowls</h1>
       {isLoading ? <p className="mt-4 text-slate-700">Loading Bowl Pool access…</p> : null}
       {!isLoading && !canView ? <p className="mt-4 text-slate-700">The NCAA Bowl Pool opens December 7 at 3:00 AM Eastern.</p> : null}
       {!isLoading && canView ? (
-        <section className="mt-6 border border-slate-300 bg-white p-4 sm:p-6">
+        <>
+          <label className="mt-6 flex items-start gap-3 border border-slate-300 bg-white p-4 sm:p-5"><input className="mt-1 h-5 w-5" type="checkbox" checked={optedIn} onChange={(event) => setOptedIn(event.target.checked)} /><span className="text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out at any time)</span></label>
+          {optedIn && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
+          {optedIn ? <section className="mt-4 border border-slate-300 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-600">Selections card</p>
               <h2 className="mt-1 font-serif text-2xl font-bold">2026–27 Bowl Pool</h2>
             </div>
-            <span className="border border-slate-300 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-600">Preview</span>
           </div>
-          <p className="mt-4 max-w-2xl text-slate-700">Every bowl and playoff matchup will appear here in chronological order. Team names and spreads are intentionally blank until the schedule and lines are confirmed.</p>
-          <label className="mt-5 flex items-start gap-3 border border-slate-300 bg-slate-50 p-4"><input className="mt-1 h-5 w-5" type="checkbox" checked={optedIn} onChange={(event) => setOptedIn(event.target.checked)} /><span><strong className="block text-sm">Opt in to the NCAA Bowl Pool</strong><span className="text-sm text-slate-600">I want to make one ATS selection for every bowl and playoff matchup. You can opt out until the first kickoff.</span></span></label>
-          {profile?.isCommissioner && !hasLaunched ? <div className="mt-5 border border-slate-300 bg-slate-50 p-4"><p className="text-sm font-bold">Stage the schedule</p><p className="mt-1 text-sm text-slate-600">Paste CSV rows in order. Use the sponsor-free name you want displayed; teams and spreads may stay blank.</p><textarea className="mt-3 min-h-32 w-full border border-slate-300 bg-white p-3 font-mono text-xs" value={csv} onChange={(event) => setCsv(event.target.value)} aria-label="Bowl schedule CSV" /><button type="button" className="mt-3 border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-50" disabled={importing} onClick={() => void importSchedule()}>{importing ? "Staging…" : "Stage schedule"}</button>{importMessage ? <p className="mt-2 text-sm text-slate-700" role="status">{importMessage}</p> : null}</div> : null}
           <div className="mt-5 overflow-hidden border border-slate-300">
             <div className="grid grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
               <span>Date / time</span><span>Bowl / location</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span>
             </div>
-            {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game) => (
-              <div className="grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
+            {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game, index) => (
+              <div className={`grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <span className="text-sm" aria-label="Blank favorite team"><span className="bowl-placeholder">Team TBD</span></span>
+                <button className={`text-left text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">Team TBD</button>
                 <span className="text-center" aria-label="Blank spread">—</span>
-                <span className="text-sm" aria-label="Blank underdog team"><span className="bowl-placeholder">Team TBD</span></span>
+                <button className={`text-left text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">Team TBD</button>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-sm text-slate-600">Commissioner preview only. The live schedule importer will replace these blank rows without changing the Bowl Pool rules or NFL picks.</p>
-          <div className="mt-6 border border-slate-300 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-slate-600">Standings card</p><h3 className="mt-1 font-serif text-xl font-bold">Bowl Pool standings</h3><p className="mt-2 text-sm text-slate-600">No entries yet. Once players opt in, this responsive card will list every participant, wins, and final-game tiebreaker. It remains commissioner-only until launch.</p></div>
-          {profile?.isCommissioner && !hasLaunched ? <p className="mt-4 text-sm font-semibold text-slate-600">Commissioner preview · player access opens December 7 at 3:00 AM Eastern.</p> : null}
-        </section>
+          <section className="mt-6 border border-slate-300" aria-label="Bowl Pool scoreboard">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-3">
+              <div><p className="text-xs font-black uppercase tracking-[0.16em] text-slate-600">Scoreboard</p><h3 className="font-serif text-xl font-bold">Bowl Pool standings</h3></div>
+              <button className="border border-slate-400 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em]" onClick={() => setStandingsMinimized((current) => !current)} type="button" aria-expanded={!standingsMinimized}>{standingsMinimized ? "Show" : "Minimize"}</button>
+            </div>
+            {!standingsMinimized ? <>
+              <div className="grid grid-cols-3 gap-px border-b border-slate-200 bg-slate-200 text-center">
+                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Games</p><p className="mt-1 text-xl font-bold">—</p></div>
+                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Wins</p><p className="mt-1 text-xl font-bold">—</p></div>
+                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Final tiebreaker</p><p className="mt-1 text-xl font-bold">—</p></div>
+              </div>
+              <div className="overflow-x-auto"><div className="min-w-[42rem]">
+                <div className="grid grid-cols-[minmax(9rem,1fr)_repeat(4,minmax(6rem,0.7fr))] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600"><span>Player</span><span className="text-center">Wins</span><span className="text-center">Losses</span><span className="text-center">Points</span><span className="text-center">Final total</span></div>
+                {Array.from({ length: 5 }, (_, index) => <div className={`grid grid-cols-[minmax(9rem,1fr)_repeat(4,minmax(6rem,0.7fr))] border-t border-slate-200 px-3 py-3 text-sm ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={`standing-${index}`}><span>Player {index + 1}</span><span className="text-center">—</span><span className="text-center">—</span><span className="text-center">—</span><span className="text-center">—</span></div>)}
+              </div></div>
+            </> : null}
+          </section>
+        </section> : null}
+        </>
       ) : null}
     </main>
   );
