@@ -8,13 +8,14 @@ const CRITICAL_WORKERS = {
  * A worker is healthy only after a recent success. A later failure overrides
  * that success until the next successful invocation.
  */
-export function assessCriticalWorkerHeartbeats(rows, now = new Date()) {
+export function assessCriticalWorkerHeartbeats(rows, now = new Date(), { lineLocksDue = true } = {}) {
   const byJob = new Map((rows ?? []).map((row) => [row.job_name, row]));
   const problems = [];
 
   for (const [jobName, maximumAgeSeconds] of Object.entries(CRITICAL_WORKERS)) {
     const row = byJob.get(jobName);
     if (!row?.last_succeeded_at) {
+      if (jobName === "line_locks" && !lineLocksDue) continue;
       problems.push({ jobName, reason: "missing" });
       continue;
     }
@@ -31,7 +32,9 @@ export function assessCriticalWorkerHeartbeats(rows, now = new Date()) {
     }
 
     const ageSeconds = Math.max(0, Math.floor((now.getTime() - succeededAt.getTime()) / 1000));
-    if (ageSeconds > maximumAgeSeconds) problems.push({ jobName, reason: "stale" });
+    if (ageSeconds > maximumAgeSeconds && !(jobName === "line_locks" && !lineLocksDue)) {
+      problems.push({ jobName, reason: "stale" });
+    }
   }
 
   return { healthy: problems.length === 0, problems };

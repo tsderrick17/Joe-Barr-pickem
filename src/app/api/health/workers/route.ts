@@ -9,13 +9,24 @@ export const revalidate = 0;
 export async function GET() {
   const checkedAt = new Date();
   try {
-    const { data, error } = await supabaseAdmin
-      .from("automation_worker_heartbeats")
-      .select("job_name,last_succeeded_at,last_failed_at")
-      .in("job_name", ["line_locks", "scores", "reminders"]);
+    const [{ data, error }, { data: dueLineGames, error: dueLineGamesError }] = await Promise.all([
+      supabaseAdmin
+        .from("automation_worker_heartbeats")
+        .select("job_name,last_succeeded_at,last_failed_at")
+        .in("job_name", ["line_locks", "scores", "reminders"]),
+      supabaseAdmin
+        .from("games")
+        .select("id")
+        .eq("status", "scheduled")
+        .lte("line_lock_at", checkedAt.toISOString())
+        .limit(1),
+    ]);
     if (error) throw error;
+    if (dueLineGamesError) throw dueLineGamesError;
 
-    const result = assessCriticalWorkerHeartbeats(data, checkedAt);
+    const result = assessCriticalWorkerHeartbeats(data, checkedAt, {
+      lineLocksDue: (dueLineGames ?? []).length > 0,
+    });
     if (!result.healthy) {
       console.error("A critical automation worker heartbeat is unavailable.", {
         problems: result.problems,
