@@ -99,6 +99,11 @@ Individual bad email addresses and intentional low-provider-quota cooldowns do
 not alert. Open incidents and a manual **Run watchdog now** control are visible
 on the Commissioner overview.
 
+The weekly-recap scheduler treats any already-saved recap record for the same
+week as complete scheduling evidence. It does not rewrite historical copies,
+and duplicate legacy records cannot prevent the normal reminder worker from
+processing other due messages.
+
 Once per Eastern day, the same leased watchdog also rechecks the external
 configuration that can drift without a deployment: the deployed cron secret,
 the zero-credit Odds API authentication endpoint, the configured active Brevo

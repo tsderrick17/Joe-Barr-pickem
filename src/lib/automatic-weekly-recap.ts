@@ -37,6 +37,10 @@ export async function ensureAutomaticWeeklyRecap(now = new Date()) {
     .select("id")
     .eq("category", "weekly_recap")
     .eq("source_scoring_period_id", period.id)
+    // Historical manual or earlier automated recap records must not block the
+    // worker. One existing receipt is enough to make this scheduling step a
+    // safe no-op; the worker never needs to inspect or rewrite all copies.
+    .limit(1)
     .maybeSingle();
   if (existingError) throw new Error("The existing Tuesday recap could not be checked.");
   if (existing) return { created: false, reason: "already_queued" };
