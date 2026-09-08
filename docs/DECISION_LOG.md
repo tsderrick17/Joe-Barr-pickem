@@ -330,7 +330,6 @@ the original provider value. Rank by wins, then the closest absolute combined
 points prediction for the CFP national championship; remaining ties crown
 co-champions. Use CollegeFootballData as the no-cost schedule/result source
 and the existing Odds API integration for current NCAAF lines.
-
 ## 2026-09-08 — REF-029 — Make production worker failures actionable to the Commissioner
 
 **Status:** Accepted
