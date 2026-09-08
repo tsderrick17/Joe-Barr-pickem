@@ -49,5 +49,7 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(route, /status: result\.healthy \? 200 : 503/);
   assert.match(route, /lineLocksDue/);
   assert.match(route, /line_lock_at/);
+  assert.match(route, /scoring_period_id/);
+  assert.match(route, /status.*active/);
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
 });
