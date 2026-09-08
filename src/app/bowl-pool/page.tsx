@@ -14,6 +14,7 @@ export default function BowlPoolPage() {
   const [csv, setCsv] = useState("order,bowl_name,kickoff_at,game_key,away_team,home_team,spread,is_cfp\n");
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string }>>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -21,6 +22,13 @@ export default function BowlPoolPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!profile?.isCommissioner || hasLaunched) return;
+    void fetchWithSession(`/api/admin/bowl-pool/schedule?seasonYear=${CURRENT_SEASON_YEAR}`).then(async (response) => {
+      if (response.ok) setGames(((await response.json()) as { games?: typeof games }).games ?? []);
+    }).catch(() => undefined);
+  }, [profile?.isCommissioner, hasLaunched]);
 
   useEffect(() => {
     let active = true;
@@ -68,11 +76,11 @@ export default function BowlPoolPage() {
             <div className="grid grid-cols-[minmax(7rem,1fr)_minmax(4rem,6rem)_minmax(7rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
               <span>Favorite</span><span className="text-center">Line</span><span className="text-right">Underdog</span>
             </div>
-            {Array.from({ length: 5 }, (_, index) => (
-              <div className="grid min-h-14 grid-cols-[minmax(7rem,1fr)_minmax(4rem,6rem)_minmax(7rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={index}>
-                <span className="h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank favorite team" />
-                <span className="mx-auto h-5 w-10 rounded-sm border border-dashed border-slate-300" aria-label="Blank spread" />
-                <span className="ml-auto h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank underdog team" />
+            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "" }))).map((game) => (
+              <div className="grid min-h-14 grid-cols-[minmax(8rem,1fr)_minmax(4rem,6rem)_minmax(8rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
+                <span className="text-sm font-semibold text-slate-700">{game.bowl_name || <span className="h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank bowl" />}</span>
+                <span className="mx-auto text-center text-xs text-slate-500">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : "—"}</span>
+                <span className="ml-auto text-sm text-slate-400">Teams and line TBD</span>
               </div>
             ))}
           </div>
