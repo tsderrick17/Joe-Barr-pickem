@@ -33,11 +33,12 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
   assert.match(migration, /revoke all on table public\.bowl_pool_seasons/i);
 });
 
-test("commissioner Bowl Pool page includes a blank line-and-team selection scaffold", async () => {
+test("Bowl Pool opt-in controls the whole selection card", async () => {
   const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /Selections card/);
+  assert.match(page, /I would like to participate in the NCAA Bowl Pool \(you can opt out at any time\)/);
+  assert.match(page, /optedIn \? <section/);
   assert.match(page, /Blank favorite team/);
   assert.match(page, /Blank spread/);
   assert.match(page, /Blank underdog team/);
-  assert.match(page, /Commissioner preview only/);
+  assert.doesNotMatch(page, /Separate competition|Preview|Stage the schedule|Standings card|Commissioner preview only/);
 });
