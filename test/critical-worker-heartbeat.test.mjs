@@ -17,7 +17,7 @@ test("critical worker heartbeat requires recent line, score, and reminder succes
 test("critical worker heartbeat fails closed for missing, stale, or later failed workers", () => {
   const result = assessCriticalWorkerHeartbeats([
     { job_name: "line_locks", last_succeeded_at: "2026-09-13T15:58:00Z", last_failed_at: "2026-09-13T15:59:00Z" },
-    { job_name: "scores", last_succeeded_at: "2026-09-13T15:20:00Z", last_failed_at: null },
+    { job_name: "scores", last_succeeded_at: "2026-09-13T14:00:00Z", last_failed_at: null },
   ], now);
   assert.deepEqual(result, { healthy: false, problems: [
     { jobName: "line_locks", reason: "failed" },
