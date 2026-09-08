@@ -37,6 +37,7 @@ type ScoreboardRow = {
 type HomeData = {
   serverTime: string;
   viewerPlayerId: string;
+  isCommissioner: boolean;
   showSurvivorStandings: boolean;
   showPoolChat: boolean;
   hidePickemEliminatedRows: boolean;
@@ -464,6 +465,8 @@ export default function HomePage() {
             </div>
           ) : null}
         </section> : null}
+
+        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="Bowl Pool standings preview"><div className="pickem-ledger-masthead"><h2>NCAA Bowl Pool</h2><p className="pickem-ledger-period">PRE-LAUNCH PREVIEW</p></div><div className="border-y-2 border-[#1d1d1f] bg-white p-4 text-sm text-slate-700">Bowl Pool standings will appear here beneath Survivor once players opt in. This preview is visible only to the Commissioner until December 7 at 3:00 AM Eastern.</div></section> : null}
       </div>
     </main>
   );
