@@ -26,6 +26,14 @@ test("critical worker heartbeat fails closed for missing, stale, or later failed
   ] });
 });
 
+test("line-lock monitoring waits for the first line-lock deadline", () => {
+  const result = assessCriticalWorkerHeartbeats([
+    { job_name: "scores", last_succeeded_at: "2026-09-13T15:30:00Z", last_failed_at: null },
+    { job_name: "reminders", last_succeeded_at: "2026-09-13T15:50:00Z", last_failed_at: null },
+  ], now, { lineLocksDue: false });
+  assert.deepEqual(result, { healthy: true, problems: [] });
+});
+
 test("worker receipts stay constant-size and the public route remains opaque", async () => {
   const [migration, lease, route] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820011000_add_critical_worker_heartbeats.sql", import.meta.url), "utf8"),
@@ -39,5 +47,7 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "success"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
   assert.match(route, /status: result\.healthy \? 200 : 503/);
+  assert.match(route, /lineLocksDue/);
+  assert.match(route, /line_lock_at/);
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
 });
