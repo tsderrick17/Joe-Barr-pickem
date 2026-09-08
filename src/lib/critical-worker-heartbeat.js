@@ -1,8 +1,7 @@
 const CRITICAL_WORKERS = {
-  // Keep probe cadence separate from cron-delivery jitter.
-  line_locks: 12 * 60,
-  scores: 45 * 60,
-  reminders: 20 * 60,
+  line_locks: 5 * 60,
+  scores: 35 * 60,
+  reminders: 12 * 60,
 };
 
 const WORKER_LABELS = {
