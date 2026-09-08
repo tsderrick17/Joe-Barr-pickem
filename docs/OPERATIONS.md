@@ -80,6 +80,11 @@ commissioner action is likely required. It opens one incident per condition,
 sends one notification for that incident, and automatically resolves the
 incident after recovery. A resolved condition can alert again if it genuinely
 recurs. Failed notification delivery is retried no more than every 30 minutes.
+When the shared worker assessment finds real overdue line, scoring, or reminder
+work alongside an unhealthy worker receipt, the watchdog first makes one normal
+lease-protected recovery attempt. It keeps provider quota protection, retry
+backoff, delivery deduplication, and all existing database safeguards; it then
+rechecks health and leaves the incident open if recovery did not complete.
 
 The only alert conditions are:
 

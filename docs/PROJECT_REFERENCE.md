@@ -279,6 +279,11 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Mutations are idempotent or retry-safe. Imports validate before writing;
   rollover returns the existing result; line locking and scoring operate only
   on due records.
+- When the watchdog proves a critical worker is unhealthy while it has real
+  due work, it makes one lease-protected recovery attempt through that worker's
+  normal line-lock, score, or reminder path. It immediately rechecks the saved
+  result; an incomplete recovery remains an actionable incident rather than
+  being reported as healthy.
 - Operational logs and delivery receipts are retained and reviewed separately
   from permanent competitive history.
 - Once per Eastern day, the leased watchdog reuses Launch Preflight's
