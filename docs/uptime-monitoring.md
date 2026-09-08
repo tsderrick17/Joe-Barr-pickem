@@ -11,7 +11,7 @@ contacts, and current incidents.
 | Monitor | URL | A 200 proves | Where to diagnose a failure |
 | --- | --- | --- | --- |
 | PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
-| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The watchdog worker checked in successfully within the last 12 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
+| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The watchdog worker checked in successfully within the last 20 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
 | PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking (once a lock is due), reminder processing, and final-score processing are within their allowed freshness windows (with room for one delayed cron delivery) | **Commissioner → Automation Health** to identify the worker |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
 
