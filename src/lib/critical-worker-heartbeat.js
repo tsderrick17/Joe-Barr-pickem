@@ -1,7 +1,5 @@
 const CRITICAL_WORKERS = {
-  // Leave room for pg_cron/Vercel cold starts and one delayed invocation.
-  // UptimeRobot checks every five minutes, so a single late run must not flap
-  // the public monitor while work is still within a safe recovery window.
+  // Keep probe cadence separate from cron-delivery jitter.
   line_locks: 12 * 60,
   scores: 45 * 60,
   reminders: 20 * 60,
@@ -23,8 +21,8 @@ export function describeCriticalWorkerProblem(problem) {
 
 /**
  * A worker is healthy after a recent success. A transient failed invocation
- * does not immediately override that success; the freshness window is the
- * circuit breaker for repeated failures.
+ * does not immediately override that success; freshness is the circuit
+ * breaker for repeated failures.
  */
 export function assessCriticalWorkerHeartbeats(rows, now = new Date(), {
   lineLocksDue = true,
