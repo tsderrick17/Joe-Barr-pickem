@@ -12,6 +12,9 @@ export default function BowlPoolPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasLaunched, setHasLaunched] = useState(false);
   const [optedIn, setOptedIn] = useState(false);
+  const [selections, setSelections] = useState<Record<string, "favorite" | "underdog">>({});
+  const [savedSelections, setSavedSelections] = useState<Record<string, "favorite" | "underdog">>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string; venue_city?: string; venue_state?: string; time_confirmed?: boolean }>>([]);
 
   useEffect(() => {
@@ -42,6 +45,19 @@ export default function BowlPoolPage() {
   }, []);
 
   const canView = profile?.isCommissioner === true || hasLaunched;
+  const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections);
+  function chooseTeam(gameId: string, side: "favorite" | "underdog") {
+    setSelections((current) => current[gameId] === side
+      ? Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId))
+      : { ...current, [gameId]: side });
+  }
+  async function submitSelections() {
+    setIsSubmitting(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+    setSavedSelections(selections);
+    setIsSubmitting(false);
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">NCAA Bowls</h1>
@@ -50,6 +66,7 @@ export default function BowlPoolPage() {
       {!isLoading && canView ? (
         <>
           <label className="mt-6 flex items-start gap-3 border border-slate-300 bg-white p-4 sm:p-5"><input className="mt-1 h-5 w-5" type="checkbox" checked={optedIn} onChange={(event) => setOptedIn(event.target.checked)} /><span className="text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out at any time)</span></label>
+          {optedIn && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
           {optedIn ? <section className="mt-4 border border-slate-300 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
@@ -64,9 +81,9 @@ export default function BowlPoolPage() {
               <div className="grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <span className="text-sm" aria-label="Blank favorite team"><span className="bowl-placeholder">Team TBD</span></span>
+                <button className={`text-left text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">Team TBD</button>
                 <span className="text-center" aria-label="Blank spread">—</span>
-                <span className="text-sm" aria-label="Blank underdog team"><span className="bowl-placeholder">Team TBD</span></span>
+                <button className={`text-left text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">Team TBD</button>
               </div>
             ))}
           </div>
