@@ -481,7 +481,7 @@ export default function HomePage() {
           </div>
           {!bowlPoolMinimized ? <>
             <div className="grid grid-cols-2 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center">
-              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Frisco Bowl</p><p className="mt-1 text-xl font-bold">— wins</p></div>
+              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Frisco</p><p className="mt-1 text-xl font-bold">— wins</p></div>
               <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Pool wins</p><p className="mt-1 text-xl font-bold">—</p></div>
             </div>
             <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
