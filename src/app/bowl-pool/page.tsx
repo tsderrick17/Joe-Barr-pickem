@@ -78,13 +78,13 @@ export default function BowlPoolPage() {
             <div className="grid grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
               <span>Date / time</span><span>Bowl / location</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span>
             </div>
-            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game) => (
+            {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game) => (
               <div className="grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <span className="text-sm" aria-label="Blank favorite team">TBD</span>
+                <span className="text-sm" aria-label="Blank favorite team"><span className="bowl-placeholder">Team TBD</span></span>
                 <span className="text-center" aria-label="Blank spread">—</span>
-                <span className="text-sm" aria-label="Blank underdog team">TBD</span>
+                <span className="text-sm" aria-label="Blank underdog team"><span className="bowl-placeholder">Team TBD</span></span>
               </div>
             ))}
           </div>
