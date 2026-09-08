@@ -30,6 +30,10 @@ type Health = {
   };
   providerAllowance: number | null;
   retention: { candidates: number; cutoff: string };
+  criticalWorkers: {
+    healthy: boolean;
+    messages: string[];
+  };
 };
 
 async function readJson(response: Response) {
@@ -158,6 +162,12 @@ export default function AutomationHealth() {
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <StatusCard label="OFFICIAL LINES" value="Last successful lock" detail={localTime(health.latestSuccessfulLocks?.completed_at ?? health.latestSuccessfulLocks?.started_at)} />
+          <StatusCard
+            attention={!health.criticalWorkers.healthy}
+            label="CRITICAL WORKERS"
+            value={health.criticalWorkers.healthy ? "All workers current" : "Action needed"}
+            detail={health.criticalWorkers.healthy ? "Line locks, scores, and reminders are current when work is due." : health.criticalWorkers.messages.join(" ")}
+          />
           <StatusCard
             attention={health.scoreProviderFailureStreak > 0}
             label="FINAL SCORES"

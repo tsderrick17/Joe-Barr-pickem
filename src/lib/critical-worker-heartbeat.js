@@ -4,6 +4,20 @@ const CRITICAL_WORKERS = {
   reminders: 12 * 60,
 };
 
+const WORKER_LABELS = {
+  line_locks: "Official-line locking",
+  scores: "Final-score checking",
+  reminders: "Reminder delivery",
+};
+
+export function describeCriticalWorkerProblem(problem) {
+  const label = WORKER_LABELS[problem.jobName];
+  if (problem.reason === "missing") return `${label} has not recorded a successful run while work is due.`;
+  if (problem.reason === "failed") return `${label} failed after its last successful run.`;
+  if (problem.reason === "stale") return `${label} is overdue for a successful run while work is due.`;
+  return `${label} has an invalid heartbeat timestamp.`;
+}
+
 /**
  * A worker is healthy only after a recent success. A later failure overrides
  * that success until the next successful invocation.

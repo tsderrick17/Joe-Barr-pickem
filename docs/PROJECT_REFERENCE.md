@@ -391,6 +391,10 @@ Manual controls are recovery paths, not alternate implementations.
 - A successful Vercel production deployment starts an independent smoke gate.
   It retries the canonical site plus the availability, watchdog, worker, and
   backup contracts until all return HTTP 200 or the release is marked failed.
+- The public worker contract stays deliberately opaque, but its exact same
+  due-work and heartbeat evaluation powers the Commissioner Automation Status
+  card. A 503 can therefore be diagnosed there by responsibility (line locks,
+  final scores, or reminders) without exposing operational timestamps publicly.
 - Client error reporting discards only exact, confirmed browser-extension
   infrastructure noise; broad message classes are never suppressed. Player
   identity remains excluded from every Sentry event.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { assessCriticalWorkerHeartbeats } from "../src/lib/critical-worker-heartbeat.js";
+import { assessCriticalWorkerHeartbeats, describeCriticalWorkerProblem } from "../src/lib/critical-worker-heartbeat.js";
 
 const now = new Date("2026-09-13T16:00:00Z");
 
@@ -34,11 +34,19 @@ test("line-lock monitoring waits for the first line-lock deadline", () => {
   assert.deepEqual(result, { healthy: true, problems: [] });
 });
 
+test("Commissioner-safe worker messages identify the affected responsibility", () => {
+  assert.equal(
+    describeCriticalWorkerProblem({ jobName: "line_locks", reason: "stale" }),
+    "Official-line locking is overdue for a successful run while work is due.",
+  );
+});
+
 test("worker receipts stay constant-size and the public route remains opaque", async () => {
-  const [migration, lease, route] = await Promise.all([
+  const [migration, lease, route, sharedHealth] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820011000_add_critical_worker_heartbeats.sql", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/automation-execution-lease.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/app/api/health/workers/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/critical-worker-health.ts", import.meta.url), "utf8"),
   ]);
   assert.match(migration, /job_name text primary key/);
   assert.match(migration, /on conflict \(job_name\) do update/);
@@ -47,9 +55,10 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "success"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
   assert.match(route, /status: result\.healthy \? 200 : 503/);
-  assert.match(route, /lineLocksDue/);
-  assert.match(route, /line_lock_at/);
-  assert.match(route, /scoring_period_id/);
-  assert.match(route, /status.*active/);
+  assert.match(route, /checkCriticalWorkerHealth/);
+  assert.match(sharedHealth, /lineLocksDue/);
+  assert.match(sharedHealth, /line_lock_at/);
+  assert.match(sharedHealth, /scoring_period_id/);
+  assert.match(sharedHealth, /status", "active/);
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
 });

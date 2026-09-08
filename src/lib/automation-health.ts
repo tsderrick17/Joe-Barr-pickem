@@ -1,4 +1,5 @@
 import { checkReminderHealth } from "@/lib/reminder-health";
+import { checkCriticalWorkerHealth } from "@/lib/critical-worker-health";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type AutomationRun = {
@@ -18,7 +19,7 @@ export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
   const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult] = await Promise.all([
+  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult, criticalWorkerHealth] = await Promise.all([
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
@@ -43,6 +44,7 @@ export async function checkAutomationHealth(now = new Date()) {
     supabaseAdmin.from("pin_login_incidents")
       .select("id, attempted_pins")
       .gt("alert_until", now.toISOString()),
+    checkCriticalWorkerHealth(now),
   ]);
 
   if (
@@ -146,6 +148,7 @@ export async function checkAutomationHealth(now = new Date()) {
     problems.push(`${retentionCandidates.toLocaleString()} operational records are older than 180 days; review archival storage before the database grows further.`);
   }
 
+  problems.push(...criticalWorkerHealth.messages);
   problems.push(...reminderHealth.problems);
   return {
     checkedAt,
@@ -170,5 +173,6 @@ export async function checkAutomationHealth(now = new Date()) {
     pinAttackIncidents: pinAttackIncidentsResult.data ?? [],
     retention: { ...retention, candidates: retentionCandidates },
     reminderHealth,
+    criticalWorkers: criticalWorkerHealth,
   };
 }

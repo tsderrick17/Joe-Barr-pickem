@@ -314,7 +314,6 @@ favorite-side position. Slow repeated PIN guesses by source fingerprint after
 five and ten failures without ever locking an individual player's valid PIN.
 Treat verified postponed, cancelled, and no-contest selections as audited
 voids—not losses—and allow those settled disruptions to stop holding rollover.
-
 ## 2026-09-07 — REF-028 — Keep the NCAA Bowl Pool separate, voluntary, and push-free
 
 **Status:** Accepted
@@ -331,3 +330,14 @@ the original provider value. Rank by wins, then the closest absolute combined
 points prediction for the CFP national championship; remaining ties crown
 co-champions. Use CollegeFootballData as the no-cost schedule/result source
 and the existing Odds API integration for current NCAAF lines.
+
+## 2026-09-08 — REF-029 — Make production worker failures actionable to the Commissioner
+
+**Status:** Accepted
+
+The public worker-health endpoint remains an intentionally opaque availability
+contract, but it and the Commissioner Automation Status view must use one shared
+evaluation of due line locks, scores, reminders, and worker heartbeats. A failed
+production smoke gate therefore corresponds to a visible Commissioner action
+item with the affected responsibility, while public probes reveal no job names
+or timestamps.
