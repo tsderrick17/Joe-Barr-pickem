@@ -44,6 +44,7 @@ export async function GET() {
       .from("push_reminders")
       .select("id")
       .in("status", ["scheduled", "sending"])
+      .gte("scheduled_for", new Date(checkedAt.getTime() - 24 * 60 * 60 * 1000).toISOString())
       .lte("scheduled_for", checkedAt.toISOString())
       .limit(1);
     if (dueRemindersError) throw dueRemindersError;
