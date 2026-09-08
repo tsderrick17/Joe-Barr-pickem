@@ -22,3 +22,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Schedule import failed." }, { status: 400 });
   }
 }
+
+export async function GET(request: NextRequest) {
+  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const year = Number(request.nextUrl.searchParams.get("seasonYear") || 2026);
+  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", year).maybeSingle();
+  if (!season) return NextResponse.json({ games: [] });
+  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id,provider_game_id,bowl_name,kickoff_at,order_index,away_team_id,home_team_id").eq("season_id", season.id).order("order_index");
+  if (error) return NextResponse.json({ error: "Schedule could not be loaded." }, { status: 500 });
+  return NextResponse.json({ games: games ?? [] });
+}
