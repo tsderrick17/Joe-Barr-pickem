@@ -168,8 +168,10 @@ the canonical NFL schedule and runs on the first day that has no NFL game. The
 calendar check includes preseason, regular-season, and playoff dates, makes no
 Odds API request, and fails closed when the schedule feed lacks coverage for an
 active football month. A successful completion marker prevents another
-scheduled run that month; a failed attempt may retry on a later non-gameday.
-Manual rehearsals remain available at any time.
+scheduled run that month. A failed scheduled attempt does not retry
+automatically: use a manual rehearsal once the cause is understood, so one
+fault cannot create a daily alert loop. Manual rehearsals remain available at
+any time.
 
 The selected run builds an isolated database, installs the latest direct package
 versions without committing them, applies all migrations, runs the deterministic

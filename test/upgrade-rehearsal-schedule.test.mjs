@@ -23,18 +23,22 @@ test("a scheduled rehearsal skips a gameday and runs on the next available non-g
     selectUpgradeRehearsalDay({ eventName: "schedule", today: "2026-10-02", gameDates }),
     { run: true, reason: "first-available-non-gameday", date: "2026-10-02" },
   );
+  assert.deepEqual(
+    selectUpgradeRehearsalDay({ eventName: "schedule", today: "2026-10-03", gameDates }),
+    { run: false, reason: "first-non-gameday-already-passed", date: "2026-10-02" },
+  );
 });
 
 test("playoff dates receive the same gameday protection", () => {
-  const gameDates = new Set(["2027-01-02", "2027-01-03", "2027-01-04"]);
+  const gameDates = new Set(["2027-01-01", "2027-01-02", "2027-01-03", "2027-01-04"]);
   assert.equal(selectUpgradeRehearsalDay({ eventName: "schedule", today: "2027-01-02", gameDates }).run, false);
   assert.equal(selectUpgradeRehearsalDay({ eventName: "schedule", today: "2027-01-05", gameDates }).run, true);
 });
 
-test("competitive months fail closed when the schedule feed has no coverage", () => {
-  assert.throws(
-    () => selectUpgradeRehearsalDay({ eventName: "schedule", today: "2026-09-01", gameDates: new Set() }),
-    /no games for 2026-09/,
+test("competitive months fail closed without creating a scheduled failure when coverage is unavailable", () => {
+  assert.deepEqual(
+    selectUpgradeRehearsalDay({ eventName: "schedule", today: "2026-09-01", gameDates: new Set() }),
+    { run: false, reason: "schedule-unavailable", date: "2026-09-01" },
   );
   assert.equal(selectUpgradeRehearsalDay({ eventName: "schedule", today: "2026-06-01", gameDates: new Set() }).run, true);
 });

@@ -154,7 +154,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     // to lock a fresh line and finish the season.
     const rescheduled = await insertOne(client, `
       select * from public.reschedule_game_atomically($1, $2, $3, null)
-    `, [playoffGames[2].id, iso(48 * 60 * 60 * 1000), iso(47 * 60 * 60 * 1000)]);
+    `, [playoffGames[2].id, iso(60 * 60 * 1000), iso(0)]);
     assert.equal(rescheduled.line_reopened, true);
     const removedLine = await insertOne(client,
       "select count(*)::integer as count from public.game_lines where game_id = $1",
@@ -169,7 +169,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
 
     await client.query(
       "select * from public.snapshot_playoff_day_eligibility($1, $2)",
-      [playoff.id, playoffGames[0].kickoff_at],
+      [playoff.id, iso(-24 * 60 * 60 * 1000)],
     );
     const firstEligibility = await client.query(`
       select player_id, is_eligible

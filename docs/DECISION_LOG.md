@@ -272,9 +272,9 @@ Evaluate the monthly isolated upgrade rehearsal during the first ten Eastern
 calendar days and run it on the first available date with no NFL game. Use the
 canonical no-credit schedule feed across preseason, regular season, and
 playoffs; fail closed when an active football month lacks schedule coverage.
-Record a successful monthly completion artifact so later daily checks skip, but
-allow a failed attempt to retry on another non-gameday and preserve manual
-dispatch. This does not change production availability—the rehearsal has always
+Record a successful monthly completion artifact so later daily checks skip. A
+scheduled attempt gets exactly one selected non-gameday each month; preserve
+manual dispatch as the deliberate retry path after a failure. This does not change production availability—the rehearsal has always
 been isolated—but it keeps optional CI work and alerts away from peak game use.
 
 ## 2026-08-26 — REF-026 — Treat playoff reveals and daily recaps as separate promises
