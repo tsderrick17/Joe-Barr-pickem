@@ -15,7 +15,10 @@ if (eventName === "workflow_dispatch") {
 const response = await fetch(process.env.NFL_FULL_SCHEDULE_URL ?? NFLVERSE_SCHEDULE_URL, {
   signal: AbortSignal.timeout(30_000),
 });
-if (!response.ok) throw new Error(`The NFL schedule feed returned HTTP ${response.status}; the rehearsal will retry on the next scheduled day.`);
+if (!response.ok) {
+  appendFileSync(outputPath, `run=false\nreason=schedule-unavailable\nselected_date=${today}\n`);
+  process.exit(0);
+}
 
 const decision = selectUpgradeRehearsalDay({
   eventName,

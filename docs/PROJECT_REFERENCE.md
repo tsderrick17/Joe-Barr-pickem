@@ -379,7 +379,9 @@ Manual controls are recovery paths, not alternate implementations.
   never commits upgrades or deploys production. Its scheduled gate uses the
   canonical NFL calendar to choose the first available non-gameday each month,
   includes playoff dates, fails closed on missing in-season schedule coverage,
-  and records one completion marker so it cannot repeat after success.
+  and records one completion marker so it cannot repeat after success. A
+  scheduled failure also waits until the following month; a manual run is the
+  explicit retry mechanism.
 
 ## Documentation maintenance contract
 

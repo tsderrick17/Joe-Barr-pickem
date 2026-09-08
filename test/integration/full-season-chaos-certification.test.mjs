@@ -337,8 +337,8 @@ test("one-button full-season chaos certification", {
       }
 
       await advanceFixtureClock(client, `
-        update public.games set kickoff_at = clock_timestamp() - interval '2 hours',
-          line_lock_at = clock_timestamp() - interval '3 hours'
+        update public.games set kickoff_at = clock_timestamp() - interval '1 day',
+          line_lock_at = clock_timestamp() - interval '25 hours'
         where scoring_period_id = $1 and status = 'scheduled'
       `, [period.id]);
       const finals = games

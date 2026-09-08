@@ -24,8 +24,21 @@ export function selectUpgradeRehearsalDay({ eventName, today, gameDates }) {
 
   if (day > 10) return { run: false, reason: "outside-opening-window", date: today };
   if (competitiveMonths.has(month) && ![...gameDates].some((date) => date.startsWith(monthPrefix))) {
-    throw new Error(`The NFL schedule feed has no games for ${match[1]}-${match[2]}; the rehearsal will fail closed and retry.`);
+    return { run: false, reason: "schedule-unavailable", date: today };
   }
-  if (gameDates.has(today)) return { run: false, reason: "nfl-gameday", date: today };
-  return { run: true, reason: "first-available-non-gameday", date: today };
+
+  // The Action wakes during the opening ten days solely to find this month's
+  // first non-gameday. Once that day has passed, a failed rehearsal must not
+  // turn into a daily alert loop. Manual dispatch remains the deliberate retry
+  // path, and the next month gets a fresh scheduled attempt.
+  for (let candidateDay = 1; candidateDay <= day; candidateDay += 1) {
+    const candidate = `${monthPrefix}${String(candidateDay).padStart(2, "0")}`;
+    if (gameDates.has(candidate)) continue;
+    if (candidate === today) {
+      return { run: true, reason: "first-available-non-gameday", date: candidate };
+    }
+    return { run: false, reason: "first-non-gameday-already-passed", date: candidate };
+  }
+
+  return { run: false, reason: "nfl-gameday", date: today };
 }
