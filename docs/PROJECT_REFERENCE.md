@@ -118,6 +118,30 @@ be replayed.
   remains, the disruption does not eliminate the entry or hold week rollover.
 - Survivor results never count toward season-long ATS wins or ATS percentage.
 
+## NCAA Bowl Pool
+
+- The NCAA Bowl Pool is a separate, voluntary annual competition. It has its
+  own seasons, entries, college teams, games, lines, picks, standings,
+  championships, and audit history; it never changes NFL Pick'em or Survivor
+  records.
+- Players see the Bowl Pool opt-in beginning December 7 at 3:00 AM Eastern.
+  Commissioners can access it before then. A player may withdraw only before
+  the first game kicks off. Their private draft remains during that withdrawal
+  window and is deleted at the first kickoff.
+- Every FBS bowl and College Football Playoff game, including campus CFP games
+  and the national championship, is represented in chronological order. An
+  opted-in player may save any number of selections at once and return later;
+  every individual game locks at its own kickoff and becomes public then.
+- NCAA ATS picks follow the NFL privacy and locked-line rules. A whole-number
+  source spread is adjusted by half a point for this pool so it cannot push;
+  an actual `PK` game remains `PK`. A win is one standings point.
+- Bowl standings are visible to all players in an expandable grid. Before a
+  game's kickoff, only the owner can see their selection; after kickoff the
+  represented pick is public. Final cells show a full green win or red loss.
+- Final standings sort by ATS wins, then the smallest absolute difference from
+  the combined points scored in the CFP national championship. Remaining ties
+  create co-champions.
+
 ## Weekly lifecycle
 
 All operational times below are `America/New_York` and therefore remain stable
@@ -306,6 +330,11 @@ may enrich spreads but cannot override canonical schedule assignments.
   source-game snapshot, and the unique reminder/player delivery receipt plus
   uncertain-retry guard prevent duplicate copies without suppressing a different
   valid message.
+- CollegeFootballData is the canonical NCAA schedule and result source. The
+  existing Odds API integration supplies live NCAAF spreads. Both inputs are
+  stored before a bowl line becomes official, and either provider failing must
+  block only the affected bowl-game transition rather than guess or overwrite
+  a saved record.
 
 ## Action-only watchdog
 
