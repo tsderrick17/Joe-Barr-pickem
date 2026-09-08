@@ -2258,6 +2258,14 @@ html[data-theme="night"] .newspaper-clipping::after {
   vertical-align: middle;
 }
 
+.bowl-placeholder {
+  background: linear-gradient(90deg, rgba(238, 205, 0, .72), rgba(255, 235, 40, .54) 8%, rgba(255, 235, 40, .48));
+  clip-path: polygon(2% 0, 100% 3%, 98% 100%, 0 96%);
+  display: inline-block;
+  padding: .05em .28em .08em;
+  transform: rotate(-.6deg);
+}
+
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 

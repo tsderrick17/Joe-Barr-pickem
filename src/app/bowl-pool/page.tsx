@@ -82,9 +82,9 @@ export default function BowlPoolPage() {
               <div className="grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <span className="text-sm" aria-label="Blank favorite team">TBD</span>
+                <span className="text-sm" aria-label="Blank favorite team"><span className="bowl-placeholder">Team TBD</span></span>
                 <span className="text-center" aria-label="Blank spread">—</span>
-                <span className="text-sm" aria-label="Blank underdog team">TBD</span>
+                <span className="text-sm" aria-label="Blank underdog team"><span className="bowl-placeholder">Team TBD</span></span>
               </div>
             ))}
           </div>
