@@ -372,3 +372,12 @@ then inserts only keys that are absent. The table's partial unique key remains
 the final duplicate guard, but is not used as a PostgREST upsert conflict
 target. This retains immutable delivery records and prevents schedule setup
 from blocking the reminder worker.
+## REF-033 — Agile NCAA bowl schedule staging
+
+- **Decision:** Stage bowl games with a stable commissioner-supplied key and
+  canonical sponsor-free display name; allow team and spread fields to remain
+  blank until confirmed. Keep the pre-launch standings preview commissioner-only.
+- **Reason:** Bowl participants and lines change annually, while the known bowl
+  order and kickoff schedule can be prepared safely without exposing unfinished
+  data or changing NFL records. Idempotent keyed imports avoid duplicate games.
+- **Supersedes:** Manual, one-off bowl rows and a fixed five-row preview.
