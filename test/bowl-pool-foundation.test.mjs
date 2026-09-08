@@ -39,6 +39,6 @@ test("Bowl Pool opt-in controls the whole selection card", async () => {
   assert.match(page, /optedIn \? <section/);
   assert.match(page, /Select favorite team/);
   assert.match(page, /Blank spread/);
-  assert.match(page, /Blank underdog team/);
+  assert.match(page, /Select underdog team/);
   assert.doesNotMatch(page, /Separate competition|Preview|Stage the schedule|Standings card|Commissioner preview only/);
 });
