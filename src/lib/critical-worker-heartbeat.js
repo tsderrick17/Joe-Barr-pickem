@@ -20,8 +20,9 @@ export function describeCriticalWorkerProblem(problem) {
 }
 
 /**
- * A worker is healthy only after a recent success. A later failure overrides
- * that success until the next successful invocation.
+ * A worker is healthy after a recent success. A transient failed invocation
+ * does not immediately override that success; freshness is the circuit
+ * breaker for repeated failures.
  */
 export function assessCriticalWorkerHeartbeats(rows, now = new Date(), {
   lineLocksDue = true,
@@ -40,16 +41,10 @@ export function assessCriticalWorkerHeartbeats(rows, now = new Date(), {
     }
 
     const succeededAt = new Date(row.last_succeeded_at);
-    const failedAt = row.last_failed_at ? new Date(row.last_failed_at) : null;
     if (Number.isNaN(succeededAt.getTime())) {
       problems.push({ jobName, reason: "invalid" });
       continue;
     }
-    if (failedAt && !Number.isNaN(failedAt.getTime()) && failedAt > succeededAt) {
-      problems.push({ jobName, reason: "failed" });
-      continue;
-    }
-
     const ageSeconds = Math.max(0, Math.floor((now.getTime() - succeededAt.getTime()) / 1000));
     const workNotDue = (jobName === "line_locks" && !lineLocksDue) || (jobName === "scores" && !scoresDue) || (jobName === "reminders" && !remindersDue);
     if (ageSeconds > maximumAgeSeconds && !workNotDue) {
