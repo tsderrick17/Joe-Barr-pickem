@@ -9,19 +9,29 @@ export const revalidate = 0;
 export async function GET() {
   const checkedAt = new Date();
   try {
-    const [{ data, error }, { data: dueLineGames, error: dueLineGamesError }] = await Promise.all([
+    const [{ data, error }, { data: activePeriods, error: activePeriodsError }] = await Promise.all([
       supabaseAdmin
         .from("automation_worker_heartbeats")
         .select("job_name,last_succeeded_at,last_failed_at")
         .in("job_name", ["line_locks", "scores", "reminders"]),
       supabaseAdmin
-        .from("games")
+        .from("scoring_periods")
         .select("id")
-        .eq("status", "scheduled")
-        .lte("line_lock_at", checkedAt.toISOString())
-        .limit(1),
+        .eq("status", "active"),
     ]);
     if (error) throw error;
+    if (activePeriodsError) throw activePeriodsError;
+
+    const activePeriodIds = (activePeriods ?? []).map((period) => period.id);
+    const { data: dueLineGames, error: dueLineGamesError } = activePeriodIds.length === 0
+      ? { data: [], error: null }
+      : await supabaseAdmin
+        .from("games")
+        .select("id")
+        .in("scoring_period_id", activePeriodIds)
+        .eq("status", "scheduled")
+        .lte("line_lock_at", checkedAt.toISOString())
+        .limit(1);
     if (dueLineGamesError) throw dueLineGamesError;
 
     const result = assessCriticalWorkerHeartbeats(data, checkedAt, {
