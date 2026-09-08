@@ -32,3 +32,12 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
   assert.match(migration, /purge_withdrawn_bowl_pool_drafts/i);
   assert.match(migration, /revoke all on table public\.bowl_pool_seasons/i);
 });
+
+test("commissioner Bowl Pool page includes a blank line-and-team selection scaffold", async () => {
+  const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /Selections card/);
+  assert.match(page, /Blank favorite team/);
+  assert.match(page, /Blank spread/);
+  assert.match(page, /Blank underdog team/);
+  assert.match(page, /Commissioner preview only/);
+});
