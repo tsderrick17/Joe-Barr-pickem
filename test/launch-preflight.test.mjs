@@ -11,7 +11,7 @@ test("launch preflight verifies every external game-day dependency without sendi
   assert.match(source, /is_commissioner/);
   assert.match(source, /notification_email/);
   assert.match(source, /automation_cron_secret_matches/);
-  assert.match(source, /assessAutomationHeartbeat/);
+  assert.match(source, /assessAutomationWorkerHeartbeat/);
   assert.match(source, /supabase-server-authorization/);
   assert.match(source, /supabaseServerCredentialSource/);
   assert.match(source, /authorized && authoritativeSource/);
