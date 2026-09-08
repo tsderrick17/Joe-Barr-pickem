@@ -34,15 +34,6 @@ test("line-lock monitoring waits for the first line-lock deadline", () => {
   assert.deepEqual(result, { healthy: true, problems: [] });
 });
 
-test("worker monitoring tolerates one delayed cron delivery", () => {
-  const result = assessCriticalWorkerHeartbeats([
-    { job_name: "line_locks", last_succeeded_at: "2026-09-13T15:50:00Z", last_failed_at: null },
-    { job_name: "scores", last_succeeded_at: "2026-09-13T15:30:00Z", last_failed_at: null },
-    { job_name: "reminders", last_succeeded_at: "2026-09-13T15:50:00Z", last_failed_at: null },
-  ], now);
-  assert.equal(result.healthy, true);
-});
-
 test("Commissioner-safe worker messages identify the affected responsibility", () => {
   assert.equal(
     describeCriticalWorkerProblem({ jobName: "line_locks", reason: "stale" }),

@@ -24,11 +24,6 @@ database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
 descriptive.
 
-The worker freshness windows include bounded cron-delivery grace: 12 minutes
-for line locks, 45 minutes for score checks, and 20 minutes for reminders.
-UptimeRobot probes every five minutes, so one delayed serverless invocation
-does not flap the monitor; the watchdog still evaluates genuinely overdue work.
-
 ## What each monitor does not prove
 
 - The production check proves core availability, not that every background job
