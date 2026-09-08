@@ -14,7 +14,7 @@ export default function BowlPoolPage() {
   const [csv, setCsv] = useState("order,bowl_name,kickoff_at,game_key,away_team,home_team,spread,is_cfp\n");
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string }>>([]);
+  const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string; venue_city?: string; venue_state?: string; time_confirmed?: boolean }>>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -73,14 +73,16 @@ export default function BowlPoolPage() {
           <p className="mt-4 max-w-2xl text-slate-700">Every bowl and playoff matchup will appear here in chronological order. Team names and spreads are intentionally blank until the schedule and lines are confirmed.</p>
           {profile?.isCommissioner && !hasLaunched ? <div className="mt-5 border border-slate-300 bg-slate-50 p-4"><p className="text-sm font-bold">Stage the schedule</p><p className="mt-1 text-sm text-slate-600">Paste CSV rows in order. Use the sponsor-free name you want displayed; teams and spreads may stay blank.</p><textarea className="mt-3 min-h-32 w-full border border-slate-300 bg-white p-3 font-mono text-xs" value={csv} onChange={(event) => setCsv(event.target.value)} aria-label="Bowl schedule CSV" /><button type="button" className="mt-3 border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-50" disabled={importing} onClick={() => void importSchedule()}>{importing ? "Staging…" : "Stage schedule"}</button>{importMessage ? <p className="mt-2 text-sm text-slate-700" role="status">{importMessage}</p> : null}</div> : null}
           <div className="mt-5 overflow-hidden border border-slate-300">
-            <div className="grid grid-cols-[minmax(7rem,1fr)_minmax(4rem,6rem)_minmax(7rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
-              <span>Favorite</span><span className="text-center">Line</span><span className="text-right">Underdog</span>
+            <div className="grid grid-cols-[minmax(10rem,1.2fr)_minmax(7rem,0.9fr)_minmax(5rem,0.5fr)_minmax(7rem,0.9fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
+              <span>Date / bowl</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span><span className="text-right">Location</span>
             </div>
-            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "" }))).map((game) => (
-              <div className="grid min-h-14 grid-cols-[minmax(8rem,1fr)_minmax(4rem,6rem)_minmax(8rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
-                <span className="text-sm font-semibold text-slate-700">{game.bowl_name || <span className="h-5 max-w-32 rounded-sm border border-dashed border-slate-300" aria-label="Blank favorite team" />}</span>
-                <span className="mx-auto text-center text-xs text-slate-500" aria-label="Blank spread">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : "—"}</span>
-                <span className="ml-auto text-sm text-slate-400" aria-label="Blank underdog team">Teams and line TBD</span>
+            {(games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game) => (
+              <div className="grid min-h-16 grid-cols-[minmax(10rem,1.2fr)_minmax(7rem,0.9fr)_minmax(5rem,0.5fr)_minmax(7rem,0.9fr)_minmax(8rem,1fr)] items-center border-t border-slate-200 px-3 text-slate-400 sm:px-4" key={game.id}>
+                <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}{game.time_confirmed === false ? " · time TBD" : game.kickoff_at ? ` · ${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</small></span>
+                <span className="text-sm" aria-label="Blank favorite team">TBD</span>
+                <span className="text-center" aria-label="Blank spread">—</span>
+                <span className="text-sm" aria-label="Blank underdog team">TBD</span>
+                <span className="text-right text-xs">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</span>
               </div>
             ))}
           </div>

@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("players")
       .select(
-        "id, show_survivor_standings, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows",
+        "id, is_commissioner, show_survivor_standings, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows",
       )
       .eq("auth_user_id", user.id)
       .eq("active", true)
@@ -566,6 +566,7 @@ export async function GET(request: NextRequest) {
     // another player's selection appear early or remain hidden after kickoff.
     serverTime: currentTime.toISOString(),
     viewerPlayerId: viewer.id,
+    isCommissioner: viewer.is_commissioner,
     showSurvivorStandings: viewer.show_survivor_standings,
     showPoolChat: viewer.show_pool_chat,
     hidePickemEliminatedRows: viewer.hide_pickem_eliminated_rows,

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const year = Number(request.nextUrl.searchParams.get("seasonYear") || 2026);
   const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", year).maybeSingle();
   if (!season) return NextResponse.json({ games: [] });
-  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id,provider_game_id,bowl_name,kickoff_at,order_index,away_team_id,home_team_id").eq("season_id", season.id).order("order_index");
+  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id,provider_game_id,bowl_name,kickoff_at,order_index,venue_city,venue_state,time_confirmed,away_team_id,home_team_id").eq("season_id", season.id).order("order_index");
   if (error) return NextResponse.json({ error: "Schedule could not be loaded." }, { status: 500 });
   return NextResponse.json({ games: games ?? [] });
 }
