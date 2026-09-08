@@ -314,3 +314,20 @@ favorite-side position. Slow repeated PIN guesses by source fingerprint after
 five and ten failures without ever locking an individual player's valid PIN.
 Treat verified postponed, cancelled, and no-contest selections as audited
 voids—not losses—and allow those settled disruptions to stop holding rollover.
+
+## 2026-09-07 — REF-028 — Keep the NCAA Bowl Pool separate, voluntary, and push-free
+
+**Status:** Accepted
+
+Create a separate annual Bowl Pool rather than bending the NFL season model.
+Players opt in beginning December 7 at 3:00 AM Eastern and may withdraw before
+the first kickoff; a withdrawn pre-event draft is retained through that choice
+window and removed at the first kickoff. Every FBS bowl and CFP game is an
+individually lockable ATS selection, public only at that game's kickoff.
+
+Keep genuine PK games as PK. Convert every non-zero whole-number source spread
+to the next half point before it is locked, removing ATS pushes without hiding
+the original provider value. Rank by wins, then the closest absolute combined
+points prediction for the CFP national championship; remaining ties crown
+co-champions. Use CollegeFootballData as the no-cost schedule/result source
+and the existing Odds API integration for current NCAAF lines.
