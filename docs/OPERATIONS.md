@@ -104,6 +104,11 @@ week as complete scheduling evidence. It does not rewrite historical copies,
 and duplicate legacy records cannot prevent the normal reminder worker from
 processing other due messages.
 
+Automatic email-plan scheduling updates existing unsent occurrences and inserts
+only genuinely missing ones. This deliberately avoids treating the partial
+automation-key uniqueness guard as an upsert target; schedule reconciliation
+cannot block the reminder worker or create a duplicate occurrence.
+
 Once per Eastern day, the same leased watchdog also rechecks the external
 configuration that can drift without a deployment: the deployed cron secret,
 the zero-credit Odds API authentication endpoint, the configured active Brevo

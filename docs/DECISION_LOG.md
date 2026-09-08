@@ -363,3 +363,13 @@ period is already queued. It therefore reads at most one matching record and
 leaves any legacy duplicates untouched. This avoids a harmless historical
 duplicate turning into a worker-wide failure while preserving all delivery and
 audit records.
+
+## 2026-09-08 — REF-032 — Insert only missing automatic email occurrences
+
+**Status:** Accepted
+
+Automatic email scheduling first reconciles the existing scheduled occurrences,
+then inserts only keys that are absent. The table's partial unique key remains
+the final duplicate guard, but is not used as a PostgREST upsert conflict
+target. This retains immutable delivery records and prevents schedule setup
+from blocking the reminder worker.

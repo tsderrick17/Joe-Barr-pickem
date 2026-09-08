@@ -87,7 +87,24 @@ export async function ensureAutomaticEmailPlanMessages() {
     if (updateError) throw new Error("A scheduled automatic email could not follow the latest schedule or wording.");
   }
 
-  const { data, error } = await supabaseAdmin.from("push_reminders").upsert(rows, { onConflict: "automation_key", ignoreDuplicates: true }).select("id");
+  const existingKeys = new Set(
+    (existing ?? [])
+      .map((item) => item.automation_key)
+      .filter((key): key is string => Boolean(key)),
+  );
+  const missingRows = rows.filter((row) => !existingKeys.has(row.automation_key));
+  if (!missingRows.length) return { created: 0, reason: null };
+
+  // `automation_key` is protected by a partial unique index. PostgREST cannot
+  // safely target that index as an upsert conflict target, so its former
+  // upsert failed after updating the existing schedule and blocked all due
+  // reminders. The execution lease makes this read-then-insert path safe; a
+  // concurrent manual creation is a harmless duplicate and remains a no-op.
+  const { data, error } = await supabaseAdmin
+    .from("push_reminders")
+    .insert(missingRows)
+    .select("id");
+  if (error?.code === "23505") return { created: 0, reason: "already_queued" };
   if (error) throw new Error("The automatic email plan could not be queued.");
   return { created: data?.length ?? 0, reason: null };
 }
