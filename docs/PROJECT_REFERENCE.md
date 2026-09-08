@@ -358,6 +358,18 @@ the condition genuinely recurs.
 
 ## Commissioner controls
 
+### NCAA Bowl Pool schedule staging
+
+The separate NCAA Bowl Pool is staged by the Commissioner before its December
+7 launch. The schedule importer accepts an ordered CSV with `order`,
+`bowl_name`, `kickoff_at`, and stable `game_key` columns; team names, spreads,
+and CFP flags are optional so the known bowl order can be loaded before teams
+and lines are confirmed. Commissioners enter the sponsor-free display name
+they want players to see. Imports are idempotent by `game_key`, update kickoff
+and order without changing NFL picks, and are locked after launch. The empty
+standings card is commissioner-only before launch and expands responsively for
+any number of opted-in players after launch.
+
 The Commissioner area is the operational control plane. Its intended order is:
 
 1. Read the quiet watchdog and Automation Health.
