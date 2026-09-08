@@ -13,4 +13,6 @@ test("account navigation uses the shared authenticated profile path", async () =
   assert.doesNotMatch(nav, /supabase\s*\.from\("players"\)/);
   assert.match(profile, /firstName:\s*player\.first_name/);
   assert.match(profile, /isCommissioner:\s*player\.is_commissioner/);
+  assert.match(nav, /href="\/bowl-pool"/);
+  assert.match(nav, /isCommissioner \|\| isBowlPoolLaunched/);
 });
