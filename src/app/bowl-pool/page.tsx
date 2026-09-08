@@ -15,7 +15,6 @@ export default function BowlPoolPage() {
   const [selections, setSelections] = useState<Record<string, "favorite" | "underdog">>({});
   const [savedSelections, setSavedSelections] = useState<Record<string, "favorite" | "underdog">>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [standingsMinimized, setStandingsMinimized] = useState(false);
   const [games, setGames] = useState<Array<{ id: string; bowl_name: string; kickoff_at: string; venue_city?: string; venue_state?: string; time_confirmed?: boolean }>>([]);
 
   useEffect(() => {
@@ -66,7 +65,7 @@ export default function BowlPoolPage() {
       {!isLoading && !canView ? <p className="mt-4 text-slate-700">The NCAA Bowl Pool opens December 7 at 3:00 AM Eastern.</p> : null}
       {!isLoading && canView ? (
         <>
-          <label className="mt-6 flex items-start gap-3 border border-slate-300 bg-white p-4 sm:p-5"><input className="mt-1 h-5 w-5" type="checkbox" checked={optedIn} onChange={(event) => setOptedIn(event.target.checked)} /><span className="text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out at any time)</span></label>
+          <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => setOptedIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>
           {optedIn && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
           {optedIn ? <section className="mt-4 border border-slate-300 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
@@ -78,7 +77,7 @@ export default function BowlPoolPage() {
             <div className="grid grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
               <span>Date / time</span><span>Bowl / location</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span>
             </div>
-            {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : Array.from({ length: 5 }, (_, index) => ({ id: `blank-${index}`, bowl_name: "", kickoff_at: "", venue_city: undefined, venue_state: undefined, time_confirmed: true }))).map((game, index) => (
+            {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
               <div className={`grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{game.bowl_name || "Bowl game"}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
@@ -88,23 +87,6 @@ export default function BowlPoolPage() {
               </div>
             ))}
           </div>
-          <section className="mt-6 border border-slate-300" aria-label="Bowl Pool scoreboard">
-            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-3">
-              <div><p className="text-xs font-black uppercase tracking-[0.16em] text-slate-600">Scoreboard</p><h3 className="font-serif text-xl font-bold">Bowl Pool standings</h3></div>
-              <button className="border border-slate-400 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em]" onClick={() => setStandingsMinimized((current) => !current)} type="button" aria-expanded={!standingsMinimized}>{standingsMinimized ? "Show" : "Minimize"}</button>
-            </div>
-            {!standingsMinimized ? <>
-              <div className="grid grid-cols-3 gap-px border-b border-slate-200 bg-slate-200 text-center">
-                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Games</p><p className="mt-1 text-xl font-bold">—</p></div>
-                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Wins</p><p className="mt-1 text-xl font-bold">—</p></div>
-                <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Final tiebreaker</p><p className="mt-1 text-xl font-bold">—</p></div>
-              </div>
-              <div className="overflow-x-auto"><div className="min-w-[42rem]">
-                <div className="grid grid-cols-[minmax(9rem,1fr)_repeat(4,minmax(6rem,0.7fr))] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600"><span>Player</span><span className="text-center">Wins</span><span className="text-center">Losses</span><span className="text-center">Points</span><span className="text-center">Final total</span></div>
-                {Array.from({ length: 5 }, (_, index) => <div className={`grid grid-cols-[minmax(9rem,1fr)_repeat(4,minmax(6rem,0.7fr))] border-t border-slate-200 px-3 py-3 text-sm ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={`standing-${index}`}><span>Player {index + 1}</span><span className="text-center">—</span><span className="text-center">—</span><span className="text-center">—</span><span className="text-center">—</span></div>)}
-              </div></div>
-            </> : null}
-          </section>
         </section> : null}
         </>
       ) : null}

@@ -35,7 +35,7 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
 
 test("Bowl Pool opt-in controls the whole selection card", async () => {
   const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /I would like to participate in the NCAA Bowl Pool \(you can opt out at any time\)/);
+  assert.match(page, /I would like to participate in the NCAA Bowl Pool \(you can opt out prior to first kickoff\)/);
   assert.match(page, /optedIn \? <section/);
   assert.match(page, /Select favorite team/);
   assert.match(page, /Blank spread/);

@@ -65,6 +65,13 @@ type HomeData = {
   error?: string;
 };
 
+const BOWL_MATRIX_GAMES = [
+  "Frisco", "LA", "Salute to Veterans", "Cure", "68 Ventures", "Xbox", "Myrtle Beach", "Gasparilla",
+  "Playoff Game #1", "Playoff Game #2", "Playoff Game #3", "Playoff Game #4", "Potato", "Boca Raton", "New Orleans", "Frisco",
+  "Hawai'i", "GameAbove Sports", "Rate", "First Responder", "Military", "Pinstripe", "Fenway", "Pop-Tarts", "Arizona", "New Mexico", "Gator",
+  "Birmingham", "Independence", "Music City", "Alamo", "ReliaQuest", "Sun", "Citrus", "Las Vegas", "Armed Forces", "Liberty", "Duke's Mayo", "Holiday",
+];
+
 /* Keep the first paint shaped like the real Standings page while its signed-in
    data arrives. This reserves the ticket and both score surfaces up front,
    avoiding a visible jump without changing any pool behavior. */
@@ -117,6 +124,7 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
   const [savingDisplay, setSavingDisplay] = useState(false);
+  const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
   const serverClockOffset = useRef(0);
 
   useEffect(() => {
@@ -466,7 +474,24 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="Bowl Pool standings preview"><div className="pickem-ledger-masthead"><h2>NCAA Bowl Pool</h2><p className="pickem-ledger-period">PRE-LAUNCH PREVIEW</p></div><div className="border-y-2 border-[#1d1d1f] bg-white p-4 text-sm text-slate-700">Bowl Pool standings will appear here beneath Survivor once players opt in. This preview is visible only to the Commissioner until December 7 at 3:00 AM Eastern.</div></section> : null}
+        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="NCAA Bowl Pool standings">
+          <div className="pickem-ledger-masthead survivor-ledger-masthead">
+            <div className="flex items-center gap-2"><h2>NCAA Bowl Pool</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
+            <p className="pickem-ledger-period">SCOREBOARD</p>
+          </div>
+          {!bowlPoolMinimized ? <>
+            <div className="grid grid-cols-2 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center">
+              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Frisco Bowl</p><p className="mt-1 text-xl font-bold">— wins</p></div>
+              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Pool wins</p><p className="mt-1 text-xl font-bold">—</p></div>
+            </div>
+            <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
+              <div className="min-w-[64rem]">
+                <div className="grid grid-cols-[8rem_repeat(39,minmax(4.5rem,1fr))] border-b-2 border-[#1d1d1f] bg-white text-center text-[10px] font-black uppercase tracking-wide text-slate-600"><span className="sticky left-0 z-10 bg-white px-2 py-2 text-left">PLAYER</span>{BOWL_MATRIX_GAMES.map((game, index) => <span className="px-1 py-2" key={`${game}-${index}`}>{game}</span>)}</div>
+                {data.rows.map((row, rowIndex) => <div className={`grid grid-cols-[8rem_repeat(39,minmax(4.5rem,1fr))] border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} key={row.id}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold">{row.firstName}</span>{BOWL_MATRIX_GAMES.map((game, index) => <span className="px-1 py-2" key={`${row.id}-${game}-${index}`}>—</span>)}</div>)}
+              </div>
+            </div>
+          </> : null}
+        </section> : null}
       </div>
     </main>
   );
