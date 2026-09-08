@@ -341,3 +341,15 @@ evaluation of due line locks, scores, reminders, and worker heartbeats. A failed
 production smoke gate therefore corresponds to a visible Commissioner action
 item with the affected responsibility, while public probes reveal no job names
 or timestamps.
+
+## 2026-09-08 — REF-030 — Recover proven overdue critical work through the watchdog
+
+**Status:** Accepted
+
+When the shared critical-worker assessment proves that a line lock, score
+check, or reminder is both due and unhealthy, the existing leased watchdog may
+run that worker's standard recovery path once. This avoids a second privileged
+implementation and retains every worker's lease, provider allowance, backoff,
+idempotency, and delivery protections. The watchdog re-evaluates health after
+the attempt and preserves an incident when recovery fails or remains in
+progress; it never treats an attempted repair as a successful one.

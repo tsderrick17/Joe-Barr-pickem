@@ -1,6 +1,10 @@
 import { checkAutomationHealth } from "@/lib/automation-health";
+import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 import { getSeasonBootstrapStatus } from "@/lib/full-schedule-bootstrap";
 import { runExternalConfigurationChecks, type LaunchPreflightCheck } from "@/lib/launch-preflight";
+import { lockDueLines } from "@/lib/lock-due-lines";
+import { sendDueReminders } from "@/lib/reminder-worker";
+import { syncFinalScores } from "@/lib/sync-final-scores";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "@/lib/watchdog-rules";
 
@@ -11,6 +15,10 @@ type ConfigurationRun = {
   status: string;
   started_at: string;
   details?: { checks?: LaunchPreflightCheck[] } | null;
+};
+type CriticalWorkerRecovery = {
+  job: "line_locks" | "scores" | "reminders";
+  outcome: "recovered" | "already-running" | "failed";
 };
 
 function isWeeklyStoragePruneDue(now: Date) {
@@ -83,6 +91,36 @@ async function checkConfigurationDrift(now: Date, latestRun: ConfigurationRun | 
   }
 }
 
+/**
+ * The watchdog is allowed to recover only work that the shared critical-worker
+ * assessment has proved is both due and unhealthy. Each operation still uses
+ * its normal lease, provider limits, and idempotent worker implementation.
+ */
+async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof checkAutomationHealth>>) {
+  const jobs = new Set(health.criticalWorkers.problems.map((problem) => problem.jobName));
+  const recoveryTasks: Array<readonly [CriticalWorkerRecovery["job"], () => Promise<unknown>]> = [];
+
+  if (jobs.has("line_locks")) recoveryTasks.push(["line_locks", () => runWithAutomationLease("line_locks", lockDueLines)]);
+  if (jobs.has("scores")) recoveryTasks.push(["scores", () => runWithAutomationLease("scores", syncFinalScores)]);
+  if (jobs.has("reminders")) recoveryTasks.push(["reminders", () => runWithAutomationLease("reminders", sendDueReminders)]);
+
+  const recoveries: CriticalWorkerRecovery[] = [];
+  for (const [job, task] of recoveryTasks) {
+    try {
+      await task();
+      recoveries.push({ job, outcome: "recovered" });
+    } catch (error) {
+      if (error instanceof AutomationAlreadyRunningError) {
+        recoveries.push({ job, outcome: "already-running" });
+        continue;
+      }
+      console.error("Critical worker recovery failed.", { job });
+      recoveries.push({ job, outcome: "failed" });
+    }
+  }
+  return recoveries;
+}
+
 export async function getWatchdogStatus() {
   const [{ data: alerts, error }, { data: lastRun, error: runError }] = await Promise.all([
     supabaseAdmin.from("automation_alerts").select("id, signal_key, severity, title, detail, detected_at, last_seen_at, notified_at, resolved_at, notification_error")
@@ -99,7 +137,7 @@ export async function runAutomationWatchdog(now = new Date()) {
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
   try {
-    const [health, bootstrap, preflight, storagePrune, configurationRun] = await Promise.all([
+    const [initialHealth, bootstrap, preflight, storagePrune, configurationRun] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
       isWeeklyStoragePruneDue(now)
         ? supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
@@ -110,6 +148,10 @@ export async function runAutomationWatchdog(now = new Date()) {
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
     if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
     if (configurationRun.error) throw new Error("The latest configuration-drift check could not be loaded.");
+    const criticalWorkerRecovery = await recoverCriticalWorkerWork(initialHealth);
+    // Re-read after any attempted recovery so the incident state reflects the
+    // saved worker receipt and remaining real work, never a hopeful attempt.
+    const health = criticalWorkerRecovery.length ? await checkAutomationHealth(new Date()) : initialHealth;
     const configurationChecks = await checkConfigurationDrift(now, configurationRun.data as ConfigurationRun | null);
     const signals = evaluateWatchdogSignals({
       health,
@@ -156,6 +198,7 @@ export async function runAutomationWatchdog(now = new Date()) {
       opened,
       resolved: resolvedIds.length,
       notified,
+      criticalWorkerRecovery,
       configurationChecks: configurationChecks.length,
       storagePruned: storagePrune.data ?? undefined,
     };
