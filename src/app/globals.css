@@ -3005,6 +3005,46 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 .bowl-standings-team { min-height: 1.45rem; line-height: 1.45rem; }
 .bowl-standings-line { min-height: 1.45rem; line-height: 1.45rem; }
 
+.bowl-flip-counter {
+  display: inline-flex;
+  gap: .18rem;
+  margin-top: .35rem;
+  perspective: 14rem;
+}
+.bowl-flip-digit {
+  background: #1d2938;
+  border: 1px solid #101923;
+  border-radius: .2rem;
+  box-shadow: inset 0 1px rgba(255,255,255,.14), 0 2px 2px rgba(29,29,31,.18);
+  color: #fffdf8;
+  display: grid;
+  font: 900 2rem/.95 ui-monospace, SFMono-Regular, Menlo, monospace;
+  height: 2.35rem;
+  min-width: 1.35rem;
+  overflow: hidden;
+  place-items: center;
+  position: relative;
+}
+.bowl-flip-digit::after {
+  background: rgba(255,255,255,.16);
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 50%;
+}
+.bowl-flip-digit-face { display: block; transform-origin: center; }
+.bowl-flip-counter.is-shuffling .bowl-flip-digit-face { animation: bowl-digit-flip .72s ease-in-out infinite; }
+@keyframes bowl-digit-flip {
+  0%, 100% { transform: rotateX(0deg); }
+  45% { transform: rotateX(-88deg); }
+  55% { transform: rotateX(88deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bowl-flip-counter.is-shuffling .bowl-flip-digit-face { animation: none; }
+}
+
 .playoff-scoreboard table { background: transparent; }
 .playoff-scoreboard tbody tr { background: transparent !important; }
 .playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
