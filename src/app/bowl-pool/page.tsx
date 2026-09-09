@@ -55,7 +55,7 @@ export default function BowlPoolPage() {
     if (!profile || (!profile.isCommissioner && !hasLaunched)) return;
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (!response.ok) { setOptedIn(false); return; }
-      const payload = await response.json() as { games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }> };
+      const payload = await response.json() as { games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }>; ownPreviewSelections?: Array<{ game_id: string; side: "favorite" | "underdog" }> };
       const nextGames = payload.games ?? [];
       setGames(nextGames);
       setChampionshipGameId(payload.season?.championship_game_id ?? null);
@@ -64,14 +64,14 @@ export default function BowlPoolPage() {
       setChampionshipTotalGuess(guess);
       setSavedChampionshipTotalGuess(guess);
       if (payload.ownPicks) {
-        const next = Object.fromEntries(payload.ownPicks.flatMap((pick) => {
+        const next = Object.fromEntries([...(payload.ownPreviewSelections ?? []).map((pick) => [pick.game_id, pick.side] as const), ...payload.ownPicks.flatMap((pick) => {
           const game = nextGames.find((candidate) => candidate.id === pick.game_id);
           if (!game) return [];
           const favoriteId = game.line?.favorite_team_id;
           const awayId = game.away_team_id ?? game.awayTeam?.id;
           const side = pick.selected_team_id === (favoriteId ?? awayId) ? "favorite" : "underdog";
           return [[pick.game_id, side as "favorite" | "underdog"]];
-        }));
+        })]);
         setSelections(next);
         setSavedSelections(next);
       }
@@ -117,10 +117,11 @@ export default function BowlPoolPage() {
     setIsSubmitting(true);
     setSubmissionError("");
     try {
-      const selectionsToSave = Object.entries(selections).map(([gameId, side]) => {
+      const selectionsToSave = Object.entries(selections).flatMap(([gameId, side]) => {
         const game = games.find((candidate) => candidate.id === gameId);
-        return { gameId, teamId: game && !gameLocked(game) ? (teamForSide(game, side)?.id ?? "") : "" };
-      }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
+        if (!game || gameLocked(game)) return [];
+        return [{ gameId, teamId: teamForSide(game, side)?.id ?? "", side }];
+      });
       const parsedGuess = championshipTotalGuess.trim() === "" ? null : Number(championshipTotalGuess);
       const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: true, selections: selectionsToSave, championshipTotalGuess: parsedGuess }) });
       if (!response.ok) {
@@ -137,7 +138,7 @@ export default function BowlPoolPage() {
   async function changeOptIn(nextOptedIn: boolean) {
     setOptedIn(nextOptedIn);
     try {
-      const selectionsToSave = Object.entries(selections).map(([gameId, side]) => { const game = games.find((candidate) => candidate.id === gameId); return { gameId, teamId: game ? (teamForSide(game, side)?.id ?? "") : "" }; }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
+      const selectionsToSave = Object.entries(selections).flatMap(([gameId, side]) => { const game = games.find((candidate) => candidate.id === gameId); return game && !gameLocked(game) ? [{ gameId, teamId: teamForSide(game, side)?.id ?? "", side }] : []; });
       const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: nextOptedIn ? selectionsToSave : [], championshipTotalGuess: championshipTotalGuess.trim() === "" ? null : Number(championshipTotalGuess) }) });
       if (!response.ok) { setOptedIn(!nextOptedIn); throw new Error("Your Bowl Pool participation could not be saved."); }
       if (nextOptedIn) { setSavedSelections(selections); setSavedChampionshipTotalGuess(championshipTotalGuess); }
