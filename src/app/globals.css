@@ -2363,6 +2363,7 @@ html[data-theme="night"] .newspaper-clipping::after {
   grid-template-columns: 11rem minmax(24rem, 1fr);
 }
 .bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
+.bowl-receipt-strip .slate-receipt-print { margin-bottom: auto; margin-top: auto; }
 .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
 .bowl-receipt-strip .slate-receipt-pool > span { align-self: center; }
 .bowl-receipt-strip .slate-receipt-pool > em { align-self: center; justify-self: start; margin-left: 0; }
