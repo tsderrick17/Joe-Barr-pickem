@@ -105,8 +105,10 @@ export default function BowlPoolPage() {
   async function changeOptIn(nextOptedIn: boolean) {
     setOptedIn(nextOptedIn);
     try {
-      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: [] }) });
-      if (!response.ok) setOptedIn(!nextOptedIn);
+      const selectionsToSave = Object.entries(selections).map(([gameId, side]) => { const game = games.find((candidate) => candidate.id === gameId); return { gameId, teamId: game ? (teamForSide(game, side)?.id ?? "") : "" }; }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
+      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: nextOptedIn ? selectionsToSave : [] }) });
+      if (!response.ok) { setOptedIn(!nextOptedIn); throw new Error("Your Bowl Pool participation could not be saved."); }
+      if (nextOptedIn) { setSavedSelections(selections); setSavedChampionshipTotalGuess(championshipTotalGuess); }
     } catch { setOptedIn(!nextOptedIn); }
   }
 
@@ -144,20 +146,20 @@ export default function BowlPoolPage() {
             </div>
           </div>
           <div className="mt-5 overflow-hidden border border-slate-300">
-            <div className="grid grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:px-4">
-              <span>Date / time</span><span>Bowl / location</span><span>Favorite</span><span className="text-center">Line</span><span>Underdog</span>
+            <div className="grid grid-cols-[minmax(5rem,.7fr)_minmax(0,1.3fr)] gap-x-3 bg-slate-100 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:px-4">
+              <span>Date / time</span><span>Bowl / location</span><span className="hidden sm:block">Favorite</span><span className="hidden text-center sm:block">Line</span><span className="hidden sm:block">Underdog</span>
             </div>
             {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
-              <div className={`grid min-h-16 grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] items-center gap-x-3 border-t border-slate-200 px-3 text-slate-400 sm:px-4 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
+              <div className={`grid min-h-16 grid-cols-[minmax(5rem,.7fr)_minmax(0,1.3fr)] items-center gap-x-3 border-t border-slate-200 px-3 py-3 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-xs leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? `${new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })} ET` : ""}</span>
                 <span><strong className="block text-sm text-slate-700">{displayBowlName(game)}</strong><small>{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button className={`text-left text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
-                <span className="text-center" aria-label="Blank spread">{game.line?.locked_spread ?? "—"}</span>
-                <button className={`text-left text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
+                <button className={`col-span-2 border-t border-slate-200 pt-2 text-left text-sm sm:col-span-1 sm:border-0 sm:pt-0 ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button"><span className="mr-1 text-[10px] font-black uppercase tracking-wide text-slate-500 sm:hidden">Fav:</span>{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
+                <span className="text-left text-sm sm:text-center" aria-label="Blank spread"><span className="mr-1 text-[10px] font-black uppercase tracking-wide text-slate-500 sm:hidden">Line:</span>{game.line?.locked_spread ?? "—"}</span>
+                <button className={`text-left text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button"><span className="mr-1 text-[10px] font-black uppercase tracking-wide text-slate-500 sm:hidden">Dog:</span>{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="max-w-xs border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="200" placeholder="Combined points scored" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value)} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="200" placeholder="000" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value)} /></label>
         </section> : null}
         </>
       ) : null}

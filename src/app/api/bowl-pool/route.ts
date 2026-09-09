@@ -60,7 +60,9 @@ export async function GET(request: NextRequest) {
     }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }))
     : [];
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
-  const { data: players } = playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
+  const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+    ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
+    : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
   const [{ data: championships }, { data: currentChampionships }] = await Promise.all([
     supabaseAdmin.from("pool_championships").select("player_id, season_year").eq("pool", "bowl").order("season_year", { ascending: false }),
@@ -81,7 +83,9 @@ export async function GET(request: NextRequest) {
     losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss").length,
     tiebreakerTotal: entry.championship_total_guess,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
-  })).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
+  })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+    ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
+    : []).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(CURRENT_SEASON_YEAR) },
     isCommissioner: Boolean(player.is_commissioner),
@@ -110,7 +114,7 @@ export async function POST(request: NextRequest) {
   const now = new Date();
   const firstKickoff = context.season.first_kickoff_at ? new Date(context.season.first_kickoff_at) : null;
   if (firstKickoff && now >= firstKickoff && !player.is_commissioner) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
   if (existingError) return NextResponse.json({ error: "Your Bowl Pool entry could not be loaded." }, { status: 500 });
   if (!body.optedIn) {
     if (existing) {
@@ -119,7 +123,10 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ optedIn: false });
   }
-  const { data: entry, error: entryError } = await supabaseAdmin.from("bowl_pool_entries").upsert({ id: existing?.id, season_id: context.season.id, player_id: player.id, status: "active", opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null }, { onConflict: "season_id,player_id" }).select("id, status").single();
+  const entryPayload = { season_id: context.season.id, player_id: player.id, status: "active" as const, opted_in_at: existing?.opted_in_at ?? now.toISOString(), opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null };
+  const { data: entry, error: entryError } = existing
+    ? await supabaseAdmin.from("bowl_pool_entries").update(entryPayload).eq("id", existing.id).select("id, status").single()
+    : await supabaseAdmin.from("bowl_pool_entries").insert(entryPayload).select("id, status").single();
   if (entryError || !entry) return NextResponse.json({ error: entryError?.message ?? "Your Bowl Pool entry could not be saved." }, { status: 400 });
   const unique = new Map<string, Selection>();
   for (const selection of body.selections) unique.set(selection.gameId, selection);
