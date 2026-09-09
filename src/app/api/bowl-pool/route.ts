@@ -60,7 +60,9 @@ export async function GET(request: NextRequest) {
     }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }))
     : [];
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
-  const { data: players } = playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
+  const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+    ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
+    : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
   const [{ data: championships }, { data: currentChampionships }] = await Promise.all([
     supabaseAdmin.from("pool_championships").select("player_id, season_year").eq("pool", "bowl").order("season_year", { ascending: false }),
@@ -81,7 +83,9 @@ export async function GET(request: NextRequest) {
     losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss").length,
     tiebreakerTotal: entry.championship_total_guess,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
-  })).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
+  })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+    ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
+    : []).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(CURRENT_SEASON_YEAR) },
     isCommissioner: Boolean(player.is_commissioner),

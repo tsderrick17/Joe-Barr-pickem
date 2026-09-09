@@ -255,6 +255,8 @@ export default function HomePage() {
   const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
   const bowlRows = bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [];
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
+  const bowlGradedGames = bowlStandings?.publicPicks ? new Set(bowlStandings.publicPicks.filter((pick) => pick.result === "win" || pick.result === "loss").map((pick) => pick.game_id)).size : 0;
+  const bowlLeader = bowlRows[0];
   const bowlName = (game: (typeof bowlGames)[number]) => (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
   const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { timeZone: "America/New_York" }) : "Date TBD";
   const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);
@@ -515,6 +517,7 @@ export default function HomePage() {
           </div>
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
+            <div className="grid grid-cols-3 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center"><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Leader</p><p className="mt-1 truncate text-lg font-bold">{bowlLeader?.playerName ?? "—"}</p></div><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Current wins</p><p className="mt-1 text-lg font-bold">{bowlLeader?.wins ?? 0}</p></div><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Games graded</p><p className="mt-1 text-lg font-bold">{bowlGradedGames}</p></div></div>
             <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
               <div className="min-w-[80rem]">
                 <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white" />{bowlDateGroups.map((group) => <span className="border-b border-[#1d1d1f] bg-white px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-600" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}</div>
