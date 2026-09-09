@@ -554,10 +554,9 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="NCAA Bowl Pool standings">
+        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="Bowl Card">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
-            <div className="flex items-center gap-2"><h2>NCAA Bowl Pool</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
-            <p className="pickem-ledger-period">STANDINGS</p>
+            <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
