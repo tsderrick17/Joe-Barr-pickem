@@ -3001,6 +3001,9 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   isolation: isolate;
   box-shadow: 3px 0 0 rgba(29, 29, 31, .12);
 }
+.bowl-standings-bowl-name { border-bottom: 1px solid #b8c0ca; padding-bottom: .3rem; }
+.bowl-standings-team { min-height: 1.45rem; line-height: 1.45rem; }
+.bowl-standings-line { min-height: 1.45rem; line-height: 1.45rem; }
 
 .playoff-scoreboard table { background: transparent; }
 .playoff-scoreboard tbody tr { background: transparent !important; }
