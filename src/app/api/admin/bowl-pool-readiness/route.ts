@@ -21,7 +21,15 @@ export async function GET(request: NextRequest) {
   const future = (games ?? []).filter((game) => new Date(game.kickoff_at).getTime() > Date.now());
   const missingTeams = (games ?? []).filter((game) => !game.away_team_id || !game.home_team_id).length;
   const lockedGames = (games ?? []).filter((game) => game.status !== "scheduled").length;
-  const integrity = assessBowlPoolIntegrity(games ?? [], lines ?? []);
+  const beforeFirstKickoff = !season.first_kickoff_at || new Date() < new Date(season.first_kickoff_at);
+  const assessedIntegrity = assessBowlPoolIntegrity(games ?? [], lines ?? []);
+  // Team assignments are intentionally TBD during preseason setup. Keep the
+  // readiness panel useful without raising a production incident before the
+  // first kickoff; ordering and status still remain visible and are repaired
+  // by migrations when the schedule changes.
+  const integrity = beforeFirstKickoff && missingTeams > 0
+    ? { ...assessedIntegrity, healthy: assessedIntegrity.problems.every((problem) => problem.includes("missing a team")), problems: assessedIntegrity.problems.filter((problem) => !problem.includes("missing a team")) }
+    : assessedIntegrity;
   const settlement = assessBowlPoolSettlement({ games: games ?? [], entries: entries ?? [], picks: picks ?? [], results: results ?? [], lines: lines ?? [] });
   return NextResponse.json({ checkedAt: new Date().toISOString(), seasonYear: season.season_year, playerVisibleAt: season.player_visible_at, firstKickoffAt: season.first_kickoff_at, games: games?.length ?? 0, missingTeams, missingLines: integrity.missingLines, nextKickoffAt: future[0]?.kickoff_at ?? null, cronHealth: heartbeatError ? "unavailable" : ((heartbeats ?? []).every((row) => row.last_status === "success" || row.last_status === "skipped") ? "healthy" : "attention"), lockedGames, integrity: { healthy: integrity.healthy, problems: integrity.problems }, settlement: { healthy: settlement.healthy, problems: settlement.problems } });
 }
