@@ -168,7 +168,7 @@ export default function BowlPoolPage() {
           {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT <small>SEASON PICKS</small></span>
-              <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button>
+              <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">SUBMIT</button>
             </div>
             <div className="slate-receipt-pool bowl-receipt-summary">
               <span>BOWL POOL</span>
