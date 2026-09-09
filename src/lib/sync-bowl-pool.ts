@@ -41,10 +41,13 @@ async function syncAnnualSchedule(now: Date) {
       return data?.id ?? null;
     }));
     if (!teamIds[0] || !teamIds[1]) continue;
-    const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1], status: "scheduled" };
+    // A provider refresh may correct a kickoff or matchup, but it must never
+    // resurrect a commissioner-recorded cancellation, postponement, or
+    // no-contest. New rows start scheduled; existing rows keep their status.
+    const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
     const { data: saved, error } = gameId
       ? await supabaseAdmin.from("bowl_pool_games").update(row).eq("id", gameId).select("id").single()
-      : await supabaseAdmin.from("bowl_pool_games").upsert(row, { onConflict: "provider_game_id" }).select("id").single();
+      : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
     if (!error && saved) { used.add(saved.id); imported += 1; if (/national championship|championship game/i.test(bowlName)) championshipGameId = saved.id; }
   }
   if (championshipGameId) await supabaseAdmin.from("bowl_pool_seasons").update({ championship_game_id: championshipGameId }).eq("id", season.id);

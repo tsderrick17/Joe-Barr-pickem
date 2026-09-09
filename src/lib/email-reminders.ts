@@ -6,6 +6,7 @@ import {
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import { ensureBowlDailyRecapSnapshot } from "@/lib/bowl-pool-recap";
 
 type Reminder = {
   id: string;
@@ -15,12 +16,15 @@ type Reminder = {
   body: string;
   automation_key?: string | null;
   recap_snapshot?: unknown;
+  source_game_ids?: string[];
 };
 
 type EmailRecipient = {
   playerId: string;
   email: string;
 };
+
+type BowlRecipientEntry = { id: string; player_id: string; players: { notification_email: string | null; email_notifications_enabled: boolean } | null };
 
 type ExistingDelivery = {
   id: string;
@@ -87,8 +91,15 @@ function playoffChampionCopy(snapshot: unknown) {
     : `Congratulations to our Pick'em co-champions: ${names.join(", ")}!`;
 }
 
+function bowlRecapCopy(snapshot: unknown) {
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "bowl_daily_recap" || !("copy" in snapshot) || typeof snapshot.copy !== "string") return "";
+  return snapshot.copy;
+}
+
 function messageHtml(reminder: Reminder) {
-  const recapImages = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
+  const recapImages = reminder.category === "bowl_daily_recap"
+    ? `<div style="margin-top:28px"><a href="${siteUrl}/bowl-pool" style="display:block"><img alt="Bowl Pool results and standings" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=bowl" style="display:block;height:auto;margin:0 0 18px;width:100%"></a></div>`
+    : reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
     ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Pick'em standings and this week's picks" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="display:block;height:auto;margin:0 0 18px;width:100%"></a>${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? `<a href="${siteUrl}/board#slate-matchups" style="display:block"><img alt="Active Survivor board" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="display:block;height:auto;width:100%"></a>` : ""}</div>`
     : reminder.category === "weekly"
       ? `<div style="margin-top:28px"><a href="${siteUrl}/board" style="display:block"><img alt="This week's preliminary Slate" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=fresh" style="display:block;height:auto;width:100%"></a></div>`
@@ -99,20 +110,36 @@ function messageHtml(reminder: Reminder) {
         : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal" || reminder.category === "playoff_public_reveal"
           ? `<div style="margin-top:28px"><a href="${siteUrl}" style="display:block"><img alt="Public Pick'em standings and revealed selections" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=reveal" style="display:block;height:auto;width:100%"></a></div>`
         : "";
-  const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap";
+  const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
-  const destination = isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
-  const callToAction = isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
+  const destination = reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due" ? `${siteUrl}/bowl-pool` : isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
+  const callToAction = reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
   const championCopy = playoffChampionCopy(reminder.recap_snapshot);
   const championBlock = championCopy ? `<p style="background:#ecfdf5;border-left:4px solid #007e72;color:#064e3b;font:700 16px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(championCopy)}</p>` : "";
   const survivorUpdateCopy = weeklySurvivorUpdateCopy(reminder.recap_snapshot);
   const survivorUpdateBlock = survivorUpdateCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(survivorUpdateCopy)}</p>` : "";
-  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL PICK'EM</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${survivorUpdateBlock}${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you opted into Joe Barr Memorial Pick'em email reminders. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+  const bowlCopy = bowlRecapCopy(reminder.recap_snapshot);
+  const bowlBlock = bowlCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(bowlCopy)}</p>` : "";
+  return `<main style="background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:28px;line-height:1.15;margin:0 0 16px">${escapeHtml(reminder.title)}</h1><p style="font:18px/1.5 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${survivorUpdateBlock}${bowlBlock}${recapImages}<p style="margin:24px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:28px 0 16px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0">You received this because you are active in the Bowl Pool and allow Pick'em emails. <a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
+  if (reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due") {
+    const { data: entries, error: entriesError } = await supabaseAdmin.from("bowl_pool_entries")
+      .select("id, player_id, players!inner(id, notification_email, email_notifications_enabled)").eq("status", "active");
+    if (entriesError) throw new Error("Bowl Pool email recipients could not be read.");
+    let selected = entries ?? [];
+    if (reminder.category === "bowl_pick_due" && reminder.source_game_ids?.[0]) {
+      const { data: picks, error: picksError } = await supabaseAdmin.from("bowl_pool_picks").select("entry_id").eq("game_id", reminder.source_game_ids[0]);
+      if (picksError) throw new Error("Bowl pick status could not be read.");
+      const pickedEntries = new Set((picks ?? []).map((pick) => pick.entry_id));
+      selected = selected.filter((entry) => !pickedEntries.has(entry.id));
+    }
+    return (selected as unknown as BowlRecipientEntry[]).flatMap((entry) => entry.players?.email_notifications_enabled && entry.players.notification_email
+      ? [{ playerId: entry.player_id, email: entry.players.notification_email as string }] : []);
+  }
   const playerIds = await eligiblePlayerIds(reminder.audience);
   if (playerIds.length === 0) return [] as EmailRecipient[];
   const preference = emailPreferenceColumn(reminder.category, reminder.automation_key);
@@ -305,6 +332,7 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
     if (reminder.category === "sunday_early_reveal") reminder.recap_snapshot = await ensureSundayRevealSnapshot(reminder.id, reminder.recap_snapshot, "early");
     if (reminder.category === "sunday_late_reveal") reminder.recap_snapshot = await ensureSundayRevealSnapshot(reminder.id, reminder.recap_snapshot, "late");
     if (reminder.category === "featured_window_reveal") reminder.recap_snapshot = await ensureFeaturedWindowRevealSnapshot(reminder.id, reminder.recap_snapshot);
+    if (reminder.category === "bowl_daily_recap") reminder.recap_snapshot = await ensureBowlDailyRecapSnapshot(reminder.id, reminder.recap_snapshot);
     recipients = limitedRecipients ?? await recipientsForReminder(reminder);
   } catch (reason) {
     throw new ReminderPreparationError(

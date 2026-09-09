@@ -6,6 +6,7 @@ export const PRODUCTION_SMOKE_PATHS = [
   "/api/health/automation",
   "/api/health/workers",
   "/api/health/backup",
+  "/api/health/bowl-pool",
 ];
 
 const baseUrl = (process.env.PICKEM_SMOKE_BASE_URL ?? "https://pickemjb.vercel.app").replace(/\/$/, "");

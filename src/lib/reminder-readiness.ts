@@ -234,6 +234,24 @@ async function sundayRevealReady(window: "early" | "late", sourceGameIds: string
   return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
 }
 
+async function bowlDailyRecapReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
+  if (!sourceGameIds.length) return { ready: false, terminal: true, reason: "This Bowl recap has no games." };
+  const { data, error } = await supabaseAdmin.from("bowl_pool_games").select("status").in("id", sourceGameIds);
+  if (error) throw new Error("Bowl recap completion could not be checked.");
+  if ((data ?? []).length !== sourceGameIds.length) return { ready: false, terminal: true, reason: "A Bowl recap game no longer exists." };
+  return (data ?? []).every((game) => ["final", "cancelled", "no_contest", "postponed"].includes(game.status))
+    ? { ready: true, reason: null }
+    : { ready: false, reason: "This Bowl game day is still in progress." };
+}
+
+async function bowlPickDueReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
+  if (sourceGameIds.length !== 1) return { ready: false, terminal: true, reason: "This Bowl pick reminder has no single game." };
+  const { data, error } = await supabaseAdmin.from("bowl_pool_games").select("kickoff_at, status").eq("id", sourceGameIds[0]).maybeSingle();
+  if (error || !data) throw new Error("Bowl pick reminder timing could not be checked.");
+  if (data.status !== "scheduled" || new Date(data.kickoff_at) <= new Date()) return { ready: false, terminal: true, reason: "The Bowl selection window has closed." };
+  return { ready: true, reason: null };
+}
+
 export async function reminderReadiness(category: ReminderCategory, sourceGameIds: string[] = [], sourcePeriodId?: string | null): Promise<ReminderReadiness> {
   if (category === "weekly") return freshSlateReady();
   if (category === "final_lines" || category === "sunday_final_lines") return gameDaySlateReady(sourceGameIds);
@@ -244,5 +262,7 @@ export async function reminderReadiness(category: ReminderCategory, sourceGameId
   if (category === "featured_window_reveal") return featuredWindowRevealReady(sourceGameIds);
   if (category === "sunday_early_reveal") return sundayRevealReady("early", sourceGameIds);
   if (category === "sunday_late_reveal") return sundayRevealReady("late", sourceGameIds);
+  if (category === "bowl_daily_recap") return bowlDailyRecapReady(sourceGameIds);
+  if (category === "bowl_pick_due") return bowlPickDueReady(sourceGameIds);
   return { ready: true, reason: null };
 }

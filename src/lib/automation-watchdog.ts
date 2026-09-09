@@ -6,6 +6,7 @@ import { lockDueLines } from "@/lib/lock-due-lines";
 import { sendDueReminders } from "@/lib/reminder-worker";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "@/lib/watchdog-rules";
 
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
@@ -137,13 +138,14 @@ export async function runAutomationWatchdog(now = new Date()) {
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
   try {
-    const [initialHealth, bootstrap, preflight, storagePrune, configurationRun] = await Promise.all([
+    const [initialHealth, bootstrap, preflight, storagePrune, configurationRun, bowlHealth] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
       isWeeklyStoragePruneDue(now)
         ? supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
         : Promise.resolve({ data: null, error: null }),
       supabaseAdmin.from("sync_runs").select("status, started_at, details")
         .eq("job_type", "configuration_drift").order("started_at", { ascending: false }).limit(1).maybeSingle(),
+      checkBowlPoolHealth(),
     ]);
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
     if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
@@ -156,6 +158,7 @@ export async function runAutomationWatchdog(now = new Date()) {
     const signals = evaluateWatchdogSignals({
       health,
       bootstrap,
+      bowlHealth,
       preflightChecks: [...(preflight.data ?? []), ...configurationChecks],
       now,
     }) as Signal[];
