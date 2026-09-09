@@ -69,9 +69,9 @@ async function syncAnnualSchedule(now: Date) {
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
     if (!error && saved) { used.add(saved.id); imported += 1; if (/national championship|championship game/i.test(bowlName)) championshipGameId = saved.id; }
     const espnSpread = competition?.odds?.find((odds) => Number.isFinite(odds.spread))?.spread;
-    if (!error && saved && Number.isFinite(espnSpread) && espnSpread !== 0) {
+    if (!error && saved && typeof espnSpread === "number" && Number.isFinite(espnSpread) && espnSpread !== 0) {
       const favoriteId = espnSpread < 0 ? teamIds[1] : teamIds[0];
-      const poolSpread = Math.ceil(Math.abs(espnSpread as number) * 2) / 2;
+      const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
       await supabaseAdmin.from("bowl_pool_game_lines").upsert({ game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), locked_at: now >= new Date(kickoff) ? kickoff : null }, { onConflict: "game_id" });
     }
   }
