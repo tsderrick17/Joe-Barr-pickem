@@ -433,8 +433,8 @@ body {
   align-self: center;
   border: 1px solid #c8b8a0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: min(100%, 28rem);
+  grid-template-columns: repeat(2, minmax(6rem, 8rem));
+  width: fit-content;
 }
 .bowl-receipt-metric {
   align-items: center;
@@ -529,7 +529,9 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
-  .bowl-receipt-metrics { width: 100%; }
+  .bowl-receipt-strip { width: 100%; }
+  .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
+  .bowl-receipt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .bowl-receipt-metric { min-height: 2.45rem; padding-inline: .24rem; }
   .bowl-receipt-metric strong { font-size: .72rem; }
   .bowl-receipt-metric small { font-size: .36rem; letter-spacing: .08em; }
@@ -2019,6 +2021,30 @@ html[data-theme="night"] select option {
   color: #f0f5f1;
 }
 
+/* Bowl Pool surfaces use explicit light Tailwind utilities in the markup;
+   restate them here so the entire competition remains legible in night mode. */
+html[data-theme="night"] .bowl-receipt-metrics { border-color: #52707a; }
+html[data-theme="night"] .bowl-receipt-metric { background: #1b3038; color: #edf7f5; }
+html[data-theme="night"] .bowl-receipt-metric + .bowl-receipt-metric { border-left-color: #52707a; }
+html[data-theme="night"] .bowl-receipt-metric strong { color: #edf7f5; }
+html[data-theme="night"] .bowl-receipt-metric small { color: #a8c1c4; }
+html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections {
+  background: #132129 !important;
+  border-color: #52707a !important;
+  color: #edf7f5;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-white"] { background-color: #132129 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-slate-100"] { background-color: #1b3038 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-200"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-300"] { border-color: #52707a !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-400"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-600"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: #edf7f5 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-team-selection { color: #fff7d6 !important; }
+
 html[data-theme="night"] [class*="text-zinc-900"],
 html[data-theme="night"] [class*="text-[#171719]"],
 html[data-theme="night"] [class*="text-[#171717]"],
@@ -2325,6 +2351,14 @@ html[data-theme="night"] .newspaper-clipping::after {
   padding: .04em .13em .08em;
   position: relative;
 }
+.bowl-receipt-strip {
+  grid-template-columns: auto auto;
+  margin-inline: auto;
+  max-width: 100%;
+  width: fit-content;
+}
+.bowl-receipt-strip .slate-receipt-ticket { min-width: 7rem; }
+.bowl-receipt-strip .slate-receipt-pool { min-width: 15rem; }
 
 .bowl-team-label--selected {
   display: inline-block;
