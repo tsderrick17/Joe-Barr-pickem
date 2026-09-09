@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
+import { syncBowlPool } from "@/lib/sync-bowl-pool";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 
 export const runtime = "nodejs";
@@ -23,7 +24,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await runWithAutomationLease("scores", syncFinalScores);
+    const result = await runWithAutomationLease("scores", async () => {
+      const nfl = await syncFinalScores();
+      const bowl = await syncBowlPool();
+      return { nfl, bowl };
+    });
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) {
