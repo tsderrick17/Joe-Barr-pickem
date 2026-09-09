@@ -66,12 +66,13 @@ type HomeData = {
 };
 type BowlStandingsData = {
   season?: { season_year: number };
-  games: Array<{ id: string; bowl_name: string; provider_game_id?: string; kickoff_at?: string }>;
+  games: Array<{ id: string; bowl_name: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string } | null; homeTeam?: { id: string; full_name: string } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null } | null }>;
   standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
   championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
   publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
   privatePickMarkers?: Array<{ playerId: string | null; game_id: string }>;
 };
+type BowlMatrixGame = BowlStandingsData["games"][number];
 
 const BOWL_MATRIX_GAMES = [
   "Frisco", "LA", "Salute to Veterans", "Cure", "68 Ventures", "Xbox", "Myrtle Beach", "Gasparilla",
@@ -251,9 +252,16 @@ export default function HomePage() {
   }, [data]);
 
   const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
-  const bowlGames = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
+  const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
   const bowlRows = bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [];
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
+  const bowlName = (game: (typeof bowlGames)[number]) => (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
+  const bowlTeam = (game: (typeof bowlGames)[number], side: "favorite" | "underdog") => {
+    const away = game.awayTeam; const home = game.homeTeam; const favoriteId = game.line?.favorite_team_id;
+    const favorite = favoriteId && away?.id === favoriteId ? away : favoriteId && home?.id === favoriteId ? home : away;
+    const underdog = favorite?.id === away?.id ? home : away;
+    return side === "favorite" ? favorite : underdog;
+  };
   const bowlCell = (playerId: string, gameId: string) => {
     const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result;
     return result === "win" ? "W" : result === "loss" ? "L" : "·";
@@ -505,14 +513,10 @@ export default function HomePage() {
           </div>
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
-            <div className="grid grid-cols-2 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center">
-              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Frisco</p><p className="mt-1 text-xl font-bold">{bowlRows[0]?.wins ?? "—"} wins</p></div>
-              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Pool wins</p><p className="mt-1 text-xl font-bold">{bowlRows[0]?.wins ?? "—"}</p></div>
-            </div>
             <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
-              <div className="min-w-[64rem]">
-                <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(4.5rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[10px] font-black tracking-wide">PLAYER</span>{bowlGames.map((game, index) => <span className="border-b-2 border-[#1d1d1f] bg-white px-1 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-600" key={`${game.id}-${index}`}>{game.bowl_name}</span>)}</div>
-                {bowlRows.map((row, rowIndex) => <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(4.5rem, 1fr))` }} key={row.playerId}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold"><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}</div>)}
+              <div className="min-w-[80rem]">
+                <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[10px] font-black tracking-wide">PLAYER</span>{bowlGames.map((game, index) => <span className="border-b-2 border-[#1d1d1f] bg-white px-2 py-2 text-center text-[10px] leading-4 text-slate-700" key={`${game.id}-${index}`}><strong className="block text-[9px] uppercase tracking-wide text-slate-500">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "numeric", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}</strong><b className="block text-xs uppercase tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block break-words font-bold">{bowlTeam(game, "favorite")?.full_name ?? "Team TBD"}</span><span className="block font-mono font-black text-[#007e72]">{game.line?.locked_spread ?? "—"}</span><span className="block break-words font-bold">{bowlTeam(game, "underdog")?.full_name ?? "Team TBD"}</span></span>)}</div>
+                {bowlRows.map((row, rowIndex) => <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }} key={row.playerId}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold"><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}</div>)}
               </div>
             </div>
           </> : null}
