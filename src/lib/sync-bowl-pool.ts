@@ -2,7 +2,7 @@ import { gradeBowlPoolPick } from "@/lib/bowl-pool.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
-type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; competitions?: Array<{ venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
+type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; competitions?: Array<{ odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
 
 async function providerEvents(path: string, query: Record<string, string>) {
   // The Odds API's free plan does not include college-football markets. Keep
@@ -68,6 +68,12 @@ async function syncAnnualSchedule(now: Date) {
       ? await supabaseAdmin.from("bowl_pool_games").update(row).eq("id", gameId).select("id").single()
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
     if (!error && saved) { used.add(saved.id); imported += 1; if (/national championship|championship game/i.test(bowlName)) championshipGameId = saved.id; }
+    const espnSpread = competition?.odds?.find((odds) => Number.isFinite(odds.spread))?.spread;
+    if (!error && saved && typeof espnSpread === "number" && Number.isFinite(espnSpread) && espnSpread !== 0) {
+      const favoriteId = espnSpread < 0 ? teamIds[1] : teamIds[0];
+      const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
+      await supabaseAdmin.from("bowl_pool_game_lines").upsert({ game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), locked_at: now >= new Date(kickoff) ? kickoff : null }, { onConflict: "game_id" });
+    }
   }
   if (championshipGameId) await supabaseAdmin.from("bowl_pool_seasons").update({ championship_game_id: championshipGameId }).eq("id", season.id);
   return imported;
