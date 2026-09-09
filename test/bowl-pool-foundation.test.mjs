@@ -74,3 +74,11 @@ test("Bowl entry locks opt-in at the first kickoff but still accepts later open-
   assert.match(page, /!gameLocked\(game\)/);
   assert.match(page, /disabled=\{gameLocked\(game\)\}/);
 });
+
+test("Bowl readiness treats preseason TBD teams as setup while preserving order checks", async () => {
+  const route = await readFile(new URL("../src/app/api/admin/bowl-pool-readiness/route.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20260911010000_repair_bowl_pool_order.sql", import.meta.url), "utf8");
+  assert.match(route, /beforeFirstKickoff/);
+  assert.match(route, /problem\.includes\("missing a team"\)/);
+  assert.match(migration, /row_number\(\) over \(partition by season_id order by kickoff_at, id\)/i);
+});
