@@ -4,6 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { onlyPublicPickRows } from "@/lib/pool-action-visibility";
 import { slateImagePresentation } from "@/lib/slate-image-order";
 import type { EarlyLockSnapshot, FeaturedWindowRevealSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
+import type { BowlDailyRecapSnapshot } from "@/lib/bowl-pool-recap";
+import { bowlRecapLayout } from "@/lib/bowl-recap-layout.js";
 
 export const dynamic = "force-dynamic";
 
@@ -95,13 +97,40 @@ function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; titl
   );
 }
 
+function BowlRecapImage({ snapshot }: { snapshot: BowlDailyRecapSnapshot }) {
+  const layout = bowlRecapLayout(snapshot.games.length);
+  const columns = Array.from({ length: layout.columns }, (_, index) => snapshot.games.slice(index * layout.gamesPerColumn, (index + 1) * layout.gamesPerColumn));
+  return <div style={{ background: PAPER, color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 46px", width: "100%" }}>
+    <div style={{ alignItems: "baseline", borderBottom: `3px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}><span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>NCAA Bowl Pool</span><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, letterSpacing: 2 }}>DAILY RECAP</span></div>
+    <div style={{ alignSelf: "center", display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, margin: "12px 0" }}>{snapshot.day.toUpperCase()}</div>
+    <div style={{ display: "flex", gap: 20 }}>
+      {columns.map((column, columnIndex) => <div key={columnIndex} style={{ display: "flex", flex: 1, flexDirection: "column" }}>
+        {column.map((game) => <div key={game.name} style={{ background: PARCHMENT, border: "1px solid #d4cab7", display: "flex", flexDirection: "column", marginBottom: 10, padding: "10px 12px" }}>
+          <span style={{ display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 1 }}>{game.name.toUpperCase()}</span>
+          <span style={{ display: "flex", fontFamily: "Arial", fontSize: 21, fontWeight: 800, justifyContent: "space-between", marginTop: 7 }}><span>{game.favorite}</span><span style={{ color: TEAL }}>{game.line}</span><span>{game.underdog}</span></span>
+          <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 700, justifyContent: "space-between", marginTop: 5 }}><span>{game.favoriteScore ?? "—"}</span><span>FINAL</span><span>{game.underdogScore ?? "—"}</span></span>
+        </div>)}
+      </div>)}
+    </div>
+    <div style={{ borderTop: `2px solid ${INK}`, display: "flex", flexDirection: "column", marginTop: 8, paddingTop: 10 }}>
+      <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 2 }}>STANDINGS</span>
+      {snapshot.rows.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 17, minHeight: 31 }}><span style={{ color: MUTED, display: "flex", width: 36 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontFamily: "Georgia", fontWeight: 800 }}>{row.name}</span><span style={{ display: "flex", fontWeight: 800, width: 54 }}>{row.wins}</span><span style={{ color: TEAL, display: "flex", fontWeight: 800 }}>{row.results.join("  ")}</span></div>)}
+    </div>
+  </div>;
+}
+
 export async function GET(request: NextRequest) {
   const reminderId = request.nextUrl.searchParams.get("reminder");
   const kind = request.nextUrl.searchParams.get("kind");
-  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal")) return new Response("Not found", { status: 404 });
+  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal" && kind !== "bowl")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | PlayoffPublicRevealSnapshot | FeaturedWindowRevealSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | PlayoffPublicRevealSnapshot | FeaturedWindowRevealSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | BowlDailyRecapSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
+
+  if (kind === "bowl" && snapshot.kind === "bowl_daily_recap") {
+    const layout = bowlRecapLayout(snapshot.games.length);
+    return new ImageResponse(<BowlRecapImage snapshot={snapshot} />, { width: layout.width, height: layout.height });
+  }
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
     snapshot = { ...snapshot, survivor: { ...snapshot.survivor, rows: snapshot.survivor.rows.filter((row) => row.status === "IN" || row.eliminatedInRecapWeek) } };

@@ -1,3 +1,4 @@
+/** @param {{ eliminated?: string[]; remaining: number; champions?: string[] }} summary */
 export function bowlRecapCopy({ eliminated = [], remaining, champions = [] }) {
   const parts = [];
   if (eliminated.length) parts.push(`${eliminated.join(", ")} ${eliminated.length === 1 ? "was" : "were"} eliminated today.`);
