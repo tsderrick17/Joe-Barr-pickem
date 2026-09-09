@@ -135,6 +135,7 @@ export default function HomePage() {
   const [savingDisplay, setSavingDisplay] = useState(false);
   const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
   const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
+  const bowlScrollRef = useRef<HTMLDivElement | null>(null);
   const serverClockOffset = useRef(0);
 
   useEffect(() => {
@@ -255,8 +256,6 @@ export default function HomePage() {
   const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
   const bowlRows = bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [];
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
-  const bowlGradedGames = bowlStandings?.publicPicks ? new Set(bowlStandings.publicPicks.filter((pick) => pick.result === "win" || pick.result === "loss").map((pick) => pick.game_id)).size : 0;
-  const bowlLeader = bowlRows[0];
   const bowlName = (game: (typeof bowlGames)[number]) => (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
   const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { timeZone: "America/New_York" }) : "Date TBD";
   const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);
@@ -271,6 +270,26 @@ export default function HomePage() {
     return result === "win" ? "W" : result === "loss" ? "L" : "·";
   };
   const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
+
+  // Keep the active slate in view when the standings are opened. This uses
+  // Eastern time, matching the pool's kickoff and lock rules, and falls back
+  // to the next scheduled game when today's slate has already passed.
+  useEffect(() => {
+    if (!data?.isCommissioner || bowlPoolMinimized || !bowlGames.length) return;
+    const frame = window.requestAnimationFrame(() => {
+      const container = bowlScrollRef.current;
+      if (!container) return;
+      const todayKey = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date());
+      const now = Date.now();
+      const currentDayIndex = bowlGames.findIndex((game) => game.kickoff_at && new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date(game.kickoff_at)) === todayKey);
+      const nextGameIndex = bowlGames.findIndex((game) => game.kickoff_at && new Date(game.kickoff_at).getTime() >= now);
+      const targetIndex = currentDayIndex >= 0 ? currentDayIndex : nextGameIndex;
+      if (targetIndex < 0) return;
+      const target = container.querySelector<HTMLElement>(`[data-bowl-game-index="${targetIndex}"]`);
+      if (target) container.scrollLeft = Math.max(0, target.offsetLeft - 128);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [bowlGames, bowlPoolMinimized, data?.isCommissioner]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   const ticketPicks: TicketPick[] = [...viewerPicks]
@@ -513,16 +532,15 @@ export default function HomePage() {
         {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="NCAA Bowl Pool standings">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
             <div className="flex items-center gap-2"><h2>NCAA Bowl Pool</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
-            <p className="pickem-ledger-period">SCOREBOARD</p>
+            <p className="pickem-ledger-period">STANDINGS</p>
           </div>
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
-            <div className="grid grid-cols-3 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center"><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Leader</p><p className="mt-1 truncate text-lg font-bold">{bowlLeader?.playerName ?? "—"}</p></div><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Current wins</p><p className="mt-1 text-lg font-bold">{bowlLeader?.wins ?? 0}</p></div><div className="bg-white px-2 py-3"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Games graded</p><p className="mt-1 text-lg font-bold">{bowlGradedGames}</p></div></div>
-            <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
+            <div className="overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>
               <div className="min-w-[80rem]">
-                <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white" />{bowlDateGroups.map((group) => <span className="border-b border-[#1d1d1f] bg-white px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-600" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}</div>
-                <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[10px] font-black tracking-wide">PLAYER</span>{bowlGames.map((game, index) => <span className="border-b-2 border-[#1d1d1f] bg-white px-2 py-2 text-center text-[10px] leading-4 text-slate-700" key={`${game.id}-${index}`}><b className="block text-xs uppercase tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block break-words font-bold">{bowlTeam(game, "favorite")?.full_name ?? "Team TBD"}</span><span className="block font-mono font-black text-[#007e72]">{game.line?.locked_spread ?? "—"}</span><span className="block break-words font-bold">{bowlTeam(game, "underdog")?.full_name ?? "Team TBD"}</span></span>)}</div>
-                {bowlRows.map((row, rowIndex) => <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }} key={row.playerId}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold"><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}</div>)}
+                <div className="grid" style={{ gridTemplateColumns: `3rem 8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-20 bg-white" /><span className="sticky left-[3rem] z-20 bg-white" />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-white px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-600" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}</div>
+                <div className="grid" style={{ gridTemplateColumns: `3rem 8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }}><span className="sticky left-0 z-20 bg-white px-1 py-2 text-center text-[10px] font-black tracking-wide">W</span><span className="sticky left-[3rem] z-20 bg-white px-2 py-2 text-left text-[10px] font-black tracking-wide">PLAYER</span>{bowlGames.map((game, index) => <span className="border-b-2 border-[#1d1d1f] bg-white px-2 py-2 text-center text-[10px] leading-4 text-slate-700" data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="block text-xs uppercase tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block break-words font-bold">{bowlTeam(game, "favorite")?.full_name ?? "Team TBD"}</span><span className="block font-mono font-black text-[#007e72]">{game.line?.locked_spread ?? "—"}</span><span className="block break-words font-bold">{bowlTeam(game, "underdog")?.full_name ?? "Team TBD"}</span></span>)}</div>
+                {bowlRows.map((row, rowIndex) => <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} style={{ gridTemplateColumns: `3rem 8rem repeat(${bowlGames.length}, minmax(8rem, 1fr))` }} key={row.playerId}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-1 py-2 text-center font-mono font-black tabular-nums">{row.wins}</span><span className="sticky left-[3rem] z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold"><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}</div>)}
               </div>
             </div>
           </> : null}
