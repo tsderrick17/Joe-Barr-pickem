@@ -21,7 +21,7 @@ async function currentPlayer(request: NextRequest) {
 async function seasonAndGames() {
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
   if (seasonError || !season) return { season: null, games: [], error: seasonError ?? new Error("Bowl Pool season is not configured.") };
-  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, bowl_name, kickoff_at, line_lock_at, order_index, status, away_team_id, home_team_id, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index");
+  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, away_team_id, home_team_id, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index");
   if (error) return { season, games: [], error };
   return { season, games: games ?? [], error: null };
 }
@@ -50,8 +50,12 @@ export async function GET(request: NextRequest) {
     const game = context.games.find((candidate) => candidate.id === pick.game_id);
     return game && new Date(game.kickoff_at) <= now;
   }).map((pick) => ({ ...pick, playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null }));
+  const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
+  const { data: players } = playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
+  const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
     playerId: entry.player_id,
+    playerName: playerNameById.get(entry.player_id) ?? "Player",
     wins: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length,
     losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length,
     tiebreakerTotal: entry.championship_total_guess,
