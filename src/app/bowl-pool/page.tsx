@@ -127,11 +127,12 @@ export default function BowlPoolPage() {
     return name;
   }
 
+  if (!isLoading && !canView) return null;
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">NCAA Bowls</h1>
-      {isLoading ? <p className="mt-4 text-slate-700">Loading Bowl Pool access…</p> : null}
-      {!isLoading && !canView ? <p className="mt-4 text-slate-700">The NCAA Bowl Pool opens December 7 at 3:00 AM Eastern.</p> : null}
+      {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
       {!isLoading && canView ? (
         <>
           <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>
