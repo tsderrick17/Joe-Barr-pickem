@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 
-type Selection = { gameId: string; teamId: string };
+type Selection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
 
 async function currentPlayer(request: NextRequest) {
   const authorization = request.headers.get("authorization");
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]))];
   const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
     teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, display_name, short_name, abbreviation").in("id", teamIds) : Promise.resolve({ data: [] }),
-    supabaseAdmin.from("bowl_pool_entries").select("id, status, championship_total_guess, opted_in_at, opted_out_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle(),
+    supabaseAdmin.from("bowl_pool_entries").select("id, status, championship_total_guess, opted_in_at, opted_out_at, preview_selections").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle(),
     supabaseAdmin.from("bowl_pool_picks").select("id, game_id, selected_team_id, result").eq("entry_id", (await supabaseAdmin.from("bowl_pool_entries").select("id").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle()).data?.id ?? "00000000-0000-0000-0000-000000000000"),
     supabaseAdmin.from("bowl_pool_entries").select("id, player_id, status, championship_total_guess").eq("season_id", context.season.id),
     supabaseAdmin.from("bowl_pool_picks").select("entry_id, game_id, selected_team_id, result"),
@@ -59,6 +59,12 @@ export async function GET(request: NextRequest) {
       const entry = (allEntries ?? []).find((candidate) => candidate.id === pick.entry_id);
       return game && new Date(game.kickoff_at) > now && (player.is_commissioner || entry?.player_id === player.id);
     }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }));
+  for (const preview of Array.isArray(ownEntry?.preview_selections) ? ownEntry.preview_selections as Array<{ game_id?: string }> : []) {
+    const game = context.games.find((candidate) => candidate.id === preview.game_id);
+    if (game && new Date(game.kickoff_at) > now && !privatePickMarkers.some((marker) => marker.playerId === player.id && marker.game_id === game.id)) {
+      privatePickMarkers.push({ playerId: player.id, game_id: game.id });
+    }
+  }
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
   const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
     ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
@@ -103,6 +109,7 @@ export async function GET(request: NextRequest) {
     entry: ownEntry ?? null,
     games: context.games.map((game) => ({ ...game, awayTeam: teamById.get(game.away_team_id) ? { ...teamById.get(game.away_team_id), full_name: teamById.get(game.away_team_id)!.display_name } : null, homeTeam: teamById.get(game.home_team_id) ? { ...teamById.get(game.home_team_id), full_name: teamById.get(game.home_team_id)!.display_name } : null, line: lineByGameId.get(game.id) ?? null })),
     ownPicks: ownPicks ?? [],
+    ownPreviewSelections: Array.isArray(ownEntry?.preview_selections) ? ownEntry.preview_selections : [],
     publicPicks,
     automaticResults: seasonAutomaticResults.map((result) => ({ ...result, playerId: (allEntries ?? []).find((entry) => entry.id === result.entry_id)?.player_id ?? null })),
     privatePickMarkers,
@@ -124,7 +131,7 @@ export async function POST(request: NextRequest) {
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
   const firstKickoff = context.season.first_kickoff_at ? new Date(context.season.first_kickoff_at) : null;
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at, championship_total_guess").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at, championship_total_guess, preview_selections").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
   if (existingError) return NextResponse.json({ error: "Your Bowl Pool entry could not be loaded." }, { status: 500 });
   const entryClosed = Boolean(firstKickoff && now >= firstKickoff && !player.is_commissioner);
   if (!body.optedIn) {
@@ -139,19 +146,29 @@ export async function POST(request: NextRequest) {
   const unique = new Map<string, Selection>();
   for (const selection of body.selections) unique.set(selection.gameId, selection);
   const gameById = new Map(context.games.map((game) => [game.id, game]));
+  const previewSelections: Array<{ game_id: string; side: "favorite" | "underdog" }> = [];
+  const databaseSelections: Array<{ game_id: string; team_id: string }> = [];
   for (const selection of unique.values()) {
     const game = gameById.get(selection.gameId);
     if (!game || new Date(game.kickoff_at) <= now || game.status !== "scheduled") return NextResponse.json({ error: "One of those games is no longer open for selections." }, { status: 400 });
-    if (selection.teamId !== game.away_team_id && selection.teamId !== game.home_team_id) return NextResponse.json({ error: "A selection must be one of the teams in that game." }, { status: 400 });
+    if (selection.teamId && (selection.teamId === game.away_team_id || selection.teamId === game.home_team_id)) {
+      databaseSelections.push({ game_id: selection.gameId, team_id: selection.teamId });
+    } else if (player.is_commissioner && !game.away_team_id && !game.home_team_id && (selection.side === "favorite" || selection.side === "underdog")) {
+      previewSelections.push({ game_id: selection.gameId, side: selection.side });
+    } else {
+      return NextResponse.json({ error: "A selection must be one of the teams in that game." }, { status: 400 });
+    }
   }
   const { data: entryId, error: saveError } = await supabaseAdmin.rpc("save_bowl_pool_submission", {
     target_player_id: player.id,
     target_season_id: context.season.id,
     target_opted_in: true,
-    target_selections: [...unique.values()].map((selection) => ({ game_id: selection.gameId, team_id: selection.teamId })),
+    target_selections: databaseSelections,
     target_tiebreaker: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null,
     evaluated_at: now.toISOString(),
   });
   if (saveError || !entryId) return NextResponse.json({ error: saveError?.message ?? "Your Bowl Pool selections could not be saved." }, { status: 400 });
+  const { error: previewError } = await supabaseAdmin.from("bowl_pool_entries").update({ preview_selections: previewSelections }).eq("id", entryId);
+  if (previewError) return NextResponse.json({ error: "Your placeholder Bowl selections could not be saved." }, { status: 400 });
   return NextResponse.json({ optedIn: true, saved: unique.size });
 }
