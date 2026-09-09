@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   const context = await seasonAndGames();
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
+  if (!player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]))];
   const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
