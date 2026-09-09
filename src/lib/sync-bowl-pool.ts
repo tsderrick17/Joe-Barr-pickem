@@ -23,6 +23,11 @@ async function teamIdFor(name: string, providerId: string, abbreviation?: string
   return error || !data ? null : data.id;
 }
 
+async function cancelQueuedBowlReminders(gameId: string) {
+  await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed" })
+    .in("category", ["bowl_pick_due", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [gameId]);
+}
+
 async function syncAnnualSchedule(now: Date) {
   const year = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: `${year}-12-07T08:00:00.000Z` }, { onConflict: "season_year" }).select("id").single();
@@ -54,6 +59,7 @@ async function syncAnnualSchedule(now: Date) {
     // resurrect a commissioner-recorded cancellation, postponement, or
     // no-contest. New rows start scheduled; existing rows keep their status.
     const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
+    if (gameId && match && match.candidate.kickoff_at !== kickoff) await cancelQueuedBowlReminders(gameId);
     const { data: saved, error } = gameId
       ? await supabaseAdmin.from("bowl_pool_games").update(row).eq("id", gameId).select("id").single()
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
