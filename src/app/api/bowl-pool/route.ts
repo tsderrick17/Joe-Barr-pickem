@@ -54,12 +54,11 @@ export async function GET(request: NextRequest) {
     const game = context.games.find((candidate) => candidate.id === pick.game_id);
     return activeEntryIds.has(pick.entry_id) && game && new Date(game.kickoff_at) <= now;
   }).map((pick) => ({ ...pick, playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null }));
-  const privatePickMarkers = player.is_commissioner
-    ? seasonPicks.filter((pick) => {
+  const privatePickMarkers = seasonPicks.filter((pick) => {
       const game = context.games.find((candidate) => candidate.id === pick.game_id);
-      return game && new Date(game.kickoff_at) > now;
-    }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }))
-    : [];
+      const entry = (allEntries ?? []).find((candidate) => candidate.id === pick.entry_id);
+      return game && new Date(game.kickoff_at) > now && (player.is_commissioner || entry?.player_id === player.id);
+    }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }));
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
   const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
     ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
