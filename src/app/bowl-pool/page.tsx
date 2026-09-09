@@ -33,6 +33,12 @@ export default function BowlPoolPage() {
   const [championshipTotalGuess, setChampionshipTotalGuess] = useState("");
   const [savedChampionshipTotalGuess, setSavedChampionshipTotalGuess] = useState("");
   const [games, setGames] = useState<BowlGame[]>([]);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -81,6 +87,12 @@ export default function BowlPoolPage() {
   }, []);
 
   const canView = profile?.isCommissioner === true || hasLaunched;
+  const firstKickoffMs = games.reduce<number | null>((earliest, game) => {
+    if (!game.kickoff_at) return earliest;
+    const kickoff = new Date(game.kickoff_at).getTime();
+    return earliest === null || kickoff < earliest ? kickoff : earliest;
+  }, null);
+  const poolLocked = firstKickoffMs !== null && nowMs >= firstKickoffMs;
   const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
   function chooseTeam(gameId: string, side: "favorite" | "underdog") {
     setSelections((current) => current[gameId] === side
@@ -137,7 +149,7 @@ export default function BowlPoolPage() {
       {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
       {!isLoading && canView ? (
         <>
-          {optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
+          {poolLocked ? null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
           {optedIn === true && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
           {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
@@ -146,20 +158,20 @@ export default function BowlPoolPage() {
             </div>
           </div>
           <div className="mt-5 overflow-hidden border border-slate-300">
-            <div className="grid grid-cols-[4rem_minmax(5.5rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] gap-x-1 bg-slate-100 px-2 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
-              <span>Date / time</span><span>Bowl / location</span><span>Fav</span><span className="text-center">Line</span><span>Dog</span>
+            <div className="grid grid-cols-[3.7rem_minmax(5.25rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] gap-x-1 bg-slate-100 px-2 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
+              <span>Date / time</span><span>Bowl / location</span><span className="text-center">Fav</span><span className="text-center">Line</span><span className="text-center">Dog</span>
             </div>
             {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
-              <div className={`grid min-h-16 grid-cols-[4rem_minmax(5.5rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] items-center gap-x-1 border-t border-slate-200 px-2 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
+              <div className={`grid min-h-16 grid-cols-[3.7rem_minmax(5.25rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] items-center gap-x-1 border-t border-slate-200 px-2 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
                 <span className="min-w-0"><strong className="block truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button className={`min-w-0 truncate text-left text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
+                <button className={`min-w-0 truncate text-center text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
                 <span className="text-center text-xs sm:text-sm" aria-label="Blank spread">{game.line?.locked_spread ?? "—"}</span>
-                <button className={`min-w-0 truncate text-left text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
+                <button className={`min-w-0 truncate text-center text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="999" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
         </section> : null}
         </>
       ) : null}
