@@ -19,7 +19,7 @@ type BowlGame = {
   home_team_id?: string;
   awayTeam?: { id: string; full_name: string } | null;
   homeTeam?: { id: string; full_name: string } | null;
-  line?: { favorite_team_id?: string | null; locked_spread?: number | string } | null;
+  line?: { favorite_team_id?: string | null; locked_spread?: number | string; locked_at?: string | null } | null;
 };
 
 export default function BowlPoolPage() {
@@ -165,9 +165,9 @@ export default function BowlPoolPage() {
               <div className={`grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
                 <span className="min-w-0"><strong className="block truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button className={`min-w-0 truncate text-center text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
-                <span className="text-center text-xs sm:text-sm" aria-label="Blank spread">{game.line?.locked_spread ?? "—"}</span>
-                <button className={`min-w-0 truncate text-center text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
+                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
+                <span className={`text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>
+                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
               </div>
             ))}
           </div>
