@@ -144,25 +144,25 @@ export default function BowlPoolPage() {
   if (!isLoading && !canView) return null;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-6xl px-2 py-8 sm:px-6 sm:py-10">
       <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">NCAA Bowls</h1>
       {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
       {!isLoading && canView ? (
         <>
           {poolLocked ? null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
           {optedIn === true && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
-          {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-4 sm:p-6">
+          {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
               <h2 className="mt-1 font-serif text-2xl font-bold">2026–27 Bowl Pool</h2>
             </div>
           </div>
-          <div className="mt-5 overflow-hidden border border-slate-300">
-            <div className="grid grid-cols-[3.7rem_minmax(5.25rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] gap-x-1 bg-slate-100 px-2 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
+          <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
+            <div className="grid grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] bg-slate-100 px-1 py-2 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
               <span>Date / time</span><span>Bowl / location</span><span className="text-center">Fav</span><span className="text-center">Line</span><span className="text-center">Dog</span>
             </div>
             {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
-              <div className={`grid min-h-16 grid-cols-[3.7rem_minmax(5.25rem,1.2fr)_minmax(4.25rem,1fr)_2rem_minmax(4.25rem,1fr)] items-center gap-x-1 border-t border-slate-200 px-2 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
+              <div className={`grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
                 <span className="min-w-0"><strong className="block truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
                 <button className={`min-w-0 truncate text-center text-[11px] sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
