@@ -92,6 +92,10 @@ jobs:
         if: steps.calendar.outputs.run == 'true'
         run: |
           node scripts/prepare-isolated-schema.mjs
+          stale_version_count="$(psql "$PICKEM_TEST_DATABASE_URL" -tAc "select count(*) from supabase_migrations.schema_migrations where version = '20260909040000';")"
+          if [ "$stale_version_count" = "1" ]; then
+            npx --no-install supabase migration repair --db-url "$PICKEM_TEST_DATABASE_URL" --status reverted 20260909040000
+          fi
           npx --no-install supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
       - name: Rehearse full application and season lifecycle
         if: steps.calendar.outputs.run == 'true'
