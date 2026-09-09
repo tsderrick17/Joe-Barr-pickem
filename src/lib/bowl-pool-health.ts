@@ -4,9 +4,15 @@ import { assessBowlPoolIntegrity } from "@/lib/bowl-pool-integrity";
 import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function checkBowlPoolHealth() {
-  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
+  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, status, player_visible_at, first_kickoff_at").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
   if (seasonError) throw seasonError;
   if (!season) return { configured: false, healthy: true, problems: [], integrity: null, settlement: null };
+  // Before the Bowl Pool opens, intentional placeholders (TBD teams and
+  // future lines) are setup work, not an operational incident. Monitoring
+  // becomes strict at the first kickoff, when missing data can affect picks.
+  if (season.first_kickoff_at && new Date() < new Date(season.first_kickoff_at)) {
+    return { configured: true, healthy: true, problems: [], integrity: null, settlement: null };
+  }
   const { data: games, error: gamesError } = await supabaseAdmin.from("bowl_pool_games").select("id,kickoff_at,order_index,status,away_team_id,home_team_id").eq("season_id", season.id).order("kickoff_at");
   if (gamesError) throw gamesError;
   const gameIds = (games ?? []).map((game) => game.id);
