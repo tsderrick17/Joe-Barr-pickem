@@ -259,7 +259,7 @@ export default function AdminPage() {
 
           <div className="rounded-sm border border-zinc-300 bg-white px-4 py-3 text-sm lg:min-w-72">
             <p className="text-[11px] font-black tracking-[.14em] text-zinc-500">MANAGE</p>
-            <div className="mt-2 flex w-full flex-nowrap gap-x-4 overflow-x-auto font-semibold underline sm:justify-end">
+            <div className="mt-2 flex w-full flex-nowrap justify-start gap-x-4 overflow-x-auto font-semibold underline">
               <Link className="shrink-0" href="/admin/players">Players</Link>
               <Link className="shrink-0" href="/admin/reminders">Email center</Link>
               <Link className="shrink-0" href="/archive">Archive</Link>
