@@ -59,6 +59,7 @@ test("successful production deployments receive an independent smoke gate", asyn
     "/api/health/automation",
     "/api/health/workers",
     "/api/health/backup",
+    "/api/health/bowl-pool",
   ]);
   assert.match(smoke, /Multiple health contracts failed together/);
   assert.match(smoke, /Supabase server authorization/);
