@@ -66,7 +66,7 @@ type HomeData = {
 };
 type BowlStandingsData = {
   season?: { season_year: number };
-  games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
+  games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; is_cfp?: boolean; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
   standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
   championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
   publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
@@ -273,8 +273,11 @@ export default function HomePage() {
   const bowlGradedGames = bowlStandings?.games ? bowlStandings.games.filter((game) => ["final", "cancelled", "no_contest"].includes(game.status ?? "")).length : 0;
   const bowlName = (game: (typeof bowlGames)[number]) => {
     const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
-    if (/quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (QF)`;
-    if (/semifinal|semi/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (SF)`;
+    const cleanName = name.replace(/\s*\([^)]*\)$/, "");
+    const qfBowl = /^(fiesta|cotton|peach|rose)(?: bowl)?$/i.test(cleanName);
+    const sfBowl = /^(orange|sugar)(?: bowl)?$/i.test(cleanName);
+    if (/quarterfinal|quarter/i.test(name) || /quarterfinal/i.test(game.provider_game_id ?? "") || qfBowl) return `${cleanName} (QF)`;
+    if (/semifinal|semi/i.test(name) || /semifinal/i.test(game.provider_game_id ?? "") || sfBowl) return `${cleanName} (SF)`;
     return name;
   };
   const bowlTeamLabel = (team: { full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined) => {
