@@ -32,8 +32,10 @@ create table if not exists public.bowl_pool_games (
   odds_event_id text unique,
   bowl_name text not null,
   is_cfp boolean not null default false,
-  away_team_id uuid not null references public.bowl_pool_teams(id),
-  home_team_id uuid not null references public.bowl_pool_teams(id),
+  -- Selection Sunday establishes the bowl row before the participants are
+  -- known. Team identities are filled by the annual schedule sync later.
+  away_team_id uuid references public.bowl_pool_teams(id),
+  home_team_id uuid references public.bowl_pool_teams(id),
   kickoff_at timestamptz not null,
   line_lock_at timestamptz not null,
   venue_name text,
@@ -45,7 +47,7 @@ create table if not exists public.bowl_pool_games (
   home_score integer,
   finalized_at timestamptz,
   created_at timestamptz not null default now(),
-  check (away_team_id <> home_team_id),
+  check (away_team_id is null or home_team_id is null or away_team_id <> home_team_id),
   check (line_lock_at <= kickoff_at)
 );
 
@@ -226,7 +228,8 @@ begin
   if game_row.status <> 'scheduled' or clock_timestamp() >= game_row.kickoff_at then
     raise exception 'That bowl game is no longer open for selections.';
   end if;
-  if new.selected_team_id not in (game_row.away_team_id, game_row.home_team_id) then
+  if game_row.away_team_id is null or game_row.home_team_id is null
+    or new.selected_team_id not in (game_row.away_team_id, game_row.home_team_id) then
     raise exception 'A bowl pick must select one of the two teams in that game.';
   end if;
   return new;
