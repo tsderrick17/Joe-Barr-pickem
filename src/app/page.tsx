@@ -256,9 +256,13 @@ export default function HomePage() {
   }, [retryNonce]);
 
   useEffect(() => {
-    void fetchWithSession("/api/bowl-pool").then(async (response) => {
+    const loadBowlStandings = () => void fetchWithSession("/api/bowl-pool", { cache: "no-store" }).then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
     }).catch(() => undefined);
+    loadBowlStandings();
+    const refreshFromHistory = (event: PageTransitionEvent) => { if (event.persisted) loadBowlStandings(); };
+    window.addEventListener("pageshow", refreshFromHistory);
+    return () => window.removeEventListener("pageshow", refreshFromHistory);
   }, [data?.isCommissioner]);
 
   const viewerRow = useMemo(() => {
