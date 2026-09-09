@@ -3004,6 +3004,16 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 .bowl-standings-bowl-name { border-bottom: 1px solid #b8c0ca; padding-bottom: .3rem; }
 .bowl-standings-team { min-height: 1.45rem; line-height: 1.45rem; }
 .bowl-standings-line { min-height: 1.45rem; line-height: 1.45rem; }
+.bowl-standings-game-cell {
+  align-items: center;
+  display: grid !important;
+  grid-template-rows: 2.25rem 1.45rem 1.45rem 1.45rem;
+  justify-items: stretch;
+}
+.bowl-standings-game-cell > .bowl-standings-bowl-name,
+.bowl-standings-game-cell > .bowl-standings-team,
+.bowl-standings-game-cell > .bowl-standings-line { align-self: center; margin-top: 0; width: 100%; }
+.bowl-standings-game-cell > .bowl-standings-bowl-name { box-sizing: border-box; }
 
 .bowl-flip-counter {
   display: inline-flex;
