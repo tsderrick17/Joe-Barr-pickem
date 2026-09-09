@@ -2,6 +2,24 @@ import { easternDateTimeToUtc } from "./schedule-time.js";
 
 export const BOWL_POOL_TIME_ZONE = "America/New_York";
 
+/**
+ * Return the canonical compact college label for Bowl cards.  The schedule
+ * import supplies official abbreviations/short names; the initials fallback
+ * keeps an unassigned or newly added school readable until that metadata is
+ * available.  Callers should retain the full name in a title/aria-label.
+ */
+export function bowlTeamDisplayLabel(team) {
+  if (!team) return "TBD";
+  const abbreviation = typeof team.abbreviation === "string" ? team.abbreviation.trim() : "";
+  if (abbreviation) return abbreviation.toUpperCase();
+  const shortName = typeof team.short_name === "string" ? team.short_name.trim() : "";
+  if (shortName) return shortName;
+  const fullName = typeof team.full_name === "string" ? team.full_name.trim() : "";
+  if (!fullName) return "TBD";
+  const words = fullName.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
+  return words.length > 1 ? words.map((word) => word[0]).join("").slice(0, 4).toUpperCase() : fullName.slice(0, 4).toUpperCase();
+}
+
 /** December 7 at 3:00 AM Eastern. Commissioners bypass this player-facing gate. */
 export function bowlPoolLaunchAt(seasonYear) {
   return easternDateTimeToUtc(seasonYear, 12, 7, 3).toISOString();

@@ -10,6 +10,7 @@ import {
   fetchWithSession,
   SessionUnavailableError,
 } from "@/lib/auth-session";
+import { bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 
 type ScoreboardPick = {
   label: string | null;
@@ -285,11 +286,7 @@ export default function HomePage() {
     return name;
   };
   const bowlTeamLabel = (team: { full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined) => {
-    if (!team) return "TBD";
-    if (team.abbreviation) return team.abbreviation.toUpperCase();
-    if (team.short_name) return team.short_name;
-    const words = team.full_name.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
-    return words.length > 1 ? words.map((word) => word[0]).join("").slice(0, 4).toUpperCase() : team.full_name.slice(0, 4).toUpperCase();
+    return bowlTeamDisplayLabel(team);
   };
   const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD";
   const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);

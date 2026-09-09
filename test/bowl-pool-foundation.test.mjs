@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlPoolLaunchAt, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
+import { bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 
 test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
@@ -62,6 +62,13 @@ test("Bowl receipt distinguishes a draft, a saved partial card, and a complete s
   assert.deepEqual(bowlReceiptSummary({ selectedCount: 42, totalGames: 42, tiebreaker: "54" }), {
     picksLabel: "42/42", tiebreakerLabel: "54", status: "COMPLETE · SAVED", state: "complete",
   });
+});
+
+test("Bowl cards use official compact team labels with an accessible full-name fallback", () => {
+  assert.equal(bowlTeamDisplayLabel({ full_name: "Texas Christian", short_name: "TCU", abbreviation: "tcu" }), "TCU");
+  assert.equal(bowlTeamDisplayLabel({ full_name: "Mississippi State", short_name: "Mississippi St.", abbreviation: null }), "Mississippi St.");
+  assert.equal(bowlTeamDisplayLabel({ full_name: "Central Michigan", short_name: null, abbreviation: null }), "CM");
+  assert.equal(bowlTeamDisplayLabel(null), "TBD");
 });
 
 test("bowl selections compare by game/value, not insertion order", () => {
