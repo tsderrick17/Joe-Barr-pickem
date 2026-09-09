@@ -40,7 +40,7 @@ type LockedLineRow = {
 
 type ChampionshipRow = {
   player_id: string;
-  pool: "pickem" | "survivor";
+  pool: "pickem" | "survivor" | "bowl";
   season_year: number;
 };
 
@@ -273,7 +273,8 @@ export async function GET(request: NextRequest) {
   }
   const trophiesByPlayerId = new Map<string, string[]>();
   for (const championship of (championshipRows ?? []) as ChampionshipRow[]) {
-    const title = `'${String(championship.season_year).slice(-2)} ${championship.pool === "pickem" ? "Pick'em" : "Survivor"} Champion`;
+    const poolLabel = championship.pool === "pickem" ? "Pick'em" : championship.pool === "survivor" ? "Survivor" : "Bowl Pool";
+    const title = `'${String(championship.season_year).slice(-2)} ${poolLabel} Champion`;
     const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
     titles.push(title);
     trophiesByPlayerId.set(championship.player_id, titles);
