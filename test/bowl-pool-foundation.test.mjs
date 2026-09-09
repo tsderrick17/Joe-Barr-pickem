@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { bowlPoolLaunchAt, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
+import { bowlReceiptSummary } from "../src/lib/bowl-receipt.js";
 
 test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
   assert.equal(normalizeBowlPoolSpread(0), 0);
@@ -36,9 +37,35 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
 test("Bowl Pool opt-in controls the whole selection card", async () => {
   const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
   assert.match(page, /I would like to participate in the NCAA Bowl Pool \(you can opt out prior to first kickoff\)/);
+  assert.match(page, /bowlReceiptSummary/);
+  assert.match(page, /BOWL RECEIPT/);
   assert.match(page, /optedIn === true \? <section/);
   assert.match(page, /Select favorite team/);
-  assert.match(page, /Blank spread/);
+  assert.match(page, /aria-label="Spread"/);
   assert.match(page, /Select underdog team/);
+  assert.match(page, /!gameLocked\(game\)/);
   assert.doesNotMatch(page, /Separate competition|Preview|Stage the schedule|Standings card|Commissioner preview only/);
+});
+
+test("Bowl receipt distinguishes a draft, a saved partial card, and a complete saved card", () => {
+  assert.deepEqual(bowlReceiptSummary({ selectedCount: 5, totalGames: 42, tiebreaker: "", hasUnsavedChanges: true }), {
+    picksLabel: "5/42", tiebreakerLabel: "DUE", status: "CHANGED · SUBMIT TO SAVE", state: "unsaved",
+  });
+  assert.deepEqual(bowlReceiptSummary({ selectedCount: 42, totalGames: 42, tiebreaker: "" }), {
+    picksLabel: "42/42", tiebreakerLabel: "DUE", status: "SAVED · TIEBREAKER DUE", state: "quiet",
+  });
+  assert.deepEqual(bowlReceiptSummary({ selectedCount: 42, totalGames: 42, tiebreaker: "54" }), {
+    picksLabel: "42/42", tiebreakerLabel: "54", status: "COMPLETE · SAVED", state: "complete",
+  });
+});
+
+test("Bowl entry locks opt-in at the first kickoff but still accepts later open-game selections", async () => {
+  const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
+  const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /const entryClosed = Boolean\(firstKickoff/);
+  assert.match(route, /entryClosed && \(!existing \|\| existing\.status !== "active"\)/);
+  assert.match(page, /const championshipLocked/);
+  assert.match(page, /disabled=\{championshipLocked\}/);
+  assert.match(page, /!gameLocked\(game\)/);
+  assert.match(page, /disabled=\{gameLocked\(game\)\}/);
 });

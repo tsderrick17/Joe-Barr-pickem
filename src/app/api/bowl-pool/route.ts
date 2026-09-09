@@ -113,16 +113,18 @@ export async function POST(request: NextRequest) {
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
   const firstKickoff = context.season.first_kickoff_at ? new Date(context.season.first_kickoff_at) : null;
-  if (firstKickoff && now >= firstKickoff && !player.is_commissioner) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at, championship_total_guess").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
   if (existingError) return NextResponse.json({ error: "Your Bowl Pool entry could not be loaded." }, { status: 500 });
+  const entryClosed = Boolean(firstKickoff && now >= firstKickoff && !player.is_commissioner);
   if (!body.optedIn) {
+    if (entryClosed) return NextResponse.json({ error: "Bowl Pool opt-out closed at the first kickoff." }, { status: 409 });
     if (existing) {
       const { error } = await supabaseAdmin.from("bowl_pool_entries").update({ status: "withdrawn", opted_out_at: now.toISOString() }).eq("id", existing.id);
       if (error) return NextResponse.json({ error: "Your opt-out could not be saved." }, { status: 400 });
     }
     return NextResponse.json({ optedIn: false });
   }
+  if (entryClosed && (!existing || existing.status !== "active")) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
   const entryPayload = { season_id: context.season.id, player_id: player.id, status: "active" as const, opted_in_at: existing?.opted_in_at ?? now.toISOString(), opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null };
   const { data: entry, error: entryError } = existing
     ? await supabaseAdmin.from("bowl_pool_entries").update(entryPayload).eq("id", existing.id).select("id, status").single()
