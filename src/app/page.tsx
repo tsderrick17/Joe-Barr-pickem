@@ -64,6 +64,19 @@ type HomeData = {
   }[];
   error?: string;
 };
+type BowlStandingsData = {
+  games: Array<{ id: string; bowl_name: string; provider_game_id?: string; kickoff_at?: string }>;
+  standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null }>;
+  publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
+  privatePickMarkers?: Array<{ playerId: string | null; game_id: string }>;
+};
+
+const BOWL_MATRIX_GAMES = [
+  "Frisco", "LA", "Salute to Veterans", "Cure", "68 Ventures", "Xbox", "Myrtle Beach", "Gasparilla",
+  "Playoff Game #1", "Playoff Game #2", "Playoff Game #3", "Playoff Game #4", "Potato", "Boca Raton", "New Orleans", "Frisco",
+  "Hawai'i", "GameAbove Sports", "Rate", "First Responder", "Military", "Pinstripe", "Fenway", "Pop-Tarts", "Arizona", "New Mexico", "Gator",
+  "Birmingham", "Independence", "Music City", "Alamo", "ReliaQuest", "Sun", "Citrus", "Las Vegas", "Armed Forces", "Liberty", "Duke's Mayo", "Holiday",
+];
 
 /* Keep the first paint shaped like the real Standings page while its signed-in
    data arrives. This reserves the ticket and both score surfaces up front,
@@ -117,6 +130,8 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
   const [savingDisplay, setSavingDisplay] = useState(false);
+  const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
+  const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
   const serverClockOffset = useRef(0);
 
   useEffect(() => {
@@ -222,11 +237,25 @@ export default function HomePage() {
     };
   }, [retryNonce]);
 
+  useEffect(() => {
+    if (!data?.isCommissioner) return;
+    void fetchWithSession("/api/bowl-pool").then(async (response) => {
+      if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
+    }).catch(() => undefined);
+  }, [data?.isCommissioner]);
+
   const viewerRow = useMemo(() => {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
   }, [data]);
 
   const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
+  const bowlGames = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
+  const bowlRows = bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null })) ?? [];
+  const bowlCell = (playerId: string, gameId: string) => {
+    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result;
+    return result === "win" ? "W" : result === "loss" ? "L" : "·";
+  };
+  const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   const ticketPicks: TicketPick[] = [...viewerPicks]
@@ -466,7 +495,24 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="Bowl Pool standings preview"><div className="pickem-ledger-masthead"><h2>NCAA Bowl Pool</h2><p className="pickem-ledger-period">PRE-LAUNCH PREVIEW</p></div><div className="border-y-2 border-[#1d1d1f] bg-white p-4 text-sm text-slate-700">Bowl Pool standings will appear here beneath Survivor once players opt in. This preview is visible only to the Commissioner until December 7 at 3:00 AM Eastern.</div></section> : null}
+        {data.isCommissioner ? <section className="pickem-ledger py-6 sm:py-7" aria-label="NCAA Bowl Pool standings">
+          <div className="pickem-ledger-masthead survivor-ledger-masthead">
+            <div className="flex items-center gap-2"><h2>NCAA Bowl Pool</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show NCAA Bowl Pool" : "Hide NCAA Bowl Pool"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
+            <p className="pickem-ledger-period">SCOREBOARD</p>
+          </div>
+          {!bowlPoolMinimized ? <>
+            <div className="grid grid-cols-2 gap-px border-y-2 border-[#1d1d1f] bg-[#1d1d1f] text-center">
+              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Frisco</p><p className="mt-1 text-xl font-bold">{bowlRows[0]?.wins ?? "—"} wins</p></div>
+              <div className="bg-white px-3 py-3"><p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Pool wins</p><p className="mt-1 text-xl font-bold">{bowlRows[0]?.wins ?? "—"}</p></div>
+            </div>
+            <div className="overflow-x-auto border-b-2 border-[#1d1d1f]">
+              <div className="min-w-[64rem]">
+                <div className="grid" style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(4.5rem, 1fr))` }}><span className="sticky left-0 z-10 bg-white px-2 py-2 text-left text-[10px] font-black tracking-wide">PLAYER</span>{bowlGames.map((game, index) => <span className="border-b-2 border-[#1d1d1f] bg-white px-1 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-600" key={`${game.id}-${index}`}>{game.bowl_name}</span>)}</div>
+                {bowlRows.map((row, rowIndex) => <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex % 2 ? "is-alt" : ""}`} style={{ gridTemplateColumns: `8rem repeat(${bowlGames.length}, minmax(4.5rem, 1fr))` }} key={row.playerId}><span className="sticky left-0 z-10 bg-[#f5f0e6] px-2 py-2 text-left font-serif font-bold">{row.playerName}</span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}</div>)}
+              </div>
+            </div>
+          </> : null}
+        </section> : null}
       </div>
     </main>
   );
