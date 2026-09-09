@@ -82,7 +82,10 @@ jobs:
           github-token: ${{ github.token }}
       - run: npm ci
       - name: Install isolated browser
-        run: npx playwright install --with-deps chromium
+        # ubuntu-24.04 runners already include Chromium's system libraries.
+        # Avoid apt-based dependency installation, which can fail on transient
+        # third-party mirror hash mismatches before tests even start.
+        run: npx playwright install chromium
       - name: Repair superseded CFP migration history
         # A prior rehearsal applied the old filename before it was moved after
         # the production migration sequence. Repair only that known stale
