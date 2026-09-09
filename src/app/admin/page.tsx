@@ -7,6 +7,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 
 const GameExceptions = dynamic(() => import("@/components/game-exceptions"));
+const BowlPoolExceptions = dynamic(() => import("@/components/bowl-pool-exceptions"));
 const LineLockChecker = dynamic(() => import("@/components/line-lock-checker"));
 const ScoreSyncChecker = dynamic(() => import("@/components/score-sync-checker"));
 const AutomationHealth = dynamic(() => import("@/components/automation-health"));
@@ -313,6 +314,7 @@ export default function AdminPage() {
           <ScoreSyncChecker />
           <FinalScoreReconciliation />
           <GameExceptions />
+          <BowlPoolExceptions />
         </> : null}
 
         {activePanel === "system" ? <>
