@@ -2311,6 +2311,41 @@ html[data-theme="night"] .newspaper-clipping::after {
   transform: rotate(-.6deg);
 }
 
+/* Bowl selections use the same chisel-pass motion as the Slate, but retain
+   the Pool's yellow marker so the two competition cards stay distinct. */
+.bowl-team-selection {
+  background: transparent !important;
+  color: #161616 !important;
+}
+
+.bowl-team-label {
+  display: inline-block;
+  isolation: isolate;
+  margin: 0 -.13em;
+  padding: .04em .13em .08em;
+  position: relative;
+}
+
+.bowl-team-label--selected::before {
+  background: linear-gradient(90deg,
+    rgba(212, 167, 0, .66) 0%,
+    rgba(244, 204, 25, .58) 8%,
+    rgba(255, 226, 69, .5) 18%,
+    rgba(255, 236, 108, .42) 100%);
+  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
+  content: "";
+  inset: -.04em -.32em -.16em;
+  position: absolute;
+  transform: rotate(-1.1deg);
+  transform-origin: center;
+  z-index: -1;
+}
+
+.bowl-team-label--new::before {
+  will-change: clip-path;
+  animation: slate-selection-sweep 720ms cubic-bezier(.18,.72,.18,1) 35ms both;
+}
+
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 
