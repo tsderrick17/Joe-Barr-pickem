@@ -529,7 +529,8 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
-  .bowl-receipt-strip { grid-template-columns: 6.5rem minmax(0, 1fr); width: 100%; }
+  .bowl-receipt-strip,
+  .slate-receipt-strip.bowl-receipt-strip.is-pickem-only { grid-template-columns: 6.5rem minmax(0, 1fr); width: 100%; }
   .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
   .bowl-receipt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .bowl-receipt-metric { min-height: 2.45rem; padding-inline: .24rem; }
@@ -2357,6 +2358,9 @@ html[data-theme="night"] .newspaper-clipping::after {
   margin-inline: auto;
   max-width: 100%;
   width: fit-content;
+}
+.slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
+  grid-template-columns: 11rem minmax(24rem, 1fr);
 }
 .bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
 .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
