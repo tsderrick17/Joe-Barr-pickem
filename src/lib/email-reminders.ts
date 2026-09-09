@@ -127,8 +127,15 @@ function messageHtml(reminder: Reminder) {
 
 async function recipientsForReminder(reminder: Reminder) {
   if (reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due") {
-    const { data: entries, error: entriesError } = await supabaseAdmin.from("bowl_pool_entries")
+    let seasonId: string | null = null;
+    if (reminder.source_game_ids?.[0]) {
+      const { data: sourceGame } = await supabaseAdmin.from("bowl_pool_games").select("season_id").eq("id", reminder.source_game_ids[0]).maybeSingle();
+      seasonId = sourceGame?.season_id ?? null;
+    }
+    let entriesQuery = supabaseAdmin.from("bowl_pool_entries")
       .select("id, player_id, players!inner(id, notification_email, email_notifications_enabled)").eq("status", "active");
+    if (seasonId) entriesQuery = entriesQuery.eq("season_id", seasonId);
+    const { data: entries, error: entriesError } = await entriesQuery;
     if (entriesError) throw new Error("Bowl Pool email recipients could not be read.");
     let selected = entries ?? [];
     if (reminder.category === "bowl_pick_due" && reminder.source_game_ids?.[0]) {

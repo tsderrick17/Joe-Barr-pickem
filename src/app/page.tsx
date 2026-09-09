@@ -66,10 +66,11 @@ type HomeData = {
 };
 type BowlStandingsData = {
   season?: { season_year: number };
-  games: Array<{ id: string; bowl_name: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
+  games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
   standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
   championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
   publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
+  automaticResults?: Array<{ playerId: string | null; game_id: string; result: string }>;
   privatePickMarkers?: Array<{ playerId: string | null; game_id: string }>;
 };
 type BowlMatrixGame = BowlStandingsData["games"][number];
@@ -242,7 +243,6 @@ export default function HomePage() {
   }, [retryNonce]);
 
   useEffect(() => {
-    if (!data?.isCommissioner) return;
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
     }).catch(() => undefined);
@@ -257,7 +257,7 @@ export default function HomePage() {
   const bowlScheduleReady = Boolean(bowlStandings?.games);
   const bowlRows = [...(bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [])].sort((first, second) => second.wins - first.wins || first.losses - second.losses || first.playerName.localeCompare(second.playerName));
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
-  const bowlGradedGames = bowlStandings?.publicPicks ? new Set(bowlStandings.publicPicks.filter((pick) => pick.result === "win" || pick.result === "loss").map((pick) => pick.game_id)).size : 0;
+  const bowlGradedGames = bowlStandings?.games ? bowlStandings.games.filter((game) => ["final", "cancelled", "no_contest"].includes(game.status ?? "")).length : 0;
   const bowlName = (game: (typeof bowlGames)[number]) => {
     const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
     if (/quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (QF)`;
@@ -290,7 +290,8 @@ export default function HomePage() {
     return side === "favorite" ? favorite : underdog;
   };
   const bowlCell = (playerId: string, gameId: string) => {
-    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result;
+    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result
+      ?? bowlStandings?.automaticResults?.find((result) => result.playerId === playerId && result.game_id === gameId)?.result;
     return result === "win" ? "W" : result === "loss" ? "L" : "·";
   };
   const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
@@ -300,7 +301,7 @@ export default function HomePage() {
   // beside the frozen player columns. This uses Eastern time, matching the
   // pool's kickoff and lock rules.
   useEffect(() => {
-    if (!data?.isCommissioner || bowlPoolMinimized || !bowlGames.length) return;
+    if (bowlPoolMinimized || !bowlGames.length) return;
     const frame = window.requestAnimationFrame(() => {
       const container = bowlScrollRef.current;
       if (!container) return;
@@ -314,7 +315,7 @@ export default function HomePage() {
       if (target) container.scrollLeft = Math.max(0, target.offsetLeft - 128);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [bowlGames, bowlPoolMinimized, data?.isCommissioner]);
+  }, [bowlGames, bowlPoolMinimized]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   const ticketPicks: TicketPick[] = [...viewerPicks]
@@ -554,7 +555,7 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {data.isCommissioner ? <section className="pickem-ledger bowl-card-section py-6 sm:py-7" aria-label="Bowl Card">
+        {bowlStandings ? <section className="pickem-ledger bowl-card-section py-6 sm:py-7" aria-label="Bowl Card">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
             <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>

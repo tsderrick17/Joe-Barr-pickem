@@ -21,7 +21,7 @@ async function currentPlayer(request: NextRequest) {
 async function seasonAndGames() {
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
   if (seasonError || !season) return { season: null, games: [], error: seasonError ?? new Error("Bowl Pool season is not configured.") };
-  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, away_team_id, home_team_id, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index");
+  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, away_team_id, home_team_id, away_score, home_score, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index");
   if (error) return { season, games: [], error };
   return { season, games: games ?? [], error: null };
 }
@@ -49,9 +49,10 @@ export async function GET(request: NextRequest) {
   const seasonEntryIds = new Set((allEntries ?? []).map((entry) => entry.id));
   const seasonPicks = (allPicks ?? []).filter((pick) => seasonEntryIds.has(pick.entry_id) && gameIds.includes(pick.game_id));
   const seasonAutomaticResults = (automaticResults ?? []).filter((result) => seasonEntryIds.has(result.entry_id) && gameIds.includes(result.game_id));
+  const activeEntryIds = new Set((allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => entry.id));
   const publicPicks = seasonPicks.filter((pick) => {
     const game = context.games.find((candidate) => candidate.id === pick.game_id);
-    return game && new Date(game.kickoff_at) <= now;
+    return activeEntryIds.has(pick.entry_id) && game && new Date(game.kickoff_at) <= now;
   }).map((pick) => ({ ...pick, playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null }));
   const privatePickMarkers = player.is_commissioner
     ? seasonPicks.filter((pick) => {
@@ -79,13 +80,23 @@ export async function GET(request: NextRequest) {
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
-    wins: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win").length,
-    losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss").length,
+    wins: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),
+    losses: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),
     tiebreakerTotal: entry.championship_total_guess,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
   })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
     ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
-    : []).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
+    : []).sort((a, b) => {
+      const wins = b.wins - a.wins;
+      if (wins) return wins;
+      const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
+      const finalTotal = finalGame && Number.isInteger(finalGame.away_score) && Number.isInteger(finalGame.home_score) ? finalGame.away_score! + finalGame.home_score! : null;
+      if (finalTotal !== null && a.tiebreakerTotal !== null && b.tiebreakerTotal !== null) {
+        const difference = Math.abs(a.tiebreakerTotal - finalTotal) - Math.abs(b.tiebreakerTotal - finalTotal);
+        if (difference) return difference;
+      }
+      return a.losses - b.losses || String(a.playerId).localeCompare(String(b.playerId));
+    });
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(CURRENT_SEASON_YEAR) },
     isCommissioner: Boolean(player.is_commissioner),
@@ -94,6 +105,7 @@ export async function GET(request: NextRequest) {
     games: context.games.map((game) => ({ ...game, awayTeam: teamById.get(game.away_team_id) ? { ...teamById.get(game.away_team_id), full_name: teamById.get(game.away_team_id)!.display_name } : null, homeTeam: teamById.get(game.home_team_id) ? { ...teamById.get(game.home_team_id), full_name: teamById.get(game.home_team_id)!.display_name } : null, line: lineByGameId.get(game.id) ?? null })),
     ownPicks: ownPicks ?? [],
     publicPicks,
+    automaticResults: seasonAutomaticResults.map((result) => ({ ...result, playerId: (allEntries ?? []).find((entry) => entry.id === result.entry_id)?.player_id ?? null })),
     privatePickMarkers,
     standings,
     championships: [
@@ -125,11 +137,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ optedIn: false });
   }
   if (entryClosed && (!existing || existing.status !== "active")) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
-  const entryPayload = { season_id: context.season.id, player_id: player.id, status: "active" as const, opted_in_at: existing?.opted_in_at ?? now.toISOString(), opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null };
-  const { data: entry, error: entryError } = existing
-    ? await supabaseAdmin.from("bowl_pool_entries").update(entryPayload).eq("id", existing.id).select("id, status").single()
-    : await supabaseAdmin.from("bowl_pool_entries").insert(entryPayload).select("id, status").single();
-  if (entryError || !entry) return NextResponse.json({ error: entryError?.message ?? "Your Bowl Pool entry could not be saved." }, { status: 400 });
   const unique = new Map<string, Selection>();
   for (const selection of body.selections) unique.set(selection.gameId, selection);
   const gameById = new Map(context.games.map((game) => [game.id, game]));
@@ -138,11 +145,14 @@ export async function POST(request: NextRequest) {
     if (!game || new Date(game.kickoff_at) <= now || game.status !== "scheduled") return NextResponse.json({ error: "One of those games is no longer open for selections." }, { status: 400 });
     if (selection.teamId !== game.away_team_id && selection.teamId !== game.home_team_id) return NextResponse.json({ error: "A selection must be one of the teams in that game." }, { status: 400 });
   }
-  const { data: existingPicks } = await supabaseAdmin.from("bowl_pool_picks").select("id, game_id").eq("entry_id", entry.id);
-  const unlockedExisting = (existingPicks ?? []).filter((pick) => new Date(gameById.get(pick.game_id)?.kickoff_at ?? 0) > now).map((pick) => pick.id);
-  const selectedIds = [...unique.keys()];
-  if (unlockedExisting.length) await supabaseAdmin.from("bowl_pool_picks").delete().in("id", unlockedExisting).not("game_id", "in", `(${selectedIds.join(",") || "null"})`);
-  const rows = [...unique.values()].map((selection) => ({ entry_id: entry.id, game_id: selection.gameId, selected_team_id: selection.teamId, submitted_at: now.toISOString(), result: "pending" }));
-  if (rows.length) { const { error } = await supabaseAdmin.from("bowl_pool_picks").upsert(rows, { onConflict: "entry_id,game_id" }); if (error) return NextResponse.json({ error: "Your Bowl Pool selections could not be saved." }, { status: 400 }); }
-  return NextResponse.json({ optedIn: true, saved: rows.length });
+  const { data: entryId, error: saveError } = await supabaseAdmin.rpc("save_bowl_pool_submission", {
+    target_player_id: player.id,
+    target_season_id: context.season.id,
+    target_opted_in: true,
+    target_selections: [...unique.values()].map((selection) => ({ game_id: selection.gameId, team_id: selection.teamId })),
+    target_tiebreaker: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null,
+    evaluated_at: now.toISOString(),
+  });
+  if (saveError || !entryId) return NextResponse.json({ error: saveError?.message ?? "Your Bowl Pool selections could not be saved." }, { status: 400 });
+  return NextResponse.json({ optedIn: true, saved: unique.size });
 }

@@ -7,14 +7,16 @@ export async function checkBowlPoolHealth() {
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, status, player_visible_at, first_kickoff_at").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
   if (seasonError) throw seasonError;
   if (!season) return { configured: false, healthy: true, problems: [], integrity: null, settlement: null };
-  // Before the Bowl Pool opens, intentional placeholders (TBD teams and
-  // future lines) are setup work, not an operational incident. Monitoring
-  // becomes strict at the first kickoff, when missing data can affect picks.
-  if (new Date() < new Date(season.player_visible_at) || (season.first_kickoff_at && new Date() < new Date(season.first_kickoff_at))) {
+  // Before player visibility, placeholders are expected. Once the pool is
+  // visible, schedule integrity must be checked so setup failures are caught
+  // before the first lock.
+  // We intentionally no longer defer checks with: new Date() < new Date(season.first_kickoff_at)
+  if (new Date() < new Date(season.player_visible_at)) {
     return { configured: true, healthy: true, problems: [], integrity: null, settlement: null };
   }
   const { data: games, error: gamesError } = await supabaseAdmin.from("bowl_pool_games").select("id,kickoff_at,order_index,status,away_team_id,home_team_id").eq("season_id", season.id).order("kickoff_at");
   if (gamesError) throw gamesError;
+  if (!(games ?? []).length) return { configured: true, healthy: false, problems: ["Bowl Pool has no games after player visibility."], integrity: null, settlement: null };
   const gameIds = (games ?? []).map((game) => game.id);
   const { data: entries, error: entriesError } = await supabaseAdmin.from("bowl_pool_entries").select("id,status").eq("season_id", season.id);
   if (entriesError) throw entriesError;
@@ -26,6 +28,7 @@ export async function checkBowlPoolHealth() {
   ]);
   if (linesResult.error || picksResult.error || resultsResult.error) throw linesResult.error ?? picksResult.error ?? resultsResult.error;
   const integrity = assessBowlPoolIntegrity(games ?? [], linesResult.data ?? []);
-  const settlement = assessBowlPoolSettlement({ games: games ?? [], entries: entries ?? [], picks: picksResult.data ?? [], results: resultsResult.data ?? [], lines: linesResult.data ?? [] });
+  const settlementGames = (games ?? []).filter((game) => game.status === "final");
+  const settlement = assessBowlPoolSettlement({ games: settlementGames, entries: entries ?? [], picks: picksResult.data ?? [], results: resultsResult.data ?? [], lines: linesResult.data ?? [] });
   return { configured: true, healthy: integrity.healthy && settlement.healthy, problems: [...integrity.problems, ...settlement.problems], integrity, settlement };
 }
