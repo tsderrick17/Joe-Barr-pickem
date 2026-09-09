@@ -3,10 +3,11 @@
  *   health: any,
  *   bootstrap: any,
  *   preflightChecks?: Array<{ label: string, passed: boolean }>,
+ *   bowlHealth?: { configured?: boolean, healthy?: boolean, problems?: string[] } | null,
  *   now?: Date,
  * }} input
  */
-export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [], now = new Date() }) {
+export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [], bowlHealth = null, now = new Date() }) {
   const signals = [];
   if (bootstrap.turnover?.status === "blocked") {
     signals.push({
@@ -50,6 +51,13 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       key: "schedule-change-review-needed", severity: "critical",
       title: "An NFL schedule change needs review",
       detail: `${health.pendingScheduleReviews} changed game${health.pendingScheduleReviews === 1 ? " is" : "s are"} locked, settled, re-paired, or assigned to another scoring period. Safe schedule corrections continue automatically; these games remain pinned until reviewed.`,
+    });
+  }
+  if (bowlHealth?.configured && !bowlHealth.healthy) {
+    signals.push({
+      key: "bowl-pool-integrity-needs-review", severity: "critical",
+      title: "Bowl Pool integrity needs review",
+      detail: bowlHealth.problems.join(" ") || "Bowl Pool schedule, lines, picks, or result receipts failed reconciliation. Open Commissioner Desk → Bowl Pool readiness.",
     });
   }
   if ((health.scheduleProviderCircuit?.consecutive_failures ?? 0) >= 3) {

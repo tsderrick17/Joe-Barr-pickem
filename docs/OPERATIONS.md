@@ -204,3 +204,16 @@ a full slate, verify grades and preserved history, and perform the atomic
 handoff to the next week. The rehearsal runs inside a database transaction and
 always rolls it back, so it leaves no fixture records behind. It never calls
 the Odds provider or Brevo and cannot run with production credentials.
+
+## Bowl Pool assurance
+
+The Bowl Pool has its own integrity and settlement reconciliation checks. The
+commissioner readiness panel reports missing teams or locked lines, ordering or
+status corruption, missing result receipts, pending final picks, and pick/result
+mismatches. The watchdog raises one commissioner incident for any unresolved
+problem. The public monitor contract is `GET /api/health/bowl-pool`; it returns
+only `ok` or `unavailable` and is safe to monitor externally.
+
+The encrypted backup workflow restores and verifies the Bowl Pool tables in its
+disposable PostgreSQL database. A restore that lacks Bowl Pool tables fails the
+backup job even when the general database export is readable.
