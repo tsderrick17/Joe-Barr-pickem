@@ -44,6 +44,8 @@ test("Bowl Pool opt-in controls the whole selection card", async () => {
   assert.match(page, /aria-label="Spread"/);
   assert.match(page, /Select underdog team/);
   assert.match(page, /!gameLocked\(game\)/);
+  assert.match(page, /type="button">SUBMIT<\/button>/);
+  assert.doesNotMatch(page, /SUBMITTING…/);
   assert.doesNotMatch(page, /Separate competition|Preview|Stage the schedule|Standings card|Commissioner preview only/);
 });
 
