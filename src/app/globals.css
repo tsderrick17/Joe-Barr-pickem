@@ -426,6 +426,47 @@ body {
 .slate-receipt-pool > em.is-complete { color: #08764e; }
 .slate-receipt-pool > em.is-unsaved { color: #a86008; }
 
+/* The Bowl Pool is a season card, not a short weekly slip. Keep its receipt
+   in the same register as Pick'em, but show durable progress instead of a
+   forty-game chip wall. */
+.bowl-receipt-metrics {
+  align-self: center;
+  border: 1px solid #c8b8a0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 28rem);
+}
+.bowl-receipt-metric {
+  align-items: center;
+  background: #fffaf3;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  justify-content: center;
+  min-height: 2.65rem;
+  padding: .3rem .45rem;
+  text-align: center;
+}
+.bowl-receipt-metric + .bowl-receipt-metric { border-left: 1px dashed var(--receipt-rule); }
+.bowl-receipt-metric strong {
+  color: #18364d;
+  font-family: "Courier New", monospace;
+  font-size: .92rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.bowl-receipt-metric small {
+  color: #596579;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: .43rem;
+  font-weight: 900;
+  letter-spacing: .11em;
+  line-height: 1.1;
+}
+.bowl-receipt-metric.is-due strong { color: #a82820; }
+
+.bowl-receipt-strip button:disabled { cursor: default; }
+
 .slate-receipt-survivor-pick {
   --receipt-chip-buffer: .15rem;
   align-items: center;
@@ -488,6 +529,10 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
+  .bowl-receipt-metrics { width: 100%; }
+  .bowl-receipt-metric { min-height: 2.45rem; padding-inline: .24rem; }
+  .bowl-receipt-metric strong { font-size: .72rem; }
+  .bowl-receipt-metric small { font-size: .36rem; letter-spacing: .08em; }
   /* Give the Survivor chip the unused middle of the receipt instead of
      leaving that space in the flexible status row. The label and status keep
      their own tracks, so the larger chip cannot cover either one. */

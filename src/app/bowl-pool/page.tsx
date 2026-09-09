@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
+import { bowlReceiptSummary } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 
@@ -33,7 +34,9 @@ export default function BowlPoolPage() {
   const [championshipTotalGuess, setChampionshipTotalGuess] = useState("");
   const [savedChampionshipTotalGuess, setSavedChampionshipTotalGuess] = useState("");
   const [games, setGames] = useState<BowlGame[]>([]);
+  const [championshipGameId, setChampionshipGameId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [submissionError, setSubmissionError] = useState("");
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
@@ -51,9 +54,10 @@ export default function BowlPoolPage() {
     if (!profile || (!profile.isCommissioner && !hasLaunched)) return;
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (!response.ok) { setOptedIn(false); return; }
-      const payload = await response.json() as { games?: BowlGame[]; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }> };
+      const payload = await response.json() as { games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }> };
       const nextGames = payload.games ?? [];
       setGames(nextGames);
+      setChampionshipGameId(payload.season?.championship_game_id ?? null);
       if (payload.optedIn !== undefined) setOptedIn(payload.optedIn);
       const guess = payload.entry?.championship_total_guess == null ? "" : String(payload.entry.championship_total_guess);
       setChampionshipTotalGuess(guess);
@@ -94,23 +98,34 @@ export default function BowlPoolPage() {
   }, null);
   const poolLocked = firstKickoffMs !== null && nowMs >= firstKickoffMs;
   const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
+  const selectedGameCount = games.filter((game) => Boolean(selections[game.id])).length;
+  const bowlReceipt = bowlReceiptSummary({ selectedCount: selectedGameCount, totalGames: games.length, tiebreaker: championshipTotalGuess, hasUnsavedChanges, isSubmitting });
+  const gameLocked = (game: BowlGame) => Boolean(game.kickoff_at) && nowMs >= new Date(game.kickoff_at).getTime();
+  const championshipLocked = Boolean(championshipGameId && games.find((game) => game.id === championshipGameId && gameLocked(game)));
   function chooseTeam(gameId: string, side: "favorite" | "underdog") {
+    setSubmissionError("");
     setSelections((current) => current[gameId] === side
       ? Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId))
       : { ...current, [gameId]: side });
   }
   async function submitSelections() {
     setIsSubmitting(true);
+    setSubmissionError("");
     try {
       const selectionsToSave = Object.entries(selections).map(([gameId, side]) => {
         const game = games.find((candidate) => candidate.id === gameId);
-        return { gameId, teamId: game ? (teamForSide(game, side)?.id ?? "") : "" };
+        return { gameId, teamId: game && !gameLocked(game) ? (teamForSide(game, side)?.id ?? "") : "" };
       }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
       const parsedGuess = championshipTotalGuess.trim() === "" ? null : Number(championshipTotalGuess);
       const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: true, selections: selectionsToSave, championshipTotalGuess: parsedGuess }) });
-      if (!response.ok) throw new Error("Your Bowl Pool selections could not be saved.");
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Your Bowl Pool selections could not be saved.");
+      }
       setSavedSelections(selections);
       setSavedChampionshipTotalGuess(championshipTotalGuess);
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : "Your Bowl Pool selections could not be saved.");
     } finally { setIsSubmitting(false); }
   }
 
@@ -118,7 +133,7 @@ export default function BowlPoolPage() {
     setOptedIn(nextOptedIn);
     try {
       const selectionsToSave = Object.entries(selections).map(([gameId, side]) => { const game = games.find((candidate) => candidate.id === gameId); return { gameId, teamId: game ? (teamForSide(game, side)?.id ?? "") : "" }; }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
-      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: nextOptedIn ? selectionsToSave : [] }) });
+      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: nextOptedIn ? selectionsToSave : [], championshipTotalGuess: championshipTotalGuess.trim() === "" ? null : Number(championshipTotalGuess) }) });
       if (!response.ok) { setOptedIn(!nextOptedIn); throw new Error("Your Bowl Pool participation could not be saved."); }
       if (nextOptedIn) { setSavedSelections(selections); setSavedChampionshipTotalGuess(championshipTotalGuess); }
     } catch { setOptedIn(!nextOptedIn); }
@@ -150,8 +165,22 @@ export default function BowlPoolPage() {
       {!isLoading && canView ? (
         <>
           {poolLocked ? null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
-          {optedIn === true && hasUnsavedChanges ? <section className="slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Bowl Pool submission"><div className="slate-receipt-ticket"><button className="slate-receipt-print needs-attention" disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button></div></section> : null}
-          {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6">
+          {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
+            <div className="slate-receipt-ticket">
+              <span>BOWL RECEIPT <small>SEASON PICKS</small></span>
+              <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">{isSubmitting ? "SUBMITTING…" : "SUBMIT"}</button>
+            </div>
+            <div className="slate-receipt-pool bowl-receipt-summary">
+              <span>BOWL POOL</span>
+              <div className="bowl-receipt-metrics">
+                <div className="bowl-receipt-metric"><strong>{bowlReceipt.picksLabel}</strong><small>GAMES SELECTED</small></div>
+                <div className={`bowl-receipt-metric ${bowlReceipt.tiebreakerLabel === "DUE" ? "is-due" : ""}`}><strong>{bowlReceipt.tiebreakerLabel}</strong><small>TIEBREAKER</small></div>
+              </div>
+              <em aria-live="polite" className={bowlReceipt.state === "complete" ? "is-complete" : bowlReceipt.state === "unsaved" ? "is-unsaved" : ""}>{bowlReceipt.status}</em>
+            </div>
+            {submissionError ? <p className="slate-receipt-warning" role="alert">{submissionError}</p> : null}
+          </section> : null}
+          {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
               <h2 className="mt-1 font-serif text-2xl font-bold">2026–27 Bowl Pool</h2>
@@ -165,13 +194,13 @@ export default function BowlPoolPage() {
               <div className={`grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
                 <span className="min-w-0"><strong className="block truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
+                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
                 <span className={`text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>
-                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
+                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal disabled:cursor-not-allowed disabled:bg-slate-100" disabled={championshipLocked} inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => { setSubmissionError(""); setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3)); }} /></label>
         </section> : null}
         </>
       ) : null}
