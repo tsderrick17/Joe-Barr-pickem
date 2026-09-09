@@ -131,7 +131,7 @@ export async function syncBowlPool(now = new Date()) {
   const { data: pending, error: pendingError } = await supabaseAdmin.from("bowl_pool_picks").select("id, entry_id, game_id, selected_team_id").eq("result", "pending");
   if (pendingError) throw new Error("Bowl Pool pending picks could not be loaded.");
   const gameIds = [...new Set((pending ?? []).map((pick) => pick.game_id))];
-  if (!gameIds.length) return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded: 0, finalizedGames, ...provider };
+  if (!gameIds.length) { const { data: currentSeason } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1).maybeSingle(); if (currentSeason) await supabaseAdmin.rpc("refresh_bowl_pool_champion", { target_season_id: currentSeason.id, evaluated_at: evaluatedAt }); return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded: 0, finalizedGames, ...provider }; }
   const [{ data: games, error: gamesError }, { data: lines, error: linesError }] = await Promise.all([
     supabaseAdmin.from("bowl_pool_games").select("id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score").in("id", gameIds).eq("status", "final"),
     supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", gameIds),
@@ -151,5 +151,7 @@ export async function syncBowlPool(now = new Date()) {
     await supabaseAdmin.from("bowl_pool_game_results").upsert({ entry_id: pick.entry_id, game_id: pick.game_id, result, reason: "graded", graded_at: evaluatedAt }, { onConflict: "entry_id,game_id" });
     picksGraded += 1;
   }
+  const { data: currentSeason } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1).maybeSingle();
+  if (currentSeason) await supabaseAdmin.rpc("refresh_bowl_pool_champion", { target_season_id: currentSeason.id, evaluated_at: evaluatedAt });
   return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded, finalizedGames, ...provider };
 }

@@ -23,6 +23,7 @@ const AutomationWatchdog = dynamic(() => import("@/components/automation-watchdo
 const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstrap-status"));
 const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
+const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 
 type Spread = {
   team: string;
@@ -321,6 +322,7 @@ export default function AdminPage() {
             <p className="mt-1 max-w-2xl text-zinc-700">Capacity and automation live here so the day-to-day pool view stays focused. Most of this page should be green and left alone.</p>
           </section>
           <AccountCapacityPanel />
+          <BowlPoolReadiness />
           <SentryVerification />
           <section className="border-b-2 border-zinc-900 py-7">
             <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>

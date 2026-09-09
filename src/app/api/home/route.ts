@@ -40,7 +40,7 @@ type LockedLineRow = {
 
 type ChampionshipRow = {
   player_id: string;
-  pool: "pickem" | "survivor";
+  pool: "pickem" | "survivor" | "bowl";
   season_year: number;
 };
 
@@ -272,8 +272,12 @@ export async function GET(request: NextRequest) {
     console.warn("Championship history is unavailable.", { code: championshipsError.code });
   }
   const trophiesByPlayerId = new Map<string, string[]>();
+  const championshipCounts = new Map<string, number>();
+  for (const championship of (championshipRows ?? []) as ChampionshipRow[]) { const key = `${championship.season_year}:${championship.pool}`; championshipCounts.set(key, (championshipCounts.get(key) ?? 0) + 1); }
   for (const championship of (championshipRows ?? []) as ChampionshipRow[]) {
-    const title = `'${String(championship.season_year).slice(-2)} ${championship.pool === "pickem" ? "Pick'em" : "Survivor"} Champion`;
+    const poolLabel = championship.pool === "pickem" ? "Pick'em" : championship.pool === "survivor" ? "Survivor" : "Bowl Pool";
+    const suffix = (championshipCounts.get(`${championship.season_year}:${championship.pool}`) ?? 0) > 1 ? "Co-Champion" : "Champion";
+    const title = `'${String(championship.season_year).slice(-2)} ${poolLabel} ${suffix}`;
     const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
     titles.push(title);
     trophiesByPlayerId.set(championship.player_id, titles);

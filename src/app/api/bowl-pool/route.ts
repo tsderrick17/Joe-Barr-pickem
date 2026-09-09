@@ -62,12 +62,25 @@ export async function GET(request: NextRequest) {
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
   const { data: players } = playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
+  const [{ data: championships }, { data: currentChampionships }] = await Promise.all([
+    supabaseAdmin.from("pool_championships").select("player_id, season_year").eq("pool", "bowl").order("season_year", { ascending: false }),
+    supabaseAdmin.from("bowl_pool_championships").select("player_id").eq("season_id", context.season.id),
+  ]);
+  const trophiesByPlayerId = new Map<string, string[]>();
+  const championshipCounts = new Map<number, number>();
+  for (const championship of championships ?? []) championshipCounts.set(championship.season_year, (championshipCounts.get(championship.season_year) ?? 0) + 1);
+  for (const championship of championships ?? []) {
+    const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
+    titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool ${(championshipCounts.get(championship.season_year) ?? 0) > 1 ? "Co-Champion" : "Champion"}`);
+    trophiesByPlayerId.set(championship.player_id, titles);
+  }
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
     wins: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win").length,
     losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss").length,
     tiebreakerTotal: entry.championship_total_guess,
+    trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
   })).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(CURRENT_SEASON_YEAR) },
@@ -79,6 +92,10 @@ export async function GET(request: NextRequest) {
     publicPicks,
     privatePickMarkers,
     standings,
+    championships: [
+      ...(championships ?? []).map((championship) => ({ playerId: championship.player_id, seasonYear: championship.season_year, playerName: playerNameById.get(championship.player_id) ?? "Player" })),
+      ...(currentChampionships ?? []).map((championship) => ({ playerId: championship.player_id, seasonYear: context.season!.season_year, playerName: playerNameById.get(championship.player_id) ?? "Player" })),
+    ],
   });
 }
 
