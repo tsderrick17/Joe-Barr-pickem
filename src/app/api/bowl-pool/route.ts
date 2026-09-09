@@ -50,6 +50,12 @@ export async function GET(request: NextRequest) {
     const game = context.games.find((candidate) => candidate.id === pick.game_id);
     return game && new Date(game.kickoff_at) <= now;
   }).map((pick) => ({ ...pick, playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null }));
+  const privatePickMarkers = player.is_commissioner
+    ? seasonPicks.filter((pick) => {
+      const game = context.games.find((candidate) => candidate.id === pick.game_id);
+      return game && new Date(game.kickoff_at) > now;
+    }).map((pick) => ({ playerId: (allEntries ?? []).find((entry) => entry.id === pick.entry_id)?.player_id ?? null, game_id: pick.game_id }))
+    : [];
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
   const { data: players } = playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
@@ -68,6 +74,7 @@ export async function GET(request: NextRequest) {
     games: context.games.map((game) => ({ ...game, awayTeam: teamById.get(game.away_team_id) ?? null, homeTeam: teamById.get(game.home_team_id) ?? null, line: lineByGameId.get(game.id) ?? null })),
     ownPicks: ownPicks ?? [],
     publicPicks,
+    privatePickMarkers,
     standings,
   });
 }
