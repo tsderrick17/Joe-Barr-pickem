@@ -1,6 +1,6 @@
 # Uptime monitoring
 
-UptimeRobot is an independent alarm system. The app owns four public, opaque
+UptimeRobot is an independent alarm system. The app owns five public, opaque
 health contracts; additional page monitors are useful but do not replace them.
 The live monitor count is shown under **Commissioner → Connected systems**,
 while UptimeRobot remains the source of truth for exact monitor names, URLs,
@@ -14,12 +14,13 @@ contacts, and current incidents.
 | PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The watchdog worker checked in successfully within the last 20 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
 | PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking (once a lock is due), reminder processing, and final-score processing are within their allowed freshness windows (with room for one delayed cron delivery) | **Commissioner → Automation Health** to identify the worker |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
+| PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
 
 Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
 timeout, or missed heartbeat as down. Configure both outage and recovery
 notifications. Keep the Commissioner alert destination current.
 
-All four endpoints deliberately return only HTTP 200 or 503. They never expose
+All five endpoints deliberately return only HTTP 200 or 503. They never expose
 database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
 descriptive.
@@ -40,6 +41,8 @@ does not flap the monitor; the watchdog still evaluates genuinely overdue work.
   slate, the line-lock heartbeat is intentionally not required.
 - The backup heartbeat proves the latest completed export, encryption, and
   restore check; it does not replace a deliberate isolated restore rehearsal.
+- The Bowl Pool heartbeat proves the Bowl Pool contract is available; before
+  the launch gate it intentionally stays healthy with placeholder data.
 
 This separation matters: one red monitor should identify the failed layer
 without turning an ordinary provider delay into a whole-site outage.
