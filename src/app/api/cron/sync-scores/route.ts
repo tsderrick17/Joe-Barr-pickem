@@ -24,11 +24,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await runWithAutomationLease("scores", async () => {
-      const nfl = await syncFinalScores();
-      const bowl = await syncBowlPool();
-      return { nfl, bowl };
-    });
+    const nfl = await runWithAutomationLease("scores", syncFinalScores);
+    const bowl = await runWithAutomationLease("bowl_scores", syncBowlPool);
+    const result = { nfl, bowl };
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) {
