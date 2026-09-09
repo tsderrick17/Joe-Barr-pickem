@@ -568,7 +568,7 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {bowlStandings ? <section className="pickem-ledger bowl-card-section py-6 sm:py-7" aria-label="Bowl Card">
+        {bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${bowlPoolMinimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
             <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>

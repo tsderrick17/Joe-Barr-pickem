@@ -2402,6 +2402,11 @@ html[data-theme="night"] .newspaper-clipping::after {
   max-width: 100%;
   min-width: 0;
 }
+.bowl-card-section.is-minimized {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--standings-module-width);
+}
 
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
