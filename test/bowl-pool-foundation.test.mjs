@@ -40,9 +40,12 @@ test("Bowl Pool opt-in controls the whole selection card", async () => {
   assert.match(page, /bowlReceiptSummary/);
   assert.match(page, /BOWL RECEIPT/);
   assert.match(page, /optedIn === true \? <section/);
+  assert.match(page, /poolLocked \? optedIn === false/);
+  assert.match(page, /Bowl Pool entry is closed for this year\. Check back next year\./);
   assert.match(page, /Select favorite team/);
   assert.match(page, /aria-label="Spread"/);
   assert.match(page, /Select underdog team/);
+  assert.match(page, /bowl-team-label--new/);
   assert.match(page, /!gameLocked\(game\)/);
   assert.match(page, /type="button">SUBMIT<\/button>/);
   assert.doesNotMatch(page, /SUBMITTING…/);

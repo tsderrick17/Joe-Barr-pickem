@@ -37,6 +37,7 @@ export default function BowlPoolPage() {
   const [championshipGameId, setChampionshipGameId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [submissionError, setSubmissionError] = useState("");
+  const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; side: "favorite" | "underdog"; token: number } | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
@@ -104,9 +105,13 @@ export default function BowlPoolPage() {
   const championshipLocked = Boolean(championshipGameId && games.find((game) => game.id === championshipGameId && gameLocked(game)));
   function chooseTeam(gameId: string, side: "favorite" | "underdog") {
     setSubmissionError("");
-    setSelections((current) => current[gameId] === side
-      ? Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId))
-      : { ...current, [gameId]: side });
+    if (selections[gameId] === side) {
+      setSelections((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId)));
+      setSelectionFeedback(null);
+      return;
+    }
+    setSelections((current) => ({ ...current, [gameId]: side }));
+    setSelectionFeedback({ gameId, side, token: Date.now() });
   }
   async function submitSelections() {
     setIsSubmitting(true);
@@ -164,7 +169,7 @@ export default function BowlPoolPage() {
       {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
       {!isLoading && canView ? (
         <>
-          {poolLocked ? null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
+          {poolLocked ? optedIn === false ? <div className="mt-6 border border-slate-300 bg-white p-5 text-center text-sm font-bold text-slate-700">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
           {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT <small>SEASON PICKS</small></span>
@@ -194,9 +199,9 @@ export default function BowlPoolPage() {
               <div className={`grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 py-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
                 <span className="min-w-0"><strong className="block truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-placeholder" : ""}`} aria-label="Select favorite team" disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} type="button">{teamForSide(game, "favorite")?.full_name || "Team TBD"}</button>
+                <button aria-label="Select favorite team" aria-pressed={selections[game.id] === "favorite"} className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} type="button"><span className={`bowl-team-label ${selections[game.id] === "favorite" ? "bowl-team-label--selected" : ""} ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "bowl-team-label--new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}>{teamForSide(game, "favorite")?.full_name || "Team TBD"}</span></button>
                 <span className={`text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>
-                <button className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-placeholder" : ""}`} aria-label="Select underdog team" disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} type="button">{teamForSide(game, "underdog")?.full_name || "Team TBD"}</button>
+                <button aria-label="Select underdog team" aria-pressed={selections[game.id] === "underdog"} className={`min-w-0 truncate text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:overflow-visible sm:whitespace-normal sm:text-sm ${selections[game.id] === "underdog" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} type="button"><span className={`bowl-team-label ${selections[game.id] === "underdog" ? "bowl-team-label--selected" : ""} ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? "bowl-team-label--new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? `${game.id}-${selectionFeedback.token}` : game.id}>{teamForSide(game, "underdog")?.full_name || "Team TBD"}</span></button>
               </div>
             ))}
           </div>
