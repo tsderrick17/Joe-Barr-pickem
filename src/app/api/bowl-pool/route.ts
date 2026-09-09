@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]))];
   const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
-    teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, full_name, abbreviation").in("id", teamIds) : Promise.resolve({ data: [] }),
+    teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, display_name, short_name, abbreviation").in("id", teamIds) : Promise.resolve({ data: [] }),
     supabaseAdmin.from("bowl_pool_entries").select("id, status, championship_total_guess, opted_in_at, opted_out_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle(),
     supabaseAdmin.from("bowl_pool_picks").select("id, game_id, selected_team_id, result").eq("entry_id", (await supabaseAdmin.from("bowl_pool_entries").select("id").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle()).data?.id ?? "00000000-0000-0000-0000-000000000000"),
     supabaseAdmin.from("bowl_pool_entries").select("id, player_id, status, championship_total_guess").eq("season_id", context.season.id),
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     isCommissioner: Boolean(player.is_commissioner),
     optedIn: ownEntry?.status === "active" || ownEntry?.status === "complete",
     entry: ownEntry ?? null,
-    games: context.games.map((game) => ({ ...game, awayTeam: teamById.get(game.away_team_id) ?? null, homeTeam: teamById.get(game.home_team_id) ?? null, line: lineByGameId.get(game.id) ?? null })),
+    games: context.games.map((game) => ({ ...game, awayTeam: teamById.get(game.away_team_id) ? { ...teamById.get(game.away_team_id), full_name: teamById.get(game.away_team_id)!.display_name } : null, homeTeam: teamById.get(game.home_team_id) ? { ...teamById.get(game.home_team_id), full_name: teamById.get(game.home_team_id)!.display_name } : null, line: lineByGameId.get(game.id) ?? null })),
     ownPicks: ownPicks ?? [],
     publicPicks,
     privatePickMarkers,
