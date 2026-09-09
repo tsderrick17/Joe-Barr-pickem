@@ -159,7 +159,7 @@ export default function BowlPoolPage() {
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value)} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm font-bold text-slate-700">National Championship total points tiebreaker<input className="w-[4.5rem] border border-slate-400 bg-white px-3 py-2 font-normal" inputMode="numeric" min="0" max="999" type="number" value={championshipTotalGuess} onChange={(event) => setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
         </section> : null}
         </>
       ) : null}
