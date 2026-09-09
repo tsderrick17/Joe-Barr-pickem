@@ -22,7 +22,7 @@ begin
     select entry.id, entry.player_id, entry.championship_total_guess, count(*) filter (where pick.result = 'win' or result.result = 'win')::integer as wins
     from public.bowl_pool_entries entry left join public.bowl_pool_picks pick on pick.entry_id = entry.id left join public.bowl_pool_game_results result on result.entry_id = entry.id and result.game_id = pick.game_id
     where entry.season_id = target_season_id and entry.status in ('active', 'complete') and entry.championship_total_guess is not null group by entry.id, entry.player_id, entry.championship_total_guess
-  ), ranked as (select *, abs(championship_total_guess - final_total) as difference, max(wins) over () as top_wins from totals), winners as (select * from ranked where wins = top_wins order by difference limit 1)
+  ), ranked as (select *, abs(championship_total_guess - final_total) as difference, max(wins) over () as top_wins from totals), winners as (select * from ranked where wins = top_wins and difference = (select min(difference) from ranked where wins = top_wins))
   insert into public.bowl_pool_championships (season_id, player_id, wins, championship_total_guess, final_total_difference)
   select target_season_id, player_id, wins, championship_total_guess, difference from winners on conflict (season_id, player_id) do nothing;
   get diagnostics inserted_count = row_count;

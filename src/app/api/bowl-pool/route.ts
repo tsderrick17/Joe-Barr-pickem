@@ -67,9 +67,11 @@ export async function GET(request: NextRequest) {
     supabaseAdmin.from("bowl_pool_championships").select("player_id").eq("season_id", context.season.id),
   ]);
   const trophiesByPlayerId = new Map<string, string[]>();
+  const championshipCounts = new Map<number, number>();
+  for (const championship of championships ?? []) championshipCounts.set(championship.season_year, (championshipCounts.get(championship.season_year) ?? 0) + 1);
   for (const championship of championships ?? []) {
     const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
-    titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool Champion`);
+    titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool ${(championshipCounts.get(championship.season_year) ?? 0) > 1 ? "Co-Champion" : "Champion"}`);
     trophiesByPlayerId.set(championship.player_id, titles);
   }
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
