@@ -2856,6 +2856,15 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   padding-right: .5rem;
 }
 
+/* Keep the Bowl Pool identity columns above the moving game matrix. The
+   explicit stacking and edge shadow prevent later game cells from painting
+   over names when the long standings sheet is scrolled horizontally. */
+.bowl-standings-scroll .bowl-standings-sticky {
+  position: sticky;
+  isolation: isolate;
+  box-shadow: 3px 0 0 rgba(29, 29, 31, .12);
+}
+
 .playoff-scoreboard table { background: transparent; }
 .playoff-scoreboard tbody tr { background: transparent !important; }
 .playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
