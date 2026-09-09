@@ -58,7 +58,8 @@ function parseScore(value: string | number | null | undefined) {
 }
 
 async function syncScheduleAndLines(now: Date) {
-  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", 2026).maybeSingle();
+  const seasonYear = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYear).maybeSingle();
   if (!season) return { scheduleGames: 0, linesLocked: 0 };
   const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id").eq("season_id", season.id).in("status", ["scheduled", "live"]);
   if (!games?.length) return { scheduleGames: 0, linesLocked: 0 };
