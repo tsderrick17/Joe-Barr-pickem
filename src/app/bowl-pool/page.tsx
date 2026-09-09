@@ -136,8 +136,8 @@ export default function BowlPoolPage() {
     const name = game.bowl_name || "Bowl game";
     const key = game.provider_game_id ?? "";
     if (/first[-_ ]round/i.test(key) || /first round/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (1st round)`;
-    if (/quarterfinal|quarter/i.test(key) || /quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (quarters)`;
-    if (/semifinal|semi/i.test(key) || /semifinal|semi/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (semis)`;
+    if (/quarterfinal|quarter/i.test(key) || /quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (QF)`;
+    if (/semifinal|semi/i.test(key) || /semifinal|semi/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (SF)`;
     return name;
   }
 
