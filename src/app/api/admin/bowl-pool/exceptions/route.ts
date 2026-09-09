@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   try {
     const games = await seasonGames();
-    return NextResponse.json({ recordableGames: games.filter((game) => game.status === "scheduled" || game.status === "live"), exceptions: games.filter((game) => game.status === "postponed" || game.status === "cancelled" || game.status === "no_contest") });
+    const { data: changes } = await supabaseAdmin.from("bowl_pool_schedule_changes").select("id, game_id, old_kickoff_at, new_kickoff_at, detected_at").is("reviewed_at", null).in("game_id", games.map((game) => game.id)).order("detected_at", { ascending: false });
+    return NextResponse.json({ recordableGames: games.filter((game) => game.status === "scheduled" || game.status === "live"), exceptions: games.filter((game) => game.status === "postponed" || game.status === "cancelled" || game.status === "no_contest"), scheduleChanges: changes ?? [] });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Bowl Pool exceptions could not be loaded." }, { status: 500 });
   }
@@ -28,9 +29,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const commissioner = await requireCommissioner(request);
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" | "rescheduled"; kickoffAt?: string };
+  let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" | "rescheduled"; kickoffAt?: string; changeId?: string };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 }); }
   if (!body.gameId || !["postponed", "cancelled", "no_contest", "rescheduled"].includes(body.status ?? "")) return NextResponse.json({ error: "Choose a Bowl Pool game and a valid disruption status." }, { status: 400 });
+  if (body.status === "rescheduled" && body.changeId) {
+    const { error } = await supabaseAdmin.from("bowl_pool_schedule_changes").update({ reviewed_at: new Date().toISOString() }).eq("id", body.changeId).eq("game_id", body.gameId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ message: "Schedule change marked reviewed." });
+  }
   if (body.status === "rescheduled") {
     if (!body.kickoffAt || !Number.isFinite(Date.parse(body.kickoffAt))) return NextResponse.json({ error: "A valid future kickoff is required to reschedule a Bowl game." }, { status: 400 });
     const { error } = await supabaseAdmin.rpc("reschedule_bowl_game", { target_game_id: body.gameId, new_kickoff_at: new Date(body.kickoffAt).toISOString(), actor_player_id: commissioner.id });

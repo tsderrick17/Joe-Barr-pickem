@@ -1,11 +1,12 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 
-export type AutomationJob = "line_locks" | "scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
+export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
 const leaseSecondsByJob: Record<AutomationJob, number> = {
   line_locks: 120,
   scores: 120,
+  bowl_scores: 180,
   reminders: 600,
   season_bootstrap: 600,
   watchdog: 120,
@@ -18,6 +19,8 @@ export class AutomationAlreadyRunningError extends Error {
       ? "Official line locking"
       : job === "scores"
         ? "Final-score sync"
+        : job === "bowl_scores"
+          ? "Bowl Pool score sync"
         : job === "schedule_refresh"
           ? "NFL schedule refresh"
         : job === "season_bootstrap"

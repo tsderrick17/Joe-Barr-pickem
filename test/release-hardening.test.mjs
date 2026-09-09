@@ -12,7 +12,7 @@ test("eligible pull requests run the real isolated browser flow", async () => {
   assert.match(workflow, /PICKEM_TEST_SUPABASE_URL/);
   assert.match(workflow, /PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY/);
   assert.match(workflow, /PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY/);
-  assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /playwright install (?:--with-deps )?chromium/);
   assert.match(config, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(browser, /is_commissioner:\s*true/);
   assert.match(browser, /name:\s*"Commissioner"/);

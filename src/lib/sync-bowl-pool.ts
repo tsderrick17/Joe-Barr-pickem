@@ -5,6 +5,10 @@ type ProviderEvent = { id: string; commence_time: string; home_team: string; awa
 type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; competitions?: Array<{ venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
 
 async function providerEvents(path: string, query: Record<string, string>) {
+  // The Odds API's free plan does not include college-football markets. Keep
+  // Bowl Pool automation from silently consuming paid credits; bowl lines
+  // must come from the free schedule/import path or commissioner entry.
+  if (path.includes("americanfootball_ncaaf") && process.env.BOWL_POOL_ODDS_API_ENABLED !== "true") return [] as ProviderEvent[];
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return [] as ProviderEvent[];
   const response = await fetch(`https://api.the-odds-api.com/v4/${path}?${new URLSearchParams({ apiKey, ...query })}`, { signal: AbortSignal.timeout(12_000), cache: "no-store" });
