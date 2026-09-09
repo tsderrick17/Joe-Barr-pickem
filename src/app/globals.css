@@ -2319,7 +2319,7 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .bowl-team-label {
-  display: inline-block;
+  display: block;
   isolation: isolate;
   margin: 0 -.13em;
   padding: .04em .13em .08em;

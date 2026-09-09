@@ -262,7 +262,6 @@ export default function HomePage() {
     const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
     if (/quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (QF)`;
     if (/semifinal|semi/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (SF)`;
-    if (/first[- ]round/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (1st round)`;
     return name;
   };
   const bowlTeamLabel = (team: { full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined) => {
@@ -277,7 +276,7 @@ export default function HomePage() {
   // Keep the grid's containing block as wide as its generated tracks. Without
   // this, CSS grid tracks overflow the 80rem shell while row borders stop at
   // the shell's edge (which made the table appear to end mid-schedule).
-  const bowlTableMinWidth = `${12.5 + bowlGames.length * 7.5}rem`;
+  const bowlTableMinWidth = `${14.5 + bowlGames.length * 7.5}rem`;
   const bowlGameBoundaryClass = (index: number) => {
     const key = bowlDateKey(bowlGames[index]);
     const previousKey = index > 0 ? bowlDateKey(bowlGames[index - 1]) : null;
@@ -296,21 +295,22 @@ export default function HomePage() {
   };
   const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
 
-  // Keep the active slate in view when the standings are opened. This uses
-  // Eastern time, matching the pool's kickoff and lock rules, and falls back
-  // to the next scheduled game when today's slate has already passed.
+  // Before the Bowl Pool begins, leave the sheet at its natural left edge.
+  // Once a Bowl game day is underway, bring that day's first game directly
+  // beside the frozen player columns. This uses Eastern time, matching the
+  // pool's kickoff and lock rules.
   useEffect(() => {
     if (!data?.isCommissioner || bowlPoolMinimized || !bowlGames.length) return;
     const frame = window.requestAnimationFrame(() => {
       const container = bowlScrollRef.current;
       if (!container) return;
       const todayKey = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date());
-      const now = Date.now();
       const currentDayIndex = bowlGames.findIndex((game) => game.kickoff_at && new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date(game.kickoff_at)) === todayKey);
-      const nextGameIndex = bowlGames.findIndex((game) => game.kickoff_at && new Date(game.kickoff_at).getTime() >= now);
-      const targetIndex = currentDayIndex >= 0 ? currentDayIndex : nextGameIndex;
-      if (targetIndex < 0) return;
-      const target = container.querySelector<HTMLElement>(`[data-bowl-game-index="${targetIndex}"]`);
+      if (currentDayIndex < 0) {
+        container.scrollLeft = 0;
+        return;
+      }
+      const target = container.querySelector<HTMLElement>(`[data-bowl-game-index="${currentDayIndex}"]`);
       if (target) container.scrollLeft = Math.max(0, target.offsetLeft - 128);
     });
     return () => window.cancelAnimationFrame(frame);
@@ -562,9 +562,9 @@ export default function HomePage() {
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>
               <div style={{ minWidth: bowlTableMinWidth }}>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(4.5rem, .55fr)` }}><span aria-hidden="true" className="bowl-standings-sticky sticky left-0 z-30 bg-[#f5f0e6]" style={{ gridColumn: "span 2" }} />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-[#334155] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-white" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}<span aria-hidden="true" className="border-l-2 border-t-2 border-[#8d877d] bg-transparent" /></div>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(4.5rem, .55fr)` }}><span className="bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="text-[9px] font-black tracking-wide">Games remaining</span>{bowlScheduleReady ? <strong className="mt-1 text-3xl font-black leading-none text-slate-950">{Math.max(0, bowlGames.length - bowlGradedGames)}</strong> : null}</span>{bowlGames.map((game, index) => <span className={`border-b-2 border-[#1d1d1f] bg-[#f7f3ea] px-2 py-2 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="block text-xs uppercase tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block break-words font-bold text-slate-950" title={bowlTeam(game, "favorite")?.full_name}>{bowlTeamLabel(bowlTeam(game, "favorite"))}</span><span className={`block font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{game.line?.locked_spread ?? "—"}</span><span className="block break-words font-bold text-slate-950" title={bowlTeam(game, "underdog")?.full_name}>{bowlTeamLabel(bowlTeam(game, "underdog"))}</span></span>)}<span className="flex items-center justify-center border-b-2 border-l-2 border-[#8d877d] bg-[#f5f0e6] px-1 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
-                {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "bg-[#e9eef4]" : "bg-[#f5f0e6]"; return <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(4.5rem, .55fr)` }} key={row.playerId}><span className={`bowl-standings-sticky sticky left-0 z-30 px-1 py-2 text-center font-mono font-black tabular-nums ${rowFill}`}>{row.wins}</span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif font-bold ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-1 py-2 font-mono text-xs font-black tabular-nums text-slate-700">{row.tiebreakerTotal ?? "—"}</span></div>; })}
+                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }}><span aria-hidden="true" className="bowl-standings-sticky sticky left-0 z-30 bg-[#f5f0e6]" style={{ gridColumn: "span 2" }} />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-[#334155] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-white" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}<span aria-hidden="true" className="border-l-2 border-t-2 border-[#8d877d] bg-transparent" /></div>
+                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="text-[9px] font-black tracking-wide">Games remaining</span>{bowlScheduleReady ? <strong className="mt-1 text-3xl font-black leading-none text-slate-950">{Math.max(0, bowlGames.length - bowlGradedGames)}</strong> : null}</span>{bowlGames.map((game, index) => <span className={`bg-[#f7f3ea] px-2 py-2 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="block text-xs uppercase tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block truncate font-bold text-slate-950" title={bowlTeam(game, "favorite")?.full_name}>{bowlTeamLabel(bowlTeam(game, "favorite"))}</span><span className={`block font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{game.line?.locked_spread ?? "—"}</span><span className="block truncate font-bold text-slate-950" title={bowlTeam(game, "underdog")?.full_name}>{bowlTeamLabel(bowlTeam(game, "underdog"))}</span></span>)}<span className="flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
+                {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "bg-[#e9eef4]" : "bg-[#f5f0e6]"; return <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }} key={row.playerId}><span className={`bowl-standings-sticky sticky left-0 z-30 px-1 py-2 text-center font-mono font-black tabular-nums ${rowFill}`}>{row.wins}</span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif font-bold ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-2 py-2 font-mono text-xs font-black tabular-nums text-slate-700">{row.tiebreakerTotal ?? "—"}</span></div>; })}
               </div>
             </div>
           </> : null}
