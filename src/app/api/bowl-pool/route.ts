@@ -34,18 +34,20 @@ export async function GET(request: NextRequest) {
   const now = new Date();
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]))];
-  const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }] = await Promise.all([
+  const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
     teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, full_name, abbreviation").in("id", teamIds) : Promise.resolve({ data: [] }),
     supabaseAdmin.from("bowl_pool_entries").select("id, status, championship_total_guess, opted_in_at, opted_out_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle(),
     supabaseAdmin.from("bowl_pool_picks").select("id, game_id, selected_team_id, result").eq("entry_id", (await supabaseAdmin.from("bowl_pool_entries").select("id").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle()).data?.id ?? "00000000-0000-0000-0000-000000000000"),
     supabaseAdmin.from("bowl_pool_entries").select("id, player_id, status, championship_total_guess").eq("season_id", context.season.id),
     supabaseAdmin.from("bowl_pool_picks").select("entry_id, game_id, selected_team_id, result"),
     gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, locked_spread, locked_at").in("game_id", gameIds) : Promise.resolve({ data: [] }),
+    supabaseAdmin.from("bowl_pool_game_results").select("entry_id, game_id, result"),
   ]);
   const teamById = new Map((teams ?? []).map((team) => [team.id, team]));
   const lineByGameId = new Map((lines ?? []).map((line) => [line.game_id, line]));
   const seasonEntryIds = new Set((allEntries ?? []).map((entry) => entry.id));
   const seasonPicks = (allPicks ?? []).filter((pick) => seasonEntryIds.has(pick.entry_id) && gameIds.includes(pick.game_id));
+  const seasonAutomaticResults = (automaticResults ?? []).filter((result) => seasonEntryIds.has(result.entry_id) && gameIds.includes(result.game_id));
   const publicPicks = seasonPicks.filter((pick) => {
     const game = context.games.find((candidate) => candidate.id === pick.game_id);
     return game && new Date(game.kickoff_at) <= now;
@@ -62,8 +64,8 @@ export async function GET(request: NextRequest) {
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
-    wins: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length,
-    losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length,
+    wins: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win").length,
+    losses: seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss").length,
     tiebreakerTotal: entry.championship_total_guess,
   })).sort((a, b) => b.wins - a.wins || String(a.playerId).localeCompare(String(b.playerId)));
   return NextResponse.json({
