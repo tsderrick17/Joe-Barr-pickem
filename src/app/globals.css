@@ -3001,19 +3001,31 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   isolation: isolate;
   box-shadow: 3px 0 0 rgba(29, 29, 31, .12);
 }
-.bowl-standings-bowl-name { border-bottom: 1px solid #b8c0ca; padding-bottom: .3rem; }
-.bowl-standings-team { min-height: 1.45rem; line-height: 1.45rem; }
-.bowl-standings-line { min-height: 1.45rem; line-height: 1.45rem; }
 .bowl-standings-game-cell {
-  align-items: center;
+  align-items: stretch;
   display: grid !important;
-  grid-template-rows: 2.25rem 1.45rem 1.45rem 1.45rem;
-  justify-items: stretch;
+  grid-template-rows: 3rem 1.6rem 1.6rem 1.6rem;
+  min-height: 7.8rem;
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name,
 .bowl-standings-game-cell > .bowl-standings-team,
-.bowl-standings-game-cell > .bowl-standings-line { align-self: center; margin-top: 0; width: 100%; }
-.bowl-standings-game-cell > .bowl-standings-bowl-name { box-sizing: border-box; }
+.bowl-standings-game-cell > .bowl-standings-line {
+  align-items: center;
+  display: flex !important;
+  height: 100%;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  min-height: 0;
+  width: 100%;
+}
+.bowl-standings-game-cell > .bowl-standings-bowl-name {
+  border-bottom: 1px solid #b8c0ca;
+  box-sizing: border-box;
+  padding: 0 .1rem;
+}
 
 .bowl-flip-counter {
   display: inline-flex;
