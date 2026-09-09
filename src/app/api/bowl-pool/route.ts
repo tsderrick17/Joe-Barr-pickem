@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
   const now = new Date();
   const firstKickoff = context.season.first_kickoff_at ? new Date(context.season.first_kickoff_at) : null;
   if (firstKickoff && now >= firstKickoff && !player.is_commissioner) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
   if (existingError) return NextResponse.json({ error: "Your Bowl Pool entry could not be loaded." }, { status: 500 });
   if (!body.optedIn) {
     if (existing) {
@@ -119,7 +119,10 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ optedIn: false });
   }
-  const { data: entry, error: entryError } = await supabaseAdmin.from("bowl_pool_entries").upsert({ id: existing?.id, season_id: context.season.id, player_id: player.id, status: "active", opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null }, { onConflict: "season_id,player_id" }).select("id, status").single();
+  const entryPayload = { season_id: context.season.id, player_id: player.id, status: "active" as const, opted_in_at: existing?.opted_in_at ?? now.toISOString(), opted_out_at: null, championship_total_guess: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null };
+  const { data: entry, error: entryError } = existing
+    ? await supabaseAdmin.from("bowl_pool_entries").update(entryPayload).eq("id", existing.id).select("id, status").single()
+    : await supabaseAdmin.from("bowl_pool_entries").insert(entryPayload).select("id, status").single();
   if (entryError || !entry) return NextResponse.json({ error: entryError?.message ?? "Your Bowl Pool entry could not be saved." }, { status: 400 });
   const unique = new Map<string, Selection>();
   for (const selection of body.selections) unique.set(selection.gameId, selection);

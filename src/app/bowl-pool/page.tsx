@@ -105,8 +105,10 @@ export default function BowlPoolPage() {
   async function changeOptIn(nextOptedIn: boolean) {
     setOptedIn(nextOptedIn);
     try {
-      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: [] }) });
-      if (!response.ok) setOptedIn(!nextOptedIn);
+      const selectionsToSave = Object.entries(selections).map(([gameId, side]) => { const game = games.find((candidate) => candidate.id === gameId); return { gameId, teamId: game ? (teamForSide(game, side)?.id ?? "") : "" }; }).filter((selection): selection is { gameId: string; teamId: string } => Boolean(selection.teamId));
+      const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optedIn: nextOptedIn, selections: nextOptedIn ? selectionsToSave : [] }) });
+      if (!response.ok) { setOptedIn(!nextOptedIn); throw new Error("Your Bowl Pool participation could not be saved."); }
+      if (nextOptedIn) { setSavedSelections(selections); setSavedChampionshipTotalGuess(championshipTotalGuess); }
     } catch { setOptedIn(!nextOptedIn); }
   }
 
