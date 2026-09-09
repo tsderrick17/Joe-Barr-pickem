@@ -6,7 +6,7 @@ alter table public.pool_championships add constraint pool_championships_pool_che
 insert into public.pool_championships (season_year, pool, player_id, crowned_at)
 select 2025, 'bowl', id, timestamptz '2026-01-25 00:00:00+00'
 from public.players where lower(trim(first_name)) = 'al'
-on conflict (season_year, pool) do nothing;
+on conflict do nothing;
 
 create or replace function public.refresh_bowl_pool_champion(target_season_id uuid, evaluated_at timestamptz default clock_timestamp())
 returns integer language plpgsql security definer set search_path = public as $$
