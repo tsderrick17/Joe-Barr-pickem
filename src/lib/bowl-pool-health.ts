@@ -10,7 +10,7 @@ export async function checkBowlPoolHealth() {
   // Before the Bowl Pool opens, intentional placeholders (TBD teams and
   // future lines) are setup work, not an operational incident. Monitoring
   // becomes strict at the first kickoff, when missing data can affect picks.
-  if (season.first_kickoff_at && new Date() < new Date(season.first_kickoff_at)) {
+  if (new Date() < new Date(season.player_visible_at) || (season.first_kickoff_at && new Date() < new Date(season.first_kickoff_at))) {
     return { configured: true, healthy: true, problems: [], integrity: null, settlement: null };
   }
   const { data: games, error: gamesError } = await supabaseAdmin.from("bowl_pool_games").select("id,kickoff_at,order_index,status,away_team_id,home_team_id").eq("season_id", season.id).order("kickoff_at");
