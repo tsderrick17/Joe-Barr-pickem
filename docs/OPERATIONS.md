@@ -217,3 +217,24 @@ only `ok` or `unavailable` and is safe to monitor externally.
 The encrypted backup workflow restores and verifies the Bowl Pool tables in its
 disposable PostgreSQL database. A restore that lacks Bowl Pool tables fails the
 backup job even when the general database export is readable.
+
+### Bowl Pool email operations
+
+Active Bowl Pool participants who have pool email enabled receive the same
+automatic delivery protection as NFL pool messages; there is no separate Bowl
+email opt-in. An individual unpicked-game reminder is eligible three hours
+before that game's Eastern kickoff and is evaluated against the recipient's
+current saved picks at send time. The daily results recap runs at 5:00 AM
+Eastern on the day after a Bowl gameday, waits until that day's games have
+terminal results, and can include the full day's schedule in a compact,
+responsive image. Each reminder and recap is keyed and recorded with an
+immutable source snapshot, so retries cannot duplicate a delivery or mutate a
+previously sent result.
+
+Before the December launch gate, Bowl placeholders and missing lines are
+intentional and do not make the public Bowl health monitor fail. After the
+player-visible launch/first kickoff, the same endpoint becomes strict about
+schedule, locks, results, receipts, and settlement reconciliation. A cancelled,
+postponed, or no-contest game is recorded through the Commissioner Bowl
+exceptions control so its picks are voided or retained according to the
+documented rules rather than graded as a loss.

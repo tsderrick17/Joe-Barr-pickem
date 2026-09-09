@@ -141,6 +141,15 @@ be replayed.
 - Final standings sort by ATS wins, then the smallest absolute difference from
   the combined points scored in the CFP national championship. Remaining ties
   create co-champions.
+- Active participants with pool email enabled receive an individual reminder
+  three hours before an unpicked game's kickoff and a 5:00 AM Eastern recap on
+  the following day after that gameday's results are terminal. Recaps may
+  contain the entire day's slate; immutable snapshots and keyed delivery
+  receipts make retries safe and prevent duplicate messages.
+- Before launch, placeholders and missing lines are expected and the Bowl
+  health contract remains available. After launch/first kickoff, monitoring is
+  strict; verified postponed, cancelled, and no-contest games must be recorded
+  by the Commissioner so picks are handled as void disruptions.
 
 ## Weekly lifecycle
 
