@@ -17,7 +17,7 @@ const MARGIN_RED = "#d56b66";
 const TEAL = "#008c82";
 const MUTED = "#596579";
 
-type SlateGame = { away: string; home: string; time: string; favorite: "away" | "home" | null; spread: number | null };
+type SlateGame = { away: string; home: string; day?: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
 
 function SlateImage({
@@ -40,16 +40,14 @@ function SlateImage({
         <span style={{ color: official ? TEAL : MUTED, display: "flex", fontFamily: "Arial", fontSize: 18, fontWeight: 800, letterSpacing: 2 }}>{official ? "OFFICIAL LINES" : "PRELIMINARY LINES"}</span>
       </div>
       <div style={{ borderBottom: "1px solid #c8c1b5", display: "flex", fontFamily: "Arial", fontSize: 18, fontWeight: 800, letterSpacing: 2, padding: "14px 2px" }}>{title.toUpperCase()}</div>
-      <div style={{ color: "#32445f", display: "flex", fontFamily: "Arial", fontSize: 15, lineHeight: 1.3, margin: "14px 0", padding: "0 2px" }}>
-        <span style={{ display: "flex", flex: 1 }}><b>PICK&apos;EM</b>&nbsp; Click a team name to choose against the spread.</span>
-        <span style={{ display: "flex", flex: 1 }}><b>SURVIVOR</b>&nbsp; Choose an outright winner with a poker chip.</span>
-        <span style={{ display: "flex", flex: 1 }}><b>SAVE</b>&nbsp; Save selections at the bottom.</span>
-      </div>
       <div style={{ display: "flex", flexDirection: "column" }}>
         {games.map((game, index) => {
           const presentation = slateImagePresentation(game);
           return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: 22, minHeight: 64, padding: "0 14px" }}>
-            <span style={{ color: MUTED, display: "flex", fontSize: 14, fontWeight: 800, width: 132 }}>{game.time}</span>
+            <span style={{ color: MUTED, display: "flex", flexDirection: "column", fontSize: 14, fontWeight: 800, lineHeight: 1.25, width: 150 }}>
+              {game.day ? <span style={{ display: "flex", fontSize: 12 }}>{game.day}</span> : null}
+              <span style={{ display: "flex", marginTop: game.day ? 3 : 0 }}>{game.time}</span>
+            </span>
             <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", paddingRight: 14, textAlign: "right" }}>{presentation.leftTeam}</span>
             <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: 21, fontWeight: 800, justifyContent: "center", width: 92 }}>{presentation.line}</span>
             <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-start", paddingLeft: 14 }}>{presentation.rightTeam}</span>
