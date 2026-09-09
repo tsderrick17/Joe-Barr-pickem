@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
-import { bowlReceiptSummary } from "@/lib/bowl-receipt.js";
+import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 
@@ -98,7 +98,7 @@ export default function BowlPoolPage() {
     return earliest === null || kickoff < earliest ? kickoff : earliest;
   }, null);
   const poolLocked = firstKickoffMs !== null && nowMs >= firstKickoffMs;
-  const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
+  const hasUnsavedChanges = !bowlSelectionsEqual(selections, savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
   const selectedGameCount = games.filter((game) => Boolean(selections[game.id])).length;
   const bowlReceipt = bowlReceiptSummary({ selectedCount: selectedGameCount, totalGames: games.length, tiebreaker: championshipTotalGuess, hasUnsavedChanges, isSubmitting });
   const gameLocked = (game: BowlGame) => Boolean(game.kickoff_at) && nowMs >= new Date(game.kickoff_at).getTime();

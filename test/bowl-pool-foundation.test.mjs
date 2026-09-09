@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { bowlPoolLaunchAt, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
-import { bowlReceiptSummary } from "../src/lib/bowl-receipt.js";
+import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 
 test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
   assert.equal(normalizeBowlPoolSpread(0), 0);
@@ -62,6 +62,11 @@ test("Bowl receipt distinguishes a draft, a saved partial card, and a complete s
   assert.deepEqual(bowlReceiptSummary({ selectedCount: 42, totalGames: 42, tiebreaker: "54" }), {
     picksLabel: "42/42", tiebreakerLabel: "54", status: "COMPLETE · SAVED", state: "complete",
   });
+});
+
+test("bowl selections compare by game/value, not insertion order", () => {
+  assert.equal(bowlSelectionsEqual({ first: "favorite", second: "underdog" }, { second: "underdog", first: "favorite" }), true);
+  assert.equal(bowlSelectionsEqual({ first: "favorite" }, { first: "underdog" }), false);
 });
 
 test("Bowl entry locks opt-in at the first kickoff but still accepts later open-game selections", async () => {

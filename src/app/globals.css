@@ -2326,6 +2326,16 @@ html[data-theme="night"] .newspaper-clipping::after {
   position: relative;
 }
 
+.bowl-team-label--selected {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: max-content;
+}
+
 .bowl-team-label--selected::before {
   background: linear-gradient(90deg,
     rgba(212, 167, 0, .66) 0%,
@@ -2344,6 +2354,12 @@ html[data-theme="night"] .newspaper-clipping::after {
 .bowl-team-label--new::before {
   will-change: clip-path;
   animation: slate-selection-sweep 720ms cubic-bezier(.18,.72,.18,1) 35ms both;
+}
+
+.bowl-card-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .my-ticket-result.is-w { color: #16834e; }

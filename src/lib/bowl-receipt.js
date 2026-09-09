@@ -53,3 +53,11 @@ export function bowlReceiptSummary({ selectedCount = 0, totalGames = 0, tiebreak
     state: "quiet",
   };
 }
+
+/** Compare selections by game/value rather than object insertion order. */
+export function bowlSelectionsEqual(first = {}, second = {}) {
+  const canonicalize = (values) => Object.fromEntries(
+    Object.entries(values).sort(([firstId], [secondId]) => firstId.localeCompare(secondId)),
+  );
+  return JSON.stringify(canonicalize(first)) === JSON.stringify(canonicalize(second));
+}
