@@ -66,10 +66,11 @@ type HomeData = {
 };
 type BowlStandingsData = {
   season?: { season_year: number };
-  games: Array<{ id: string; bowl_name: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
+  games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
   standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
   championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
   publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
+  automaticResults?: Array<{ playerId: string | null; game_id: string; result: string }>;
   privatePickMarkers?: Array<{ playerId: string | null; game_id: string }>;
 };
 type BowlMatrixGame = BowlStandingsData["games"][number];
@@ -242,7 +243,6 @@ export default function HomePage() {
   }, [retryNonce]);
 
   useEffect(() => {
-    if (!data?.isCommissioner) return;
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
     }).catch(() => undefined);
@@ -257,7 +257,7 @@ export default function HomePage() {
   const bowlScheduleReady = Boolean(bowlStandings?.games);
   const bowlRows = [...(bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [])].sort((first, second) => second.wins - first.wins || first.losses - second.losses || first.playerName.localeCompare(second.playerName));
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
-  const bowlGradedGames = bowlStandings?.publicPicks ? new Set(bowlStandings.publicPicks.filter((pick) => pick.result === "win" || pick.result === "loss").map((pick) => pick.game_id)).size : 0;
+  const bowlGradedGames = bowlStandings?.games ? bowlStandings.games.filter((game) => ["final", "cancelled", "no_contest"].includes(game.status ?? "")).length : 0;
   const bowlName = (game: (typeof bowlGames)[number]) => {
     const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
     if (/quarterfinal|quarter/i.test(name)) return `${name.replace(/\s*\([^)]*\)$/, "")} (QF)`;
@@ -290,7 +290,8 @@ export default function HomePage() {
     return side === "favorite" ? favorite : underdog;
   };
   const bowlCell = (playerId: string, gameId: string) => {
-    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result;
+    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result
+      ?? bowlStandings?.automaticResults?.find((result) => result.playerId === playerId && result.game_id === gameId)?.result;
     return result === "win" ? "W" : result === "loss" ? "L" : "·";
   };
   const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
@@ -300,7 +301,7 @@ export default function HomePage() {
   // beside the frozen player columns. This uses Eastern time, matching the
   // pool's kickoff and lock rules.
   useEffect(() => {
-    if (!data?.isCommissioner || bowlPoolMinimized || !bowlGames.length) return;
+    if (bowlPoolMinimized || !bowlGames.length) return;
     const frame = window.requestAnimationFrame(() => {
       const container = bowlScrollRef.current;
       if (!container) return;
@@ -314,7 +315,7 @@ export default function HomePage() {
       if (target) container.scrollLeft = Math.max(0, target.offsetLeft - 128);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [bowlGames, bowlPoolMinimized, data?.isCommissioner]);
+  }, [bowlGames, bowlPoolMinimized]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   const ticketPicks: TicketPick[] = [...viewerPicks]
@@ -554,7 +555,7 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {data.isCommissioner ? <section className="pickem-ledger bowl-card-section py-6 sm:py-7" aria-label="Bowl Card">
+        {bowlStandings ? <section className="pickem-ledger bowl-card-section py-6 sm:py-7" aria-label="Bowl Card">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
             <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>
@@ -563,7 +564,7 @@ export default function HomePage() {
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>
               <div style={{ minWidth: bowlTableMinWidth }}>
                 <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }}><span aria-hidden="true" className="bowl-standings-sticky sticky left-0 z-30 bg-[#f5f0e6]" style={{ gridColumn: "span 2" }} />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-[#334155] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-white" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}<span aria-hidden="true" className="border-l-2 border-[#8d877d] bg-transparent" /></div>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="text-[9px] font-black tracking-wide">Games remaining</span>{bowlScheduleReady ? <strong className="mt-1 text-3xl font-black leading-none text-slate-950">{Math.max(0, bowlGames.length - bowlGradedGames)}</strong> : null}</span>{bowlGames.map((game, index) => <span className={`flex flex-col items-center bg-[#f7f3ea] px-2 py-2 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="flex min-h-8 w-full items-end justify-center text-xs uppercase leading-4 tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block h-4 w-full truncate font-bold text-slate-950" title={bowlTeam(game, "favorite")?.full_name}>{bowlTeamLabel(bowlTeam(game, "favorite"))}</span><span className={`block h-4 font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{game.line?.locked_spread ?? "—"}</span><span className="block h-4 w-full truncate font-bold text-slate-950" title={bowlTeam(game, "underdog")?.full_name}>{bowlTeamLabel(bowlTeam(game, "underdog"))}</span></span>)}<span className="flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
+                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="text-[9px] font-black tracking-wide">Games remaining</span>{bowlScheduleReady ? <strong className="mt-1 text-3xl font-black leading-none text-slate-950">{Math.max(0, bowlGames.length - bowlGradedGames)}</strong> : null}</span>{bowlGames.map((game, index) => <span className={`flex flex-col items-center bg-[#f7f3ea] px-2 py-1.5 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="flex min-h-8 w-full items-center justify-center text-xs uppercase leading-4 tracking-wide text-slate-900">{bowlName(game)}</b><span className="mt-1 block h-4 w-full truncate font-bold text-slate-950" title={bowlTeam(game, "favorite")?.full_name}>{bowlTeamLabel(bowlTeam(game, "favorite"))}</span><span className={`block h-4 font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{game.line?.locked_spread ?? "—"}</span><span className="block h-4 w-full truncate font-bold text-slate-950" title={bowlTeam(game, "underdog")?.full_name}>{bowlTeamLabel(bowlTeam(game, "underdog"))}</span></span>)}<span className="flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
                 {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "bg-[#e9eef4]" : "bg-[#f5f0e6]"; return <div className={`grid border-b border-[#91afd0] text-center text-xs ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(7.5rem, 1fr)) minmax(6.5rem, .72fr)` }} key={row.playerId}><span className={`bowl-standings-sticky sticky left-0 z-30 px-1 py-2 text-center font-mono font-black tabular-nums ${rowFill}`}>{row.wins}</span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif font-bold ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = bowlCell(row.playerId, game.id); const locked = bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-2 py-2 font-mono text-xs font-black tabular-nums text-slate-700">{row.tiebreakerTotal ?? "—"}</span></div>; })}
               </div>
             </div>

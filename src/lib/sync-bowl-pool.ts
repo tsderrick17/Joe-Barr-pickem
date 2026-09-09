@@ -13,6 +13,21 @@ async function providerEvents(path: string, query: Record<string, string>) {
   return Array.isArray(payload) ? payload as ProviderEvent[] : [];
 }
 
+function normalizedTeamName(value: string) { return value.toLowerCase().replace(/[^a-z0-9]/g, ""); }
+function joinedTeamName(value: { display_name?: string } | Array<{ display_name?: string }> | null | undefined) { return Array.isArray(value) ? value[0]?.display_name ?? "" : value?.display_name ?? ""; }
+
+async function teamIdFor(name: string, providerId: string, abbreviation?: string | null) {
+  const { data: existing } = await supabaseAdmin.from("bowl_pool_teams").select("id").eq("display_name", name).maybeSingle();
+  if (existing?.id) return existing.id;
+  const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: providerId, display_name: name, short_name: name, abbreviation: abbreviation ?? null }, { onConflict: "provider_team_id" }).select("id").single();
+  return error || !data ? null : data.id;
+}
+
+async function cancelQueuedBowlReminders(gameId: string) {
+  await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed" })
+    .in("category", ["bowl_pick_due", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [gameId]);
+}
+
 async function syncAnnualSchedule(now: Date) {
   const year = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: `${year}-12-07T08:00:00.000Z` }, { onConflict: "season_year" }).select("id").single();
@@ -37,14 +52,14 @@ async function syncAnnualSchedule(now: Date) {
     const teamIds = await Promise.all([away, home].map(async (competitor) => {
       const name = competitor.team?.displayName ?? "Team TBD";
       const id = competitor.team?.id ?? name;
-      const { data } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: `espn:${id}`, display_name: name, short_name: name, abbreviation: competitor.team?.abbreviation }, { onConflict: "provider_team_id" }).select("id").single();
-      return data?.id ?? null;
+      return teamIdFor(name, `espn:${id}`, competitor.team?.abbreviation);
     }));
     if (!teamIds[0] || !teamIds[1]) continue;
     // A provider refresh may correct a kickoff or matchup, but it must never
     // resurrect a commissioner-recorded cancellation, postponement, or
     // no-contest. New rows start scheduled; existing rows keep their status.
     const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
+    if (gameId && match && match.candidate.kickoff_at !== kickoff) await cancelQueuedBowlReminders(gameId);
     const { data: saved, error } = gameId
       ? await supabaseAdmin.from("bowl_pool_games").update(row).eq("id", gameId).select("id").single()
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
@@ -64,20 +79,19 @@ async function syncScheduleAndLines(now: Date) {
   const seasonYear = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
   const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYear).maybeSingle();
   if (!season) return { scheduleGames: 0, linesLocked: 0 };
-  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id").eq("season_id", season.id).in("status", ["scheduled", "live"]);
+  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id, away:bowl_pool_teams!bowl_pool_games_away_team_id_fkey(display_name), home:bowl_pool_teams!bowl_pool_games_home_team_id_fkey(display_name)").eq("season_id", season.id).in("status", ["scheduled", "live"]);
   if (!games?.length) return { scheduleGames: 0, linesLocked: 0 };
   const events = await providerEvents("sports/americanfootball_ncaaf/odds", { regions: "us", markets: "spreads", oddsFormat: "american", dateFormat: "iso" });
   const { data: lockedLines } = await supabaseAdmin.from("bowl_pool_game_lines").select("game_id").in("game_id", games.map((game) => game.id));
   const alreadyLocked = new Set((lockedLines ?? []).map((line) => line.game_id));
   const used = new Set<string>(); let scheduleGames = 0; let linesLocked = 0;
   for (const game of games) {
-    const match = events.filter((event) => !used.has(event.id)).map((event) => ({ event, distance: Math.abs(new Date(event.commence_time).getTime() - new Date(game.kickoff_at).getTime()) })).sort((a, b) => a.distance - b.distance)[0];
+    const match = events.filter((event) => !used.has(event.id)).map((event) => ({ event, distance: Math.abs(new Date(event.commence_time).getTime() - new Date(game.kickoff_at).getTime()) })).filter(({ event, distance }) => distance <= 6 * 60 * 60 * 1000 && normalizedTeamName(event.away_team) === normalizedTeamName(joinedTeamName(game.away)) && normalizedTeamName(event.home_team) === normalizedTeamName(joinedTeamName(game.home))).sort((a, b) => a.distance - b.distance)[0];
     if (!match || match.distance > 6 * 60 * 60 * 1000) continue;
     used.add(match.event.id);
     const event = match.event;
     const teamRows = await Promise.all([event.away_team, event.home_team].map(async (name) => {
-      const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: `ncaaf:${name}`, display_name: name, short_name: name }, { onConflict: "provider_team_id" }).select("id").single();
-      return error || !data ? null : data.id;
+      return teamIdFor(name, `ncaaf:${name}`);
     }));
     if (!teamRows[0] || !teamRows[1]) continue;
     const { error: gameError } = await supabaseAdmin.from("bowl_pool_games").update({ odds_event_id: event.id, away_team_id: teamRows[0], home_team_id: teamRows[1] }).eq("id", game.id);
@@ -85,7 +99,7 @@ async function syncScheduleAndLines(now: Date) {
     scheduleGames += 1;
     if (new Date(game.line_lock_at) > now || alreadyLocked.has(game.id)) continue;
     const outcome = event.bookmakers?.flatMap((bookmaker) => bookmaker.markets ?? []).find((market) => market.key === "spreads")?.outcomes ?? [];
-    const favorite = outcome.find((row) => typeof row.point === "number" && row.point < 0);
+    const favorite = outcome.find((row) => typeof row.point === "number" && row.point < 0) ?? outcome.find((row) => typeof row.point === "number" && row.point === 0 && row.name === event.home_team);
     if (!favorite || typeof favorite.point !== "number") continue;
     const favoriteId = favorite.name === event.away_team ? teamRows[0] : favorite.name === event.home_team ? teamRows[1] : null;
     if (!favoriteId) continue;
@@ -117,6 +131,16 @@ async function syncScores(now: Date) {
   return finalized;
 }
 
+async function refreshSeasonStatus(now: Date) {
+  const year = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id, player_visible_at, first_kickoff_at").eq("season_year", year).maybeSingle();
+  if (!season) return;
+  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("status").eq("season_id", season.id);
+  const allTerminal = Boolean(games?.length) && games!.every((game) => ["final", "cancelled", "no_contest"].includes(game.status));
+  const status = allTerminal ? "complete" : season.first_kickoff_at && now >= new Date(season.first_kickoff_at) ? "live" : now >= new Date(season.player_visible_at) ? "open" : "scheduled";
+  await supabaseAdmin.from("bowl_pool_seasons").update({ status, completed_at: status === "complete" ? now.toISOString() : null }).eq("id", season.id);
+}
+
 export async function syncBowlPool(now = new Date()) {
   const evaluatedAt = now.toISOString();
   const scheduleImported = await syncAnnualSchedule(now);
@@ -130,11 +154,13 @@ export async function syncBowlPool(now = new Date()) {
   }
   const { data: missing, error: missingError } = await supabaseAdmin.rpc("settle_bowl_pool_missing_picks", { evaluated_at: evaluatedAt });
   if (missingError) throw new Error("Bowl Pool missing-pick losses could not be settled.");
+  const { error: purgeError } = await supabaseAdmin.rpc("purge_withdrawn_bowl_pool_drafts", { evaluated_at: evaluatedAt });
+  if (purgeError) throw new Error("Withdrawn Bowl Pool drafts could not be purged.");
 
   const { data: pending, error: pendingError } = await supabaseAdmin.from("bowl_pool_picks").select("id, entry_id, game_id, selected_team_id").eq("result", "pending");
   if (pendingError) throw new Error("Bowl Pool pending picks could not be loaded.");
   const gameIds = [...new Set((pending ?? []).map((pick) => pick.game_id))];
-  if (!gameIds.length) { const { data: currentSeason } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1).maybeSingle(); if (currentSeason) await supabaseAdmin.rpc("refresh_bowl_pool_champion", { target_season_id: currentSeason.id, evaluated_at: evaluatedAt }); return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded: 0, finalizedGames, ...provider }; }
+  if (!gameIds.length) { const { data: currentSeason } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1).maybeSingle(); if (currentSeason) await supabaseAdmin.rpc("refresh_bowl_pool_champion", { target_season_id: currentSeason.id, evaluated_at: evaluatedAt }); await refreshSeasonStatus(now); return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded: 0, finalizedGames, ...provider }; }
   const [{ data: games, error: gamesError }, { data: lines, error: linesError }] = await Promise.all([
     supabaseAdmin.from("bowl_pool_games").select("id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score").in("id", gameIds).eq("status", "final"),
     supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", gameIds),
@@ -151,10 +177,12 @@ export async function syncBowlPool(now = new Date()) {
     if (result === "pending") continue;
     const { error } = await supabaseAdmin.from("bowl_pool_picks").update({ result, graded_at: evaluatedAt }).eq("id", pick.id).eq("result", "pending");
     if (error) throw new Error("Bowl Pool grades could not be saved.");
-    await supabaseAdmin.from("bowl_pool_game_results").upsert({ entry_id: pick.entry_id, game_id: pick.game_id, result, reason: "graded", graded_at: evaluatedAt }, { onConflict: "entry_id,game_id" });
+    const { error: receiptError } = await supabaseAdmin.from("bowl_pool_game_results").upsert({ entry_id: pick.entry_id, game_id: pick.game_id, result, reason: "graded", graded_at: evaluatedAt }, { onConflict: "entry_id,game_id" });
+    if (receiptError) throw new Error("Bowl Pool result receipts could not be saved.");
     picksGraded += 1;
   }
   const { data: currentSeason } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1).maybeSingle();
   if (currentSeason) await supabaseAdmin.rpc("refresh_bowl_pool_champion", { target_season_id: currentSeason.id, evaluated_at: evaluatedAt });
+  await refreshSeasonStatus(now);
   return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded, finalizedGames, ...provider };
 }
