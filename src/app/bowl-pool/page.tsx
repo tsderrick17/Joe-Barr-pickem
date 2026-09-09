@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
-import { bowlReceiptSummary } from "@/lib/bowl-receipt.js";
+import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 
@@ -98,7 +98,7 @@ export default function BowlPoolPage() {
     return earliest === null || kickoff < earliest ? kickoff : earliest;
   }, null);
   const poolLocked = firstKickoffMs !== null && nowMs >= firstKickoffMs;
-  const hasUnsavedChanges = JSON.stringify(selections) !== JSON.stringify(savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
+  const hasUnsavedChanges = !bowlSelectionsEqual(selections, savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
   const selectedGameCount = games.filter((game) => Boolean(selections[game.id])).length;
   const bowlReceipt = bowlReceiptSummary({ selectedCount: selectedGameCount, totalGames: games.length, tiebreaker: championshipTotalGuess, hasUnsavedChanges, isSubmitting });
   const gameLocked = (game: BowlGame) => Boolean(game.kickoff_at) && nowMs >= new Date(game.kickoff_at).getTime();
@@ -163,15 +163,14 @@ export default function BowlPoolPage() {
   if (!isLoading && !canView) return null;
 
   return (
-    <main className="mx-auto max-w-6xl px-2 py-8 sm:px-6 sm:py-10">
-      <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">NCAA Bowls</h1>
+    <main className="bowl-pool-page mx-auto max-w-6xl px-2 py-8 sm:px-6 sm:py-10">
       {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
       {!isLoading && canView ? (
         <>
           {poolLocked ? optedIn === false ? <div className="mt-6 border border-slate-300 bg-white p-5 text-center text-sm font-bold text-slate-700">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
           {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
-              <span>BOWL RECEIPT <small>SEASON PICKS</small></span>
+              <span>BOWL RECEIPT</span>
               <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">SUBMIT</button>
             </div>
             <div className="slate-receipt-pool bowl-receipt-summary">
