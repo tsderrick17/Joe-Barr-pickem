@@ -2467,6 +2467,12 @@ html[data-theme="night"] .newspaper-clipping::after {
 }
 
 .bowl-standings-scroll {
+  /* Keep the initial desktop view compact: frozen player columns plus six
+     complete game columns. The schedule itself remains horizontally scrollable. */
+  max-width: 100%;
+  width: min(100%, 53rem);
+  scroll-padding-left: 8rem;
+  scroll-snap-type: x mandatory;
   scrollbar-color: #a69f93 transparent;
   scrollbar-width: thin;
 }
@@ -3095,6 +3101,8 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   min-height: 7.8rem;
   padding-bottom: 0 !important;
   padding-top: 0 !important;
+  scroll-margin-left: 8rem;
+  scroll-snap-align: start;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name,
 .bowl-standings-game-cell > .bowl-standings-team,
