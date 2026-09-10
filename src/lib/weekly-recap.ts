@@ -55,6 +55,32 @@ export type FeaturedWindowRevealSnapshot = {
 
 type PublicPickRow = SundayRevealSnapshot["rows"][number];
 
+type LockedGameLine = {
+  game_id: string;
+  favorite_team_id: string | null;
+  locked_spread: number | string | null;
+};
+
+function publicPickLabel({
+  gameId,
+  selectedTeamId,
+  abbreviationById,
+  lineByGame,
+}: {
+  gameId: string;
+  selectedTeamId: string;
+  abbreviationById: Map<string, string>;
+  lineByGame: Map<string, LockedGameLine>;
+}) {
+  const team = abbreviationById.get(selectedTeamId) ?? "NFL";
+  const line = lineByGame.get(gameId);
+  const spread = Number(line?.locked_spread);
+  if (!line || !Number.isFinite(spread)) return `${team} · —`;
+  if (spread === 0) return `${team} PK`;
+  const signedSpread = line.favorite_team_id === selectedTeamId ? -Math.abs(spread) : Math.abs(spread);
+  return `${team} ${signedSpread > 0 ? "+" : "−"}${Math.abs(signedSpread)}`;
+}
+
 function onlyRowsWithPublicPicks(rows: PublicPickRow[]) {
   return rows.filter((row) => row.picks.length > 0);
 }
@@ -447,11 +473,12 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   if (!revealGames.length) throw new Error("The selected Sunday kickoff window is not public yet.");
 
   const seasonPeriodIds = (seasonPeriods ?? []).map((item) => item.id);
-  const [{ data: picks, error: picksError }, { data: teams, error: teamsError }] = await Promise.all([
+  const [{ data: picks, error: picksError }, { data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
     seasonPeriodIds.length ? supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", seasonPeriodIds).neq("result", "void") : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("teams").select("id, abbreviation").in("id", [...new Set(revealGames.flatMap((game) => [game.away_team_id, game.home_team_id]))]),
+    supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", revealGames.map((game) => game.id)),
   ]);
-  if (picksError || teamsError) throw new Error("Public Sunday selections could not be prepared.");
+  if (picksError || teamsError || linesError) throw new Error("Public Sunday selections could not be prepared.");
 
   const playerWins = new Map<string, number>();
   for (const pick of picks ?? []) if (pick.result === "win") playerWins.set(pick.player_id, (playerWins.get(pick.player_id) ?? 0) + 1);
@@ -464,10 +491,11 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   const revealGameIds = new Set(revealGames.filter((game) => shouldShowPoolActionMatchup({ kickoffAt: game.kickoff_at, now, hasSelections: pickedRevealGameIds.has(game.id) })).map((game) => game.id));
   if (!revealGameIds.size) throw new Error("No selected Sunday matchup is ready for a public receipt.");
   const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
+  const lineByGame = new Map((lines ?? []).map((line) => [line.game_id, line as LockedGameLine]));
   const picksByPlayer = new Map<string, string[]>();
   for (const pick of picks ?? []) {
     if (pick.scoring_period_id !== period.id || !revealGameIds.has(pick.game_id) || !contenderIds.has(pick.player_id)) continue;
-    picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), abbreviationById.get(pick.selected_team_id) ?? "NFL"]);
+    picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
   }
   const snapshot: SundayRevealSnapshot = {
     kind: "sunday_reveal",
@@ -522,18 +550,24 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const selectedFeaturedGames = featuredGames.filter((game) => selectedPublicGameIds.has(game.id));
   if (!selectedFeaturedGames.length) throw new Error("No selected featured matchup is ready for a public receipt.");
   const selectedTeamIds = [...new Set((picks ?? []).filter((pick) => pick.scoring_period_id === period.id && selectedPublicGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
-  const { data: teams, error: teamsError } = selectedTeamIds.length
-    ? await supabaseAdmin.from("teams").select("id, abbreviation").in("id", selectedTeamIds)
-    : { data: [], error: null };
-  if (teamsError) throw new Error("Featured-game team labels could not be prepared.");
+  const [{ data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
+    selectedTeamIds.length
+      ? supabaseAdmin.from("teams").select("id, abbreviation").in("id", selectedTeamIds)
+      : Promise.resolve({ data: [], error: null }),
+    selectedPublicGameIds.size
+      ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", [...selectedPublicGameIds])
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (teamsError || linesError) throw new Error("Featured-game team labels could not be prepared.");
 
   const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
+  const lineByGame = new Map((lines ?? []).map((line) => [line.game_id, line as LockedGameLine]));
   const wins = new Map<string, number>();
   const picksByPlayer = new Map<string, string[]>();
   for (const pick of picks ?? []) {
     if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
     if (pick.scoring_period_id === period.id && selectedPublicGameIds.has(pick.game_id)) {
-      picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), abbreviationById.get(pick.selected_team_id) ?? "NFL"]);
+      picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
     }
   }
 
@@ -594,13 +628,19 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
     ...selectedPicks.map((pick) => pick.selected_team_id),
     ...selectedPublicGames.flatMap((game) => [game.away_team_id, game.home_team_id]),
   ])];
-  const { data: teams, error: teamsError } = selectedTeamIds.length
-    ? await supabaseAdmin.from("teams").select("id, abbreviation, mascot").in("id", selectedTeamIds)
-    : { data: [], error: null };
-  if (teamsError) throw new Error("Public playoff team labels could not be prepared.");
+  const [{ data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
+    selectedTeamIds.length
+      ? supabaseAdmin.from("teams").select("id, abbreviation, mascot").in("id", selectedTeamIds)
+      : Promise.resolve({ data: [], error: null }),
+    selectedPublicGameIds.size
+      ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", [...selectedPublicGameIds])
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (teamsError || linesError) throw new Error("Public playoff team labels could not be prepared.");
 
   const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
   const mascotById = new Map((teams ?? []).map((team) => [team.id, team.mascot]));
+  const lineByGame = new Map((lines ?? []).map((line) => [line.game_id, line as LockedGameLine]));
   const eligibility = calculatePlayoffEligibility({
     players: players ?? [],
     periods: seasonPeriods,
@@ -615,7 +655,7 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
   for (const pick of picks ?? []) {
     if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
     if (pick.scoring_period_id === period.id && selectedPublicGameIds.has(pick.game_id)) {
-      pickByPlayerAndGame.set(`${pick.player_id}:${pick.game_id}`, abbreviationById.get(pick.selected_team_id) ?? "NFL");
+      pickByPlayerAndGame.set(`${pick.player_id}:${pick.game_id}`, publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame }));
     }
   }
 
