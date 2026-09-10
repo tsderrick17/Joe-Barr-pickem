@@ -88,6 +88,13 @@ body {
 }
 .standings-loading-rows-short { min-height: 24rem; }
 
+/* Reserve the first Bowl Pool viewport while the authenticated profile and
+   schedule arrive, so the real card replaces a stable shape instead of
+   pushing the page down after first paint. */
+.bowl-pool-loading-shell {
+  min-height: 42rem;
+}
+
 .slate-mini-nav {
   /* The receipt draws its own broken rules. A shared border here would run
      through every perforation and make the punches look painted on. */

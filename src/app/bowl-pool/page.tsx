@@ -52,7 +52,6 @@ export default function BowlPoolPage() {
   }, []);
 
   useEffect(() => {
-    if (!profile || (!profile.isCommissioner && !hasLaunched)) return;
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (!response.ok) { setOptedIn(false); return; }
       const payload = await response.json() as { games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }>; ownPreviewSelections?: Array<{ game_id: string; side: "favorite" | "underdog" }> };
@@ -76,7 +75,7 @@ export default function BowlPoolPage() {
         setSavedSelections(next);
       }
     }).catch(() => setOptedIn(false));
-  }, [profile, hasLaunched]);
+  }, [hasLaunched]);
 
   useEffect(() => {
     let active = true;
@@ -165,7 +164,7 @@ export default function BowlPoolPage() {
 
   return (
     <main className="bowl-pool-page mx-auto max-w-6xl px-2 py-8 sm:px-6 sm:py-10">
-      {isLoading ? <p className="mt-4 text-slate-700">Loading…</p> : null}
+      {isLoading ? <div aria-busy="true" className="bowl-pool-loading-shell mt-4" aria-label="Loading Bowl Pool"><div className="h-8 w-52 rounded bg-slate-200" /><div className="mt-6 h-14 rounded border border-slate-200 bg-white" /><div className="mt-4 h-24 rounded border border-slate-200 bg-white" /><div className="mt-4 h-72 rounded border border-slate-200 bg-white" /></div> : null}
       {!isLoading && canView ? (
         <>
           {poolLocked ? optedIn === false ? <div className="mt-6 border border-slate-300 bg-white p-5 text-center text-sm font-bold text-slate-700">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-500 sm:p-5">Loading…</div> : <label className="mt-6 flex items-center justify-center gap-3 border border-slate-300 bg-white p-4 text-center sm:p-5"><input className="h-5 w-5 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="font-bold text-sm text-slate-700">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
