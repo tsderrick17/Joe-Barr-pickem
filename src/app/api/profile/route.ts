@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     emailFeaturedWindowRevealEnabled: player.email_featured_window_reveal_enabled,
     emailCustomEnabled: player.email_custom_enabled,
     showSurvivorStandings: player.show_survivor_standings,
+    showBowlCard: player.show_bowl_card,
     showPoolChat: player.show_pool_chat,
     hidePickemEliminatedRows: player.hide_pickem_eliminated_rows,
     hideSurvivorEliminatedRows: player.hide_survivor_eliminated_rows,
@@ -47,7 +48,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
+  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showBowlCard?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -97,6 +98,7 @@ export async function PUT(request: NextRequest) {
       email_featured_window_reveal_enabled: preference(body.emailFeaturedWindowRevealEnabled, player.email_featured_window_reveal_enabled),
       email_custom_enabled: true,
       show_survivor_standings: preference(body.showSurvivorStandings, player.show_survivor_standings),
+      show_bowl_card: preference(body.showBowlCard, player.show_bowl_card),
       show_pool_chat: preference(body.showPoolChat, player.show_pool_chat),
       hide_pickem_eliminated_rows: preference(body.hidePickemEliminatedRows, player.hide_pickem_eliminated_rows),
       hide_survivor_eliminated_rows: preference(body.hideSurvivorEliminatedRows, player.hide_survivor_eliminated_rows),
