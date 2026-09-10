@@ -1491,6 +1491,43 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-name-short { display: none; }
 .scoreboard-team-name-short { display: none; }
 
+/* Final rows have three separate pieces of information on each side: the
+   team, its score/result, and the players who selected it. Keep the first two
+   in one stable baseline and give the names their own wrapping lane so a
+   narrow phone never makes scores or picker names collide. */
+.slate-team-result-line {
+  align-items: baseline;
+  display: flex;
+  gap: .28rem;
+  min-width: 0;
+  width: 100%;
+}
+.slate-team-result-line.is-right { justify-content: flex-end; }
+.slate-team-result-line.is-left { justify-content: flex-start; }
+.slate-team-result-line .slate-team-label { min-width: 0; }
+.slate-team-score,
+.slate-team-result-mark { flex: 0 0 auto; }
+.slate-team-picker-list {
+  display: block;
+  font-size: .6875rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  margin-top: .15rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .slate-team-result-line { gap: .2rem; }
+  .slate-team-picker-list {
+    font-size: .625rem;
+    line-height: .85rem;
+    text-align: left;
+  }
+  .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
+  .slate-team-score { font-size: .9rem; }
+}
+
 /* Give the teams—not the line—a little more room on a phone, in enlarged
    text, and at browser zoom. The full record remains available to assistive
    technology through the short label's aria-label. */
