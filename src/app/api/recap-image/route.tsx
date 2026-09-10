@@ -45,14 +45,15 @@ function SlateImage({
       <div style={{ display: "flex", flexDirection: "column" }}>
         {games.map((game, index) => {
           const presentation = slateImagePresentation(game);
-          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: compact ? 28 : 22, minHeight: compact ? 96 : 64, padding: "0 14px" }}>
-            <span style={{ color: MUTED, display: "flex", flexDirection: "column", fontSize: compact ? 17 : 14, fontWeight: 800, lineHeight: 1.25, width: 150 }}>
+          const singleGame = games.length <= 2;
+          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: compact ? 28 : singleGame ? 30 : 22, minHeight: compact ? 96 : singleGame ? 88 : 64, padding: singleGame ? "0 6px" : "0 14px" }}>
+            <span style={{ color: MUTED, display: "flex", flexDirection: "column", fontSize: compact ? 17 : singleGame ? 16 : 14, fontWeight: 800, lineHeight: 1.25, width: singleGame ? 120 : 150 }}>
               {game.day ? <span style={{ display: "flex", fontSize: 12 }}>{game.day}</span> : null}
               <span style={{ display: "flex", marginTop: game.day ? 3 : 0 }}>{game.time}</span>
             </span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end", paddingRight: 14, textAlign: "right" }}>{presentation.leftTeam}</span>
-            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: compact ? 28 : 21, fontWeight: 900, justifyContent: "center", width: 110 }}>{presentation.line}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-start", paddingLeft: 14 }}>{presentation.rightTeam}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-end", paddingRight: singleGame ? 4 : 14, textAlign: singleGame ? "center" : "right" }}>{presentation.leftTeam}</span>
+            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: compact ? 28 : singleGame ? 27 : 21, fontWeight: 900, justifyContent: "center", width: singleGame ? 130 : 110 }}>{presentation.line}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-start", paddingLeft: singleGame ? 4 : 14, textAlign: singleGame ? "center" : "left" }}>{presentation.rightTeam}</span>
           </div>;
         })}
       </div>
@@ -106,8 +107,9 @@ function publicRevealHeight(rows: PublicRow[]) {
 
 function slateImageHeight(gameCount: number, compact = false) {
   const count = Math.max(1, gameCount);
-  const base = compact ? 330 : 370;
-  const rowHeight = compact ? 96 : 64;
+  const singleGame = count <= 2;
+  const base = compact ? 330 : singleGame ? 330 : 370;
+  const rowHeight = compact ? 96 : singleGame ? 88 : 64;
   return Math.max(compact ? 420 : 440, Math.min(1800, base + count * rowHeight));
 }
 
