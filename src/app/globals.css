@@ -2397,7 +2397,10 @@ html[data-theme="night"] .newspaper-clipping::after {
   width: fit-content;
 }
 .slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
-  grid-template-columns: 11rem minmax(24rem, 1fr);
+  /* Size the desktop receipt to its actual stub and two metrics instead of
+     stretching the pool lane across the full content column. */
+  grid-template-columns: 9rem max-content;
+  width: max-content;
 }
 .bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
 .bowl-receipt-strip .slate-receipt-print { margin-bottom: auto; margin-top: auto; }
