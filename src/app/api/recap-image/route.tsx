@@ -83,18 +83,25 @@ function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; titl
     ? [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))]
     : [rows];
   return (
-    <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "42px 52px", width: "100%" }}>
+    <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "30px 52px", width: "100%" }}>
       <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
         <span style={{ display: "flex", fontFamily: "Georgia", fontSize: 44, fontWeight: 800 }}>Pick&apos;em Pad</span>
         <span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{kicker}</span>
       </div>
-      <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 25, fontWeight: 800, marginTop: 12, paddingBottom: 4 }}>{title.toUpperCase()}</div>
-      <div style={{ display: "flex", gap: columns.length > 1 ? 24 : 0 }}>
+      <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 25, fontWeight: 800, marginTop: 10, paddingBottom: 4 }}>{title.toUpperCase()}</div>
+      <div style={{ display: "flex", gap: columns.length > 1 ? 24 : 0, marginTop: 6 }}>
         {columns.map((column, index) => <PadRows compact={compact} grow key={index} rows={column} />)}
       </div>
-      <div style={{ borderTop: `2px solid ${INK}`, color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 14 }}>{note}</div>
+      <div style={{ borderTop: `2px solid ${INK}`, color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: 18, paddingTop: 12 }}>{note}</div>
     </div>
   );
+}
+
+function publicRevealHeight(rows: PublicRow[]) {
+  const columnCount = rows.length > 16 ? 2 : 1;
+  const rowsPerColumn = Math.ceil(rows.length / columnCount);
+  const rowHeight = rows.length > 10 ? 40 : 48;
+  return Math.max(400, Math.min(920, 245 + rowsPerColumn * rowHeight));
 }
 
 function BowlRecapImage({ snapshot }: { snapshot: BowlDailyRecapSnapshot }) {
@@ -149,15 +156,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "reveal" && snapshot.kind === "sunday_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker={`SUNDAY ${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={snapshot.week} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker={`SUNDAY ${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={snapshot.week} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: publicRevealHeight(onlyPublicPickRows(snapshot.rows)) });
   }
 
   if (kind === "reveal" && snapshot.kind === "playoff_public_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker={`${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={`${snapshot.round} · ${snapshot.matchup ?? snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="This kickoff's selections are now public. Later playoff picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker={`${snapshot.window.toUpperCase()} · PUBLIC RECEIPTS`} title={`${snapshot.round} · ${snapshot.matchup ?? snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="This kickoff's selections are now public. Later playoff picks remain private." />, { width: 1200, height: publicRevealHeight(onlyPublicPickRows(snapshot.rows)) });
   }
 
   if (kind === "reveal" && snapshot.kind === "featured_window_reveal") {
-    return new ImageResponse(<PublicPickemImage kicker="FEATURED WINDOW · PUBLIC RECEIPTS" title={`${snapshot.week} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: 1200 });
+    return new ImageResponse(<PublicPickemImage kicker="FEATURED WINDOW · PUBLIC RECEIPTS" title={`${snapshot.week} · ${snapshot.window}`} rows={onlyPublicPickRows(snapshot.rows)} note="Only selections from games already underway are shown. Future picks remain private." />, { width: 1200, height: publicRevealHeight(onlyPublicPickRows(snapshot.rows)) });
   }
 
   if (snapshot.kind !== "weekly_recap" && snapshot.kind !== "playoff_day_recap") return new Response("Not found", { status: 404 });
