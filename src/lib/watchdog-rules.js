@@ -97,6 +97,17 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
   return signals;
 }
 
+// A resolved incident that immediately returns is usually provider jitter or a
+// short-lived cron miss, not a new emergency. Keep a quiet period per signal so
+// the commissioner receives one useful message instead of a reopen/notify loop.
+export const WATCHDOG_REPEAT_COOLDOWN_MS = 6 * 60 * 60 * 1000;
+
+export function isWatchdogRepeatNotificationDue(lastNotifiedAt, now = new Date()) {
+  if (!lastNotifiedAt) return true;
+  const timestamp = new Date(lastNotifiedAt).getTime();
+  return !Number.isFinite(timestamp) || now.getTime() - timestamp >= WATCHDOG_REPEAT_COOLDOWN_MS;
+}
+
 function easternDayKey(value) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",

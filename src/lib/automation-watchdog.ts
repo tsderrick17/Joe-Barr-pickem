@@ -7,7 +7,7 @@ import { sendDueReminders } from "@/lib/reminder-worker";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
-import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "@/lib/watchdog-rules";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
 
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
 type AlertRow = { id: string; signal_key: string; notified_at: string | null; notification_attempted_at: string | null };
@@ -162,17 +162,25 @@ export async function runAutomationWatchdog(now = new Date()) {
       preflightChecks: [...(preflight.data ?? []), ...configurationChecks],
       now,
     }) as Signal[];
-    const { data: openAlerts, error: alertsError } = await supabaseAdmin.from("automation_alerts")
-      .select("id, signal_key, notified_at, notification_attempted_at").is("resolved_at", null);
+    const { data: recentAlerts, error: alertsError } = await supabaseAdmin.from("automation_alerts")
+      .select("id, signal_key, notified_at, notification_attempted_at, resolved_at")
+      .order("detected_at", { ascending: false }).limit(100);
     if (alertsError) throw new Error("Open watchdog incidents could not be loaded.");
     const activeKeys = new Set(signals.map((signal) => signal.key));
+    const openAlerts = (recentAlerts ?? []).filter((alert) => !alert.resolved_at);
     const resolvedIds = (openAlerts ?? []).filter((alert) => !activeKeys.has(alert.signal_key)).map((alert) => alert.id);
     if (resolvedIds.length) await supabaseAdmin.from("automation_alerts").update({ resolved_at: now.toISOString(), last_seen_at: now.toISOString() }).in("id", resolvedIds);
     const openByKey = new Map((openAlerts ?? []).map((alert) => [alert.signal_key, alert as AlertRow]));
+    const lastNotifiedByKey = new Map<string, string>();
+    for (const alert of recentAlerts ?? []) {
+      if (!alert.notified_at || lastNotifiedByKey.has(alert.signal_key)) continue;
+      lastNotifiedByKey.set(alert.signal_key, alert.notified_at);
+    }
     let opened = 0;
     let notified = 0;
     for (const signal of signals) {
       let alert = openByKey.get(signal.key);
+      const wasAlreadyOpen = Boolean(alert);
       if (!alert) {
         const { data: inserted, error } = await supabaseAdmin.from("automation_alerts").insert({
           signal_key: signal.key, severity: signal.severity, title: signal.title, detail: signal.detail,
@@ -184,8 +192,9 @@ export async function runAutomationWatchdog(now = new Date()) {
       } else {
         await supabaseAdmin.from("automation_alerts").update({ last_seen_at: now.toISOString(), severity: signal.severity, title: signal.title, detail: signal.detail, details: signal }).eq("id", alert.id);
       }
+      const repeatQuiet = !wasAlreadyOpen && !isWatchdogRepeatNotificationDue(lastNotifiedByKey.get(signal.key), now);
       const retryDue = !alert.notification_attempted_at || now.getTime() - new Date(alert.notification_attempted_at).getTime() >= 30 * 60 * 1000;
-      if (!alert.notified_at && retryDue) {
+      if (!alert.notified_at && !repeatQuiet && retryDue) {
         await supabaseAdmin.from("automation_alerts").update({ notification_attempted_at: now.toISOString() }).eq("id", alert.id);
         try {
           const recipients = await notifyCommissioners(signal);
