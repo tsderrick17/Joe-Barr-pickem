@@ -322,7 +322,7 @@ export default function HomePage() {
     const preview = bowlStandings?.ownPreviewSelections?.find((pick) => pick.game_id === game.id);
     return preview ? (preview.side === "favorite" ? "FAV" : "DOG") : "·";
   };
-  const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : "text-slate-400";
+  const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : result === "·" ? "text-slate-400" : "text-slate-950";
 
   // Before the Bowl Pool begins, leave the sheet at its natural left edge.
   // Once a Bowl game day is underway, bring that day's first game directly
