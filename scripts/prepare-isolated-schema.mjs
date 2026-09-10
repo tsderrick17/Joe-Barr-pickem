@@ -8,6 +8,20 @@ const bootstrapMigration = resolve(
   "20260726000000_initialize_isolated_schema.sql",
 );
 
+// A prior isolated rehearsal recorded the Bowl Card preference migration
+// before the remote migration tip even though that attempt never reached
+// production. Keep a no-op local stub for that historical version so Supabase
+// can reconcile the isolated migration ledger; the correctly ordered migration
+// below still owns the actual column change.
+const bowlPreferenceCompatibilityMigration = resolve(
+  migrationsDirectory,
+  "20260910090000_persist_bowl_card_preference.sql",
+);
+await writeFile(
+  bowlPreferenceCompatibilityMigration,
+  "-- Compatibility stub for an isolated database migration ledger entry.\n",
+);
+
 // These files either schedule calls to the live Vercel deployment, replay one
 // production player's picks, or only report production automation health.
 // They must never be part of an isolated test database bootstrap.
