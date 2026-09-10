@@ -41,6 +41,19 @@ test("rejects changing or removing a locked pick", () => {
   assert.match(removed.error, /cannot be changed or removed/);
 });
 
+test("allows adding a future pick without echoing a locked pick", () => {
+  const result = prepareAtsReplacements({
+    selections: [{ gameId: "late", teamId: "d" }],
+    existingPicks: [{ game_id: "early", selected_team_id: "a" }],
+    games,
+    now,
+  });
+
+  assert.deepEqual(result, {
+    replacements: [{ game_id: "late", selected_team_id: "d" }],
+  });
+});
+
 test("rejects a team that is not in its selected game", () => {
   const result = prepareAtsReplacements({
     selections: [{ gameId: "late", teamId: "a" }],

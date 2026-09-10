@@ -20,12 +20,12 @@ export function prepareAtsReplacements({ selections, existingPicks, games, now =
     }
   }
 
-  const removedLockedPick = lockedExisting.some(
-    (pick) => !selections.some(
-      (selection) => selection.gameId === pick.game_id && selection.teamId === pick.selected_team_id,
-    ),
-  );
-  if (removedLockedPick) {
+  // A browser may submit only the newly editable portion of a ticket after a
+  // prior game has kicked off. The database RPC preserves locked picks, so do
+  // not require those sealed rows to be echoed back when another selection is
+  // being added. An empty submission remains an explicit clear attempt and
+  // is still rejected while any locked pick exists.
+  if (selections.length === 0 && lockedExisting.length > 0) {
     return { error: "One of your existing picks has already started and cannot be changed or removed." };
   }
 
