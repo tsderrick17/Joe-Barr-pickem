@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateWatchdogSignals, isConfigurationDriftCheckDue } from "../src/lib/watchdog-rules.js";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "../src/lib/watchdog-rules.js";
 
 function healthy(overrides = {}) {
   return {
@@ -103,4 +103,12 @@ test("configuration drift runs once per Eastern day and retries failures hourly"
   assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "2026-08-20T14:59:00Z" }, now), true);
   assert.equal(isConfigurationDriftCheckDue({ status: "started", started_at: "2026-08-20T14:59:00Z" }, now), true);
   assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "not-a-date" }, now), true);
+});
+
+test("watchdog quiets a resolved incident for six hours, then allows a meaningful repeat", () => {
+  const notifiedAt = "2026-08-20T12:00:00Z";
+  assert.equal(isWatchdogRepeatNotificationDue(notifiedAt, new Date("2026-08-20T17:59:59Z")), false);
+  assert.equal(isWatchdogRepeatNotificationDue(notifiedAt, new Date("2026-08-20T18:00:00Z")), true);
+  assert.equal(isWatchdogRepeatNotificationDue(null, new Date("2026-08-20T12:00:00Z")), true);
+  assert.equal(isWatchdogRepeatNotificationDue("not-a-date", new Date("2026-08-20T12:00:00Z")), true);
 });
