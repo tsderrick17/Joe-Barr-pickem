@@ -11,8 +11,6 @@ const BowlPoolExceptions = dynamic(() => import("@/components/bowl-pool-exceptio
 const LineLockChecker = dynamic(() => import("@/components/line-lock-checker"));
 const ScoreSyncChecker = dynamic(() => import("@/components/score-sync-checker"));
 const AutomationHealth = dynamic(() => import("@/components/automation-health"));
-const IntegrityRehearsal = dynamic(() => import("@/components/integrity-rehearsal"));
-const SeasonRecoveryRehearsal = dynamic(() => import("@/components/season-recovery-rehearsal"));
 const GameDayPlaybook = dynamic(() => import("@/components/game-day-playbook"));
 const AutomationPreflight = dynamic(() => import("@/components/automation-preflight"));
 const FinalScoreReconciliation = dynamic(() => import("@/components/final-score-reconciliation"));
@@ -88,7 +86,7 @@ type FullSchedulePreview = {
 const commissionerPanels = [
   ["overview", "Overview", "See the pool's current stage and the next safe move."],
   ["game-day", "Game day", "Locks, scores, and the few actions that matter during games."],
-  ["season-setup", "Season", "Schedule setup, season turnover, archive, and rehearsals."],
+  ["season-setup", "Season", "Schedule setup, season turnover, and archive."],
   ["system", "System & safety", "Capacity, automation health, and the rare recovery tools."],
 ] as const;
 
@@ -263,7 +261,6 @@ export default function AdminPage() {
               <Link className="shrink-0" href="/admin/players">Players</Link>
               <Link className="shrink-0" href="/admin/reminders">Email center</Link>
               <Link className="shrink-0" href="/archive">Archive</Link>
-              <Link className="shrink-0" href="/preview">Rehearsals</Link>
             </div>
           </div>
         </header>
@@ -298,7 +295,7 @@ export default function AdminPage() {
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             <Link className="group border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/admin/players"><p className="font-serif text-xl font-bold">Players</p><p className="mt-1 text-sm text-zinc-700">Add players, review activity, and manage private PINs.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN PLAYERS →</p></Link>
             <Link className="group border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/admin/reminders"><p className="font-serif text-xl font-bold">Email center</p><p className="mt-1 text-sm text-zinc-700">Check delivery, send a private test, or update future wording.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN EMAILS →</p></Link>
-            <button className="border border-zinc-300 bg-white p-4 text-left transition hover:border-zinc-900 hover:shadow-sm" onClick={() => setActivePanel("season-setup")} type="button"><p className="font-serif text-xl font-bold">Season work</p><p className="mt-1 text-sm text-zinc-700">Open the schedule, archive, and the safe rehearsal tools.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN SEASON →</p></button>
+            <button className="border border-zinc-300 bg-white p-4 text-left transition hover:border-zinc-900 hover:shadow-sm" onClick={() => setActivePanel("season-setup")} type="button"><p className="font-serif text-xl font-bold">Season work</p><p className="mt-1 text-sm text-zinc-700">Open the schedule and archive.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN SEASON →</p></button>
           </div>
         </section>
         </> : null}
@@ -346,14 +343,11 @@ export default function AdminPage() {
         <section className="border-b-2 border-zinc-900 py-8">
           <p className="text-xs font-black tracking-[.16em] text-zinc-600">PRACTICE & HISTORY</p>
           <h2 className="mt-1 font-serif text-2xl font-bold">Rehearse safely, then preserve the record</h2>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-700">Rehearsals never touch live player records. The archive remains the permanent record after a period or season has settled.</p>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-700">The archive remains the permanent record after a period or season has settled.</p>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <Link className="border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/preview"><p className="font-serif text-xl font-bold">Open rehearsals</p><p className="mt-1 text-sm text-zinc-700">Walk through player-facing, playoff, and season-close scenarios.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN REHEARSALS →</p></Link>
             <Link className="border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/archive"><p className="font-serif text-xl font-bold">Open archive</p><p className="mt-1 text-sm text-zinc-700">Review settled weeks, permanent receipts, and season history.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN ARCHIVE →</p></Link>
           </div>
         </section>
-        <IntegrityRehearsal />
-        <SeasonRecoveryRehearsal />
         <section className="mt-8 border-y-2 border-zinc-900 py-8">
           <h2 className="font-serif text-2xl font-bold">Odds Feed</h2>
 
