@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("players")
       .select(
-        "id, is_commissioner, show_survivor_standings, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows",
+        "id, is_commissioner, show_survivor_standings, show_bowl_card, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows",
       )
       .eq("auth_user_id", user.id)
       .eq("active", true)
@@ -574,6 +574,7 @@ export async function GET(request: NextRequest) {
     viewerPlayerId: viewer.id,
     isCommissioner: viewer.is_commissioner,
     showSurvivorStandings: viewer.show_survivor_standings,
+    showBowlCard: viewer.show_bowl_card,
     showPoolChat: viewer.show_pool_chat,
     hidePickemEliminatedRows: viewer.hide_pickem_eliminated_rows,
     hideSurvivorEliminatedRows: viewer.hide_survivor_eliminated_rows,

@@ -40,6 +40,7 @@ type HomeData = {
   viewerPlayerId: string;
   isCommissioner: boolean;
   showSurvivorStandings: boolean;
+  showBowlCard: boolean;
   showPoolChat: boolean;
   hidePickemEliminatedRows: boolean;
   hideSurvivorEliminatedRows: boolean;
@@ -189,6 +190,7 @@ export default function HomePage() {
 
         setErrorMessage("");
         setData(result);
+        setBowlPoolMinimized(!result.showBowlCard);
         hasLoaded = true;
 
         if (revealTimer !== null) {
@@ -382,6 +384,26 @@ export default function HomePage() {
       setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
     } catch {
       setErrorMessage("That display choice could not be saved. Please try again.");
+    } finally {
+      setSavingDisplay(false);
+    }
+  }
+
+  async function setBowlCardDisplay(show: boolean) {
+    if (savingDisplay) return;
+    setSavingDisplay(true);
+    try {
+      const response = await fetchWithSession("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showBowlCard: show }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Bowl Card display preference could not be saved.");
+      setBowlPoolMinimized(!show);
+      setData((current) => current ? { ...current, showBowlCard: show } : current);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Bowl Card display preference could not be saved.");
     } finally {
       setSavingDisplay(false);
     }
@@ -581,7 +603,7 @@ export default function HomePage() {
 
         {bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${bowlPoolMinimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
-            <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
+            <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setBowlCardDisplay(bowlPoolMinimized)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
