@@ -7,12 +7,16 @@ import { nextScoreCheckAt } from "../src/lib/score-check-backoff.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("score polling expands failed-provider cooldowns to six hours", () => {
+test("score polling checks delayed finals frequently, then expands to a six-hour safety cooldown", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
   assert.deepEqual(
-    [1, 2, 3, 4, 5].map((attempt) => nextScoreCheckAt(attempt, now)),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].map((attempt) => nextScoreCheckAt(attempt, now)),
     [
       "2026-09-14T00:15:00.000Z",
+      "2026-09-14T00:15:00.000Z",
+      "2026-09-14T00:15:00.000Z",
+      "2026-09-14T00:15:00.000Z",
+      "2026-09-14T00:30:00.000Z",
       "2026-09-14T00:30:00.000Z",
       "2026-09-14T01:00:00.000Z",
       "2026-09-14T02:00:00.000Z",

@@ -279,8 +279,8 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
-- Score polling backs off per unfinished game at 15 minutes, 30 minutes, one
-  hour, two hours, then six hours.
+- Score polling backs off per unfinished game at 15 minutes four times, 30
+  minutes twice, one hour, two hours, then six hours.
 - Low provider allowance reserves remaining credits for line integrity.
 - Schedule-provider failures use a circuit breaker and shared cooldown. Manual
   commissioner override may bypass timing, but not authentication, leases,
