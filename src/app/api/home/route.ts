@@ -425,14 +425,16 @@ export async function GET(request: NextRequest) {
     eliminateSurvivorNoPicks().catch(() => null),
   ]);
 
+  // Enrollment and no-pick evaluation are maintenance steps. They can
+  // transiently fail during a concurrent cron run, but that must not hide a
+  // standings table whose read-only data is still available.
   if (ensuredEntries.error || !noPickEvaluation) {
-    survivorAvailable = false;
-    survivorNotice =
-      "Survivor is temporarily unavailable. ATS standings remain current.";
     console.error("Survivor enrollment failed.", {
       code: ensuredEntries.error?.code ?? "no-pick-evaluation-failed",
     });
-  } else {
+  }
+
+  {
     const [
       { data: survivorEntries, error: survivorEntriesError },
       { data: survivorPicks, error: survivorPicksError },
