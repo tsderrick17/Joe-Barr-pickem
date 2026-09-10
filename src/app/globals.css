@@ -2440,6 +2440,16 @@ html[data-theme="night"] .newspaper-clipping::after {
   max-width: 100%;
   min-width: 0;
 }
+
+/* Keep the commissioner shortcuts on one tidy row on narrow screens while
+   allowing touch/trackpad scrolling without exposing a persistent scrollbar. */
+.manage-links {
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.manage-links::-webkit-scrollbar { display: none; }
+
 .bowl-card-section.is-minimized {
   margin-left: auto;
   margin-right: auto;
