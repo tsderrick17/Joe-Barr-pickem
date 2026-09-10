@@ -82,7 +82,9 @@ Automatic selection reminders are grouped into three player choices: Sunday
 reveal windows appear as intentionally suppressed and require no action. The
 Reminders page edits future standard wording and shows receipts; it does not
 create one-off scheduled pool messages or alter the automatic timetable.
-Regular includes the daily playoff recap after final grading. Full Card adds
+Regular includes the daily playoff recap after final grading. Players who have
+weekly recaps enabled receive those playoff round summaries too; the legacy
+dedicated playoff-recap choice remains honored for custom plans. Full Card adds
 every playoff kickoff reveal; exact simultaneous kickoffs share one message.
 
 ### A deployment changes database behavior

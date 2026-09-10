@@ -381,3 +381,17 @@ from blocking the reminder worker.
   order and kickoff schedule can be prepared safely without exposing unfinished
   data or changing NFL records. Idempotent keyed imports avoid duplicate games.
 - **Supersedes:** Manual, one-off bowl rows and a fixed five-row preview.
+
+## REF-034 — Weekly subscribers receive playoff round recaps
+
+**Status:** Accepted
+
+Keep the existing post-grading playoff recap snapshot and its elimination and
+champion detection, but deliver it to players who selected weekly recaps as
+well as players using the older dedicated playoff-recap choice. Subject lines
+identify both the completed playoff round and the represented game date.
+
+**Reason:** A weekly recap subscriber should not silently miss the round summary
+just because the playoff-specific toggle predates the plan system. Preserving
+the legacy toggle avoids changing custom player choices while making the weekly
+plan promise consistent through the playoffs.
