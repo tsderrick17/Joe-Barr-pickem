@@ -587,7 +587,6 @@ export default function HomePage() {
           <div className="pickem-ledger-masthead survivor-ledger-masthead">
             <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" onClick={() => setBowlPoolMinimized((current) => !current)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
           </div>
-          {data?.isCommissioner && !bowlPoolMinimized ? <div aria-label="Bowl result styling preview" className="bowl-result-preview"><span className="bowl-result-preview-label">Result styling preview</span><span className="bowl-result-preview-chip is-win">W <small>Win</small></span><span className="bowl-result-preview-chip is-loss">L <small>Loss</small></span></div> : null}
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#ecfdf5] px-3 py-3 text-center font-bold text-green-900">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>

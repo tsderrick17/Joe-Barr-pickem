@@ -2466,39 +2466,22 @@ html[data-theme="night"] .newspaper-clipping::after {
   max-width: var(--standings-module-width);
 }
 
-.bowl-result-preview {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: .45rem;
-  margin: -.15rem 0 .65rem;
-  padding: .35rem .15rem 0;
+.bowl-standings-scroll {
+  scrollbar-color: #a69f93 transparent;
+  scrollbar-width: thin;
 }
-.bowl-result-preview-label {
-  color: var(--ledger-muted);
-  font-size: .58rem;
-  font-weight: 900;
-  letter-spacing: .12em;
-  margin-right: .2rem;
-  text-transform: uppercase;
+.bowl-standings-scroll::-webkit-scrollbar { height: .45rem; }
+.bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
+.bowl-standings-scroll::-webkit-scrollbar-thumb {
+  background: #a69f93;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
 }
-.bowl-result-preview-chip {
-  align-items: baseline;
-  border: 1px solid currentColor;
-  border-radius: .3rem;
-  display: inline-flex;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: .72rem;
-  font-weight: 950;
-  gap: .28rem;
-  line-height: 1;
-  padding: .3rem .45rem;
-}
-.bowl-result-preview-chip small { font-size: .56rem; font-weight: 800; letter-spacing: .04em; }
-.bowl-result-preview-chip.is-win { background: #dcfce7; color: #166534; }
-.bowl-result-preview-chip.is-loss { background: #fee2e2; color: #b91c1c; }
-html[data-theme="night"] .bowl-result-preview-chip.is-win { background: #123c2a; color: #86efac; }
-html[data-theme="night"] .bowl-result-preview-chip.is-loss { background: #4a1f24; color: #fca5a5; }
+.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #716b61; background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 transparent; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #9aaabd; background-clip: padding-box; }
 
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
