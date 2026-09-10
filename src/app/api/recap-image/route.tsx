@@ -56,7 +56,7 @@ function SlateImage({
           </div>;
         })}
       </div>
-      <div style={{ borderTop: `3px solid ${INK}`, color: official ? TEAL : MUTED, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 16, fontWeight: 800, marginTop: compact ? 24 : "auto", paddingTop: 14 }}>{footer}</div>
+      <div style={{ borderTop: `3px solid ${INK}`, color: official ? TEAL : MUTED, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 16, fontWeight: 800, marginTop: compact ? 24 : 18, paddingTop: 14 }}>{footer}</div>
       <div style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, marginTop: 7 }}>Favorites left; home team ALL CAPS. Changes allowed until kickoff time.</div>
       <span style={{ display: "none" }}>{subtitle}</span>
     </div>
@@ -104,6 +104,24 @@ function publicRevealHeight(rows: PublicRow[]) {
   return Math.max(400, Math.min(920, 245 + rowsPerColumn * rowHeight));
 }
 
+function slateImageHeight(gameCount: number, compact = false) {
+  const count = Math.max(1, gameCount);
+  const base = compact ? 330 : 370;
+  const rowHeight = compact ? 96 : 64;
+  return Math.max(compact ? 420 : 440, Math.min(1800, base + count * rowHeight));
+}
+
+function summaryImageHeight(snapshot: WeeklyRecapSnapshot | PlayoffDayRecapSnapshot) {
+  const weeklyRows = snapshot.weeklySummary.length;
+  const standingsRows = snapshot.standings.length;
+  const championSpace = snapshot.kind === "playoff_day_recap" && snapshot.championsCrowned.length ? 52 : 0;
+  return Math.max(500, Math.min(1800, 300 + weeklyRows * 40 + standingsRows * 29 + championSpace));
+}
+
+function survivorImageHeight(snapshot: WeeklyRecapSnapshot["survivor"]) {
+  return Math.max(440, Math.min(1800, 250 + snapshot.rows.length * 42));
+}
+
 function BowlRecapImage({ snapshot }: { snapshot: BowlDailyRecapSnapshot }) {
   const layout = bowlRecapLayout(snapshot.games.length);
   const columns = Array.from({ length: layout.columns }, (_, index) => snapshot.games.slice(index * layout.gamesPerColumn, (index + 1) * layout.gamesPerColumn));
@@ -144,15 +162,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "fresh" && snapshot.kind === "fresh_slate") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.week} subtitle="Preliminary lines" footer="PRELIMINARY LINES MAY MOVE BEFORE OFFICIAL LOCK." official={false} />, { width: 1200, height: 1200 });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.week} subtitle="Preliminary lines" footer="PRELIMINARY LINES MAY MOVE BEFORE OFFICIAL LOCK." official={false} />, { width: 1200, height: slateImageHeight(snapshot.games.length) });
   }
 
   if (kind === "gameday" && snapshot.kind === "game_day") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Official lines" footer="TEAL LINES ARE OFFICIAL AND WILL NOT CHANGE." official />, { width: 1200, height: 1200 });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Official lines" footer="TEAL LINES ARE OFFICIAL AND WILL NOT CHANGE." official />, { width: 1200, height: slateImageHeight(snapshot.games.length) });
   }
 
   if (kind === "earlylock" && snapshot.kind === "early_lock") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Early lock" footer="THIS INTERNATIONAL MATCHUP'S OFFICIAL LINE IS LOCKED EARLY." official compact />, { width: 1200, height: 560 });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Early lock" footer="THIS INTERNATIONAL MATCHUP'S OFFICIAL LINE IS LOCKED EARLY." official compact />, { width: 1200, height: slateImageHeight(snapshot.games.length, true) });
   }
 
   if (kind === "reveal" && snapshot.kind === "sunday_reveal") {
@@ -186,7 +204,7 @@ export async function GET(request: NextRequest) {
           {snapshot.standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
         </div>
       </div>,
-      { width: 1200, height: 1200 },
+      { width: 1200, height: summaryImageHeight(snapshot) },
     );
   }
 
@@ -207,9 +225,9 @@ export async function GET(request: NextRequest) {
         <div style={{ alignItems: "baseline", borderBottom: `3px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 13 }}><span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Survivor Table</span><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{snapshot.week.toUpperCase()}</span></div>
         <div style={{ alignItems: "center", borderBottom: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, marginTop: 16, padding: "0 8px 10px" }}><span style={{ display: "flex", width: 62 }}>STATUS</span><span style={{ display: "flex", width: 170 }}>PLAYER</span>{Array.from({ length: snapshot.survivor.visibleWeeks }, (_, index) => <span key={index} style={{ display: "flex", justifyContent: "center", width: 54 }}>{index + 1}</span>)}</div>
         {snapshot.survivor.rows.map((row) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 18, minHeight: 42, padding: "0 8px" }}><span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 13, fontWeight: 800, width: 62 }}>{row.status}</span><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span>{row.picks.map((pick, pickIndex) => <span key={pickIndex} style={{ color: "#334155", display: "flex", fontFamily: "Arial", fontSize: 12, fontWeight: 800, justifyContent: "center", width: 54 }}>{pick ?? "·"}</span>)}</div>)}
-        <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: "auto", paddingTop: 13 }}>{survivorFooter}</div>
+        <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: 18, paddingTop: 13 }}>{survivorFooter}</div>
       </div>,
-      { width: 1200, height: 1200 },
+      { width: 1200, height: survivorImageHeight(snapshot.survivor) },
     );
   }
 
