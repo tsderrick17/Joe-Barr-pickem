@@ -3064,10 +3064,20 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   min-height: 0;
   width: 100%;
 }
+.bowl-standings-game-cell > .bowl-standings-team {
+  /* Team labels are the actionable data on this ledger. Keep them fully
+     opaque and ink-dark even when the surrounding cell uses muted slate ink. */
+  color: #111827 !important;
+  opacity: 1 !important;
+}
 .bowl-standings-game-cell > .bowl-standings-bowl-name {
   border-bottom: 1px solid #b8c0ca;
   box-sizing: border-box;
   padding: 0 .1rem;
+}
+
+html[data-theme="night"] .bowl-standings-game-cell > .bowl-standings-team {
+  color: #f8fafc !important;
 }
 
 .bowl-flip-counter {
