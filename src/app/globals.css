@@ -2801,7 +2801,9 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .survivor-ledger {
   margin-left: auto;
   margin-right: auto;
-  max-width: 100%;
+  /* The 18-week grid is 55.5rem wide; keep the surrounding card from
+     stretching beyond the final week on desktop. */
+  max-width: 55.5rem;
   width: 100%;
 }
 
