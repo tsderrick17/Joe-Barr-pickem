@@ -100,11 +100,12 @@ export async function POST(request: NextRequest) {
   if (selections.some((selection) => gameById.get(selection.gameId)?.scoring_period_id !== scoringPeriodId)) {
     return NextResponse.json({ error: "One of your selected games does not belong to this week." }, { status: 400 });
   }
-  const submittedGameIds = new Set([
-    ...selections.map((selection) => selection.gameId),
-    ...(survivorSelection ? [survivorSelection.gameId] : []),
-  ]);
-  if ([...submittedGameIds].some((gameId) => gameById.get(gameId)?.status !== "scheduled")) {
+  const existingPickByGameId = new Map((existingPicks ?? []).map((pick) => [pick.game_id, pick.selected_team_id]));
+  if (selections.some((selection) => {
+    const game = gameById.get(selection.gameId);
+    const isMatchingLockedPick = existingPickByGameId.get(selection.gameId) === selection.teamId;
+    return game?.status !== "scheduled" && !isMatchingLockedPick;
+  })) {
     return NextResponse.json(
       { error: "One of those games is no longer open for selections." },
       { status: 400 },
