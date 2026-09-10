@@ -3117,3 +3117,18 @@ html[data-theme="night"] .playoff-scoreboard {
     linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
     #172027;
 }
+
+/* The Bowl receipt has a deliberately wide desktop layout, but its flexible
+   pool lane must never retain the desktop minimum on a phone. */
+@media (max-width: 639px) {
+  .slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
+    grid-template-columns: minmax(5.75rem, 6.5rem) minmax(0, 1fr);
+    width: 100%;
+  }
+  .bowl-receipt-strip .slate-receipt-pool,
+  .bowl-receipt-metrics,
+  .bowl-receipt-metric {
+    min-width: 0;
+  }
+  .bowl-receipt-metric { overflow: hidden; }
+}
