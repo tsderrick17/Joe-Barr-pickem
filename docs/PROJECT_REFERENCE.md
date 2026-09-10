@@ -316,7 +316,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   **Full Card**. Each remains individually adjustable in Notifications; existing
   choices are never changed just because the plan labels evolve. Regular includes
   the daily playoff recap; Full Card additionally includes every playoff kickoff
-  reveal.
+  reveal. A playoff recap is delivered to anyone who selected weekly recaps or
+  the legacy dedicated playoff-recap choice, so custom weekly plans do not miss
+  the round summary.
 - Final gameday lines use one explicit choice: every gameday, Sundays only, or
   none. Selection reminders use three independent choices: Sunday 11:00 AM,
   Sunday 3:00 PM, and the combined Sunday 6:00 PM/Monday 5:00 PM primetime set.
@@ -334,9 +336,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   never repeats picks from an earlier kickoff or exposes a later one.
 - Wednesday Slate and Tuesday recap subjects include the scoring-period name.
   Playoff reveal subjects include the round, matchup, and represented Eastern
-  game date; day-recap subjects include the date. Daily playoff recaps identify
-  eliminations, and the final recap explicitly crowns the Pick'em champion or
-  co-champions. After Survivor concludes, weekly recaps automatically use
+  game date; playoff recap subjects include the completed round and game date.
+  Daily playoff recaps identify eliminations, and the final recap explicitly
+  crowns the Pick'em champion or co-champions. After Survivor concludes, weekly recaps automatically use
   Pick'em-only wording; the championship-week recap still memorializes the
   Survivor champion.
 - Multiple valid pool emails may be delivered on one day when the live schedule

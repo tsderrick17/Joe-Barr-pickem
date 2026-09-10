@@ -16,7 +16,7 @@ test("maps the four pick reminders to three independent player choices", () => {
 test("automatic subjects retain custom wording while adding week or playoff date context", () => {
   assert.equal(automaticEmailSubject({ templateId: "weekly", title: "{{week}} Slate is ready", periodName: "Week 8" }), "Week 8 Slate is ready");
   assert.equal(automaticEmailSubject({ templateId: "weekly_recap", title: "Pool recap", periodName: "Week 7" }), "Pool recap — Week 7");
-  assert.equal(automaticEmailSubject({ templateId: "playoff_day_recap", title: "Playoff recap — {{date}}", periodName: "Wild Card", eventAt: "2027-01-17T21:30:00.000Z" }), "Playoff recap — Sunday, Jan 17");
+  assert.equal(automaticEmailSubject({ templateId: "playoff_day_recap", title: "{{round}} playoff recap — {{date}}", periodName: "Wild Card", eventAt: "2027-01-17T21:30:00.000Z" }), "Wild Card playoff recap — Sunday, Jan 17");
   assert.equal(automaticEmailSubject({ templateId: "playoff_public_reveal", title: "{{round}} picks: {{matchup}} — {{date}}", periodName: "Wild Card", eventAt: "2027-01-09T21:30:00.000Z", matchupLabel: "Steelers vs. Ravens" }), "Wild Card picks: Steelers vs. Ravens — Saturday, Jan 9");
   assert.equal(automaticEmailSubject({ templateId: "playoff_public_reveal", title: "Playoff picks are public — {{date}}", periodName: "Wild Card", eventAt: "2027-01-09T21:30:00.000Z", matchupLabel: "Steelers vs. Ravens" }), "Playoff picks are public: Steelers vs. Ravens — Saturday, Jan 9");
 });
@@ -47,4 +47,10 @@ test("the preference migration preserves the old reminder choice and supports ex
 test("the Commissioner email route no longer accepts hand-scheduled messages", async () => {
   const route = await readFile(new URL("../src/app/api/admin/reminders/route.ts", import.meta.url), "utf8");
   assert.doesNotMatch(route, /export async function POST/);
+});
+
+test("playoff recap delivery honors weekly recap subscribers as well as the dedicated playoff choice", async () => {
+  const source = await readFile(new URL("../src/lib/email-reminders.ts", import.meta.url), "utf8");
+  assert.match(source, /email_weekly_recap_enabled, email_playoff_day_recap_enabled/);
+  assert.match(source, /email_weekly_recap_enabled === true \|\| player\.email_playoff_day_recap_enabled === true/);
 });

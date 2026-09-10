@@ -149,6 +149,24 @@ async function recipientsForReminder(reminder: Reminder) {
   }
   const playerIds = await eligiblePlayerIds(reminder.audience);
   if (playerIds.length === 0) return [] as EmailRecipient[];
+  if (reminder.category === "playoff_day_recap") {
+    const { data, error } = await supabaseAdmin
+      .from("players")
+      .select("id, notification_email, email_notifications_enabled, email_weekly_recap_enabled, email_playoff_day_recap_enabled")
+      .in("id", playerIds)
+      .eq("email_notifications_enabled", true)
+      .not("notification_email", "is", null);
+    if (error) throw new Error("Playoff recap email choices could not be read.");
+    return ((data ?? []) as unknown as Array<{
+      id: string;
+      notification_email: string | null;
+      email_weekly_recap_enabled: boolean | null;
+      email_playoff_day_recap_enabled: boolean | null;
+    }>).filter((player) =>
+      (player.email_weekly_recap_enabled === true || player.email_playoff_day_recap_enabled === true) &&
+      Boolean(player.notification_email),
+    ).map((player) => ({ playerId: player.id, email: player.notification_email! }));
+  }
   const preference = emailPreferenceColumn(reminder.category, reminder.automation_key);
   const { data, error } = await supabaseAdmin
     .from("players")
