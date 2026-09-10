@@ -2476,7 +2476,7 @@ html[data-theme="night"] .newspaper-clipping::after {
   scrollbar-color: #a69f93 transparent;
   scrollbar-width: thin;
 }
-.bowl-standings-scroll::-webkit-scrollbar { height: .45rem; }
+.bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {
   background: #a69f93;
