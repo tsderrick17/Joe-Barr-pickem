@@ -145,7 +145,13 @@ export default function ReminderAdminPage() {
   const scheduledCount = reminders.filter((reminder) => reminder.status === "scheduled").length;
   const attentionCount = reminders.filter((reminder) => (reminder.status === "failed" || reminder.emailFailed > 0) && new Date(reminder.scheduledFor).getTime() >= recentIssueCutoff).length;
   const suppressedCount = reminders.reduce((total, reminder) => total + reminder.emailSuppressed, 0);
-  const scheduledReminders = reminders.filter((reminder) => reminder.status === "scheduled" || reminder.status === "sending");
+  const scheduledReminders = reminders
+    .filter((reminder) => reminder.status === "scheduled" || reminder.status === "sending")
+    .sort((left, right) => {
+      const leftTime = new Date(left.scheduledFor).getTime();
+      const rightTime = new Date(right.scheduledFor).getTime();
+      return (Number.isFinite(leftTime) ? leftTime : Number.POSITIVE_INFINITY) - (Number.isFinite(rightTime) ? rightTime : Number.POSITIVE_INFINITY);
+    });
   const sentReminders = reminders.filter((reminder) => reminder.status !== "scheduled" && reminder.status !== "sending");
 
   function reminderCard(reminder: Reminder, canCancel: boolean) {
