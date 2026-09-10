@@ -5,12 +5,7 @@ const MINUTE = 60_000;
  * it must not consume one provider credit every fifteen minutes indefinitely.
  */
 export function nextScoreCheckAt(attempts: number, now = new Date()) {
-  const delayMinutes =
-    attempts <= 1 ? 15 :
-    attempts === 2 ? 30 :
-    attempts === 3 ? 60 :
-    attempts === 4 ? 120 :
-    360;
+  const delayMinutes = [15, 15, 15, 15, 30, 30, 60, 120][Math.max(0, attempts - 1)] ?? 360;
 
   return new Date(now.getTime() + delayMinutes * MINUTE).toISOString();
 }

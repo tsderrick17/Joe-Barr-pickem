@@ -30,7 +30,7 @@ includes a read-only per-table size breakdown for review.
 ## Provider allowance
 
 Final-score checks use escalating cooldowns for a game that has not finalized:
-15 minutes, 30 minutes, 1 hour, 2 hours, then every 6 hours. A low observed
+15 minutes four times, 30 minutes twice, 1 hour, 2 hours, then every 6 hours. A low observed
 Odds API balance reserves the remaining allowance for line integrity and is
 shown as an Automation Health warning. Normal completed games still grade as
 soon as the provider reports final scores.
