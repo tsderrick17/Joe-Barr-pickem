@@ -304,6 +304,13 @@ may enrich spreads but cannot override canonical schedule assignments.
   `SUPABASE_SERVICE_ROLE_KEY` path is accepted. A working compatibility
   fallback remains available for isolated/local recovery but opens a drift
   incident in production instead of silently becoming authoritative.
+- The public automation heartbeat proves that an authenticated, leased
+  watchdog invocation reached the database and recorded a durable run receipt.
+  It is intentionally written before the watchdog's heavier diagnostics,
+  provider checks, alert delivery, Bowl readiness, and cleanup. Those failures
+  remain visible as failed watchdog runs and actionable incidents, but cannot
+  make an otherwise running scheduler flap the external liveness monitor. A
+  failure before the durable receipt still fails closed.
 - A weekly storage guardrail runs through the protected Monday watchdog and
   removes only routine `sync_runs` plus resolved watchdog and schedule-review
   incidents after 180 days. The certified annual cleanup may additionally

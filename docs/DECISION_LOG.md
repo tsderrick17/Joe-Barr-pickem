@@ -395,3 +395,20 @@ identify both the completed playoff round and the represented game date.
 just because the playoff-specific toggle predates the plan system. Preserving
 the legacy toggle avoids changing custom player choices while making the weekly
 plan promise consistent through the playoffs.
+
+## 2026-09-11 — REF-035 — Separate watchdog liveness from diagnostics
+
+**Status:** Accepted
+
+Treat the public automation heartbeat as proof that an authenticated, leased
+watchdog invocation reached Postgres and durably recorded its run receipt. Write
+that pulse before the watchdog performs heavier diagnostics, provider checks,
+alert delivery, Bowl readiness, or housekeeping. Failures in those later steps
+remain persisted as failed watchdog runs and Commissioner incidents, while a
+failure to acquire the lease or store the initial receipt remains a real
+liveness outage.
+
+**Reason:** A transient diagnostic dependency should not make the independent
+monitor report the scheduler as dead. This preserves prompt detection of real
+cron, authorization, lease, or database failures without recurring false
+heartbeat alarms.

@@ -7,6 +7,7 @@ import { sendDueReminders } from "@/lib/reminder-worker";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
+import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
 
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
@@ -137,6 +138,14 @@ export async function runAutomationWatchdog(now = new Date()) {
   const { data: run, error: runError } = await supabaseAdmin.from("sync_runs")
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
+
+  // The public heartbeat is a liveness contract: an authenticated, leased
+  // watchdog invocation reached the database and durably recorded its run.
+  // Keep that proof independent from later diagnostic work (provider checks,
+  // Bowl readiness, alerts, and cleanup), which can need attention without
+  // making the scheduler itself unavailable. A failure before this point still
+  // fails closed because there is no fresh pulse.
+  await recordAutomationWorkerHeartbeat("watchdog", "success");
   try {
     const [initialHealth, bootstrap, preflight, storagePrune, configurationRun, bowlHealth] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
