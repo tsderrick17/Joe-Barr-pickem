@@ -3172,6 +3172,47 @@ html[data-theme="night"] .bowl-standings-game-cell > .bowl-standings-team {
   color: #f8fafc !important;
 }
 
+/* The Bowl Card uses a bespoke grid with intentionally light paper colors in
+   its markup.  Restyle every surface explicitly for night mode so muted text
+   never lands on parchment-colored cells. */
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
+  background: #111c24;
+  border-color: #6b8790 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
+html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
+  background: #172731 !important;
+  border-color: #6b8790 !important;
+  color: #dcebed !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-game-cell {
+  background: #1c2c36 !important;
+  border-color: #6b8790 !important;
+  color: #dcebed !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-bowl-name {
+  border-color: #637b84 !important;
+  color: #f6f7f2 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #f3f6f7 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row {
+  background: #172731 !important;
+  border-color: #587584 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span {
+  color: #e9f1f3 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky {
+  background: #172731 !important;
+  color: #f4f7f6 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-green-"] { color: #80e4ac !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca !important; }
+
 .bowl-flip-counter {
   display: inline-flex;
   gap: .18rem;
