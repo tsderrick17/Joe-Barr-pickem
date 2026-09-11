@@ -111,9 +111,11 @@ and every health contract without exposing their response bodies.
 
 Open UptimeRobot's **PickemJB automation heartbeat** incident, then check
 **Commissioner → Automation Health** and the watchdog receipt. A non-200
-response at `/api/health/automation` means the five-minute watchdog has failed
-or has not completed successfully within 12 minutes; it does not mean the
-player-facing site itself is unavailable.
+response at `/api/health/automation` means no authenticated, leased watchdog
+invocation has recorded its durable receipt within 20 minutes; it does not mean
+the player-facing site itself is unavailable. A diagnostic failure after that
+receipt appears in Automation Health as an actionable incident rather than
+turning the liveness monitor red.
 
 ### The critical-worker heartbeat is down
 

@@ -34,6 +34,16 @@ test("automation heartbeat allows a delayed watchdog delivery within the grace w
   assert.equal(result.healthy, true);
 });
 
+test("watchdog records liveness before noncritical diagnostics", async () => {
+  const source = await readFile(new URL("../src/lib/automation-watchdog.ts", import.meta.url), "utf8");
+  const runReceipt = source.indexOf('insert({ provider: "internal", job_type: "watchdog", status: "started" })');
+  const pulse = source.indexOf('recordAutomationWorkerHeartbeat("watchdog", "success")');
+  const diagnostics = source.indexOf("const [initialHealth, bootstrap, preflight");
+  assert.ok(runReceipt >= 0);
+  assert.ok(pulse > runReceipt);
+  assert.ok(diagnostics > pulse);
+});
+
 test("public automation health route exposes only an opaque monitor response", async () => {
   const source = await readFile(new URL("../src/app/api/health/automation/route.ts", import.meta.url), "utf8");
   assert.match(source, /automation_worker_heartbeats/);

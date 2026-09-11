@@ -166,8 +166,8 @@ async function checkWatchdogHeartbeat(): Promise<LaunchPreflightCheck> {
     "Internal automation heartbeat",
     heartbeat.healthy,
     heartbeat.healthy
-      ? "The five-minute watchdog has completed successfully within the last 12 minutes."
-      : "The watchdog has not completed successfully within the last 12 minutes.",
+      ? "An authenticated, leased watchdog invocation recorded its durable receipt within the last 20 minutes."
+      : "No authenticated, leased watchdog invocation has recorded its durable receipt within the last 20 minutes.",
     "schedules",
   );
 }

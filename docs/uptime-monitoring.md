@@ -11,7 +11,7 @@ contacts, and current incidents.
 | Monitor | URL | A 200 proves | Where to diagnose a failure |
 | --- | --- | --- | --- |
 | PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
-| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | The watchdog worker checked in successfully within the last 20 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
+| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | An authenticated, leased watchdog invocation recorded a durable run receipt within the last 20 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
 | PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking (once a lock is due), reminder processing, and final-score processing are within their allowed freshness windows (with room for one delayed cron delivery) | **Commissioner → Automation Health** to identify the worker |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
 | PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
@@ -65,9 +65,13 @@ false alarm while the alias settles. If two or more contracts remain red, the
 run labels the result as a likely shared deployment or authorization problem;
 it does not imply that each worker independently broke.
 
-The automation heartbeat uses a constant-size worker row that updates in place;
-diagnostic run failures therefore cannot create a false liveness outage. TLS
-errors from a local command-line client (such as Windows Schannel) are client
-environment failures, not application health results; UptimeRobot remains the
-external TLS authority. Monitor records do not consume Odds API credits or
-create growing pool-history tables.
+The automation heartbeat uses a constant-size worker row that updates in place
+as soon as an authenticated, leased watchdog call records its durable run
+receipt. Later diagnostic failures are stored as failed watchdog runs and
+actionable Commissioner incidents, but do not create a false liveness outage.
+If the scheduler, authorization, lease, or database write is unavailable
+before that receipt, the monitor still fails closed. TLS errors from a local
+command-line client (such as Windows Schannel) are client environment failures,
+not application health results; UptimeRobot remains the external TLS authority.
+Monitor records do not consume Odds API credits or create growing pool-history
+tables.
