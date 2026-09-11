@@ -1531,20 +1531,28 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   text-align: left;
   width: auto;
 }
-.slate-game-row.is-final .slate-team-result-line.is-left { margin-right: auto; }
-.slate-game-row.is-final .slate-team-result-line.is-right { margin-left: auto; }
+.slate-game-row.is-final .slate-final-team-stack {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 100%;
+  width: fit-content;
+}
+.slate-game-row.is-final .slate-final-team-stack.is-left {
+  align-items: flex-start;
+  text-align: left;
+}
+.slate-game-row.is-final .slate-final-team-stack.is-right {
+  align-items: flex-end;
+  text-align: right;
+}
+.slate-game-row.is-final .slate-team-result-line.is-left,
+.slate-game-row.is-final .slate-team-result-line.is-right { margin: 0; }
 .slate-game-row.is-final .slate-team-result-line.is-right .slate-team-label {
   text-align: right;
 }
 .slate-game-row.is-final .slate-team-picker-list {
-  display: inline-block;
-  width: auto;
-}
-.slate-game-row.is-final .slate-team-result-line.is-left + .slate-team-picker-list {
-  margin-right: auto;
-}
-.slate-game-row.is-final .slate-team-result-line.is-right + .slate-team-picker-list {
-  margin-left: auto;
+  display: block;
+  width: 100%;
 }
 .slate-team-picker-list {
   display: block;

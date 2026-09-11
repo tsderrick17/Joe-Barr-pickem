@@ -104,7 +104,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const compactLabel = team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
-    const content = <>
+    const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}
@@ -112,6 +112,12 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       </span>
       {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
+    // A final row has an intrinsic team/score group. Keep its picker names in
+    // that same group so they always sit beneath the team, rather than flowing
+    // onto the open edge of a wide grid cell.
+    const content = isFinal
+      ? <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>
+      : teamResult;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
     const pickemControl = allowSelection
       ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
