@@ -1515,22 +1515,33 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-score,
 .slate-team-result-mark { flex: 0 0 auto; }
 
-/* Finished matchups have one fixed baseline for the team, final score, and
-   result mark. Giving the name the flexible lane keeps both sides of the row
-   balanced when a long team wraps, instead of letting each side drift based
-   on its text width. */
+/* Finished matchups keep the team, final score, and result mark together as a
+   content-sized group. This prevents a short score from drifting to the far
+   edge of a wide team lane while still anchoring the two sides symmetrically. */
 .slate-game-row.is-final .slate-team-result-line {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  display: flex;
   align-items: baseline;
-  column-gap: .28rem;
+  gap: .28rem;
+  max-width: 100%;
+  width: fit-content;
 }
 .slate-game-row.is-final .slate-team-result-line .slate-team-label {
   min-width: 0;
   text-align: left;
 }
+.slate-game-row.is-final .slate-team-result-line.is-left { margin-right: auto; }
+.slate-game-row.is-final .slate-team-result-line.is-right { margin-left: auto; }
 .slate-game-row.is-final .slate-team-result-line.is-right .slate-team-label {
   text-align: right;
+}
+.slate-game-row.is-final .slate-team-picker-list {
+  width: fit-content;
+}
+.slate-game-row.is-final .slate-team-result-line.is-left + .slate-team-picker-list {
+  margin-right: auto;
+}
+.slate-game-row.is-final .slate-team-result-line.is-right + .slate-team-picker-list {
+  margin-left: auto;
 }
 .slate-team-picker-list {
   display: block;
