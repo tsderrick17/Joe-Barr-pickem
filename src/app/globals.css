@@ -1519,11 +1519,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    content-sized group. This prevents a short score from drifting to the far
    edge of a wide team lane while still anchoring the two sides symmetrically. */
 .slate-game-row.is-final .slate-team-result-line {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
   gap: .28rem;
   max-width: 100%;
-  width: fit-content;
+  width: auto;
 }
 .slate-game-row.is-final .slate-team-result-line .slate-team-label {
   min-width: 0;
@@ -1535,7 +1535,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   text-align: right;
 }
 .slate-game-row.is-final .slate-team-picker-list {
-  width: fit-content;
+  display: inline-block;
+  width: auto;
 }
 .slate-game-row.is-final .slate-team-result-line.is-left + .slate-team-picker-list {
   margin-right: auto;
