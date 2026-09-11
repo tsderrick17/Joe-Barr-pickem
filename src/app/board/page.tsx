@@ -73,6 +73,7 @@ type BoardResponse = {
     pick: { game_id: string; selected_team_id: string } | null;
     usedTeamIds: string[];
   };
+  showPoolAction: boolean;
   bootstrap?: {
     weeks: ScoringPeriod[];
     nextWeekAvailableAt: string | null;
@@ -203,6 +204,7 @@ export default function BoardPage() {
       );
 
       setGames(data.games);
+      setShowActionOnly(Boolean(data.showPoolAction));
       setPlayoffEliminated(data.pickem.playoffEliminated);
       setSelectedPicks(data.myPicks);
       setSavedPicks(data.myPicks);
@@ -692,7 +694,6 @@ export default function BoardPage() {
       return;
     }
 
-    setShowActionOnly(false);
     await loadWeek(selectedWeek);
   }
 
@@ -808,7 +809,16 @@ export default function BoardPage() {
               <div className="slate-view-switch-slot">
                 <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
                   <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
-                  <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => setShowActionOnly((current) => !current)} role="switch" type="button"><span /></button>
+                  <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => {
+                    const next = !actionOnlyActive;
+                    setShowActionOnly(next);
+                    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) }).then(async (response) => {
+                      if (!response.ok) throw new Error();
+                    }).catch(() => {
+                      setShowActionOnly(actionOnlyActive);
+                      setSelectionWarning("Your Slate display preference could not be saved.");
+                    });
+                  }} role="switch" type="button"><span /></button>
                   <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
                 </div>
               </div>
