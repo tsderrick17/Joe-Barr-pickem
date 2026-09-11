@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle(),
     supabaseAdmin
       .from("players")
-      .select("id, first_name")
+      .select("id, first_name, show_pool_action")
       .eq("active", true),
   ]);
 
@@ -607,5 +607,6 @@ export async function GET(request: NextRequest) {
     },
     survivor,
     bootstrap,
+    showPoolAction: Boolean((players ?? []).find((item) => item.id === player.id)?.show_pool_action),
   });
 }
