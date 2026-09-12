@@ -1,9 +1,12 @@
-const DEFAULT_MAX_AGE_MINUTES = 20;
+// pg_cron aims for five-minute delivery, but serverless dispatch is not a
+// real-time clock. Thirty-five minutes tolerates bounded delivery jitter and
+// several missed invocations without suppressing a genuinely stopped worker.
+const DEFAULT_MAX_AGE_MINUTES = 35;
 
 /**
  * Convert the latest watchdog receipt into a deliberately small public health
- * result. The watchdog runs every five minutes, so twenty minutes allows
- * delayed delivery and cold starts without hiding repeated missed runs.
+ * result. The watchdog runs every five minutes, so thirty-five minutes allows
+ * bounded delivery jitter without hiding a genuinely stopped scheduler.
  */
 export function assessAutomationHeartbeat(latestRun, now = new Date(), maxAgeMinutes = DEFAULT_MAX_AGE_MINUTES) {
   if (!latestRun) return { healthy: false, reason: "missing" };

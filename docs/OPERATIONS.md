@@ -119,8 +119,9 @@ The check sends no pool email and consumes no Odds API credit.
 An external UptimeRobot monitor must also check
 `https://pickemjb.vercel.app/api/health/automation` every five minutes. The
 endpoint returns 200 when an authenticated, leased watchdog invocation has
-recorded its durable heartbeat within the last 20 minutes, so a stopped worker
-cannot silently report itself as healthy. Heavy diagnostic failures are
+recorded its durable heartbeat within the last 35 minutes, so bounded scheduler
+delivery jitter does not create a false outage while a stopped worker cannot
+silently report itself as healthy. Heavy diagnostic failures are
 reported separately in Commissioner → Automation Health and do not poison this
 liveness signal. This monitor is separate from the existing public-site
 monitor.
