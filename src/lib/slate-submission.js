@@ -37,3 +37,24 @@ export function prepareAtsReplacements({ selections, existingPicks, games, now =
       .map((selection) => ({ game_id: selection.gameId, selected_team_id: selection.teamId })),
   };
 }
+
+/**
+ * Pick'em and Survivor use one receipt, but they remain independently
+ * editable. Omit Survivor entirely unless it changed so a sealed Survivor
+ * selection can never block a valid later ATS submission.
+ */
+export function buildSlateSubmission({
+  scoringPeriodId,
+  selections,
+  survivorAvailable,
+  survivorHasUnsavedChanges,
+  survivorPick,
+}) {
+  return {
+    scoringPeriodId,
+    selections,
+    ...(survivorAvailable && survivorHasUnsavedChanges
+      ? { survivorSelection: survivorPick }
+      : {}),
+  };
+}

@@ -4,7 +4,7 @@ import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
 } from "../src/lib/slate-draft-locks.js";
-import { prepareAtsReplacements } from "../src/lib/slate-submission.js";
+import { buildSlateSubmission, prepareAtsReplacements } from "../src/lib/slate-submission.js";
 
 const games = [
   { id: "early", away_team_id: "a", home_team_id: "b", kickoff_at: "2026-09-13T17:00:00Z" },
@@ -51,6 +51,36 @@ test("allows adding a future pick without echoing a locked pick", () => {
 
   assert.deepEqual(result, {
     replacements: [{ game_id: "late", selected_team_id: "d" }],
+  });
+});
+
+test("saves an ATS change without resubmitting an unchanged locked Survivor pick", () => {
+  const submission = buildSlateSubmission({
+    scoringPeriodId: "week-1",
+    selections: [{ gameId: "late", teamId: "d" }],
+    survivorAvailable: true,
+    survivorHasUnsavedChanges: false,
+    survivorPick: { gameId: "early", teamId: "a" },
+  });
+
+  assert.deepEqual(submission, {
+    scoringPeriodId: "week-1",
+    selections: [{ gameId: "late", teamId: "d" }],
+  });
+});
+
+test("includes Survivor only when its selection actually changed", () => {
+  const survivorPick = { gameId: "late", teamId: "d" };
+  assert.deepEqual(buildSlateSubmission({
+    scoringPeriodId: "week-1",
+    selections: [],
+    survivorAvailable: true,
+    survivorHasUnsavedChanges: true,
+    survivorPick,
+  }), {
+    scoringPeriodId: "week-1",
+    selections: [],
+    survivorSelection: survivorPick,
   });
 });
 

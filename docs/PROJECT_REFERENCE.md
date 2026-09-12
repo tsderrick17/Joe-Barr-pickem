@@ -92,6 +92,8 @@ be replayed.
 - A player may submit a full round at once. Each individual pick remains
   editable until its own kickoff, so earlier games can lock while later games
   remain changeable.
+- A Pick'em save never resubmits or validates an unchanged Survivor selection.
+  A sealed Survivor pick therefore cannot block a later legal Pick'em save.
 - The selected team must belong to the selected game. A kicked-off pick cannot
   be added, removed, or replaced.
 - Picks use the saved official line. A cover is a win; an ATS push or tied
