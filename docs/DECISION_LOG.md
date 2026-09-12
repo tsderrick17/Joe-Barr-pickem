@@ -426,3 +426,15 @@ short-lived missed invocations into repetitive external downtime messages.
 seven monitor intervals, preserving detection of a genuinely stopped cron,
 authorization, lease, or database path while making a transient dispatch delay
 non-actionable rather than noisy.
+
+## 2026-09-12 — REF-037 — Decouple unchanged Survivor state from Pick'em saves
+
+**Status:** Accepted
+
+A Slate submission includes Survivor data only when the player changed the
+Survivor selection. An ATS-only update therefore uses the ATS-only atomic save
+path and leaves an existing Survivor pick untouched.
+
+**Reason:** Once a Survivor game begins, its selection must stay sealed. That
+constraint applies only to Survivor changes; it must not prevent a player from
+adding or revising a still-open Pick'em selection later in the same week.

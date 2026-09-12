@@ -14,6 +14,7 @@ import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
 } from "@/lib/slate-draft-locks";
+import { buildSlateSubmission } from "@/lib/slate-submission";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
@@ -714,13 +715,13 @@ export default function BoardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
+        body: JSON.stringify(buildSlateSubmission({
           scoringPeriodId: week.id,
           selections: selectedPicks,
-          ...(survivorAvailable
-            ? { survivorSelection: survivorPick }
-            : {}),
-        }),
+          survivorAvailable,
+          survivorHasUnsavedChanges,
+          survivorPick,
+        })),
         signal: request.signal,
       });
 
