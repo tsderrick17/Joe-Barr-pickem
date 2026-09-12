@@ -412,3 +412,17 @@ liveness outage.
 monitor report the scheduler as dead. This preserves prompt detection of real
 cron, authorization, lease, or database failures without recurring false
 heartbeat alarms.
+
+## 2026-09-12 — REF-036 — Bound heartbeat noise without masking scheduler failure
+
+**Status:** Accepted
+
+The public watchdog heartbeat allows a durable receipt to be up to 35 minutes
+old while the watchdog remains scheduled every five minutes. This absorbs
+bounded pg_cron and serverless delivery jitter that can otherwise turn several
+short-lived missed invocations into repetitive external downtime messages.
+
+**Reason:** The liveness route still fails closed when no receipt arrives for
+seven monitor intervals, preserving detection of a genuinely stopped cron,
+authorization, lease, or database path while making a transient dispatch delay
+non-actionable rather than noisy.

@@ -11,7 +11,7 @@ contacts, and current incidents.
 | Monitor | URL | A 200 proves | Where to diagnose a failure |
 | --- | --- | --- | --- |
 | PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
-| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | An authenticated, leased watchdog invocation recorded a durable run receipt within the last 20 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
+| PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | An authenticated, leased watchdog invocation recorded a durable run receipt within the last 35 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
 | PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking (once a lock is due), reminder processing, and final-score processing are within their allowed freshness windows (with room for one delayed cron delivery) | **Commissioner → Automation Health** to identify the worker |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
 | PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
@@ -26,9 +26,10 @@ information. Do not weaken that opacity to make an external status page more
 descriptive.
 
 The worker freshness windows include bounded cron-delivery grace: 12 minutes
-for line locks, 45 minutes for score checks, and 20 minutes for reminders.
-UptimeRobot probes every five minutes, so one delayed serverless invocation
-does not flap the monitor; the watchdog still evaluates genuinely overdue work.
+for line locks, 45 minutes for score checks, and 20 minutes for reminders. The
+watchdog heartbeat allows 35 minutes: that absorbs bounded scheduler and
+serverless delivery jitter while still reporting a genuinely stopped scheduler
+within seven five-minute monitor intervals.
 
 ## What each monitor does not prove
 

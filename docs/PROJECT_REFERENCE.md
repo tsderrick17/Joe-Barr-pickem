@@ -306,6 +306,8 @@ may enrich spreads but cannot override canonical schedule assignments.
   incident in production instead of silently becoming authoritative.
 - The public automation heartbeat proves that an authenticated, leased
   watchdog invocation reached the database and recorded a durable run receipt.
+  Its 35-minute freshness window absorbs bounded five-minute cron and
+  serverless delivery jitter while retaining a finite outage signal.
   It is intentionally written before the watchdog's heavier diagnostics,
   provider checks, alert delivery, Bowl readiness, and cleanup. Those failures
   remain visible as failed watchdog runs and actionable incidents, but cannot
