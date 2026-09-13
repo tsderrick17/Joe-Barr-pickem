@@ -1562,40 +1562,38 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    content-sized group. This prevents a short score from drifting to the far
    edge of a wide team lane while still anchoring the two sides symmetrically. */
 .slate-game-row.is-final .slate-team-result-line {
-  display: inline-flex;
-  align-items: baseline;
-  gap: .28rem;
-  max-width: 100%;
-  width: auto;
+  display: contents;
 }
 .slate-game-row.is-final .slate-team-result-line .slate-team-label {
-  flex: 0 1 auto;
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
   text-align: left;
-  width: auto;
 }
 .slate-game-row.is-final .slate-final-team-stack {
-  display: inline-flex;
-  flex-direction: column;
+  align-items: baseline;
+  column-gap: .28rem;
+  display: grid;
+  grid-template-columns: minmax(0, auto) auto auto;
   max-width: 100%;
   width: fit-content;
 }
 .slate-game-row.is-final .slate-final-team-stack.is-left {
-  align-items: flex-start;
+  justify-items: start;
   text-align: left;
 }
 .slate-game-row.is-final .slate-final-team-stack.is-right {
-  align-items: flex-end;
+  justify-items: end;
   text-align: right;
 }
-.slate-game-row.is-final .slate-team-result-line.is-left,
-.slate-game-row.is-final .slate-team-result-line.is-right { margin: 0; }
 .slate-game-row.is-final .slate-team-result-line.is-right .slate-team-label {
   text-align: right;
 }
 .slate-game-row.is-final .slate-team-picker-list {
-  display: block;
-  width: 100%;
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: .15rem;
+  width: auto;
 }
 .slate-team-picker-list {
   display: block;
