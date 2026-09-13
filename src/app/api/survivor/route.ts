@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
-import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
 export const dynamic = "force-dynamic";
@@ -129,15 +127,6 @@ async function survivorContext(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    await voidDisruptedPicks();
-    await eliminateSurvivorNoPicks();
-  } catch {
-    return NextResponse.json(
-      { error: "Survivor status could not be verified safely. Please try again." },
-      { status: 503 },
-    );
-  }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
 
@@ -233,12 +222,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    await voidDisruptedPicks();
-    await eliminateSurvivorNoPicks();
-  } catch {
-    return NextResponse.json({ error: "Survivor status could not be verified safely." }, { status: 503 });
-  }
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
   if (context.season.survivor_champion_player_id) {

@@ -6,16 +6,22 @@ import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 
 type Selection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
 
-async function currentPlayer(request: NextRequest) {
+type CurrentPlayer = { id: string; first_name: string; active: boolean; is_commissioner: boolean };
+type PlayerLookup =
+  | { player: CurrentPlayer; error: null }
+  | { player: null; error: "unauthorized" | "unavailable" };
+
+async function currentPlayer(request: NextRequest): Promise<PlayerLookup> {
   const authorization = request.headers.get("authorization");
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!authorization?.startsWith("Bearer ") || !url || !key) return null;
+  if (!authorization?.startsWith("Bearer ") || !url || !key) return { player: null, error: "unauthorized" };
   const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
-  if (!user) return null;
-  const { data: player } = await supabaseAdmin.from("players").select("id, first_name, active, is_commissioner").eq("auth_user_id", user.id).maybeSingle();
-  return player?.active ? player : null;
+  const { data: { user }, error: userError } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
+  if (userError || !user) return { player: null, error: userError && (userError.status ?? 500) >= 500 ? "unavailable" : "unauthorized" };
+  const { data: player, error: playerError } = await supabaseAdmin.from("players").select("id, first_name, active, is_commissioner").eq("auth_user_id", user.id).maybeSingle();
+  if (playerError) return { player: null, error: "unavailable" };
+  return player?.active ? { player, error: null } : { player: null, error: "unauthorized" };
 }
 
 async function seasonAndGames() {
@@ -27,8 +33,9 @@ async function seasonAndGames() {
 }
 
 export async function GET(request: NextRequest) {
-  const player = await currentPlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in to view the Bowl Pool." }, { status: 401 });
+  const playerLookup = await currentPlayer(request);
+  if (!playerLookup.player) return NextResponse.json({ error: playerLookup.error === "unavailable" ? "The Bowl Pool service is temporarily unavailable. Please try again." : "You must be signed in to view the Bowl Pool." }, { status: playerLookup.error === "unavailable" ? 503 : 401 });
+  const player = playerLookup.player;
   const context = await seasonAndGames();
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
@@ -122,8 +129,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const player = await currentPlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in to save Bowl Pool selections." }, { status: 401 });
+  const playerLookup = await currentPlayer(request);
+  if (!playerLookup.player) return NextResponse.json({ error: playerLookup.error === "unavailable" ? "The Bowl Pool service is temporarily unavailable. Please try again." : "You must be signed in to save Bowl Pool selections." }, { status: playerLookup.error === "unavailable" ? 503 : 401 });
+  const player = playerLookup.player;
   let body: { optedIn?: unknown; selections?: Selection[]; championshipTotalGuess?: unknown };
   try { body = await request.json() as typeof body; } catch { return NextResponse.json({ error: "Your Bowl Pool submission was incomplete." }, { status: 400 }); }
   if (typeof body.optedIn !== "boolean" || !Array.isArray(body.selections)) return NextResponse.json({ error: "Opt-in status and selections are required." }, { status: 400 });

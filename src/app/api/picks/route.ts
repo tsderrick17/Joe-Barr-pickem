@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
 type Selection = { gameId: string; teamId: string };
@@ -21,12 +20,6 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
-  try {
-    await voidDisruptedPicks();
-  } catch {
-    return NextResponse.json({ error: "Disrupted-game checks could not be completed." }, { status: 503 });
-  }
-
   let body: {
     scoringPeriodId?: string;
     selections?: Selection[];
