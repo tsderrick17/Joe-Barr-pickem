@@ -62,7 +62,7 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "started"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "success"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
-  assert.match(route, /status: result\.healthy \? 200 : 503/);
+  assert.match(route, /status: debouncedHealthy \? 200 : 503/);
   assert.match(route, /checkCriticalWorkerHealth/);
   assert.match(sharedHealth, /lineLocksDue/);
   assert.match(sharedHealth, /line_lock_at/);

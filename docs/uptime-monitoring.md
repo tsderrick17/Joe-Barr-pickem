@@ -31,6 +31,11 @@ watchdog heartbeat allows 35 minutes: that absorbs bounded scheduler and
 serverless delivery jitter while still reporting a genuinely stopped scheduler
 within seven five-minute monitor intervals.
 
+The critical-worker public probe also uses a ten-minute failure debounce. A
+single transient unhealthy evaluation is recorded but remains HTTP 200; the
+probe returns HTTP 503 only if the unhealthy state persists for ten minutes,
+and returns to HTTP 200 on the first healthy evaluation.
+
 ## What each monitor does not prove
 
 - The production check proves core availability, not that every background job
