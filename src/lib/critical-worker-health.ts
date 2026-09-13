@@ -7,12 +7,14 @@ export type CriticalWorkerProblem = {
   reason: "missing" | "invalid" | "failed" | "stale";
 };
 
+export type CriticalWorkerName = CriticalWorkerProblem["jobName"];
+
 /**
  * Shared by the public smoke contract and the Commissioner desk. Public callers
  * deliberately receive only the boolean result; the Commissioner view receives
  * these safe, operational descriptions.
  */
-export async function checkCriticalWorkerHealth(checkedAt = new Date()) {
+export async function checkCriticalWorkerHealth(checkedAt = new Date(), onlyJob?: CriticalWorkerName) {
   const [{ data: heartbeats, error: heartbeatsError }, { data: activePeriods, error: activePeriodsError }] = await Promise.all([
     supabaseAdmin
       .from("automation_worker_heartbeats")
@@ -80,10 +82,11 @@ export async function checkCriticalWorkerHealth(checkedAt = new Date()) {
     return !nextCheckAt || new Date(nextCheckAt).getTime() <= checkedAt.getTime();
   });
   const result = assessCriticalWorkerHeartbeats(heartbeats, checkedAt, {
-    lineLocksDue,
-    scoresDue,
-    remindersDue: (dueReminders ?? []).length > 0,
+    lineLocksDue: onlyJob === "scores" || onlyJob === "reminders" ? false : lineLocksDue,
+    scoresDue: onlyJob === "line_locks" || onlyJob === "reminders" ? false : scoresDue,
+    remindersDue: onlyJob === "line_locks" || onlyJob === "scores" ? false : (dueReminders ?? []).length > 0,
   });
   const problems = result.problems as CriticalWorkerProblem[];
-  return { ...result, problems, messages: problems.map(describeCriticalWorkerProblem) };
+  const scopedProblems = onlyJob ? problems.filter((problem) => problem.jobName === onlyJob) : problems;
+  return { healthy: scopedProblems.length === 0, problems: scopedProblems, messages: scopedProblems.map(describeCriticalWorkerProblem) };
 }

@@ -3,7 +3,6 @@ import { respondToCriticalWorkerHealth } from "@/lib/critical-worker-health-rout
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/** Public and deliberately opaque: it exposes no job names or timestamps. */
 export async function GET() {
-  return respondToCriticalWorkerHealth("critical_workers");
+  return respondToCriticalWorkerHealth("critical_worker_line_locks", "line_locks");
 }
