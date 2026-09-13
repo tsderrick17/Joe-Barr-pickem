@@ -4,6 +4,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 
 export const dynamic = "force-dynamic";
 
@@ -43,9 +44,9 @@ async function authenticatedPlayer(
   const authClient = createClient(url, key, {
     global: { headers: { Authorization: authorization } },
   });
-  const { data: { user }, error: userError } = await authClient.auth.getUser(
+  const { data: { user }, error: userError } = await retrySafeRead(() => authClient.auth.getUser(
     authorization.slice("Bearer ".length),
-  );
+  ));
   if (userError || !user) {
     const serviceUnavailable =
       userError ? (userError.status ?? 500) >= 500 : false;
@@ -58,11 +59,11 @@ async function authenticatedPlayer(
     };
   }
 
-  const { data: player, error: playerError } = await supabaseAdmin
+  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin
     .from("players")
     .select("id, active")
     .eq("auth_user_id", user.id)
-    .maybeSingle();
+    .maybeSingle());
 
   if (playerError) {
     return {
@@ -92,11 +93,11 @@ async function survivorContext(request: NextRequest) {
   }
   const { player } = authentication;
 
-  const { data: season, error: seasonError } = await supabaseAdmin
+  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin
     .from("seasons")
     .select("id, survivor_champion_player_id")
     .eq("year", CURRENT_SEASON_YEAR)
-    .maybeSingle();
+    .maybeSingle());
   if (seasonError) return { error: "The current season could not be loaded.", status: 503 as const };
   if (!season) return { error: `The ${CURRENT_SEASON_YEAR} season has not been set up.`, status: 404 as const };
 
@@ -105,21 +106,21 @@ async function survivorContext(request: NextRequest) {
   });
   if (ensured.error) return { error: "Survivor entries could not be prepared.", status: 500 as const };
 
-  const { data: periods, error: periodsError } = await supabaseAdmin
+  const { data: periods, error: periodsError } = await retrySafeRead(() => supabaseAdmin
     .from("scoring_periods")
     .select("id, display_name, display_order, status")
     .eq("season_id", season.id)
-    .order("display_order");
+    .order("display_order"));
   if (periodsError) return { error: "The weekly schedule could not be loaded.", status: 503 as const };
   const period = selectDefaultScoringPeriod((periods ?? []) as Period[]);
   if (!period) return { error: "The weekly schedule could not be loaded.", status: 500 as const };
 
-  const { data: entry, error: entryError } = await supabaseAdmin
+  const { data: entry, error: entryError } = await retrySafeRead(() => supabaseAdmin
     .from("survivor_entries")
     .select("id, status, eliminated_at")
     .eq("player_id", player.id)
     .eq("season_id", season.id)
-    .maybeSingle();
+    .maybeSingle());
   if (entryError) return { error: "Your Survivor entry could not be loaded.", status: 503 as const };
   if (!entry) return { error: "Your Survivor entry could not be loaded.", status: 500 as const };
 

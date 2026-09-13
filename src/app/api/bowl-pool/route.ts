@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 
 type Selection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
 
@@ -17,17 +18,17 @@ async function currentPlayer(request: NextRequest): Promise<PlayerLookup> {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!authorization?.startsWith("Bearer ") || !url || !key) return { player: null, error: "unauthorized" };
   const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user }, error: userError } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
+  const { data: { user }, error: userError } = await retrySafeRead(() => authClient.auth.getUser(authorization.slice("Bearer ".length)));
   if (userError || !user) return { player: null, error: userError && (userError.status ?? 500) >= 500 ? "unavailable" : "unauthorized" };
-  const { data: player, error: playerError } = await supabaseAdmin.from("players").select("id, first_name, active, is_commissioner").eq("auth_user_id", user.id).maybeSingle();
+  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, first_name, active, is_commissioner").eq("auth_user_id", user.id).maybeSingle());
   if (playerError) return { player: null, error: "unavailable" };
   return player?.active ? { player, error: null } : { player: null, error: "unauthorized" };
 }
 
 async function seasonAndGames() {
-  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
+  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle());
   if (seasonError || !season) return { season: null, games: [], error: seasonError ?? new Error("Bowl Pool season is not configured.") };
-  const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, is_cfp, away_team_id, home_team_id, away_score, home_score, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index");
+  const { data: games, error } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, is_cfp, away_team_id, home_team_id, away_score, home_score, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index"));
   if (error) return { season, games: [], error };
   return { season, games: games ?? [], error: null };
 }
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
   const firstKickoff = context.season.first_kickoff_at ? new Date(context.season.first_kickoff_at) : null;
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at, championship_total_guess, preview_selections").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle();
+  const { data: existing, error: existingError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_entries").select("id, status, opted_in_at, championship_total_guess, preview_selections").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle());
   if (existingError) return NextResponse.json({ error: "Your Bowl Pool entry could not be loaded." }, { status: 500 });
   const entryClosed = Boolean(firstKickoff && now >= firstKickoff && !player.is_commissioner);
   if (!body.optedIn) {
