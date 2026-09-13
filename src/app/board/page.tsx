@@ -82,6 +82,11 @@ type BoardResponse = {
   error?: string;
 };
 
+// A pick save can briefly wait behind database work that is already in
+// progress. Keep the request alive long enough for that safe, serialized save
+// to return rather than telling a player it failed while the server finishes.
+const PICK_SAVE_TIMEOUT_MS = 30_000;
+
 function SlateLoadingShell() {
   return (
     <main aria-busy="true" className="min-h-screen bg-[#e9e2d3] text-[#171719]">
@@ -707,7 +712,7 @@ export default function BoardPage() {
 
     setIsSubmitting(true);
     const request = new AbortController();
-    const requestTimer = window.setTimeout(() => request.abort(), 15_000);
+    const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
 
     try {
       const response = await fetchWithSession("/api/picks", {
@@ -725,7 +730,7 @@ export default function BoardPage() {
         signal: request.signal,
       });
 
-      const data = (await response.json()) as {
+      const data = (await response.json().catch(() => ({}))) as {
         error?: string;
         message?: string;
       };
