@@ -13,7 +13,7 @@ test("player submissions do not wait for a pool-wide maintenance RPC", async () 
 });
 
 test("database replacements void only the submitter's disrupted receipts atomically", async () => {
-  const migration = await readFile(new URL("../supabase/migrations/20260913040000_decouple_player_saves_from_global_maintenance.sql", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20260913130000_decouple_player_saves_from_global_maintenance.sql", import.meta.url), "utf8");
 
   assert.match(migration, /p\.player_id = target_player_id/);
   assert.match(migration, /p\.survivor_entry_id = target_survivor_entry_id/);
