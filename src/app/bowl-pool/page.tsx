@@ -172,6 +172,10 @@ export default function BowlPoolPage() {
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT</span>
               <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">SUBMIT</button>
+              <span aria-live="polite" className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`} role="status">
+                <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
+                <span>{isSubmitting ? "PRINTING RECEIPT" : ""}</span>
+              </span>
             </div>
             <div className="slate-receipt-pool bowl-receipt-summary">
               <span>BOWL POOL</span>
