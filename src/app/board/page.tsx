@@ -877,7 +877,7 @@ export default function BoardPage() {
               role="status"
             >
               <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
-              <span>{isSubmitting ? "PRINTING RECEIPT" : ""}</span>
+              <span>{isSubmitting ? "PRINTING" : ""}</span>
             </span>
           </div>
           <div className="slate-receipt-pool slate-receipt-pickem">
