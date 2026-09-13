@@ -366,6 +366,21 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
         : "The email reminder could not be prepared.",
     );
   }
+  // A Pick Due audience is calculated from the players who still have an open
+  // selection to make. Sending a zero-recipient reminder is not a delivery;
+  // it is the same successful no-op as an empty public-pick reveal.
+  if (reminder.category === "pick_due" && recipients.length === 0) {
+    return {
+      recipients: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      retryableFailed: 0,
+      errors: [],
+      suppressed: true,
+      suppressionReason: "No player has an outstanding Pick'em selection.",
+    };
+  }
   let sent = 0;
   let failed = 0;
   let skipped = 0;
@@ -379,7 +394,7 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
     retryableFailed += Number(result.failed && result.retryable);
     if (result.errorMessage) errors.push(result.errorMessage);
   }
-  return { recipients: recipients.length, sent, failed, skipped, retryableFailed, errors };
+  return { recipients: recipients.length, sent, failed, skipped, retryableFailed, errors, suppressed: false, suppressionReason: null };
 }
 
 export async function deliverEmailTest(reminder: Reminder, playerId: string, email: string) {
