@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 
 type Selection = { gameId: string; teamId: string };
 type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string; status: string };
@@ -21,12 +21,6 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
-  try {
-    await voidDisruptedPicks();
-  } catch {
-    return NextResponse.json({ error: "Disrupted-game checks could not be completed." }, { status: 503 });
-  }
-
   let body: {
     scoringPeriodId?: string;
     selections?: Selection[];
@@ -48,23 +42,23 @@ export async function POST(request: NextRequest) {
   if (new Set(selections.map((selection) => selection.gameId)).size !== selections.length) return NextResponse.json({ error: "You may only select one team from each game." }, { status: 400 });
 
   const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await authClient.auth.getUser(
+  const { data: { user } } = await retrySafeRead(() => authClient.auth.getUser(
     authorization.slice("Bearer ".length),
-  );
+  ));
   if (!user) return NextResponse.json({ error: "Your sign-in session could not be verified." }, { status: 401 });
 
-  const { data: player } = await supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle();
+  const { data: player } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle());
   if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
   await recordPlayerActivity(player.id);
 
-  const { data: period } = await supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle();
+  const { data: period } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
   if (!period) return NextResponse.json({ error: "That week could not be found." }, { status: 404 });
   if (period.status === "complete") return NextResponse.json({ error: "This completed week is read-only." }, { status: 400 });
   if (selections.length > period.max_picks) return NextResponse.json({ error: `You cannot submit more than ${period.max_picks} picks for this scoring period.` }, { status: 400 });
-  const { error: pickWindowError } = await supabaseAdmin.rpc(
+  const { error: pickWindowError } = await retrySafeRead(() => supabaseAdmin.rpc(
     "assert_scoring_period_accepts_picks",
     { target_scoring_period_id: scoringPeriodId },
-  );
+  ));
   if (pickWindowError) {
     return NextResponse.json(
       { error: "That Slate is not open for selections yet." },
@@ -88,12 +82,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const { data: existingPicks, error: existingError } = await supabaseAdmin.from("picks").select("id, game_id, selected_team_id").eq("player_id", player.id).eq("scoring_period_id", scoringPeriodId).neq("result", "void");
+  const { data: existingPicks, error: existingError } = await retrySafeRead(() => supabaseAdmin.from("picks").select("id, game_id, selected_team_id").eq("player_id", player.id).eq("scoring_period_id", scoringPeriodId).neq("result", "void"));
   if (existingError) return NextResponse.json({ error: "Your existing picks could not be loaded." }, { status: 500 });
 
   const survivorSelection = body.survivorSelection;
   const gameIds = [...new Set([...selections.map((selection) => selection.gameId), ...(existingPicks ?? []).map((pick) => pick.game_id), ...(survivorSelection ? [survivorSelection.gameId] : [])])];
-  const { data: games, error: gamesError } = await supabaseAdmin.from("games").select("id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status").in("id", gameIds);
+  const { data: games, error: gamesError } = await retrySafeRead(() => supabaseAdmin.from("games").select("id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status").in("id", gameIds));
   if (gamesError || !games) return NextResponse.json({ error: "The selected games could not be loaded." }, { status: 500 });
   const gameById = new Map((games as GameRow[]).map((game) => [game.id, game]));
 

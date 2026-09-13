@@ -312,6 +312,46 @@ body {
 .slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention 15s ease-in-out infinite; }
 .slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 15s ease-in-out infinite; }
 
+/* The printer line has a fixed footprint beneath Submit, so saving feedback
+   reads like a receipt being pulled through a mechanism without moving the
+   surrounding ticket or widening the button. */
+.receipt-printing-status {
+  align-items: center;
+  color: #657080;
+  display: flex;
+  font-family: "Courier New", monospace;
+  font-size: .4rem;
+  font-weight: 700;
+  gap: .22rem;
+  letter-spacing: .09em;
+  line-height: .62rem;
+  min-height: .62rem;
+  overflow: hidden;
+  padding-left: .16rem;
+  text-transform: uppercase;
+  width: calc(100% - .4rem);
+}
+.receipt-printing-marks { display: inline-flex; gap: .1rem; height: .32rem; visibility: hidden; }
+.receipt-printing-marks i {
+  background: #007e72;
+  border-radius: 50%;
+  display: block;
+  height: .26rem;
+  opacity: .4;
+  transform: translateY(.08rem);
+  width: .26rem;
+}
+.receipt-printing-status.is-printing { color: #17675f; }
+.receipt-printing-status.is-printing .receipt-printing-marks { visibility: visible; }
+.receipt-printing-status.is-printing .receipt-printing-marks i { animation: receipt-printer-feed 1.05s steps(2, end) infinite; }
+.receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(2) { animation-delay: .15s; }
+.receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(3) { animation-delay: .3s; }
+
+@keyframes receipt-printer-feed {
+  0%, 100% { opacity: .24; transform: translateY(.08rem) scale(.78); }
+  45% { opacity: 1; transform: translateY(-.04rem) scale(1); }
+}
+
 @keyframes receipt-print-attention {
   /* The sheen clears at 20%; the press follows roughly .2 seconds later,
      while the 15-second cycle still governs click-to-click timing. */
@@ -342,6 +382,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .slate-receipt-print.needs-attention:not(:disabled),
   .slate-receipt-print.needs-attention:not(:disabled)::before,
+  .receipt-printing-status.is-printing .receipt-printing-marks i,
   .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
   .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
 }

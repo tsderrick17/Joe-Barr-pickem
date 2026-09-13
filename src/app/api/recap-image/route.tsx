@@ -16,6 +16,10 @@ const RULE_BLUE = "#9cc6ea";
 const MARGIN_RED = "#d56b66";
 const TEAL = "#008c82";
 const MUTED = "#596579";
+// Email clients scale images to the width of the message column. Rendering the
+// Slate on a slightly tighter canvas makes its type and rules materially more
+// legible on phones without making the email itself any wider.
+const SLATE_IMAGE_WIDTH = 1000;
 
 type SlateGame = { away: string; home: string; day?: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
@@ -46,14 +50,14 @@ function SlateImage({
         {games.map((game, index) => {
           const presentation = slateImagePresentation(game);
           const singleGame = games.length <= 2;
-          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: compact ? 28 : singleGame ? 30 : 22, minHeight: compact ? 96 : singleGame ? 88 : 64, padding: singleGame ? "0 6px" : "0 14px" }}>
-            <span style={{ color: MUTED, display: "flex", flexDirection: "column", fontSize: compact ? 17 : singleGame ? 16 : 14, fontWeight: 800, lineHeight: 1.25, width: singleGame ? 120 : 150 }}>
+          return <div key={`${game.away}-${game.home}`} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", borderTop: index === 0 ? `3px solid ${official ? TEAL : INK}` : "0 solid transparent", display: "flex", fontFamily: "Arial", fontSize: compact ? 28 : singleGame ? 30 : 22, minHeight: compact ? 96 : singleGame ? 88 : 64, padding: singleGame ? "0 6px" : "0 8px" }}>
+            <span style={{ color: MUTED, display: "flex", flexDirection: "column", fontSize: compact ? 17 : singleGame ? 16 : 14, fontWeight: 800, lineHeight: 1.25, width: singleGame ? 120 : 108 }}>
               {game.day ? <span style={{ display: "flex", fontSize: 12 }}>{game.day}</span> : null}
               <span style={{ display: "flex", marginTop: game.day ? 3 : 0 }}>{game.time}</span>
             </span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-end", paddingRight: singleGame ? 4 : 14, textAlign: singleGame ? "center" : "right" }}>{presentation.leftTeam}</span>
-            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: compact ? 28 : singleGame ? 27 : 21, fontWeight: 900, justifyContent: "center", width: singleGame ? 130 : 110 }}>{presentation.line}</span>
-            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-start", paddingLeft: singleGame ? 4 : 14, textAlign: singleGame ? "center" : "left" }}>{presentation.rightTeam}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-start", paddingLeft: singleGame ? 0 : 10, paddingRight: singleGame ? 4 : 10, textAlign: singleGame ? "center" : "left" }}>{presentation.leftTeam}</span>
+            <span style={{ color: official ? TEAL : INK, display: "flex", fontFamily: "monospace", fontSize: compact ? 28 : singleGame ? 27 : 21, fontWeight: 900, justifyContent: "center", width: singleGame ? 130 : 100 }}>{presentation.line}</span>
+            <span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: singleGame ? "center" : "flex-start", paddingLeft: singleGame ? 4 : 10, textAlign: singleGame ? "center" : "left" }}>{presentation.rightTeam}</span>
           </div>;
         })}
       </div>
@@ -164,15 +168,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (kind === "fresh" && snapshot.kind === "fresh_slate") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.week} subtitle="Preliminary lines" footer="PRELIMINARY LINES MAY MOVE BEFORE OFFICIAL LOCK." official={false} />, { width: 1200, height: slateImageHeight(snapshot.games.length) });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.week} subtitle="Preliminary lines" footer="PRELIMINARY LINES MAY MOVE BEFORE OFFICIAL LOCK." official={false} />, { width: SLATE_IMAGE_WIDTH, height: slateImageHeight(snapshot.games.length) });
   }
 
   if (kind === "gameday" && snapshot.kind === "game_day") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Official lines" footer="TEAL LINES ARE OFFICIAL AND WILL NOT CHANGE." official />, { width: 1200, height: slateImageHeight(snapshot.games.length) });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Official lines" footer="TEAL LINES ARE OFFICIAL AND WILL NOT CHANGE." official />, { width: SLATE_IMAGE_WIDTH, height: slateImageHeight(snapshot.games.length) });
   }
 
   if (kind === "earlylock" && snapshot.kind === "early_lock") {
-    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Early lock" footer="THIS INTERNATIONAL MATCHUP'S OFFICIAL LINE IS LOCKED EARLY." official compact />, { width: 1200, height: slateImageHeight(snapshot.games.length, true) });
+    return new ImageResponse(<SlateImage games={snapshot.games} title={snapshot.day} subtitle="Early lock" footer="THIS INTERNATIONAL MATCHUP'S OFFICIAL LINE IS LOCKED EARLY." official compact />, { width: SLATE_IMAGE_WIDTH, height: slateImageHeight(snapshot.games.length, true) });
   }
 
   if (kind === "reveal" && snapshot.kind === "sunday_reveal") {

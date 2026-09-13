@@ -96,6 +96,17 @@ export async function sendDueReminders() {
       deliveryStarted = true;
       const emailDelivery = await deliverEmailReminder(reminder);
       const completedAt = new Date();
+      if (emailDelivery.suppressed) {
+        await updateClaimedReminder(reminder.id, {
+          status: "suppressed",
+          processing_started_at: null,
+          suppression_reason: emailDelivery.suppressionReason,
+          updated_at: completedAt.toISOString(),
+        });
+        result.reminders += 1;
+        result.suppressed += 1;
+        continue;
+      }
       const reminderUpdate: ClaimedReminderUpdate =
         emailDelivery.retryableFailed > 0
           ? {
