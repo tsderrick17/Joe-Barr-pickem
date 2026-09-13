@@ -70,6 +70,6 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(sharedHealth, /status", "active/);
   assert.match(sharedHealth, /from\("game_lines"\)/);
   assert.match(sharedHealth, /from\("score_check_backoff"\)/);
-  assert.match(sharedHealth, /3 \* 60 \+ 20/);
+  assert.match(sharedHealth, /FIRST_SCORE_CHECK_DELAY_MINUTES \+ 20/);
   assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
 });

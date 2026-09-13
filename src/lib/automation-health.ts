@@ -1,5 +1,6 @@
 import { checkReminderHealth } from "@/lib/reminder-health";
 import { checkCriticalWorkerHealth } from "@/lib/critical-worker-health";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type AutomationRun = {
@@ -17,7 +18,7 @@ function latestByJob(runs: AutomationRun[], job: AutomationRun["job_type"]) {
 
 export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
-  const scoreDueAt = new Date(now.getTime() - (3 * 60 + 20) * 60 * 1000).toISOString();
+  const scoreDueAt = new Date(now.getTime() - (FIRST_SCORE_CHECK_DELAY_MINUTES + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult, criticalWorkerHealth] = await Promise.all([
     supabaseAdmin
