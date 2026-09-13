@@ -1,4 +1,5 @@
 import { assessCriticalWorkerHeartbeats, describeCriticalWorkerProblem } from "@/lib/critical-worker-heartbeat.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type CriticalWorkerProblem = {
@@ -48,7 +49,7 @@ export async function checkCriticalWorkerHealth(checkedAt = new Date()) {
   const lineCandidateIds = (dueGames ?? [])
     .filter((game) => new Date(game.line_lock_at).getTime() <= checkedAt.getTime())
     .map((game) => game.id);
-  const scoreDueAt = new Date(checkedAt.getTime() - (3 * 60 + 20) * 60 * 1000).getTime();
+  const scoreDueAt = new Date(checkedAt.getTime() - (FIRST_SCORE_CHECK_DELAY_MINUTES + 20) * 60 * 1000).getTime();
   const scoreCandidateIds = (dueGames ?? [])
     .filter((game) => new Date(game.kickoff_at).getTime() <= scoreDueAt)
     .map((game) => game.id);

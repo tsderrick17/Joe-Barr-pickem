@@ -169,7 +169,7 @@ across daylight-saving changes.
    If the provider is unavailable, the most recent preliminary line may lock
    only when it is no more than 24 hours old. An older or unverified line stays
    preliminary and opens an urgent Commissioner review instead of being guessed.
-4. Final-score eligibility begins three hours after kickoff. Automation polls
+4. Final-score eligibility begins two hours and fifty minutes after kickoff. Automation polls
    only eligible unfinished games, imports verified finals, and grades ATS and
    Survivor atomically.
 5. The major weekly recap becomes eligible Tuesday at 6:30 AM Eastern. It sends

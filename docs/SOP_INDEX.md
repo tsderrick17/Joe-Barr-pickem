@@ -29,7 +29,7 @@ score sync, recap, default-week handoff, and the safest recovery order.
 
 ### A score is late, wrong, or disagrees with the provider
 
-Use **Commissioner → Final Score Check** once after the three-hour window.
+Use **Commissioner → Final Score Check** once after the two-hour-fifty-minute window.
 If a saved final disagrees with the provider, run **Final Score Reconciliation**
 and follow the audited correction procedure in
 [commissioner-runbook.md](commissioner-runbook.md). Never type an estimated

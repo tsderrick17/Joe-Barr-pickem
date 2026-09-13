@@ -33,7 +33,7 @@ function, trigger, schedule, Vault secret, or provider setting exists.
 
 ## Missing or late final score
 
-1. Wait until the normal three-hour post-kickoff eligibility window.
+1. Wait until the normal two-hour-fifty-minute post-kickoff eligibility window.
 2. Open **Commissioner → Final Score Check** and run it once.
 3. Read the result and most recent check receipt.
 4. If the provider has not finalized the game, let the measured retry/backoff

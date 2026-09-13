@@ -6,7 +6,7 @@ import { type CSSProperties, useState } from "react";
 const steps = [
   { time: "Before kickoff", title: "Verify readiness", body: "Run Automation Preflight and the read-only checks. A red result identifies the exact setup item to resolve before game day.", href: "#automation-preflight", action: "Open readiness checks" },
   { time: "At line lock", title: "Confirm official lines", body: "Automation locks each due line. Use the manual check once only when the live map identifies a missed scheduled run.", href: "#official-spread-locks", action: "Open line locks" },
-  { time: "After games", title: "Sync final scores", body: "The score worker begins after the three-hour eligibility window, grades both pools atomically, and respects provider backoff.", href: "#final-score-check", action: "Open score sync" },
+  { time: "After games", title: "Sync final scores", body: "The score worker begins after the two-hour-fifty-minute eligibility window, grades both pools atomically, and respects provider backoff.", href: "#final-score-check", action: "Open score sync" },
   { time: "After grading", title: "Reconcile finals", body: "The read-only comparison checks saved finals against the provider and flags a real discrepancy without changing a result.", href: "#final-score-reconciliation", action: "Open reconciliation" },
   { time: "When held", title: "Resolve exceptions", body: "Only verified postponements, cancellations, no-contests, or missing grades should interrupt the normal path.", href: "#game-exceptions", action: "Open exceptions" },
 ];
