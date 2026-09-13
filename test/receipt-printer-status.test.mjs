@@ -11,7 +11,10 @@ test("Slate and Bowl receipts show printer feedback below the stable Submit butt
 
   assert.match(board, /receipt-printing-status \$\{isSubmitting \? "is-printing"/);
   assert.match(bowl, /receipt-printing-status \$\{isSubmitting \? "is-printing"/);
+  assert.match(board, /isSubmitting \? "PRINTING" : ""/);
+  assert.match(bowl, /isSubmitting \? "PRINTING" : ""/);
   assert.match(css, /\.receipt-printing-status \{[\s\S]*min-height: \.62rem/);
+  assert.match(css, /\.receipt-printing-status \{[\s\S]*white-space: nowrap/);
   assert.match(css, /@keyframes receipt-printer-feed/);
   assert.match(css, /prefers-reduced-motion[\s\S]*receipt-printing-marks i/);
 });

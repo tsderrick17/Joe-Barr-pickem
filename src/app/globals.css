@@ -327,9 +327,10 @@ body {
   line-height: .62rem;
   min-height: .62rem;
   overflow: hidden;
-  padding-left: .16rem;
+  padding-left: 0;
   text-transform: uppercase;
-  width: calc(100% - .4rem);
+  white-space: nowrap;
+  width: 100%;
 }
 .receipt-printing-marks { display: inline-flex; gap: .1rem; height: .32rem; visibility: hidden; }
 .receipt-printing-marks i {
@@ -567,6 +568,7 @@ body {
   .slate-receipt-pool > span { font-size: .46rem; }
   .slate-receipt-ticket a { font-size: .54rem; }
   .slate-receipt-ticket > span small { display: none; }
+  .receipt-printing-status { font-size: .36rem; gap: .16rem; letter-spacing: .07em; }
   .slate-receipt-print { font-size: .58rem; min-height: 1.62rem; padding: .15rem .22rem; width: calc(100% - .2rem); }
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
