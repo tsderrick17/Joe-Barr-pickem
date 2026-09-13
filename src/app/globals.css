@@ -1679,6 +1679,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   z-index: 1;
 }
 
+/* The chip is intentionally larger than its grid lane. Give every chip lane
+   a real minimum footprint so a tall picker list in an adjacent team cell
+   cannot let the next row rise into the chip's visual bounds. */
+.slate-survivor-chip-slot { min-height: 3.2rem; }
+
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:hover),
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:focus-visible) { z-index: 12; }
 
@@ -1721,6 +1726,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
+  .slate-survivor-chip-slot { min-height: 3.9rem; }
   .slate-survivor-chip-button { height: 3.16rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.16rem; }
   .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 }

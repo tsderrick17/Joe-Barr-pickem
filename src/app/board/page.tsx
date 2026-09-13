@@ -286,6 +286,10 @@ export default function BoardPage() {
         setNextWeekAvailableAt(manualAccessAt);
         setWeek(initialWeek);
         setGames(data.games);
+        // Apply the player's durable display choice during the initial
+        // bootstrap too. The week-switch path already does this; omitting it
+        // here made every fresh load fall back to All Games.
+        setShowActionOnly(Boolean(data.showPoolAction));
         setPlayoffEliminated(data.pickem.playoffEliminated);
         setSelectedPicks(data.myPicks);
         setSavedPicks(data.myPicks);

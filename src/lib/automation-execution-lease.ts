@@ -13,6 +13,31 @@ const leaseSecondsByJob: Record<AutomationJob, number> = {
   schedule_refresh: 600,
 };
 
+const LEASE_CLAIM_RETRY_DELAYS_MS = [150, 450];
+
+async function claimAutomationLease(job: AutomationJob) {
+  for (let attempt = 0; attempt <= LEASE_CLAIM_RETRY_DELAYS_MS.length; attempt += 1) {
+    const { data: token, error } = await supabaseAdmin.rpc(
+      "claim_automation_execution_lease",
+      { target_job_name: job, lease_seconds: leaseSecondsByJob[job] },
+    );
+
+    if (!error) return { token, error: null };
+
+    if (attempt < LEASE_CLAIM_RETRY_DELAYS_MS.length) {
+      await new Promise((resolve) => setTimeout(resolve, LEASE_CLAIM_RETRY_DELAYS_MS[attempt]));
+    } else {
+      console.error("Automation execution lease claim failed after bounded retries.", {
+        job,
+        error: error.message,
+      });
+      return { token: null, error };
+    }
+  }
+
+  return { token: null, error: new Error("The automation execution lease could not be acquired.") };
+}
+
 export class AutomationAlreadyRunningError extends Error {
   constructor(job: AutomationJob) {
     const label = job === "line_locks"
@@ -38,10 +63,7 @@ export async function runWithAutomationLease<T>(
   task: () => Promise<T>,
 ): Promise<T> {
   await recordAutomationWorkerHeartbeat(job, "started");
-  const { data: token, error } = await supabaseAdmin.rpc(
-    "claim_automation_execution_lease",
-    { target_job_name: job, lease_seconds: leaseSecondsByJob[job] },
-  );
+  const { token, error } = await claimAutomationLease(job);
 
   if (error) {
     await recordAutomationWorkerHeartbeat(job, "failed");
@@ -61,10 +83,18 @@ export async function runWithAutomationLease<T>(
     await recordAutomationWorkerHeartbeat(job, "failed");
     throw error;
   } finally {
-    const { error: releaseError } = await supabaseAdmin.rpc(
+    let { error: releaseError } = await supabaseAdmin.rpc(
       "release_automation_execution_lease",
       { target_job_name: job, lease_token: token },
     );
+
+    if (releaseError) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      ({ error: releaseError } = await supabaseAdmin.rpc(
+        "release_automation_execution_lease",
+        { target_job_name: job, lease_token: token },
+      ));
+    }
 
     if (releaseError) {
       console.error("Automation lease release failed.", { job });
