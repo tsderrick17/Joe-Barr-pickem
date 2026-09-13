@@ -50,11 +50,12 @@ test("Commissioner-safe worker messages identify the affected responsibility", (
 });
 
 test("worker receipts stay constant-size and the public route remains opaque", async () => {
-  const [migration, lease, route, sharedHealth] = await Promise.all([
+  const [migration, lease, route, sharedHealth, healthRoute] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820011000_add_critical_worker_heartbeats.sql", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/automation-execution-lease.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/app/api/health/workers/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/critical-worker-health.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/critical-worker-health-route.ts", import.meta.url), "utf8"),
   ]);
   assert.match(migration, /job_name text primary key/);
   assert.match(migration, /on conflict \(job_name\) do update/);
@@ -62,8 +63,10 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "started"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "success"\)/);
   assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
-  assert.match(route, /status: debouncedHealthy \? 200 : 503/);
-  assert.match(route, /checkCriticalWorkerHealth/);
+  assert.match(healthRoute, /status: debouncedHealthy \? 200 : 503/);
+  assert.match(route, /respondToCriticalWorkerHealth/);
+  assert.match(healthRoute, /checkCriticalWorkerHealth/);
+  assert.match(healthRoute, /health_probe_states/);
   assert.match(sharedHealth, /lineLocksDue/);
   assert.match(sharedHealth, /line_lock_at/);
   assert.match(sharedHealth, /scoring_period_id/);
