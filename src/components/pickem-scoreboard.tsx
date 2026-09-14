@@ -20,6 +20,13 @@ export type PickemScoreboardRow = {
   picks: PickemScoreboardPick[];
 };
 
+function compactPickLabel(label: string, abbreviation?: string | null) {
+  if (abbreviation) return scorepadAbbreviation(abbreviation);
+  const words = label.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
+  const fallback = words.length > 1 ? words.map((word) => word[0]).join("") : (words[0] ?? "NFL");
+  return scorepadAbbreviation(fallback.slice(0, 3));
+}
+
 type Props = {
   isPlayoff?: boolean;
   rows: PickemScoreboardRow[];
@@ -83,7 +90,7 @@ export default function PickemScoreboard({
                       <td className={`pickem-ledger-pick break-words ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
                         {pick?.label ? (
                           <span>
-                            {isPlayoff ? (pick.abbreviation ? scorepadAbbreviation(pick.abbreviation) : pick.label) : <><span className="scoreboard-team-name-full">{pick.label}</span>{pick.abbreviation ? <span aria-label={pick.label} className="scoreboard-team-name-short">{scorepadAbbreviation(pick.abbreviation)}</span> : null}</>}
+                            {isPlayoff ? compactPickLabel(pick.label, pick.abbreviation) : <><span className="scoreboard-team-name-full">{pick.label}</span><span aria-label={pick.label} className="scoreboard-team-name-short">{compactPickLabel(pick.label, pick.abbreviation)}</span></>}
                             {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "official-line-color" : "text-slate-700"}`}>{pick.spread}</strong> : null}
                             <AtsResultStamp className="ml-1.5" result={pick.resultMark} />
                           </span>
