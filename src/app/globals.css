@@ -1550,13 +1550,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   display: flex;
   gap: .28rem;
   min-width: 0;
+  flex-wrap: nowrap;
   width: 100%;
 }
 .slate-team-result-line.is-right { justify-content: flex-end; }
 .slate-team-result-line.is-left { justify-content: flex-start; }
 .slate-team-result-line .slate-team-label { min-width: 0; }
 .slate-team-score,
-.slate-team-result-mark { flex: 0 0 auto; }
+.slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
 
 /* Finished matchups keep the team, final score, and result mark together as a
    content-sized group. This prevents a short score from drifting to the far
