@@ -1310,7 +1310,7 @@ html[data-theme="night"] .survivor-selection-footer {
   /* A scorepad puts the two handwritten entries immediately after the
      names.  Keep this deliberately narrower on wide screens; phones still
      use their full available width. */
-  max-width: var(--standings-module-width);
+  max-width: 30rem;
   width: 100%;
 }
 
