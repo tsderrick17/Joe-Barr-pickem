@@ -2881,14 +2881,20 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .survivor-ledger {
   margin-left: auto;
   margin-right: auto;
-  /* The 18-week grid is 55.5rem wide; keep the surrounding card from
-     stretching beyond the final week on desktop. */
-  max-width: 55.5rem;
+  /* Match the Bowl Card's available standings rail. The grid keeps a
+     55.5rem minimum for narrow viewports, but expands instead of scrolling
+     when the page has room. */
+  max-width: 100%;
   width: 100%;
 }
 
 .survivor-ledger.is-minimized {
   max-width: var(--standings-module-width);
+}
+
+.survivor-standings-grid {
+  grid-template-columns: 3rem 7rem repeat(18, minmax(2.5rem, 1fr));
+  width: 100%;
 }
 
 .pool-chat-message {
