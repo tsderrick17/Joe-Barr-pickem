@@ -1597,19 +1597,22 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 .slate-team-picker-list {
   display: block;
-  font-size: .6875rem;
-  font-weight: 700;
-  line-height: 1.05rem;
-  margin-top: .15rem;
+  border-top: 1px solid rgba(145, 175, 208, .72);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+  line-height: 1.15rem;
+  margin-top: .22rem;
   max-width: 100%;
   overflow-wrap: anywhere;
+  padding-top: .16rem;
 }
 
 @media (max-width: 767px) {
   .slate-team-result-line { gap: .2rem; }
   .slate-team-picker-list {
-    font-size: .625rem;
-    line-height: .85rem;
+    font-size: .7rem;
+    line-height: .95rem;
     text-align: left;
   }
   .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
