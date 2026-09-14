@@ -1,7 +1,7 @@
-type Props = { name: string; showTrophy?: boolean; titles?: string[] };
+type Props = { name: string; showTrophy?: boolean; titles?: string[]; nameClassName?: string };
 
-export default function PlayerTrophyName({ name, showTrophy = true, titles = [] }: Props) {
-  if (!titles.length) return <>{name}</>;
+export default function PlayerTrophyName({ name, showTrophy = true, titles = [], nameClassName }: Props) {
+  if (!titles.length) return <span className={nameClassName}>{name}</span>;
 
   return (
     <span
@@ -9,7 +9,7 @@ export default function PlayerTrophyName({ name, showTrophy = true, titles = [] 
       className="inline-flex items-center gap-1"
       title={titles.map((title) => `🏆 ${title}`).join("\n")}
     >
-      <span>{name}</span>
+      <span className={nameClassName}>{name}</span>
       {showTrophy ? <span aria-hidden="true" className="font-sans text-sm no-underline">🏆</span> : null}
     </span>
   );
