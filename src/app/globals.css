@@ -1575,6 +1575,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-game-row .slate-final-team-stack {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: .28rem;
   min-width: 0;
   width: 100%;
 }
@@ -1614,6 +1615,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 @media (max-width: 767px) {
   .slate-team-result-line { gap: .2rem; }
+  .slate-game-row .slate-final-team-stack { column-gap: .2rem; }
   .slate-team-picker-list {
     font-size: .7rem;
     line-height: .95rem;
