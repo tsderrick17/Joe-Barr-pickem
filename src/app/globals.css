@@ -1540,7 +1540,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .slate-team-name-full { display: none; }
 .slate-team-name-short { display: inline; }
-.scoreboard-team-name-short { display: none; }
+.scoreboard-team-name-full { display: none; }
+.scoreboard-team-name-short { display: inline; }
 
 /* Final rows have three separate pieces of information on each side: the
    team, its score/result, and the players who selected it. Keep the first two
