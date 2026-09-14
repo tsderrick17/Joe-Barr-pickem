@@ -1447,7 +1447,7 @@ html[data-theme="night"] .survivor-selection-footer {
    gutter; picks earned the broad writing space.  Make that geometry explicit
    instead of letting the table split all remaining columns evenly. */
 .pickem-ledger-wins-column { width: clamp(2.7rem, 4vw, 3.25rem); }
-.pickem-ledger-player-column { width: clamp(6.2rem, 10vw, 7.2rem); }
+.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
 
 .pickem-ledger-player {
   border-right: 0;
@@ -1473,12 +1473,16 @@ html[data-theme="night"] .survivor-selection-footer {
   font-weight: 900;
 }
 
+/* Give the first pick a quiet visual gutter after the player-name lane. */
+.pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
+
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
   .pickem-ledger-row td { padding: .32rem .38rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: 1.05rem; }
   .pickem-ledger-pick .font-mono { font-size: .96rem; }
+  .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
 }
 
 html[data-theme="night"] .pickem-ledger {
