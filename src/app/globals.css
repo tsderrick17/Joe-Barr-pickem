@@ -1548,7 +1548,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    narrow phone never makes scores or picker names collide. */
 .slate-team-result-line {
   align-items: baseline;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: .28rem;
   min-width: 0;
   flex-wrap: nowrap;
@@ -1557,43 +1558,39 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-result-line.is-right { justify-content: flex-end; }
 .slate-team-result-line.is-left { justify-content: flex-start; }
 .slate-team-result-line .slate-team-label { min-width: 0; }
+.slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
+.slate-team-label-lane.is-left { margin-right: auto; text-align: left; }
+.slate-team-label-lane.is-right { margin-left: auto; text-align: left; }
 .slate-team-score,
 .slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
 
 /* Finished matchups keep the team, final score, and result mark together as a
    content-sized group. This prevents a short score from drifting to the far
    edge of a wide team lane while still anchoring the two sides symmetrically. */
-.slate-game-row.is-final .slate-team-result-line {
+.slate-game-row .slate-final-team-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-width: 0;
+  width: 100%;
+}
+.slate-game-row .slate-team-result-line {
   display: contents;
 }
-.slate-game-row.is-final .slate-team-result-line .slate-team-label {
-  grid-column: 1;
-  grid-row: 1;
+.slate-game-row .slate-team-result-line .slate-team-label {
   min-width: 0;
-  text-align: left;
 }
-.slate-game-row.is-final .slate-final-team-stack {
-  align-items: baseline;
-  column-gap: .28rem;
-  display: grid;
-  grid-template-columns: minmax(0, auto) auto auto;
-  max-width: 100%;
-  width: fit-content;
-}
-.slate-game-row.is-final .slate-final-team-stack.is-left {
+.slate-game-row .slate-final-team-stack.is-left {
   justify-items: start;
   text-align: left;
 }
-.slate-game-row.is-final .slate-final-team-stack.is-right {
+.slate-game-row .slate-final-team-stack.is-right {
   justify-items: end;
   text-align: right;
 }
-.slate-game-row.is-final .slate-team-result-line.is-right .slate-team-label {
-  text-align: right;
+.slate-game-row .slate-team-result-line.is-right .slate-team-label {
+  text-align: left;
 }
-.slate-game-row.is-final .slate-team-picker-list {
-  grid-column: 1;
-  grid-row: 2;
+.slate-game-row .slate-team-picker-list {
   margin-top: .15rem;
   width: auto;
 }

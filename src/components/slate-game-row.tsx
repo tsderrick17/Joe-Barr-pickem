@@ -106,18 +106,21 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const className = `${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
-        <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
+        <span className={`slate-team-label-lane is-${align}`}>
+          <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
+          {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
+        </span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}
         <AtsResultStamp className="slate-team-result-mark" result={isFinal ? team.result : null} tilted={false} />
       </span>
-      {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
     </>;
     // A final row has an intrinsic team/score group. Keep its picker names in
     // that same group so they always sit beneath the team, rather than flowing
     // onto the open edge of a wide grid cell.
-    const content = isFinal
-      ? <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>
-      : teamResult;
+    // Keep the team/result line and picker list in one shared two-row grid at
+    // every game state. This gives scores a stable column and keeps picker
+    // names anchored to the same team lane instead of the row's open edge.
+    const content = <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
     const pickemControl = allowSelection
       ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
