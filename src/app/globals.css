@@ -1538,8 +1538,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   display: none;
 }
 
-.slate-team-name-full { display: none; }
-.slate-team-name-short { display: inline; }
+.slate-team-name-full { display: inline; }
+.slate-team-name-short { display: none; }
 .scoreboard-team-name-full { display: none; }
 .scoreboard-team-name-short { display: inline; }
 
@@ -1619,9 +1619,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   .slate-team-score { font-size: .9rem; }
 }
 
-/* The Pick'em Pad uses compact team labels at every viewport so the team,
-   spread/score, result marker, and picker names remain easy to scan. The full
-   record remains available to assistive technology through aria-label. */
+/* Keep full Slate team names at normal widths; compact labels are reserved for
+   the narrow fallback where the row cannot fit the full record. */
 @media (max-width: 320px) {
   .slate-team-name-full { display: none; }
   .slate-team-name-short { display: inline; }
