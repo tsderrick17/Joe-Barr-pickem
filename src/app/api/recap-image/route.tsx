@@ -79,7 +79,12 @@ function PadRows({ rows, compact = false, grow = false }: { rows: PublicRow[]; c
         <div key={row.name} style={{ alignItems: "center", background: PAPER, borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: compact ? 18 : 21, minHeight: compact ? 40 : 48 }}>
           <span style={{ borderRight: `3px solid ${MARGIN_RED}`, color: INK, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 19, fontWeight: 800, justifyContent: "flex-end", paddingRight: 10, width: 64 }}>{row.wins}</span>
           <span style={{ display: "flex", fontWeight: 700, paddingLeft: 14, width: compact ? 145 : 170 }}>{row.name}</span>
-          <span style={{ color: "#263d5b", display: "flex", flex: 1, fontFamily: "Arial", fontSize: compact ? 15 : 17, fontWeight: 700, gap: 16 }}>{row.picks.join("  ·  ") || "—"}</span>
+          <span style={{ color: "#263d5b", display: "flex", flex: 1, flexWrap: "wrap", fontFamily: "Arial", fontSize: compact ? 15 : 17, fontWeight: 700, gap: 16 }}>
+            {row.picks.length ? row.picks.map((pick, index) => {
+              const resultMatch = pick.match(/^(.*?)(\s+[WL])$/);
+              return <span key={`${pick}-${index}`} style={{ display: "flex", whiteSpace: "nowrap" }}>{resultMatch ? <><span>{resultMatch[1]}</span><span style={{ marginLeft: 4 }}>{resultMatch[2]}</span></> : pick}{index < row.picks.length - 1 ? <span style={{ marginLeft: 16 }}>·</span> : null}</span>;
+            }) : "—"}
+          </span>
         </div>
       ))}
     </div>
