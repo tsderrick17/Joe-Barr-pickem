@@ -1538,7 +1538,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   display: none;
 }
 
-.slate-team-name-short { display: none; }
+.slate-team-name-full { display: none; }
+.slate-team-name-short { display: inline; }
 .scoreboard-team-name-short { display: none; }
 
 /* Final rows have three separate pieces of information on each side: the
@@ -1620,11 +1621,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   .slate-team-score { font-size: .9rem; }
 }
 
-/* Give the teams—not the line—a little more room on a phone, in enlarged
-   text, and at browser zoom. The full record remains available to assistive
-   technology through the short label's aria-label. */
-/* Abbreviations are an emergency fallback only. Team cells deliberately wrap
-   first, so a normal phone keeps the full team name visible. */
+/* The Pick'em Pad uses compact team labels at every viewport so the team,
+   spread/score, result marker, and picker names remain easy to scan. The full
+   record remains available to assistive technology through aria-label. */
 @media (max-width: 320px) {
   .slate-team-name-full { display: none; }
   .slate-team-name-short { display: inline; }
