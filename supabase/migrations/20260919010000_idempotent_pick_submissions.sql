@@ -27,7 +27,7 @@ begin
   end if;
 
   insert into public.pick_submission_receipts(request_id, player_id, scoring_period_id)
-  values (request_id, target_player_id, target_scoring_period_id)
+  values ($6, target_player_id, target_scoring_period_id)
   on conflict (request_id) do nothing;
 
   if not found then
@@ -54,7 +54,7 @@ begin
     jsonb_build_object(
       'ats_pick_count', jsonb_array_length(replacement_picks),
       'survivor_pick_saved', replacement_survivor_pick is not null,
-      'request_id', request_id
+      'request_id', $6
     )
   );
 end;
