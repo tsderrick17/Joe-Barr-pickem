@@ -2898,6 +2898,14 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   width: 100%;
 }
 
+/* The standings matrix should never create a second, nearly-invisible
+   vertical scrollbar. Its height is content-driven; only narrow viewports
+   may need the intentional horizontal scroll. */
+.survivor-standings-scroll {
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
 .survivor-standings-grid > .survivor-standings-header,
 .survivor-standings-grid > .survivor-standings-row {
   grid-template-columns: 3rem 7rem repeat(18, minmax(2.5rem, 1fr));
