@@ -22,7 +22,7 @@ test("Bowl email delivery snapshots the recap and sends reminders only to active
   assert.match(source, /\.eq\("status", "active"\)/);
   assert.match(source, /from\("bowl_pool_picks"\)/);
   assert.match(source, /email_notifications_enabled/);
-  assert.match(source, /kind=bowl/);
+  assert.match(source, /kind: "bowl"/);
 });
 
 test("Bowl email readiness waits for final results and suppresses expired pick windows", () => {

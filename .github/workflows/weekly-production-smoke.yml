@@ -1,0 +1,29 @@
+name: Weekly production smoke summary
+
+on:
+  schedule:
+    - cron: "30 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PICKEM_SMOKE_BASE_URL: https://pickemjb.vercel.app
+      PICKEM_SMOKE_ATTEMPTS: "3"
+      PICKEM_SMOKE_RETRY_MS: "10000"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Verify deployed site and operational contracts
+        run: node scripts/production-smoke.mjs
