@@ -1574,8 +1574,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    edge of a wide team lane while still anchoring the two sides symmetrically. */
 .slate-game-row .slate-final-team-stack {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  column-gap: .28rem;
+  /* Keep the final score and result mark attached to the team label instead
+     of stretching the score across the unused side of the row. The label can
+     still wrap inside its lane, while the score gets a stable, bold slot. */
+  grid-template-columns: minmax(0, max-content) max-content max-content;
+  column-gap: .34rem;
+  justify-content: start;
   min-width: 0;
   width: 100%;
 }
@@ -1590,6 +1594,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   text-align: left;
 }
 .slate-game-row .slate-final-team-stack.is-right {
+  justify-content: end;
   justify-items: end;
   text-align: right;
 }
@@ -1615,7 +1620,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 @media (max-width: 767px) {
   .slate-team-result-line { gap: .2rem; }
-  .slate-game-row .slate-final-team-stack { column-gap: .2rem; }
+  .slate-game-row .slate-final-team-stack { column-gap: .24rem; }
   .slate-team-picker-list {
     font-size: .7rem;
     line-height: .95rem;
