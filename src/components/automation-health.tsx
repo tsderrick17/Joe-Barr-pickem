@@ -17,6 +17,7 @@ type Health = {
   scoreCandidates: number;
   scoreProviderFailureStreak: number;
   scoreProviderRetryAt: string | null;
+  scoreCheckStatus: "retrying" | "due" | "scheduled" | "idle";
   scheduleProviderCircuit: {
     consecutive_failures: number;
     next_retry_at: string;
@@ -171,8 +172,8 @@ export default function AutomationHealth() {
           <StatusCard
             attention={health.scoreProviderFailureStreak > 0}
             label="FINAL SCORES"
-            value={health.scoreProviderFailureStreak > 0 ? `${health.scoreProviderFailureStreak} failed attempt${health.scoreProviderFailureStreak === 1 ? "" : "s"}` : "Automatic checks ready"}
-            detail={health.scoreProviderFailureStreak > 0 ? `Next retry ${localTime(health.scoreProviderRetryAt)}` : `Last success ${localTime(health.latestSuccessfulScores?.completed_at ?? health.latestSuccessfulScores?.started_at)}`}
+            value={health.scoreCheckStatus === "retrying" ? `${health.scoreProviderFailureStreak} failed attempt${health.scoreProviderFailureStreak === 1 ? "" : "s"}` : health.scoreCheckStatus === "due" ? "Check due now" : health.scoreCheckStatus === "scheduled" ? "Checks scheduled" : "No games awaiting scores"}
+            detail={health.scoreCheckStatus === "retrying" ? `Next retry ${localTime(health.scoreProviderRetryAt)}` : health.scoreCheckStatus === "due" ? `${health.scoreCandidates} game${health.scoreCandidates === 1 ? "" : "s"} awaiting a final check.` : `Last success ${localTime(health.latestSuccessfulScores?.completed_at ?? health.latestSuccessfulScores?.started_at)}`}
           />
           <StatusCard
             attention={Boolean(scheduleCooling)}

@@ -106,6 +106,13 @@ export async function checkAutomationHealth(now = new Date()) {
     .map((backoff) => backoff.next_check_at)
     .filter(Boolean)
     .sort();
+  const scoreCheckStatus = scoreProviderFailureStreak > 0
+    ? "retrying" as const
+    : scoreChecksDueNow > 0
+      ? "due" as const
+      : scoreCandidates > 0
+        ? "scheduled" as const
+        : "idle" as const;
   const problems: string[] = [];
 
   if (latestLocks?.status === "failed" && missingOfficialLines > 0) {
@@ -164,6 +171,7 @@ export async function checkAutomationHealth(now = new Date()) {
     scoreChecksDueNow,
     scoreProviderFailureStreak,
     scoreProviderRetryAt: scoreProviderFailureStreak > 0 ? scoreRetryTimes[0] ?? null : null,
+    scoreCheckStatus,
     providerAllowance,
     scheduleProviderCircuit: scheduleCircuitResult.data,
     scheduleProviderCooldownActive: Boolean(

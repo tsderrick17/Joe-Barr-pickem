@@ -724,13 +724,15 @@ export default function BoardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildSlateSubmission({
-          scoringPeriodId: week.id,
-          selections: selectedPicks,
-          survivorAvailable,
-          survivorHasUnsavedChanges,
-          survivorPick,
-        })),
+        body: JSON.stringify({
+          ...buildSlateSubmission({
+            scoringPeriodId: week.id,
+            selections: selectedPicks,
+            survivorAvailable,
+            survivorHasUnsavedChanges,
+            survivorPick,
+          }),
+        }),
         signal: request.signal,
       });
 

@@ -1,0 +1,4 @@
+-- Compatibility marker for an experimental migration that was applied to the
+-- isolated database and intentionally removed from the release. The proven
+-- five-argument save RPC remains the active contract; the follow-up repair
+-- migration restores it for databases that saw the experiment.
