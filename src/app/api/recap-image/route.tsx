@@ -164,7 +164,7 @@ function BowlRecapImage({ snapshot }: { snapshot: BowlDailyRecapSnapshot }) {
   </div>;
 }
 
-export async function GET(request: NextRequest) {
+async function renderRecap(request: NextRequest) {
   const reminderId = request.nextUrl.searchParams.get("reminder");
   const kind = request.nextUrl.searchParams.get("kind");
   if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal" && kind !== "bowl")) return new Response("Not found", { status: 404 });
@@ -254,4 +254,22 @@ export async function GET(request: NextRequest) {
   }
 
   return new Response("Not found", { status: 404 });
+}
+
+// Email clients cannot recover gracefully from a broken image URL. Keep the
+// endpoint image-shaped even when a legacy snapshot or a transient data issue
+// slips through, while preserving the real error in server logs for repair.
+export async function GET(request: NextRequest) {
+  try {
+    return await renderRecap(request);
+  } catch (error) {
+    console.error("recap image render failed", error);
+    return new ImageResponse(
+      <div style={{ alignItems: "center", background: PAPER, color: INK, display: "flex", flexDirection: "column", fontFamily: "Arial", height: "100%", justifyContent: "center", padding: 48, textAlign: "center", width: "100%" }}>
+        <span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Pick&apos;em Update</span>
+        <span style={{ color: MUTED, display: "flex", fontSize: 20, marginTop: 14 }}>Open Pick&apos;em to view the latest standings.</span>
+      </div>,
+      { width: 920, height: 300 },
+    );
+  }
 }
