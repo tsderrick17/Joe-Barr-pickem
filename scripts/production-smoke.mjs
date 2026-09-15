@@ -12,6 +12,7 @@ export const PRODUCTION_SMOKE_PATHS = [
 const baseUrl = (process.env.PICKEM_SMOKE_BASE_URL ?? "https://pickemjb.vercel.app").replace(/\/$/, "");
 const maximumAttempts = Number(process.env.PICKEM_SMOKE_ATTEMPTS ?? 12);
 const retryDelayMs = Number(process.env.PICKEM_SMOKE_RETRY_MS ?? 10_000);
+const recapReminderId = process.env.PICKEM_SMOKE_RECAP_REMINDER_ID?.trim() || null;
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -30,6 +31,18 @@ async function check(path) {
   }
 }
 
+async function checkRecapImage(kind) {
+  if (!recapReminderId) return { path: `/api/recap-image?kind=${kind}`, skipped: true, healthy: true };
+  const path = `/api/recap-image?reminder=${encodeURIComponent(recapReminderId)}&kind=${kind}`;
+  try {
+    const response = await fetch(`${baseUrl}${path}`, { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(12_000) });
+    const contentType = response.headers.get("content-type") ?? "";
+    return { path, status: response.status, contentType, healthy: response.status === 200 && contentType.startsWith("image/") };
+  } catch {
+    return { path, status: null, contentType: "", healthy: false };
+  }
+}
+
 export async function runProductionSmoke() {
   if (baseUrl !== "https://pickemjb.vercel.app") {
     throw new Error("The production smoke gate only accepts the canonical PickemJB URL.");
@@ -39,10 +52,11 @@ export async function runProductionSmoke() {
   }
 
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
-    const results = await Promise.all(PRODUCTION_SMOKE_PATHS.map(check));
+    const results = [...await Promise.all(PRODUCTION_SMOKE_PATHS.map(check)), ...await Promise.all(["summary", "survivor"].map(checkRecapImage))];
     const failures = results.filter((result) => !result.healthy);
     if (failures.length === 0) {
-      console.log(`Production smoke passed on attempt ${attempt}: ${PRODUCTION_SMOKE_PATHS.length} contracts returned HTTP 200.`);
+      const imageMessage = recapReminderId ? " and 2 recap images returned valid image content" : " (recap image checks skipped; set PICKEM_SMOKE_RECAP_REMINDER_ID to enable them)";
+      console.log(`Production smoke passed on attempt ${attempt}: ${PRODUCTION_SMOKE_PATHS.length} operational contracts returned HTTP 200${imageMessage}.`);
       return;
     }
 

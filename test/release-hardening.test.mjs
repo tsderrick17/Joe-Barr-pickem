@@ -63,6 +63,8 @@ test("successful production deployments receive an independent smoke gate", asyn
   ]);
   assert.match(smoke, /Multiple health contracts failed together/);
   assert.match(smoke, /Supabase server authorization/);
+  assert.match(smoke, /PICKEM_SMOKE_RECAP_REMINDER_ID/);
+  assert.match(smoke, /contentType\.startsWith\("image\/"\)/);
 });
 
 test("application quality cancellation is scoped to one commit", async () => {
