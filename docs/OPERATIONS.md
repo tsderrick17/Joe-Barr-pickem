@@ -1,5 +1,14 @@
 # Lead Pipe Locks operations
 
+## Routine production smoke
+
+The **Weekly production smoke summary** runs every Monday at 7:30 AM Pacific
+and can also be dispatched manually from GitHub Actions. It checks the
+canonical site plus the public availability, automation, worker, backup, and
+Bowl Pool health contracts. A failure means the corresponding contract needs
+investigation; it does not authorize manual scoring, reminder, or schedule
+work. The post-deployment smoke gate remains the faster release check.
+
 ## Backup and retention
 
 The weekly GitHub Action **Encrypted database backup** creates a complete
