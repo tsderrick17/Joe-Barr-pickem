@@ -1605,6 +1605,19 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   margin-top: .15rem;
   width: auto;
 }
+
+/* Upcoming rows have no score/result columns. Give each team name a full,
+   stable lane so right-side names share one starting edge instead of shifting
+   based on their text width (especially noticeable without Survivor chips). */
+.slate-game-row:not(.is-final) .slate-final-team-stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+.slate-game-row:not(.is-final) .slate-team-label-lane {
+  width: 100%;
+}
+.slate-game-row:not(.is-final) .slate-team-label-lane.is-right {
+  text-align: left;
+}
 .slate-team-picker-list {
   display: block;
   border-top: 1px solid rgba(145, 175, 208, .72);
