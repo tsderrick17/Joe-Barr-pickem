@@ -2599,6 +2599,20 @@ html[data-theme="night"] .newspaper-clipping::after {
   }
 }
 
+/* The page's ordinary standings rail is intentionally compact. On a true
+   desktop viewport, let the expanded Bowl Card use the available window so
+   its seven-game viewport is not clipped by the rail's max-width. Minimized
+   cards keep the compact Pick'em rail above. */
+@media (min-width: 1100px) {
+  .bowl-card-section:not(.is-minimized) {
+    width: min(67rem, calc(100vw - 2rem));
+    max-width: none;
+    margin-left: 50%;
+    margin-right: 0;
+    transform: translateX(-50%);
+  }
+}
+
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {

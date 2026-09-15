@@ -9,5 +9,6 @@ test("desktop Bowl Card viewport fits seven complete game columns", () => {
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
   const page = fs.readFileSync(path.join(root, "src/app/page.tsx"), "utf8");
   assert.match(css, /\.bowl-standings-scroll\s*\{\s*width: min\(100%, 67rem\)/);
+  assert.match(css, /\.bowl-card-section:not\(\.is-minimized\)[\s\S]*width: min\(67rem, calc\(100vw - 2rem\)\)/);
   assert.match(page, /bowlGames\.length \* 7\.5/);
 });
