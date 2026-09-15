@@ -19,7 +19,7 @@ test("the save endpoint forwards a stable receipt key to the atomic RPC", async 
 });
 
 test("the idempotency migration makes duplicate receipt keys a no-op", async () => {
-  const source = await readFile(new URL("../supabase/migrations/20260917010000_idempotent_pick_submissions.sql", import.meta.url), "utf8");
+  const source = await readFile(new URL("../supabase/migrations/20260919010000_idempotent_pick_submissions.sql", import.meta.url), "utf8");
   assert.match(source, /pick_submission_receipts/);
   assert.match(source, /on conflict \(request_id\) do nothing/i);
   assert.match(source, /if not found then\s+return;/i);
