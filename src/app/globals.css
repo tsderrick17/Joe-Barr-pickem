@@ -1508,6 +1508,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   background: transparent;
+  /* Keep the marker attached to the words themselves.  The surrounding
+     label lane is intentionally full-width for score alignment, but the
+     selected label must remain content-sized so the highlight never becomes
+     a ribbon across the entire lane. */
+  display: inline-block;
+  max-width: 100%;
+  width: fit-content;
   margin: 0 -.13em;
   padding: .04em .13em .08em;
   position: relative;
