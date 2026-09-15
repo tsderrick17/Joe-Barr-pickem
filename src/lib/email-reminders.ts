@@ -96,23 +96,28 @@ function bowlRecapCopy(snapshot: unknown) {
   return snapshot.copy;
 }
 
-const recapImageFrameStyle = "margin:28px auto 0;max-width:560px";
+const recapImageFrameStyle = "box-sizing:border-box;margin:28px auto 0;max-width:560px;width:100%";
 const recapImageStyle = "display:block;height:auto;margin:0 0 18px;max-width:100%;width:100%";
 const recapImageStyleNoMargin = "display:block;height:auto;max-width:100%;width:100%";
 
+function recapImage({ alt, href, kind, reminderId, style }: { alt: string; href: string; kind: string; reminderId: string; style: string }) {
+  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}`;
+  return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="560" style="${style}"><span style="font:12px/1.4 Arial,sans-serif;color:#57534e">View this update on Pick'em if the image is unavailable.</span></a>`;
+}
+
 function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "bowl_daily_recap"
-    ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}/bowl-pool" style="display:block"><img alt="Bowl Pool results and standings" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=bowl" style="${recapImageStyle}"></a></div>`
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool results and standings", href: `${siteUrl}/bowl-pool`, kind: "bowl", reminderId: reminder.id, style: recapImageStyle })}</div>`
     : reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
-    ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}" style="display:block"><img alt="Pick'em standings and this week's picks" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=summary" style="${recapImageStyle}"></a>${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? `<a href="${siteUrl}/board#slate-matchups" style="display:block"><img alt="Active Survivor board" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=survivor" style="${recapImageStyleNoMargin}"></a>` : ""}</div>`
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Pick'em standings and this week's picks", href: siteUrl, kind: "summary", reminderId: reminder.id, style: recapImageStyle })}${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? recapImage({ alt: "Active Survivor board", href: `${siteUrl}/board#slate-matchups`, kind: "survivor", reminderId: reminder.id, style: recapImageStyleNoMargin }) : ""}</div>`
     : reminder.category === "weekly"
-      ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}/board" style="display:block"><img alt="This week's preliminary Slate" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=fresh" style="${recapImageStyleNoMargin}"></a></div>`
+      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "This week's preliminary Slate", href: `${siteUrl}/board`, kind: "fresh", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
       : reminder.category === "final_lines" || reminder.category === "sunday_final_lines"
-      ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}/board" style="display:block"><img alt="Today's official Slate" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=gameday" style="${recapImageStyleNoMargin}"></a></div>`
+      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Today's official Slate", href: `${siteUrl}/board`, kind: "gameday", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
       : reminder.category === "early_lock"
-        ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}/board" style="display:block"><img alt="International game official line" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=earlylock" style="${recapImageStyleNoMargin}"></a></div>`
+        ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "International game official line", href: `${siteUrl}/board`, kind: "earlylock", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
         : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal" || reminder.category === "playoff_public_reveal"
-          ? `<div style="${recapImageFrameStyle}"><a href="${siteUrl}" style="display:block"><img alt="Public Pick'em standings and revealed selections" src="${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminder.id)}&kind=reveal" style="${recapImageStyleNoMargin}"></a></div>`
+          ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Public Pick'em standings and revealed selections", href: siteUrl, kind: "reveal", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
         : "";
   const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
