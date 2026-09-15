@@ -44,5 +44,9 @@
   },
   "overrides": {
     "fast-uri": "^4.1.4"
+  },
+  "allowScripts": {
+    "@sentry/cli@2.58.6": true,
+    "unrs-resolver@1.12.2": true
   }
 }
