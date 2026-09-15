@@ -16,6 +16,7 @@ The system is designed to fail closed. A missing line, unresolved score, schedul
 | Test safely away from production | [Isolated testing](docs/isolated-integration-tests.md) |
 | Check backups, quotas, watchdogs, or automation | [Operations](docs/OPERATIONS.md) |
 | Diagnose an external monitor | [Uptime monitoring](docs/uptime-monitoring.md) |
+| Perform routine cleanup | [Maintenance checklist](docs/MAINTENANCE_CHECKLIST.md) |
 | Understand why a durable rule exists | [Decision log](docs/DECISION_LOG.md) |
 
 Coding agents must begin with [AGENTS.md](AGENTS.md).
