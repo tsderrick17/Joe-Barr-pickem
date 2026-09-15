@@ -2588,12 +2588,14 @@ html[data-theme="night"] .newspaper-clipping::after {
   scrollbar-width: thin;
 }
 
-/* On desktop the standings rail has enough breathing room for one additional
-   complete game. Keep the six-game starting viewport on smaller screens,
-   where the existing horizontal scroll remains the better fit. */
+/* On desktop the standings rail has enough breathing room for seven complete
+   games. The generated grid is 14.5rem of frozen/summary columns plus
+   7.5rem per game, so 67rem is the exact seven-game viewport with no clipped
+   final column. Smaller screens retain the compact six-game viewport and
+   intentional horizontal scrolling. */
 @media (min-width: 768px) {
   .bowl-standings-scroll {
-    width: min(100%, 61rem);
+    width: min(100%, 67rem);
   }
 }
 
