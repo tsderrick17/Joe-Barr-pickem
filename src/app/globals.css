@@ -1619,6 +1619,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   width: auto;
 }
 
+@media (min-width: 768px) {
+  /* Picker names are supporting detail and must not determine the primary
+     team/score column width. Cap their measure so a popular team (such as
+     Buffalo) wraps beneath its label while the score stays close to the W/L. */
+  .slate-game-row.is-final .slate-team-picker-list {
+    max-width: 12ch;
+  }
+}
+
 /* Upcoming rows have no score/result columns. Give each team name a full,
    stable lane so right-side names share one starting edge instead of shifting
    based on their text width (especially noticeable without Survivor chips). */
@@ -1716,8 +1725,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 /* The chip is intentionally larger than its grid lane. Give every chip lane
    a real minimum footprint so a tall picker list in an adjacent team cell
-   cannot let the next row rise into the chip's visual bounds. */
-.slate-survivor-chip-slot { min-height: 3.2rem; }
+   cannot let the next row rise into the chip's visual bounds. The wider Slate
+   rows now give the chip room for a 20% size increase at every breakpoint. */
+.slate-survivor-chip-slot { min-height: 3.85rem; }
 
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:hover),
 .slate-survivor-chip-slot:has(.slate-survivor-chip-button:focus-visible) { z-index: 12; }
@@ -1736,7 +1746,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
-  height: 2.7rem;
+  height: 3.24rem;
   justify-content: center;
   left: 50%;
   min-width: 0;
@@ -1746,7 +1756,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   transform: translate(-50%, -50%) scale(1.12);
   transform-origin: center;
   transition: filter 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
-  width: 2.7rem;
+  width: 3.24rem;
   z-index: 1;
 }
 
@@ -1761,8 +1771,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
 @media (min-width: 640px) {
-  .slate-survivor-chip-slot { min-height: 3.9rem; }
-  .slate-survivor-chip-button { height: 3.16rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.16rem; }
+  .slate-survivor-chip-slot { min-height: 4.7rem; }
+  .slate-survivor-chip-button { height: 3.79rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.79rem; }
   .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
 }
 
