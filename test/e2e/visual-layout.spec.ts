@@ -18,7 +18,7 @@ test.describe("rehearsal visual layout guard", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/preview");
     await page.getByRole("button", { name: "Pick'em Pad" }).click();
-      await expect(page.locator("h1").filter({ hasText: "Pick'em Pad" })).toBeVisible();
+    await expect(page.locator("h1").filter({ hasText: "Pick'em Pad" })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
   });
