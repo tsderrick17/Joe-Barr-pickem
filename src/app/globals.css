@@ -2569,6 +2569,16 @@ html[data-theme="night"] .newspaper-clipping::after {
   scrollbar-color: #a69f93 transparent;
   scrollbar-width: thin;
 }
+
+/* On desktop the standings rail has enough breathing room for one additional
+   complete game. Keep the six-game starting viewport on smaller screens,
+   where the existing horizontal scroll remains the better fit. */
+@media (min-width: 768px) {
+  .bowl-standings-scroll {
+    width: min(100%, 61rem);
+  }
+}
+
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {
