@@ -1619,6 +1619,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   width: auto;
 }
 
+@media (min-width: 768px) {
+  /* Picker names are supporting detail and must not determine the primary
+     team/score column width. Cap their measure so a popular team (such as
+     Buffalo) wraps beneath its label while the score stays close to the W/L. */
+  .slate-game-row.is-final .slate-team-picker-list {
+    max-width: 12ch;
+  }
+}
+
 /* Upcoming rows have no score/result columns. Give each team name a full,
    stable lane so right-side names share one starting edge instead of shifting
    based on their text width (especially noticeable without Survivor chips). */
