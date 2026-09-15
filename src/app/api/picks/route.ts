@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     scoringPeriodId?: string;
     selections?: Selection[];
     survivorSelection?: Selection | null;
+    requestId?: string;
   };
 
   try {
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
   }
   const scoringPeriodId = body.scoringPeriodId;
   const selections = body.selections;
+  const requestId = body.requestId ?? crypto.randomUUID();
   const includesSurvivor = Object.hasOwn(body, "survivorSelection");
   if (!scoringPeriodId || !Array.isArray(selections)) return NextResponse.json({ error: "Your pick submission was incomplete." }, { status: 400 });
   if (new Set(selections.map((selection) => selection.gameId)).size !== selections.length) return NextResponse.json({ error: "You may only select one team from each game." }, { status: 400 });
@@ -149,6 +151,7 @@ export async function POST(request: NextRequest) {
     target_scoring_period_id: scoringPeriodId,
     replacement_picks: picksToInsert,
     replacement_survivor_pick: survivorPickToInsert,
+    request_id: requestId,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   if (!survivorChanged) return NextResponse.json({ message: pickSaveMessage(selections.length) });

@@ -717,6 +717,7 @@ export default function BoardPage() {
     setIsSubmitting(true);
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
+    const requestId = window.crypto.randomUUID();
 
     try {
       const response = await fetchWithSession("/api/picks", {
@@ -724,13 +725,16 @@ export default function BoardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildSlateSubmission({
-          scoringPeriodId: week.id,
-          selections: selectedPicks,
-          survivorAvailable,
-          survivorHasUnsavedChanges,
-          survivorPick,
-        })),
+        body: JSON.stringify({
+          ...buildSlateSubmission({
+            scoringPeriodId: week.id,
+            selections: selectedPicks,
+            survivorAvailable,
+            survivorHasUnsavedChanges,
+            survivorPick,
+          }),
+          requestId,
+        }),
         signal: request.signal,
       });
 

@@ -9,7 +9,7 @@ guarded recovery tools for a specific observed condition.
 | When | Expected automatic behavior | Human check |
 | --- | --- | --- |
 | Preseason | Create the new preseason, validate 272 games, import and pin 18 regular weeks | Review Season Readiness and bootstrap status |
-| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm all four required health monitors are green |
+| Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm the production, heartbeat, line-lock, score, reminder, backup, and Bowl Pool monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
 | Daily | Recheck cron authorization, Odds access, Brevo sender, and Commissioner alert delivery configuration | Act only if the watchdog opens one drift incident |
@@ -117,13 +117,11 @@ the player-facing site itself is unavailable. A diagnostic failure after that
 receipt appears in Automation Health as an actionable incident rather than
 turning the liveness monitor red.
 
-### The critical-worker heartbeat is down
+### A specialized worker monitor is down
 
-Open UptimeRobot's **PickemJB critical workers** incident, then open
-**Commissioner → Automation Health**. The public endpoint intentionally does
-not name the failing worker. The Commissioner view distinguishes a stale or
-failed line lock, score refresh, or reminder pass. Recover only the named
-worker; do not manually run every job.
+Open the matching **PickemJB line-lock workers**, **PickemJB score workers**, or
+**PickemJB reminder workers** incident, then open **Commissioner → Automation
+Health**. Recover only the named worker; do not manually run every job.
 
 ### Several health monitors fail together
 

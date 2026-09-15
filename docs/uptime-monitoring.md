@@ -1,6 +1,6 @@
 # Uptime monitoring
 
-UptimeRobot is an independent alarm system. The app owns five public, opaque
+UptimeRobot is an independent alarm system. The app owns seven public, opaque
 health contracts; additional page monitors are useful but do not replace them.
 The live monitor count is shown under **Commissioner → Connected systems**,
 while UptimeRobot remains the source of truth for exact monitor names, URLs,
@@ -12,7 +12,6 @@ contacts, and current incidents.
 | --- | --- | --- | --- |
 | PickemJB production | `https://pickemjb.vercel.app/api/health` | The deployment can reach the production database with both player-facing and server authorization | Vercel deployment/logs, then Supabase status |
 | PickemJB automation heartbeat | `https://pickemjb.vercel.app/api/health/automation` | An authenticated, leased watchdog invocation recorded a durable run receipt within the last 35 minutes | **Commissioner → Automation Health** and the watchdog worker heartbeat |
-| PickemJB critical workers | `https://pickemjb.vercel.app/api/health/workers` | Line locking (once a lock is due), reminder processing, and final-score processing are within their allowed freshness windows (with room for one delayed cron delivery) | **Commissioner → Automation Health** to identify the worker |
 | PickemJB line-lock workers | `https://pickemjb.vercel.app/api/health/workers/line-locks` | Official line locking is healthy independently | **Commissioner → Automation Health** and line-lock worker logs |
 | PickemJB score workers | `https://pickemjb.vercel.app/api/health/workers/scores` | Final-score processing is healthy independently | **Commissioner → Automation Health** and score-worker logs |
 | PickemJB reminder workers | `https://pickemjb.vercel.app/api/health/workers/reminders` | Reminder processing is healthy independently | **Commissioner → Automation Health** and reminder-worker logs |
@@ -23,7 +22,7 @@ Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
 timeout, or missed heartbeat as down. Configure both outage and recovery
 notifications. Keep the Commissioner alert destination current.
 
-All five endpoints deliberately return only HTTP 200 or 503. They never expose
+All seven endpoints deliberately return only HTTP 200 or 503. They never expose
 database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
 descriptive.
