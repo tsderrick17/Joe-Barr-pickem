@@ -9,7 +9,7 @@ create table if not exists public.pick_submission_receipts (
 
 alter table public.pick_submission_receipts enable row level security;
 
-create or replace function public.save_slate_selections(
+create or replace function public.save_slate_selections_with_receipt(
   target_player_id uuid,
   target_survivor_entry_id uuid,
   target_scoring_period_id uuid,
@@ -73,14 +73,14 @@ language plpgsql
 set search_path = public
 as $$
 begin
-  perform public.save_slate_selections(
+  perform public.save_slate_selections_with_receipt(
     target_player_id, target_survivor_entry_id, target_scoring_period_id,
     replacement_picks, replacement_survivor_pick, gen_random_uuid()
   );
 end;
 $$;
 
-revoke all on function public.save_slate_selections(uuid, uuid, uuid, jsonb, jsonb, uuid) from public, anon, authenticated;
 revoke all on function public.save_slate_selections(uuid, uuid, uuid, jsonb, jsonb) from public, anon, authenticated;
-grant execute on function public.save_slate_selections(uuid, uuid, uuid, jsonb, jsonb, uuid) to service_role;
+revoke all on function public.save_slate_selections_with_receipt(uuid, uuid, uuid, jsonb, jsonb, uuid) from public, anon, authenticated;
 grant execute on function public.save_slate_selections(uuid, uuid, uuid, jsonb, jsonb) to service_role;
+grant execute on function public.save_slate_selections_with_receipt(uuid, uuid, uuid, jsonb, jsonb, uuid) to service_role;

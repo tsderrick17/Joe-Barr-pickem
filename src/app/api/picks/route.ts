@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     survivorPickToInsert = { game_id: survivorSelection.gameId, selected_team_id: survivorSelection.teamId };
   }
 
-  const { error } = await supabaseAdmin.rpc("save_slate_selections", {
+  const { error } = await supabaseAdmin.rpc("save_slate_selections_with_receipt", {
     target_player_id: player.id,
     target_survivor_entry_id: entry.id,
     target_scoring_period_id: scoringPeriodId,

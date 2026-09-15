@@ -15,6 +15,7 @@ test("a slow Slate save is allowed to complete before the browser reports failur
 test("the save endpoint forwards a stable receipt key to the atomic RPC", async () => {
   const source = await readFile(new URL("../src/app/api/picks/route.ts", import.meta.url), "utf8");
   assert.match(source, /requestId\?: string/);
+  assert.match(source, /save_slate_selections_with_receipt/);
   assert.match(source, /request_id: requestId/);
 });
 
