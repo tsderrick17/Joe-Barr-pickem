@@ -132,8 +132,8 @@ function slateImageHeight(gameCount: number, compact = false) {
 }
 
 function summaryImageHeight(snapshot: WeeklyRecapSnapshot | PlayoffDayRecapSnapshot) {
-  const weeklyRows = snapshot.weeklySummary.length;
-  const standingsRows = snapshot.standings.length;
+  const weeklyRows = Array.isArray(snapshot.weeklySummary) ? snapshot.weeklySummary.length : 0;
+  const standingsRows = Array.isArray(snapshot.standings) ? snapshot.standings.length : 0;
   const championSpace = snapshot.kind === "playoff_day_recap" && snapshot.championsCrowned.length ? 52 : 0;
   return Math.max(500, Math.min(1800, 300 + weeklyRows * 40 + standingsRows * 29 + championSpace));
 }
@@ -210,6 +210,8 @@ export async function GET(request: NextRequest) {
   if (kind === "summary") {
     const title = snapshot.kind === "playoff_day_recap" ? snapshot.day : snapshot.week;
     const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned ?? [] : [];
+    const weeklySummary = Array.isArray(snapshot.weeklySummary) ? snapshot.weeklySummary : [];
+    const standings = Array.isArray(snapshot.standings) ? snapshot.standings : [];
     return new ImageResponse(
       <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 48px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
@@ -218,10 +220,10 @@ export async function GET(request: NextRequest) {
         </div>
         <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, marginTop: 12, paddingBottom: 3 }}>{title.toUpperCase()}</div>
         {champions.length ? <div style={{ alignSelf: "center", background: "#e8f4f0", borderLeft: `5px solid ${TEAL}`, display: "flex", fontFamily: "Georgia", fontSize: 22, fontWeight: 800, marginTop: 14, padding: "10px 16px" }}>{champions.length === 1 ? `${champions[0]} · PICK'EM CHAMPION` : `${champions.join(" & ")} · PICK'EM CO-CHAMPIONS`}</div> : null}
-        <PadRows rows={snapshot.weeklySummary} compact />
+        <PadRows rows={weeklySummary} compact />
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", flexDirection: "column", marginTop: 18, paddingTop: 12 }}>
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 2 }}>STANDINGS</span>
-          {snapshot.standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
+          {standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
         </div>
       </div>,
       { width: 920, height: summaryImageHeight(snapshot) },
