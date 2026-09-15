@@ -717,7 +717,6 @@ export default function BoardPage() {
     setIsSubmitting(true);
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
-    const requestId = window.crypto.randomUUID();
 
     try {
       const response = await fetchWithSession("/api/picks", {
@@ -733,7 +732,6 @@ export default function BoardPage() {
             survivorHasUnsavedChanges,
             survivorPick,
           }),
-          requestId,
         }),
         signal: request.signal,
       });
