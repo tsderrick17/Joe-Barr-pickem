@@ -29,6 +29,15 @@ const PUBLIC_RECEIPT_IMAGE_WIDTH = 920;
 type SlateGame = { away: string; home: string; day?: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
 
+function safePublicRows(value: unknown): PublicRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((row): row is Record<string, unknown> => Boolean(row && typeof row === "object")).map((row) => ({
+    name: String(row.name ?? ""),
+    wins: Number.isFinite(Number(row.wins)) ? Number(row.wins) : 0,
+    picks: Array.isArray(row.picks) ? row.picks.map((pick) => typeof pick === "string" ? pick : String(pick ?? "")) : [],
+  }));
+}
+
 function SlateImage({
   games,
   title,
@@ -210,8 +219,8 @@ async function renderRecap(request: NextRequest) {
   if (kind === "summary") {
     const title = snapshot.kind === "playoff_day_recap" ? snapshot.day : snapshot.week;
     const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned ?? [] : [];
-    const weeklySummary = Array.isArray(snapshot.weeklySummary) ? snapshot.weeklySummary : [];
-    const standings = Array.isArray(snapshot.standings) ? snapshot.standings : [];
+    const weeklySummary = safePublicRows(snapshot.weeklySummary);
+    const standings = safePublicRows(snapshot.standings);
     return new ImageResponse(
       <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 48px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
