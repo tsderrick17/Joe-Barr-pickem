@@ -105,6 +105,16 @@ function PadRows({ rows, compact = false, grow = false }: { rows: PublicRow[]; c
   );
 }
 
+function SummaryRows({ rows }: { rows: PublicRow[] }) {
+  return <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>
+    {rows.map((row) => <div key={row.name} style={{ alignItems: "center", background: PAPER, borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 17, minHeight: 40 }}>
+      <span style={{ borderRight: `3px solid ${MARGIN_RED}`, color: INK, display: "flex", fontWeight: 800, justifyContent: "flex-end", paddingRight: 10, width: 64 }}>{row.wins}</span>
+      <span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, paddingLeft: 14, width: 170 }}>{row.name}</span>
+      <span style={{ color: "#263d5b", display: "flex", flex: 1, fontWeight: 700, paddingLeft: 14 }}>{row.picks.length ? row.picks.join("  ·  ") : "—"}</span>
+    </div>)}
+  </div>;
+}
+
 function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; title: string; rows: PublicRow[]; note: string }) {
   const compact = rows.length > 10;
   const columns = rows.length > 16
@@ -229,7 +239,7 @@ async function renderRecap(request: NextRequest) {
         </div>
         <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, marginTop: 12, paddingBottom: 3 }}>{title.toUpperCase()}</div>
         {champions.length ? <div style={{ alignSelf: "center", background: "#e8f4f0", borderLeft: `5px solid ${TEAL}`, display: "flex", fontFamily: "Georgia", fontSize: 22, fontWeight: 800, marginTop: 14, padding: "10px 16px" }}>{champions.length === 1 ? `${champions[0]} · PICK'EM CHAMPION` : `${champions.join(" & ")} · PICK'EM CO-CHAMPIONS`}</div> : null}
-        <PadRows rows={weeklySummary} compact />
+        <SummaryRows rows={weeklySummary} />
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", flexDirection: "column", marginTop: 18, paddingTop: 12 }}>
           <span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, fontWeight: 800, letterSpacing: 2 }}>STANDINGS</span>
           {standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
