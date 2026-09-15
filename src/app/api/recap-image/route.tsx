@@ -16,10 +16,11 @@ const RULE_BLUE = "#9cc6ea";
 const MARGIN_RED = "#d56b66";
 const TEAL = "#008c82";
 const MUTED = "#596579";
+const SITE_URL = "https://pickemjb.vercel.app";
 // Email clients scale images to the width of the message column. Rendering the
 // Slate on a slightly tighter canvas makes its type and rules materially more
 // legible on phones without making the email itself any wider.
-const SLATE_IMAGE_WIDTH = 1000;
+const SLATE_IMAGE_WIDTH = 920;
 // Public-receipt images use the same deliberately tight canvas as the Slate.
 // Email clients scale the artwork to their fixed message column, so a 1200px
 // reveal made the actual Pick'em data needlessly small on phones.
@@ -80,7 +81,11 @@ function PadRows({ rows, compact = false, grow = false }: { rows: PublicRow[]; c
           <span style={{ borderRight: `3px solid ${MARGIN_RED}`, color: INK, display: "flex", fontFamily: "Arial", fontSize: compact ? 17 : 19, fontWeight: 800, justifyContent: "flex-end", paddingRight: 10, width: 64 }}>{row.wins}</span>
           <span style={{ display: "flex", fontWeight: 700, paddingLeft: 14, width: compact ? 145 : 170 }}>{row.name}</span>
           <span style={{ color: "#263d5b", display: "flex", flex: 1, flexWrap: "wrap", fontFamily: "Arial", fontSize: compact ? 15 : 17, fontWeight: 700, gap: 16 }}>
-            {row.picks.length ? row.picks.map((pick, index) => {
+            {Array.isArray(row.picks) && row.picks.length ? row.picks.map((rawPick, index) => {
+              // Recap snapshots are persisted JSON and may contain legacy null
+              // or non-string values. Normalize before applying result markup so
+              // one malformed pick cannot make the entire OG image return 500.
+              const pick = typeof rawPick === "string" ? rawPick : String(rawPick ?? "");
               const resultMatch = pick.match(/^(.*?)(\s+[WL])$/);
               return <span key={`${pick}-${index}`} style={{ display: "flex", whiteSpace: "nowrap" }}>{resultMatch ? <><span>{resultMatch[1]}</span><span style={{ marginLeft: 4 }}>{resultMatch[2]}</span></> : pick}{index < row.picks.length - 1 ? <span style={{ marginLeft: 16 }}>·</span> : null}</span>;
             }) : "—"}
@@ -169,7 +174,7 @@ export async function GET(request: NextRequest) {
 
   if (kind === "bowl" && snapshot.kind === "bowl_daily_recap") {
     const layout = bowlRecapLayout(snapshot.games.length);
-    return new ImageResponse(<BowlRecapImage snapshot={snapshot} />, { width: layout.width, height: layout.height });
+    return new ImageResponse(<BowlRecapImage snapshot={snapshot} />, { width: 920, height: layout.height });
   }
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
@@ -219,7 +224,7 @@ export async function GET(request: NextRequest) {
           {snapshot.standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
         </div>
       </div>,
-      { width: 1200, height: summaryImageHeight(snapshot) },
+      { width: 920, height: summaryImageHeight(snapshot) },
     );
   }
 
@@ -239,10 +244,10 @@ export async function GET(request: NextRequest) {
       <div style={{ background: PAPER, color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 40px", width: "100%" }}>
         <div style={{ alignItems: "baseline", borderBottom: `3px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 13 }}><span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Survivor Table</span><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>{snapshot.week.toUpperCase()}</span></div>
         <div style={{ alignItems: "center", borderBottom: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, marginTop: 16, padding: "0 8px 10px" }}><span style={{ display: "flex", width: 62 }}>STATUS</span><span style={{ display: "flex", width: 170 }}>PLAYER</span>{Array.from({ length: snapshot.survivor.visibleWeeks }, (_, index) => <span key={index} style={{ display: "flex", justifyContent: "center", width: 54 }}>{index + 1}</span>)}</div>
-        {snapshot.survivor.rows.map((row) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 18, minHeight: 42, padding: "0 8px" }}><span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 13, fontWeight: 800, width: 62 }}>{row.status}</span><span style={{ display: "flex", fontFamily: "Georgia", fontWeight: 700, width: 170 }}>{row.name}</span>{row.picks.map((pick, pickIndex) => <span key={pickIndex} style={{ color: "#334155", display: "flex", fontFamily: "Arial", fontSize: 12, fontWeight: 800, justifyContent: "center", width: 54 }}>{pick ?? "·"}</span>)}</div>)}
+        {snapshot.survivor.rows.map((row) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 18, minHeight: 42, padding: "0 8px" }}><span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 13, fontWeight: 800, width: 62 }}>{row.status}</span><span style={{ color: row.status === "OUT" ? MUTED : INK, display: "flex", fontFamily: "Georgia", fontWeight: 700, textDecoration: row.status === "OUT" ? "line-through" : "none", width: 170 }}>{row.name}</span>{row.picks.map((rawPick, pickIndex) => { const pick = typeof rawPick === "string" ? rawPick : ""; const match = pick.match(/^([A-Z]+)(?:\s+([WL]))?$/); const abbreviation = match?.[1] ?? ""; const result = match?.[2] ?? ""; return <span key={pickIndex} style={{ alignItems: "center", color: "#334155", display: "flex", justifyContent: "center", width: 54 }}>{abbreviation ? <span style={{ display: "flex", position: "relative" }}><img alt="" height="32" src={`${SITE_URL}/team-logos/${abbreviation}.png`} width="32" />{result === "W" ? <span style={{ alignItems: "center", background: "#08785d", borderRadius: 12, color: "white", display: "flex", fontFamily: "Arial", fontSize: 11, fontWeight: 900, height: 16, justifyContent: "center", position: "absolute", right: -4, top: -4, width: 16 }}>✓</span> : result === "L" ? <span style={{ color: "#b91c1c", display: "flex", fontFamily: "Arial", fontSize: 29, fontWeight: 900, position: "absolute", right: -3, top: -9 }}>×</span> : null}</span> : "·"}</span>; })}</div>)}
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: 18, paddingTop: 13 }}>{survivorFooter}</div>
       </div>,
-      { width: 1200, height: survivorImageHeight(snapshot.survivor) },
+      { width: 920, height: survivorImageHeight(snapshot.survivor) },
     );
   }
 

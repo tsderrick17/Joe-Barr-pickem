@@ -259,7 +259,7 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   const championCrownedInRecapWeek = Boolean(
     championName && (entries ?? []).some((entry) => entry.eliminated_scoring_period_id === period.id),
   );
-  const survivorPicksByEntry = new Map<string, Array<{ scoring_period_id: string; selected_team_id: string }>>();
+  const survivorPicksByEntry = new Map<string, Array<{ scoring_period_id: string; selected_team_id: string; result: string }>>();
   for (const pick of survivorPicks ?? []) survivorPicksByEntry.set(pick.survivor_entry_id, [...(survivorPicksByEntry.get(pick.survivor_entry_id) ?? []), pick]);
 
   return {
@@ -276,7 +276,7 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
     survivor: { in: (entries ?? []).filter((entry) => entry.status === "active").length, out: (entries ?? []).filter((entry) => entry.status === "eliminated").length, latest: latest ? `${latest} Survivor pick${latest === 1 ? "" : "s"} advanced` : null, championName, championCrownedInRecapWeek, visibleWeeks, rows: (players ?? []).map((player) => {
       const entry = [...entryById.values()].find((item) => item.player_id === player.id);
       const entryPicks = entry ? survivorPicksByEntry.get(entry.id) ?? [] : [];
-      const byWeek = new Map(entryPicks.map((pick) => [orderByPeriod.get(pick.scoring_period_id), abbreviations.get(pick.selected_team_id) ?? "NFL"]));
+      const byWeek = new Map(entryPicks.map((pick) => [orderByPeriod.get(pick.scoring_period_id), `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`]));
       const status: "IN" | "OUT" = entry?.status === "eliminated" ? "OUT" : "IN";
       return { name: player.first_name, status, eliminatedAt: entry?.eliminated_at ?? null, eliminatedInRecapWeek: entry?.eliminated_scoring_period_id === period.id, picks: Array.from({ length: visibleWeeks }, (_, index) => byWeek.get(index + 1) ?? null) };
     }).filter((row) => row.status === "IN" || row.eliminatedInRecapWeek).sort((first, second) => {
