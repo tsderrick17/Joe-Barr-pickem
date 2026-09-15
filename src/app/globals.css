@@ -1596,6 +1596,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-game-row .slate-team-result-line .slate-team-label {
   min-width: 0;
 }
+@media (min-width: 768px) {
+  /* Desktop final rows have enough room for the full team label. Keep the
+     name and its W/L mark on one baseline instead of letting a long Week 1
+     label spill onto a second line; picker names may still wrap below it. */
+  .slate-game-row.is-final .slate-team-label { white-space: nowrap; }
+}
 .slate-game-row .slate-final-team-stack.is-left {
   justify-items: start;
   text-align: left;

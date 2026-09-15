@@ -14,4 +14,5 @@ test("selected Slate highlight stays sized to the team label", () => {
   assert.match(selectedBlock, /width:\s*fit-content/);
   assert.match(selectedBlock, /max-width:\s*100%/);
   assert.doesNotMatch(markerBlock, /width:\s*100%/);
+  assert.match(css, /\.slate-game-row\.is-final \.slate-team-label\s*\{\s*white-space:\s*nowrap/);
 });
