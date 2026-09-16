@@ -2321,7 +2321,9 @@ html[data-theme="night"] .newspaper-clipping::after {
   color: #28221b;
   margin-left: auto;
   margin-right: auto;
-  max-width: var(--standings-module-width);
+  /* Match the compact Pick'em Pad width rather than the former wide module
+     rail. The ticket's two columns remain equal within this narrower card. */
+  max-width: 30rem;
   padding: .9rem 1.05rem .8rem;
   position: relative;
   width: 100%;
@@ -2742,6 +2744,12 @@ html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover {
 }
 
 .my-ticket-instructions p + p { margin-top: .28rem; }
+
+@media (min-width: 640px) {
+  /* These are short printed guidance lines, not flowing body copy. Keep each
+     instruction intact as the ticket narrows so its hierarchy stays crisp. */
+  .my-ticket-instructions p { white-space: nowrap; }
+}
 
 .my-ticket-footer {
   align-items: end;
