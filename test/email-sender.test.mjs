@@ -13,3 +13,9 @@ test("Notifications shows the externally visible safe-sender address only after 
   assert.match(source, /\{enabled \? <aside[^>]*>.*Keep PickemJB out of spam.*senderEmail.*as <span className="font-bold">PickemJB<\/span>.*appears as the sender.*<\/aside> : null\}/s);
   assert.match(route, /BREVO_PUBLIC_SENDER_EMAIL \?\? process\.env\.BREVO_SENDER_EMAIL/);
 });
+
+test("shared email footer keeps only the notification link without pool-membership claims", async () => {
+  const source = await readFile(new URL("../src/lib/email-reminders.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /You received this because you are active in the Bowl Pool/);
+  assert.match(source, /Change your choices in Notifications/);
+});
