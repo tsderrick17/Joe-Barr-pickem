@@ -1640,7 +1640,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   text-align: left;
 }
 .slate-team-picker-list {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 .28rem;
   border-top: 1px solid rgba(145, 175, 208, .72);
   font-size: .78rem;
   font-weight: 800;
@@ -1653,10 +1655,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   overflow-wrap: break-word;
   padding-top: .16rem;
 }
+.slate-team-picker-name { white-space: nowrap; }
 
 @media (max-width: 767px) {
   .slate-team-result-line { gap: .2rem; }
-  .slate-game-row .slate-final-team-stack { column-gap: .24rem; }
+  .slate-game-row .slate-final-team-stack {
+    column-gap: .24rem;
+    grid-template-columns: minmax(0, 1fr) max-content max-content;
+  }
+  .slate-game-row .slate-team-label-lane { width: 100%; }
   .slate-team-picker-list {
     font-size: .7rem;
     line-height: .95rem;
