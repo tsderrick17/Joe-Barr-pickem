@@ -106,7 +106,7 @@ function StandingsLoadingShell() {
   return (
     <main aria-busy="true" className="min-h-screen bg-[#f5f0e6] text-[#171719]">
       <div className="mx-auto max-w-5xl px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
-        <section className="standings-loading-ticket mx-auto w-full max-w-[var(--standings-module-width)] border border-[#756b5b] bg-[#f3ead6] p-4 shadow-[0_4px_14px_rgba(44,36,24,.14)]">
+        <section className="standings-loading-ticket mx-auto w-full max-w-[30rem] border border-[#756b5b] bg-[#f3ead6] p-4 shadow-[0_4px_14px_rgba(44,36,24,.14)]">
           <div className="mx-auto h-3 w-44 bg-[#d9ceb8]" />
           <div className="mx-auto mt-3 h-8 w-72 max-w-full bg-[#cfc1a8]" />
           <div className="mt-7 h-px bg-[#756b5b]" />
@@ -117,7 +117,7 @@ function StandingsLoadingShell() {
           <div className="h-px bg-[#756b5b]" />
           <div className="mt-4 grid grid-cols-3 gap-4"><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /></div>
         </section>
-        <section className="mx-auto w-full max-w-[var(--standings-module-width)]">
+        <section className="mx-auto w-full max-w-[30rem]">
           <div className="h-12 border-y-2 border-[#1d1d1f] bg-[#fffdf8]" />
           <div className="standings-loading-rows" />
         </section>

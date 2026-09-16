@@ -104,7 +104,7 @@ function SlateLoadingShell() {
             </aside>
           </div>
         </header>
-        <div className="slate-loading-receipt h-[4.55rem] border-y border-[#b7aea0]" />
+        <div className="slate-loading-receipt h-[6.75rem] border-y border-[#b7aea0] sm:h-[5.8rem]" />
         <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 sm:mt-8 sm:space-y-7">
           {Array.from({ length: 5 }, (_, index) => (
             <section key={index} className="space-y-2">
