@@ -1620,7 +1620,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   /* Keep the final score and result mark attached to the team label instead
      of stretching the score across the unused side of the row. The label can
      still wrap inside its lane, while the score gets a stable, bold slot. */
-  grid-template-columns: minmax(0, max-content) max-content max-content;
+  grid-template-columns: minmax(0, max-content) 2.3ch max-content;
   column-gap: .34rem;
   justify-content: start;
   min-width: 0;
@@ -1707,7 +1707,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     text-align: left;
   }
   .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
-  .slate-team-score { font-size: .9rem; }
+  .slate-team-score { font-size: 1em; }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
