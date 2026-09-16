@@ -3225,10 +3225,11 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-race strong { font-size: 1.08rem; }
   .my-ticket-race span { font-size: .88rem; }
 
-  /* A receipt should read down the page on a phone, not compress two ticket
-     stubs into a cramped side-by-side grid. */
-  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
-  .my-ticket-section { padding: .58rem 0; }
+  /* Normal phones have enough width for the two equal ticket sides. Keep the
+     compact split, while the narrow fallback below protects very small
+     screens from cramped labels. */
+  .my-ticket-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .my-ticket-section { padding: .58rem .35rem; }
 
   .my-ticket-columns.is-playoff .my-ticket-picks {
     grid-auto-flow: row;
@@ -3238,9 +3239,9 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   }
 
   .my-ticket-section + .my-ticket-section {
-    border-left: 0;
-    border-top: 1px dashed #958a77;
-    padding-left: 0;
+    border-left: 1px dashed #958a77;
+    border-top: 0;
+    padding-left: .65rem;
   }
 
   .my-ticket-section-heading { font-size: .62rem; }
@@ -3258,6 +3259,18 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-footer > div { min-width: 4.75rem; }
   .my-ticket-change-note { font-size: .53rem; }
   .my-ticket-barcode { width: 3.2rem; }
+}
+
+@media (max-width: 379px) {
+  /* Keep the smallest phones readable if two columns would force labels to
+     wrap excessively. */
+  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
+  .my-ticket-section { padding-inline: 0; }
+  .my-ticket-section + .my-ticket-section {
+    border-left: 0;
+    border-top: 1px dashed #958a77;
+    padding-left: 0;
+  }
 }
 
 /* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
