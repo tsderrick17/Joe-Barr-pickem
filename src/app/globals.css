@@ -346,6 +346,16 @@ body {
 .receipt-printing-status.is-printing .receipt-printing-marks i { animation: receipt-printer-feed 1.05s steps(2, end) infinite; }
 .receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(2) { animation-delay: .15s; }
 .receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(3) { animation-delay: .3s; }
+.slate-receipt-submit-hint {
+  color: #5d6470;
+  display: block;
+  font-size: .45rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1.15;
+  margin-top: .18rem;
+  text-align: center;
+}
 
 @keyframes receipt-printer-feed {
   0%, 100% { opacity: .24; transform: translateY(.08rem) scale(.78); }
@@ -568,6 +578,7 @@ body {
   .slate-receipt-ticket a { font-size: .54rem; }
   .slate-receipt-ticket > span small { display: none; }
   .receipt-printing-status { font-size: .36rem; gap: .16rem; letter-spacing: .07em; }
+  .slate-receipt-submit-hint { font-size: .4rem; }
   .slate-receipt-print { font-size: .58rem; min-height: 1.62rem; padding: .15rem .22rem; width: calc(100% - .2rem); }
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
@@ -843,6 +854,8 @@ body {
   padding: 1.1rem 1rem;
   text-align: center;
 }
+#slate-matchups,
+#my-ticket { scroll-margin-top: calc(var(--site-nav-height, 7rem) + 5rem); }
 
 .survivor-sticky-status,
 .survivor-sticky-name {
