@@ -1597,9 +1597,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   flex-direction: column;
   justify-content: center;
 }
-.slate-game-row.is-final > .slate-team-side:has(.slate-team-picker-list) {
-  align-self: stretch;
-  justify-content: flex-start;
+.slate-game-row.is-final > .slate-team-side > .slate-final-team-stack {
+  /* Center the complete team/score/picker block as one unit. A longer picker
+     list may change where the team label sits inside the block, but never
+     pulls the block itself toward the top of the matchup row. */
+  align-self: center;
 }
 .slate-team-result-line .slate-team-label { min-width: 0; }
 .slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
