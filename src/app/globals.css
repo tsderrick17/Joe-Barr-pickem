@@ -4,6 +4,17 @@
   --background: #ffffff;
   --foreground: #171717;
   --official-line-color: #008c82;
+  /* Shared visual system primitives used by pool surfaces and email artwork. */
+  --pool-paper: #f7f3e8;
+  --pool-surface: #fffdf8;
+  --pool-ink: #171717;
+  --pool-muted: #6b655d;
+  --pool-teal: #16806a;
+  --pool-alert: #a33c29;
+  --pool-rule: #c7c0b5;
+  --pool-space-1: .35rem;
+  --pool-space-2: .7rem;
+  --pool-space-3: 1.05rem;
 }
 
 @theme inline {
@@ -3060,6 +3071,12 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   border-left-color: #a65d08;
 }
 
+.commissioner-map-metrics { display: grid; gap: var(--pool-space-2); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.commissioner-map-metric { background: var(--pool-surface); border: 1px solid var(--pool-rule); display: grid; gap: var(--pool-space-1); min-width: 0; padding: var(--pool-space-3); }
+.commissioner-map-metric-label { color: var(--pool-muted); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
+.commissioner-map-metric strong { color: var(--pool-ink); font-family: Georgia, serif; font-size: 1.25rem; line-height: 1.1; overflow-wrap: anywhere; }
+.commissioner-map-metric > span:last-child { color: var(--pool-muted); font-size: .78rem; }
+
 .commissioner-map-pulse {
   align-items: center;
   border: 1px solid currentColor;
@@ -3191,6 +3208,7 @@ html[data-theme="night"] .commissioner-flow-step.is-attention .commissioner-flow
 html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
 
 @media (max-width: 639px) {
+  .commissioner-map-metrics { grid-template-columns: minmax(0, 1fr); }
   .commissioner-map-banner { align-items: flex-start; }
   .commissioner-map-pulse { flex-basis: 2.25rem; height: 2.25rem; width: 2.25rem; }
   .commissioner-flow { gap: 0; grid-template-columns: minmax(0, 1fr); }

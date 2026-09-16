@@ -1,5 +1,13 @@
 # Commissioner recovery and release runbook
 
+## Control-center overview
+
+Start at **Commissioner → Overview**. The live operations map is the first
+place to check schedule, selections, line locks, scoring, recap readiness, and
+week/round handoff. Its at-a-glance cards show the current stage, watchdog
+incidents, and provider allowance; select a stage for the exact hold and next
+safe action. Use the specialist panels only after the map identifies a need.
+
 Use this page only after the [SOP index](SOP_INDEX.md) identifies an abnormal
 condition. Scheduled automation is the normal operator. Recovery controls must
 retain the same authentication, execution lease, provider allowance,

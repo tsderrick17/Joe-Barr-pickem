@@ -87,6 +87,12 @@ export default function CommissionerOperationsMap() {
           <div className="commissioner-map-pulse" aria-hidden="true"><span /></div>
         </div>
 
+        <div className="commissioner-map-metrics mt-4" aria-label="Operations at a glance">
+          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">CURRENT STAGE</span><strong>{selected?.label ?? "—"}</strong><span>{selected ? stateLabel[selected.state] : "Waiting for status"}</span></div>
+          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">WATCHDOG</span><strong>{map.openIncidentCount ? map.openIncidentCount : "Quiet"}</strong><span>{map.openIncidentCount ? `Open incident${map.openIncidentCount === 1 ? "" : "s"}` : "No open incidents"}</span></div>
+          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">PROVIDER CREDITS</span><strong>{map.providerAllowance ?? "—"}</strong><span>{map.providerAllowance === null || map.providerAllowance === undefined ? "Not reported" : "Remaining this period"}</span></div>
+        </div>
+
         <ol className="commissioner-flow mt-8" aria-label="Current pool operations flow" style={{ "--commissioner-step-count": map.stages.length } as CSSProperties}>
           {map.stages.map((stage, index) => {
             const selectedStage = selected?.id === stage.id;
