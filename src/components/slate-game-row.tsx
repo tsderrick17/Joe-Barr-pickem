@@ -108,7 +108,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
           <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
-          {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.join(", ")}</span> : null}
+          {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.map((picker, index) => <span className="slate-team-picker-name" key={`${picker}-${index}`}>{picker}{index < team.pickers.length - 1 ? "," : ""}</span>)}</span> : null}
         </span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}
         <AtsResultStamp className="slate-team-result-mark" result={isFinal ? team.result : null} tilted={false} />
