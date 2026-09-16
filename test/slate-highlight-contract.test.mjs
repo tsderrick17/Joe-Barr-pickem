@@ -16,3 +16,12 @@ test("selected Slate highlight stays sized to the team label", () => {
   assert.doesNotMatch(markerBlock, /width:\s*100%/);
   assert.match(css, /\.slate-game-row\.is-final \.slate-team-label\s*\{\s*white-space:\s*nowrap/);
 });
+
+test("final Slate scores use the team-name size and a stable numeric anchor", () => {
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const scoreBlock = css.match(/\.slate-team-score\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  assert.match(scoreBlock, /font-size:\s*1em/);
+  assert.match(scoreBlock, /font-weight:\s*800/);
+  assert.match(scoreBlock, /min-width:\s*2\.3ch/);
+  assert.match(scoreBlock, /text-align:\s*right/);
+});

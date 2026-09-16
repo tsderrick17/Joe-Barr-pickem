@@ -1599,6 +1599,19 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-score,
 .slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
 
+/* Scores are part of the team label, not a separate visual hierarchy. Keep
+   their type size identical to the team name while giving every row the same
+   compact numeric anchor. */
+.slate-team-score {
+  display: inline-block;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 2.3ch;
+  text-align: right;
+}
+
 /* Finished matchups keep the team, final score, and result mark together as a
    content-sized group. This prevents a short score from drifting to the far
    edge of a wide team lane while still anchoring the two sides symmetrically. */
