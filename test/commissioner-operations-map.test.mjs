@@ -22,3 +22,10 @@ test("commissioner operations map exposes the hold and the next safe transition"
   assert.match(route, /Round handoff/);
   assert.match(route, /Season finish/);
 });
+
+test("commissioner operations map keeps key health signals visible at a glance", () => {
+  assert.match(component, /Operations at a glance/);
+  assert.match(component, /CURRENT STAGE/);
+  assert.match(component, /WATCHDOG/);
+  assert.match(component, /PROVIDER CREDITS/);
+});
