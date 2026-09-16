@@ -1,3 +1,6 @@
+/* ImageResponse/Satori requires a raw <img> for embedded team logos; next/image
+   cannot be used inside this server-generated image tree. */
+/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
