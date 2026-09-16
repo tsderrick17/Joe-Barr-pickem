@@ -1603,13 +1603,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      pulls the block itself toward the top of the matchup row. */
   align-self: center;
 }
-.slate-game-row.is-final:has(.slate-team-picker-list) > .slate-team-side {
-  /* Once either side has picker names, both team lines use the same anchor.
-     This keeps the unselected opponent from sitting lower than the selected
-     team while preserving centered blocks for rows without pickers. */
-  align-self: stretch;
-  justify-content: flex-start;
-}
 .slate-team-result-line .slate-team-label { min-width: 0; }
 .slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
 .slate-team-label-lane.is-left { margin-right: auto; text-align: left; }
@@ -1711,6 +1704,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      long unbroken token when it truly cannot fit. */
   overflow-wrap: break-word;
   padding-top: .16rem;
+}
+.slate-game-row.is-final .slate-team-picker-list {
+  min-height: var(--slate-picker-lane-height, 0px);
+}
+.slate-team-picker-list.is-empty {
+  border-color: transparent;
+  visibility: hidden;
 }
 .slate-team-picker-name { white-space: nowrap; }
 
