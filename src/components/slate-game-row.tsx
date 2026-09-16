@@ -191,10 +191,19 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     ? "grid-cols-[2.3rem_minmax(0,1fr)_3.45rem_2.5rem_3.45rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.9rem_2.9rem_3.9rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_4.7rem_5rem_4.7rem_minmax(0,1fr)]"
     : "grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)]";
   const hasSurvivorSelection = survivor?.enabled && survivor.selectedTeamId && [left.id, right.id].includes(survivor.selectedTeamId);
+  const statusLabel = game.status === "postponed"
+    ? "POSTPONED"
+    : game.status === "cancelled"
+      ? "CANCELLED"
+      : isLive
+        ? "LIVE"
+        : isFinal
+          ? "FINAL"
+          : null;
 
   return <article className={`slate-game-row relative z-0 grid ${rowColumns} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pr-1 min-[380px]:gap-1 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
-    <div className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
-      {isFinal ? <p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p> : isLive ? <p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
+    <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
+      {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <><p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-red-800">UPDATING</p></> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>
     {teamCell(left, "left")}
     {survivorChip(left)}

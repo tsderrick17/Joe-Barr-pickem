@@ -162,22 +162,22 @@ export default function SiteNav() {
         </Link>
 
         <div className="site-nav-links flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:gap-x-6 md:text-base">
-          <Link className={linkStyle("/")} href="/">
+          <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">
             Standings
           </Link>
 
-          <Link className={linkStyle("/board")} href="/board">
+          <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">
             The Slate
           </Link>
 
           {isCommissioner || isBowlPoolLaunched ? (
-            <Link className={linkStyle("/bowl-pool")} href="/bowl-pool">
+            <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={linkStyle("/bowl-pool")} href="/bowl-pool">
               NCAA Bowls
             </Link>
           ) : null}
 
           {isCommissioner ? (
-            <Link className={linkStyle("/admin")} href="/admin">
+            <Link aria-current={pathname.startsWith("/admin") ? "page" : undefined} className={linkStyle("/admin")} href="/admin">
               Commissioner
             </Link>
           ) : null}
@@ -200,7 +200,7 @@ export default function SiteNav() {
           {playerName ? (
             <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
               <div className="flex items-center justify-end gap-3">
-                <a className={linkStyle("/profile")} href="/profile">
+                <a aria-current={pathname.startsWith("/profile") ? "page" : undefined} className={linkStyle("/profile")} href="/profile">
                   Notifications
                 </a>
 
@@ -254,9 +254,9 @@ export default function SiteNav() {
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
-        <Link className={linkStyle("/")} href="/">Standings</Link>
-        <Link className={linkStyle("/board")} href="/board">The Slate</Link>
-        {isCommissioner || isBowlPoolLaunched ? <Link className={linkStyle("/bowl-pool")} href="/bowl-pool">NCAA Bowls</Link> : null}
+        <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
+        <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>
+        {isCommissioner || isBowlPoolLaunched ? <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={linkStyle("/bowl-pool")} href="/bowl-pool">NCAA Bowls</Link> : null}
       </div>
     </nav>
   </>;

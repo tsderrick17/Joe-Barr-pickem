@@ -561,6 +561,17 @@ export default function BoardPage() {
     openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} EDITABLE` : "",
     duePickCount > 0 ? `${duePickCount} DUE` : "",
   ].filter(Boolean).join(" · ");
+  const submitHint = receiptIsLoading
+    ? "CHECKING SAVED PICKS"
+    : isSubmitting
+      ? "SAVING PICKS"
+      : receiptNeedsSaving
+        ? "READY TO SAVE"
+        : duePickCount > 0
+          ? `${duePickCount} PICK${duePickCount === 1 ? "" : "S"} NEEDED`
+          : survivorControlsEnabled && !survivorPick
+            ? "SURVIVOR PICK NEEDED"
+            : "ALL PICKS SAVED";
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -885,6 +896,7 @@ export default function BoardPage() {
               <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
               <span>{isSubmitting ? "PRINTING" : ""}</span>
             </span>
+            <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
           </div>
           <div className="slate-receipt-pool slate-receipt-pickem">
             <span>PICK&apos;EM</span>
