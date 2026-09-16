@@ -10,6 +10,7 @@ test("monitoring guidance matches the specialized production monitors", async ()
   assert.match(monitoring, /PickemJB line-lock workers/);
   assert.match(monitoring, /PickemJB score workers/);
   assert.match(monitoring, /PickemJB reminder workers/);
+  assert.match(monitoring, /PickemJB settlement freshness/);
   assert.doesNotMatch(monitoring, /PickemJB critical workers/);
   assert.doesNotMatch(sop, /PickemJB critical workers/);
 });
