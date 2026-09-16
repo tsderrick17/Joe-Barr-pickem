@@ -7,7 +7,9 @@ const root = path.resolve(import.meta.dirname, "..");
 
 test("desktop Slate picker names cannot push final scores away", () => {
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
-  assert.match(css, /\.slate-game-row\.is-final \.slate-team-picker-list\s*\{[\s\S]*max-width:\s*12ch;/);
-  assert.match(css, /\.slate-team-picker-list\s*\{[\s\S]*overflow-wrap:\s*break-word;/);
-  assert.doesNotMatch(css, /\.slate-team-picker-list\s*\{[\s\S]*overflow-wrap:\s*anywhere;/);
+  const desktopPickerBlock = css.match(/\.slate-game-row\.is-final \.slate-team-picker-list\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const pickerBlock = css.match(/(?:^|\n)\.slate-team-picker-list\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  assert.match(desktopPickerBlock, /max-width:\s*12ch;/);
+  assert.match(pickerBlock, /overflow-wrap:\s*break-word;/);
+  assert.doesNotMatch(pickerBlock, /overflow-wrap:\s*anywhere;/);
 });

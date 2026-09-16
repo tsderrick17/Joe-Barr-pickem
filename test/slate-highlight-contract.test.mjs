@@ -31,7 +31,12 @@ test("final Slate scores use the team-name size and a stable numeric anchor", ()
 
 test("final Slate team text groups stay vertically centered as one unit", () => {
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const component = fs.readFileSync(path.join(root, "src/components/slate-game-row.tsx"), "utf8");
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side > \.slate-final-team-stack\s*\{[\s\S]*align-self:\s*center/);
-  assert.match(css, /\.slate-game-row\.is-final:has\(\.slate-team-picker-list\) > \.slate-team-side\s*\{[\s\S]*align-self:\s*stretch[\s\S]*justify-content:\s*flex-start/);
+  assert.match(css, /\.slate-game-row\.is-final \.slate-team-picker-list\s*\{[\s\S]*min-height:\s*var\(--slate-picker-lane-height, 0px\)/);
+  assert.match(css, /\.slate-team-picker-list\.is-empty\s*\{[\s\S]*visibility:\s*hidden/);
+  assert.match(component, /new ResizeObserver\(measurePickerLane\)/);
+  assert.match(component, /--slate-picker-lane-height/);
+  assert.doesNotMatch(css, /\.slate-game-row\.is-final:has\(\.slate-team-picker-list\)/);
 });
