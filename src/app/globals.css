@@ -3104,6 +3104,19 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   border-left-color: #a65d08;
 }
 
+/* Keep the Commissioner email center usable as delivery history grows. Each
+   list gets its own bounded scroll region so the page controls stay reachable. */
+.commissioner-email-list {
+  max-height: 34rem;
+  overflow-y: auto;
+  padding-right: .35rem;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 639px) {
+  .commissioner-email-list { max-height: 28rem; }
+}
+
 .commissioner-map-metrics { display: grid; gap: var(--pool-space-2); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .commissioner-map-metric { background: var(--pool-surface); border: 1px solid var(--pool-rule); display: grid; gap: var(--pool-space-1); min-width: 0; padding: var(--pool-space-3); }
 .commissioner-map-metric-label { color: var(--pool-muted); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
