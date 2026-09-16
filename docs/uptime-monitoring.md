@@ -17,7 +17,7 @@ contacts, and current incidents.
 | PickemJB reminder workers | `https://pickemjb.vercel.app/api/health/workers/reminders` | Reminder processing is healthy independently | **Commissioner → Automation Health** and reminder-worker logs |
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
 | PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
-| PickemJB settlement freshness | `https://pickemjb.vercel.app/api/health/settlement` | No game remains unsettled more than four hours after kickoff | **Commissioner → Automation Health** and score-worker logs |
+| PickemJB settlement freshness | `https://pickemjb.vercel.app/api/health/settlement` | No game remains unsettled more than six hours after kickoff | **Commissioner → Automation Health** and score-worker logs |
 
 Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
 timeout, or missed heartbeat as down. Configure both outage and recovery
@@ -28,7 +28,7 @@ database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
 descriptive.
 
-The settlement monitor allows four hours after kickoff for score-provider and
+The settlement monitor allows six hours after kickoff for score-provider and
 grading delay. The worker freshness windows include bounded cron-delivery grace: 12 minutes
 for line locks, 45 minutes for score checks, and 20 minutes for reminders. The
 watchdog heartbeat allows 35 minutes: that absorbs bounded scheduler and
