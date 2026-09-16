@@ -1593,9 +1593,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-result-line.is-right { justify-content: flex-end; }
 .slate-team-result-line.is-left { justify-content: flex-start; }
 .slate-game-row.is-final > .slate-team-side {
-  align-self: stretch;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+}
+.slate-game-row.is-final > .slate-team-side:has(.slate-team-picker-list) {
+  align-self: stretch;
   justify-content: flex-start;
 }
 .slate-team-result-line .slate-team-label { min-width: 0; }
