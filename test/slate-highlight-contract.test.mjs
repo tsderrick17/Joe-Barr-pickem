@@ -33,5 +33,5 @@ test("final Slate team text groups stay vertically centered as one unit", () => 
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side > \.slate-final-team-stack\s*\{[\s\S]*align-self:\s*center/);
-  assert.match(css, /\.slate-game-row\.is-final:has\(\.slate-team-picker-list\) > \.slate-team-side\s*\{[\s\S]*align-self:\s*stretch[\s\S]*justify-content:\s*flex-start/);
+  assert.doesNotMatch(css, /\.slate-game-row\.is-final:has\(\.slate-team-picker-list\)/);
 });

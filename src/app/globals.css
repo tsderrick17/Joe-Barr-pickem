@@ -1603,13 +1603,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      pulls the block itself toward the top of the matchup row. */
   align-self: center;
 }
-.slate-game-row.is-final:has(.slate-team-picker-list) > .slate-team-side {
-  /* A picker list changes the row's text height. Anchor both matchup sides
-     together so the unselected team moves with the selected team instead of
-     appearing vertically detached. Rows without pickers remain centered. */
-  align-self: stretch;
-  justify-content: flex-start;
-}
 .slate-team-result-line .slate-team-label { min-width: 0; }
 .slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
 .slate-team-label-lane.is-left { margin-right: auto; text-align: left; }
