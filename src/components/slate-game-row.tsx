@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useState } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
@@ -79,8 +79,6 @@ type Props = {
 
 export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
   const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
-  const [pickerLaneHeight, setPickerLaneHeight] = useState(0);
-  const rowRef = useRef<HTMLElement>(null);
   const favoriteIsHome = game.favoriteTeamId === game.homeTeamId;
   const left = favoriteIsHome
     ? { name: game.homeTeam, abbreviation: game.homeTeamAbbreviation, id: game.homeTeamId, result: game.homeResult, score: game.homeScore, pickers: game.homePickers, home: true }
@@ -96,36 +94,6 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   const showSpecialLockNote = game.isInternational && !lockedSpread;
   const hasPublishedPick = left.pickers.length > 0 || right.pickers.length > 0;
   const compactFinal = isFinal && !hasPublishedPick;
-  const pickerSignature = `${left.pickers.join(",")}|${right.pickers.join(",")}`;
-
-  /* A final matchup has one shared vertical rhythm. Reserve the height of the
-     taller picker list on both sides, then let the two equal text blocks
-     center naturally. That keeps the team lines aligned without pinning the
-     whole matchup to its top edge. */
-  useEffect(() => {
-    const row = rowRef.current;
-    if (!row || !isFinal || !hasPublishedPick) {
-      setPickerLaneHeight(0);
-      return;
-    }
-
-    const measurePickerLane = () => {
-      const lists = Array.from(row.querySelectorAll<HTMLElement>(".slate-team-picker-list:not(.is-empty)"));
-      const nextHeight = Math.ceil(Math.max(0, ...lists.map((list) => list.scrollHeight)));
-      setPickerLaneHeight((current) => current === nextHeight ? current : nextHeight);
-    };
-
-    measurePickerLane();
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(measurePickerLane);
-    observer.observe(row);
-    return () => observer.disconnect();
-  }, [hasPublishedPick, isFinal, pickerSignature]);
-
-  const rowStyle = pickerLaneHeight
-    ? ({ "--slate-picker-lane-height": `${pickerLaneHeight}px` } as CSSProperties)
-    : undefined;
 
   const teamCell = (team: typeof left, align: "left" | "right") => {
     const selected = selectedTeamId === team.id;
@@ -140,7 +108,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
           <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
-          {hasStarted && (isFinal || team.pickers.length) ? <span aria-hidden={team.pickers.length ? undefined : true} className={`slate-team-picker-list ${team.pickers.length ? (selected ? "text-slate-200" : "text-slate-600") : "is-empty"}`}>{team.pickers.map((picker, index) => <span className="slate-team-picker-name" key={`${picker}-${index}`}>{picker}{index < team.pickers.length - 1 ? "," : ""}</span>)}</span> : null}
+          {hasStarted && team.pickers.length ? <span className={`slate-team-picker-list ${selected ? "text-slate-200" : "text-slate-600"}`}>{team.pickers.map((picker, index) => <span className="slate-team-picker-name" key={`${picker}-${index}`}>{picker}{index < team.pickers.length - 1 ? "," : ""}</span>)}</span> : null}
         </span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}
         <AtsResultStamp className="slate-team-result-mark" result={isFinal ? team.result : null} tilted={false} />
@@ -233,7 +201,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
           ? "FINAL"
           : null;
 
-  return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
+  return <article className={`slate-game-row relative z-0 grid ${rowColumns} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
     <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
       {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <><p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-red-800">UPDATING</p></> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>
