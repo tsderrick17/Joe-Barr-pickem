@@ -1597,7 +1597,16 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   flex-direction: column;
   justify-content: center;
 }
-.slate-game-row.is-final > .slate-team-side:has(.slate-team-picker-list) {
+.slate-game-row.is-final > .slate-team-side > .slate-final-team-stack {
+  /* Center the complete team/score/picker block as one unit. A longer picker
+     list may change where the team label sits inside the block, but never
+     pulls the block itself toward the top of the matchup row. */
+  align-self: center;
+}
+.slate-game-row.is-final:has(.slate-team-picker-list) > .slate-team-side {
+  /* A picker list changes the row's text height. Anchor both matchup sides
+     together so the unselected team moves with the selected team instead of
+     appearing vertically detached. Rows without pickers remain centered. */
   align-self: stretch;
   justify-content: flex-start;
 }
