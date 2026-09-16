@@ -2321,7 +2321,9 @@ html[data-theme="night"] .newspaper-clipping::after {
   color: #28221b;
   margin-left: auto;
   margin-right: auto;
-  max-width: var(--standings-module-width);
+  /* Match the compact Pick'em Pad width rather than the former wide module
+     rail. The ticket's two columns remain equal within this narrower card. */
+  max-width: 30rem;
   padding: .9rem 1.05rem .8rem;
   position: relative;
   width: 100%;
@@ -2742,6 +2744,12 @@ html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover {
 }
 
 .my-ticket-instructions p + p { margin-top: .28rem; }
+
+@media (min-width: 640px) {
+  /* These are short printed guidance lines, not flowing body copy. Keep each
+     instruction intact as the ticket narrows so its hierarchy stays crisp. */
+  .my-ticket-instructions p { white-space: nowrap; }
+}
 
 .my-ticket-footer {
   align-items: end;
@@ -3217,10 +3225,11 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-race strong { font-size: 1.08rem; }
   .my-ticket-race span { font-size: .88rem; }
 
-  /* A receipt should read down the page on a phone, not compress two ticket
-     stubs into a cramped side-by-side grid. */
-  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
-  .my-ticket-section { padding: .58rem 0; }
+  /* Normal phones have enough width for the two equal ticket sides. Keep the
+     compact split, while the narrow fallback below protects very small
+     screens from cramped labels. */
+  .my-ticket-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .my-ticket-section { padding: .58rem .35rem; }
 
   .my-ticket-columns.is-playoff .my-ticket-picks {
     grid-auto-flow: row;
@@ -3230,9 +3239,9 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   }
 
   .my-ticket-section + .my-ticket-section {
-    border-left: 0;
-    border-top: 1px dashed #958a77;
-    padding-left: 0;
+    border-left: 1px dashed #958a77;
+    border-top: 0;
+    padding-left: .65rem;
   }
 
   .my-ticket-section-heading { font-size: .62rem; }
@@ -3250,6 +3259,18 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   .my-ticket-footer > div { min-width: 4.75rem; }
   .my-ticket-change-note { font-size: .53rem; }
   .my-ticket-barcode { width: 3.2rem; }
+}
+
+@media (max-width: 379px) {
+  /* Keep the smallest phones readable if two columns would force labels to
+     wrap excessively. */
+  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
+  .my-ticket-section { padding-inline: 0; }
+  .my-ticket-section + .my-ticket-section {
+    border-left: 0;
+    border-top: 1px dashed #958a77;
+    padding-left: 0;
+  }
 }
 
 /* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly

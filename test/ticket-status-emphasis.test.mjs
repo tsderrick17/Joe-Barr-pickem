@@ -24,4 +24,9 @@ test("the ticket uses upright result stamps and aligned open states", async () =
   assert.match(styles, /Keep the completion receipt and status stamp from visually merging/);
   assert.match(styles, /\.my-ticket-footer \{\s*column-gap: \.65rem;\s*grid-template-columns: minmax\(0, 1fr\) minmax\(4\.75rem, auto\) 3\.2rem;/);
   assert.match(styles, /\.my-ticket-footer > div \{ min-width: 4\.75rem; \}/);
+  assert.match(styles, /\.my-ticket \{[\s\S]*max-width: 30rem;/);
+  assert.match(styles, /\.my-ticket-columns \{\s*display: grid;\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
+  assert.match(styles, /\.my-ticket-instructions p \{ white-space: nowrap; \}/);
+  assert.match(styles, /@media \(max-width: 639px\)[\s\S]*\.my-ticket-columns \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(styles, /@media \(max-width: 379px\)[\s\S]*\.my-ticket-columns \{ grid-template-columns: minmax\(0, 1fr\); \}/);
 });
