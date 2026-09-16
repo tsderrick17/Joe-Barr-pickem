@@ -130,7 +130,9 @@ body {
 .slate-mini-nav strong {
   font-size: .66rem;
   letter-spacing: .045em;
-  overflow-wrap: anywhere;
+  /* Keep picker names readable on narrow rows: wrap at word boundaries and
+     only break a long unbroken token when it truly cannot fit. */
+  overflow-wrap: break-word;
 }
 
 .slate-receipt-picks-short { display: none; }
