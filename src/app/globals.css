@@ -130,9 +130,6 @@ body {
 .slate-mini-nav strong {
   font-size: .66rem;
   letter-spacing: .045em;
-  /* Keep picker names readable on narrow rows: wrap at word boundaries and
-     only break a long unbroken token when it truly cannot fit. */
-  overflow-wrap: break-word;
 }
 
 .slate-receipt-picks-short { display: none; }
@@ -1651,7 +1648,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   line-height: 1.15rem;
   margin-top: .22rem;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  /* Keep picker names readable: wrap at word boundaries before breaking a
+     long unbroken token when it truly cannot fit. */
+  overflow-wrap: break-word;
   padding-top: .16rem;
 }
 
