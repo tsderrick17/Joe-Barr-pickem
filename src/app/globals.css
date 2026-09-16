@@ -1592,6 +1592,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 .slate-team-result-line.is-right { justify-content: flex-end; }
 .slate-team-result-line.is-left { justify-content: flex-start; }
+.slate-game-row.is-final > .slate-team-side {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 .slate-team-result-line .slate-team-label { min-width: 0; }
 .slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
 .slate-team-label-lane.is-left { margin-right: auto; text-align: left; }

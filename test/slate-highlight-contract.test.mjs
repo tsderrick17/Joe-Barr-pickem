@@ -28,3 +28,9 @@ test("final Slate scores use the team-name size and a stable numeric anchor", ()
   assert.match(css, /\.slate-team-result-mark\s*\{\s*align-self:\s*start/);
   assert.match(css, /grid-template-columns:\s*minmax\(0, max-content\) 2\.3ch max-content/);
 });
+
+test("final Slate team sides share a top anchor when picker lists have different heights", () => {
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side\s*\{[\s\S]*align-self:\s*stretch/);
+  assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side\s*\{[\s\S]*justify-content:\s*flex-start/);
+});
