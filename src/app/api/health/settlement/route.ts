@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 // The score worker begins at 2h50m after kickoff. Four hours gives it a
 // bounded cushion without hiding a genuinely stalled settlement.
-const SETTLEMENT_GRACE_MS = 4 * 60 * 60 * 1000;
+const SETTLEMENT_GRACE_MS = 6 * 60 * 60 * 1000;
 const SETTLED_STATUSES = ["final", "postponed", "cancelled", "no_contest"];
 
 export async function GET() {
