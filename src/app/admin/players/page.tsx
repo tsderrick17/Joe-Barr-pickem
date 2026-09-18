@@ -68,7 +68,11 @@ export default function PlayerManagementPage() {
   }, []);
 
   useEffect(() => {
-    void loadPlayers();
+    const timer = window.setTimeout(() => {
+      void loadPlayers();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [loadPlayers]);
 
   async function addPlayer(event: FormEvent<HTMLFormElement>) {
