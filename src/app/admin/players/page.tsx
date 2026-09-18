@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import * as Sentry from "@sentry/nextjs";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type Player = {
   id: string;
@@ -33,83 +34,46 @@ export default function PlayerManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getAccessToken = useCallback(async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    return session?.access_token ?? null;
-  }, []);
-
   const loadPlayers = useCallback(async () => {
     setErrorMessage("");
     setIsLoading(true);
 
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-      setErrorMessage("Please sign in before managing players.");
-      setIsLoading(false);
-      return;
-    }
-
-    const response = await fetch("/api/admin/players", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setErrorMessage(
-        data.error ?? "The player list could not be loaded.",
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    setPlayers(data.players ?? []);
-    setIsLoading(false);
-  }, [getAccessToken]);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    async function loadInitialPlayers() {
-      const accessToken = await getAccessToken();
-
-      if (!isCurrent) return;
-
-      if (!accessToken) {
-        setErrorMessage("Please sign in before managing players.");
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch("/api/admin/players", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+    try {
+      const response = await fetchWithSession("/api/admin/players");
       const data = await response.json();
-
-      if (!isCurrent) return;
 
       if (!response.ok) {
         setErrorMessage(data.error ?? "The player list could not be loaded.");
-        setIsLoading(false);
         return;
       }
 
       setPlayers(data.players ?? []);
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) {
+        setErrorMessage("Please sign in before managing players.");
+        return;
+      }
+
+      const error = reason instanceof Error ? reason : new Error("Player list request failed.");
+      Sentry.withScope((scope) => {
+        scope.setTag("app.route", "/admin/players");
+        scope.setTag("error.kind", "network");
+        scope.setContext("request", { endpoint: "/api/admin/players", method: "GET" });
+        Sentry.captureException(error);
+      });
+      setErrorMessage("The player list could not be loaded. Check your connection and try again.");
+    } finally {
       setIsLoading(false);
     }
+  }, []);
 
-    void loadInitialPlayers();
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadPlayers();
+    }, 0);
 
-    return () => {
-      isCurrent = false;
-    };
-  }, [getAccessToken]);
+    return () => window.clearTimeout(timer);
+  }, [loadPlayers]);
 
   async function addPlayer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,41 +93,40 @@ export default function PlayerManagementPage() {
       return;
     }
 
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-      setErrorMessage("Please sign in before adding a player.");
-      return;
-    }
-
     setIsSubmitting(true);
+    try {
+      const response = await fetchWithSession("/api/admin/players", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName: cleanedName, pin }),
+      });
+      const data = await response.json();
 
-    const response = await fetch("/api/admin/players", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        firstName: cleanedName,
-        pin,
-      }),
-    });
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "The player could not be added.");
+        return;
+      }
 
-    const data = await response.json();
-
-    setIsSubmitting(false);
-
-    if (!response.ok) {
-      setErrorMessage(data.error ?? "The player could not be added.");
-      return;
+      setFirstName("");
+      setPin("");
+      setSuccessMessage(data.message ?? "Player added successfully.");
+      await loadPlayers();
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) {
+        setErrorMessage("Please sign in before adding a player.");
+      } else {
+        const error = reason instanceof Error ? reason : new Error("Player creation request failed.");
+        Sentry.withScope((scope) => {
+          scope.setTag("app.route", "/admin/players");
+          scope.setTag("error.kind", "network");
+          scope.setContext("request", { endpoint: "/api/admin/players", method: "POST" });
+          Sentry.captureException(error);
+        });
+        setErrorMessage("The player could not be added. Check your connection and try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setFirstName("");
-    setPin("");
-    setSuccessMessage(data.message ?? "Player added successfully.");
-
-    await loadPlayers();
   }
 
   return (
@@ -293,6 +256,19 @@ PINs are unique login identifiers and may be viewed here at any time.
                 {players.length} TOTAL
               </p>
             </div>
+
+            {errorMessage && !isLoading ? (
+              <div className="mt-6 flex items-center justify-between gap-4 border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <span>{errorMessage}</span>
+                <button
+                  type="button"
+                  className="shrink-0 font-bold underline"
+                  onClick={() => void loadPlayers()}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : null}
 
             <div className="mt-6 border-y-2 border-zinc-900">
               {isLoading ? (

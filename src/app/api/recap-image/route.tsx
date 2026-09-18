@@ -11,6 +11,7 @@ import type { BowlDailyRecapSnapshot } from "@/lib/bowl-pool-recap";
 import { bowlRecapLayout } from "@/lib/bowl-recap-layout.js";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const INK = "#171719";
 const PAPER = "#fffdf8";
@@ -20,14 +21,16 @@ const MARGIN_RED = "#d56b66";
 const TEAL = "#008c82";
 const MUTED = "#596579";
 const SITE_URL = "https://pickemjb.vercel.app";
+const IMAGE_CACHE_CONTROL = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800";
 // Email clients scale images to the width of the message column. Rendering the
 // Slate on a slightly tighter canvas makes its type and rules materially more
 // legible on phones without making the email itself any wider.
 const SLATE_IMAGE_WIDTH = 920;
-// Public-receipt images use the same deliberately tight canvas as the Slate.
-// Email clients scale the artwork to their fixed message column, so a 1200px
-// reveal made the actual Pick'em data needlessly small on phones.
-const PUBLIC_RECEIPT_IMAGE_WIDTH = 920;
+// Recap and public-receipt images use a tighter canvas than the full Slate.
+// Email clients scale artwork to their fixed message column, so a wide canvas
+// makes the actual Pick'em data needlessly small on phones.
+const PUBLIC_RECEIPT_IMAGE_WIDTH = 760;
+const RECAP_IMAGE_WIDTH = 760;
 
 type SlateGame = { away: string; home: string; day?: string; time: string; favorite: "away" | "home" | null; spread: number | null };
 type PublicRow = { name: string; wins: number; picks: string[] };
@@ -248,7 +251,7 @@ async function renderRecap(request: NextRequest) {
           {standings.map((row, index) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Georgia", fontSize: 18, minHeight: 29 }}><span style={{ color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 14, width: 40 }}>{index + 1}</span><span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{row.name}</span><span style={{ display: "flex", fontFamily: "Arial", fontWeight: 800 }}>{row.wins}</span></div>)}
         </div>
       </div>,
-      { width: 920, height: summaryImageHeight(snapshot) },
+      { width: RECAP_IMAGE_WIDTH, height: summaryImageHeight(snapshot) },
     );
   }
 
@@ -271,7 +274,7 @@ async function renderRecap(request: NextRequest) {
         {snapshot.survivor.rows.map((row) => <div key={row.name} style={{ alignItems: "center", borderBottom: `1px solid ${RULE_BLUE}`, display: "flex", fontFamily: "Arial", fontSize: 18, minHeight: 42, padding: "0 8px" }}><span style={{ color: row.status === "IN" ? "#08785d" : "#b91c1c", display: "flex", fontSize: 13, fontWeight: 800, width: 62 }}>{row.status}</span><span style={{ color: row.status === "OUT" ? MUTED : INK, display: "flex", fontFamily: "Georgia", fontWeight: 700, textDecoration: row.status === "OUT" ? "line-through" : "none", width: 170 }}>{row.name}</span>{row.picks.map((rawPick, pickIndex) => { const pick = typeof rawPick === "string" ? rawPick : ""; const match = pick.match(/^([A-Z]+)(?:\s+([WL]))?$/); const abbreviation = match?.[1] ?? ""; const result = match?.[2] ?? ""; return <span key={pickIndex} style={{ alignItems: "center", color: "#334155", display: "flex", justifyContent: "center", width: 54 }}>{abbreviation ? <span style={{ display: "flex", position: "relative" }}><img alt="" height="32" src={`${SITE_URL}/team-logos/${abbreviation}.png`} width="32" />{result === "W" ? <span style={{ alignItems: "center", background: "#08785d", borderRadius: 12, color: "white", display: "flex", fontFamily: "Arial", fontSize: 11, fontWeight: 900, height: 16, justifyContent: "center", position: "absolute", right: -4, top: -4, width: 16 }}>✓</span> : result === "L" ? <span style={{ color: "#b91c1c", display: "flex", fontFamily: "Arial", fontSize: 29, fontWeight: 900, position: "absolute", right: -3, top: -9 }}>×</span> : null}</span> : "·"}</span>; })}</div>)}
         <div style={{ borderTop: `2px solid ${INK}`, display: "flex", fontFamily: "Arial", fontSize: 16, marginTop: 18, paddingTop: 13 }}>{survivorFooter}</div>
       </div>,
-      { width: 920, height: survivorImageHeight(snapshot.survivor) },
+      { width: RECAP_IMAGE_WIDTH, height: survivorImageHeight(snapshot.survivor) },
     );
   }
 
@@ -283,15 +286,21 @@ async function renderRecap(request: NextRequest) {
 // slips through, while preserving the real error in server logs for repair.
 export async function GET(request: NextRequest) {
   try {
-    return await renderRecap(request);
+    const response = await renderRecap(request);
+    if (response.headers.get("content-type")?.startsWith("image/")) {
+      response.headers.set("Cache-Control", IMAGE_CACHE_CONTROL);
+    }
+    return response;
   } catch (error) {
     console.error("recap image render failed", error);
-    return new ImageResponse(
+    const response = new ImageResponse(
       <div style={{ alignItems: "center", background: PAPER, color: INK, display: "flex", flexDirection: "column", fontFamily: "Arial", height: "100%", justifyContent: "center", padding: 48, textAlign: "center", width: "100%" }}>
         <span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>Pick&apos;em Update</span>
         <span style={{ color: MUTED, display: "flex", fontSize: 20, marginTop: 14 }}>Open Pick&apos;em to view the latest standings.</span>
       </div>,
       { width: 920, height: 300 },
     );
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   }
 }

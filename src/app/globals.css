@@ -12,6 +12,11 @@
   --pool-teal: #16806a;
   --pool-alert: #a33c29;
   --pool-rule: #c7c0b5;
+  --pool-display-font: Georgia, "Times New Roman", serif;
+  --pool-body-font: Arial, Helvetica, sans-serif;
+  --pool-radius-sm: .125rem;
+  --pool-focus-ring: 0 0 0 3px rgba(22, 128, 106, .24);
+  --pool-control-height: 2.75rem;
   --pool-space-1: .35rem;
   --pool-space-2: .7rem;
   --pool-space-3: 1.05rem;
@@ -1689,6 +1694,65 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-game-row:not(.is-final) .slate-team-label-lane.is-right {
   text-align: left;
 }
+
+/* Shared visual system primitives. Pool surfaces, email artwork, and the
+   Commissioner desk should draw from these tokens before adding a local rule. */
+.pool-eyebrow {
+  color: var(--pool-muted);
+  font-family: var(--pool-body-font);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.pool-panel {
+  background: var(--pool-surface);
+  border: 1px solid var(--pool-rule);
+  border-radius: var(--pool-radius-sm);
+}
+
+.pool-action:focus-visible,
+.pool-panel:focus-within {
+  box-shadow: var(--pool-focus-ring);
+}
+
+.commissioner-map-release {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem !important;
+  letter-spacing: .04em;
+}
+
+/* When Survivor is no longer in play, reclaim both chip lanes. Keep the time
+   in a slim left gutter, then give the two teams equal lanes around a truly
+   centered pregame spread. Settled rows intentionally keep their established
+   score layout below. */
+@media (min-width: 768px) {
+  .slate-game-row.no-survivor-layout:not(.is-final) {
+    grid-template-columns: minmax(0, 1fr) 6.5rem minmax(0, 1fr);
+    padding-left: 4.5rem;
+  }
+
+  .slate-game-row.no-survivor-layout:not(.is-final) > :first-child {
+    left: 0;
+    position: absolute;
+    width: 4.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .slate-game-row.no-survivor-layout:not(.is-final) {
+    grid-template-columns: minmax(0, 1fr) 3.35rem minmax(0, 1fr);
+    padding-left: 2.6rem;
+  }
+
+  .slate-game-row.no-survivor-layout:not(.is-final) > :first-child {
+    left: 0;
+    position: absolute;
+    width: 2.6rem;
+  }
+}
+
 .slate-team-picker-list {
   display: flex;
   flex-wrap: wrap;
@@ -3117,7 +3181,7 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   .commissioner-email-list { max-height: 28rem; }
 }
 
-.commissioner-map-metrics { display: grid; gap: var(--pool-space-2); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.commissioner-map-metrics { display: grid; gap: var(--pool-space-2); grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .commissioner-map-metric { background: var(--pool-surface); border: 1px solid var(--pool-rule); display: grid; gap: var(--pool-space-1); min-width: 0; padding: var(--pool-space-3); }
 .commissioner-map-metric-label { color: var(--pool-muted); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
 .commissioner-map-metric strong { color: var(--pool-ink); font-family: Georgia, serif; font-size: 1.25rem; line-height: 1.1; overflow-wrap: anywhere; }

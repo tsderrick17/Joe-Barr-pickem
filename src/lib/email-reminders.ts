@@ -101,7 +101,9 @@ const recapImageStyle = "display:block;height:auto;margin:0 0 18px;max-width:100
 const recapImageStyleNoMargin = "display:block;height:auto;max-width:100%;width:100%";
 
 function recapImage({ alt, href, kind, reminderId, style }: { alt: string; href: string; kind: string; reminderId: string; style: string }) {
-  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}`;
+  // Version the artwork URL so a transient 404/timeout cached by an email
+  // provider cannot poison every later open of the same message.
+  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=2`;
   return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="560" style="${style}"><span style="font:12px/1.4 Arial,sans-serif;color:#57534e">View this update on Pick'em if the image is unavailable.</span></a>`;
 }
 

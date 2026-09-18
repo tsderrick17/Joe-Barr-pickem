@@ -15,6 +15,8 @@ type GameRow = {
   finalized_at: string | null;
 };
 
+const release = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
+
 function nextTime(values: string[], now: Date) {
   return values
     .filter((value) => new Date(value).getTime() > now.getTime())
@@ -49,6 +51,7 @@ export async function GET(request: NextRequest) {
         summary: `Create the ${CURRENT_SEASON_YEAR} season before the operating flow can begin.`,
         currentStageId: "schedule",
         openIncidentCount: watchdog.openAlerts.length,
+        release,
         stages: [
           stage("schedule", "Schedule", "attention", "No current season record was found.", "Create the season, then load and pin its schedule."),
           stage("selections", "Selections", "waiting", "Player selections wait for an active scoring period.", "Begins after the schedule is ready."),
@@ -69,7 +72,7 @@ export async function GET(request: NextRequest) {
         stage("results", "Results & recap", "complete", "The final results are complete.", "Recap receipts remain available."),
         stage("handoff", "Season finish", "complete", "The final playoff round turned over successfully.", "The next automatic lifecycle step is the new-season bootstrap."),
       ];
-      return NextResponse.json({ checkedAt: now.toISOString(), overall: "healthy", headline: "The season is complete", summary: "Every operational gate is settled and the full season remains preserved.", currentStageId: "handoff", openIncidentCount: watchdog.openAlerts.length, providerAllowance: health.providerAllowance, stages: completedStages });
+      return NextResponse.json({ checkedAt: now.toISOString(), overall: "healthy", headline: "The season is complete", summary: "Every operational gate is settled and the full season remains preserved.", currentStageId: "handoff", openIncidentCount: watchdog.openAlerts.length, providerAllowance: health.providerAllowance, release, stages: completedStages });
     }
 
     const { data: periods, error: periodsError } = await supabaseAdmin
@@ -211,6 +214,7 @@ export async function GET(request: NextRequest) {
       currentStageId: current.id,
       openIncidentCount,
       providerAllowance: health.providerAllowance,
+      release,
       stages,
     });
   } catch {
