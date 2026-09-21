@@ -68,3 +68,42 @@ export function summarizeProviderEfficiency(runs, now = new Date()) {
     trend,
   };
 }
+
+function monthStart(now) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+function monthRunRows(runs, now) {
+  const start = monthStart(now);
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return runs.filter((run) => {
+    const timestamp = new Date(run.completed_at ?? run.started_at).getTime();
+    return timestamp >= start.getTime() && timestamp < end.getTime();
+  });
+}
+
+export function summarizeProviderCalendarMonth(runs, now = new Date()) {
+  const rows = monthRunRows(runs, now);
+  const totalCredits = rows.reduce((total, run) => total + providerRequestCost(run), 0);
+  const byJob = (jobType) => rows
+    .filter((run) => run.job_type === jobType)
+    .reduce((total, run) => total + providerRequestCost(run), 0);
+  const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const daysElapsed = Math.max(1, now.getUTCDate());
+  const sundaysInMonth = Array.from({ length: daysInMonth }, (_, index) =>
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), index + 1)).getUTCDay() === 0,
+  ).filter(Boolean).length;
+
+  return {
+    monthLabel: now.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
+    daysInMonth,
+    daysElapsed,
+    sundaysInMonth,
+    providerCalls: rows.filter((run) => providerRequestCost(run) > 0).length,
+    creditsTracked: totalCredits,
+    scoreCredits: byJob("scores"),
+    lineLockCredits: byJob("line_locks"),
+    oddsCredits: byJob("odds"),
+    projectedCredits: Math.ceil((totalCredits / daysElapsed) * daysInMonth),
+  };
+}

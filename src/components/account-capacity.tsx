@@ -28,6 +28,18 @@ type AccountCapacity = {
     previousSevenDayCreditsPerFinal: number | null;
     trend: "improving" | "worsening" | "steady" | "insufficient";
   };
+  calendarMonth?: {
+    monthLabel: string;
+    daysInMonth: number;
+    daysElapsed: number;
+    sundaysInMonth: number;
+    providerCalls: number;
+    creditsTracked: number;
+    scoreCredits: number;
+    lineLockCredits: number;
+    oddsCredits: number;
+    projectedCredits: number;
+  };
 };
 
 type StorageTableUsage = {
@@ -146,6 +158,16 @@ export default function AccountCapacityPanel() {
         {access ? <><p className="mt-1 text-sm text-zinc-700">{access.purpose}</p><p className="mt-2 text-[11px] font-black tracking-[.1em] text-[#007e72]">{access.signIn.toUpperCase()}</p></> : null}
         <div className="mt-4"><CapacityDial account={account} /></div>
         <p className="mt-3 border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-600">{account.detail}</p>
+        {account.calendarMonth ? <div className="mt-3 border-t border-zinc-200 pt-3">
+          <p className="text-[10px] font-black tracking-[.12em] text-zinc-600">CALENDAR MONTH · {account.calendarMonth.monthLabel.toUpperCase()}</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.used === null ? "—" : `${account.used} / ${account.limit ?? "—"}`}</b>quota used</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.projectedCredits}</b>provisional month-end</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.scoreCredits}</b>score credits tracked</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.sundaysInMonth}</b>Sundays in month</p>
+          </div>
+          <p className="mt-2 text-xs text-zinc-600">Tracked by source: {account.calendarMonth.lineLockCredits} line-lock, {account.calendarMonth.oddsCredits} schedule/odds.</p>
+        </div> : null}
         {account.efficiency ? <div className="mt-3 border-t border-zinc-200 pt-3">
           <p className="text-[10px] font-black tracking-[.12em] text-zinc-600">30-DAY EFFICIENCY</p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">

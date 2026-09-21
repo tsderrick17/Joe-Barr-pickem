@@ -292,6 +292,12 @@ may enrich spreads but cannot override canonical schedule assignments.
   credits, imported finals, productive checks, credits per final, and the
   seven-day trend. Only the real 7:00 AM Eastern pre-lock window may spend the
   schedule-refresh credit, even though both DST-safe cron entries remain.
+- Commissioner Connected Systems also reports calendar-month quota usage,
+  provisional month-end load, source breakdown, and Sunday count. This is the
+  planning view for the provider's monthly reset; the 30-day view is strictly
+  an efficiency trend. Bowl Pool schedule and scores use ESPN by default and
+  do not consume NFL Odds API credits unless the NCAAF fallback is explicitly
+  enabled.
 - Schedule-provider failures use a circuit breaker and shared cooldown. Manual
   commissioner override may bypass timing, but not authentication, leases,
   quota reserve, pins, or atomic validation.

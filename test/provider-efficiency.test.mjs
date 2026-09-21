@@ -5,7 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { nextScoreCheckAt } from "../src/lib/score-check-backoff.ts";
 import { shouldHoldScorePollingForQuota } from "../src/lib/score-check-backoff.ts";
-import { providerRequestCost, summarizeProviderEfficiency } from "../src/lib/provider-efficiency.js";
+import { providerRequestCost, summarizeProviderCalendarMonth, summarizeProviderEfficiency } from "../src/lib/provider-efficiency.js";
 import { isEasternPrelockRefreshWindow } from "../src/lib/prelock-refresh-window.ts";
 import { shouldRunBowlScoreSync } from "../src/lib/score-worker-cadence.ts";
 
@@ -81,6 +81,17 @@ test("a failed provider response still counts a reported charge", () => {
     status: "failed",
     details: { providerChecked: true, requestsLast: "0" },
   }), 0);
+});
+
+test("calendar-month tracking exposes five-Sunday planning context separately from rolling efficiency", () => {
+  const result = summarizeProviderCalendarMonth([
+    { job_type: "scores", completed_at: "2026-11-01T12:00:00.000Z", details: { providerChecked: true, requestsLast: "2" } },
+    { job_type: "line_locks", completed_at: "2026-11-02T12:00:00.000Z", details: { dueGames: 3, requestsLast: "1" } },
+  ], new Date("2026-11-03T12:00:00.000Z"));
+  assert.equal(result.sundaysInMonth, 5);
+  assert.equal(result.creditsTracked, 3);
+  assert.equal(result.scoreCredits, 2);
+  assert.equal(result.lineLockCredits, 1);
 });
 
 test("a rejected score-provider call persists per-game backoff before failing", async () => {

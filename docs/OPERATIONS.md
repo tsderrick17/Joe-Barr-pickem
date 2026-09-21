@@ -54,6 +54,14 @@ finals imported, productive score checks, credits per final, and the seven-day
 direction. Use that evidence—not guesswork—to adjust thresholds after real game
 weeks. The two daylight-saving-safe pre-lock schedules remain installed, but
 only the invocation that is actually 7:00 AM Eastern may call the provider.
+The same card also shows calendar-month quota usage, a provisional month-end
+projection, source breakdown, and the number of Sundays in that month. The
+provider quota resets monthly, so the calendar view is the planning view for
+five-Sunday months; the rolling view is for efficiency comparisons.
+
+The Bowl Pool is not part of this NFL allowance by default. Its schedule and
+scores use ESPN. Only the explicitly enabled NCAAF Odds API fallback would share
+the monthly Odds API quota.
 
 ## Automatic season handoff
 

@@ -1,5 +1,5 @@
 import { easternCalendarDayWindow } from "@/lib/eastern-calendar-day";
-import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
+import { summarizeProviderCalendarMonth, summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type ProviderEfficiency = {
@@ -29,6 +29,18 @@ export type AccountCapacity = {
   detail: string;
   connection: "live" | "awaiting_connection" | "not_reported";
   efficiency?: ProviderEfficiency;
+  calendarMonth?: {
+    monthLabel: string;
+    daysInMonth: number;
+    daysElapsed: number;
+    sundaysInMonth: number;
+    providerCalls: number;
+    creditsTracked: number;
+    scoreCredits: number;
+    lineLockCredits: number;
+    oddsCredits: number;
+    projectedCredits: number;
+  };
 };
 
 export type StorageTableUsage = {
@@ -238,6 +250,8 @@ async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
 export async function loadAccountCapacity(now = new Date()): Promise<AccountCapacity[]> {
   const day = easternCalendarDayWindow(now);
   const efficiencyStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const historyStart = new Date(Math.min(Date.parse(efficiencyStart), Date.parse(monthStart))).toISOString();
   const [databaseResult, emailResult, oddsResult, uptimeRobot, github, sentry] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
@@ -251,7 +265,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .select("job_type, details, completed_at, started_at")
       .eq("provider", "The Odds API")
       .in("status", ["success", "failed"])
-      .gte("started_at", efficiencyStart)
+      .gte("started_at", historyStart)
       .order("completed_at", { ascending: false })
       .limit(1000),
     loadUptimeRobotCapacity(now),
@@ -263,6 +277,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
   const databaseMb = databaseBytes === null ? null : Number((databaseBytes / (1024 * 1024)).toFixed(1));
   const latestOddsRun = (oddsResult.data ?? []).find((run) => latestRemaining(run.details) !== null) ?? null;
   const providerEfficiency = summarizeProviderEfficiency(oddsResult.data ?? [], now) as ProviderEfficiency;
+  const providerCalendarMonth = summarizeProviderCalendarMonth(oddsResult.data ?? [], now);
   const remainingOddsCredits = latestOddsRun ? latestRemaining(latestOddsRun.details) : null;
   const oddsUsed = remainingOddsCredits === null
     ? null
@@ -280,9 +295,10 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       observedAt: latestOddsRun?.completed_at ?? latestOddsRun?.started_at ?? null,
       detail: remainingOddsCredits === null
         ? "The next successful line or score update will capture this reading automatically; this screen never spends an Odds API credit to check."
-        : `${remainingOddsCredits} credits remain from the latest normal provider response.`,
+        : `${remainingOddsCredits} credits remain from the latest normal provider response. Bowl Pool uses ESPN by default and does not consume this NFL credit pool; an explicitly enabled NCAAF Odds API fallback would use the same monthly allowance.`,
       connection: remainingOddsCredits === null ? "not_reported" : "live",
       efficiency: providerEfficiency,
+      calendarMonth: providerCalendarMonth,
     },
     {
       id: "brevo",
