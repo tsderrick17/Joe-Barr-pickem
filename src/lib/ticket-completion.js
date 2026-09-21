@@ -1,7 +1,7 @@
 /**
- * A Survivor selection counts on the personal ticket only while that player
- * still has an active Survivor entry. This keeps the ticket honest after an
- * elimination or after the pool crowns its champion.
+ * A Survivor selection counts on the personal ticket while the player is
+ * eligible for the current scoring period. An elimination recorded during
+ * this period still counts for this week's ticket; it changes next period.
  */
 export function ticketCompletion({
   isPlayoff = false,
@@ -10,13 +10,14 @@ export function ticketCompletion({
   survivorAvailable,
   survivorPickMade,
   survivorStatus,
+  survivorRequired,
 }) {
   // Survivor ends before the postseason. Keep the ticket truthful even if a
   // stale client response still contains an active Survivor entry.
-  const survivorRequired = !isPlayoff && survivorAvailable && survivorStatus === "active";
-  const requiredSelections = maxPicks + (survivorRequired ? 1 : 0);
+  const countsSurvivor = !isPlayoff && survivorAvailable && (typeof survivorRequired === "boolean" ? survivorRequired : survivorStatus === "active");
+  const requiredSelections = maxPicks + (countsSurvivor ? 1 : 0);
   const selectionsMade =
-    pickemSelections + (survivorRequired && survivorPickMade ? 1 : 0);
+    pickemSelections + (countsSurvivor && survivorPickMade ? 1 : 0);
 
   return {
     requiredSelections,

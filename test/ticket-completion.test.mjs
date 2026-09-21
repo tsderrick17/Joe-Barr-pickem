@@ -43,6 +43,20 @@ test("removes Survivor from the ticket requirement once a player is out or the p
   }
 });
 
+test("keeps Survivor required for the period in which the player was eliminated", () => {
+  assert.deepEqual(
+    ticketCompletion({
+      maxPicks: 2,
+      pickemSelections: 2,
+      survivorAvailable: true,
+      survivorPickMade: true,
+      survivorStatus: "eliminated",
+      survivorRequired: true,
+    }),
+    { requiredSelections: 3, selectionsMade: 3, isFilled: true },
+  );
+});
+
 test("treats a playoff ticket as Pick'em-only even if stale Survivor data is present", () => {
   assert.deepEqual(
     ticketCompletion({

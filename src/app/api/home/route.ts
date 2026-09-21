@@ -401,9 +401,11 @@ export async function GET(request: NextRequest) {
   let survivorNotice: string | null = null;
   let survivorRows: Array<{
     id: string;
+    playerId: string;
     firstName: string;
     status: string;
     eliminatedAt: string | null;
+    requiredThisPeriod: boolean;
     pick: {
       label: string | null;
       isHidden: boolean;
@@ -441,7 +443,7 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       supabaseAdmin
         .from("survivor_entries")
-        .select("id, player_id, status, eliminated_at")
+        .select("id, player_id, status, eliminated_at, eliminated_scoring_period_id")
         .eq("season_id", season.id),
       supabaseAdmin
         .from("survivor_picks")
@@ -526,6 +528,12 @@ export async function GET(request: NextRequest) {
               trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
               status: entry.status,
               eliminatedAt: entry.eliminated_at,
+              // An elimination applies after the current scoring period. If
+              // it was recorded in this period, keep Survivor on this week's
+              // ticket and start the reduced requirement next period.
+              requiredThisPeriod:
+                entry.status === "active" ||
+                entry.eliminated_scoring_period_id === currentWeek.id,
               pick: pick
                 ? {
                     label: visible

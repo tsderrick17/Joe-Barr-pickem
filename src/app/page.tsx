@@ -61,6 +61,7 @@ type HomeData = {
     firstName: string;
     trophies?: string[];
     status: "active" | "eliminated" | "complete";
+    requiredThisPeriod: boolean;
     pick: (ScoreboardPick & { abbreviation?: string | null }) | null;
     picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
   }[];
@@ -469,6 +470,7 @@ export default function HomePage() {
           readOnly={data.weekStatus === "complete"}
           survivorAvailable={data.survivorAvailable}
           survivorPick={ticketSurvivor}
+          survivorRequired={viewerSurvivor?.requiredThisPeriod}
           survivorStatus={data.survivorComplete ? "complete" : viewerSurvivor?.status ?? "active"}
           week={data.week}
         />

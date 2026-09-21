@@ -26,6 +26,7 @@ type Props = {
   readOnly?: boolean;
   survivorAvailable: boolean;
   survivorPick: SurvivorTicket;
+  survivorRequired?: boolean;
   survivorStatus: "active" | "eliminated" | "complete";
   week: string;
 };
@@ -36,6 +37,7 @@ export default function MyTicket({
   picks,
   survivorAvailable,
   survivorPick,
+  survivorRequired,
   survivorStatus,
   week,
 }: Props) {
@@ -45,6 +47,7 @@ export default function MyTicket({
     pickemSelections: picks.length,
     survivorAvailable,
     survivorPickMade: Boolean(survivorPick),
+    survivorRequired,
     survivorStatus,
   });
   const status = isFilled ? "SUBMITTED" : "OPEN";
