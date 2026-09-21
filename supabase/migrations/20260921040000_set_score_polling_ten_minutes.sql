@@ -1,31 +1,62 @@
 -- Keep score workers responsive without changing the retry ladders or Bowl Pool cadence.
 -- The endpoint remains due-work gated, lease protected, and quota protected.
 
-delete from cron.job
-where jobname in (
-  'refresh-final-nfl-scores-every-15-minutes',
-  'refresh-final-nfl-scores-every-five-minutes',
-  'refresh-final-nfl-scores-every-ten-minutes'
-);
-
-insert into cron.job (schedule, command, jobname)
-values (
-  '*/10 * * * *',
-  $$
-  select net.http_post(
-    url := 'https://pickemjb.vercel.app/api/cron/sync-scores',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || (
-        select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret' limit 1
+do $migration$
+declare
+  command_text text := $command$
+    select net.http_post(
+      url := 'https://pickemjb.vercel.app/api/cron/sync-scores',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret' limit 1
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 30000
+    );
+  $command$;
+begin
+  -- Production exposes pg_cron helper functions; isolated rehearsal databases do not.
+  -- Keep rehearsals migration-safe while using the supported helper overload in production.
+  if to_regprocedure('cron.unschedule(integer)') is not null then
+    execute $sql$
+      select cron.unschedule(jobid::integer)
+      from cron.job
+      where jobname in (
+        'refresh-final-nfl-scores-every-15-minutes',
+        'refresh-final-nfl-scores-every-five-minutes',
+        'refresh-final-nfl-scores-every-ten-minutes'
       )
-    ),
-    body := '{}'::jsonb,
-    timeout_milliseconds := 30000
-  );
-  $$,
-  'refresh-final-nfl-scores-every-ten-minutes'
-);
+    $sql$;
+  elsif to_regprocedure('cron.unschedule(bigint)') is not null then
+    execute $sql$
+      select cron.unschedule(jobid)
+      from cron.job
+      where jobname in (
+        'refresh-final-nfl-scores-every-15-minutes',
+        'refresh-final-nfl-scores-every-five-minutes',
+        'refresh-final-nfl-scores-every-ten-minutes'
+      )
+    $sql$;
+  end if;
+
+  if to_regprocedure('cron.schedule(text,text,text)') is not null then
+    execute format(
+      'select cron.schedule(%L, %L, %L)',
+      'refresh-final-nfl-scores-every-ten-minutes',
+      '*/10 * * * *',
+      command_text
+    );
+  elsif to_regprocedure('cron.schedule(text,text)') is not null then
+    execute format(
+      'select cron.schedule(%L, %L)',
+      '*/10 * * * *',
+      command_text
+    );
+  end if;
+end
+$migration$;
 
 create or replace function public.automation_preflight()
 returns table(check_id text, label text, passed boolean, detail text)
