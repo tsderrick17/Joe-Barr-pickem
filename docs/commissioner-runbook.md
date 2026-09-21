@@ -121,3 +121,65 @@ Pause writes, preserve the current audit evidence, and restore into an isolated
 project first. Verify the restored application before considering any
 production recovery. Detailed retention and backup behavior lives in
 [OPERATIONS.md](OPERATIONS.md).
+# Grading control center
+
+The Commissioner Desk's **Grading** panel is the operational view for live
+settlement. It shows the active scoring period, game-by-game state, pending
+Pick'em and Survivor grades, score-sync freshness, provider allowance, and a
+prioritized attention queue. Use the queue as the starting point when a final
+score is late, a grade remains pending, a kickoff has passed without a live or
+final state, or a line is missing after lock.
+
+The dashboard is read-only and refreshes automatically once per minute. It does
+not replace the guarded recovery controls on Game day. For a game in
+`Needs review`, verify the provider result and use Final Score Check or Final
+Score Reconciliation according to the normal runbook. Do not type an estimated
+score or repeatedly poll a failing provider.
+
+The **Recent operational history** list is the durable audit trail for the
+current view. It is useful for answering whether a final score was accepted,
+whether grading ran, and when the underlying record changed; it is not a
+replacement for the immutable player-facing receipt or the full audit log.
+
+The **Participant impact** and **Notification readiness** cards are context,
+not controls: they summarize graded outcomes, Survivor status, and queued or
+completed messages. Use the Email center for delivery receipts and the guarded
+game-day controls for any correction.
+
+The **Release readiness** cards provide the next milestone without changing
+the schedule: loaded games, official-line coverage, next kickoff, and next
+line lock. A partial line count is expected before the slate is fully locked;
+only a missing line after its deadline should enter the attention queue.
+
+The **Provider efficiency** card is a decision aid, not a dynamic polling
+switch. It reports observed credits, finalized games, productive checks, and
+the seven-day trend while the score cadence remains predictable week to week.
+
+Use the **Period** selector to inspect a completed or upcoming scoring period
+without changing the player-facing default week. Historical views are
+read-only and retain the same attention, audit, and readiness rules.
+
+The **Worker activity** table is a quick liveness check for score and line-lock
+invocations. A failed row should be investigated through Automation Health and
+the watchdog before any manual retry; a missing row means there is no recent
+worker receipt to trust.
+
+The **Period comparison** card compares average settlement time with the prior
+scoring period when enough settled games exist. It is a trend signal only; it
+does not alter polling cadence or the safe settlement rules.
+
+Use **Game inspector** for the evidence behind a status: score, finalization
+time, Pick'em grades, and Survivor grades. **Copy snapshot** creates a small
+text handoff for a support note or incident log; it does not expose picks or
+change any pool record.
+
+The **Settlement latency** card measures kickoff-to-finalization time for the
+selected period. It is a trend signal, not a new grading threshold; use the
+worker table and provider efficiency details before intervening.
+
+The **Incident posture** card shows both open and recently resolved watchdog
+signals. Treat an open item as the current source of truth; resolved items are
+there for context when reviewing whether a retry actually recovered the system.
+### Polling strategy simulator
+
+The Grading panel includes a read-only simulator comparing conservative, balanced, and responsive score polling. It projects credits for the current slate and a 30-day month, highlights the current recommendation, and clearly labels the result as approval-required. The simulator never changes cron schedules or provider behavior. Use the settlement-latency and credits-per-final metrics alongside it before authorizing a future schedule change.
