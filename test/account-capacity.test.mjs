@@ -14,12 +14,16 @@ test("account capacity gauges use existing provider records and database details
 
   assert.match(capacity, /email_reminder_deliveries/);
   assert.match(capacity, /sync_runs/);
+  assert.match(capacity, /summarizeProviderEfficiency/);
+  assert.match(capacity, /efficiencyStart/);
   assert.doesNotMatch(capacity, /api\.the-odds-api\.com/);
   assert.match(route, /requireCommissioner/);
   assert.match(migration, /pg_database_size/);
   assert.match(migration, /revoke all.*from public, anon, authenticated/i);
   assert.match(panel, /Setup needed/);
   assert.match(panel, /Unknown plan limits show a live count/);
+  assert.match(panel, /30-DAY EFFICIENCY/);
+  assert.match(panel, /credits \/ final/);
   assert.match(panel, /Dashboard only/);
   assert.match(panel, /liveCountWithoutLimit/);
   assert.match(capacity, /storage_table_usage/);

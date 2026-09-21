@@ -60,6 +60,8 @@ export type LockLinesResult = {
   missingGames: string[];
   providerAvailable: boolean;
   requestsRemaining: string | null;
+  requestsUsed?: string | null;
+  requestsLast?: string | null;
   warnings: string[];
 };
 
@@ -222,6 +224,8 @@ async function lockDueLinesInternal(
 
   let providerAvailable = true;
   let requestsRemaining: string | null = null;
+  let requestsUsed: string | null = null;
+  let requestsLast: string | null = null;
   let oddsEvents: OddsEvent[] = [];
 
   try {
@@ -240,6 +244,8 @@ async function lockDueLinesInternal(
 
     requestsRemaining =
       response.headers.get("x-requests-remaining");
+    requestsUsed = response.headers.get("x-requests-used");
+    requestsLast = response.headers.get("x-requests-last");
 
     if (!response.ok) {
       providerAvailable = false;
@@ -460,6 +466,8 @@ async function lockDueLinesInternal(
     missingGames,
     providerAvailable,
     requestsRemaining,
+    requestsUsed,
+    requestsLast,
     warnings,
   };
 

@@ -27,7 +27,7 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     ? new Date(health.latestScores.completed_at ?? health.latestScores.started_at).getTime()
     : 0;
   const scoreWorkerStale = !latestScoreTime || now.getTime() - latestScoreTime > 45 * 60 * 1000;
-  const quotaProtected = health.providerAllowance !== null && health.providerAllowance < 25;
+  const quotaProtected = health.providerAllowance !== null && health.providerAllowance < 50;
   if (!quotaProtected && (
     (health.scoreChecksDueNow > 0 && (health.latestScores?.status === "failed" || scoreWorkerStale)) ||
     health.scoreProviderFailureStreak >= 3

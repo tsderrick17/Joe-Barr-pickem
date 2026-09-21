@@ -1,5 +1,21 @@
 import { easternCalendarDayWindow } from "@/lib/eastern-calendar-day";
+import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+export type ProviderEfficiency = {
+  windowDays: number;
+  providerCalls: number;
+  totalCredits: number;
+  scoreCalls: number;
+  scoreCredits: number;
+  finalizedGames: number;
+  productiveScoreCalls: number;
+  productiveRate: number | null;
+  creditsPerFinal: number | null;
+  currentSevenDayCreditsPerFinal: number | null;
+  previousSevenDayCreditsPerFinal: number | null;
+  trend: "improving" | "worsening" | "steady" | "insufficient";
+};
 
 export type AccountCapacity = {
   id: string;
@@ -12,6 +28,7 @@ export type AccountCapacity = {
   observedAt: string | null;
   detail: string;
   connection: "live" | "awaiting_connection" | "not_reported";
+  efficiency?: ProviderEfficiency;
 };
 
 export type StorageTableUsage = {
@@ -220,6 +237,7 @@ async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
 
 export async function loadAccountCapacity(now = new Date()): Promise<AccountCapacity[]> {
   const day = easternCalendarDayWindow(now);
+  const efficiencyStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [databaseResult, emailResult, oddsResult, uptimeRobot, github, sentry] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
@@ -230,11 +248,12 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .lt("delivered_at", day.end),
     supabaseAdmin
       .from("sync_runs")
-      .select("details, completed_at, started_at")
+      .select("job_type, details, completed_at, started_at")
       .eq("provider", "The Odds API")
-      .eq("status", "success")
+      .in("status", ["success", "failed"])
+      .gte("started_at", efficiencyStart)
       .order("completed_at", { ascending: false })
-      .limit(8),
+      .limit(1000),
     loadUptimeRobotCapacity(now),
     loadGitHubCapacity(now),
     loadSentryCapacity(now),
@@ -243,6 +262,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
   const databaseBytes = databaseResult.error ? null : wholeNumber(databaseResult.data);
   const databaseMb = databaseBytes === null ? null : Number((databaseBytes / (1024 * 1024)).toFixed(1));
   const latestOddsRun = (oddsResult.data ?? []).find((run) => latestRemaining(run.details) !== null) ?? null;
+  const providerEfficiency = summarizeProviderEfficiency(oddsResult.data ?? [], now) as ProviderEfficiency;
   const remainingOddsCredits = latestOddsRun ? latestRemaining(latestOddsRun.details) : null;
   const oddsUsed = remainingOddsCredits === null
     ? null
@@ -262,6 +282,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
         ? "The next successful line or score update will capture this reading automatically; this screen never spends an Odds API credit to check."
         : `${remainingOddsCredits} credits remain from the latest normal provider response.`,
       connection: remainingOddsCredits === null ? "not_reported" : "live",
+      efficiency: providerEfficiency,
     },
     {
       id: "brevo",

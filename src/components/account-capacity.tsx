@@ -14,6 +14,20 @@ type AccountCapacity = {
   observedAt: string | null;
   detail: string;
   connection: "live" | "awaiting_connection" | "not_reported";
+  efficiency?: {
+    windowDays: number;
+    providerCalls: number;
+    totalCredits: number;
+    scoreCalls: number;
+    scoreCredits: number;
+    finalizedGames: number;
+    productiveScoreCalls: number;
+    productiveRate: number | null;
+    creditsPerFinal: number | null;
+    currentSevenDayCreditsPerFinal: number | null;
+    previousSevenDayCreditsPerFinal: number | null;
+    trend: "improving" | "worsening" | "steady" | "insufficient";
+  };
 };
 
 type StorageTableUsage = {
@@ -132,6 +146,16 @@ export default function AccountCapacityPanel() {
         {access ? <><p className="mt-1 text-sm text-zinc-700">{access.purpose}</p><p className="mt-2 text-[11px] font-black tracking-[.1em] text-[#007e72]">{access.signIn.toUpperCase()}</p></> : null}
         <div className="mt-4"><CapacityDial account={account} /></div>
         <p className="mt-3 border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-600">{account.detail}</p>
+        {account.efficiency ? <div className="mt-3 border-t border-zinc-200 pt-3">
+          <p className="text-[10px] font-black tracking-[.12em] text-zinc-600">30-DAY EFFICIENCY</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.efficiency.totalCredits}</b>credits tracked</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.efficiency.finalizedGames}</b>games finalized</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.efficiency.creditsPerFinal ?? "—"}</b>score credits / final</p>
+            <p><b className="block text-base tabular-nums text-zinc-950">{account.efficiency.productiveRate === null ? "—" : `${account.efficiency.productiveRate}%`}</b>productive checks</p>
+          </div>
+          <p className="mt-2 text-xs font-semibold text-[#007e72]">Seven-day efficiency: {account.efficiency.trend === "insufficient" ? "collecting baseline" : account.efficiency.trend}.</p>
+        </div> : null}
       </article>;
     })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{table.estimated_rows.toLocaleString()}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} Unknown plan limits show a live count instead of a made-up percentage.</p></> : null}
   </section>;
