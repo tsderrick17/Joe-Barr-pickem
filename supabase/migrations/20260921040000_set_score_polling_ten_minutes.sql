@@ -1,7 +1,7 @@
 -- Keep score workers responsive without changing the retry ladders or Bowl Pool cadence.
 -- The endpoint remains due-work gated, lease protected, and quota protected.
 
-select cron.unschedule(jobid::integer)
+select cron.unschedule(jobid)
 from cron.job
 where jobname in (
   'refresh-final-nfl-scores-every-15-minutes',
