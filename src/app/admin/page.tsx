@@ -23,6 +23,8 @@ const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstra
 const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
+const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
+const PollingStrategyPanel = dynamic(() => import("@/components/polling-strategy-panel"));
 
 type Spread = {
   team: string;
@@ -85,6 +87,7 @@ type FullSchedulePreview = {
 
 const commissionerPanels = [
   ["overview", "Overview", "See the pool's current stage and the next safe move."],
+  ["grading", "Grading", "Watch live score ingestion, settlement, pending grades, and exceptions."],
   ["game-day", "Game day", "Locks, scores, and the few actions that matter during games."],
   ["season-setup", "Season", "Schedule setup, season turnover, and archive."],
   ["system", "System & safety", "Capacity, automation health, and the rare recovery tools."],
@@ -299,6 +302,8 @@ export default function AdminPage() {
           </div>
         </section>
         </> : null}
+
+        {activePanel === "grading" ? <><GradingDashboard /><PollingStrategyPanel /></> : null}
 
         {activePanel === "game-day" ? <>
           <section className="border-b-2 border-zinc-900 py-7">
