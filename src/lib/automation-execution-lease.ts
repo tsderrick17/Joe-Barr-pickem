@@ -5,12 +5,22 @@ export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders
 
 const leaseSecondsByJob: Record<AutomationJob, number> = {
   line_locks: 120,
-  scores: 120,
-  bowl_scores: 180,
+  scores: 300,
+  bowl_scores: 300,
   reminders: 600,
   season_bootstrap: 600,
   watchdog: 120,
   schedule_refresh: 600,
+};
+
+const executionTimeoutSecondsByJob: Record<AutomationJob, number> = {
+  line_locks: 90,
+  scores: 270,
+  bowl_scores: 270,
+  reminders: 540,
+  season_bootstrap: 540,
+  watchdog: 90,
+  schedule_refresh: 540,
 };
 
 const LEASE_CLAIM_RETRY_DELAYS_MS = [150, 450];
@@ -58,6 +68,28 @@ export class AutomationAlreadyRunningError extends Error {
   }
 }
 
+export class AutomationExecutionTimeoutError extends Error {
+  constructor(job: AutomationJob) {
+    super(`${job} exceeded its execution safety timeout.`);
+    this.name = "AutomationExecutionTimeoutError";
+  }
+}
+
+async function withExecutionTimeout<T>(job: AutomationJob, task: () => Promise<T>) {
+  const timeoutMs = executionTimeoutSecondsByJob[job] * 1000;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      task(),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new AutomationExecutionTimeoutError(job)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export async function runWithAutomationLease<T>(
   job: AutomationJob,
   task: () => Promise<T>,
@@ -75,29 +107,35 @@ export async function runWithAutomationLease<T>(
     throw new AutomationAlreadyRunningError(job);
   }
 
+  let timedOut = false;
   try {
-    const result = await task();
+    const result = await withExecutionTimeout(job, task);
     await recordAutomationWorkerHeartbeat(job, "success");
     return result;
   } catch (error) {
+    timedOut = error instanceof AutomationExecutionTimeoutError;
     await recordAutomationWorkerHeartbeat(job, "failed");
     throw error;
   } finally {
-    let { error: releaseError } = await supabaseAdmin.rpc(
+    if (timedOut) {
+      console.error("Automation lease retained until expiry after execution timeout.", { job });
+    } else {
+      let { error: releaseError } = await supabaseAdmin.rpc(
       "release_automation_execution_lease",
       { target_job_name: job, lease_token: token },
-    );
+      );
 
-    if (releaseError) {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      ({ error: releaseError } = await supabaseAdmin.rpc(
-        "release_automation_execution_lease",
-        { target_job_name: job, lease_token: token },
-      ));
-    }
+      if (releaseError) {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        ({ error: releaseError } = await supabaseAdmin.rpc(
+          "release_automation_execution_lease",
+          { target_job_name: job, lease_token: token },
+        ));
+      }
 
-    if (releaseError) {
-      console.error("Automation lease release failed.", { job });
+      if (releaseError) {
+        console.error("Automation lease release failed.", { job });
+      }
     }
   }
 }

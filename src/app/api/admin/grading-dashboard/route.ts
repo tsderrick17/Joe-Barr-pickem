@@ -136,6 +136,15 @@ export async function GET(request: NextRequest) {
       const productive = rows.filter((run) => run.details && typeof run.details === "object" && Number((run.details as Record<string, unknown>).finalScoresImported ?? 0) > 0).length;
       return { date: dayStart.toISOString().slice(0, 10), creditsPerFinal: finals > 0 ? Number((credits / finals).toFixed(2)) : null, productiveRate: rows.length > 0 ? Math.round((productive / rows.length) * 100) : null, credits, finals };
     });
+    const ladderCounts = new Map<number, number>();
+    for (const run of syncResult.data ?? []) {
+      if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
+      const rungs = (run.details as Record<string, unknown>).ladderRungs;
+      if (!rungs || typeof rungs !== "object") continue;
+      for (const [rung, count] of Object.entries(rungs as Record<string, unknown>)) { const rungNumber = Number(rung); const rungCount = Number(count); if (Number.isInteger(rungNumber) && rungNumber > 0 && Number.isFinite(rungCount) && rungCount > 0) ladderCounts.set(rungNumber, (ladderCounts.get(rungNumber) ?? 0) + rungCount); }
+    }
+    const ladderTotal = [...ladderCounts.values()].reduce((sum, count) => sum + count, 0);
+    const ladderSummary = [...ladderCounts.entries()].sort(([left], [right]) => left - right).map(([rung, pickedUp]) => ({ rung, pickedUp, percentage: ladderTotal ? Math.round((pickedUp / ladderTotal) * 100) : 0 }));
     const settlementLatencies = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => Math.max(0, Math.round((new Date(game.finalizedAt!).getTime() - new Date(game.kickoffAt).getTime()) / 60000)));
     const settlementLatency = { averageMinutes: settlementLatencies.length ? Math.round(settlementLatencies.reduce((sum, value) => sum + value, 0) / settlementLatencies.length) : null, slowestMinutes: settlementLatencies.length ? Math.max(...settlementLatencies) : null, samples: settlementLatencies.length };
     const previousLatencies = (previousGamesResult.data ?? []).filter((game) => game.status === "final" && game.finalized_at).map((game) => Math.max(0, Math.round((new Date(game.finalized_at!).getTime() - new Date(game.kickoff_at).getTime()) / 60000)));
@@ -154,7 +163,8 @@ export async function GET(request: NextRequest) {
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
       workerRuns: (syncResult.data ?? []).slice(0, 8).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
       cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 15, regularRetryMinutes: [10, 10, 10, 15, 15, 30, 60, 120, 360], playoffRetryMinutes: [5, 5, 5, 5, 5, 5, 10, 15, 30, 60, 120, 360], note: "A game enters score polling after the eligibility window; unfinished games then follow the retry ladder." },
-      scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true }; }),
+      scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? {} }; }),
+      ladderSummary,
       incidents: watchdog.recentAlerts.slice(0, 8).map((alert) => ({ id: alert.id, title: alert.title, severity: alert.severity, detectedAt: alert.detected_at, lastSeenAt: alert.last_seen_at, resolvedAt: alert.resolved_at })),
       reminders: (remindersResult.data ?? []).map((reminder) => ({ id: reminder.id, category: reminder.category, title: reminder.title, scheduledFor: reminder.scheduled_for, status: reminder.status, sentAt: reminder.sent_at })),
     });

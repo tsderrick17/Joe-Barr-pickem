@@ -545,6 +545,7 @@ export async function syncFinalScores({
         providerChecked: true,
         completedGamesFound: completedEvents.length,
         finalScoresImported: atomicResult.final_scores_imported,
+        ladderRungs: finalizedGames.reduce<Record<string, number>>((counts, game) => { const rung = String((backoffByGameId.get(game.id)?.attempts ?? 0) + 1); counts[rung] = (counts[rung] ?? 0) + 1; return counts; }, {}),
         picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
         picksAwaitingLine:
           recoveredGrades.picksAwaitingLine + (pendingAfterFinalization ?? 0),

@@ -36,8 +36,10 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /previousAverageMinutes/);
   assert.match(route, /firstCheckMinutesAfterKickoff/);
   assert.match(route, /scorePolls/);
+  assert.match(route, /ladderSummary/);
   assert.match(pollingComponent, /Current polling cadence/);
   assert.match(pollingComponent, /Recent score polls/);
+  assert.match(pollingComponent, /Finals picked up by ladder rung/);
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
   assert.match(route, /efficiencyHistory/);
   assert.match(efficiencyComponent, /Provider efficiency over time/);
