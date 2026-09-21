@@ -115,14 +115,14 @@ test("the faster NFL worker preserves the bowl sync's 15-minute cadence", () => 
   assert.equal(shouldRunBowlScoreSync(new Date("2026-09-20T20:15:00.000Z")), true);
 });
 
-test("five-minute worker remains reproducible and isolated rehearsals strip its live schedule", async () => {
+test("ten-minute worker remains reproducible and isolated rehearsals strip its live schedule", async () => {
   const [migration, isolation] = await Promise.all([
-    readFile(path.join(root, "supabase/migrations/20260921030000_add_adaptive_score_polling.sql"), "utf8"),
+    readFile(path.join(root, "supabase/migrations/20260921040000_set_score_polling_ten_minutes.sql"), "utf8"),
     readFile(path.join(root, "scripts/prepare-isolated-schema.mjs"), "utf8"),
   ]);
-  assert.match(migration, /refresh-final-nfl-scores-every-five-minutes/);
-  assert.match(migration, /'\*\/5 \* \* \* \*'/);
-  assert.match(migration, /Final score worker every five minutes/);
+  assert.match(migration, /refresh-final-nfl-scores-every-ten-minutes/);
+  assert.match(migration, /'\*\/10 \* \* \* \*'/);
+  assert.match(migration, /Final score worker every ten minutes/);
   assert.match(isolation, /PRODUCTION ADAPTIVE SCORE SCHEDULE/);
 });
 

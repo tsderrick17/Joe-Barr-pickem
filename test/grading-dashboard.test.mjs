@@ -35,6 +35,7 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /Period comparison/);
   assert.match(route, /previousAverageMinutes/);
   assert.match(route, /firstCheckMinutesAfterKickoff/);
+  assert.match(route, /cronIntervalMinutes: 10/);
   assert.match(route, /scorePolls/);
   assert.match(route, /ladderSummary/);
   assert.match(pollingComponent, /Current polling cadence/);
