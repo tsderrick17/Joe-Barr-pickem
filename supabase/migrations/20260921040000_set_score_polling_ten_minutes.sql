@@ -9,7 +9,6 @@ where jobname in (
 );
 
 select cron.schedule(
-  'refresh-final-nfl-scores-every-ten-minutes',
   '*/10 * * * *',
   $$
   select net.http_post(
@@ -25,6 +24,11 @@ select cron.schedule(
   );
   $$
 );
+
+update cron.job
+set jobname = 'refresh-final-nfl-scores-every-ten-minutes'
+where schedule = '*/10 * * * *'
+  and command like '%/api/cron/sync-scores%';
 
 create or replace function public.automation_preflight()
 returns table(check_id text, label text, passed boolean, detail text)
