@@ -8,4 +8,7 @@ test("automation lease claims use bounded retries while preserving the overlap g
   assert.match(source, /claimAutomationLease\(job\)/);
   assert.match(source, /if \(!token\) \{/);
   assert.match(source, /release_automation_execution_lease/);
+  assert.match(source, /executionTimeoutSecondsByJob/);
+  assert.match(source, /AutomationExecutionTimeoutError/);
+  assert.match(source, /lease retained until expiry after execution timeout/);
 });
