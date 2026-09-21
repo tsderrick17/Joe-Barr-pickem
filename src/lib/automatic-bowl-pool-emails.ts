@@ -1,7 +1,7 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-type BowlGame = { id: string; kickoff_at: string; status: string };
+type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string };
 
 function easternDate(value: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -40,9 +40,20 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
   let created = 0;
   for (const season of seasons ?? []) {
     const { data, error } = await supabaseAdmin.from("bowl_pool_games")
-      .select("id, kickoff_at, status").eq("season_id", season.id).order("kickoff_at");
+      .select("id, kickoff_at, line_lock_at, status").eq("season_id", season.id).order("kickoff_at");
     if (error) throw new Error("Bowl Pool games could not be read for email scheduling.");
     const games = (data ?? []) as BowlGame[];
+    for (const day of bowlGamedays(games)) {
+      const dayGames = games.filter((game) => easternDate(new Date(game.kickoff_at)) === day);
+      const scheduledFor = dayGames.map((game) => game.line_lock_at).sort()[0];
+      if (!scheduledFor) continue;
+      if (await queue({
+        created_by_player_id: senderId, category: "bowl_line_lock", audience: "all_active",
+        title: "Bowl Pool lines are set", body: "The official lines are posted for today's Bowl Pool games. Review your selections before kickoff.",
+        scheduled_for: scheduledFor, source_game_ids: dayGames.map((game) => game.id),
+        automation_key: `bowl:${season.id}:line-lock:${day}`,
+      })) created += 1;
+    }
     for (const game of games.filter((item) => item.status === "scheduled" && new Date(item.kickoff_at) > now)) {
       const scheduledFor = unpickedBowlReminderAt(game.kickoff_at);
       if (new Date(scheduledFor) <= now) continue;

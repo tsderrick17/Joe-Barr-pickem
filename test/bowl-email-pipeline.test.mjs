@@ -13,6 +13,8 @@ test("Bowl email worker queues immutable daily recaps and game-specific pick rem
   assert.match(source, /bowl:\$\{season\.id\}:daily-recap/);
   assert.match(source, /bowl:\$\{season\.id\}:pick-due/);
   assert.match(source, /source_game_ids: dayGames\.map/);
+  assert.match(source, /category: "bowl_line_lock"/);
+  assert.match(source, /bowl:\$\{season\.id\}:line-lock/);
 });
 
 test("Bowl email delivery snapshots the recap and sends reminders only to active unpicked entries", () => {
@@ -23,6 +25,7 @@ test("Bowl email delivery snapshots the recap and sends reminders only to active
   assert.match(source, /from\("bowl_pool_picks"\)/);
   assert.match(source, /email_notifications_enabled/);
   assert.match(source, /kind: "bowl"/);
+  assert.match(source, /ensureBowlLineLockSnapshot/);
 });
 
 test("Bowl email readiness waits for final results and suppresses expired pick windows", () => {
@@ -31,4 +34,11 @@ test("Bowl email readiness waits for final results and suppresses expired pick w
   assert.match(source, /\["final", "cancelled", "no_contest", "postponed"\]/);
   assert.match(source, /bowlPickDueReady/);
   assert.match(source, /The Bowl selection window has closed/);
+});
+
+test("Bowl line-lock readiness waits for every playable game to have a locked line", () => {
+  const source = read("src/lib/reminder-readiness.ts");
+  assert.match(source, /bowlLineLockReady/);
+  assert.match(source, /Today’s Bowl lines are still being finalized/);
+  assert.match(source, /category === "bowl_line_lock"/);
 });

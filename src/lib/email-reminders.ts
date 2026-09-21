@@ -6,7 +6,7 @@ import {
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
-import { ensureBowlDailyRecapSnapshot } from "@/lib/bowl-pool-recap";
+import { ensureBowlDailyRecapSnapshot, ensureBowlLineLockSnapshot } from "@/lib/bowl-pool-recap";
 
 type Reminder = {
   id: string;
@@ -109,7 +109,9 @@ function recapImage({ alt, href, kind, reminderId, style }: { alt: string; href:
 }
 
 function messageHtml(reminder: Reminder) {
-  const recapImages = reminder.category === "bowl_daily_recap"
+  const recapImages = reminder.category === "bowl_line_lock"
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool official lines", href: `${siteUrl}/bowl-pool`, kind: "bowl-lines", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
+    : reminder.category === "bowl_daily_recap"
     ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool results and standings", href: `${siteUrl}/bowl-pool`, kind: "bowl", reminderId: reminder.id, style: recapImageStyle })}</div>`
     : reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
     ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Pick'em standings and this week's picks", href: siteUrl, kind: "summary", reminderId: reminder.id, style: recapImageStyle })}${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? recapImage({ alt: "Active Survivor board", href: `${siteUrl}/board#slate-matchups`, kind: "survivor", reminderId: reminder.id, style: recapImageStyleNoMargin }) : ""}</div>`
@@ -124,8 +126,8 @@ function messageHtml(reminder: Reminder) {
         : "";
   const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
-  const destination = reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due" ? `${siteUrl}/bowl-pool` : isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
-  const callToAction = reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
+  const destination = reminder.category === "bowl_line_lock" || reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due" ? `${siteUrl}/bowl-pool` : isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
+  const callToAction = reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
   const championCopy = playoffChampionCopy(reminder.recap_snapshot);
@@ -138,7 +140,7 @@ function messageHtml(reminder: Reminder) {
 }
 
 async function recipientsForReminder(reminder: Reminder) {
-  if (reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due") {
+  if (reminder.category === "bowl_line_lock" || reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due") {
     let seasonId: string | null = null;
     if (reminder.source_game_ids?.[0]) {
       const { data: sourceGame } = await supabaseAdmin.from("bowl_pool_games").select("season_id").eq("id", reminder.source_game_ids[0]).maybeSingle();
@@ -370,6 +372,7 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
     if (reminder.category === "sunday_late_reveal") reminder.recap_snapshot = await ensureSundayRevealSnapshot(reminder.id, reminder.recap_snapshot, "late");
     if (reminder.category === "featured_window_reveal") reminder.recap_snapshot = await ensureFeaturedWindowRevealSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "bowl_daily_recap") reminder.recap_snapshot = await ensureBowlDailyRecapSnapshot(reminder.id, reminder.recap_snapshot);
+    if (reminder.category === "bowl_line_lock") reminder.recap_snapshot = await ensureBowlLineLockSnapshot(reminder.id, reminder.recap_snapshot);
     recipients = limitedRecipients ?? await recipientsForReminder(reminder);
   } catch (reason) {
     throw new ReminderPreparationError(

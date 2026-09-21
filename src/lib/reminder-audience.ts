@@ -13,6 +13,7 @@ export type ReminderCategory =
   | "sunday_early_reveal"
   | "sunday_late_reveal"
   | "featured_window_reveal"
+  | "bowl_line_lock"
   | "bowl_daily_recap"
   | "bowl_pick_due"
   | "ats_due"

@@ -12,12 +12,43 @@ export type BowlDailyRecapSnapshot = {
   copy: string;
 };
 
+export type BowlLineLockSnapshot = {
+  kind: "bowl_line_lock";
+  day: string;
+  games: Array<{ name: string; favorite: string; underdog: string; line: string }>;
+};
+
 type PlayerName = { first_name: string | null; last_name: string | null } | null;
 type BowlEntry = { id: string; player_id: string; players: PlayerName };
 type BowlGame = { id: string; season_id: string; bowl_name: string; kickoff_at: string; status: string; away_score: number | null; home_score: number | null; away_team_id: string | null; home_team_id: string | null; away: { short_name: string | null } | null; home: { short_name: string | null } | null; bowl_pool_game_lines: { favorite_team_id: string | null; locked_spread: number | null }[] | null };
 type BowlChampion = { player_id: string; players: PlayerName };
 
 function lineText(value: number | null) { return value === null ? "—" : value === 0 ? "PK" : `-${value}`; }
+
+export async function ensureBowlLineLockSnapshot(reminderId: string, current: unknown): Promise<BowlLineLockSnapshot> {
+  if (current && typeof current === "object" && "kind" in current && current.kind === "bowl_line_lock") return current as BowlLineLockSnapshot;
+  const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders").select("source_game_ids").eq("id", reminderId).maybeSingle();
+  if (reminderError || !reminder?.source_game_ids?.length) throw new Error("Bowl line-update games could not be identified.");
+  const { data: games, error: gameError } = await supabaseAdmin.from("bowl_pool_games")
+    .select("id, bowl_name, kickoff_at, status, away_team_id, home_team_id, away:bowl_pool_teams!bowl_pool_games_away_team_id_fkey(short_name), home:bowl_pool_teams!bowl_pool_games_home_team_id_fkey(short_name), bowl_pool_game_lines(favorite_team_id, locked_spread, locked_at)")
+    .in("id", reminder.source_game_ids);
+  if (gameError || !(games ?? []).length) throw new Error("Bowl official lines could not be prepared.");
+  const playable = games.filter((game) => !["postponed", "cancelled", "no_contest"].includes(game.status));
+  const snapshot: BowlLineLockSnapshot = {
+    kind: "bowl_line_lock",
+    day: new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date(games[0].kickoff_at)),
+    games: playable.map((game) => {
+      const line = Array.isArray(game.bowl_pool_game_lines) ? game.bowl_pool_game_lines[0] : game.bowl_pool_game_lines;
+      const away = Array.isArray(game.away) ? game.away[0] : game.away;
+      const home = Array.isArray(game.home) ? game.home[0] : game.home;
+      const favoriteAway = line?.favorite_team_id === game.away_team_id;
+      return { name: game.bowl_name, favorite: favoriteAway ? away?.short_name ?? "Away" : home?.short_name ?? "Home", underdog: favoriteAway ? home?.short_name ?? "Home" : away?.short_name ?? "Away", line: lineText(line?.locked_spread ?? null) };
+    }),
+  };
+  const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
+  if (error) throw new Error("The Bowl official-lines receipt could not be saved.");
+  return snapshot;
+}
 
 export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: unknown): Promise<BowlDailyRecapSnapshot> {
   if (current && typeof current === "object" && "kind" in current && current.kind === "bowl_daily_recap") return current as BowlDailyRecapSnapshot;
