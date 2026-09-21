@@ -51,6 +51,9 @@ export type ScoreSyncResult = {
   providerChecked: boolean;
   completedGamesFound: number;
   finalScoresImported: number;
+  newFinals?: number;
+  newFinalsByRung?: Record<string, number>;
+  ladderRungs?: Record<string, number>;
   picksGraded: number;
   picksAwaitingLine: number;
   requestsRemaining: string | null;
@@ -306,6 +309,8 @@ export async function syncFinalScores({
     providerChecked: false,
     completedGamesFound: 0,
     finalScoresImported: 0,
+    newFinals: 0,
+    newFinalsByRung: {},
     picksGraded: recoveredGrades.picksGraded,
     picksAwaitingLine: recoveredGrades.picksAwaitingLine,
     requestsRemaining: null,
@@ -438,6 +443,8 @@ export async function syncFinalScores({
         providerChecked: true,
         completedGamesFound: 0,
         finalScoresImported: 0,
+        newFinals: 0,
+        newFinalsByRung: {},
         picksGraded: recoveredGrades.picksGraded,
         picksAwaitingLine: recoveredGrades.picksAwaitingLine,
         requestsRemaining,
@@ -539,13 +546,20 @@ export async function syncFinalScores({
           `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,
         );
       }
+      const newFinalsByRung = finalizedGames.reduce<Record<string, number>>((counts, game) => {
+        const rung = String((backoffByGameId.get(game.id)?.attempts ?? 0) + 1);
+        counts[rung] = (counts[rung] ?? 0) + 1;
+        return counts;
+      }, {});
       const result = {
         checkedAt,
         eligibleGames: eligibleGames.length,
         providerChecked: true,
         completedGamesFound: completedEvents.length,
         finalScoresImported: atomicResult.final_scores_imported,
-        ladderRungs: finalizedGames.reduce<Record<string, number>>((counts, game) => { const rung = String((backoffByGameId.get(game.id)?.attempts ?? 0) + 1); counts[rung] = (counts[rung] ?? 0) + 1; return counts; }, {}),
+        newFinals: finalizedGames.length,
+        newFinalsByRung,
+        ladderRungs: newFinalsByRung,
         picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
         picksAwaitingLine:
           recoveredGrades.picksAwaitingLine + (pendingAfterFinalization ?? 0),

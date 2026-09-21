@@ -281,11 +281,10 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
-- The NFL score worker wakes every five minutes and spends no provider credit
-  unless a game's durable retry time is due. Regular-season games use the same
-  fixed 10/15/30/60/120/360-minute delayed-final sequence every week. Playoff
-  games use a faster fixed 5/10/15/30/60/120/360-minute sequence because the
-  schedule is smaller.
+- The NFL score worker wakes every ten minutes and spends no provider credit
+  unless a game's durable retry time is due. Regular-season and playoff games
+  become eligible 170 minutes after official kickoff and use the same fixed
+  10/10/10/10/10/10/20/20/20/60/120-minute delayed-final sequence.
 - Remaining credits do not change the normal cadence. Repeated polling pauses
   only below the protected 50-credit emergency reserve. Every paid response can
   settle all due completed games it contains, and the bowl worker remains on a

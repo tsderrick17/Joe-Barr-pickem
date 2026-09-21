@@ -38,14 +38,18 @@ includes a read-only per-table size breakdown for review.
 
 ## Provider allowance
 
-The NFL final-score worker wakes every five minutes but calls the provider only
+The NFL final-score worker wakes every ten minutes but calls the provider only
 when at least one game's durable retry time is due. Regular-season delayed
-finals follow the same predictable 10/15/30/60/120/360-minute sequence every
-week. Playoff delayed finals use a faster fixed 5/10/15/30/60/120/360-minute
-sequence because there are fewer games. The monthly balance does not change
-either normal cadence. Repeated polling pauses only below the protected
+finals follow the same predictable 10/10/10/10/10/10/20/20/20/60/120-minute
+sequence every week, and playoff delayed finals use the same ladder. Both
+competition types become eligible 170 minutes after official kickoff. The
+monthly balance does not change the normal cadence. Repeated polling pauses only below the protected
 50-credit emergency reserve, so official line integrity is never traded for
 faster grading. One paid response settles every due completed game it contains.
+Each successful score run records newly finalized games by ladder window. The
+Commissioner grading panel aggregates those records and shows the percentage
+of new finals captured by each window; a game is counted once, at the first
+poll that safely records it as final.
 The bowl worker retains its 15-minute cadence.
 
 Each provider response records the reported request cost and remaining balance;
