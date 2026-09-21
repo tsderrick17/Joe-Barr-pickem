@@ -1729,14 +1729,15 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    score layout below. */
 @media (min-width: 768px) {
   .slate-game-row.no-survivor-layout:not(.is-final) {
-    grid-template-columns: minmax(0, 1fr) 6.5rem minmax(0, 1fr);
-    padding-left: 4.5rem;
+    /* Keep the clock/status lane in the same column as final rows. The
+       previous absolute gutter reclaimed a few pixels, but made live and
+       upcoming matchups start noticeably farther left than settled games. */
+    grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr);
   }
 
   .slate-game-row.no-survivor-layout:not(.is-final) > :first-child {
-    left: 0;
-    position: absolute;
-    width: 4.5rem;
+    position: static;
+    width: auto;
   }
 }
 
