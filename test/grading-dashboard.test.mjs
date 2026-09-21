@@ -5,6 +5,7 @@ import test from "node:test";
 test("grading dashboard exposes a game pipeline and actionable attention queue", async () => {
   const route = await readFile(new URL("../src/app/api/admin/grading-dashboard/route.ts", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
+  const pollingComponent = await readFile(new URL("../src/components/polling-strategy-panel.tsx", import.meta.url), "utf8");
 
   assert.match(route, /needs_review/);
   assert.match(route, /lastScoreSyncAgeMinutes/);
@@ -33,6 +34,14 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /Settlement latency/);
   assert.match(component, /Period comparison/);
   assert.match(route, /previousAverageMinutes/);
+  assert.match(route, /firstCheckMinutesAfterKickoff/);
+  assert.match(route, /scorePolls/);
+  assert.match(pollingComponent, /Current polling cadence/);
+  assert.match(pollingComponent, /Recent score polls/);
+  const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
+  assert.match(route, /efficiencyHistory/);
+  assert.match(efficiencyComponent, /Provider efficiency over time/);
+  assert.match(efficiencyComponent, /Credits \/ final/);
 });
 
 test("grading dashboard keeps the current scoring period and reminder signals together", async () => {
