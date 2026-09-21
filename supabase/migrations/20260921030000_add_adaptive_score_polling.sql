@@ -1,6 +1,6 @@
--- Spend the existing provider allowance where players feel it: near the end
--- of live games. The endpoint remains due-work gated and quota protected, so
--- the faster worker cadence does not itself create provider calls.
+-- Wake frequently enough to support a fixed ten-minute regular-season retry
+-- and a fixed five-minute playoff retry. The endpoint remains due-work gated
+-- and quota protected, so the worker cadence does not itself create calls.
 
 -- BEGIN PRODUCTION ADAPTIVE SCORE SCHEDULE
 select cron.unschedule(jobid::integer)
@@ -40,7 +40,7 @@ as $$
       ('lock-official-lines-every-minute', 'Official line lock every minute', '* * * * *', '/api/cron/lock-lines'),
       ('refresh-nfl-schedule-and-spreads-prelock-early', 'Pre-lock spread refresh (daylight-safe)', '0 11 * 1,2,8,9,10,11,12 *', '/api/admin/import-games'),
       ('refresh-nfl-schedule-and-spreads-prelock-standard', 'Pre-lock spread refresh (standard-safe)', '0 12 * 1,2,8,9,10,11,12 *', '/api/admin/import-games'),
-      ('refresh-final-nfl-scores-every-five-minutes', 'Adaptive final score refresh every five minutes', '*/5 * * * *', '/api/cron/sync-scores'),
+      ('refresh-final-nfl-scores-every-five-minutes', 'Final score worker every five minutes', '*/5 * * * *', '/api/cron/sync-scores'),
       ('send-pickem-browser-reminders-every-five-minutes', 'Reminder delivery every five minutes', '*/5 * * * *', '/api/cron/send-reminders'),
       ('bootstrap-full-nfl-season-daily', 'Automatic preseason schedule bootstrap', '15 12 * 8,9 *', '/api/cron/bootstrap-season'),
       ('pickem-operations-watchdog-every-five-minutes', 'Operations watchdog every five minutes', '*/5 * * * *', '/api/cron/watchdog')

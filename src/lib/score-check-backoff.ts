@@ -1,24 +1,19 @@
 const MINUTE = 60_000;
 
-export type ScorePollingMode = "fast" | "balanced" | "conserve";
+export type ScorePollingMode = "regular" | "playoff";
 
-export function scorePollingMode(remaining: number | null): ScorePollingMode {
-  if (remaining !== null && remaining >= 250) return "fast";
-  if (remaining !== null && remaining >= 100) return "balanced";
-  return "conserve";
+export function scorePollingMode(isPlayoff: boolean): ScorePollingMode {
+  return isPlayoff ? "playoff" : "regular";
 }
 
 export function scorePollingDelayMinutes(
   attempts: number,
-  remaining: number | null,
+  isPlayoff: boolean,
 ) {
   const index = Math.max(0, attempts - 1);
-  const mode = scorePollingMode(remaining);
-  const delays = mode === "fast"
+  const delays = isPlayoff
     ? [5, 5, 5, 5, 5, 5, 10, 15, 30, 60, 120]
-    : mode === "balanced"
-      ? [10, 10, 10, 10, 15, 15, 30, 60, 120]
-      : [15, 15, 15, 15, 30, 30, 60, 120];
+    : [10, 10, 10, 10, 15, 15, 30, 60, 120];
 
   return delays[index] ?? 360;
 }
@@ -30,9 +25,9 @@ export function scorePollingDelayMinutes(
 export function nextScoreCheckAt(
   attempts: number,
   now = new Date(),
-  remaining: number | null = null,
+  isPlayoff = false,
 ) {
-  const delayMinutes = scorePollingDelayMinutes(attempts, remaining);
+  const delayMinutes = scorePollingDelayMinutes(attempts, isPlayoff);
 
   return new Date(now.getTime() + delayMinutes * MINUTE).toISOString();
 }

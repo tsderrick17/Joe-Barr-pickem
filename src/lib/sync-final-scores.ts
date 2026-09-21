@@ -67,7 +67,7 @@ async function deferUnfinishedScoreChecks(
   games: GameRow[],
   previousChecks: Map<string, ScoreCheckBackoffRow>,
   checkedAt: string,
-  remainingCredits: number | null,
+  playoffPeriodIds: Set<string>,
 ) {
   if (games.length === 0) return;
 
@@ -79,7 +79,11 @@ async function deferUnfinishedScoreChecks(
       game_id: game.id,
       attempts,
       last_checked_at: checkedAt,
-      next_check_at: nextScoreCheckAt(attempts, checked, remainingCredits),
+      next_check_at: nextScoreCheckAt(
+        attempts,
+        checked,
+        playoffPeriodIds.has(game.scoring_period_id),
+      ),
       updated_at: checkedAt,
     };
   });
@@ -257,6 +261,21 @@ export async function syncFinalScores({
   const scoreDueGames = (unfinishedGames as GameRow[]).filter((game) =>
     isDueForFinalScoreCheck({ kickoffAt: game.kickoff_at, status: game.status }, now),
   );
+  const scorePeriodIds = [...new Set(scoreDueGames.map((game) => game.scoring_period_id))];
+  const { data: scorePeriods, error: scorePeriodsError } = scorePeriodIds.length
+    ? await supabaseAdmin
+        .from("scoring_periods")
+        .select("id, period_type")
+        .in("id", scorePeriodIds)
+    : { data: [], error: null };
+  if (scorePeriodsError) {
+    throw new Error("Score polling cadence could not be determined safely.");
+  }
+  const playoffPeriodIds = new Set(
+    (scorePeriods ?? [])
+      .filter((period) => period.period_type === "playoff")
+      .map((period) => period.id),
+  );
   const { data: scoreCheckBackoffs, error: scoreCheckBackoffsError } =
     scoreDueGames.length
       ? await supabaseAdmin
@@ -277,6 +296,9 @@ export async function syncFinalScores({
     const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
     return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
   });
+  const pollingMode = scorePollingMode(
+    eligibleGames.some((game) => playoffPeriodIds.has(game.scoring_period_id)),
+  );
 
   const noScoreResult = {
     checkedAt,
@@ -338,7 +360,7 @@ export async function syncFinalScores({
       requestsRemaining: String(lastRemaining),
       requestsUsed: null,
       requestsLast: null,
-      pollingMode: "conserve",
+      pollingMode,
       warnings,
       quotaProtected: true,
     };
@@ -384,8 +406,6 @@ export async function syncFinalScores({
     failedRequestsRemaining = requestsRemaining;
     failedRequestsUsed = requestsUsed;
     failedRequestsLast = requestsLast;
-    const remainingCredits = parseCreditHeader(requestsRemaining);
-    const pollingMode = scorePollingMode(remainingCredits);
 
     if (!response.ok) {
       throw new Error("The NFL score feed could not be reached right now.");
@@ -411,7 +431,7 @@ export async function syncFinalScores({
     );
 
     if (completedEvents.length === 0) {
-      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, remainingCredits);
+      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
       const result = {
         checkedAt,
         eligibleGames: eligibleGames.length,
@@ -494,7 +514,7 @@ export async function syncFinalScores({
       const stillUnfinished = eligibleGames.filter(
         (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
       );
-      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, remainingCredits);
+      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, playoffPeriodIds);
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;
@@ -553,7 +573,7 @@ export async function syncFinalScores({
         // Network failures, timeouts, HTTP errors, and malformed payloads use
         // the same persistent per-game exponential backoff as a delayed final.
         // The five-minute cron can then exit without spending another credit.
-        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, null);
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
       } catch {
         await supabaseAdmin.from("sync_runs").update({
           status: "failed",
@@ -572,7 +592,7 @@ export async function syncFinalScores({
         requestsRemaining: failedRequestsRemaining,
         requestsUsed: failedRequestsUsed,
         requestsLast: failedRequestsLast,
-        pollingMode: scorePollingMode(parseCreditHeader(failedRequestsRemaining)),
+        pollingMode,
       },
     }).eq("id", run.data.id);
     throw error;

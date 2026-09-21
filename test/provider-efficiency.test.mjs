@@ -11,29 +11,28 @@ import { shouldRunBowlScoreSync } from "../src/lib/score-worker-cadence.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("score polling checks delayed finals frequently, then expands to a six-hour safety cooldown", () => {
+test("regular-season score polling uses a predictable cadence before expanding its cooldown", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
   assert.deepEqual(
     [1, 2, 3, 4, 5, 6, 7, 8, 9].map((attempt) => nextScoreCheckAt(attempt, now)),
     [
+      "2026-09-14T00:10:00.000Z",
+      "2026-09-14T00:10:00.000Z",
+      "2026-09-14T00:10:00.000Z",
+      "2026-09-14T00:10:00.000Z",
       "2026-09-14T00:15:00.000Z",
       "2026-09-14T00:15:00.000Z",
-      "2026-09-14T00:15:00.000Z",
-      "2026-09-14T00:15:00.000Z",
-      "2026-09-14T00:30:00.000Z",
       "2026-09-14T00:30:00.000Z",
       "2026-09-14T01:00:00.000Z",
       "2026-09-14T02:00:00.000Z",
-      "2026-09-14T06:00:00.000Z",
     ],
   );
 });
 
-test("score polling spends headroom adaptively and retains a fifty-credit reserve", () => {
+test("playoff polling is consistently faster while the fifty-credit reserve remains", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now, 300), "2026-09-14T00:05:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now, 150), "2026-09-14T00:10:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now, 75), "2026-09-14T00:15:00.000Z");
+  assert.equal(nextScoreCheckAt(1, now, false), "2026-09-14T00:10:00.000Z");
+  assert.equal(nextScoreCheckAt(1, now, true), "2026-09-14T00:05:00.000Z");
   assert.equal(shouldHoldScorePollingForQuota(49, "2026-09-13T00:00:00.000Z", now), true);
   assert.equal(shouldHoldScorePollingForQuota(50, "2026-09-13T00:00:00.000Z", now), false);
 });
@@ -98,7 +97,7 @@ test("a rejected score-provider call persists per-game backoff before failing", 
   const source = await readFile(path.join(root, "src/lib/sync-final-scores.ts"), "utf8");
   const failureHandler = source.slice(source.lastIndexOf("} catch (error)"));
   assert.match(failureHandler, /if \(!providerResponseAccepted\)/);
-  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt, null\)/);
+  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds\)/);
   assert.match(failureHandler, /providerChecked: providerRequestAttempted/);
   assert.match(failureHandler, /requestsLast: failedRequestsLast/);
 });
@@ -107,6 +106,7 @@ test("one paid score response settles every due completed game it already contai
   const source = await readFile(path.join(root, "src/lib/sync-final-scores.ts"), "utf8");
   assert.match(source, /const dueGameByExternalId = new Map\([\s\S]*scoreDueGames\.flatMap/);
   assert.match(source, /const savedGames = scoreDueGames\.filter/);
+  assert.match(source, /period\.period_type === "playoff"/);
 });
 
 test("the faster NFL worker preserves the bowl sync's 15-minute cadence", () => {
@@ -115,14 +115,14 @@ test("the faster NFL worker preserves the bowl sync's 15-minute cadence", () => 
   assert.equal(shouldRunBowlScoreSync(new Date("2026-09-20T20:15:00.000Z")), true);
 });
 
-test("adaptive five-minute cron remains reproducible and isolated rehearsals strip its live schedule", async () => {
+test("five-minute worker remains reproducible and isolated rehearsals strip its live schedule", async () => {
   const [migration, isolation] = await Promise.all([
     readFile(path.join(root, "supabase/migrations/20260921030000_add_adaptive_score_polling.sql"), "utf8"),
     readFile(path.join(root, "scripts/prepare-isolated-schema.mjs"), "utf8"),
   ]);
   assert.match(migration, /refresh-final-nfl-scores-every-five-minutes/);
   assert.match(migration, /'\*\/5 \* \* \* \*'/);
-  assert.match(migration, /Adaptive final score refresh every five minutes/);
+  assert.match(migration, /Final score worker every five minutes/);
   assert.match(isolation, /PRODUCTION ADAPTIVE SCORE SCHEDULE/);
 });
 

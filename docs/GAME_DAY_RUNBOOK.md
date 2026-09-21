@@ -12,8 +12,9 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
    what needs attention.
 2. Open **Automation Health**. Confirm the most recent line lock and score
    sync are healthy. A low provider allowance is a warning, not a scoring
-   change—the app automatically slows delayed-score polling and preserves a
-   50-credit reserve. Connected Systems shows the rolling 30-day credits per
+   change—the normal regular-season and playoff cadences stay fixed. Only the
+   50-credit emergency reserve can pause repeated delayed-final checks.
+   Connected Systems shows the rolling 30-day credits per
    imported final and the seven-day trend; use those measurements when deciding
    whether future polling thresholds should change.
    The daily configuration receipt should also be healthy; if it is not, use

@@ -282,10 +282,12 @@ may enrich spreads but cannot override canonical schedule assignments.
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
 - The NFL score worker wakes every five minutes and spends no provider credit
-  unless a game's durable retry time is due. Per-game polling starts at five
-  minutes with at least 250 observed credits, ten minutes with at least 100,
-  and the conservative 15/30/60/120/360-minute schedule below 100.
-- Polling pauses below the protected 50-credit reserve. Every paid response can
+  unless a game's durable retry time is due. Regular-season games use the same
+  fixed 10/15/30/60/120/360-minute delayed-final sequence every week. Playoff
+  games use a faster fixed 5/10/15/30/60/120/360-minute sequence because the
+  schedule is smaller.
+- Remaining credits do not change the normal cadence. Repeated polling pauses
+  only below the protected 50-credit emergency reserve. Every paid response can
   settle all due completed games it contains, and the bowl worker remains on a
   15-minute cadence.
 - Provider response headers feed a 30-day Commissioner efficiency summary of

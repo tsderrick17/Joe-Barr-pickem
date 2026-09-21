@@ -39,13 +39,14 @@ includes a read-only per-table size breakdown for review.
 ## Provider allowance
 
 The NFL final-score worker wakes every five minutes but calls the provider only
-when at least one game's durable retry time is due. Its retry pace adapts to the
-last observed monthly balance: five-minute checks with at least 250 credits,
-ten-minute checks with at least 100, and the conservative 15/30/60/120/360
-minute schedule below 100. Polling pauses below the protected 50-credit reserve
-so official line integrity is never traded for faster grading. One paid score
-response settles every due completed game it contains. The bowl worker retains
-its 15-minute cadence.
+when at least one game's durable retry time is due. Regular-season delayed
+finals follow the same predictable 10/15/30/60/120/360-minute sequence every
+week. Playoff delayed finals use a faster fixed 5/10/15/30/60/120/360-minute
+sequence because there are fewer games. The monthly balance does not change
+either normal cadence. Repeated polling pauses only below the protected
+50-credit emergency reserve, so official line integrity is never traded for
+faster grading. One paid response settles every due completed game it contains.
+The bowl worker retains its 15-minute cadence.
 
 Each provider response records the reported request cost and remaining balance;
 older runs without cost headers use a conservative endpoint-cost estimate.
@@ -174,9 +175,10 @@ Migration `20260818013000_rebuild_critical_automation.sql` defines the original
 three game-critical workflows. Migration
 `20260921030000_add_adaptive_score_polling.sql` is the current idempotent
 override: official line locking remains every minute, the due-work-gated NFL
-score worker wakes every five minutes, and both daylight/standard-safe pre-lock
-windows remain installed. The runtime Eastern-time guard ensures only one of
-those pre-lock windows spends a credit each day.
+score worker wakes every five minutes to support the fixed regular-season and
+playoff retry cadences, and both daylight/standard-safe pre-lock windows remain
+installed. The runtime Eastern-time guard ensures only one of those pre-lock
+windows spends a credit each day.
 
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing
