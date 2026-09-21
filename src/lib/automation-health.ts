@@ -126,7 +126,7 @@ export async function checkAutomationHealth(now = new Date()) {
   }
 
   const quotaProtected = latestSuccessfulScores?.details?.quotaProtected === true ||
-    (providerAllowance !== null && providerAllowance < 25);
+    (providerAllowance !== null && providerAllowance < 50);
   const latestScoreFinishedAt = latestScores
     ? new Date(latestScores.completed_at ?? latestScores.started_at).getTime()
     : 0;

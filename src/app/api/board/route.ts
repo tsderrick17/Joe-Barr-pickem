@@ -391,6 +391,7 @@ export async function GET(request: NextRequest) {
     chipsVisible: boolean;
     notice: string | null;
     status: "active" | "eliminated" | "complete";
+    requiredThisPeriod: boolean;
     pick: SurvivorPickRow | null;
     usedTeamIds: string[];
   } = {
@@ -399,6 +400,7 @@ export async function GET(request: NextRequest) {
     notice:
       "Survivor is temporarily unavailable. ATS picks remain available.",
     status: "active",
+    requiredThisPeriod: false,
     pick: null,
     usedTeamIds: [],
   };
@@ -407,7 +409,7 @@ export async function GET(request: NextRequest) {
     let { data: survivorEntry, error: survivorEntryError } =
       await supabaseAdmin
         .from("survivor_entries")
-        .select("id, status")
+        .select("id, status, eliminated_scoring_period_id")
         .eq("player_id", player.id)
         .eq("season_id", period.season_id)
         .maybeSingle();
@@ -425,7 +427,7 @@ export async function GET(request: NextRequest) {
       } else {
         const retry = await supabaseAdmin
           .from("survivor_entries")
-          .select("id, status")
+          .select("id, status, eliminated_scoring_period_id")
           .eq("player_id", player.id)
           .eq("season_id", period.season_id)
           .maybeSingle();
@@ -470,6 +472,7 @@ export async function GET(request: NextRequest) {
           available: true,
           chipsVisible: survivorChipsVisible,
           notice: null,
+          requiredThisPeriod: survivorEntry.status === "active" || survivorEntry.eliminated_scoring_period_id === scoringPeriodId,
           status: season.survivor_champion_player_id ? "complete" : survivorEntry.status,
           pick: survivorPick as SurvivorPickRow | null,
           usedTeamIds: (usedSurvivorPicks ?? []).map(
@@ -548,6 +551,7 @@ export async function GET(request: NextRequest) {
       chipsVisible: false,
       notice: "Survivor has concluded for the season.",
       status: "complete",
+      requiredThisPeriod: false,
       pick: null,
       usedTeamIds: [],
     };

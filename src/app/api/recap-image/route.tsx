@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { onlyPublicPickRows } from "@/lib/pool-action-visibility";
 import { slateImagePresentation } from "@/lib/slate-image-order";
 import type { EarlyLockSnapshot, FeaturedWindowRevealSnapshot, FreshSlateSnapshot, GameDaySlateSnapshot, PlayoffDayRecapSnapshot, PlayoffPublicRevealSnapshot, SundayRevealSnapshot, WeeklyRecapSnapshot } from "@/lib/weekly-recap";
-import type { BowlDailyRecapSnapshot } from "@/lib/bowl-pool-recap";
+import type { BowlDailyRecapSnapshot, BowlLineLockSnapshot } from "@/lib/bowl-pool-recap";
 import { bowlRecapLayout } from "@/lib/bowl-recap-layout.js";
 
 export const dynamic = "force-dynamic";
@@ -189,17 +189,32 @@ function BowlRecapImage({ snapshot }: { snapshot: BowlDailyRecapSnapshot }) {
   </div>;
 }
 
+function BowlLineLockImage({ snapshot }: { snapshot: BowlLineLockSnapshot }) {
+  return <div style={{ background: PAPER, color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "38px 46px", width: "100%" }}>
+    <div style={{ alignItems: "baseline", borderBottom: `3px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}><span style={{ display: "flex", fontFamily: "Georgia", fontSize: 42, fontWeight: 800 }}>NCAA Bowl Pool</span><span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, letterSpacing: 2 }}>OFFICIAL LINES</span></div>
+    <div style={{ alignSelf: "center", display: "flex", fontFamily: "Georgia", fontSize: 24, fontWeight: 800, margin: "12px 0" }}>{snapshot.day.toUpperCase()}</div>
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {snapshot.games.map((game, index) => <div key={game.name} style={{ alignItems: "center", background: index % 2 ? PAPER : PARCHMENT, borderBottom: "1px solid #d4cab7", display: "flex", fontFamily: "Arial", fontSize: 23, minHeight: 68, padding: "0 14px" }}><span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.name}</span><span style={{ display: "flex", flex: 1, fontWeight: 800, justifyContent: "flex-end" }}>{game.favorite}</span><span style={{ color: TEAL, display: "flex", fontFamily: "monospace", fontWeight: 900, justifyContent: "center", width: 110 }}>{game.line}</span><span style={{ display: "flex", flex: 1, fontWeight: 800 }}>{game.underdog}</span></div>)}
+    </div>
+    <div style={{ borderTop: `2px solid ${INK}`, color: MUTED, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, marginTop: 18, paddingTop: 12 }}>OFFICIAL LINES ARE LOCKED AND WILL NOT CHANGE.</div>
+  </div>;
+}
+
 async function renderRecap(request: NextRequest) {
   const reminderId = request.nextUrl.searchParams.get("reminder");
   const kind = request.nextUrl.searchParams.get("kind");
-  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal" && kind !== "bowl")) return new Response("Not found", { status: 404 });
+  if (!reminderId || (kind !== "summary" && kind !== "survivor" && kind !== "fresh" && kind !== "gameday" && kind !== "earlylock" && kind !== "reveal" && kind !== "bowl" && kind !== "bowl-lines")) return new Response("Not found", { status: 404 });
   const { data } = await supabaseAdmin.from("push_reminders").select("category, recap_snapshot").eq("id", reminderId).maybeSingle();
-  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | PlayoffPublicRevealSnapshot | FeaturedWindowRevealSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | BowlDailyRecapSnapshot | null;
+  let snapshot = data?.recap_snapshot as WeeklyRecapSnapshot | PlayoffDayRecapSnapshot | PlayoffPublicRevealSnapshot | FeaturedWindowRevealSnapshot | FreshSlateSnapshot | GameDaySlateSnapshot | EarlyLockSnapshot | SundayRevealSnapshot | BowlDailyRecapSnapshot | BowlLineLockSnapshot | null;
   if (!snapshot) return new Response("Not found", { status: 404 });
 
   if (kind === "bowl" && snapshot.kind === "bowl_daily_recap") {
     const layout = bowlRecapLayout(snapshot.games.length);
     return new ImageResponse(<BowlRecapImage snapshot={snapshot} />, { width: 920, height: layout.height });
+  }
+
+  if (kind === "bowl-lines" && snapshot.kind === "bowl_line_lock") {
+    return new ImageResponse(<BowlLineLockImage snapshot={snapshot} />, { width: 920, height: Math.max(360, 190 + snapshot.games.length * 68) });
   }
 
   if (snapshot.kind === "weekly_recap" && kind === "survivor") {
@@ -303,4 +318,5 @@ export async function GET(request: NextRequest) {
     response.headers.set("Cache-Control", "no-store");
     return response;
   }
+
 }

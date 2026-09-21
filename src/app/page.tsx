@@ -61,11 +61,17 @@ type HomeData = {
     firstName: string;
     trophies?: string[];
     status: "active" | "eliminated" | "complete";
+    requiredThisPeriod: boolean;
     pick: (ScoreboardPick & { abbreviation?: string | null }) | null;
     picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
   }[];
   error?: string;
 };
+type DisplayPreferenceKey =
+  | "showSurvivorStandings"
+  | "showBowlCard"
+  | "hidePickemEliminatedRows"
+  | "hideSurvivorEliminatedRows";
 type BowlStandingsData = {
   season?: { season_year: number };
   games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; is_cfp?: boolean; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
@@ -151,6 +157,10 @@ export default function HomePage() {
   const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
   const bowlScrollRef = useRef<HTMLDivElement | null>(null);
   const serverClockOffset = useRef(0);
+  // A background refresh can finish after a display preference save and carry
+  // an older profile snapshot. Keep the user's just-saved choice in front of
+  // that stale response until the next refresh confirms it from the server.
+  const displayPreferenceOverrides = useRef<Partial<Record<DisplayPreferenceKey, boolean>>>({});
 
   useEffect(() => {
     let revealTimer: number | null = null;
@@ -189,8 +199,12 @@ export default function HomePage() {
         serverClockOffset.current = serverTimestamp - Date.now();
 
         setErrorMessage("");
-        setData(result);
-        setBowlPoolMinimized(!result.showBowlCard);
+        const effectiveResult = {
+          ...result,
+          ...displayPreferenceOverrides.current,
+        };
+        setData(effectiveResult);
+        setBowlPoolMinimized(!effectiveResult.showBowlCard);
         hasLoaded = true;
 
         if (revealTimer !== null) {
@@ -381,6 +395,7 @@ export default function HomePage() {
         body: JSON.stringify({ showSurvivorStandings: show }),
       });
       if (!response.ok) throw new Error("Unable to save that display choice.");
+      displayPreferenceOverrides.current.showSurvivorStandings = show;
       setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
     } catch {
       setErrorMessage("That display choice could not be saved. Please try again.");
@@ -400,6 +415,7 @@ export default function HomePage() {
       });
       const result = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "Bowl Card display preference could not be saved.");
+      displayPreferenceOverrides.current.showBowlCard = show;
       setBowlPoolMinimized(!show);
       setData((current) => current ? { ...current, showBowlCard: show } : current);
     } catch (error) {
@@ -419,6 +435,7 @@ export default function HomePage() {
         body: JSON.stringify({ [field]: hidden }),
       });
       if (!response.ok) throw new Error("Unable to save that display choice.");
+      displayPreferenceOverrides.current[pool === "pickem" ? "hidePickemEliminatedRows" : "hideSurvivorEliminatedRows"] = hidden;
       setData((current) => current ? { ...current, [field]: hidden } : current);
     } catch {
       setErrorMessage("That display choice could not be saved. Please try again.");
@@ -469,6 +486,7 @@ export default function HomePage() {
           readOnly={data.weekStatus === "complete"}
           survivorAvailable={data.survivorAvailable}
           survivorPick={ticketSurvivor}
+          survivorRequired={viewerSurvivor?.requiredThisPeriod}
           survivorStatus={data.survivorComplete ? "complete" : viewerSurvivor?.status ?? "active"}
           week={data.week}
         />

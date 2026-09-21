@@ -6,7 +6,9 @@ import {
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import {
   nextScoreCheckAt,
+  scorePollingMode,
   shouldHoldScorePollingForQuota,
+  type ScorePollingMode,
 } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
@@ -52,6 +54,9 @@ export type ScoreSyncResult = {
   picksGraded: number;
   picksAwaitingLine: number;
   requestsRemaining: string | null;
+  requestsUsed: string | null;
+  requestsLast: string | null;
+  pollingMode: ScorePollingMode | "idle";
   warnings: string[];
   weekRollover: WeekRolloverResult;
   survivorNoPickEliminations: number;
@@ -62,6 +67,7 @@ async function deferUnfinishedScoreChecks(
   games: GameRow[],
   previousChecks: Map<string, ScoreCheckBackoffRow>,
   checkedAt: string,
+  playoffPeriodIds: Set<string>,
 ) {
   if (games.length === 0) return;
 
@@ -73,7 +79,11 @@ async function deferUnfinishedScoreChecks(
       game_id: game.id,
       attempts,
       last_checked_at: checkedAt,
-      next_check_at: nextScoreCheckAt(attempts, checked),
+      next_check_at: nextScoreCheckAt(
+        attempts,
+        checked,
+        playoffPeriodIds.has(game.scoring_period_id),
+      ),
       updated_at: checkedAt,
     };
   });
@@ -87,6 +97,11 @@ function parseScore(value: string | number | null | undefined) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
   if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
   return Number(value);
+}
+
+function parseCreditHeader(value: unknown) {
+  if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : null;
+  return typeof value === "string" && /^\d+$/.test(value) ? Number(value) : null;
 }
 
 async function recoverPendingFinalPickGrades() {
@@ -246,6 +261,21 @@ export async function syncFinalScores({
   const scoreDueGames = (unfinishedGames as GameRow[]).filter((game) =>
     isDueForFinalScoreCheck({ kickoffAt: game.kickoff_at, status: game.status }, now),
   );
+  const scorePeriodIds = [...new Set(scoreDueGames.map((game) => game.scoring_period_id))];
+  const { data: scorePeriods, error: scorePeriodsError } = scorePeriodIds.length
+    ? await supabaseAdmin
+        .from("scoring_periods")
+        .select("id, period_type")
+        .in("id", scorePeriodIds)
+    : { data: [], error: null };
+  if (scorePeriodsError) {
+    throw new Error("Score polling cadence could not be determined safely.");
+  }
+  const playoffPeriodIds = new Set(
+    (scorePeriods ?? [])
+      .filter((period) => period.period_type === "playoff")
+      .map((period) => period.id),
+  );
   const { data: scoreCheckBackoffs, error: scoreCheckBackoffsError } =
     scoreDueGames.length
       ? await supabaseAdmin
@@ -266,6 +296,9 @@ export async function syncFinalScores({
     const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
     return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
   });
+  const pollingMode = scorePollingMode(
+    eligibleGames.some((game) => playoffPeriodIds.has(game.scoring_period_id)),
+  );
 
   const noScoreResult = {
     checkedAt,
@@ -276,6 +309,9 @@ export async function syncFinalScores({
     picksGraded: recoveredGrades.picksGraded,
     picksAwaitingLine: recoveredGrades.picksAwaitingLine,
     requestsRemaining: null,
+    requestsUsed: null,
+    requestsLast: null,
+    pollingMode: "idle" as const,
     warnings,
     weekRollover,
     survivorNoPickEliminations: noPickResult.entries_eliminated,
@@ -289,24 +325,24 @@ export async function syncFinalScores({
     return noScoreResult;
   }
 
-  const { data: latestSuccessfulScoreRun, error: latestSuccessfulScoreRunError } =
+  const { data: recentProviderRuns, error: recentProviderRunsError } =
     await supabaseAdmin
       .from("sync_runs")
       .select("details, completed_at, started_at")
-      .eq("job_type", "scores")
-      .eq("status", "success")
+      .eq("provider", "The Odds API")
+      .in("status", ["success", "failed"])
       .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-  if (latestSuccessfulScoreRunError) {
+      .limit(25);
+  if (recentProviderRunsError) {
     throw new Error("Recent score-provider usage could not be loaded.");
   }
-  const lastRemainingRaw = (latestSuccessfulScoreRun?.details as { requestsRemaining?: string | null } | null)
-    ?.requestsRemaining;
-  const lastRemaining = lastRemainingRaw !== null && lastRemainingRaw !== undefined && /^\d+$/.test(lastRemainingRaw)
-    ? Number(lastRemainingRaw)
-    : null;
-  const lastObservedAt = latestSuccessfulScoreRun?.completed_at ?? latestSuccessfulScoreRun?.started_at ?? null;
+  const latestAllowanceRun = (recentProviderRuns ?? []).find((providerRun) => {
+    const details = providerRun.details as { requestsRemaining?: unknown } | null;
+    return parseCreditHeader(details?.requestsRemaining) !== null;
+  }) ?? null;
+  const latestAllowanceDetails = latestAllowanceRun?.details as { requestsRemaining?: unknown } | null;
+  const lastRemaining = parseCreditHeader(latestAllowanceDetails?.requestsRemaining);
+  const lastObservedAt = latestAllowanceRun?.completed_at ?? latestAllowanceRun?.started_at ?? null;
   const onlyRepeatedDelayedGames = eligibleGames.every(
     (game) => (backoffByGameId.get(game.id)?.attempts ?? 0) >= 2,
   );
@@ -322,6 +358,9 @@ export async function syncFinalScores({
       ...noScoreResult,
       eligibleGames: eligibleGames.length,
       requestsRemaining: String(lastRemaining),
+      requestsUsed: null,
+      requestsLast: null,
+      pollingMode,
       warnings,
       quotaProtected: true,
     };
@@ -350,13 +389,23 @@ export async function syncFinalScores({
   }
 
   let providerResponseAccepted = false;
+  let providerRequestAttempted = false;
+  let failedRequestsRemaining: string | null = null;
+  let failedRequestsUsed: string | null = null;
+  let failedRequestsLast: string | null = null;
   try {
     const query = new URLSearchParams({ apiKey: oddsApiKey, daysFrom: "3" });
+    providerRequestAttempted = true;
     const response = await fetch(
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?${query}`,
       { cache: "no-store", signal: AbortSignal.timeout(20_000) },
     );
     const requestsRemaining = response.headers.get("x-requests-remaining");
+    const requestsUsed = response.headers.get("x-requests-used");
+    const requestsLast = response.headers.get("x-requests-last");
+    failedRequestsRemaining = requestsRemaining;
+    failedRequestsUsed = requestsUsed;
+    failedRequestsLast = requestsLast;
 
     if (!response.ok) {
       throw new Error("The NFL score feed could not be reached right now.");
@@ -368,18 +417,21 @@ export async function syncFinalScores({
     }
     providerResponseAccepted = true;
 
-    const eligibleGameByExternalId = new Map(
-      eligibleGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
+    // One paid response already contains every current NFL game. Use it to
+    // settle every due game it can prove final, even when another game's
+    // individual retry timer is what triggered this request.
+    const dueGameByExternalId = new Map(
+      scoreDueGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
     );
     const completedEvents = (providerPayload as ScoreEvent[]).filter(
       (event) =>
-        eligibleGameByExternalId.has(event.id) &&
+        dueGameByExternalId.has(event.id) &&
         event.completed &&
         event.scores?.length === 2,
     );
 
     if (completedEvents.length === 0) {
-      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
       const result = {
         checkedAt,
         eligibleGames: eligibleGames.length,
@@ -389,6 +441,9 @@ export async function syncFinalScores({
         picksGraded: recoveredGrades.picksGraded,
         picksAwaitingLine: recoveredGrades.picksAwaitingLine,
         requestsRemaining,
+        requestsUsed,
+        requestsLast,
+        pollingMode,
         warnings,
         weekRollover,
         survivorNoPickEliminations: noPickResult.entries_eliminated,
@@ -401,7 +456,7 @@ export async function syncFinalScores({
     }
 
     const eventByExternalId = new Map(completedEvents.map((event) => [event.id, event]));
-    const savedGames = eligibleGames.filter((game) =>
+    const savedGames = scoreDueGames.filter((game) =>
       Boolean(game.odds_event_id && eventByExternalId.has(game.odds_event_id)),
     );
     const teamIds = [...new Set(savedGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
@@ -459,7 +514,7 @@ export async function syncFinalScores({
       const stillUnfinished = eligibleGames.filter(
         (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
       );
-      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt);
+      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, playoffPeriodIds);
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;
@@ -494,6 +549,9 @@ export async function syncFinalScores({
         picksAwaitingLine:
           recoveredGrades.picksAwaitingLine + (pendingAfterFinalization ?? 0),
         requestsRemaining,
+        requestsUsed,
+        requestsLast,
+        pollingMode,
         warnings,
         weekRollover: completedWeekRollover,
         survivorNoPickEliminations: noPickResult.entries_eliminated,
@@ -514,8 +572,8 @@ export async function syncFinalScores({
       try {
         // Network failures, timeouts, HTTP errors, and malformed payloads use
         // the same persistent per-game exponential backoff as a delayed final.
-        // The 15-minute cron can then exit without spending another credit.
-        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+        // The five-minute cron can then exit without spending another credit.
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
       } catch {
         await supabaseAdmin.from("sync_runs").update({
           status: "failed",
@@ -525,7 +583,18 @@ export async function syncFinalScores({
         throw new Error(`${message} The polling cooldown could not be saved safely.`);
       }
     }
-    await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.data.id);
+    await supabaseAdmin.from("sync_runs").update({
+      status: "failed",
+      completed_at: new Date().toISOString(),
+      error_message: message,
+      details: {
+        providerChecked: providerRequestAttempted,
+        requestsRemaining: failedRequestsRemaining,
+        requestsUsed: failedRequestsUsed,
+        requestsLast: failedRequestsLast,
+        pollingMode,
+      },
+    }).eq("id", run.data.id);
     throw error;
   }
 }

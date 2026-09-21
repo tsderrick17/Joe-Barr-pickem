@@ -281,9 +281,25 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
-- Score polling backs off per unfinished game at 15 minutes four times, 30
-  minutes twice, one hour, two hours, then six hours.
-- Low provider allowance reserves remaining credits for line integrity.
+- The NFL score worker wakes every five minutes and spends no provider credit
+  unless a game's durable retry time is due. Regular-season games use the same
+  fixed 10/15/30/60/120/360-minute delayed-final sequence every week. Playoff
+  games use a faster fixed 5/10/15/30/60/120/360-minute sequence because the
+  schedule is smaller.
+- Remaining credits do not change the normal cadence. Repeated polling pauses
+  only below the protected 50-credit emergency reserve. Every paid response can
+  settle all due completed games it contains, and the bowl worker remains on a
+  15-minute cadence.
+- Provider response headers feed a 30-day Commissioner efficiency summary of
+  credits, imported finals, productive checks, credits per final, and the
+  seven-day trend. Only the real 7:00 AM Eastern pre-lock window may spend the
+  schedule-refresh credit, even though both DST-safe cron entries remain.
+- Commissioner Connected Systems also reports calendar-month quota usage,
+  provisional month-end load, source breakdown, and Sunday count. This is the
+  planning view for the provider's monthly reset; the 30-day view is strictly
+  an efficiency trend. Bowl Pool schedule and scores use ESPN by default and
+  do not consume NFL Odds API credits unless the NCAAF fallback is explicitly
+  enabled.
 - Schedule-provider failures use a circuit breaker and shared cooldown. Manual
   commissioner override may bypass timing, but not authentication, leases,
   quota reserve, pins, or atomic validation.

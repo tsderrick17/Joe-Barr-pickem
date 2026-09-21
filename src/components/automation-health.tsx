@@ -182,7 +182,7 @@ export default function AutomationHealth() {
             detail={scheduleCooling ? `Next retry ${localTime(health.scheduleProviderCircuit!.next_retry_at)}` : "No provider cooldown is active."}
           />
           <StatusCard
-            attention={health.providerAllowance !== null && health.providerAllowance < 25}
+            attention={health.providerAllowance !== null && health.providerAllowance < 50}
             label="PROVIDER ALLOWANCE"
             value={health.providerAllowance === null ? "Not reported yet" : `${health.providerAllowance} credits remaining`}
             detail={`${health.reminderHealth.overdueScheduled} held reminders · ${health.retention.candidates.toLocaleString()} old operational records`}

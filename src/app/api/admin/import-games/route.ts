@@ -8,6 +8,7 @@ import { buildScheduleGame } from "@/lib/schedule-game";
 import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
 import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
 import { seasonYearAt } from "@/lib/season";
+import { isEasternPrelockRefreshWindow } from "@/lib/prelock-refresh-window";
 import {
   clearScheduleProviderCircuit,
   getScheduleProviderCircuit,
@@ -114,6 +115,18 @@ async function refreshSchedule({
   oddsApiKey: string;
   isAutomation: boolean;
 }) {
+  const checkedAt = new Date();
+  // Two UTC schedules cover daylight and standard time. Only the invocation
+  // that actually lands at 7 AM Eastern may spend a provider credit.
+  if (isAutomation && !isEasternPrelockRefreshWindow(checkedAt)) {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: "outside_eastern_prelock_window",
+      message: "The daylight-safe companion run exited without calling the odds provider.",
+    });
+  }
+
   if (isAutomation) {
     const circuit = await getScheduleProviderCircuit();
     if (circuit.blocked) {
@@ -176,6 +189,19 @@ async function refreshSchedule({
     const payload: unknown = await oddsResponse.json();
     if (!Array.isArray(payload)) throw new Error("The NFL odds feed returned an invalid response.");
     events = payload as OddsEvent[];
+    await supabaseAdmin.from("sync_runs").insert({
+      provider: "The Odds API",
+      job_type: "odds",
+      status: "success",
+      completed_at: new Date().toISOString(),
+      details: {
+        kind: "prelock_spread_refresh",
+        providerChecked: true,
+        requestsRemaining: oddsResponse.headers.get("x-requests-remaining"),
+        requestsUsed: oddsResponse.headers.get("x-requests-used"),
+        requestsLast: oddsResponse.headers.get("x-requests-last"),
+      },
+    });
     await clearScheduleProviderCircuit();
   } catch (error) {
     const cooldown = await recordScheduleProviderFailure(error);

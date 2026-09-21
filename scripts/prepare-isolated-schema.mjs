@@ -170,3 +170,27 @@ if (sanitizedCriticalAutomationSql === criticalAutomationSql) {
 }
 
 await writeFile(criticalAutomationMigration, sanitizedCriticalAutomationSql);
+
+// Retain the adaptive preflight contract in isolated tests without installing
+// a cron job that points at production.
+const adaptiveScoreMigration = resolve(
+  migrationsDirectory,
+  "20260921030000_add_adaptive_score_polling.sql",
+);
+const adaptiveScoreSql = await readFile(adaptiveScoreMigration, "utf8");
+const adaptiveScheduleStart = adaptiveScoreSql.indexOf(
+  "-- BEGIN PRODUCTION ADAPTIVE SCORE SCHEDULE",
+);
+const adaptiveScheduleEnd = adaptiveScoreSql.indexOf(
+  "-- END PRODUCTION ADAPTIVE SCORE SCHEDULE",
+);
+const sanitizedAdaptiveScoreSql =
+  adaptiveScheduleStart >= 0 && adaptiveScheduleEnd > adaptiveScheduleStart
+    ? `${adaptiveScoreSql.slice(0, adaptiveScheduleStart)}-- Isolated test databases never schedule requests to the live deployment.\n${adaptiveScoreSql.slice(adaptiveScheduleEnd + "-- END PRODUCTION ADAPTIVE SCORE SCHEDULE".length)}`
+    : adaptiveScoreSql;
+
+if (sanitizedAdaptiveScoreSql === adaptiveScoreSql) {
+  throw new Error("Could not remove the production adaptive score schedule.");
+}
+
+await writeFile(adaptiveScoreMigration, sanitizedAdaptiveScoreSql);

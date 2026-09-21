@@ -244,6 +244,23 @@ async function bowlDailyRecapReady(sourceGameIds: string[]): Promise<ReminderRea
     : { ready: false, reason: "This Bowl game day is still in progress." };
 }
 
+async function bowlLineLockReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
+  if (!sourceGameIds.length) return { ready: false, terminal: true, reason: "This Bowl line update has no games." };
+  const [{ data: games, error: gamesError }, { data: lines, error: linesError }] = await Promise.all([
+    supabaseAdmin.from("bowl_pool_games").select("id, line_lock_at, status").in("id", sourceGameIds),
+    supabaseAdmin.from("bowl_pool_game_lines").select("game_id, locked_at").in("game_id", sourceGameIds),
+  ]);
+  if (gamesError || linesError) throw new Error("Bowl official lines could not be checked.");
+  if ((games ?? []).length !== sourceGameIds.length) return { ready: false, terminal: true, reason: "A Bowl line-update game no longer exists." };
+  const playable = (games ?? []).filter((game) => !["postponed", "cancelled", "no_contest"].includes(game.status));
+  if (!playable.length) return { ready: false, terminal: true, reason: "No playable Bowl games remain for this line update." };
+  if (playable.some((game) => new Date(game.line_lock_at) > new Date())) return { ready: false, reason: "Today’s Bowl lines are still being finalized." };
+  const locked = new Set((lines ?? []).filter((line) => line.locked_at).map((line) => line.game_id));
+  return playable.every((game) => locked.has(game.id))
+    ? { ready: true, reason: null }
+    : { ready: false, reason: "Today’s Bowl lines are still being finalized." };
+}
+
 async function bowlPickDueReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
   if (sourceGameIds.length !== 1) return { ready: false, terminal: true, reason: "This Bowl pick reminder has no single game." };
   const { data, error } = await supabaseAdmin.from("bowl_pool_games").select("kickoff_at, status").eq("id", sourceGameIds[0]).maybeSingle();
@@ -260,6 +277,7 @@ export async function reminderReadiness(category: ReminderCategory, sourceGameId
   if (category === "playoff_day_recap") return playoffDayRecapReady(sourceGameIds, sourcePeriodId);
   if (category === "playoff_public_reveal") return playoffPublicRevealReady(sourceGameIds);
   if (category === "featured_window_reveal") return featuredWindowRevealReady(sourceGameIds);
+  if (category === "bowl_line_lock") return bowlLineLockReady(sourceGameIds);
   if (category === "sunday_early_reveal") return sundayRevealReady("early", sourceGameIds);
   if (category === "sunday_late_reveal") return sundayRevealReady("late", sourceGameIds);
   if (category === "bowl_daily_recap") return bowlDailyRecapReady(sourceGameIds);

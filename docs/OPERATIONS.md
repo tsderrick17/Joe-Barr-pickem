@@ -38,11 +38,31 @@ includes a read-only per-table size breakdown for review.
 
 ## Provider allowance
 
-Final-score checks use escalating cooldowns for a game that has not finalized:
-15 minutes four times, 30 minutes twice, 1 hour, 2 hours, then every 6 hours. A low observed
-Odds API balance reserves the remaining allowance for line integrity and is
-shown as an Automation Health warning. Normal completed games still grade as
-soon as the provider reports final scores.
+The NFL final-score worker wakes every five minutes but calls the provider only
+when at least one game's durable retry time is due. Regular-season delayed
+finals follow the same predictable 10/15/30/60/120/360-minute sequence every
+week. Playoff delayed finals use a faster fixed 5/10/15/30/60/120/360-minute
+sequence because there are fewer games. The monthly balance does not change
+either normal cadence. Repeated polling pauses only below the protected
+50-credit emergency reserve, so official line integrity is never traded for
+faster grading. One paid response settles every due completed game it contains.
+The bowl worker retains its 15-minute cadence.
+
+Each provider response records the reported request cost and remaining balance;
+older runs without cost headers use a conservative endpoint-cost estimate.
+Commissioner → Connected Systems summarizes the last 30 days: observed credits,
+finals imported, productive score checks, credits per final, and the seven-day
+direction. Use that evidence—not guesswork—to adjust thresholds after real game
+weeks. The two daylight-saving-safe pre-lock schedules remain installed, but
+only the invocation that is actually 7:00 AM Eastern may call the provider.
+The same card also shows calendar-month quota usage, a provisional month-end
+projection, source breakdown, and the number of Sundays in that month. The
+provider quota resets monthly, so the calendar view is the planning view for
+five-Sunday months; the rolling view is for efficiency comparisons.
+
+The Bowl Pool is not part of this NFL allowance by default. Its schedule and
+scores use ESPN. Only the explicitly enabled NCAAF Odds API fallback would share
+the monthly Odds API quota.
 
 ## Automatic season handoff
 
@@ -151,11 +171,14 @@ details or require UptimeRobot's paid push-heartbeat feature.
 
 ## Reproducible critical schedules and launch preflight
 
-Migration `20260818013000_rebuild_critical_automation.sql` is the canonical,
-idempotent definition for the three game-critical workflows: official line
-locking every minute, final-score refresh every 15 minutes, and the two
-daylight/standard-safe pre-lock spread refresh windows. It replaces any older
-jobs with those names, then recreates the expected definitions.
+Migration `20260818013000_rebuild_critical_automation.sql` defines the original
+three game-critical workflows. Migration
+`20260921030000_add_adaptive_score_polling.sql` is the current idempotent
+override: official line locking remains every minute, the due-work-gated NFL
+score worker wakes every five minutes to support the fixed regular-season and
+playoff retry cadences, and both daylight/standard-safe pre-lock windows remain
+installed. The runtime Eastern-time guard ensures only one of those pre-lock
+windows spends a credit each day.
 
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing

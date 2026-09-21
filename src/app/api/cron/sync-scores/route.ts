@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { syncBowlPool } from "@/lib/sync-bowl-pool";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { shouldRunBowlScoreSync } from "@/lib/score-worker-cadence";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const nfl = await runWithAutomationLease("scores", syncFinalScores);
-    const bowl = await runWithAutomationLease("bowl_scores", syncBowlPool);
+    const bowl = shouldRunBowlScoreSync()
+      ? await runWithAutomationLease("bowl_scores", syncBowlPool)
+      : { skipped: true, reason: "Bowl scores retain their 15-minute cadence." };
     const result = { nfl, bowl };
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
