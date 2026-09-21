@@ -97,13 +97,14 @@ function bowlRecapCopy(snapshot: unknown) {
 }
 
 const recapImageFrameStyle = "box-sizing:border-box;margin:28px auto 0;max-width:560px;width:100%";
+const publicReceiptImageFrameStyle = "box-sizing:border-box;margin:28px auto 0;max-width:480px;width:100%";
 const recapImageStyle = "display:block;height:auto;margin:0 0 18px;max-width:100%;width:100%";
 const recapImageStyleNoMargin = "display:block;height:auto;max-width:100%;width:100%";
 
 function recapImage({ alt, href, kind, reminderId, style }: { alt: string; href: string; kind: string; reminderId: string; style: string }) {
   // Version the artwork URL so a transient 404/timeout cached by an email
   // provider cannot poison every later open of the same message.
-  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=2`;
+  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=3`;
   return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="560" style="${style}"><span style="font:12px/1.4 Arial,sans-serif;color:#57534e">View this update on Pick'em if the image is unavailable.</span></a>`;
 }
 
@@ -119,7 +120,7 @@ function messageHtml(reminder: Reminder) {
       : reminder.category === "early_lock"
         ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "International game official line", href: `${siteUrl}/board`, kind: "earlylock", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
         : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal" || reminder.category === "playoff_public_reveal"
-          ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Public Pick'em standings and revealed selections", href: siteUrl, kind: "reveal", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
+          ? `<div style="${publicReceiptImageFrameStyle}">${recapImage({ alt: "Public Pick'em standings and revealed selections", href: siteUrl, kind: "reveal", reminderId: reminder.id, style: recapImageStyleNoMargin })}</div>`
         : "";
   const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";

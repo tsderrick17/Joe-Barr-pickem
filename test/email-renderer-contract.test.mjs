@@ -9,7 +9,8 @@ test("email recaps use one safe image contract across every artwork type", async
   assert.match(reminders, /function recapImage\(/);
   assert.equal((reminders.match(/recapImage\(/g) ?? []).length >= 8, true);
   assert.match(reminders, /box-sizing:border-box;[^\"]*width:100%/);
-  assert.match(reminders, /recap-image\?reminder=.*&kind=\$\{kind\}&v=2/);
+  assert.match(reminders, /recap-image\?reminder=.*&kind=\$\{kind\}&v=3/);
+  assert.match(reminders, /publicReceiptImageFrameStyle = "[^"]*max-width:480px/);
   assert.match(renderer, /safePublicRows/);
   assert.match(renderer, /const PUBLIC_RECEIPT_IMAGE_WIDTH = 760/);
   assert.match(renderer, /const RECAP_IMAGE_WIDTH = 760/);
