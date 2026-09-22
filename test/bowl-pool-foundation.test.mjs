@@ -83,6 +83,14 @@ test("Bowl standings never show the same label for both teams in one game", () =
   ), ["TEX", "TAMU"]);
 });
 
+test("Bowl line capture promotes a provisional spread when live odds are unavailable", async () => {
+  const source = await readFile(new URL("../src/lib/sync-bowl-pool.ts", import.meta.url), "utf8");
+  assert.match(source, /filter\(\(line\) => line\.locked_at\)/);
+  assert.match(source, /lockProvisional/);
+  assert.match(source, /\.is\("locked_at", null\)/);
+  assert.match(source, /typeof espnSpread === "number" && Number\.isFinite\(espnSpread\)/);
+});
+
 test("bowl selections compare by game/value, not insertion order", () => {
   assert.equal(bowlSelectionsEqual({ first: "favorite", second: "underdog" }, { second: "underdog", first: "favorite" }), true);
   assert.equal(bowlSelectionsEqual({ first: "favorite" }, { first: "underdog" }), false);
