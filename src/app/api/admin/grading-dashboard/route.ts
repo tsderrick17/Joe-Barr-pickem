@@ -147,7 +147,11 @@ export async function GET(request: NextRequest) {
       for (const [rung, count] of Object.entries(rungs as Record<string, unknown>)) { const rungNumber = Number(rung); const rungCount = Number(count); if (Number.isInteger(rungNumber) && rungNumber > 0 && Number.isFinite(rungCount) && rungCount > 0) ladderCounts.set(rungNumber, (ladderCounts.get(rungNumber) ?? 0) + rungCount); }
     }
     const ladderTotal = [...ladderCounts.values()].reduce((sum, count) => sum + count, 0);
-    const ladderSummary = [...ladderCounts.entries()].sort(([left], [right]) => left - right).map(([rung, newFinals]) => ({ rung, windowMinutes: SCORE_POLLING_RETRY_MINUTES[rung - 1] ?? 120, newFinals, pickedUp: newFinals, percentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0, newFinalsPercentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0 }));
+    const ladderSummary = SCORE_POLLING_RETRY_MINUTES.map((windowMinutes, index) => {
+      const rung = index + 1;
+      const newFinals = ladderCounts.get(rung) ?? 0;
+      return { rung, windowMinutes, newFinals, pickedUp: newFinals, percentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0, newFinalsPercentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0 };
+    });
     const settlementLatencies = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => Math.max(0, Math.round((new Date(game.finalizedAt!).getTime() - new Date(game.kickoffAt).getTime()) / 60000)));
     const settlementLatency = { averageMinutes: settlementLatencies.length ? Math.round(settlementLatencies.reduce((sum, value) => sum + value, 0) / settlementLatencies.length) : null, slowestMinutes: settlementLatencies.length ? Math.max(...settlementLatencies) : null, samples: settlementLatencies.length };
     const previousLatencies = (previousGamesResult.data ?? []).filter((game) => game.status === "final" && game.finalized_at).map((game) => Math.max(0, Math.round((new Date(game.finalized_at!).getTime() - new Date(game.kickoff_at).getTime()) / 60000)));
