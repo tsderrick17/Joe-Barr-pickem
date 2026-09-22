@@ -160,7 +160,10 @@ function summaryImageHeight(snapshot: WeeklyRecapSnapshot | PlayoffDayRecapSnaps
   const weeklyRows = Array.isArray(snapshot.weeklySummary) ? snapshot.weeklySummary.length : 0;
   const standingsRows = Array.isArray(snapshot.standings) ? snapshot.standings.length : 0;
   const championSpace = snapshot.kind === "playoff_day_recap" && snapshot.championsCrowned.length ? 52 : 0;
-  return Math.max(500, Math.min(1800, 300 + weeklyRows * 40 + standingsRows * 29 + championSpace));
+  // Keep recap artwork close to the actual receipt content. A tall fixed
+  // canvas makes mobile mail clients show a large blank tail beneath the
+  // standings, which reads like a broken screenshot.
+  return Math.max(500, Math.min(1300, 300 + weeklyRows * 40 + standingsRows * 29 + championSpace));
 }
 
 function survivorImageHeight(snapshot: WeeklyRecapSnapshot["survivor"]) {
