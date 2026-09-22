@@ -438,3 +438,15 @@ path and leaves an existing Survivor pick untouched.
 **Reason:** Once a Survivor game begins, its selection must stay sealed. That
 constraint applies only to Survivor changes; it must not prevent a player from
 adding or revising a still-open Pick'em selection later in the same week.
+## 2026-09-22 — Interactive provider charts and monthly credit accounting
+
+Grading charts now share the dashboard refresh and period selection. Use a
+daily/cumulative UTC calendar-month credit chart and paginate receipts to avoid
+the 1,000-row truncation. Explicit zero-cost responses remain zero; missing cost
+headers use the documented endpoint estimate rather than JavaScript null-to-zero
+coercion. Quota snapshots and recorded costs are different measures.
+Legacy slate attribution is bounded by finalization and marked estimated;
+overlapping windows are withheld rather than assigned to the latest kickoff.
+Shared responsive charts provide crosshairs, touch and keyboard exploration,
+separate efficiency axes, and a data table. Ladder widths retain actual gap
+proportions, with fresh-final counts controlling bar height.

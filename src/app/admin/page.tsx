@@ -24,8 +24,6 @@ const CommissionerOperationsMap = dynamic(() => import("@/components/commissione
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
-const PollingStrategyPanel = dynamic(() => import("@/components/polling-strategy-panel"));
-const EfficiencyTrendPanel = dynamic(() => import("@/components/efficiency-trend-panel"));
 
 type Spread = {
   team: string;
@@ -304,7 +302,7 @@ export default function AdminPage() {
         </section>
         </> : null}
 
-        {activePanel === "grading" ? <><GradingDashboard /><PollingStrategyPanel /><EfficiencyTrendPanel /></> : null}
+        {activePanel === "grading" ? <GradingDashboard /> : null}
 
         {activePanel === "game-day" ? <>
           <section className="border-b-2 border-zinc-900 py-7">

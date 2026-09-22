@@ -4,12 +4,32 @@ import { checkAutomationHealth } from "@/lib/automation-health";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { providerRequestCost, summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
+import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { recommendPollingPlan, simulatePollingPlans } from "@/lib/polling-plan.js";
+import { monthlyCreditSeries, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 
 type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 const GAME_STATUS_GRACE_MINUTES = 15;
+
+// Fetch every receipt, including busy months that exceed Supabase's page limit.
+async function providerRunsSince(since: string, until: string) {
+  const page = (offset: number) => supabaseAdmin.from("sync_runs")
+    .select("id, job_type, status, started_at, completed_at, details")
+    .eq("provider", "The Odds API").in("status", ["success", "failed"])
+    .gte("started_at", since).lte("started_at", until)
+    .order("started_at", { ascending: true }).order("id", { ascending: true })
+    .range(offset, offset + 999);
+  const first = await page(0);
+  if (first.error) return first;
+  const rows = [...(first.data ?? [])];
+  for (let offset = 1000; rows.length === offset; offset += 1000) {
+    const more = await page(offset);
+    if (more.error) return { data: null, error: more.error };
+    rows.push(...(more.data ?? []));
+  }
+  return { data: rows, error: null };
+}
 
 function minutesSince(value: string | null, now: Date) {
   if (!value) return null;
@@ -68,7 +88,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
-      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, details").eq("provider", "The Odds API").in("status", ["success", "failed"]).gte("started_at", new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()).order("started_at", { ascending: false }).limit(1000),
+      providerRunsSince(new Date(Math.min(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1), now.getTime() - 30 * 86400000)).toISOString(), now.toISOString()),
       previousPeriod ? supabaseAdmin.from("games").select("kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
     ]);
     if (gamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
@@ -129,25 +149,9 @@ export async function GET(request: NextRequest) {
     const pickOutcomeCounts = (picksResult.data ?? []).reduce((counts, pick) => { counts[pick.result as "win" | "loss" | "void" | "pending"] += 1; return counts; }, { win: 0, loss: 0, void: 0, pending: 0 });
     const survivorEntryCounts = (survivorEntriesResult.data ?? []).reduce((counts, entry) => { counts[entry.status as "active" | "eliminated" | "complete"] += 1; return counts; }, { active: 0, eliminated: 0, complete: 0 });
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
-    const efficiency = summarizeProviderEfficiency(oddsRunsResult.data ?? [], now);
-    const scoreRuns = (oddsRunsResult.data ?? []).filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
-    const slateStarts = [...new Set(gameRows.map((game) => {
-      const kickoff = new Date(game.kickoffAt);
-      kickoff.setUTCMinutes(Math.floor(kickoff.getUTCMinutes() / 30) * 30, 0, 0);
-      return kickoff.toISOString();
-    }))].sort();
-    const efficiencyHistory = slateStarts.map((slateStartedAt, index) => {
-      const firstEligibleAt = new Date(slateStartedAt).getTime() + 170 * 60_000;
-      const nextEligibleAt = index < slateStarts.length - 1 ? new Date(slateStarts[index + 1]).getTime() + 170 * 60_000 : Number.POSITIVE_INFINITY;
-      const rows = scoreRuns.filter((run) => {
-        const checkedAt = new Date(run.completed_at ?? run.started_at).getTime();
-        return checkedAt >= firstEligibleAt && checkedAt < nextEligibleAt;
-      });
-      const credits = rows.reduce((sum, run) => sum + providerRequestCost(run), 0);
-      const finals = rows.reduce((sum, run) => sum + (run.details && typeof run.details === "object" && Number.isFinite(Number((run.details as Record<string, unknown>).finalScoresImported)) ? Number((run.details as Record<string, unknown>).finalScoresImported) : 0), 0);
-      const productive = rows.filter((run) => run.details && typeof run.details === "object" && Number((run.details as Record<string, unknown>).finalScoresImported ?? 0) > 0).length;
-      return { slateStartedAt, creditsPerFinal: finals > 0 ? Number((credits / finals).toFixed(2)) : null, productiveRate: rows.length > 0 ? Math.round((productive / rows.length) * 100) : null, credits, finals };
-    }).filter((slate) => slate.credits > 0);
+    const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= now.getTime() - 30 * 86400000), now);
+    const efficiencyHistory = slateEfficiencySeries(games, oddsRunsResult.data ?? [], now);
+    const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now);
     const ladderCounts = new Map<number, number>();
     for (const run of syncResult.data ?? []) {
       if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
@@ -181,6 +185,7 @@ export async function GET(request: NextRequest) {
       cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
       scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,
+      creditUsage,
       incidents: watchdog.recentAlerts.slice(0, 8).map((alert) => ({ id: alert.id, title: alert.title, severity: alert.severity, detectedAt: alert.detected_at, lastSeenAt: alert.last_seen_at, resolvedAt: alert.resolved_at })),
       reminders: (remindersResult.data ?? []).map((reminder) => ({ id: reminder.id, category: reminder.category, title: reminder.title, scheduledFor: reminder.scheduled_for, status: reminder.status, sentAt: reminder.sent_at })),
     });

@@ -396,6 +396,15 @@ the condition genuinely recurs.
 
 ## Commissioner controls
 
+The Grading charts share the dashboard's selected period and minute refresh.
+Monthly credit usage runs from the first UTC day through today, with daily and
+cumulative views of recorded provider costs (charged failures included).
+Provider-reported quota snapshots remain separate from logged costs. Receipt
+queries paginate so a busy month cannot silently lose older records.
+Slate efficiency uses exact kickoff times; legacy receipt attribution is
+explicitly estimated and withheld for overlapping windows. The ladder plots
+fresh-final counts with widths proportional to configured polling gaps.
+
 ### NCAA Bowl Pool schedule staging
 
 The separate NCAA Bowl Pool is staged by the Commissioner before its December

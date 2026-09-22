@@ -1,4 +1,5 @@
 function wholeNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
   const numeric = typeof value === "number" ? value : Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
 }
