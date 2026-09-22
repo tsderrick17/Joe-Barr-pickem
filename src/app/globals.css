@@ -3642,6 +3642,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-route-card > strong { color: #08764e; font-size: .67rem; letter-spacing: .11em; margin-top: auto; padding-top: 1.25rem; }
 .commissioner-inline-action { background: #173c35; color: #fff; font-size: .76rem; font-weight: 800; letter-spacing: .04em; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; }
 .commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
+.provider-chart-axis-label { align-items: center; background: #e4e4e7; border-radius: .25rem; color: #71717a; display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
 
 .commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1.5rem; padding: clamp(1.15rem, 3vw, 2rem); }
 .commissioner-tool-card--write { border-left-color: #a76311; }
@@ -3667,6 +3668,19 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
   .commissioner-command-links strong { font-size: .73rem; }
   .commissioner-panel-tab { font-size: .95rem; padding: .55rem .62rem; }
   .commissioner-workspace-intro { padding-top: 1.5rem; }
+
+  /* Charts are a primary mobile surface: keep the legend compact, give the
+     selected observation a clean reading order, and preserve plot height. */
+  .provider-chart-legend { gap: .15rem .4rem; margin-bottom: .7rem; }
+  .provider-chart-legend-item { font-size: .72rem; gap: .4rem; padding: .28rem .2rem; }
+  .provider-chart-legend-item > span:first-child { height: .42rem; width: 1.1rem; }
+  .provider-chart-tooltip { border-radius: .7rem; padding: .7rem .8rem; }
+  .provider-chart-tooltip > p:first-child { font-size: .68rem; line-height: 1.25; }
+  .provider-chart-tooltip strong { font-size: 1.1rem; }
+  .provider-chart-tooltip > div { column-gap: .8rem; }
+  .provider-chart-tooltip > p:last-child { font-size: .68rem; line-height: 1.35; }
+  .provider-chart-explorer { gap: .5rem; padding-top: .65rem; }
+  .provider-chart-data { margin-top: .5rem; }
 }
 
 /* The Bowl receipt has a deliberately wide desktop layout, but its flexible
