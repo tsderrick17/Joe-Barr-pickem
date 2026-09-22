@@ -85,11 +85,11 @@ type FullSchedulePreview = {
 };
 
 const commissionerPanels = [
-  ["overview", "Overview", "See the pool's current stage and the next safe move."],
-  ["grading", "Grading", "Watch live score ingestion, settlement, pending grades, and exceptions."],
-  ["game-day", "Game day", "Locks, scores, and the few actions that matter during games."],
-  ["season-setup", "Season", "Schedule setup, season turnover, and archive."],
-  ["system", "System & safety", "Capacity, automation health, and the rare recovery tools."],
+  ["overview", "Overview", "Live pool status, priorities, and the next safe move.", "01"],
+  ["grading", "Grading", "Settlement, freshness, provider efficiency, and exceptions.", "02"],
+  ["game-day", "Game day", "The focused checklist for locks, finals, and integrity holds.", "03"],
+  ["season-setup", "Season", "Schedule preparation, change control, and the permanent archive.", "04"],
+  ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "05"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
@@ -240,53 +240,43 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3e8] px-4 py-8 text-zinc-900 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-5xl">
-        <header className="flex flex-col gap-6 border-b-2 border-zinc-900 pb-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.2em] text-zinc-600">
-              COMMISSIONER
-            </p>
-
-            <h1 className="mt-2 font-serif text-4xl font-bold">
-              Commissioner Desk
-            </h1>
-
-            <p className="mt-2 text-zinc-700">
-              Run the pool from one place. Routine work is separated from season setup and rare recovery tools.
-            </p>
+    <main className="commissioner-desk min-h-screen bg-[#f7f3e8] px-4 py-5 text-zinc-900 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-6xl">
+        <header className="commissioner-command-bar">
+          <div className="commissioner-command-title">
+            <p className="text-[11px] font-black tracking-[0.22em] text-emerald-200">JOE BARR PICK’EM · COMMISSIONER</p>
+            <h1 className="mt-2 font-serif text-4xl font-bold sm:text-5xl">Operations desk</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">One calm place to see the pool’s live state, understand the next move, and act without disturbing scheduled automation.</p>
           </div>
 
-          <div className="rounded-sm border border-zinc-300 bg-white px-4 py-3 text-sm lg:min-w-72">
-            <p className="text-[11px] font-black tracking-[.14em] text-zinc-500">MANAGE</p>
-            <div className="manage-links mt-2 flex w-full flex-nowrap justify-start gap-x-4 overflow-x-auto font-semibold underline">
-              <Link className="shrink-0" href="/admin/players">Players</Link>
-              <Link className="shrink-0" href="/admin/reminders">Email center</Link>
-              <Link className="shrink-0" href="/archive">Archive</Link>
-            </div>
+          <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
+            <Link href="/admin/players"><span>Roster</span><strong>Players</strong></Link>
+            <Link href="/admin/reminders"><span>Delivery</span><strong>Email center</strong></Link>
+            <Link href="/archive"><span>History</span><strong>Archive</strong></Link>
           </div>
         </header>
 
-        <nav aria-label="Commissioner sections" className="mt-5 overflow-x-auto border-b-2 border-zinc-900 pb-3">
-          <div className="flex min-w-max gap-x-5 sm:gap-x-7">
-          {commissionerPanels.map(([panel, label]) => (
+        <nav aria-label="Commissioner sections" className="commissioner-panel-nav">
+          <div className="commissioner-panel-tabs">
+          {commissionerPanels.map(([panel, label, description, number]) => (
             <button
               aria-pressed={activePanel === panel}
-              className={`border-b-4 px-1 py-2 text-left font-serif text-lg font-bold transition sm:text-xl ${activePanel === panel ? "border-zinc-900 text-zinc-950" : "border-transparent text-zinc-500 hover:border-zinc-400 hover:text-zinc-900"}`}
+              aria-label={`${label}. ${description}`}
+              className={`commissioner-panel-tab ${activePanel === panel ? "is-active" : ""}`}
               key={panel}
               onClick={() => setActivePanel(panel)}
               type="button"
             >
-              {label}
+              <span>{number}</span>{label}
             </button>
           ))}
           </div>
-          <p className="mt-2 text-sm text-zinc-600">{commissionerPanels.find(([panel]) => panel === activePanel)?.[2]}</p>
+          <p className="commissioner-panel-description">{commissionerPanels.find(([panel]) => panel === activePanel)?.[2]}</p>
         </nav>
 
         {activePanel === "overview" ? <>
-        <CommissionerOperationsMap />
-        <section className="border-b-2 border-zinc-900 py-8">
+        <CommissionerOperationsMap onOpenWorkspace={setActivePanel} />
+        <section className="commissioner-workspace-section">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-black tracking-[.16em] text-zinc-600">QUICK ROUTES</p>
@@ -295,9 +285,9 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <Link className="group border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/admin/players"><p className="font-serif text-xl font-bold">Players</p><p className="mt-1 text-sm text-zinc-700">Add players, review activity, and manage private PINs.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN PLAYERS →</p></Link>
-            <Link className="group border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/admin/reminders"><p className="font-serif text-xl font-bold">Email center</p><p className="mt-1 text-sm text-zinc-700">Check delivery, send a private test, or update future wording.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN EMAILS →</p></Link>
-            <button className="border border-zinc-300 bg-white p-4 text-left transition hover:border-zinc-900 hover:shadow-sm" onClick={() => setActivePanel("season-setup")} type="button"><p className="font-serif text-xl font-bold">Season work</p><p className="mt-1 text-sm text-zinc-700">Open the schedule and archive.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN SEASON →</p></button>
+            <Link className="commissioner-route-card" href="/admin/players"><span>ROSTER CONTROL</span><p>Players</p><small>Add players, review activity, and manage private PINs.</small><strong>OPEN PLAYERS →</strong></Link>
+            <Link className="commissioner-route-card" href="/admin/reminders"><span>PLAYER DELIVERY</span><p>Email center</p><small>Check delivery, send a private test, or update future wording.</small><strong>OPEN EMAILS →</strong></Link>
+            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("season-setup")} type="button"><span>SEASON CONTROL</span><p>Season work</p><small>Review the schedule, imports, and permanent archive.</small><strong>OPEN SEASON →</strong></button>
           </div>
         </section>
         </> : null}
@@ -305,9 +295,10 @@ export default function AdminPage() {
         {activePanel === "grading" ? <GradingDashboard /> : null}
 
         {activePanel === "game-day" ? <>
-          <section className="border-b-2 border-zinc-900 py-7">
-            <h2 className="font-serif text-2xl font-bold">Game day operations</h2>
-            <p className="mt-1 text-zinc-700">Use these checks in order. Scheduled automation remains the primary path.</p>
+          <section className="commissioner-workspace-intro">
+            <p>LIVE RUNBOOK</p>
+            <h2>Game day operations</h2>
+            <span>Use these checks in order. Scheduled automation is the primary path; manual tools stay clearly contained below.</span>
           </section>
           <GameDayPlaybook />
           <AutomationPreflight />
@@ -319,17 +310,17 @@ export default function AdminPage() {
         </> : null}
 
         {activePanel === "system" ? <>
-          <section className="border-b-2 border-zinc-900 py-7">
-            <p className="text-xs font-black tracking-[0.16em] text-zinc-600">SYSTEM HEALTH</p>
-            <h2 className="mt-1 font-serif text-2xl font-bold">Keep the engine quiet and visible</h2>
-            <p className="mt-1 max-w-2xl text-zinc-700">Capacity and automation live here so the day-to-day pool view stays focused. Most of this page should be green and left alone.</p>
+          <section className="commissioner-workspace-intro">
+            <p>QUIET BY DESIGN</p>
+            <h2>System health & safety</h2>
+            <span>Capacity and automation live here so the day-to-day pool view stays focused. Most of this page should be green and left alone.</span>
           </section>
           <AccountCapacityPanel />
           <BowlPoolReadiness />
           <SentryVerification />
-          <section className="border-b-2 border-zinc-900 py-7">
+          <section className="commissioner-diagnostics">
             <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>
-              <summary className="cursor-pointer font-serif text-xl font-bold">Diagnostics and manual recovery</summary>
+              <summary>Diagnostics and manual recovery <span>Open only when a live status flags a hold</span></summary>
               <p className="mt-2 max-w-2xl text-sm text-zinc-700">Open this when the operations map identifies a hold, or when you specifically need a full readiness report.</p>
               {showDiagnostics ? <>
                 <OpeningWeekChecklist />
@@ -343,8 +334,13 @@ export default function AdminPage() {
         </> : null}
 
         {activePanel === "season-setup" ? <>
+        <section className="commissioner-workspace-intro">
+          <p>SEASON CONTROL</p>
+          <h2>Prepare carefully. Preserve forever.</h2>
+          <span>Validate before every write, keep routine refreshes separate from setup, and leave a clean record behind.</span>
+        </section>
         <SeasonBootstrapStatus />
-        <section className="border-b-2 border-zinc-900 py-8">
+        <section className="commissioner-workspace-section">
           <p className="text-xs font-black tracking-[.16em] text-zinc-600">PRACTICE & HISTORY</p>
           <h2 className="mt-1 font-serif text-2xl font-bold">Rehearse safely, then preserve the record</h2>
           <p className="mt-2 max-w-2xl text-sm text-zinc-700">The archive remains the permanent record after a period or season has settled.</p>
@@ -352,8 +348,9 @@ export default function AdminPage() {
             <Link className="border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/archive"><p className="font-serif text-xl font-bold">Open archive</p><p className="mt-1 text-sm text-zinc-700">Review settled weeks, permanent receipts, and season history.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN ARCHIVE →</p></Link>
           </div>
         </section>
-        <section className="mt-8 border-y-2 border-zinc-900 py-8">
-          <h2 className="font-serif text-2xl font-bold">Odds Feed</h2>
+        <section className="commissioner-tool-card mt-8">
+          <p className="commissioner-tool-eyebrow">READ-ONLY PROVIDER CHECK</p>
+          <h2 className="font-serif text-2xl font-bold">Odds feed</h2>
 
           <p className="mt-2 text-zinc-700">
             This is a read-only preview. It does not add games or lock lines.
@@ -437,8 +434,9 @@ export default function AdminPage() {
           ) : null}
         </section>
 
-        <section className="border-b-2 border-zinc-900 py-8">
-          <h2 className="font-serif text-2xl font-bold">Import Games</h2>
+        <section className="commissioner-tool-card commissioner-tool-card--write">
+          <p className="commissioner-tool-eyebrow">VALIDATE BEFORE WRITING</p>
+          <h2 className="font-serif text-2xl font-bold">Import games</h2>
 
           <div className="mt-5 border-2 border-zinc-900 bg-white p-5">
             <h3 className="font-serif text-xl font-bold">Preseason full-schedule bootstrap</h3>

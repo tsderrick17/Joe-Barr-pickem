@@ -17,6 +17,17 @@ type OperationsMap = {
   stages: Stage[];
 };
 
+type OperationsWorkspace = "overview" | "grading" | "game-day" | "season-setup" | "system";
+
+const workspaceForStage: Record<string, { panel: OperationsWorkspace; label: string }> = {
+  schedule: { panel: "season-setup", label: "Open season workspace" },
+  selections: { panel: "overview", label: "Open pool overview" },
+  lines: { panel: "game-day", label: "Open game-day workspace" },
+  scores: { panel: "game-day", label: "Open game-day workspace" },
+  results: { panel: "grading", label: "Open grading workspace" },
+  handoff: { panel: "grading", label: "Open grading workspace" },
+};
+
 const stateLabel: Record<StageState, string> = {
   complete: "Complete",
   active: "In progress",
@@ -31,7 +42,7 @@ async function loadOperationsMap() {
   return payload as OperationsMap;
 }
 
-export default function CommissionerOperationsMap() {
+export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenWorkspace?: (panel: OperationsWorkspace) => void }) {
   const [map, setMap] = useState<OperationsMap | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,6 +130,9 @@ export default function CommissionerOperationsMap() {
           <div className="commissioner-map-next">
             <p className="text-xs font-black tracking-[0.14em]">WHAT HAPPENS NEXT</p>
             <p className="mt-1 text-sm leading-5">{selected.next}</p>
+            {onOpenWorkspace && workspaceForStage[selected.id] ? <button className="commissioner-inline-action mt-3" onClick={() => onOpenWorkspace(workspaceForStage[selected.id].panel)} type="button">
+              {workspaceForStage[selected.id].label} <span aria-hidden="true">→</span>
+            </button> : null}
           </div>
         </div> : null}
 
