@@ -104,8 +104,8 @@ const recapImageStyleNoMargin = "display:block;height:auto;max-width:100%;width:
 function recapImage({ alt, href, kind, reminderId, style, width = 560 }: { alt: string; href: string; kind: string; reminderId: string; style: string; width?: number }) {
   // Version the artwork URL so a transient 404/timeout cached by an email
   // provider cannot poison every later open of the same message.
-  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=3`;
-  return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="${width}" style="${style}"><span style="font:12px/1.4 Arial,sans-serif;color:#57534e">View this update on Pick'em if the image is unavailable.</span></a>`;
+  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=4`;
+  return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="${width}" style="${style}"></a>`;
 }
 
 function messageHtml(reminder: Reminder) {
