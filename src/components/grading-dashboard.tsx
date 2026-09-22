@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
@@ -35,21 +35,29 @@ export default function GradingDashboard() {
   const [periodId, setPeriodId] = useState("");
   const [selectedGameId, setSelectedGameId] = useState("");
   const [copied, setCopied] = useState(false);
+  const periodIdRef = useRef("");
+  const requestSequenceRef = useRef(0);
 
-  const refresh = useCallback(async (selectedPeriodId = periodId) => {
+  const refresh = useCallback(async (requestedPeriodId = periodIdRef.current) => {
+    const requestSequence = ++requestSequenceRef.current;
     setLoading(true); setError("");
     try {
-      const response = await fetchWithSession(selectedPeriodId ? `/api/admin/grading-dashboard?periodId=${encodeURIComponent(selectedPeriodId)}` : "/api/admin/grading-dashboard");
+      const response = await fetchWithSession(requestedPeriodId ? `/api/admin/grading-dashboard?periodId=${encodeURIComponent(requestedPeriodId)}` : "/api/admin/grading-dashboard");
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "The grading dashboard could not load.");
+      if (requestSequence !== requestSequenceRef.current) return;
       setData(payload);
-      setPeriodId(payload.period?.id ?? "");
+      const resolvedPeriodId = payload.period?.id ?? "";
+      periodIdRef.current = resolvedPeriodId;
+      setPeriodId(resolvedPeriodId);
       setSelectedGameId((current) => current && payload.games.some((game: Dashboard["games"][number]) => game.id === current) ? current : payload.games.find((game: Dashboard["games"][number]) => game.needsAttention)?.id ?? payload.games[0]?.id ?? "");
     } catch (reason) {
+      if (requestSequence !== requestSequenceRef.current) return;
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
       else setError(reason instanceof Error ? reason.message : "The grading dashboard could not load.");
-    } finally { setLoading(false); }
-  }, [periodId]);
+    } finally { if (requestSequence === requestSequenceRef.current) setLoading(false); }
+  }, []);
+  useEffect(() => { periodIdRef.current = periodId; }, [periodId]);
   useEffect(() => { const initial = window.setTimeout(() => void refresh(), 0); const timer = window.setInterval(() => void refresh(), 60000); return () => { window.clearTimeout(initial); window.clearInterval(timer); }; }, [refresh]);
 
   const filteredGames = useMemo(() => data?.games.filter((game) => filter === "all" || (filter === "attention" ? game.needsAttention : filter === game.state)) ?? [], [data, filter]);
