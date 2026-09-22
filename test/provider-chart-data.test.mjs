@@ -29,7 +29,7 @@ test("missing costs use estimates, explicit zero stays free and quota null is un
   assert.equal(data.remaining, null);
 });
 
-test("slates use exact kickoffs and never absorb later unrelated polls", () => {
+test("slates pool kickoffs within 30 minutes and never absorb later unrelated polls", () => {
   const games = [{ kickoff_at: "2026-09-20T17:00:00Z", finalized_at: "2026-09-20T20:30:00Z" }];
   const rows = [
     { started_at: "2026-09-20T20:00:00Z", job_type: "scores", details: { requestsLast: 2, newFinals: 1 } },
@@ -41,13 +41,25 @@ test("slates use exact kickoffs and never absorb later unrelated polls", () => {
   assert.equal(result[0].productiveRate, 100);
 });
 
-test("overlapping slates withhold uncertain values; future games never appear", () => {
+test("kickoffs more than 30 minutes apart remain separate slates", () => {
+  const games = [
+    { kickoff_at: "2026-09-20T17:00:00Z", finalized_at: "2026-09-20T20:30:00Z" },
+    { kickoff_at: "2026-09-20T17:30:01Z", finalized_at: "2026-09-20T20:30:00Z" },
+  ];
+  const result = slateEfficiencySeries(games, [], new Date("2026-09-22T00:00:00Z"));
+  assert.equal(result.length, 2);
+  assert.deepEqual(result.map((point) => point.games), [1, 1]);
+});
+
+test("pooled slates avoid false overlap; future games never appear", () => {
   const games = [
     { kickoff_at: "2026-09-20T20:05:00Z", finalized_at: "2026-09-21T00:30:00Z" },
     { kickoff_at: "2026-09-20T20:25:00Z", finalized_at: "2026-09-21T00:30:00Z" },
     { kickoff_at: "2026-09-25T20:25:00Z", finalized_at: null },
   ];
   const result = slateEfficiencySeries(games, [{ started_at: "2026-09-20T23:30:00Z", job_type: "scores", details: { requestsLast: 2, newFinals: 1 } }], new Date("2026-09-22T00:00:00Z"));
-  assert.equal(result.length, 2);
-  assert.ok(result.every((point) => point.creditsPerFinal === null && point.attribution === "unavailable"));
+  assert.equal(result.length, 1);
+  assert.equal(result[0].games, 2);
+  assert.equal(result[0].creditsPerFinal, 2);
+  assert.equal(result[0].attribution, "estimated");
 });

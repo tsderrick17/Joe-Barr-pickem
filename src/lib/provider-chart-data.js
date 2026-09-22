@@ -1,6 +1,7 @@
 import { providerRequestCost } from "./provider-efficiency.js";
 
 const DAY = 86400000;
+const SLATE_GROUP_GAP = 30 * 60000;
 function reported(value) {
   if (value == null || value === "") return null;
   const number = Number(value);
@@ -39,22 +40,25 @@ export function monthlyCreditSeries(runs, now = new Date()) {
 // Old receipts do not identify games. Only unambiguous live polling windows
 // can be attributed; overlapping windows are withheld, never counted twice.
 export function slateEfficiencySeries(games, runs, now = new Date()) {
-  const groups = new Map();
-  for (const game of games) {
+  const groups = [];
+  for (const game of [...games].sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))) {
     const kickoff = Date.parse(game.kickoff_at);
     if (!Number.isFinite(kickoff) || kickoff > now.getTime()) continue;
-    const key = new Date(kickoff).toISOString();
-    const group = groups.get(key) ?? [];
-    group.push(game); groups.set(key, group);
+    const group = groups.at(-1);
+    if (!group || kickoff - group.firstKickoff > SLATE_GROUP_GAP) groups.push({ firstKickoff: kickoff, games: [game] });
+    else group.games.push(game);
   }
-  const slates = [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([slateStartedAt, slateGames]) => ({
+  const slates = groups.map(({ firstKickoff, games: slateGames }) => {
+    const slateStartedAt = new Date(firstKickoff).toISOString();
+    return {
     slateStartedAt, games: slateGames.length, credits: 0, finals: 0, calls: 0, productive: 0,
     ambiguous: false,
     start: Date.parse(slateStartedAt) + 170 * 60000,
     end: slateGames.every((game) => game.finalized_at)
       ? Math.max(...slateGames.map((game) => Date.parse(game.finalized_at))) + 60000
       : Math.min(now.getTime(), Date.parse(slateStartedAt) + 24 * 60 * 60000),
-  }));
+    };
+  });
   for (const run of runs) {
     if (run.job_type !== "scores" || providerRequestCost(run) <= 0) continue;
     const timestamp = Date.parse(run.started_at ?? run.completed_at);
