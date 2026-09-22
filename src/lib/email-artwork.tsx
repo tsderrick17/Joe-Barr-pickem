@@ -41,12 +41,15 @@ function Card({ title, subtitle, children, note }: { title: string; subtitle: st
   </div>;
 }
 
-function PickChips({ picks }: { picks: string[] }) {
-  return <div style={{ ...row, flex: 1, flexWrap: "wrap", gap: 6, padding: "8px 0" }}>{picks.length ? picks.map((pick, index) => {
+function PickChips({ picks, alignTwo }: { picks: string[]; alignTwo: boolean }) {
+  const chip = (pick: string, index: number) => {
     const won = /(?:^| )W$/.test(pick);
     const lost = /(?:^| )L$/.test(pick) || /NO PICK.*LOSS/.test(pick);
     return <span key={index} style={{ display: "flex", background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, padding: "5px 8px", fontSize: 22 }}>{pick}</span>;
-  }) : <span style={{ color: MUTED, fontSize: 20 }}>No selections</span>}</div>;
+  };
+  if (!picks.length) return <div style={{ ...row, flex: 1, padding: "8px 0" }}><span style={{ color: MUTED, fontSize: 20 }}>No selections</span></div>;
+  if (alignTwo && picks.length === 2) return <div style={{ ...row, flex: 1, minWidth: 0, padding: "8px 0" }}>{picks.map((pick, index) => <span key={index} style={{ display: "flex", flex: "1 1 0%", minWidth: 0, paddingRight: index === 0 ? 6 : 0, overflow: "hidden" }}>{chip(pick, index)}</span>)}</div>;
+  return <div style={{ ...row, flex: 1, flexWrap: "wrap", gap: 6, padding: "8px 0" }}>{picks.map(chip)}</div>;
 }
 
 function PickemTable({ standings, selections, recap, minHeight }: { standings: PublicRow[]; selections: PublicRow[]; recap: boolean; minHeight: number }) {
@@ -54,6 +57,7 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
   const picksByPlayer = new Map(selections.map((item) => [identity(item), item]));
   // Keep everyone in the standings, including players with no selections.
   const rows = [...standings, ...selections.filter((item) => !standings.some((standing) => identity(standing) === identity(item)))].sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name));
+  const alignTwoPicks = Math.max(0, ...rows.map((item) => (picksByPlayer.get(identity(item))?.picks ?? item.picks).length)) === 2;
   return <div style={column}>
     <div style={{ ...row, color: MUTED, fontSize: 16, fontWeight: 700, padding: "12px 0 8px", borderBottom: `1px solid ${INK}` }}>
       <span style={{ width: 40 }}>RK</span><span style={{ width: 180 }}>PLAYER</span><span style={{ width: 68 }}>TOTAL</span>{recap ? <span style={{ width: 64 }}>+WINS</span> : null}<span style={{ flex: 1 }}>SELECTIONS</span>
@@ -66,7 +70,7 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
         <span style={{ width: 180, padding: "8px 10px 8px 0", fontWeight: 700, fontSize: 25 }}>{standing.name}</span>
         <span style={{ width: 68, fontWeight: 700, fontSize: 28 }}>{standing.wins}</span>
         {recap ? <span style={{ width: 64, color: TEAL, fontWeight: 700 }}>{selection?.wins ?? 0}</span> : null}
-        <PickChips picks={selection?.picks ?? standing.picks} />
+        <PickChips alignTwo={alignTwoPicks} picks={selection?.picks ?? standing.picks} />
       </div>;
     })}
     {!rows.length ? <div style={{ ...row, padding: "16px 0", color: MUTED }}>No public selections yet.</div> : null}
