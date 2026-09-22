@@ -49,10 +49,10 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /SCORE_POLLING_RETRY_MINUTES/);
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
   assert.match(route, /efficiencyHistory/);
-  assert.match(efficiencyComponent, /Provider efficiency over time/);
-  assert.match(efficiencyComponent, /Observed days only/);
-  assert.match(efficiencyComponent, /const observedHistory = useMemo/);
-  assert.match(efficiencyComponent, /viewBox=\{`0 0 \$\{CHART_WIDTH\} \$\{CHART_HEIGHT\}`\}/);
+  assert.match(efficiencyComponent, /Provider efficiency by game-time slate/);
+  assert.match(efficiencyComponent, /Each point is one kickoff slate/);
+  assert.match(efficiencyComponent, /Credits per final and productive checks by game-time slate/);
+  assert.match(efficiencyComponent, /viewBox=\{`0 0 \$\{WIDTH\} \$\{HEIGHT\}`\}/);
   assert.match(efficiencyComponent, /Credits \/ final/);
 });
 

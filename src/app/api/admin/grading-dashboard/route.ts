@@ -130,15 +130,24 @@ export async function GET(request: NextRequest) {
     const survivorEntryCounts = (survivorEntriesResult.data ?? []).reduce((counts, entry) => { counts[entry.status as "active" | "eliminated" | "complete"] += 1; return counts; }, { active: 0, eliminated: 0, complete: 0 });
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
     const efficiency = summarizeProviderEfficiency(oddsRunsResult.data ?? [], now);
-    const efficiencyHistory = Array.from({ length: 30 }, (_, index) => {
-      const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (29 - index)));
-      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-      const rows = (oddsRunsResult.data ?? []).filter((run) => { const timestamp = new Date(run.completed_at ?? run.started_at).getTime(); return run.job_type === "scores" && timestamp >= dayStart.getTime() && timestamp < dayEnd.getTime() && providerRequestCost(run) > 0; });
+    const scoreRuns = (oddsRunsResult.data ?? []).filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
+    const slateStarts = [...new Set(gameRows.map((game) => {
+      const kickoff = new Date(game.kickoffAt);
+      kickoff.setUTCMinutes(Math.floor(kickoff.getUTCMinutes() / 30) * 30, 0, 0);
+      return kickoff.toISOString();
+    }))].sort();
+    const efficiencyHistory = slateStarts.map((slateStartedAt, index) => {
+      const firstEligibleAt = new Date(slateStartedAt).getTime() + 170 * 60_000;
+      const nextEligibleAt = index < slateStarts.length - 1 ? new Date(slateStarts[index + 1]).getTime() + 170 * 60_000 : Number.POSITIVE_INFINITY;
+      const rows = scoreRuns.filter((run) => {
+        const checkedAt = new Date(run.completed_at ?? run.started_at).getTime();
+        return checkedAt >= firstEligibleAt && checkedAt < nextEligibleAt;
+      });
       const credits = rows.reduce((sum, run) => sum + providerRequestCost(run), 0);
       const finals = rows.reduce((sum, run) => sum + (run.details && typeof run.details === "object" && Number.isFinite(Number((run.details as Record<string, unknown>).finalScoresImported)) ? Number((run.details as Record<string, unknown>).finalScoresImported) : 0), 0);
       const productive = rows.filter((run) => run.details && typeof run.details === "object" && Number((run.details as Record<string, unknown>).finalScoresImported ?? 0) > 0).length;
-      return { date: dayStart.toISOString().slice(0, 10), creditsPerFinal: finals > 0 ? Number((credits / finals).toFixed(2)) : null, productiveRate: rows.length > 0 ? Math.round((productive / rows.length) * 100) : null, credits, finals };
-    });
+      return { slateStartedAt, creditsPerFinal: finals > 0 ? Number((credits / finals).toFixed(2)) : null, productiveRate: rows.length > 0 ? Math.round((productive / rows.length) * 100) : null, credits, finals };
+    }).filter((slate) => slate.credits > 0);
     const ladderCounts = new Map<number, number>();
     for (const run of syncResult.data ?? []) {
       if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
