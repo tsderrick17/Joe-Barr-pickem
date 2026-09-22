@@ -16,4 +16,8 @@ test("email recaps use one safe image contract across every artwork type", async
   assert.match(renderer, /flex: "1 1 0%"/);
   assert.match(renderer, /alignTwoPicks/);
   assert.match(renderer, /picks\.length >= 6 \? 3/);
+  const recapRoute = await readFile(new URL("../src/app/api/recap-image/route.tsx", import.meta.url), "utf8");
+  assert.match(recapRoute, /artworkCacheKey/);
+  assert.match(recapRoute, /MAX_CACHED_ARTWORKS = 32/);
+  assert.match(recapRoute, /CACHE_TTL_MS/);
 });
