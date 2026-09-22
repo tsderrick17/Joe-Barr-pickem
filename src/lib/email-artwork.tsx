@@ -41,13 +41,11 @@ function Card({ title, subtitle, children, note }: { title: string; subtitle: st
   </div>;
 }
 
-function PickChips({ picks, columns }: { picks: string[]; columns: number }) {
-  const laneWidth = 420;
-  const columnWidth = laneWidth / columns;
-  return <div style={{ ...row, flex: "0 1 420px", flexWrap: "nowrap", minWidth: 0, maxWidth: "100%", overflow: "hidden", padding: "8px 0", width: laneWidth }}>{picks.length ? picks.map((pick, index) => {
+function PickChips({ picks }: { picks: string[] }) {
+  return <div style={{ ...row, flex: 1, flexWrap: "wrap", gap: 6, padding: "8px 0" }}>{picks.length ? picks.map((pick, index) => {
     const won = /(?:^| )W$/.test(pick);
     const lost = /(?:^| )L$/.test(pick) || /NO PICK.*LOSS/.test(pick);
-    return <span key={index} style={{ boxSizing: "border-box", display: "block", flex: `0 0 ${columnWidth}px`, minWidth: 0, overflow: "hidden", paddingRight: index < columns - 1 ? 6 : 0, textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span style={{ background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, display: "block", overflow: "hidden", padding: "5px 8px", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 22 }}>{pick}</span></span>;
+    return <span key={index} style={{ display: "flex", background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, padding: "5px 8px", fontSize: 22 }}>{pick}</span>;
   }) : <span style={{ color: MUTED, fontSize: 20 }}>No selections</span>}</div>;
 }
 
@@ -56,7 +54,6 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
   const picksByPlayer = new Map(selections.map((item) => [identity(item), item]));
   // Keep everyone in the standings, including players with no selections.
   const rows = [...standings, ...selections.filter((item) => !standings.some((standing) => identity(standing) === identity(item)))].sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name));
-  const pickColumns = Math.max(1, ...rows.map((item) => item.picks.length));
   return <div style={column}>
     <div style={{ ...row, color: MUTED, fontSize: 16, fontWeight: 700, padding: "12px 0 8px", borderBottom: `1px solid ${INK}` }}>
       <span style={{ width: 40 }}>RK</span><span style={{ width: 180 }}>PLAYER</span><span style={{ width: 68 }}>TOTAL</span>{recap ? <span style={{ width: 64 }}>+WINS</span> : null}<span style={{ flex: 1 }}>SELECTIONS</span>
@@ -69,7 +66,7 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
         <span style={{ width: 180, padding: "8px 10px 8px 0", fontWeight: 700, fontSize: 25 }}>{standing.name}</span>
         <span style={{ width: 68, fontWeight: 700, fontSize: 28 }}>{standing.wins}</span>
         {recap ? <span style={{ width: 64, color: TEAL, fontWeight: 700 }}>{selection?.wins ?? 0}</span> : null}
-        <PickChips columns={pickColumns} picks={selection?.picks ?? standing.picks} />
+        <PickChips picks={selection?.picks ?? standing.picks} />
       </div>;
     })}
     {!rows.length ? <div style={{ ...row, padding: "16px 0", color: MUTED }}>No public selections yet.</div> : null}
