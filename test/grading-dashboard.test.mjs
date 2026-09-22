@@ -20,6 +20,8 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /Notification readiness/);
   assert.match(component, /Release readiness/);
   assert.match(component, /<EfficiencyTrendPanel/);
+  assert.match(component, /<LadderHistogram items=\{data\.ladderSummary\}/);
+  assert.match(component, /New game finals by polling rung/);
   assert.match(route, /summarizeProviderEfficiency/);
   assert.match(route, /periodId/);
   assert.match(component, /aria-labelledby="grading-dashboard-title"/);
