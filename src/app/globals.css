@@ -1615,6 +1615,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-score,
 .slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
 
+/* The time rail sits before the matchup. Pull the line back by half that rail
+   so it is visually centered between the two team lanes, not the whole grid's
+   remaining area. */
+.slate-spread-cell { transform: translateX(-2.25rem); }
+.slate-preview-spread { display: block; transform: translateX(-2.4rem); }
+
 /* Scores are part of the team label, not a separate visual hierarchy. Keep
    their type size identical to the team name while giving every row the same
    compact numeric anchor. */
@@ -1803,6 +1809,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      wrapping long full names into the score lane. */
   .slate-game-row.is-final .slate-team-name-full { display: none; }
   .slate-game-row.is-final .slate-team-name-short { display: inline; }
+  .slate-spread-cell { transform: translateX(-1.15rem); }
+}
+
+@media (min-width: 380px) and (max-width: 767px) {
+  .slate-spread-cell { transform: translateX(-1.3rem); }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
