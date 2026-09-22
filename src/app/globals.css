@@ -3643,7 +3643,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-inline-action { background: #173c35; color: #fff; font-size: .76rem; font-weight: 800; letter-spacing: .04em; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; }
 .commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
 .provider-chart-axis-label { align-items: center; background: #e4e4e7; border-radius: .25rem; color: #71717a; display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
-.provider-efficiency-summary { border-bottom: 1px solid #e4e4e7; border-top: 1px solid #e4e4e7; display: grid; gap: .65rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
+.provider-efficiency-summary { border-bottom: 1px solid #e4e4e7; border-top: 1px solid #e4e4e7; display: grid; gap: .65rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
 .provider-efficiency-summary > div { display: grid; gap: .15rem; min-width: 0; }
 .provider-efficiency-summary span { color: #71717a; font-size: .62rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
 .provider-efficiency-summary strong { color: #18181b; font-size: 1.2rem; line-height: 1.1; overflow-wrap: anywhere; }
