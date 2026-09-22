@@ -9,6 +9,7 @@ import { recommendPollingPlan, simulatePollingPlans } from "@/lib/polling-plan.j
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 
 type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
+const GAME_STATUS_GRACE_MINUTES = 15;
 
 function minutesSince(value: string | null, now: Date) {
   if (!value) return null;
@@ -20,7 +21,8 @@ function gameState(game: { status: GameStatus; kickoff_at: string; finalized_at:
   if (game.status === "final") return pending > 0 ? "needs_review" : "settled";
   if (game.status === "live") return "live";
   if (game.status === "postponed" || game.status === "cancelled") return "held";
-  return new Date(game.kickoff_at).getTime() < now.getTime() ? "stale" : "scheduled";
+  const staleAfter = new Date(game.kickoff_at).getTime() + GAME_STATUS_GRACE_MINUTES * 60_000;
+  return staleAfter < now.getTime() ? "stale" : "scheduled";
 }
 
 export async function GET(request: NextRequest) {
@@ -114,7 +116,7 @@ export async function GET(request: NextRequest) {
     const latestScoreRun = (syncResult.data ?? [])[0] ?? null;
     const latestSuccessfulScoreRun = (syncResult.data ?? []).find((run) => run.status === "success") ?? null;
     const attention = [
-      ...gameRows.filter((game) => game.needsAttention).map((game) => ({ id: `game-${game.id}`, severity: game.state === "needs_review" ? "high" : "medium", title: `${game.away} at ${game.home}`, detail: game.state === "needs_review" ? `${game.picks.pending + game.survivor.pending} pick grades are still pending after the final score.` : game.state === "stale" ? "Kickoff has passed but the game is not live or final." : "The line-lock window passed without an official line." })),
+      ...gameRows.filter((game) => game.needsAttention).map((game) => ({ id: `game-${game.id}`, severity: game.state === "needs_review" ? "high" : "medium", title: `${game.away} at ${game.home}`, detail: game.state === "needs_review" ? `${game.picks.pending + game.survivor.pending} pick grades are still pending after the final score.` : game.state === "stale" ? `No live or final status ${GAME_STATUS_GRACE_MINUTES} minutes after kickoff.` : "The line-lock window passed without an official line." })),
       ...health.problems.map((problem, index) => ({ id: `health-${index}`, severity: "high", title: "Automation health", detail: problem })),
       ...watchdog.openAlerts.map((alert) => ({ id: `watchdog-${alert.id}`, severity: "high", title: alert.title, detail: alert.detail })),
     ];

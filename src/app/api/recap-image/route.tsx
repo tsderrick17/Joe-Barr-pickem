@@ -128,11 +128,11 @@ function PublicPickemImage({ kicker, title, rows, note }: { kicker: string; titl
     : [rows];
   return (
     <div style={{ background: "#fffaf0", color: INK, display: "flex", flexDirection: "column", height: "100%", padding: "28px 34px", width: "100%" }}>
-      <div style={{ alignItems: "baseline", borderBottom: `2px solid ${INK}`, display: "flex", justifyContent: "space-between", paddingBottom: 12 }}>
-        <span style={{ display: "flex", fontFamily: "Georgia", fontSize: 46, fontWeight: 800 }}>Pick&apos;em Pad</span>
-        <span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 15, fontWeight: 800, letterSpacing: 1.5 }}>{kicker}</span>
+      <div style={{ alignItems: "flex-start", borderBottom: `2px solid ${INK}`, display: "flex", flexDirection: "column", gap: 5, paddingBottom: 12 }}>
+        <span style={{ display: "flex", fontFamily: "Georgia", fontSize: 46, fontWeight: 800, lineHeight: 1 }}>Pick&apos;em Pad</span>
+        <span style={{ color: TEAL, display: "flex", fontFamily: "Arial", fontSize: 13, fontWeight: 800, letterSpacing: 1.2, lineHeight: 1.2, maxWidth: "100%" }}>{kicker}</span>
       </div>
-      <div style={{ alignSelf: "center", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 27, fontWeight: 800, marginTop: 10, paddingBottom: 4 }}>{title.toUpperCase()}</div>
+      <div style={{ alignSelf: "stretch", borderBottom: `3px solid ${INK}`, display: "flex", fontFamily: "Georgia", fontSize: 27, fontWeight: 800, justifyContent: "center", lineHeight: 1.1, marginTop: 10, padding: "0 8px 4px", textAlign: "center" }}>{title.toUpperCase()}</div>
       <div style={{ display: "flex", gap: columns.length > 1 ? 24 : 0, marginTop: 6 }}>
         {columns.map((column, index) => <PadRows compact={compact} grow key={index} rows={column} />)}
       </div>
