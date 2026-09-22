@@ -3767,7 +3767,6 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
   .provider-chart-tooltip strong { font-size: 1.1rem; }
   .provider-chart-tooltip > div { column-gap: .8rem; }
   .provider-chart-tooltip > p:last-child { font-size: .68rem; line-height: 1.35; }
-  .provider-chart-explorer { gap: .5rem; padding-top: .65rem; }
   .provider-chart-data { margin-top: .5rem; }
   .provider-efficiency-summary { gap: .55rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .85rem 0 1rem; padding: .7rem 0; }
   .provider-efficiency-summary strong { font-size: 1.05rem; }
