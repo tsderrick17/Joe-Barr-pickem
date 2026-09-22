@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
+import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 
 test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
@@ -69,6 +69,18 @@ test("Bowl cards use official compact team labels with an accessible full-name f
   assert.equal(bowlTeamDisplayLabel({ full_name: "Mississippi State", short_name: "Mississippi St.", abbreviation: null }), "Mississippi St.");
   assert.equal(bowlTeamDisplayLabel({ full_name: "Central Michigan", short_name: null, abbreviation: null }), "CM");
   assert.equal(bowlTeamDisplayLabel(null), "TBD");
+});
+
+test("Bowl standings never show the same label for both teams in one game", () => {
+  const [first, second] = bowlMatchupTeamLabels(
+    { full_name: "Central Michigan", short_name: "CM", abbreviation: "CM" },
+    { full_name: "Colorado Mesa", short_name: "CM", abbreviation: "CM" },
+  );
+  assert.notEqual(first.toUpperCase(), second.toUpperCase());
+  assert.deepEqual(bowlMatchupTeamLabels(
+    { full_name: "Texas", short_name: "TEX", abbreviation: "TEX" },
+    { full_name: "Texas A&M", short_name: "TAMU", abbreviation: "TAMU" },
+  ), ["TEX", "TAMU"]);
 });
 
 test("bowl selections compare by game/value, not insertion order", () => {
