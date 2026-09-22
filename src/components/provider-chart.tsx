@@ -104,12 +104,6 @@ export default function ProviderChart({ points, series, label, histogram = false
             {points[i].shortLabel.split(", ").map((part, row) => <tspan key={row} x={x(i)} dy={row ? 13 : 0}>{part}</tspan>)}
           </text>)}
       </svg>
-      <div className="provider-chart-explorer flex items-center gap-3 border-t border-zinc-100 pt-3">
-        <span className="shrink-0 text-[11px] text-zinc-500">Explore</span>
-        <input aria-label={`Explore ${label}`} type="range" min="0" max={Math.max(0, points.length - 1)} value={index}
-          onChange={(event) => setSelected(Number(event.target.value))} className="min-w-0 flex-1 accent-indigo-600" />
-        <span className="text-[11px] tabular-nums text-zinc-400">{index + 1} / {points.length}</span>
-      </div>
     </> : <p className="py-14 text-center text-sm text-zinc-500">Recorded activity will appear here as it arrives.</p>}
     <details className="provider-chart-data mt-3 text-xs text-zinc-500"><summary className="w-fit cursor-pointer py-1 font-medium">View chart data</summary>
       <div className="mt-2 max-h-64 overflow-auto"><table className="w-full text-left text-xs"><thead><tr><th className="p-2">Interval</th>{series.map((item) => <th className="p-2" key={item.key}>{item.label}</th>)}</tr></thead><tbody>
