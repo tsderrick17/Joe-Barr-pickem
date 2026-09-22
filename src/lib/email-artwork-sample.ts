@@ -14,8 +14,8 @@ export function emailArtworkSample(category: string, pickemOnly = false): EmailA
   if (category === "playoff_day_recap") return { ...weekly, kind: "playoff_day_recap", day: "Sample playoff day", eliminatedToday: [], championsCrowned: [] };
   const rows = weekly.standings.map((item) => ({ ...item, picks: ["BUF -3.5", "SEA +2.5"] }));
   if (category === "sunday_early_reveal" || category === "sunday_late_reveal") return { kind: "sunday_reveal", window: category === "sunday_early_reveal" ? "early" : "late", week: "Sample week", generatedAt: weekly.generatedAt, rows };
-  if (category === "featured_window_reveal") return { kind: "featured_window_reveal", window: "Featured game", week: "Sample week", generatedAt: weekly.generatedAt, rows };
-  if (category === "playoff_public_reveal") return { kind: "playoff_public_reveal", window: "Sample kickoff", round: "Wild Card", generatedAt: weekly.generatedAt, rows };
+  if (category === "featured_window_reveal") return { kind: "featured_window_reveal", window: "Featured game", week: "Sample week", generatedAt: weekly.generatedAt, rows: rows.map((item) => ({ ...item, picks: [item.picks[0]] })) };
+  if (category === "playoff_public_reveal") return { kind: "playoff_public_reveal", window: "Sample kickoff", round: "Wild Card", generatedAt: weekly.generatedAt, rows: rows.map((item) => ({ ...item, picks: [item.picks[0]] })) };
   const games = [{ away: "Miami Dolphins", home: "BUFFALO BILLS", favorite: "home" as const, spread: 3.5, time: "1:00 PM ET" }, { away: "Seattle Seahawks", home: "LOS ANGELES RAMS", favorite: "home" as const, spread: 2.5, time: "4:25 PM ET" }];
   if (category === "weekly") return { kind: "fresh_slate", week: "Sample week", generatedAt: weekly.generatedAt, games: games.map((game) => ({ ...game, day: "Sunday" })) };
   if (category === "early_lock") return { kind: "early_lock", day: "Sample Sunday", generatedAt: weekly.generatedAt, games: games.slice(0, 1) };
