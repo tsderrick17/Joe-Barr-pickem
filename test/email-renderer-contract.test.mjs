@@ -13,7 +13,7 @@ test("email recaps use one safe image contract across every artwork type", async
   assert.match(reminders, /publicReceiptImageFrameStyle = "[^"]*max-width:560px/);
   assert.match(renderer, /safePublicRows/);
   assert.match(renderer, /const WIDTH = 760/);
-  assert.match(renderer, /flexWrap: "wrap"/);
   assert.match(renderer, /flex: "1 1 0%"/);
   assert.match(renderer, /alignTwoPicks/);
+  assert.match(renderer, /picks\.length >= 6 \? 3/);
 });

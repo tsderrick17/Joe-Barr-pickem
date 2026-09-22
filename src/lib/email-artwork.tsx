@@ -42,6 +42,7 @@ function Card({ title, subtitle, children, note }: { title: string; subtitle: st
 }
 
 function PickChips({ picks, alignTwo }: { picks: string[]; alignTwo: boolean }) {
+  const wrapColumns = picks.length >= 6 ? 3 : picks.length >= 4 ? 2 : picks.length;
   const chip = (pick: string, index: number) => {
     const won = /(?:^| )W$/.test(pick);
     const lost = /(?:^| )L$/.test(pick) || /NO PICK.*LOSS/.test(pick);
@@ -49,7 +50,9 @@ function PickChips({ picks, alignTwo }: { picks: string[]; alignTwo: boolean }) 
   };
   if (!picks.length) return <div style={{ ...row, flex: 1, padding: "8px 0" }}><span style={{ color: MUTED, fontSize: 20 }}>No selections</span></div>;
   if (alignTwo && picks.length === 2) return <div style={{ ...row, flex: 1, minWidth: 0, padding: "8px 0" }}>{picks.map((pick, index) => <span key={index} style={{ display: "flex", flex: "1 1 0%", minWidth: 0, paddingRight: index === 0 ? 6 : 0, overflow: "hidden" }}>{chip(pick, index)}</span>)}</div>;
-  return <div style={{ ...row, flex: 1, flexWrap: "wrap", gap: 6, padding: "8px 0" }}>{picks.map(chip)}</div>;
+  if (picks.length === 1) return <div style={{ ...row, flex: 1, padding: "8px 0" }}>{chip(picks[0], 0)}</div>;
+  const rows = Array.from({ length: Math.ceil(picks.length / wrapColumns) }, (_, rowIndex) => picks.slice(rowIndex * wrapColumns, (rowIndex + 1) * wrapColumns));
+  return <div style={{ ...column, flex: 1, width: "100%", minWidth: 0, padding: "8px 0" }}>{rows.map((pickRow, rowIndex) => <div key={rowIndex} style={{ ...row, width: "100%", minWidth: 0, marginBottom: rowIndex < rows.length - 1 ? 6 : 0 }}>{pickRow.map((pick, columnIndex) => <span key={columnIndex} style={{ display: "flex", flex: "1 1 0%", minWidth: 0, paddingRight: columnIndex < wrapColumns - 1 ? 6 : 0 }}>{chip(pick, rowIndex * wrapColumns + columnIndex)}</span>)}</div>)}</div>;
 }
 
 function PickemTable({ standings, selections, recap, minHeight }: { standings: PublicRow[]; selections: PublicRow[]; recap: boolean; minHeight: number }) {
