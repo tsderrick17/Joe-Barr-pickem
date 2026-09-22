@@ -4,7 +4,7 @@ import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
 
 export type EfficiencyPoint = { slateStartedAt: string; creditsPerFinal: number | null; productiveRate: number | null; credits: number; finals: number; games: number; calls: number; attribution: string };
-export type EfficiencySummary = { totalCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string };
+export type EfficiencySummary = { totalCredits: number; scoreCredits: number; spreadCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string };
 export type CreditUsage = { monthLabel: string; trackedCredits: number; reportedUsed: number | null; remaining: number | null; reportedAt: string | null; days: Array<{ date: string; credits: number; cumulative: number; scores: number; lines: number; other: number; estimatedCalls: number }> };
 const date = (value: string, timeZone: string, time = false) => new Date(value).toLocaleString("en-US", { timeZone, month: "short", day: "numeric", ...(time ? { hour: "numeric", minute: "2-digit" } : {}) });
 const format = (value: number | null) => value === null ? "—" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
@@ -38,7 +38,9 @@ export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt, 
         <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "6"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>{value === "all" ? "All slates" : "Last 6"}</button>)}</div>
       </div>
       <div className="provider-efficiency-summary" aria-label="Provider efficiency summary">
-        <div><span>Credits tracked</span><strong>{format(summary.totalCredits)}</strong></div>
+        <div><span>Total credits</span><strong>{format(summary.totalCredits)}</strong><small>Score + spread checks</small></div>
+        <div><span>Score credits</span><strong>{format(summary.scoreCredits)}</strong><small>Final-score polling</small></div>
+        <div><span>Spread credits</span><strong>{format(summary.spreadCredits)}</strong><small>Lines and odds</small></div>
         <div><span>Credits / final</span><strong>{format(summary.creditsPerFinal)}</strong><small>{summary.finalizedGames} finals imported</small></div>
         <div><span>Productive checks</span><strong>{format(summary.productiveRate)}{summary.productiveRate === null ? "" : "%"}</strong><small>Checks that imported a final</small></div>
       </div>

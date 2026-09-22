@@ -62,6 +62,8 @@ test("provider efficiency tracks observed credits, productive checks, and week-o
     windowDays: 30,
     providerCalls: 5,
     totalCredits: 8,
+    scoreCredits: 6,
+    spreadCredits: 2,
     scoreCalls: 3,
     scoreCredits: 6,
     finalizedGames: 3,

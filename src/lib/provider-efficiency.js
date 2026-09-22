@@ -33,6 +33,9 @@ export function summarizeProviderEfficiency(runs, now = new Date()) {
   const scoreRuns = runs.filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
   const totalCredits = runs.reduce((total, run) => total + providerRequestCost(run), 0);
   const scoreCredits = scoreRuns.reduce((total, run) => total + providerRequestCost(run), 0);
+  const spreadCredits = runs
+    .filter((run) => run.job_type === "line_locks" || run.job_type === "odds")
+    .reduce((total, run) => total + providerRequestCost(run), 0);
   const finalizedGames = scoreRuns.reduce(
     (total, run) => total + (wholeNumber(detailsFor(run).finalScoresImported) ?? 0),
     0,
@@ -56,8 +59,9 @@ export function summarizeProviderEfficiency(runs, now = new Date()) {
     windowDays: 30,
     providerCalls: runs.filter((run) => providerRequestCost(run) > 0).length,
     totalCredits,
-    scoreCalls: scoreRuns.length,
     scoreCredits,
+    spreadCredits,
+    scoreCalls: scoreRuns.length,
     finalizedGames,
     productiveScoreCalls,
     productiveRate: scoreRuns.length > 0
