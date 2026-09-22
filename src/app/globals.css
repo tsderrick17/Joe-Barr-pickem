@@ -1743,14 +1743,19 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 @media (max-width: 767px) {
   .slate-game-row.no-survivor-layout:not(.is-final) {
-    grid-template-columns: minmax(0, 1fr) 3.35rem minmax(0, 1fr);
-    padding-left: 2.6rem;
+    /* With Survivor removed, keep kickoff time as a real lane instead of
+       overlaying it in the team area. That gives the favorite a little
+       breathing room and keeps the row easy to scan at a glance. */
+    grid-template-columns: 3.15rem minmax(0, 1fr) 3.35rem minmax(0, 1fr);
+    column-gap: .35rem;
+    padding-left: .35rem;
   }
 
   .slate-game-row.no-survivor-layout:not(.is-final) > :first-child {
-    left: 0;
-    position: absolute;
-    width: 2.6rem;
+    border-right: 1px solid rgba(145, 175, 208, .58);
+    padding-right: .35rem;
+    position: static;
+    width: auto;
   }
 }
 
