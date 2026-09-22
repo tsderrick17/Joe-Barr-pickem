@@ -91,6 +91,12 @@ test("Bowl line capture promotes a provisional spread when live odds are unavail
   assert.match(source, /typeof espnSpread === "number" && Number\.isFinite\(espnSpread\)/);
 });
 
+test("Bowl standings list only active entries", async () => {
+  const source = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
+  assert.match(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active"\)/);
+  assert.doesNotMatch(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active" \|\| entry\.status === "complete"\)/);
+});
+
 test("bowl selections compare by game/value, not insertion order", () => {
   assert.equal(bowlSelectionsEqual({ first: "favorite", second: "underdog" }, { second: "underdog", first: "favorite" }), true);
   assert.equal(bowlSelectionsEqual({ first: "favorite" }, { first: "underdog" }), false);

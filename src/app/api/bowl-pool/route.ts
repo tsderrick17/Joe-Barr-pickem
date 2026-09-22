@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool ${(championshipCounts.get(championship.season_year) ?? 0) > 1 ? "Co-Champion" : "Champion"}`);
     trophiesByPlayerId.set(championship.player_id, titles);
   }
-  const standings = (allEntries ?? []).filter((entry) => entry.status === "active" || entry.status === "complete").map((entry) => ({
+  const standings = (allEntries ?? []).filter((entry) => entry.status === "active").map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
     wins: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),
