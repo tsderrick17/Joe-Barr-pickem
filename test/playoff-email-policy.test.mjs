@@ -14,6 +14,11 @@ test("playoff reveal snapshots are scoped to their scheduled kickoff games", () 
   assert.match(weeklyRecap, /NO PICK — LOSS/);
 });
 
+test("featured reveal snapshots stay scoped to the scheduled featured game window", () => {
+  assert.match(weeklyRecap, /const selectedFeaturedGameIds = new Set/);
+  assert.match(weeklyRecap, /selectedFeaturedGameIds\.has\(pick\.game_id\)/);
+});
+
 test("large public receipts tighten and then split rather than overflow", () => {
   assert.match(recapImage, /rows\.length > 10/);
   assert.match(recapImage, /rows\.length > 16/);

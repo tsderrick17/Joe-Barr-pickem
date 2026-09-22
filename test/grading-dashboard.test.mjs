@@ -36,6 +36,8 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /previousAverageMinutes/);
   assert.match(route, /firstCheckMinutesAfterKickoff/);
   assert.match(route, /cronIntervalMinutes: 10/);
+  assert.match(route, /GAME_STATUS_GRACE_MINUTES = 15/);
+  assert.match(route, /staleAfter = new Date\(game\.kickoff_at\)\.getTime\(\) \+ GAME_STATUS_GRACE_MINUTES/);
   assert.match(route, /scorePolls/);
   assert.match(route, /ladderSummary/);
   assert.match(pollingComponent, /Current polling cadence/);
@@ -46,6 +48,9 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
   assert.match(route, /efficiencyHistory/);
   assert.match(efficiencyComponent, /Provider efficiency over time/);
+  assert.match(efficiencyComponent, /Observed days only/);
+  assert.match(efficiencyComponent, /const observedHistory = useMemo/);
+  assert.match(efficiencyComponent, /viewBox=\{`0 0 \$\{CHART_WIDTH\} \$\{CHART_HEIGHT\}`\}/);
   assert.match(efficiencyComponent, /Credits \/ final/);
 });
 

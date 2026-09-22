@@ -529,16 +529,18 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
     .maybeSingle();
   if (periodError || !period) throw new Error("An active week is not available for the featured-game reveal.");
 
-  const [{ data: games, error: gamesError }, { data: periods, error: periodsError }, { data: players, error: playersError }] = await Promise.all([
+  const [{ data: games, error: gamesError }, { data: periods, error: periodsError }, { data: players, error: playersError }, { data: reminder, error: reminderError }] = await Promise.all([
     supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at, is_international, status").eq("scoring_period_id", period.id).order("kickoff_at"),
     supabaseAdmin.from("scoring_periods").select("id").eq("season_id", period.season_id),
     supabaseAdmin.from("players").select("id, first_name").eq("active", true),
+    supabaseAdmin.from("push_reminders").select("source_game_ids").eq("id", reminderId).maybeSingle(),
   ]);
-  if (gamesError || periodsError || playersError) throw new Error("The featured-game reveal could not be prepared.");
+  if (gamesError || periodsError || playersError || reminderError) throw new Error("The featured-game reveal could not be prepared.");
 
-  const featuredGames = (games ?? []).filter((game) => isFeaturedGame(game) && new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status));
+  const sourceIds = new Set(reminder?.source_game_ids ?? []);
+  const featuredGames = (games ?? []).filter((game) => isFeaturedGame(game) && new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status) && (!sourceIds.size || sourceIds.has(game.id)));
   if (!featuredGames.length) throw new Error("No featured game has reached kickoff yet.");
-  const publicGameIds = new Set((games ?? []).filter((game) => new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status)).map((game) => game.id));
+  const publicGameIds = new Set(featuredGames.map((game) => game.id));
   const periodIds = (periods ?? []).map((item) => item.id);
   const { data: picks, error: picksError } = periodIds.length
     ? await supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void")
@@ -549,13 +551,14 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const selectedPublicGameIds = new Set((games ?? []).filter((game) => publicGameIds.has(game.id) && shouldShowPoolActionMatchup({ kickoffAt: game.kickoff_at, now, hasSelections: pickedPublicGameIds.has(game.id) })).map((game) => game.id));
   const selectedFeaturedGames = featuredGames.filter((game) => selectedPublicGameIds.has(game.id));
   if (!selectedFeaturedGames.length) throw new Error("No selected featured matchup is ready for a public receipt.");
-  const selectedTeamIds = [...new Set((picks ?? []).filter((pick) => pick.scoring_period_id === period.id && selectedPublicGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
+  const selectedFeaturedGameIds = new Set(selectedFeaturedGames.map((game) => game.id));
+  const selectedTeamIds = [...new Set((picks ?? []).filter((pick) => pick.scoring_period_id === period.id && selectedFeaturedGameIds.has(pick.game_id)).map((pick) => pick.selected_team_id))];
   const [{ data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
     selectedTeamIds.length
       ? supabaseAdmin.from("teams").select("id, abbreviation").in("id", selectedTeamIds)
       : Promise.resolve({ data: [], error: null }),
-    selectedPublicGameIds.size
-      ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", [...selectedPublicGameIds])
+    selectedFeaturedGameIds.size
+      ? supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", [...selectedFeaturedGameIds])
       : Promise.resolve({ data: [], error: null }),
   ]);
   if (teamsError || linesError) throw new Error("Featured-game team labels could not be prepared.");
@@ -566,7 +569,7 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const picksByPlayer = new Map<string, string[]>();
   for (const pick of picks ?? []) {
     if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
-    if (pick.scoring_period_id === period.id && selectedPublicGameIds.has(pick.game_id)) {
+    if (pick.scoring_period_id === period.id && selectedFeaturedGameIds.has(pick.game_id)) {
       picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
     }
   }
