@@ -1,24 +1,48 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { fetchWithSession } from "@/lib/auth-session";
+import { useState } from "react";
+import ProviderChart from "@/components/provider-chart";
 
-type Point = { slateStartedAt: string; creditsPerFinal: number | null; productiveRate: number | null; credits: number; finals: number };
-const WIDTH = 760, HEIGHT = 300, LEFT = 56, RIGHT = 56, TOP = 34, BOTTOM = 54;
-const PLOT_WIDTH = WIDTH - LEFT - RIGHT, PLOT_HEIGHT = HEIGHT - TOP - BOTTOM;
-function xFor(index: number, count: number) { return LEFT + (index / Math.max(1, count - 1)) * PLOT_WIDTH; }
-function leftY(value: number, max: number) { return TOP + PLOT_HEIGHT - (value / max) * PLOT_HEIGHT; }
-function rightY(value: number) { return TOP + PLOT_HEIGHT - (value / 100) * PLOT_HEIGHT; }
-function formatSlate(value: string) { return new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }); }
+export type EfficiencyPoint = { slateStartedAt: string; creditsPerFinal: number | null; productiveRate: number | null; credits: number; finals: number; games: number; calls: number; attribution: string };
+export type CreditUsage = { monthLabel: string; trackedCredits: number; reportedUsed: number | null; remaining: number | null; reportedAt: string | null; days: Array<{ date: string; credits: number; cumulative: number; scores: number; lines: number; other: number; estimatedCalls: number }> };
+const date = (value: string, timeZone: string, time = false) => new Date(value).toLocaleString("en-US", { timeZone, month: "short", day: "numeric", ...(time ? { hour: "numeric", minute: "2-digit" } : {}) });
+const format = (value: number | null) => value === null ? "—" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+const card = "min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6";
+const eyebrow = "text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400";
 
-export default function EfficiencyTrendPanel() {
-  const [history, setHistory] = useState<Point[]>([]);
-  useEffect(() => { let active = true; void fetchWithSession("/api/admin/grading-dashboard").then((response) => response.json()).then((payload) => { if (active && payload.metrics?.efficiency?.history) setHistory(payload.metrics.efficiency.history); }).catch(() => undefined); return () => { active = false; }; }, []);
-  const observed = useMemo(() => history.filter((point) => point.credits > 0), [history]);
-  if (!observed.length) return null;
-  const creditMax = Math.max(1, Math.ceil(Math.max(...observed.map((point) => point.creditsPerFinal ?? 0)) / 10) * 10);
-  const creditPoints = observed.flatMap((point, index) => point.creditsPerFinal === null ? [] : [{ x: xFor(index, observed.length), y: leftY(point.creditsPerFinal, creditMax) }]);
-  const productivePoints = observed.flatMap((point, index) => point.productiveRate === null ? [] : [{ x: xFor(index, observed.length), y: rightY(point.productiveRate) }]);
-  const ticks = [...new Set([0, Math.floor((observed.length - 1) / 2), observed.length - 1])];
-  return <div className="mt-5 border border-zinc-300 bg-white p-4"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="font-serif text-xl font-bold">Provider efficiency by game-time slate</h3><p className="mt-1 text-sm text-zinc-600">Each point is one kickoff slate. Credit cost and productive-check rate use the score polls for that slate.</p></div><div className="flex gap-4 text-xs font-bold"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-indigo-700" />Credits / final</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-700" />Productive checks</span></div></div><div className="mt-4 overflow-x-auto"><svg aria-label="Credits per final and productive checks by game-time slate" className="h-auto min-w-[38rem] w-full" role="img" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}><text x={LEFT} y="18" fill="#52525b" fontSize="12" fontWeight="700">Credits / final · lower is better</text><text x={WIDTH - RIGHT} y="18" fill="#52525b" fontSize="12" fontWeight="700" textAnchor="end">Productive checks · higher is better</text>{[0, 0.5, 1].map((fraction) => { const y = TOP + PLOT_HEIGHT - fraction * PLOT_HEIGHT; return <g key={fraction}><line x1={LEFT} x2={WIDTH - RIGHT} y1={y} y2={y} stroke="#e4e4e7" /><text x={LEFT - 8} y={y + 4} fill="#4338ca" fontSize="11" textAnchor="end">{Math.round(creditMax * fraction)}</text><text x={WIDTH - RIGHT + 8} y={y + 4} fill="#047857" fontSize="11">{Math.round(fraction * 100)}%</text></g>; })}{creditPoints.length > 1 ? <polyline fill="none" points={creditPoints.map((point) => `${point.x},${point.y}`).join(" ")} stroke="#4338ca" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" /> : null}{productivePoints.length > 1 ? <polyline fill="none" points={productivePoints.map((point) => `${point.x},${point.y}`).join(" ")} stroke="#047857" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" /> : null}{observed.map((point, index) => <g key={point.slateStartedAt}><title>{formatSlate(point.slateStartedAt)} · {point.creditsPerFinal ?? "—"} credits/final · {point.productiveRate ?? "—"}% productive · {point.credits} credits across {point.finals} final{point.finals === 1 ? "" : "s"}</title>{point.creditsPerFinal !== null ? <circle cx={xFor(index, observed.length)} cy={leftY(point.creditsPerFinal, creditMax)} r="4" fill="#4338ca" /> : null}{point.productiveRate !== null ? <circle cx={xFor(index, observed.length)} cy={rightY(point.productiveRate)} r="4" fill="#047857" /> : null}</g>)}{ticks.map((index) => <text key={index} x={xFor(index, observed.length)} y={HEIGHT - 20} fill="#71717a" fontSize="11" textAnchor={index === 0 ? "start" : index === observed.length - 1 ? "end" : "middle"}>{formatSlate(observed[index].slateStartedAt).replace(" EDT", "").replace(" EST", "")}</text>)}<text x={LEFT} y={HEIGHT - 4} fill="#71717a" fontSize="11">Game-time slate (Eastern time)</text></svg></div></div>;
+export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt }: { history: EfficiencyPoint[]; creditUsage: CreditUsage; checkedAt: string }) {
+  const [mode, setMode] = useState<"cumulative" | "daily">("cumulative");
+  const [range, setRange] = useState<"all" | "6">("all");
+  const observed = range === "6" ? history.slice(-6) : history;
+  return <div className="mt-6 space-y-5">
+    <section className={card} aria-label="Monthly provider credit usage">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div><p className={eyebrow}>Provider spending · {creditUsage.monthLabel}</p><h3 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">Current-month credit usage</h3></div>
+        <div className="flex rounded-lg bg-zinc-100 p-1">{(["cumulative", "daily"] as const).map((value) => <button key={value} type="button" aria-pressed={mode === value} onClick={() => setMode(value)}
+          className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${mode === value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-900"}`}>{value === "cumulative" ? "Month to date" : "Daily spend"}</button>)}</div>
+      </div>
+      <div className="my-5 grid grid-cols-3 gap-3 border-y border-zinc-100 py-4">
+        {[["Tracked credits", creditUsage.trackedCredits], ["Provider reports used", creditUsage.reportedUsed], ["Remaining", creditUsage.remaining]].map(([label, value]) => <div key={String(label)}><p className="text-[11px] text-zinc-500">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums tracking-tight sm:text-3xl">{format(value as number | null)}</p></div>)}
+      </div>
+      <ProviderChart key={mode} label="Current-month credit usage" points={creditUsage.days.map((day) => ({
+        label: `${date(day.date, "UTC")} · ${day.date.slice(0, 10) === checkedAt.slice(0, 10) ? "today so far" : "daily close"} · UTC`,
+        shortLabel: date(day.date, "UTC"), values: { credits: mode === "cumulative" ? day.cumulative : day.credits },
+        note: `${day.credits} spent this day · Scores ${day.scores} · Line locks ${day.lines} · Other ${day.other}${day.estimatedCalls ? ` · ${day.estimatedCalls} estimated request costs` : ""}`,
+      }))} series={[{ key: "credits", label: mode === "cumulative" ? "Cumulative credits" : "Daily credits", color: "#4f46e5", kind: mode === "cumulative" ? "area" : "bar" }]} />
+      <p className="mt-4 text-[11px] leading-relaxed text-zinc-500">Month begins on the 1st, in UTC. Chart totals use recorded requests, including charged failures; older costs may be estimated. Provider-reported usage may include activity outside these logs.{creditUsage.reportedAt ? ` Quota last reported ${date(creditUsage.reportedAt, "America/New_York", true)} ET.` : ""}</p>
+    </section>
+    <section className={card} aria-label="Slate efficiency">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div><p className={eyebrow}>Score polling · Selected period</p><h3 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">Provider efficiency by game-time slate</h3><p className="mt-2 text-xs text-zinc-500">Each point is one kickoff slate · Eastern time</p></div>
+        <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "6"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>{value === "all" ? "All slates" : "Last 6"}</button>)}</div>
+      </div>
+      <ProviderChart key={range} label="Credits per final and productive checks by game-time slate" points={observed.map((point) => ({
+        label: `${date(point.slateStartedAt, "America/New_York", true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
+        shortLabel: date(point.slateStartedAt, "America/New_York", true),
+        values: { credits: point.creditsPerFinal, productive: point.productiveRate },
+        note: point.attribution === "unavailable" ? "Overlapping slate activity — attribution unavailable" : point.attribution === "no-data" ? "No attributable polling records" : `${point.calls} checks · ${point.finals} fresh finals · Estimated attribution from polling times`,
+      }))} series={[{ key: "credits", label: "Credits / final", color: "#4f46e5" }, { key: "productive", label: "Productive checks", color: "#059669", axis: "right", suffix: "%" }]} />
+      <p className="mt-4 text-[11px] leading-relaxed text-zinc-500">Lower credits per final and higher productive checks indicate better efficiency. Historical receipts lack slate IDs: non-overlapping polling windows are estimates; overlapping or missing data stays unplotted. No line bridges a missing value.</p>
+    </section>
+  </div>;
 }
