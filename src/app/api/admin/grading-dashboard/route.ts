@@ -6,6 +6,7 @@ import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { providerRequestCost, summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { recommendPollingPlan, simulatePollingPlans } from "@/lib/polling-plan.js";
+import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 
 type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("teams").select("id, abbreviation, full_name"),
-      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").in("job_type", ["scores", "bowl_scores"]).order("started_at", { ascending: false }).limit(12),
+      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").in("job_type", ["scores", "bowl_scores"]).order("started_at", { ascending: false }).limit(1000),
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
       for (const [rung, count] of Object.entries(rungs as Record<string, unknown>)) { const rungNumber = Number(rung); const rungCount = Number(count); if (Number.isInteger(rungNumber) && rungNumber > 0 && Number.isFinite(rungCount) && rungCount > 0) ladderCounts.set(rungNumber, (ladderCounts.get(rungNumber) ?? 0) + rungCount); }
     }
     const ladderTotal = [...ladderCounts.values()].reduce((sum, count) => sum + count, 0);
-    const ladderSummary = [...ladderCounts.entries()].sort(([left], [right]) => left - right).map(([rung, pickedUp]) => ({ rung, pickedUp, percentage: ladderTotal ? Math.round((pickedUp / ladderTotal) * 100) : 0 }));
+    const ladderSummary = [...ladderCounts.entries()].sort(([left], [right]) => left - right).map(([rung, newFinals]) => ({ rung, windowMinutes: SCORE_POLLING_RETRY_MINUTES[rung - 1] ?? 120, newFinals, pickedUp: newFinals, percentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0, newFinalsPercentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0 }));
     const settlementLatencies = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => Math.max(0, Math.round((new Date(game.finalizedAt!).getTime() - new Date(game.kickoffAt).getTime()) / 60000)));
     const settlementLatency = { averageMinutes: settlementLatencies.length ? Math.round(settlementLatencies.reduce((sum, value) => sum + value, 0) / settlementLatencies.length) : null, slowestMinutes: settlementLatencies.length ? Math.max(...settlementLatencies) : null, samples: settlementLatencies.length };
     const previousLatencies = (previousGamesResult.data ?? []).filter((game) => game.status === "final" && game.finalized_at).map((game) => Math.max(0, Math.round((new Date(game.finalized_at!).getTime() - new Date(game.kickoff_at).getTime()) / 60000)));
@@ -162,8 +163,8 @@ export async function GET(request: NextRequest) {
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
       workerRuns: (syncResult.data ?? []).slice(0, 8).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
-      cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [10, 10, 10, 15, 15, 30, 60, 120, 360], playoffRetryMinutes: [5, 5, 5, 5, 5, 5, 10, 15, 30, 60, 120, 360], note: "A game enters score polling after the eligibility window; unfinished games then follow the retry ladder. The worker is invoked every 10 minutes." },
-      scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? {} }; }),
+      cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
+      scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,
       incidents: watchdog.recentAlerts.slice(0, 8).map((alert) => ({ id: alert.id, title: alert.title, severity: alert.severity, detectedAt: alert.detected_at, lastSeenAt: alert.last_seen_at, resolvedAt: alert.resolved_at })),
       reminders: (remindersResult.data ?? []).map((reminder) => ({ id: reminder.id, category: reminder.category, title: reminder.title, scheduledFor: reminder.scheduled_for, status: reminder.status, sentAt: reminder.sent_at })),
