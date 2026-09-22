@@ -3677,6 +3677,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-diagnostics { border-bottom: 1px solid #c8c2b7; margin-top: 1.4rem; padding: 1.2rem 0 1.8rem; }
 .commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
 .commissioner-diagnostics summary span { color: #716c63; display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
+.commissioner-diagnostics > details + details { border-top: 1px solid #c8c2b7; margin-top: 1rem; padding-top: 1rem; }
 .commissioner-diagnostics details[open] summary { color: #9b2e1d; }
 
 html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }

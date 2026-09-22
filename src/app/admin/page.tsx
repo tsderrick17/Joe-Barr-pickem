@@ -297,22 +297,30 @@ export default function AdminPage() {
           <section className="commissioner-workspace-intro">
             <p>LIVE RUNBOOK</p>
             <h2>Game day operations</h2>
-            <span>Use these checks in order. Scheduled automation is the primary path; manual tools stay clearly contained below.</span>
+            <span>Use the playbook first. Open the manual groups only when a check is late, a game needs intervention, or an audit correction is required.</span>
           </section>
           <GameDayPlaybook />
-          <AutomationPreflight />
-          <LineLockChecker />
-          <ScoreSyncChecker />
-          <FinalScoreReconciliation />
-          <GameExceptions />
-          <BowlPoolExceptions />
+          <section className="commissioner-diagnostics">
+            <details>
+              <summary>Automation checks and manual runs <span>Use when a scheduled lock or score sync needs verification</span></summary>
+              <AutomationPreflight />
+              <LineLockChecker />
+              <ScoreSyncChecker />
+            </details>
+            <details>
+              <summary>Exceptions and score corrections <span>Use for postponements, no contests, or a verified mismatch</span></summary>
+              <FinalScoreReconciliation />
+              <GameExceptions />
+              <BowlPoolExceptions />
+            </details>
+          </section>
         </> : null}
 
         {activePanel === "system" ? <>
           <section className="commissioner-workspace-intro">
             <p>QUIET BY DESIGN</p>
             <h2>System health & safety</h2>
-            <span>Capacity and automation live here so the day-to-day pool view stays focused. Most of this page should be green and left alone.</span>
+            <span>Use this page when the overview shows a hold, a provider limit is unclear, or an automation needs recovery. Most of it should stay green and untouched.</span>
           </section>
           <AccountCapacityPanel />
           <BowlPoolReadiness />
@@ -336,7 +344,7 @@ export default function AdminPage() {
         <section className="commissioner-workspace-intro">
           <p>SEASON CONTROL</p>
           <h2>Prepare carefully. Preserve forever.</h2>
-          <span>Validate before every write, keep routine refreshes separate from setup, and leave a clean record behind.</span>
+          <span>Use this before opening a season or changing its schedule. Validate first, write once, and leave routine game-day work to the live runbook.</span>
         </section>
         <SeasonBootstrapStatus />
         <section className="commissioner-workspace-section">
