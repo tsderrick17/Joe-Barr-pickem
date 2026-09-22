@@ -41,7 +41,6 @@ export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt, 
         <div><span>Credits tracked</span><strong>{format(summary.totalCredits)}</strong></div>
         <div><span>Credits / final</span><strong>{format(summary.creditsPerFinal)}</strong><small>{summary.finalizedGames} finals imported</small></div>
         <div><span>Productive checks</span><strong>{format(summary.productiveRate)}{summary.productiveRate === null ? "" : "%"}</strong><small>Checks that imported a final</small></div>
-        <div className={summary.trend === "worsening" ? "is-warning" : "is-good"}><span>7-day trend</span><strong>{summary.trend}</strong><small>Efficiency direction</small></div>
       </div>
       <ProviderChart key={range} label="Credits per final and productive checks by game-time slate" points={observed.map((point) => ({
         label: `${date(point.slateStartedAt, "America/New_York", true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
