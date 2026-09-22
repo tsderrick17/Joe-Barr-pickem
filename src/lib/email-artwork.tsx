@@ -70,7 +70,7 @@ function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: Emai
   const minHeight = options.density === "comfortable" ? 68 : 52;
   if (kind === "summary" && (snapshot.kind === "weekly_recap" || snapshot.kind === "playoff_day_recap")) {
     const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned : [];
-    return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "weekly_recap" ? snapshot.week : snapshot.day} · Final results`} note="TOTAL = season wins · +WINS = this recap · W = win · L = loss">
+    return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "weekly_recap" ? snapshot.week : snapshot.day} · Final results`}>
       {champions.length ? <div style={{ ...row, background: "#e2f1e8", color: TEAL, padding: 12, marginTop: 12 }}>Champion{champions.length > 1 ? "s" : ""}: {champions.join(" & ")}</div> : null}
       <PickemTable standings={safePublicRows(snapshot.standings)} selections={safePublicRows(snapshot.weeklySummary)} recap minHeight={minHeight} />
     </Card>;
