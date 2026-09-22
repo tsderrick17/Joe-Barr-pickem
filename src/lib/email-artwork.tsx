@@ -42,10 +42,12 @@ function Card({ title, subtitle, children, note }: { title: string; subtitle: st
 }
 
 function PickChips({ picks, columns }: { picks: string[]; columns: number }) {
-  return <div style={{ ...row, flex: 1, flexWrap: "nowrap", minWidth: 0, padding: "8px 0" }}>{picks.length ? picks.map((pick, index) => {
+  const laneWidth = 420;
+  const columnWidth = laneWidth / columns;
+  return <div style={{ ...row, flex: "0 1 420px", flexWrap: "nowrap", minWidth: 0, maxWidth: "100%", overflow: "hidden", padding: "8px 0", width: laneWidth }}>{picks.length ? picks.map((pick, index) => {
     const won = /(?:^| )W$/.test(pick);
     const lost = /(?:^| )L$/.test(pick) || /NO PICK.*LOSS/.test(pick);
-    return <span key={index} style={{ boxSizing: "border-box", display: "block", flex: `0 0 ${100 / columns}%`, minWidth: 0, overflow: "hidden", paddingRight: index < columns - 1 ? 6 : 0, textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span style={{ background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, display: "block", overflow: "hidden", padding: "5px 8px", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 22 }}>{pick}</span></span>;
+    return <span key={index} style={{ boxSizing: "border-box", display: "block", flex: `0 0 ${columnWidth}px`, minWidth: 0, overflow: "hidden", paddingRight: index < columns - 1 ? 6 : 0, textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span style={{ background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, display: "block", overflow: "hidden", padding: "5px 8px", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 22 }}>{pick}</span></span>;
   }) : <span style={{ color: MUTED, fontSize: 20 }}>No selections</span>}</div>;
 }
 
