@@ -9,8 +9,8 @@ export type WeeklyRecapSnapshot = {
   weekNumber: number;
   generatedAt: string;
   games: Array<{ away: string; home: string; awayScore: number; homeScore: number; favorite: "away" | "home"; spread: number }>;
-  standings: Array<{ name: string; wins: number }>;
-  weeklySummary: Array<{ name: string; wins: number; picks: string[] }>;
+  standings: Array<{ playerId?: string; name: string; wins: number }>;
+  weeklySummary: Array<{ playerId?: string; name: string; wins: number; picks: string[] }>;
   survivor: { in: number; out: number; latest: string | null; championName: string | null; championCrownedInRecapWeek: boolean; visibleWeeks: number; rows: Array<{ name: string; status: "IN" | "OUT"; eliminatedAt: string | null; eliminatedInRecapWeek: boolean; picks: Array<string | null> }> };
 };
 
@@ -19,8 +19,8 @@ export type PlayoffDayRecapSnapshot = {
   week: string;
   day: string;
   generatedAt: string;
-  standings: Array<{ name: string; wins: number }>;
-  weeklySummary: Array<{ name: string; wins: number; picks: string[] }>;
+  standings: Array<{ playerId?: string; name: string; wins: number }>;
+  weeklySummary: Array<{ playerId?: string; name: string; wins: number; picks: string[] }>;
   eliminatedToday: string[];
   championsCrowned: string[];
   // Kept empty: it makes recap-image's shared summary shape safe while
@@ -199,8 +199,8 @@ export async function buildPlayoffDayRecapSnapshot({ sourcePeriodId = null, sour
     week: period.display_name,
     day: easternDayLabel(new Date(dayGames[0].kickoff_at)),
     generatedAt: now.toISOString(),
-    standings: includedPlayers.map((player) => ({ name: player.first_name, wins: seasonWins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
-    weeklySummary: includedPlayers.map((player) => ({ name: player.first_name, wins: (dayPicks.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (dayPicks.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })),
+    standings: includedPlayers.map((player) => ({ playerId: player.id, name: player.first_name, wins: seasonWins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
+    weeklySummary: includedPlayers.map((player) => ({ playerId: player.id, name: player.first_name, wins: (dayPicks.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (dayPicks.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })),
     eliminatedToday,
     championsCrowned,
     survivor: { in: 0, out: 0, latest: null, championName: null, championCrownedInRecapWeek: false, visibleWeeks: 10, rows: [] },
@@ -271,8 +271,8 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
       const line = lineByGame.get(game.id);
       return { away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", awayScore: game.away_score!, homeScore: game.home_score!, favorite: line?.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line?.locked_spread ?? 0) };
     }),
-    standings: (players ?? []).map((player) => ({ name: player.first_name, wins: wins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
-    weeklySummary: (players ?? []).map((player) => ({ name: player.first_name, wins: (weeklyPicksByPlayer.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (weeklyPicksByPlayer.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })).filter((row) => row.picks.length > 0),
+    standings: (players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
+    weeklySummary: (players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: (weeklyPicksByPlayer.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (weeklyPicksByPlayer.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })).filter((row) => row.picks.length > 0),
     survivor: { in: (entries ?? []).filter((entry) => entry.status === "active").length, out: (entries ?? []).filter((entry) => entry.status === "eliminated").length, latest: latest ? `${latest} Survivor pick${latest === 1 ? "" : "s"} advanced` : null, championName, championCrownedInRecapWeek, visibleWeeks, rows: (players ?? []).map((player) => {
       const entry = [...entryById.values()].find((item) => item.player_id === player.id);
       const entryPicks = entry ? survivorPicksByEntry.get(entry.id) ?? [] : [];
@@ -299,7 +299,7 @@ function easternTime(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value)).replace(" AM", " AM ET").replace(" PM", " PM ET");
 }
 
-export async function ensureGameDaySlateSnapshot(reminderId: string, existing: unknown) {
+export async function ensureGameDaySlateSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "game_day") return existing as GameDaySlateSnapshot;
   const now = new Date();
   const day = easternDate(now);
@@ -328,12 +328,13 @@ export async function ensureGameDaySlateSnapshot(reminderId: string, existing: u
     const line = lineByGame.get(game.id);
     return { time: easternTime(game.kickoff_at), away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", favorite: line?.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line?.locked_spread ?? 0) };
   }) };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The gameday Slate receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensureFreshSlateSnapshot(reminderId: string, existing: unknown) {
+export async function ensureFreshSlateSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "fresh_slate") return existing as FreshSlateSnapshot;
   const now = new Date();
   const { data: period, error: periodError } = await supabaseAdmin
@@ -378,12 +379,13 @@ export async function ensureFreshSlateSnapshot(reminderId: string, existing: unk
       };
     }),
   };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The fresh Slate receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensureEarlyLockSnapshot(reminderId: string, existing: unknown) {
+export async function ensureEarlyLockSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "early_lock") return existing as EarlyLockSnapshot;
   const now = new Date();
   const { data: period, error: periodError } = await supabaseAdmin.from("scoring_periods").select("id").eq("status", "active").order("display_order").limit(1).maybeSingle();
@@ -401,12 +403,13 @@ export async function ensureEarlyLockSnapshot(reminderId: string, existing: unkn
   if (teamsError || lineError || !line) throw new Error("The international official line could not be prepared.");
   const names = new Map((teams ?? []).map((team) => [team.id, team.full_name]));
   const snapshot: EarlyLockSnapshot = { kind: "early_lock", day: easternDayLabel(new Date(game.kickoff_at)), generatedAt: now.toISOString(), games: [{ time: easternTime(game.kickoff_at), away: names.get(game.away_team_id) ?? "Away", home: names.get(game.home_team_id) ?? "Home", favorite: line.favorite_team_id === game.home_team_id ? "home" : "away", spread: Number(line.locked_spread) }] };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The early-lock Slate receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensureWeeklyRecapSnapshot(reminderId: string, existing: unknown) {
+export async function ensureWeeklyRecapSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object") return existing as WeeklyRecapSnapshot;
   const { data: reminder, error: reminderError } = await supabaseAdmin
     .from("push_reminders")
@@ -415,12 +418,13 @@ export async function ensureWeeklyRecapSnapshot(reminderId: string, existing: un
     .maybeSingle();
   if (reminderError) throw new Error("The weekly recap source week could not be loaded.");
   const snapshot = await buildWeeklyRecapSnapshot(reminder?.source_scoring_period_id);
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The weekly recap receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensurePlayoffDayRecapSnapshot(reminderId: string, existing: unknown) {
+export async function ensurePlayoffDayRecapSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "playoff_day_recap") return existing as PlayoffDayRecapSnapshot;
   const { data: reminder, error: reminderError } = await supabaseAdmin
     .from("push_reminders")
@@ -432,6 +436,7 @@ export async function ensurePlayoffDayRecapSnapshot(reminderId: string, existing
     sourcePeriodId: reminder?.source_scoring_period_id,
     sourceGameIds: reminder?.source_game_ids ?? [],
   });
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The playoff day recap receipt could not be saved.");
   return snapshot;
@@ -445,7 +450,7 @@ function easternHour(value: string) {
   return Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(value)));
 }
 
-export async function ensureSundayRevealSnapshot(reminderId: string, existing: unknown, window: "early" | "late") {
+export async function ensureSundayRevealSnapshot(reminderId: string, existing: unknown, window: "early" | "late", { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "sunday_reveal") return existing as SundayRevealSnapshot;
   const now = new Date();
   const { data: period, error: periodError } = await supabaseAdmin
@@ -502,8 +507,9 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
     window,
     week: period.display_name,
     generatedAt: now.toISOString(),
-    rows: onlyRowsWithPublicPicks((players ?? []).filter((player) => contenderIds.has(player.id)).map((player) => ({ name: player.first_name, wins: playerWins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    rows: onlyRowsWithPublicPicks((players ?? []).filter((player) => contenderIds.has(player.id)).map((player) => ({ playerId: player.id, name: player.first_name, wins: playerWins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
   };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The Sunday reveal receipt could not be saved.");
   return snapshot;
@@ -516,7 +522,7 @@ function isFeaturedGame(game: { is_international: boolean; kickoff_at: string })
   return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
 }
 
-export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, existing: unknown) {
+export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "featured_window_reveal") return existing as FeaturedWindowRevealSnapshot;
 
   const now = new Date();
@@ -580,14 +586,15 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
     week: period.display_name,
     window: `${easternDayLabel(new Date(latestFeatured.kickoff_at))} featured window`,
     generatedAt: now.toISOString(),
-    rows: onlyRowsWithPublicPicks((players ?? []).map((player) => ({ name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    rows: onlyRowsWithPublicPicks((players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
   };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The featured-game public receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, existing: unknown) {
+export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
   if (existing && typeof existing === "object" && "kind" in existing && existing.kind === "playoff_public_reveal") return existing as PlayoffPublicRevealSnapshot;
 
   const now = new Date();
@@ -674,6 +681,7 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
       picks: selectedPublicGames.map((game) => pickByPlayerAndGame.get(`${player.id}:${game.id}`) ?? "NO PICK — LOSS"),
     })).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
   };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The playoff public-pick receipt could not be saved.");
   return snapshot;

@@ -1,5 +1,21 @@
 # Durable decision log
 
+## 2026-09-22 - Email artwork and preview share one renderer
+
+**Status:** Accepted
+
+Replace guessed-height recap canvases and separate roster sections with an
+intrinsically sized card, trimmed from its transparent working canvas.
+Standings, recap wins and selections appear together by player identity.
+Keep all rows at readable width instead of shrinking large rosters into two
+columns. Survivor omits future empty weeks and shows up to six completed weeks.
+The Commissioner Email image studio uses the delivery PNG renderer and HTML,
+supports private phone/desktop inspection and downloads, and saves spacing
+alongside standard wording. Preview calls are read-only; unavailable results
+are explicitly fictional samples. Saved delivery snapshots remain immutable.
+Image spacing is included in outgoing URLs so later preference edits do not
+restyle sent messages. Pixel-based renderer checks cover short and long cards.
+
 This log records project rules that future changes must not casually reverse.
 Entries describe the current accepted decision; a later change adds a new entry
 that explicitly supersedes the old one.

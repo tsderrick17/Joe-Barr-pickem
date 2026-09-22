@@ -25,7 +25,7 @@ type BowlChampion = { player_id: string; players: PlayerName };
 
 function lineText(value: number | null) { return value === null ? "—" : value === 0 ? "PK" : `-${value}`; }
 
-export async function ensureBowlLineLockSnapshot(reminderId: string, current: unknown): Promise<BowlLineLockSnapshot> {
+export async function ensureBowlLineLockSnapshot(reminderId: string, current: unknown, { persist = true } = {}): Promise<BowlLineLockSnapshot> {
   if (current && typeof current === "object" && "kind" in current && current.kind === "bowl_line_lock") return current as BowlLineLockSnapshot;
   const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders").select("source_game_ids").eq("id", reminderId).maybeSingle();
   if (reminderError || !reminder?.source_game_ids?.length) throw new Error("Bowl line-update games could not be identified.");
@@ -45,12 +45,13 @@ export async function ensureBowlLineLockSnapshot(reminderId: string, current: un
       return { name: game.bowl_name, favorite: favoriteAway ? away?.short_name ?? "Away" : home?.short_name ?? "Home", underdog: favoriteAway ? home?.short_name ?? "Home" : away?.short_name ?? "Away", line: lineText(line?.locked_spread ?? null) };
     }),
   };
+  if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The Bowl official-lines receipt could not be saved.");
   return snapshot;
 }
 
-export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: unknown): Promise<BowlDailyRecapSnapshot> {
+export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: unknown, { persist = true } = {}): Promise<BowlDailyRecapSnapshot> {
   if (current && typeof current === "object" && "kind" in current && current.kind === "bowl_daily_recap") return current as BowlDailyRecapSnapshot;
   const { data: reminder, error: reminderError } = await supabaseAdmin.from("push_reminders")
     .select("source_game_ids").eq("id", reminderId).maybeSingle();
@@ -97,6 +98,7 @@ export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: 
   const eliminatedToday = rows.filter((row) => row.wins + remainingGames < leaderWins && !previouslyEliminated.has(row.name)).map((row) => row.name);
   const recapText = bowlRecapCopy({ eliminated: eliminatedToday, remaining: rows.length - eliminatedToday.length, champions: championsCrowned } as { eliminated: string[]; remaining: number; champions: string[] });
   const snapshot: BowlDailyRecapSnapshot = { kind: "bowl_daily_recap", day: new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date((games![0] as unknown as BowlGame).kickoff_at)), games: gamesView, rows, eliminatedToday, remaining: rows.length - eliminatedToday.length, championsCrowned, copy: recapText };
+  if (!persist) return snapshot;
   const { error: updateError } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (updateError) throw new Error("The Bowl recap snapshot could not be preserved.");
   return snapshot;

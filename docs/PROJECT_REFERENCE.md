@@ -428,6 +428,16 @@ The Commissioner area is the operational control plane. Its intended order is:
 5. Use final-score reconciliation or Game Exceptions for verified anomalies.
 6. Use Season Recovery Rehearsal before a rare lifecycle recovery.
 
+The Email image studio renders the same PNG artwork and HTML used by delivery,
+with phone/desktop previews and image downloads. Standings and recap selections
+share one row per player. Images fit their content; Survivor shows at most six
+completed weeks, with earlier history on the website. Compact/comfortable
+spacing and wording are saved per template. Spacing is embedded in outgoing
+image URLs so later preference edits cannot change sent message spacing.
+Preview generation does not send mail, queue messages, or persist a recap
+snapshot. Saved data and fictional layout samples are explicitly distinguished
+when final data is unavailable. Grading remains the place to correct results.
+
 The Reminders view is an action queue, not a health score: it plainly lists
 automatic messages, items needing attention, and empty reveal windows intentionally
 suppressed. The Commissioner may edit
