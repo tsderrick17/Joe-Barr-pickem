@@ -44,7 +44,7 @@ export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt, 
       </div>
       <ProviderChart key={range} label="Credits per final and productive checks by game-time slate" points={observed.map((point) => ({
         label: `${date(point.slateStartedAt, "America/New_York", true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
-        shortLabel: date(point.slateStartedAt, "America/New_York", true),
+        shortLabel: date(point.slateStartedAt, "America/New_York"),
         values: { credits: point.creditsPerFinal, productive: point.productiveRate },
         note: point.attribution === "unavailable" ? "Overlapping slate activity — attribution unavailable" : point.attribution === "no-data" ? "No attributable polling records" : `${point.calls} checks · ${point.finals} fresh finals · Estimated attribution from polling times`,
       }))} series={[{ key: "credits", label: "Credits / final", color: "#4f46e5" }, { key: "productive", label: "Productive checks", color: "#059669", axis: "right", suffix: "%" }]} />

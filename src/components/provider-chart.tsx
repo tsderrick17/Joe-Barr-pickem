@@ -39,7 +39,9 @@ export default function ProviderChart({ points, series, label, histogram = false
   const y = (value: number, item: ChartSeries) => bottom - value / (item.axis ? 100 : maximum) * height;
   const index = Math.min(selected ?? Math.max(0, points.length - 1), Math.max(0, points.length - 1));
   const point = points[index];
-  const tickCount = width < 500 ? 2 : 5;
+  // On a phone, two labels make a multi-slate chart look like one broken
+  // segment. Show a few actual slate dates so the gaps remain understandable.
+  const tickCount = width < 500 ? Math.min(4, points.length) : 5;
   const ticks = [...new Set(Array.from({ length: Math.min(tickCount, points.length) }, (_, i) => Math.round(i * (points.length - 1) / Math.max(1, Math.min(tickCount, points.length) - 1))))];
   function inspect(clientX: number) {
     const bounds = container.current?.getBoundingClientRect();
