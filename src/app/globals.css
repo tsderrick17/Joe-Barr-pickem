@@ -2738,6 +2738,66 @@ html[data-theme="night"] .newspaper-clipping::after {
   min-width: 0;
 }
 
+/* Bowl Pool identity: a restrained teal-and-gold postseason treatment keeps
+   the same ledger mechanics as NFL Pick'em while making the competition
+   immediately legible as its own event. */
+.bowl-pool-page #bowl-selections {
+  border-color: #b9cfc8 !important;
+  border-top: 3px solid #0f766e !important;
+  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+}
+.bowl-pool-page #bowl-selections > div:first-of-type {
+  border-bottom-color: #c7d8d3;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
+  background: #e8f3f0 !important;
+  color: #155e59 !important;
+  border-bottom: 1px solid #b9cfc8;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
+  border-color: #d7e3df;
+}
+.bowl-pool-page .bowl-team-label--selected::before {
+  background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
+  box-shadow: 0 1px 0 rgba(15, 118, 110, .3);
+}
+.bowl-card-section .pickem-ledger-masthead {
+  border-top-color: #0f766e;
+  border-bottom-color: #b9cfc8;
+}
+.bowl-card-section .bowl-standings-scroll {
+  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
+  background: #155e59 !important;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+  background: #f0f8f5 !important;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line {
+  color: #0f766e !important;
+}
+.bowl-card-section .bowl-standings-player-row {
+  border-color: #b9cfc8 !important;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections {
+  border-color: #52707a !important;
+  border-top-color: #55b8aa !important;
+  background: #132129 !important;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
+  background: #1b3a3b !important;
+  border-color: #52707a !important;
+  color: #b8ebe1 !important;
+}
+html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
+  border-top-color: #55b8aa;
+  border-bottom-color: #52707a;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+  background: #1c3438 !important;
+}
+
 /* Keep the commissioner shortcuts on one tidy row on narrow screens while
    allowing touch/trackpad scrolling without exposing a persistent scrollbar. */
 .manage-links {
