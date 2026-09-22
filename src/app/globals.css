@@ -3616,7 +3616,6 @@ html[data-theme="night"] .playoff-scoreboard {
   padding: clamp(1.35rem, 4vw, 2.5rem);
   position: relative;
 }
-.commissioner-command-bar::after { border: 1px solid rgba(170, 229, 210, .24); border-radius: 999px; content: ""; height: 19rem; position: absolute; right: -8rem; top: -12rem; width: 19rem; }
 .commissioner-command-title, .commissioner-command-links { position: relative; z-index: 1; }
 .commissioner-command-links { align-self: stretch; display: grid; gap: .55rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .commissioner-command-links a { background: rgba(255, 255, 255, .08); border: 1px solid rgba(218, 242, 232, .2); display: grid; gap: .15rem; min-width: 0; padding: .85rem .8rem; transition: background .18s ease, transform .18s ease; }
