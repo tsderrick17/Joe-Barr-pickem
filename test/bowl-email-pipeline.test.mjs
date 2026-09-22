@@ -53,3 +53,11 @@ test("Bowl score automation has its own fifteen-minute endpoint", () => {
   assert.match(migration, /'\/api\/cron\/sync-bowl-scores'/);
   assert.match(migration, /'\*\/15 \* \* \* \*'/);
 });
+
+test("Bowl score settlement works from ESPN without a paid NCAAF odds key", () => {
+  const source = read("src/lib/sync-bowl-pool.ts");
+  assert.match(source, /college-football\/scoreboard/);
+  assert.match(source, /provider_game_id/);
+  assert.match(source, /status\?\.type\?\.completed/);
+  assert.match(source, /ESPN is the no-cost source of truth for bowl results/);
+});
