@@ -43,6 +43,8 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(pollingComponent, /Current polling cadence/);
   assert.match(pollingComponent, /Recent score polls/);
   assert.match(pollingComponent, /New finals picked up by polling window/);
+  assert.match(pollingComponent, /Histogram of new fresh final scores by polling interval/);
+  assert.match(pollingComponent, /bar width = interval gap/);
   assert.match(route, /newFinalsPercentage/);
   assert.match(route, /SCORE_POLLING_RETRY_MINUTES/);
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
