@@ -4,13 +4,14 @@ import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
 
 export type EfficiencyPoint = { slateStartedAt: string; creditsPerFinal: number | null; productiveRate: number | null; credits: number; finals: number; games: number; calls: number; attribution: string };
+export type EfficiencySummary = { totalCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string };
 export type CreditUsage = { monthLabel: string; trackedCredits: number; reportedUsed: number | null; remaining: number | null; reportedAt: string | null; days: Array<{ date: string; credits: number; cumulative: number; scores: number; lines: number; other: number; estimatedCalls: number }> };
 const date = (value: string, timeZone: string, time = false) => new Date(value).toLocaleString("en-US", { timeZone, month: "short", day: "numeric", ...(time ? { hour: "numeric", minute: "2-digit" } : {}) });
 const format = (value: number | null) => value === null ? "—" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
 const card = "min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6";
 const eyebrow = "text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400";
 
-export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt }: { history: EfficiencyPoint[]; creditUsage: CreditUsage; checkedAt: string }) {
+export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt, summary }: { history: EfficiencyPoint[]; creditUsage: CreditUsage; checkedAt: string; summary: EfficiencySummary }) {
   const [mode, setMode] = useState<"cumulative" | "daily">("cumulative");
   const [range, setRange] = useState<"all" | "6">("all");
   const observed = range === "6" ? history.slice(-6) : history;
@@ -35,6 +36,12 @@ export default function EfficiencyTrendPanel({ history, creditUsage, checkedAt }
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div><p className={eyebrow}>Score polling · Selected period</p><h3 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">Provider efficiency by game-time slate</h3><p className="mt-2 text-xs text-zinc-500">Each point is one kickoff slate · Eastern time</p></div>
         <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "6"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>{value === "all" ? "All slates" : "Last 6"}</button>)}</div>
+      </div>
+      <div className="provider-efficiency-summary" aria-label="Provider efficiency summary">
+        <div><span>Credits tracked</span><strong>{format(summary.totalCredits)}</strong></div>
+        <div><span>Credits / final</span><strong>{format(summary.creditsPerFinal)}</strong><small>{summary.finalizedGames} finals imported</small></div>
+        <div><span>Productive checks</span><strong>{format(summary.productiveRate)}{summary.productiveRate === null ? "" : "%"}</strong><small>Checks that imported a final</small></div>
+        <div className={summary.trend === "worsening" ? "is-warning" : "is-good"}><span>7-day trend</span><strong>{summary.trend}</strong><small>Efficiency direction</small></div>
       </div>
       <ProviderChart key={range} label="Credits per final and productive checks by game-time slate" points={observed.map((point) => ({
         label: `${date(point.slateStartedAt, "America/New_York", true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
