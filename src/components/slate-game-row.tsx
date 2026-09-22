@@ -133,7 +133,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     // Keep the familiar home/away casing on the compact mobile treatment too:
     // home abbreviations stay loud, while away abbreviations remain lowercase.
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
-    const compactLabel = team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
+    const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const teamResult = <>

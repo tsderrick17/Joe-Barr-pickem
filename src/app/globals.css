@@ -1798,6 +1798,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   }
   .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
   .slate-team-score { font-size: 1em; }
+  /* Final score rows are a two-sided scoreboard. Use the compact team mark
+     at phone widths so both score columns keep one stable baseline instead of
+     wrapping long full names into the score lane. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
