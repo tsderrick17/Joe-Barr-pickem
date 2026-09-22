@@ -74,7 +74,10 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
 }
 
 function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: EmailArtworkOptions) {
-  const minHeight = options.density === "comfortable" ? 68 : 52;
+  // Keep the two presets visibly distinct after email clients scale the PNG:
+  // compact is a tight ledger, while comfortable gives each record room to
+  // breathe instead of differing by only a few rendered pixels.
+  const minHeight = options.density === "comfortable" ? 84 : 48;
   if (kind === "summary" && (snapshot.kind === "weekly_recap" || snapshot.kind === "playoff_day_recap")) {
     const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned : [];
     return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "weekly_recap" ? snapshot.week : snapshot.day} · Final results`}>
