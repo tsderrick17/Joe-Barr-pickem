@@ -88,7 +88,7 @@ const commissionerPanels = [
   ["overview", "Overview", "Live pool status, priorities, and the next safe move.", "01"],
   ["grading", "Grading", "Settlement, freshness, provider efficiency, and exceptions.", "02"],
   ["game-day", "Game day", "The focused checklist for locks, finals, and integrity holds.", "03"],
-  ["season-setup", "Season", "Schedule preparation, change control, and the permanent archive.", "04"],
+  ["season-setup", "Season", "Schedule preparation and change control.", "04"],
   ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "05"],
 ] as const;
 
@@ -252,7 +252,6 @@ export default function AdminPage() {
           <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
             <Link href="/admin/players"><span>Roster</span><strong>Players</strong></Link>
             <Link href="/admin/reminders"><span>Delivery</span><strong>Email center</strong></Link>
-            <Link href="/archive"><span>History</span><strong>Archive</strong></Link>
           </div>
         </header>
 
@@ -287,7 +286,7 @@ export default function AdminPage() {
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             <Link className="commissioner-route-card" href="/admin/players"><span>ROSTER CONTROL</span><p>Players</p><small>Add players, review activity, and manage private PINs.</small><strong>OPEN PLAYERS →</strong></Link>
             <Link className="commissioner-route-card" href="/admin/reminders"><span>PLAYER DELIVERY</span><p>Email center</p><small>Check delivery, send a private test, or update future wording.</small><strong>OPEN EMAILS →</strong></Link>
-            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("season-setup")} type="button"><span>SEASON CONTROL</span><p>Season work</p><small>Review the schedule, imports, and permanent archive.</small><strong>OPEN SEASON →</strong></button>
+            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("season-setup")} type="button"><span>SEASON CONTROL</span><p>Season work</p><small>Review the schedule and imports before the season begins.</small><strong>OPEN SEASON →</strong></button>
           </div>
         </section>
         </> : null}
@@ -341,12 +340,9 @@ export default function AdminPage() {
         </section>
         <SeasonBootstrapStatus />
         <section className="commissioner-workspace-section">
-          <p className="text-xs font-black tracking-[.16em] text-zinc-600">PRACTICE & HISTORY</p>
-          <h2 className="mt-1 font-serif text-2xl font-bold">Rehearse safely, then preserve the record</h2>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-700">The archive remains the permanent record after a period or season has settled.</p>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <Link className="border border-zinc-300 bg-white p-4 transition hover:border-zinc-900 hover:shadow-sm" href="/archive"><p className="font-serif text-xl font-bold">Open archive</p><p className="mt-1 text-sm text-zinc-700">Review settled weeks, permanent receipts, and season history.</p><p className="mt-4 text-xs font-black tracking-[.13em] text-[#007e72]">OPEN ARCHIVE →</p></Link>
-          </div>
+          <p className="text-xs font-black tracking-[.16em] text-zinc-600">PRACTICE & CONTROL</p>
+          <h2 className="mt-1 font-serif text-2xl font-bold">Rehearse safely, then publish</h2>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-700">Use the live Slate and its receipts for settled history; this workspace stays focused on season setup.</p>
         </section>
         <section className="commissioner-tool-card mt-8">
           <p className="commissioner-tool-eyebrow">READ-ONLY PROVIDER CHECK</p>
