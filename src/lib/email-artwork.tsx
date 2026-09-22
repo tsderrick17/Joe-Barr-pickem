@@ -18,6 +18,13 @@ const column: CSSProperties = { display: "flex", flexDirection: "column", flexSh
 const row: CSSProperties = { display: "flex", alignItems: "center", flexShrink: 0 };
 type PublicRow = { playerId?: string; name: string; wins: number; picks: string[] };
 
+function compactSlateDay(value: string) {
+  const parts = value.replace(",", "").split(" ");
+  if (parts.length !== 3) return value;
+  const [weekday, month, day] = parts;
+  return weekday.slice(0, 3) + ", " + month.slice(0, 3) + " " + day;
+}
+
 function safePublicRows(value: unknown): PublicRow[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item) => item && typeof item === "object").map((item) => ({ playerId: typeof item.playerId === "string" ? item.playerId : undefined, name: String(item.name ?? ""), wins: Number(item.wins) || 0, picks: Array.isArray(item.picks) ? item.picks.filter((pick: unknown): pick is string => typeof pick === "string") : [] }));
@@ -98,7 +105,7 @@ function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: Emai
       {snapshot.games.map((game, index) => {
         const presentation = slateImagePresentation({ ...game, home: game.home.toUpperCase() });
         return <div key={index} style={{ ...row, minHeight: Math.max(minHeight, 72), padding: "10px 0", borderBottom: `1px solid ${RULE}`, background: index % 2 ? "#f5f2e9" : PAPER }}>
-          <div style={{ ...column, width: 110, fontSize: 17, color: MUTED, paddingRight: 12 }}>{"day" in game ? <span>{String(game.day)}</span> : null}<span>{game.time}</span></div>
+          <div style={{ ...column, width: 110, fontSize: 17, color: MUTED, paddingRight: 12 }}>{"day" in game ? <span>{compactSlateDay(String(game.day))}</span> : null}<span>{game.time}</span></div>
           <span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{presentation.leftTeam}</span>
           <span style={{ display: "flex", width: 110, justifyContent: "center", fontSize: game.spread == null ? 16 : 26, color: official ? TEAL : INK, fontWeight: 700 }}>{presentation.line}</span>
           <span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{presentation.rightTeam}</span>
