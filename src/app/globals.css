@@ -3594,6 +3594,81 @@ html[data-theme="night"] .playoff-scoreboard {
     #172027;
 }
 
+/* Commissioner desk: one visual language for the operational workspaces. */
+.commissioner-desk {
+  background-image: radial-gradient(circle at 12% 0%, rgba(15, 118, 110, .09), transparent 24rem);
+}
+
+.commissioner-command-bar {
+  align-items: start;
+  background: linear-gradient(125deg, #10221f 0%, #172c28 55%, #123832 100%);
+  box-shadow: 0 16px 38px rgba(35, 38, 34, .14);
+  color: #fffdf7;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, .72fr);
+  overflow: hidden;
+  padding: clamp(1.35rem, 4vw, 2.5rem);
+  position: relative;
+}
+.commissioner-command-bar::after { border: 1px solid rgba(170, 229, 210, .24); border-radius: 999px; content: ""; height: 19rem; position: absolute; right: -8rem; top: -12rem; width: 19rem; }
+.commissioner-command-title, .commissioner-command-links { position: relative; z-index: 1; }
+.commissioner-command-links { align-self: stretch; display: grid; gap: .55rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.commissioner-command-links a { background: rgba(255, 255, 255, .08); border: 1px solid rgba(218, 242, 232, .2); display: grid; gap: .15rem; min-width: 0; padding: .85rem .8rem; transition: background .18s ease, transform .18s ease; }
+.commissioner-command-links a:hover { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
+.commissioner-command-links span { color: #a7d4c6; font-size: .61rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.commissioner-command-links strong { font-size: .86rem; line-height: 1.15; overflow-wrap: anywhere; }
+
+.commissioner-panel-nav { border-bottom: 1px solid #c8c2b7; padding: 1.15rem 0 .8rem; }
+.commissioner-panel-tabs { display: flex; gap: .45rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
+.commissioner-panel-tabs::-webkit-scrollbar { display: none; }
+.commissioner-panel-tab { align-items: center; background: transparent; border: 1px solid transparent; color: #736e66; display: inline-flex; flex: 0 0 auto; font-family: Georgia, serif; font-size: 1.05rem; font-weight: 700; gap: .45rem; padding: .6rem .75rem; transition: background .18s ease, border-color .18s ease, color .18s ease; }
+.commissioner-panel-tab > span { color: #9a9389; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .61rem; font-weight: 800; letter-spacing: .08em; }
+.commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
+.commissioner-panel-tab.is-active { background: #173c35; border-color: #173c35; color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
+.commissioner-panel-tab.is-active > span { color: #9bdbca; }
+.commissioner-panel-description { color: #656159; font-size: .82rem; margin-top: .65rem; }
+
+.commissioner-workspace-intro { border-bottom: 1px solid #c8c2b7; padding: 1.9rem 0 1.35rem; }
+.commissioner-workspace-intro > p, .commissioner-tool-eyebrow { color: #08764e; font-size: .67rem; font-weight: 900; letter-spacing: .16em; }
+.commissioner-workspace-intro h2 { font-family: Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.45rem); font-weight: 700; line-height: 1.04; margin-top: .4rem; }
+.commissioner-workspace-intro > span { color: #5f5b54; display: block; line-height: 1.5; margin-top: .65rem; max-width: 44rem; }
+.commissioner-workspace-section { border-bottom: 1px solid #c8c2b7; padding: 2rem 0; }
+.commissioner-route-card { background: #fffdfa; border: 1px solid #d4cec3; box-shadow: 0 5px 13px rgba(51, 49, 42, .045); display: flex; flex-direction: column; min-height: 12rem; padding: 1.15rem; text-decoration: none; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.commissioner-route-card:hover { border-color: #08764e; box-shadow: 0 12px 22px rgba(27, 61, 53, .12); transform: translateY(-2px); }
+.commissioner-route-card > span { color: #08764e; font-size: .62rem; font-weight: 900; letter-spacing: .14em; }
+.commissioner-route-card > p { font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700; margin-top: .45rem; }
+.commissioner-route-card > small { color: #625e57; font-size: .82rem; line-height: 1.45; margin-top: .4rem; }
+.commissioner-route-card > strong { color: #08764e; font-size: .67rem; letter-spacing: .11em; margin-top: auto; padding-top: 1.25rem; }
+.commissioner-inline-action { background: #173c35; color: #fff; font-size: .76rem; font-weight: 800; letter-spacing: .04em; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; }
+.commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
+
+.commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1.5rem; padding: clamp(1.15rem, 3vw, 2rem); }
+.commissioner-tool-card--write { border-left-color: #a76311; }
+.commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
+.commissioner-diagnostics { border-bottom: 1px solid #c8c2b7; margin-top: 1.4rem; padding: 1.2rem 0 1.8rem; }
+.commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
+.commissioner-diagnostics summary span { color: #716c63; display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
+.commissioner-diagnostics details[open] summary { color: #9b2e1d; }
+
+html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }
+html[data-theme="night"] .commissioner-panel-nav, html[data-theme="night"] .commissioner-workspace-intro, html[data-theme="night"] .commissioner-workspace-section, html[data-theme="night"] .commissioner-diagnostics { border-color: #48514e; }
+html[data-theme="night"] .commissioner-panel-tab { color: #b9c1bd; }
+html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d; border-color: #2b685d; }
+html[data-theme="night"] .commissioner-route-card, html[data-theme="night"] .commissioner-tool-card { background: #172522; border-color: #44534e; }
+html[data-theme="night"] .commissioner-route-card > small, html[data-theme="night"] .commissioner-panel-description, html[data-theme="night"] .commissioner-workspace-intro > span, html[data-theme="night"] .commissioner-diagnostics summary span { color: #c0c9c5; }
+
+@media (max-width: 639px) {
+  .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
+  .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: 1.2rem; }
+  .commissioner-command-bar h1 { font-size: 2.25rem; }
+  .commissioner-command-links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .commissioner-command-links a { padding: .68rem .55rem; }
+  .commissioner-command-links strong { font-size: .73rem; }
+  .commissioner-panel-tab { font-size: .95rem; padding: .55rem .62rem; }
+  .commissioner-workspace-intro { padding-top: 1.5rem; }
+}
+
 /* The Bowl receipt has a deliberately wide desktop layout, but its flexible
    pool lane must never retain the desktop minimum on a phone. */
 @media (max-width: 639px) {
