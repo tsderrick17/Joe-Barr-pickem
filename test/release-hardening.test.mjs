@@ -84,6 +84,13 @@ test("Sentry drops only the confirmed runtime.sendMessage browser noise", async 
   assert.match(filter, /browserExtensionMessages\.has\(message\)/);
 });
 
+test("pool chat refreshes less often and pauses while hidden", async () => {
+  const source = await readFile(new URL("../src/components/pool-chat.tsx", import.meta.url), "utf8");
+  assert.match(source, /document\.visibilityState === "visible"/);
+  assert.match(source, /}, 60_000\);/);
+  assert.match(source, /document\.addEventListener\("visibilitychange", refreshOnVisibility\)/);
+});
+
 test("launch preflight names and rejects the compatibility credential fallback", async () => {
   const admin = await readFile(new URL("../src/lib/supabase-admin.ts", import.meta.url), "utf8");
   const preflight = await readFile(new URL("../src/lib/launch-preflight.ts", import.meta.url), "utf8");

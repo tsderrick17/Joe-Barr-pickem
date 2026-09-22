@@ -68,8 +68,18 @@ export default function PoolChat({ onHide }: Props) {
 
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void loadMessages(), 0);
-    const refresh = window.setInterval(() => void loadMessages(true), 25_000);
-    return () => { window.clearTimeout(initialLoad); window.clearInterval(refresh); };
+    const refresh = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadMessages(true);
+    }, 60_000);
+    const refreshOnVisibility = () => {
+      if (document.visibilityState === "visible") void loadMessages(true);
+    };
+    document.addEventListener("visibilitychange", refreshOnVisibility);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearInterval(refresh);
+      document.removeEventListener("visibilitychange", refreshOnVisibility);
+    };
   }, [loadMessages]);
 
   useEffect(() => {
