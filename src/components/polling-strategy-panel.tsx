@@ -4,9 +4,10 @@ import ProviderChart from "@/components/provider-chart";
 
 type Plan = { id: string; label: string; checksPerGame: number; description: string; monthlyCredits: number; periodCredits: number };
 type Poll = { startedAt: string; completedAt: string | null; pollingMode: string; eligibleGames: number; completedGamesFound: number; finalScoresImported: number; newFinals: number; requestsLast: number; quotaProtected: boolean };
-type Payload = { polling: { recommendedPlan: string; plans: Plan[] }; cadence: { firstCheckMinutesAfterKickoff: number; cronIntervalMinutes: number; regularRetryMinutes: number[]; playoffRetryMinutes: number[]; note: string }; scorePolls: Poll[]; ladderSummary: Array<{ rung: number; windowMinutes: number; newFinals: number; pickedUp: number; percentage: number; newFinalsPercentage: number }> };
+export type PollingLadderItem = { rung: number; windowMinutes: number; newFinals: number; pickedUp: number; percentage: number; newFinalsPercentage: number };
+type Payload = { polling: { recommendedPlan: string; plans: Plan[] }; cadence: { firstCheckMinutesAfterKickoff: number; cronIntervalMinutes: number; regularRetryMinutes: number[]; playoffRetryMinutes: number[]; note: string }; scorePolls: Poll[]; ladderSummary: PollingLadderItem[] };
 
-function LadderHistogram({ items }: { items: Payload["ladderSummary"] }) {
+export function LadderHistogram({ items }: { items: PollingLadderItem[] }) {
   const points = items.map((item, index) => {
     const start = items.slice(0, index).reduce((sum, previous) => sum + previous.windowMinutes, 0);
     return { label: `Window ${item.rung} · ${item.windowMinutes}-minute polling gap`, shortLabel: `#${item.rung}`,
