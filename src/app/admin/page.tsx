@@ -88,8 +88,9 @@ const commissionerPanels = [
   ["overview", "Overview", "Live pool status, priorities, and the next safe move.", "01"],
   ["grading", "Grading", "Settlement, freshness, provider efficiency, and exceptions.", "02"],
   ["game-day", "Game day", "The focused checklist for locks, finals, and integrity holds.", "03"],
-  ["season-setup", "Season", "Schedule preparation and change control.", "04"],
-  ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "05"],
+  ["bowl-pool", "Bowl Pool", "Bowl schedule, lines, entries, and settlement exceptions.", "04"],
+  ["season-setup", "Season", "Schedule preparation and change control.", "05"],
+  ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "06"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
@@ -286,6 +287,7 @@ export default function AdminPage() {
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             <Link className="commissioner-route-card" href="/admin/players"><span>ROSTER CONTROL</span><p>Players</p><small>Add players, review activity, and manage private PINs.</small><strong>OPEN PLAYERS →</strong></Link>
             <Link className="commissioner-route-card" href="/admin/reminders"><span>PLAYER DELIVERY</span><p>Email center</p><small>Check delivery, send a private test, or update future wording.</small><strong>OPEN EMAILS →</strong></Link>
+            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("bowl-pool")} type="button"><span>SEPARATE COMPETITION</span><p>Bowl Pool</p><small>Review Bowl lines, schedule readiness, entries, and exceptions.</small><strong>OPEN BOWL POOL →</strong></button>
             <button className="commissioner-route-card text-left" onClick={() => setActivePanel("season-setup")} type="button"><span>SEASON CONTROL</span><p>Season work</p><small>Review the schedule and imports before the season begins.</small><strong>OPEN SEASON →</strong></button>
           </div>
         </section>
@@ -311,9 +313,18 @@ export default function AdminPage() {
               <summary>Exceptions and score corrections <span>Use for postponements, no contests, or a verified mismatch</span></summary>
               <FinalScoreReconciliation />
               <GameExceptions />
-              <BowlPoolExceptions />
             </details>
           </section>
+        </> : null}
+
+        {activePanel === "bowl-pool" ? <>
+          <section className="commissioner-workspace-intro">
+            <p>SEPARATE COMPETITION</p>
+            <h2>Bowl Pool control room</h2>
+            <span>Use this workspace for the college bowl competition only: confirm the schedule, secure each spread before kickoff, monitor entries, and resolve schedule or game exceptions.</span>
+          </section>
+          <BowlPoolReadiness />
+          <BowlPoolExceptions />
         </> : null}
 
         {activePanel === "system" ? <>
@@ -323,7 +334,6 @@ export default function AdminPage() {
             <span>Use this page when the overview shows a hold, a provider limit is unclear, or an automation needs recovery. Most of it should stay green and untouched.</span>
           </section>
           <AccountCapacityPanel />
-          <BowlPoolReadiness />
           <SentryVerification />
           <section className="commissioner-diagnostics">
             <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>
