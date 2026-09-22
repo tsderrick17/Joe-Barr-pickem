@@ -40,8 +40,9 @@ includes a read-only per-table size breakdown for review.
 
 The NFL final-score worker wakes every ten minutes but calls the provider only
 when at least one game's durable retry time is due. Regular-season delayed
-finals follow the same predictable 10/10/10/10/10/10/20/20/20/60/120-minute
-sequence every week, and playoff delayed finals use the same ladder. Both
+finals follow the same predictable 10/10/10/10/10/10/20/20/20/60/120/240-minute
+sequence every week, with the final 240-minute window reserved for emergencies,
+and playoff delayed finals use the same ladder. Both
 competition types become eligible 170 minutes after official kickoff. The
 monthly balance does not change the normal cadence. Repeated polling pauses only below the protected
 50-credit emergency reserve, so official line integrity is never traded for

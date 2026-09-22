@@ -14,7 +14,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("regular-season score polling uses a predictable cadence before expanding its cooldown", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
   assert.deepEqual(
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((attempt) => nextScoreCheckAt(attempt, now)),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((attempt) => nextScoreCheckAt(attempt, now)),
     [
       "2026-09-14T00:10:00.000Z",
       "2026-09-14T00:10:00.000Z",
@@ -27,9 +27,10 @@ test("regular-season score polling uses a predictable cadence before expanding i
       "2026-09-14T00:20:00.000Z",
       "2026-09-14T01:00:00.000Z",
       "2026-09-14T02:00:00.000Z",
+      "2026-09-14T04:00:00.000Z",
     ],
   );
-  assert.equal(nextScoreCheckAt(12, now), "2026-09-14T02:00:00.000Z");
+  assert.equal(nextScoreCheckAt(12, now), "2026-09-14T04:00:00.000Z");
 });
 
 test("playoff polling uses the same predictable ladder while the fifty-credit reserve remains", () => {
