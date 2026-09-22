@@ -19,10 +19,7 @@ test("public reveal images omit players without a revealed selection", () => {
 });
 
 test("every public-pick email image applies the Pool Action row filter", async () => {
-  const route = await readFile(new URL("../src/app/api/recap-image/route.tsx", import.meta.url), "utf8");
-  assert.equal(route.match(/rows=\{onlyPublicPickRows\(snapshot\.rows\)\}/g)?.length, 3);
-  assert.match(route, /const PUBLIC_RECEIPT_IMAGE_WIDTH = 760;/);
-  assert.equal(route.match(/width: PUBLIC_RECEIPT_IMAGE_WIDTH/g)?.length, 3);
-  assert.match(route, /flexDirection: "column", gap: 5/);
-  assert.match(route, /Math\.max\(400, Math\.min\(920/);
+  const route = await readFile(new URL("../src/lib/email-artwork.tsx", import.meta.url), "utf8");
+  assert.match(route, /onlyPublicPickRows\(safePublicRows\(snapshot.rows\)\)/);
+  assert.match(route, /const WIDTH = 760/);
 });

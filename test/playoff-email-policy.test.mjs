@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 
 const weeklyRecap = await readFile(new URL("../src/lib/weekly-recap.ts", import.meta.url), "utf8");
-const recapImage = await readFile(new URL("../src/app/api/recap-image/route.tsx", import.meta.url), "utf8");
+const recapImage = await readFile(new URL("../src/lib/email-artwork.tsx", import.meta.url), "utf8");
 const profile = await readFile(new URL("../src/app/profile/page.tsx", import.meta.url), "utf8");
 const emailReminders = await readFile(new URL("../src/lib/email-reminders.ts", import.meta.url), "utf8");
 
@@ -19,10 +19,9 @@ test("featured reveal snapshots stay scoped to the scheduled featured game windo
   assert.match(weeklyRecap, /selectedFeaturedGameIds\.has\(pick\.game_id\)/);
 });
 
-test("large public receipts tighten and then split rather than overflow", () => {
-  assert.match(recapImage, /rows\.length > 10/);
-  assert.match(recapImage, /rows\.length > 16/);
-  assert.match(recapImage, /Math\.ceil\(rows\.length \/ 2\)/);
+test("large public receipts retain a full-width readable table", () => {
+  assert.match(recapImage, /PickemTable/);
+  assert.match(recapImage, /flexWrap: "wrap"/);
 });
 
 test("Regular includes daily playoff recaps while Full Card adds every reveal", () => {

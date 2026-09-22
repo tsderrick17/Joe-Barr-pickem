@@ -7,7 +7,7 @@ test("the ticket shows preliminary lines and distinguishes official lines", asyn
     readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/my-ticket.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/api/recap-image/route.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/email-artwork.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(home, /spread: pick\.spread \?\? null,/);

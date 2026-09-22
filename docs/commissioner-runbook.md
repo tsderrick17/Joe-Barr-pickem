@@ -92,6 +92,25 @@ Never overwrite the original audit event or type an estimated score.
 
 ## Reminder, reveal, or recap is late
 
+### Review email images before delivery
+
+Open **Commissioner → Email → Email image studio**. Choose the email type,
+review the generated PNGs at Phone or Desktop width, and use the download
+links to inspect an image at full resolution. Change subject, message, or
+Compact/Comfortable spacing, select **Refresh preview**, then **Save email
+changes**. Saving is disabled until the current draft has rendered.
+
+**View email images** on a queued or sent card uses that message's saved
+snapshot when available. If upcoming results are not ready, the preview is
+explicitly marked as fictional sample data; it is not approval of results.
+Previewing never sends an email or freezes delivery data. Standard wording
+changes apply to newly queued messages; image spacing applies when delivery
+builds its URLs. Already sent messages keep their original data and URL
+spacing, though the current renderer can improve their visual treatment.
+Competitive corrections belong in Grading, not the image editor.
+
+### Delivery diagnosis
+
 1. Open **Commissioner → Reminders** and inspect the scheduled item and receipt.
 2. Distinguish `suppressed` from `failed`: an empty reveal window is intentional.
 3. For a Tuesday recap, confirm the source week is fully trustworthy first.
