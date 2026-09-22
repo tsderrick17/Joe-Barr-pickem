@@ -190,8 +190,12 @@ export default function BowlPoolPage() {
           {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
-              <h2 className="mt-1 font-serif text-2xl font-bold">2026–27 Bowl Pool</h2>
+              <h2 className="mt-1 font-serif text-2xl font-bold">2026-27 Bowl Pool</h2>
             </div>
+          </div>
+          <div aria-label="Bowl Pool rules" className="mt-4 border border-slate-300 bg-slate-50 px-3 py-3 text-xs leading-5 text-slate-700 sm:px-4 sm:py-3.5 sm:text-sm">
+            <p className="font-black uppercase tracking-[0.08em] text-slate-900">How it works</p>
+            <p className="mt-1">Opt in, pick one team in each game, and submit your card. Games lock individually at kickoff, and the locked spread determines the winner against the spread. Every graded game is a win or loss—there are no pushes. Enter the National Championship total-points tiebreaker to complete your card.</p>
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
             <div className="grid grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] bg-slate-100 px-1 py-2 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">

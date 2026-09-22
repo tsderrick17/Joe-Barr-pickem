@@ -133,7 +133,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     // Keep the familiar home/away casing on the compact mobile treatment too:
     // home abbreviations stay loud, while away abbreviations remain lowercase.
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
-    const compactLabel = team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
+    const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const teamResult = <>
@@ -239,7 +239,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     </div>
     {teamCell(left, "left")}
     {survivorChip(left)}
-    <div className="text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
+    <div className="slate-spread-cell text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
       {lockedSpread ? <span className="official-line-color font-mono text-sm font-bold sm:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">AWAITING LINE</p>}
       {showSpecialLockNote ? <p className="mt-1 whitespace-nowrap text-[7px] font-black leading-3 tracking-[-0.02em] text-teal-700">LOCKS {easternLockLabel(game.lineLockAt).toUpperCase()} ET</p> : null}
     </div>

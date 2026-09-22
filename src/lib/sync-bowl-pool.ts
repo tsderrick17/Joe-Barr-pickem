@@ -2,7 +2,7 @@ import { gradeBowlPoolPick } from "@/lib/bowl-pool.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
-type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; competitions?: Array<{ odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
+type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
 
 async function providerEvents(path: string, query: Record<string, string>) {
   // The Odds API's free plan does not include college-football markets. Keep
@@ -69,8 +69,8 @@ async function syncAnnualSchedule(now: Date) {
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();
     if (!error && saved) { used.add(saved.id); imported += 1; if (/national championship|championship game/i.test(bowlName)) championshipGameId = saved.id; }
     const espnSpread = competition?.odds?.find((odds) => Number.isFinite(odds.spread))?.spread;
-    if (!error && saved && typeof espnSpread === "number" && Number.isFinite(espnSpread) && espnSpread !== 0) {
-      const favoriteId = espnSpread < 0 ? teamIds[1] : teamIds[0];
+    if (!error && saved && typeof espnSpread === "number" && Number.isFinite(espnSpread)) {
+      const favoriteId = espnSpread < 0 ? teamIds[1] : espnSpread > 0 ? teamIds[0] : null;
       const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
       await supabaseAdmin.from("bowl_pool_game_lines").upsert({ game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), locked_at: now >= new Date(kickoff) ? kickoff : null }, { onConflict: "game_id" });
     }
@@ -92,12 +92,26 @@ async function syncScheduleAndLines(now: Date) {
   const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id, away:bowl_pool_teams!bowl_pool_games_away_team_id_fkey(display_name), home:bowl_pool_teams!bowl_pool_games_home_team_id_fkey(display_name)").eq("season_id", season.id).in("status", ["scheduled", "live"]);
   if (!games?.length) return { scheduleGames: 0, linesLocked: 0 };
   const events = await providerEvents("sports/americanfootball_ncaaf/odds", { regions: "us", markets: "spreads", oddsFormat: "american", dateFormat: "iso" });
-  const { data: lockedLines } = await supabaseAdmin.from("bowl_pool_game_lines").select("game_id").in("game_id", games.map((game) => game.id));
-  const alreadyLocked = new Set((lockedLines ?? []).map((line) => line.game_id));
+  const { data: lockedLines } = await supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at, locked_at").in("game_id", games.map((game) => game.id));
+  const lineByGame = new Map((lockedLines ?? []).map((line) => [line.game_id, line]));
+  const alreadyLocked = new Set((lockedLines ?? []).filter((line) => line.locked_at).map((line) => line.game_id));
   const used = new Set<string>(); let scheduleGames = 0; let linesLocked = 0;
+  const lockProvisional = async (gameId: string) => {
+    const provisional = lineByGame.get(gameId);
+    if (!provisional) return false;
+    const lockedAt = now.toISOString();
+    const { error: fallbackError } = await supabaseAdmin.from("bowl_pool_game_lines").update({ locked_at: lockedAt }).eq("game_id", gameId).is("locked_at", null);
+    if (fallbackError) return false;
+    await supabaseAdmin.from("bowl_pool_spread_history").insert({ game_id: gameId, favorite_team_id: provisional.favorite_team_id, source_spread: provisional.source_spread, pool_spread: provisional.locked_spread, source: provisional.source, captured_at: provisional.source_captured_at });
+    linesLocked += 1;
+    return true;
+  };
   for (const game of games) {
     const match = events.filter((event) => !used.has(event.id)).map((event) => ({ event, distance: Math.abs(new Date(event.commence_time).getTime() - new Date(game.kickoff_at).getTime()) })).filter(({ event, distance }) => distance <= 6 * 60 * 60 * 1000 && normalizedTeamName(event.away_team) === normalizedTeamName(joinedTeamName(game.away)) && normalizedTeamName(event.home_team) === normalizedTeamName(joinedTeamName(game.home))).sort((a, b) => a.distance - b.distance)[0];
-    if (!match || match.distance > 6 * 60 * 60 * 1000) continue;
+    if (!match || match.distance > 6 * 60 * 60 * 1000) {
+      await lockProvisional(game.id);
+      continue;
+    }
     used.add(match.event.id);
     const event = match.event;
     const teamRows = await Promise.all([event.away_team, event.home_team].map(async (name) => {
@@ -110,7 +124,10 @@ async function syncScheduleAndLines(now: Date) {
     if (new Date(game.line_lock_at) > now || alreadyLocked.has(game.id)) continue;
     const outcome = event.bookmakers?.flatMap((bookmaker) => bookmaker.markets ?? []).find((market) => market.key === "spreads")?.outcomes ?? [];
     const favorite = outcome.find((row) => typeof row.point === "number" && row.point < 0) ?? outcome.find((row) => typeof row.point === "number" && row.point === 0 && row.name === event.home_team);
-    if (!favorite || typeof favorite.point !== "number") continue;
+    if (!favorite || typeof favorite.point !== "number") {
+      await lockProvisional(game.id);
+      continue;
+    }
     const favoriteId = favorite.name === event.away_team ? teamRows[0] : favorite.name === event.home_team ? teamRows[1] : null;
     if (!favoriteId) continue;
     const sourceSpread = Math.abs(favorite.point);
@@ -125,15 +142,34 @@ async function syncScheduleAndLines(now: Date) {
 }
 
 async function syncScores(now: Date) {
-  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, odds_event_id").not("odds_event_id", "is", null).in("status", ["scheduled", "live"]);
+  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id").in("status", ["scheduled", "live"]);
   if (!games?.length) return 0;
-  const events = await providerEvents("sports/americanfootball_ncaaf/scores", { daysFrom: "30" });
+  // ESPN is the no-cost source of truth for bowl results. The Odds API score
+  // feed remains an optional fallback when explicitly enabled, but score
+  // settlement must not depend on a paid NCAAF entitlement.
+  const seasonYear = now.getUTCMonth() >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  const espnResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(seasonYear) })}`, { signal: AbortSignal.timeout(12_000), cache: "no-store" }).catch(() => null);
+  const espnPayload = espnResponse?.ok ? await espnResponse.json().catch(() => null) as { events?: EspnEvent[] } | null : null;
+  const espnEvents = espnPayload?.events ?? [];
+  const oddsEvents = process.env.BOWL_POOL_ODDS_API_ENABLED === "true"
+    ? await providerEvents("sports/americanfootball_ncaaf/scores", { daysFrom: "30" })
+    : [];
   let finalized = 0;
   for (const game of games) {
-    const event = events.find((candidate) => candidate.id === game.odds_event_id);
-    if (!event?.completed || event.scores?.length !== 2) continue;
-    const awayScore = parseScore(event.scores.find((score) => score.name === event.away_team)?.score);
-    const homeScore = parseScore(event.scores.find((score) => score.name === event.home_team)?.score);
+    const espnEvent = espnEvents.find((candidate) => `espn:${candidate.id}` === game.provider_game_id);
+    const competition = espnEvent?.competitions?.[0];
+    const completed = Boolean(espnEvent?.status?.type?.completed || competition?.status?.type?.completed);
+    const competitors = competition?.competitors ?? [];
+    const away = competitors.find((competitor) => competitor.homeAway === "away") ?? competitors[0];
+    const home = competitors.find((competitor) => competitor.homeAway === "home") ?? competitors[1];
+    let awayScore = parseScore(away?.score);
+    let homeScore = parseScore(home?.score);
+    if (!completed || awayScore === null || homeScore === null) {
+      const oddsEvent = oddsEvents.find((candidate) => candidate.id === game.odds_event_id);
+      if (!oddsEvent?.completed || oddsEvent.scores?.length !== 2) continue;
+      awayScore = parseScore(oddsEvent.scores.find((score) => score.name === oddsEvent.away_team)?.score);
+      homeScore = parseScore(oddsEvent.scores.find((score) => score.name === oddsEvent.home_team)?.score);
+    }
     if (awayScore === null || homeScore === null) continue;
     const { error } = await supabaseAdmin.from("bowl_pool_games").update({ status: "final", away_score: awayScore, home_score: homeScore, finalized_at: now.toISOString() }).eq("id", game.id);
     if (!error) finalized += 1;

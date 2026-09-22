@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const runbook = [
   ["1. Before the first lock", "Open Season Readiness, then Automation Preflight. A red item means pause and resolve it before the pool reaches a deadline."],
   ["2. At the scheduled line lock", "Automation is primary. If its health check is late or failed, use Check official spread locks once. It is safe to re-run and records what it did."],
@@ -9,15 +7,16 @@ const runbook = [
   ["6. If a game is moved, postponed, cancelled, or no contest", "Open Game Exceptions, select the verified game, and confirm the status. A rescheduled game keeps its existing pick but receives its new lock time; cancelled and no-contest selections follow the published settlement policy and remain in the audit trail."],
 ];
 
-const rules = [
-  ["ATS grading", "The saved official line is permanent. A selected team that covers is a win; a push is recorded as a Pick’em loss."],
-  ["Survivor", "One outright winner is required each active week. A tie is a loss. Teams may be used only once, and a missed required weekly pick is OUT."],
-  ["No contest", "A declared no contest never advances Survivor. Pending selections may be replaced while a legal option remains; otherwise the ATS result is a loss, just like a push, and Survivor is OUT."],
-  ["Privacy", "Choices remain private until the selected game’s kickoff. After that, names and picks remain visible as the permanent public receipt."],
-  ["Playoffs", "Eligibility is snapshotted at the start of each Eastern game day. Anyone who can still tie the leader at that point may pick that day; players already unable to tie are excluded and their later picks are not counted."],
-  ["Season tie", "The site never invents a tiebreaker. Every player tied for the final Pick'em lead is crowned a co-champion automatically and receives the same permanent trophy-history record."],
-  ["Survivor finish", "When one active entry remains, Survivor crowns that player automatically, records the trophy history, stops Survivor reminders, and leaves the table available for audit."],
-  ["Annual handoff", "The next season is created automatically on August 1 in Eastern time. Completed seasons stay intact for all-time ATS wins and win percentage; Survivor results never count toward those totals."],
+const constitution = [
+  ["Article I · The competition", "Pick'em is an against-the-spread season contest organized by scoring period. Each period publishes its own game list and pick capacity; the saved period configuration, not an email or a commissioner memory, governs what can be submitted."],
+  ["Article II · Pick submission", "A player may submit no more than the period's configured maximum and may select only a team in a listed game. Picks remain editable until that game's kickoff. A started game is sealed; later games stay open until their own kickoffs."],
+  ["Article III · Lines and grading", "The official spread saved at line lock is the permanent grading line. A selected team that covers wins. A push is recorded as a Pick'em loss. Scores are imported only after verification; a pending or corrected score stays pending until the audited grading workflow accepts it."],
+  ["Article IV · Public record", "Selections are private before the selected game's kickoff. At kickoff, that game's picks become public on the Slate and in any matching reveal receipt. Started-game receipts remain visible as the permanent record; future selections are never exposed early."],
+  ["Article V · Disrupted games", "A postponement preserves existing picks and receives its new lock and kickoff timing. A cancellation or no contest follows the disruption workflow: affected selections are voided or settled according to the recorded status, remain in the audit trail, and never create an invented score."],
+  ["Article VI · Survivor", "Survivor is a separate regular-season contest. Each active entry submits one outright team per scoring period, and a team may be used only once. The pick can be changed until that game's kickoff. A win advances the entry; a loss, tie, missed required pick, or invalidated contest eliminates it. Survivor ends with the regular season."],
+  ["Article VII · Playoffs", "Playoff periods use their configured pick capacity. Eligibility is snapshotted at the start of each Eastern game day: a player who can no longer tie the leader is excluded from that day's scoring, and later picks do not restore eligibility."],
+  ["Article VIII · Champions and ties", "The standings never invent a tiebreaker. Every player tied for the final Pick'em lead is a co-champion and receives the same permanent trophy-history record. When one active Survivor entry remains, the site crowns that player automatically and stops Survivor reminders."],
+  ["Article IX · Continuity", "Completed periods and seasons remain intact. The annual season handoff occurs automatically on August 1 in Eastern time. Pick'em records contribute to the season and all-time Pick'em standings; Survivor results remain a separate record."],
 ];
 
 export default function CommissionerHandbook() {
@@ -29,7 +28,6 @@ export default function CommissionerHandbook() {
           <h2 className="mt-1 font-serif text-3xl font-bold">Game day and season handbook</h2>
           <p className="mt-2 max-w-3xl text-zinc-700">The safe operating order, the rules the system enforces, and the few moments that require a commissioner decision.</p>
         </div>
-        <Link className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold hover:bg-[#fffaf0]" href="/archive">Open week archive</Link>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -40,9 +38,10 @@ export default function CommissionerHandbook() {
           </ol>
         </div>
         <div>
-          <h3 className="font-serif text-2xl font-bold">Published pool rules</h3>
+          <h3 className="font-serif text-2xl font-bold">Published pool constitution</h3>
+          <p className="mt-2 text-sm leading-5 text-zinc-700">The public reference for what is submitted, when it becomes visible, how it is graded, and how the season is preserved.</p>
           <dl className="mt-3 space-y-2">
-            {rules.map(([term, detail]) => <div className="border border-zinc-300 bg-white p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-zinc-700">{detail}</dd></div>)}
+            {constitution.map(([term, detail]) => <div className="border border-zinc-300 bg-white p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-zinc-700">{detail}</dd></div>)}
           </dl>
         </div>
       </div>

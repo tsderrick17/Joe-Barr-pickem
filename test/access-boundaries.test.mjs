@@ -30,7 +30,7 @@ test("every commissioner route uses the shared commissioner gate", async () => {
 test("scheduled mutation routes require their automation secret before doing work", async () => {
   const cronDirectory = path.join(root, "src", "app", "api", "cron");
   const routes = await routeFiles(cronDirectory);
-  assert.deepEqual(routes.map((route) => path.basename(path.dirname(route))).sort(), ["bootstrap-season", "lock-lines", "send-reminders", "sync-scores", "watchdog"]);
+  assert.deepEqual(routes.map((route) => path.basename(path.dirname(route))).sort(), ["bootstrap-season", "lock-lines", "send-reminders", "sync-bowl-scores", "sync-scores", "watchdog"]);
 
   for (const route of routes) {
     const source = await readFile(route, "utf8");

@@ -24,6 +24,10 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /periodId/);
   assert.match(component, /aria-labelledby="grading-dashboard-title"/);
   assert.match(component, /grading-period/);
+  assert.match(component, /requestSequenceRef/);
+  assert.match(component, /requestSequence !== requestSequenceRef\.current/);
+  assert.match(component, /useCallback\(async \(requestedPeriodId = periodIdRef\.current\)/);
+  assert.match(component, /useEffect\(\(\) => \{ periodIdRef\.current = periodId; \}, \[periodId\]\)/);
   assert.match(component, /Worker activity/);
   assert.match(route, /workerRuns/);
   assert.match(component, /GAME INSPECTOR/);

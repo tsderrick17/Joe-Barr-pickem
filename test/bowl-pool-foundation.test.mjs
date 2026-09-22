@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
+import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 
 test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
@@ -69,6 +69,32 @@ test("Bowl cards use official compact team labels with an accessible full-name f
   assert.equal(bowlTeamDisplayLabel({ full_name: "Mississippi State", short_name: "Mississippi St.", abbreviation: null }), "Mississippi St.");
   assert.equal(bowlTeamDisplayLabel({ full_name: "Central Michigan", short_name: null, abbreviation: null }), "CM");
   assert.equal(bowlTeamDisplayLabel(null), "TBD");
+});
+
+test("Bowl standings never show the same label for both teams in one game", () => {
+  const [first, second] = bowlMatchupTeamLabels(
+    { full_name: "Central Michigan", short_name: "CM", abbreviation: "CM" },
+    { full_name: "Colorado Mesa", short_name: "CM", abbreviation: "CM" },
+  );
+  assert.notEqual(first.toUpperCase(), second.toUpperCase());
+  assert.deepEqual(bowlMatchupTeamLabels(
+    { full_name: "Texas", short_name: "TEX", abbreviation: "TEX" },
+    { full_name: "Texas A&M", short_name: "TAMU", abbreviation: "TAMU" },
+  ), ["TEX", "TAMU"]);
+});
+
+test("Bowl line capture promotes a provisional spread when live odds are unavailable", async () => {
+  const source = await readFile(new URL("../src/lib/sync-bowl-pool.ts", import.meta.url), "utf8");
+  assert.match(source, /filter\(\(line\) => line\.locked_at\)/);
+  assert.match(source, /lockProvisional/);
+  assert.match(source, /\.is\("locked_at", null\)/);
+  assert.match(source, /typeof espnSpread === "number" && Number\.isFinite\(espnSpread\)/);
+});
+
+test("Bowl standings list only active entries", async () => {
+  const source = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
+  assert.match(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active"\)/);
+  assert.doesNotMatch(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active" \|\| entry\.status === "complete"\)/);
 });
 
 test("bowl selections compare by game/value, not insertion order", () => {

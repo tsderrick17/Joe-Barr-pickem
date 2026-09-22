@@ -18,6 +18,13 @@ const column: CSSProperties = { display: "flex", flexDirection: "column", flexSh
 const row: CSSProperties = { display: "flex", alignItems: "center", flexShrink: 0 };
 type PublicRow = { playerId?: string; name: string; wins: number; picks: string[] };
 
+function compactSlateDay(value: string) {
+  const parts = value.replace(",", "").split(" ");
+  if (parts.length !== 3) return value;
+  const [weekday, month, day] = parts;
+  return weekday.slice(0, 3) + ", " + month.slice(0, 3) + " " + day;
+}
+
 function safePublicRows(value: unknown): PublicRow[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item) => item && typeof item === "object").map((item) => ({ playerId: typeof item.playerId === "string" ? item.playerId : undefined, name: String(item.name ?? ""), wins: Number(item.wins) || 0, picks: Array.isArray(item.picks) ? item.picks.filter((pick: unknown): pick is string => typeof pick === "string") : [] }));
@@ -67,10 +74,13 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
 }
 
 function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: EmailArtworkOptions) {
-  const minHeight = options.density === "comfortable" ? 68 : 52;
+  // Keep the two presets visibly distinct after email clients scale the PNG:
+  // compact is a tight ledger, while comfortable gives each record room to
+  // breathe instead of differing by only a few rendered pixels.
+  const minHeight = options.density === "comfortable" ? 68 : 48;
   if (kind === "summary" && (snapshot.kind === "weekly_recap" || snapshot.kind === "playoff_day_recap")) {
     const champions = snapshot.kind === "playoff_day_recap" ? snapshot.championsCrowned : [];
-    return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "weekly_recap" ? snapshot.week : snapshot.day} · Final results`} note="TOTAL = season wins · +WINS = this recap · W = win · L = loss">
+    return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "weekly_recap" ? snapshot.week : snapshot.day} · Final results`}>
       {champions.length ? <div style={{ ...row, background: "#e2f1e8", color: TEAL, padding: 12, marginTop: 12 }}>Champion{champions.length > 1 ? "s" : ""}: {champions.join(" & ")}</div> : null}
       <PickemTable standings={safePublicRows(snapshot.standings)} selections={safePublicRows(snapshot.weeklySummary)} recap minHeight={minHeight} />
     </Card>;
@@ -89,7 +99,7 @@ function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: Emai
     const survivorFooter = `${snapshot.survivor.in} ${snapshot.survivor.in === 1 ? "entry remains" : "entries remain"}.${firstWeek > 1 ? " Earlier weeks are on the website." : ""}`;
     return <Card title="Survivor" subtitle={`${snapshot.week} · ${snapshot.survivor.championCrownedInRecapWeek ? `Champion: ${snapshot.survivor.championName}` : "The remaining field"}`} note={survivorFooter}>
       <div style={{ ...row, color: MUTED, fontSize: 16, padding: "12px 0 8px" }}><span style={{ width: 196 }}>PLAYER / STATUS</span>{weeks.map((week) => <span key={week} style={{ display: "flex", flex: 1, justifyContent: "center" }}>WK {week}</span>)}</div>
-      {rows.map((item, index) => <div key={index} style={{ ...row, minHeight, borderBottom: `1px solid ${RULE}` }}><div style={{ ...column, width: 196, padding: "8px 8px 8px 0" }}><span style={{ fontWeight: 700 }}>{item.name}</span><span style={{ fontSize: 16, color: item.status === "IN" ? TEAL : "#9d302a" }}>{item.status === "IN" ? "STILL IN" : "ELIMINATED"}</span></div>{weeks.map((week) => <span key={week} style={{ display: "flex", flex: 1, justifyContent: "center", textAlign: "center", fontSize: 18, color: / L$/.test(item.picks[week - 1] ?? "") ? "#9d302a" : TEAL }}>{item.picks[week - 1] ?? "—"}</span>)}</div>)}
+      {rows.map((item, index) => <div key={index} style={{ ...row, minHeight, borderBottom: `1px solid ${RULE}` }}><div style={{ ...column, width: 196, padding: "8px 8px 8px 0" }}><span style={{ fontWeight: 700 }}>{item.name}</span><span style={{ fontSize: 16, color: item.status === "IN" ? TEAL : "#9d302a" }}>{item.status === "IN" ? "STILL IN" : "ELIMINATED"}</span></div>{weeks.map((week) => { const pick = item.picks[week - 1] ?? "-"; const lost = / L$/.test(pick); const empty = pick === "-"; return <span key={week} style={{ display: "flex", flex: 1, justifyContent: "center", textAlign: "center", fontSize: 18 }}><span style={{ background: empty ? "transparent" : lost ? "#f8e8e4" : "#e2f1e8", borderRadius: 4, color: empty ? MUTED : lost ? "#9d302a" : "#076449", padding: empty ? 0 : "5px 8px" }}>{pick}</span></span>; })}</div>)}
     </Card>;
   }
   if ((kind === "fresh" && snapshot.kind === "fresh_slate") || (kind === "gameday" && snapshot.kind === "game_day") || (kind === "earlylock" && snapshot.kind === "early_lock")) {
@@ -98,7 +108,7 @@ function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: Emai
       {snapshot.games.map((game, index) => {
         const presentation = slateImagePresentation({ ...game, home: game.home.toUpperCase() });
         return <div key={index} style={{ ...row, minHeight: Math.max(minHeight, 72), padding: "10px 0", borderBottom: `1px solid ${RULE}`, background: index % 2 ? "#f5f2e9" : PAPER }}>
-          <div style={{ ...column, width: 110, fontSize: 17, color: MUTED, paddingRight: 12 }}>{"day" in game ? <span>{String(game.day)}</span> : null}<span>{game.time}</span></div>
+          <div style={{ ...column, width: 110, fontSize: 17, color: MUTED, paddingRight: 12 }}>{"day" in game ? <span>{compactSlateDay(String(game.day))}</span> : null}<span>{game.time}</span></div>
           <span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{presentation.leftTeam}</span>
           <span style={{ display: "flex", width: 110, justifyContent: "center", fontSize: game.spread == null ? 16 : 26, color: official ? TEAL : INK, fontWeight: 700 }}>{presentation.line}</span>
           <span style={{ display: "flex", flex: 1, fontWeight: 700 }}>{presentation.rightTeam}</span>

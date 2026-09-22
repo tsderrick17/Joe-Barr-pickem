@@ -53,6 +53,12 @@ test("preview renders real PNGs, escapes edited wording and never writes a recei
   }
 });
 
+test("featured reveal preview contains only the newly revealed pick", async () => {
+  const snapshot = emailArtworkSample("featured_window_reveal");
+  assert.ok(snapshot && snapshot.kind === "featured_window_reveal");
+  assert.ok(snapshot.rows.every((row) => row.picks.length === 1));
+});
+
 test("delivery fixes density in each image URL and shows one combined summary", () => {
   const html = messageHtml({ id: "fixture", category: "weekly_recap", audience: "all_active", title: "Week recap", body: "Results", recap_snapshot: snapshot, imageOptions: { density: "comfortable" } });
   assert.equal((html.match(/kind=summary/g) ?? []).length, 1);

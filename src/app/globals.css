@@ -1615,6 +1615,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-score,
 .slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
 
+/* The time rail sits before the matchup. Pull the line back by half that rail
+   so it is visually centered between the two team lanes, not the whole grid's
+   remaining area. */
+.slate-spread-cell { transform: translateX(-2.25rem); }
+.slate-preview-spread { display: block; transform: translateX(-2.4rem); }
+
 /* Scores are part of the team label, not a separate visual hierarchy. Keep
    their type size identical to the team name while giving every row the same
    compact numeric anchor. */
@@ -1798,6 +1804,16 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   }
   .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
   .slate-team-score { font-size: 1em; }
+  /* Final score rows are a two-sided scoreboard. Use the compact team mark
+     at phone widths so both score columns keep one stable baseline instead of
+     wrapping long full names into the score lane. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
+  .slate-spread-cell { transform: translateX(-1.15rem); }
+}
+
+@media (min-width: 380px) and (max-width: 767px) {
+  .slate-spread-cell { transform: translateX(-1.3rem); }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
@@ -2722,6 +2738,66 @@ html[data-theme="night"] .newspaper-clipping::after {
   min-width: 0;
 }
 
+/* Bowl Pool identity: a restrained teal-and-gold postseason treatment keeps
+   the same ledger mechanics as NFL Pick'em while making the competition
+   immediately legible as its own event. */
+.bowl-pool-page #bowl-selections {
+  border-color: #b9cfc8 !important;
+  border-top: 3px solid #0f766e !important;
+  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+}
+.bowl-pool-page #bowl-selections > div:first-of-type {
+  border-bottom-color: #c7d8d3;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
+  background: #e8f3f0 !important;
+  color: #155e59 !important;
+  border-bottom: 1px solid #b9cfc8;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
+  border-color: #d7e3df;
+}
+.bowl-pool-page .bowl-team-label--selected::before {
+  background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
+  box-shadow: 0 1px 0 rgba(15, 118, 110, .3);
+}
+.bowl-card-section .pickem-ledger-masthead {
+  border-top-color: #0f766e;
+  border-bottom-color: #b9cfc8;
+}
+.bowl-card-section .bowl-standings-scroll {
+  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
+  background: #155e59 !important;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+  background: #f0f8f5 !important;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line {
+  color: #0f766e !important;
+}
+.bowl-card-section .bowl-standings-player-row {
+  border-color: #b9cfc8 !important;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections {
+  border-color: #52707a !important;
+  border-top-color: #55b8aa !important;
+  background: #132129 !important;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
+  background: #1b3a3b !important;
+  border-color: #52707a !important;
+  color: #b8ebe1 !important;
+}
+html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
+  border-top-color: #55b8aa;
+  border-bottom-color: #52707a;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+  background: #1c3438 !important;
+}
+
 /* Keep the commissioner shortcuts on one tidy row on narrow screens while
    allowing touch/trackpad scrolling without exposing a persistent scrollbar. */
 .manage-links {
@@ -2748,24 +2824,24 @@ html[data-theme="night"] .newspaper-clipping::after {
   scrollbar-width: thin;
 }
 
-/* On desktop the standings rail has enough breathing room for seven complete
+/* On desktop the standings rail has enough breathing room for eight complete
    games. The generated grid is 14.5rem of frozen/summary columns plus
-   7.5rem per game, so 67rem is the exact seven-game viewport with no clipped
-   final column. Smaller screens retain the compact six-game viewport and
-   intentional horizontal scrolling. */
+   7.5rem per game, so 74.5rem is the exact eight-game viewport with no
+   clipped final column. Smaller screens retain the compact six-game viewport
+   and intentional horizontal scrolling. */
 @media (min-width: 768px) {
   .bowl-standings-scroll {
-    width: min(100%, 67rem);
+    width: min(100%, 74.5rem);
   }
 }
 
 /* The page's ordinary standings rail is intentionally compact. On a true
    desktop viewport, let the expanded Bowl Card use the available window so
-   its seven-game viewport is not clipped by the rail's max-width. Minimized
+   its eight-game viewport is not clipped by the rail's max-width. Minimized
    cards keep the compact Pick'em rail above. */
 @media (min-width: 1100px) {
   .bowl-card-section:not(.is-minimized) {
-    width: min(67rem, calc(100vw - 2rem));
+    width: min(74.5rem, calc(100vw - 2rem));
     max-width: none;
     margin-left: 50%;
     margin-right: 0;
@@ -3616,7 +3692,6 @@ html[data-theme="night"] .playoff-scoreboard {
   padding: clamp(1.35rem, 4vw, 2.5rem);
   position: relative;
 }
-.commissioner-command-bar::after { border: 1px solid rgba(170, 229, 210, .24); border-radius: 999px; content: ""; height: 19rem; position: absolute; right: -8rem; top: -12rem; width: 19rem; }
 .commissioner-command-title, .commissioner-command-links { position: relative; z-index: 1; }
 .commissioner-command-links { align-self: stretch; display: grid; gap: .55rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .commissioner-command-links a { background: rgba(255, 255, 255, .08); border: 1px solid rgba(218, 242, 232, .2); display: grid; gap: .15rem; min-width: 0; padding: .85rem .8rem; transition: background .18s ease, transform .18s ease; }
@@ -3648,7 +3723,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-inline-action { background: #173c35; color: #fff; font-size: .76rem; font-weight: 800; letter-spacing: .04em; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; }
 .commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
 .provider-chart-axis-label { align-items: center; background: #e4e4e7; border-radius: .25rem; color: #71717a; display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
-.provider-efficiency-summary { border-bottom: 1px solid #e4e4e7; border-top: 1px solid #e4e4e7; display: grid; gap: .65rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
+.provider-efficiency-summary { border-bottom: 1px solid #e4e4e7; border-top: 1px solid #e4e4e7; display: grid; gap: .65rem; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
 .provider-efficiency-summary > div { display: grid; gap: .15rem; min-width: 0; }
 .provider-efficiency-summary span { color: #71717a; font-size: .62rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
 .provider-efficiency-summary strong { color: #18181b; font-size: 1.2rem; line-height: 1.1; overflow-wrap: anywhere; }
@@ -3662,6 +3737,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-diagnostics { border-bottom: 1px solid #c8c2b7; margin-top: 1.4rem; padding: 1.2rem 0 1.8rem; }
 .commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
 .commissioner-diagnostics summary span { color: #716c63; display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
+.commissioner-diagnostics > details + details { border-top: 1px solid #c8c2b7; margin-top: 1rem; padding-top: 1rem; }
 .commissioner-diagnostics details[open] summary { color: #9b2e1d; }
 
 html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }

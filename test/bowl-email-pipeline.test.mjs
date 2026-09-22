@@ -42,3 +42,22 @@ test("Bowl line-lock readiness waits for every playable game to have a locked li
   assert.match(source, /Today’s Bowl lines are still being finalized/);
   assert.match(source, /category === "bowl_line_lock"/);
 });
+
+test("Bowl score automation has its own fifteen-minute endpoint", () => {
+  const route = read("src/app/api/cron/sync-bowl-scores/route.ts");
+  const nflRoute = read("src/app/api/cron/sync-scores/route.ts");
+  const migration = read("supabase/migrations/20260922020000_isolate_bowl_pool_cron.sql");
+  assert.match(route, /runWithAutomationLease\("bowl_scores", syncBowlPool\)/);
+  assert.doesNotMatch(nflRoute, /syncBowlPool/);
+  assert.match(migration, /refresh-bowl-pool-every-fifteen-minutes/);
+  assert.match(migration, /'\/api\/cron\/sync-bowl-scores'/);
+  assert.match(migration, /'\*\/15 \* \* \* \*'/);
+});
+
+test("Bowl score settlement works from ESPN without a paid NCAAF odds key", () => {
+  const source = read("src/lib/sync-bowl-pool.ts");
+  assert.match(source, /college-football\/scoreboard/);
+  assert.match(source, /provider_game_id/);
+  assert.match(source, /status\?\.type\?\.completed/);
+  assert.match(source, /ESPN is the no-cost source of truth for bowl results/);
+});

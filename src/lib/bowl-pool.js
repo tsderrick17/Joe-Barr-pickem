@@ -20,6 +20,32 @@ export function bowlTeamDisplayLabel(team) {
   return words.length > 1 ? words.map((word) => word[0]).join("").slice(0, 4).toUpperCase() : fullName.slice(0, 4).toUpperCase();
 }
 
+function normalizedBowlTeamLabel(value) {
+  return typeof value === "string" ? value.trim().replace(/\s+/g, " ").toUpperCase() : "";
+}
+
+/** Return compact labels for one matchup without allowing a same-game collision. */
+export function bowlMatchupTeamLabels(first, second) {
+  const firstBase = bowlTeamDisplayLabel(first);
+  const secondBase = bowlTeamDisplayLabel(second);
+  if (normalizedBowlTeamLabel(firstBase) !== normalizedBowlTeamLabel(secondBase)) return [firstBase, secondBase];
+
+  const candidates = (team, base) => [
+    base,
+    typeof team?.short_name === "string" ? team.short_name.trim() : "",
+    typeof team?.full_name === "string" ? team.full_name.trim() : "",
+  ].filter(Boolean).filter((value, index, values) => values.findIndex((candidate) => normalizedBowlTeamLabel(candidate) === normalizedBowlTeamLabel(value)) === index);
+  const firstCandidates = candidates(first, firstBase);
+  const secondCandidates = candidates(second, secondBase);
+  for (const firstLabel of firstCandidates) {
+    for (const secondLabel of secondCandidates) {
+      if (normalizedBowlTeamLabel(firstLabel) !== normalizedBowlTeamLabel(secondLabel)) return [firstLabel, secondLabel];
+    }
+  }
+
+  return [`${firstBase} (1)`, `${secondBase} (2)`];
+}
+
 /** December 7 at 3:00 AM Eastern. Commissioners bypass this player-facing gate. */
 export function bowlPoolLaunchAt(seasonYear) {
   return easternDateTimeToUtc(seasonYear, 12, 7, 3).toISOString();
