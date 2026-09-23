@@ -23,7 +23,7 @@ const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstra
 const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
-const GradingDashboard = dynamic(() => import("@/components/grading-dashboard-polished"));
+const GradingDashboard = dynamic(() => import("@/components/grading-dashboard-prod"));
 
 type Spread = {
   team: string;

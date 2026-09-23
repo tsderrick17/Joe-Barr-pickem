@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
     const survivorEntryCounts = (survivorEntriesResult.data ?? []).reduce((counts, entry) => { counts[entry.status as "active" | "eliminated" | "complete"] += 1; return counts; }, { active: 0, eliminated: 0, complete: 0 });
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
     const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= now.getTime() - 30 * 86400000), now);
-    const efficiencyHistory = slateEfficiencySeries(games, oddsRunsResult.data ?? [], now);
+    const efficiencyHistory = slateEfficiencySeries(scheduleGamesResult.data ?? [], oddsRunsResult.data ?? [], now);
     const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now, scheduleGamesResult.data ?? [], [...SCORE_POLLING_RETRY_MINUTES]);
     const ladderCounts = new Map<number, number>();
     for (const run of syncResult.data ?? []) {
