@@ -2781,6 +2781,31 @@ html[data-theme="night"] .bowl-rule-step { background: rgba(27, 48, 56, .86); bo
 html[data-theme="night"] .bowl-rule-step > span { background: #1b4d48; border-color: #55b8aa; color: #b8ebe1; }
 html[data-theme="night"] .bowl-rule-step strong { color: #d9f7ee; }
 html[data-theme="night"] .bowl-rule-step p { color: #a8c1c4; }
+/* Keep the Commissioner Bowl workspace on the same quiet green paper system
+   as the player card, while leaving amber/red states reserved for action. */
+.commissioner-workspace-intro:has(+ section[aria-labelledby="bowl-readiness-title"]) {
+  border-color: #b9cfc8;
+}
+section[aria-labelledby="bowl-readiness-title"],
+#bowl-pool-exceptions {
+  border-bottom-color: #b9cfc8 !important;
+}
+section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
+#bowl-pool-exceptions > div:not([class*="amber"]),
+#bowl-pool-exceptions li.border {
+  border-color: #c7ddd4 !important;
+  background: linear-gradient(135deg, #fbfefc, #f0f8f4) !important;
+}
+section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 {
+  border-color: #8cc9ad !important;
+  background: #e4f6eb !important;
+}
+#bowl-pool-exceptions select { border-color: #9fcbb8; background: #fbfefc; }
+#bowl-pool-exceptions button.border-amber-800 { border-color: #9fcbb8; color: #166534; background: #effaf3; }
+html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
+html[data-theme="night"] #bowl-pool-exceptions > div:not([class*="amber"]),
+html[data-theme="night"] #bowl-pool-exceptions li.border { border-color: #52707a !important; background: #1b3038 !important; }
+html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 { border-color: #3e937a !important; background: #1b4d48 !important; }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row {
   border-color: #cfe2da;
   background-color: #fbfefc !important;
