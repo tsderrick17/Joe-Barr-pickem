@@ -2,8 +2,18 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import * as Sentry from "@sentry/nextjs";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+
+function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POST") {
+  void import("@sentry/nextjs").then((Sentry) => {
+    Sentry.withScope((scope) => {
+      scope.setTag("app.route", "/admin/players");
+      scope.setTag("error.kind", "network");
+      scope.setContext("request", { endpoint, method });
+      Sentry.captureException(error);
+    });
+  });
+}
 
 type Player = {
   id: string;
@@ -55,12 +65,7 @@ export default function PlayerManagementPage() {
       }
 
       const error = reason instanceof Error ? reason : new Error("Player list request failed.");
-      Sentry.withScope((scope) => {
-        scope.setTag("app.route", "/admin/players");
-        scope.setTag("error.kind", "network");
-        scope.setContext("request", { endpoint: "/api/admin/players", method: "GET" });
-        Sentry.captureException(error);
-      });
+      reportNetworkError(error, "/api/admin/players", "GET");
       setErrorMessage("The player list could not be loaded. Check your connection and try again.");
     } finally {
       setIsLoading(false);
@@ -68,11 +73,7 @@ export default function PlayerManagementPage() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadPlayers();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    window.queueMicrotask(() => void loadPlayers());
   }, [loadPlayers]);
 
   async function addPlayer(event: FormEvent<HTMLFormElement>) {
@@ -116,12 +117,7 @@ export default function PlayerManagementPage() {
         setErrorMessage("Please sign in before adding a player.");
       } else {
         const error = reason instanceof Error ? reason : new Error("Player creation request failed.");
-        Sentry.withScope((scope) => {
-          scope.setTag("app.route", "/admin/players");
-          scope.setTag("error.kind", "network");
-          scope.setContext("request", { endpoint: "/api/admin/players", method: "POST" });
-          Sentry.captureException(error);
-        });
+        reportNetworkError(error, "/api/admin/players", "POST");
         setErrorMessage("The player could not be added. Check your connection and try again.");
       }
     } finally {
