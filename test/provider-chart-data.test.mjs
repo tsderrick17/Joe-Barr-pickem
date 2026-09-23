@@ -29,6 +29,21 @@ test("missing costs use estimates, explicit zero stays free and quota null is un
   assert.equal(data.remaining, null);
 });
 
+test("monthly credit forecast covers the full month and pools nearby kickoff windows", () => {
+  const result = monthlyCreditSeries([], new Date("2026-09-10T12:00:00Z"), [
+    { kickoff_at: "2026-09-12T17:00:00Z" },
+    { kickoff_at: "2026-09-12T17:25:00Z" },
+    { kickoff_at: "2026-09-12T18:00:01Z" },
+  ]);
+  assert.equal(result.days.length, 10);
+  assert.equal(result.calendarDays.length, 30);
+  assert.equal(result.calendarDays[11].forecastSlates, 2);
+  assert.equal(result.calendarDays[11].forecastGames, 3);
+  assert.ok(result.forecastCredits > 0);
+  assert.equal(result.forecastTotal, result.trackedCredits + result.forecastCredits);
+  assert.match(result.forecastAssumptions, /90%/);
+});
+
 test("slates pool kickoffs within 30 minutes and never absorb later unrelated polls", () => {
   const games = [{ kickoff_at: "2026-09-20T17:00:00Z", finalized_at: "2026-09-20T20:30:00Z" }];
   const rows = [
