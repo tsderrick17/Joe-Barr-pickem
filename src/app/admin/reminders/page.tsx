@@ -34,7 +34,7 @@ export default function ReminderAdminPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [recentIssueCutoff] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [recentIssueCutoff, setRecentIssueCutoff] = useState(0);
 
   async function load() {
     setLoading(true);
