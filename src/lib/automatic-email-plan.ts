@@ -3,6 +3,27 @@ import { automaticEmailSubject } from "@/lib/email-subjects.js";
 import { reminderTemplates } from "@/lib/reminder-templates";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+async function cancelScheduledPickemPlanMessages() {
+  // A completed season has no active scoring period, but a reminder from the
+  // final period may still be sitting in the queue. Cancel those plan items
+  // explicitly so championship completion is a hard stop for Pick'em mail.
+  // The weekly recap is queued independently and must remain available to
+  // deliver the final results and champion announcement.
+  const { data, error } = await supabaseAdmin
+    .from("push_reminders")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("status", "scheduled")
+    .like("automation_key", "plan:%")
+    .neq("category", "weekly_recap")
+    .select("id");
+  if (error) throw new Error("Scheduled Pick'em emails could not be stopped after the season ended.");
+  return data?.length ?? 0;
+}
+
 export async function ensureAutomaticEmailPlanMessages() {
   const { data: period, error: periodError } = await supabaseAdmin
     .from("scoring_periods")
@@ -12,7 +33,10 @@ export async function ensureAutomaticEmailPlanMessages() {
     .limit(1)
     .maybeSingle();
   if (periodError) throw new Error("The active week could not be loaded for automatic emails.");
-  if (!period) return { created: 0, reason: "no_active_period" };
+  if (!period) {
+    const cancelled = await cancelScheduledPickemPlanMessages();
+    return { created: 0, cancelled, reason: "no_active_period" };
+  }
 
   const [{ data: games, error: gamesError }, { data: commissioner, error: commissionerError }, { data: overrides, error: templateError }] = await Promise.all([
     supabaseAdmin.from("games").select("id, away_team_id, home_team_id, kickoff_at, line_lock_at, is_international, status").eq("scoring_period_id", period.id),
