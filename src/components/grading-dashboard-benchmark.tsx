@@ -63,13 +63,29 @@ export default function GradingDashboard() {
   }, []);
   useEffect(() => { periodIdRef.current = periodId; }, [periodId]);
   useEffect(() => { const initial = window.setTimeout(() => void refresh(), 0); const timer = window.setInterval(() => void refresh(), 60000); return () => { window.clearTimeout(initial); window.clearInterval(timer); }; }, [refresh]);
+  useEffect(() => {
+    const root = document.getElementById("grading-dashboard-title")?.closest("section");
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    let current: Node | null = walker.nextNode();
+    while (current) {
+      nodes.push(current as Text);
+      current = walker.nextNode();
+    }
+    nodes.forEach((node) => {
+      if (node.nodeValue?.includes("?") || node.nodeValue?.includes("\uFFFD")) {
+        node.nodeValue = node.nodeValue.replaceAll("?", "\u00B7").replaceAll("\uFFFD", "\u00B7");
+      }
+    });
+  }, [data, error, filter, selectedGameId]);
 
   const filteredGames = useMemo(() => [...(data?.games.filter((game) => filter === "all" || (filter === "attention" ? game.needsAttention : filter === game.state)) ?? [])].sort((left, right) => { const rank = (game: Dashboard["games"][number]) => game.needsAttention ? 0 : game.state === "live" ? 1 : game.picks.pending + game.survivor.pending > 0 ? 2 : game.state === "scheduled" ? 3 : 4; return rank(left) - rank(right) || new Date(left.kickoffAt).getTime() - new Date(right.kickoffAt).getTime(); }), [data, filter]);
   const metric = data?.metrics;
   const selectedGame = data?.games.find((game) => game.id === selectedGameId) ?? null;
   async function copySnapshot() {
     if (!data || !metric) return;
-    const snapshot = [`Pick'em grading snapshot ? ${data.period?.displayName ?? "No period"}`, `Status: ${data.status}`, `Games: ${metric.games} ? live ${metric.live} ? settled ${metric.settled}`, `Pending grades: ${metric.awaitingGrade} ? attention: ${metric.attention}`, `Last score sync: ${local(metric.lastScoreSyncAt)}`, `Credits/final: ${metric.efficiency.creditsPerFinal ?? "-"}`, `Checked: ${local(data.checkedAt)}`].join("\n");
+    const snapshot = [`Pick'em grading snapshot · ${data.period?.displayName ?? "No period"}`, `Status: ${data.status}`, `Games: ${metric.games} · live ${metric.live} · settled ${metric.settled}`, `Pending grades: ${metric.awaitingGrade} · attention: ${metric.attention}`, `Last score sync: ${local(metric.lastScoreSyncAt)}`, `Credits/final: ${metric.efficiency.creditsPerFinal ?? "-"}`, `Checked: ${local(data.checkedAt)}`].join("\n");
     try { await navigator.clipboard.writeText(snapshot); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { setCopied(false); }
   }
   return <section className="rounded-2xl border border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-4 shadow-sm sm:p-6" aria-labelledby="grading-dashboard-title">
