@@ -3833,6 +3833,7 @@ html[data-theme="night"] .playoff-scoreboard {
    columns. Keep long labels inside their lanes and give the lower operational
    panels a clear visual rhythm on both desktop and mobile. */
 [aria-labelledby="grading-dashboard-title"] .grid > * { min-width: 0; }
+[aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 > * { min-width: 0; }
 [aria-labelledby="grading-dashboard-title"] .grid p,
 [aria-labelledby="grading-dashboard-title"] dd,
 [aria-labelledby="grading-dashboard-title"] td,
@@ -3866,6 +3867,7 @@ html[data-theme="night"] .commissioner-route-card, html[data-theme="night"] .com
 html[data-theme="night"] .commissioner-route-card > small, html[data-theme="night"] .commissioner-panel-description, html[data-theme="night"] .commissioner-workspace-intro > span, html[data-theme="night"] .commissioner-diagnostics summary span { color: #c0c9c5; }
 
 @media (max-width: 639px) {
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
   .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
   .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: 1.2rem; }
   .commissioner-command-bar h1 { font-size: 2.25rem; }

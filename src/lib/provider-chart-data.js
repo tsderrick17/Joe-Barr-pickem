@@ -1,8 +1,17 @@
 import { providerRequestCost } from "./provider-efficiency.js";
 
-const DAY = 86400000;
 const SLATE_GROUP_GAP = 30 * 60000;
 const DEFAULT_SCORE_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
+function dateKeyInZone(value, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
 function reported(value) {
   if (value == null || value === "") return null;
   const number = Number(value);
@@ -23,19 +32,22 @@ function scheduleSlates(games) {
 }
 
 export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = DEFAULT_SCORE_RETRY_MINUTES) {
+  const timeZone = "America/New_York";
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
   const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
   const todayIndex = now.getUTCDate() - 1;
+  const todayKey = new Date(start + todayIndex * 86400000).toISOString().slice(0, 10);
   const allDays = Array.from({ length: daysInMonth }, (_, index) => ({
-    date: new Date(start + index * DAY).toISOString(), credits: 0, cumulative: 0,
+    date: new Date(start + index * 86400000).toISOString(), credits: 0, cumulative: 0,
     scores: 0, lines: 0, other: 0, estimatedCalls: 0,
     forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0,
   }));
+  const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
   let latest = null;
   for (const run of runs) {
     const timestamp = Date.parse(run.completed_at ?? run.started_at);
     if (timestamp < start || timestamp > now.getTime() || !Number.isFinite(timestamp)) continue;
-    const day = allDays[Math.floor((timestamp - start) / DAY)];
+    const day = allDays[Math.floor((timestamp - start) / 86400000)];
     const cost = providerRequestCost(run);
     day.credits += cost;
     day[run.job_type === "scores" ? "scores" : run.job_type === "line_locks" ? "lines" : "other"] += cost;
@@ -51,19 +63,15 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const scoreCostPerCall = scoreRuns.length ? scoreCredits / scoreRuns.length : 2;
   const lineRuns = runs.filter((run) => run.job_type === "line_locks" && providerRequestCost(run) > 0);
   const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
-  const otherActual = allDays.reduce((sum, day) => sum + day.other, 0);
-  const elapsedDays = Math.max(1, todayIndex + 1);
-  // The daily provider health check is a known one-credit baseline. A low
-  // observed average must not make quiet future days look nearly free.
-  const otherPerDay = Math.max(1, otherActual / elapsedDays);
   const firstHourChecks = Math.min(6, retryMinutes.length);
   const expectedChecks = firstHourChecks * 0.9 + retryMinutes.length * 0.1;
-  const monthEnd = start + daysInMonth * DAY;
+  const monthEnd = start + daysInMonth * 86400000;
   for (const slate of scheduleSlates(games)) {
     const kickoff = slate.firstKickoff;
-    if (kickoff < start || kickoff >= monthEnd || kickoff <= now.getTime()) continue;
-    const dayIndex = Math.floor((kickoff - start) / DAY);
-    const day = allDays[dayIndex];
+    if (kickoff >= monthEnd || kickoff <= now.getTime()) continue;
+    // Forecasts are grouped by the user's Eastern game day so late Sunday
+    // kickoffs do not appear as Monday slates in the chart.
+    const day = daysByKey.get(dateKeyInZone(new Date(kickoff), timeZone));
     if (!day) continue;
     day.forecastGames += slate.games.length;
     day.forecastSlates += 1;
@@ -71,11 +79,13 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     day.forecastLines += lineCostPerCall;
   }
   for (const day of allDays) {
-    if (day.date > now.toISOString()) day.forecastOther = otherPerDay;
+    if (day.date.slice(0, 10) > todayKey) {
+      // One daily line check is always expected, even on a no-game day.
+      day.forecastLines = 1;
+    }
     day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   }
   let forecastCumulative = cumulative;
-  const todayKey = new Date(start + todayIndex * DAY).toISOString().slice(0, 10);
   for (const day of allDays) {
     if (day.date.slice(0, 10) < todayKey) continue;
     forecastCumulative += day.forecast;
@@ -87,7 +97,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one observed-cost request per 30-minute kickoff slate.`,
+    forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one daily request, including days without games.`,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: latest?.used ?? null,
     remaining: latest?.remaining ?? null,
     reportedAt: latest ? new Date(latest.timestamp).toISOString() : null,

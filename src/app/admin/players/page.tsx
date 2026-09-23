@@ -9,7 +9,10 @@ function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POS
     Sentry.withScope((scope) => {
       scope.setTag("app.route", "/admin/players");
       scope.setTag("error.kind", "network");
-      scope.setContext("request", { endpoint, method });
+      const request = endpoint === "/api/admin/players"
+        ? { endpoint: "/api/admin/players", method }
+        : { endpoint, method };
+      scope.setContext("request", request);
       Sentry.captureException(error);
     });
   });
