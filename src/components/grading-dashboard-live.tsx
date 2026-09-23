@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
+import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel-v2";
 import ProviderChart from "@/components/provider-chart";
 import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -114,7 +114,6 @@ export default function GradingDashboard() {
     </> : loading ? <div className="mt-6 h-48 animate-pulse bg-zinc-200" aria-label="Loading grading dashboard" /> : null}
   </section>;
 }
-
 
 
 
