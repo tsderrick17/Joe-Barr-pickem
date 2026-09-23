@@ -1620,6 +1620,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    remaining area. */
 .slate-spread-cell { transform: translateX(-2.25rem); }
 .slate-preview-spread { display: block; transform: translateX(-2.4rem); }
+/* Survivor rows already reserve symmetric chip lanes around the spread. Do
+   not apply the no-chip centering adjustment here; it pulls the line into the
+   chip artwork on narrow screens. */
+.slate-game-row.has-survivor-layout .slate-spread-cell {
+  transform: none;
+  position: relative;
+  z-index: 2;
+}
 
 /* Scores are part of the team label, not a separate visual hierarchy. Keep
    their type size identical to the team name while giving every row the same
