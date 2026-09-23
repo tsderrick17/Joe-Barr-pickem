@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel-v2";
+import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
 import ProviderChart from "@/components/provider-chart";
 import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -66,18 +66,24 @@ export default function GradingDashboard() {
   useEffect(() => {
     const root = document.getElementById("grading-dashboard-title")?.closest("section");
     if (!root) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes: Text[] = [];
-    let current: Node | null = walker.nextNode();
-    while (current) {
-      nodes.push(current as Text);
-      current = walker.nextNode();
-    }
-    nodes.forEach((node) => {
-      if (node.nodeValue?.includes("?") || node.nodeValue?.includes("\uFFFD")) {
-        node.nodeValue = node.nodeValue.replaceAll("?", "\u00B7").replaceAll("\uFFFD", "\u00B7");
+    const sanitize = () => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      let current: Node | null = walker.nextNode();
+      while (current) {
+        nodes.push(current as Text);
+        current = walker.nextNode();
       }
-    });
+      nodes.forEach((node) => {
+        if (node.nodeValue?.includes("?") || node.nodeValue?.includes("\uFFFD")) {
+          node.nodeValue = node.nodeValue.replaceAll("?", "\u00B7").replaceAll("\uFFFD", "\u00B7");
+        }
+      });
+    };
+    sanitize();
+    const observer = new MutationObserver(sanitize);
+    observer.observe(root, { childList: true, characterData: true, subtree: true });
+    return () => observer.disconnect();
   }, [data, error, filter, selectedGameId]);
 
   const filteredGames = useMemo(() => [...(data?.games.filter((game) => filter === "all" || (filter === "attention" ? game.needsAttention : filter === game.state)) ?? [])].sort((left, right) => { const rank = (game: Dashboard["games"][number]) => game.needsAttention ? 0 : game.state === "live" ? 1 : game.picks.pending + game.survivor.pending > 0 ? 2 : game.state === "scheduled" ? 3 : 4; return rank(left) - rank(right) || new Date(left.kickoffAt).getTime() - new Date(right.kickoffAt).getTime(); }), [data, filter]);

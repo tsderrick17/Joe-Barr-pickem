@@ -3829,6 +3829,26 @@ html[data-theme="night"] .playoff-scoreboard {
 .provider-efficiency-summary .is-good strong { color: #047857; }
 .provider-efficiency-summary .is-warning strong { color: #a16207; }
 
+/* Grading dashboard cards should behave like dashboard tiles, not rigid text
+   columns. Keep long labels inside their lanes and give the lower operational
+   panels a clear visual rhythm on both desktop and mobile. */
+[aria-labelledby="grading-dashboard-title"] .grid > * { min-width: 0; }
+[aria-labelledby="grading-dashboard-title"] .grid p,
+[aria-labelledby="grading-dashboard-title"] dd,
+[aria-labelledby="grading-dashboard-title"] td,
+[aria-labelledby="grading-dashboard-title"] li { overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] table { border-collapse: separate; border-spacing: 0 .35rem; }
+[aria-labelledby="grading-dashboard-title"] table thead th { padding-bottom: .35rem; }
+[aria-labelledby="grading-dashboard-title"] table tbody tr { background: #fafafa; }
+[aria-labelledby="grading-dashboard-title"] table tbody td { border-top: 1px solid #f1f1f2; border-bottom: 1px solid #f1f1f2; padding-top: .7rem; padding-bottom: .7rem; }
+[aria-labelledby="grading-dashboard-title"] table tbody td:first-child { border-left: 1px solid #f1f1f2; border-radius: .55rem 0 0 .55rem; padding-left: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table tbody td:last-child { border-right: 1px solid #f1f1f2; border-radius: 0 .55rem .55rem 0; padding-right: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table tbody td:nth-child(2) { border-radius: 999px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+[aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid #e4e4e7; margin-left: .25rem; padding-left: 1rem; }
+[aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }
+[aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }
+[aria-labelledby="grading-dashboard-title"] h3 { text-wrap: balance; }
+
 .commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1.5rem; padding: clamp(1.15rem, 3vw, 2rem); }
 .commissioner-tool-card--write { border-left-color: #a76311; }
 .commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
