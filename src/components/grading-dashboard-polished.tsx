@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
@@ -97,7 +98,6 @@ export default function GradingDashboard() {
     </> : loading ? <div className="mt-6 h-48 animate-pulse bg-zinc-200" aria-label="Loading grading dashboard" /> : null}
   </section>;
 }
-
 
 
 
