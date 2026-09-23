@@ -2832,6 +2832,10 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
   background: linear-gradient(180deg, #e8f6ef, #f5fbf7) !important;
 }
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child,
+.bowl-card-section .bowl-standings-tiebreaker-header {
+  background: #f5f0e6 !important;
+}
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line {
   color: #0f766e !important;
 }
@@ -2851,10 +2855,23 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky {
   background-color: #f8edcf !important;
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-game-cell,
 .bowl-card-section .bowl-standings-player-row.is-viewer > span {
   color: #5a4614;
+}
+.bowl-card-section .bowl-standings-player-row > span {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 2.7rem;
+}
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] {
+  justify-content: flex-start;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  background-color: #f8edcf !important;
 }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   border-color: #52707a !important;
@@ -2898,6 +2915,11 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid
   scroll-snap-type: x mandatory;
   scrollbar-color: #a69f93 transparent;
   scrollbar-width: thin;
+  --bowl-game-width: 7.5rem;
+}
+
+@media (max-width: 639px) {
+  .bowl-standings-scroll { --bowl-game-width: 7.25rem; }
 }
 
 /* On desktop the standings rail has enough breathing room for eight complete
