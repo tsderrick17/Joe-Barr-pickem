@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { EmailArtworkStudio } from "@/components/email-artwork-studio";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+
+const EmailArtworkStudio = dynamic(
+  () => import("@/components/email-artwork-studio").then((module) => module.EmailArtworkStudio),
+  { ssr: false, loading: () => <section className="border-b-2 border-zinc-900 py-8"><p className="text-sm text-zinc-600">Loading email image studio…</p></section> },
+);
 
 type Reminder = { id: string; category: string; audience: string; title: string; body: string; scheduledFor: string; status: string; suppressionReason: string | null; emailDelivered: number; emailFailed: number; emailSuppressed: number };
 
@@ -29,7 +34,7 @@ export default function ReminderAdminPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [recentIssueCutoff, setRecentIssueCutoff] = useState(0);
+  const [recentIssueCutoff] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   async function load() {
     setLoading(true);
@@ -45,8 +50,7 @@ export default function ReminderAdminPage() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { setRecentIssueCutoff(Date.now() - 7 * 24 * 60 * 60 * 1000); void load(); }, 0);
-    return () => window.clearTimeout(timer);
+    window.queueMicrotask(() => void load());
   }, []);
 
   async function cancel(id: string) {
