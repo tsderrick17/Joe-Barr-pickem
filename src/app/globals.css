@@ -2752,7 +2752,9 @@ html[data-theme="night"] .newspaper-clipping::after {
 .bowl-pool-page #bowl-selections {
   border-color: #b9cfc8 !important;
   border-top: 3px solid #0f766e !important;
-  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+  background-color: #fbfefc !important;
+  background-image: radial-gradient(circle at 12% 0%, rgba(16, 185, 129, .08), transparent 32%), linear-gradient(135deg, rgba(15, 118, 110, .025), transparent 55%);
+  box-shadow: 0 10px 28px rgba(15, 118, 110, .09), inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 .bowl-pool-page #bowl-selections > div:first-of-type {
   border-bottom-color: #c7d8d3;
@@ -2765,28 +2767,55 @@ html[data-theme="night"] .newspaper-clipping::after {
 .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
   border-color: #d7e3df;
 }
+.bowl-pool-page #bowl-selections .bowl-selection-game-row {
+  border-color: #cfe2da;
+  background-color: #fbfefc !important;
+  background-image: linear-gradient(90deg, rgba(15, 118, 110, .025), transparent 42%);
+}
+.bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) {
+  background-color: #f1f8f4 !important;
+}
 .bowl-pool-page .bowl-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
-  box-shadow: 0 1px 0 rgba(15, 118, 110, .3);
+  background: linear-gradient(90deg, rgba(16, 185, 129, .34), rgba(110, 231, 183, .26) 28%, rgba(209, 250, 229, .7));
+  box-shadow: 0 1px 0 rgba(6, 95, 70, .35);
 }
 .bowl-card-section .pickem-ledger-masthead {
   border-top-color: #0f766e;
   border-bottom-color: #b9cfc8;
 }
 .bowl-card-section .bowl-standings-scroll {
-  box-shadow: 0 8px 24px rgba(15, 118, 110, .06);
+  background: #f4fbf7;
+  box-shadow: 0 10px 28px rgba(15, 118, 110, .09), inset 0 1px 0 rgba(255, 255, 255, .8);
 }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
   background: #155e59 !important;
 }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
-  background: #f0f8f5 !important;
+  background: linear-gradient(180deg, #e8f6ef, #f5fbf7) !important;
 }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line {
   color: #0f766e !important;
 }
 .bowl-card-section .bowl-standings-player-row {
-  border-color: #b9cfc8 !important;
+  border-color: #c4ded4 !important;
+  background-color: #fbfefc !important;
+  background-image: linear-gradient(90deg, rgba(15, 118, 110, .02), transparent 50%);
+}
+.bowl-card-section .bowl-standings-player-row.is-alt {
+  background-color: #eff8f3 !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer {
+  background-color: #d9f3e5 !important;
+  background-image: linear-gradient(90deg, rgba(5, 150, 105, .15), rgba(167, 243, 208, .12) 55%, rgba(255, 255, 255, .25));
+  box-shadow: inset 0 2px 0 #0f9f72, inset 0 -2px 0 #7bc9a9;
+  color: #064e3b;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky {
+  background-color: #d9f3e5 !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-game-cell,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span {
+  color: #065f46;
 }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   border-color: #52707a !important;
