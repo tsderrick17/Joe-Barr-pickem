@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
-export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string };
+export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 function scaleMax(value: number) {
   if (value <= 0) return 4;
@@ -94,7 +94,7 @@ export default function ProviderChart({ points, series, label, histogram = false
           if (segment) segments.push(segment);
           return <g key={item.key}>
             {item.kind === "area" && segments.length === 1 && points.every((entry) => entry.values[item.key] != null) ? <path d={`${segments[0]} L${x(points.length - 1)},${bottom} L${x(0)},${bottom} Z`} fill={`url(#${gradient}-${item.key})`} /> : null}
-            {segments.map((path, i) => <path key={i} d={path} fill="none" stroke={item.color} strokeWidth="2.3" strokeLinejoin="round" strokeLinecap="round" />)}
+            {segments.map((path, i) => <path key={i} d={path} fill="none" stroke={item.color} strokeWidth="2.3" strokeLinejoin="round" strokeLinecap="round" strokeDasharray={item.dash} />)}
             {points.map((entry, i) => entry.values[item.key] == null ? null : <circle key={i} cx={x(i)} cy={y(entry.values[item.key]!, item)} r={index === i ? 4 : 2.5} fill={item.color} stroke="white" strokeWidth="1.5" />)}
           </g>;
         })}

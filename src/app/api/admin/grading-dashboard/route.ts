@@ -78,8 +78,10 @@ export async function GET(request: NextRequest) {
     if (!period) return NextResponse.json({ checkedAt: now.toISOString(), status: "attention", periods: periods ?? [], errorSummary: ["No scoring period is configured."], period: null, metrics: null, games: [], attention: [], reminders: [] });
     const previousPeriod = periods?.filter((item) => item.display_order < period.display_order).at(-1) ?? null;
 
-    const [gamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult] = await Promise.all([
+    const seasonPeriodIds = (periods ?? []).map((item) => item.id);
+    const [gamesResult, scheduleGamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult] = await Promise.all([
       supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status, away_score, home_score, finalized_at, away_team_id, home_team_id").eq("scoring_period_id", period.id).order("kickoff_at"),
+      seasonPeriodIds.length ? supabaseAdmin.from("games").select("kickoff_at").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
       supabaseAdmin.from("game_lines").select("game_id, locked_spread, locked_at, manual_override").in("game_id", (await supabaseAdmin.from("games").select("id").eq("scoring_period_id", period.id)).data?.map((game) => game.id) ?? []),
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
@@ -91,7 +93,7 @@ export async function GET(request: NextRequest) {
       providerRunsSince(new Date(Math.min(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1), now.getTime() - 30 * 86400000)).toISOString(), now.toISOString()),
       previousPeriod ? supabaseAdmin.from("games").select("kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
     ]);
-    if (gamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
+    if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
 
     const games = gamesResult.data ?? [];
     const lineByGame = new Map((linesResult.data ?? []).map((line) => [line.game_id, line]));
@@ -151,7 +153,7 @@ export async function GET(request: NextRequest) {
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
     const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= now.getTime() - 30 * 86400000), now);
     const efficiencyHistory = slateEfficiencySeries(games, oddsRunsResult.data ?? [], now);
-    const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now);
+    const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now, scheduleGamesResult.data ?? [], [...SCORE_POLLING_RETRY_MINUTES]);
     const ladderCounts = new Map<number, number>();
     for (const run of syncResult.data ?? []) {
       if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
