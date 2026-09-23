@@ -13,6 +13,10 @@ const PAPER = "#fffdf8";
 const TEAL = "#008c82";
 const MUTED = "#596579";
 const RULE = "#c8d8e3";
+const BOWL_PAPER = "#f7fcf9";
+const BOWL_ALT = "#eaf6ef";
+const BOWL_TEAL = "#0f766e";
+const BOWL_RULE = "#c7ddd4";
 const WIDTH = 760;
 const column: CSSProperties = { display: "flex", flexDirection: "column", flexShrink: 0 };
 const row: CSSProperties = { display: "flex", alignItems: "center", flexShrink: 0 };
@@ -30,9 +34,10 @@ function safePublicRows(value: unknown): PublicRow[] {
   return value.filter((item) => item && typeof item === "object").map((item) => ({ playerId: typeof item.playerId === "string" ? item.playerId : undefined, name: String(item.name ?? ""), wins: Number(item.wins) || 0, picks: Array.isArray(item.picks) ? item.picks.filter((pick: unknown): pick is string => typeof pick === "string") : [] }));
 }
 
-function Card({ title, subtitle, children, note }: { title: string; subtitle: string; children: ReactNode; note?: string }) {
-  return <div style={{ ...column, background: PAPER, color: INK, width: WIDTH, padding: 24, fontFamily: "sans-serif", fontSize: 24 }}>
-    <div style={{ ...column, borderBottom: `3px solid ${INK}`, paddingBottom: 12 }}>
+function Card({ title, subtitle, children, note, tone }: { title: string; subtitle: string; children: ReactNode; note?: string; tone?: "bowl" }) {
+  const isBowl = tone === "bowl" || title === "NCAA Bowl Pool";
+  return <div style={{ ...column, background: isBowl ? BOWL_PAPER : PAPER, color: INK, width: WIDTH, padding: 24, fontFamily: "sans-serif", fontSize: 24 }}>
+    <div style={{ ...column, borderBottom: `3px solid ${isBowl ? BOWL_TEAL : INK}`, paddingBottom: 12 }}>
       <span style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>{title}</span>
       <span style={{ color: TEAL, fontSize: 20, marginTop: 4 }}>{subtitle}</span>
     </div>
@@ -55,7 +60,8 @@ function PickChips({ picks, alignTwo }: { picks: string[]; alignTwo: boolean }) 
   return <div style={{ ...column, flex: 1, width: "100%", minWidth: 0, padding: "8px 0", flexWrap: "wrap" }}>{rows.map((pickRow, rowIndex) => <div key={rowIndex} style={{ ...row, width: "100%", minWidth: 0, marginBottom: rowIndex < rows.length - 1 ? 6 : 0 }}>{pickRow.map((pick, columnIndex) => <span key={columnIndex} style={{ display: "flex", flex: "1 1 0%", minWidth: 0, paddingRight: columnIndex < wrapColumns - 1 ? 6 : 0 }}>{chip(pick, rowIndex * wrapColumns + columnIndex)}</span>)}</div>)}</div>;
 }
 
-function PickemTable({ standings, selections, recap, minHeight }: { standings: PublicRow[]; selections: PublicRow[]; recap: boolean; minHeight: number }) {
+function PickemTable({ standings, selections, recap, minHeight, tone }: { standings: PublicRow[]; selections: PublicRow[]; recap: boolean; minHeight: number; tone?: "bowl" }) {
+  const isBowl = tone === "bowl";
   const identity = (item: PublicRow) => item.playerId ?? item.name;
   const picksByPlayer = new Map(selections.map((item) => [identity(item), item]));
   // Keep everyone in the standings, including players with no selections.
@@ -68,7 +74,7 @@ function PickemTable({ standings, selections, recap, minHeight }: { standings: P
     {rows.map((standing, index) => {
       const selection = picksByPlayer.get(identity(standing));
       const rank = rows.findIndex((item) => item.wins === standing.wins) + 1;
-      return <div key={`${standing.name}-${index}`} style={{ ...row, minHeight, borderBottom: `1px solid ${RULE}`, background: index % 2 ? "#f5f2e9" : PAPER }}>
+      return <div key={`${standing.name}-${index}`} style={{ ...row, minHeight, borderBottom: `1px solid ${isBowl ? BOWL_RULE : RULE}`, background: index % 2 ? (isBowl ? BOWL_ALT : "#f5f2e9") : (isBowl ? BOWL_PAPER : PAPER) }}>
         <span style={{ width: 40, color: MUTED, fontSize: 20 }}>{rank}</span>
         <span style={{ width: 180, padding: "8px 10px 8px 0", fontWeight: 700, fontSize: 25 }}>{standing.name}</span>
         <span style={{ width: 68, fontWeight: 700, fontSize: 28 }}>{standing.wins}</span>
