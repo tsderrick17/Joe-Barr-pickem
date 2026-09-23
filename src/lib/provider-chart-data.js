@@ -53,7 +53,9 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
   const otherActual = allDays.reduce((sum, day) => sum + day.other, 0);
   const elapsedDays = Math.max(1, todayIndex + 1);
-  const otherPerDay = otherActual / elapsedDays;
+  // The daily provider health check is a known one-credit baseline. A low
+  // observed average must not make quiet future days look nearly free.
+  const otherPerDay = Math.max(1, otherActual / elapsedDays);
   const firstHourChecks = Math.min(6, retryMinutes.length);
   const expectedChecks = firstHourChecks * 0.9 + retryMinutes.length * 0.1;
   const monthEnd = start + daysInMonth * DAY;
@@ -70,20 +72,20 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   }
   for (const day of allDays) {
     if (day.date > now.toISOString()) day.forecastOther = otherPerDay;
-    day.forecast = day.forecastScores + day.forecastLines + day.forecastOther;
+    day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   }
   let forecastCumulative = cumulative;
   const todayKey = new Date(start + todayIndex * DAY).toISOString().slice(0, 10);
   for (const day of allDays) {
     if (day.date.slice(0, 10) < todayKey) continue;
     forecastCumulative += day.forecast;
-    day.forecastCumulative = forecastCumulative;
+    day.forecastCumulative = Math.round(forecastCumulative);
   }
-  const forecastCredits = allDays.reduce((sum, day) => sum + day.forecast, 0);
+  const forecastCredits = Math.round(allDays.reduce((sum, day) => sum + day.forecast, 0));
   const days = allDays.slice(0, todayIndex + 1);
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
-    forecastCredits: Number(forecastCredits.toFixed(1)), forecastTotal: Number((cumulative + forecastCredits).toFixed(1)),
+    forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
     forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one observed-cost request per 30-minute kickoff slate.`,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: latest?.used ?? null,
