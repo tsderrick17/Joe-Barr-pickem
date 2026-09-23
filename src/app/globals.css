@@ -2767,6 +2767,20 @@ html[data-theme="night"] .newspaper-clipping::after {
 .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
   border-color: #d7e3df;
 }
+.bowl-rules-panel {
+  background: linear-gradient(135deg, rgba(236, 253, 245, .72), rgba(248, 250, 249, .95));
+  border-color: #c7ddd4 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+.bowl-rule-step { align-items: flex-start; background: rgba(255, 255, 255, .72); border: 1px solid #d8e7e1; border-radius: .5rem; display: flex; gap: .6rem; min-height: 3.5rem; padding: .58rem .65rem; }
+.bowl-rule-step > span { align-items: center; background: #d9f3e5; border: 1px solid #9ed5bb; border-radius: 999px; color: #086044; display: flex; flex: 0 0 1.35rem; font-size: .68rem; font-weight: 900; height: 1.35rem; justify-content: center; line-height: 1; margin-top: .02rem; width: 1.35rem; }
+.bowl-rule-step strong { color: #164e3b; display: block; font-size: .76rem; line-height: 1.2; }
+.bowl-rule-step p { color: #52665f; font-size: .7rem; line-height: 1.35; margin-top: .18rem; }
+html[data-theme="night"] .bowl-rules-panel { background: linear-gradient(135deg, rgba(21, 58, 59, .9), rgba(19, 33, 41, .95)); border-color: #52707a !important; }
+html[data-theme="night"] .bowl-rule-step { background: rgba(27, 48, 56, .86); border-color: #52707a; }
+html[data-theme="night"] .bowl-rule-step > span { background: #1b4d48; border-color: #55b8aa; color: #b8ebe1; }
+html[data-theme="night"] .bowl-rule-step strong { color: #d9f7ee; }
+html[data-theme="night"] .bowl-rule-step p { color: #a8c1c4; }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row {
   border-color: #cfe2da;
   background-color: #fbfefc !important;
