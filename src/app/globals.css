@@ -2814,6 +2814,13 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) {
   background-color: #f3f0e8 !important;
 }
+.bowl-pool-page #bowl-selections .bowl-title-row { border-bottom-color: #b9cfc8; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: #52665f; }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
+  background: #e8f3f0 !important;
+  border-color: #b9cfc8 !important;
+  color: #155e59 !important;
+}
 .bowl-pool-page .bowl-team-label--selected::before {
   background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
   box-shadow: 0 1px 0 rgba(15, 118, 110, .3);

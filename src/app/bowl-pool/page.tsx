@@ -188,23 +188,9 @@ export default function BowlPoolPage() {
             {submissionError ? <p className="slate-receipt-warning" role="alert">{submissionError}</p> : null}
           </section> : null}
           {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
-          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
-            <div>
-              <h2 className="mt-1 font-serif text-2xl font-bold">2026-27 Bowl Pool</h2>
-            </div>
-          </div>
-          <div aria-label="Bowl Pool rules" className="bowl-rules-panel mt-4 border border-slate-300 bg-slate-50 px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-slate-200 pb-2">
-              <p className="text-xs font-black uppercase tracking-[0.08em] text-slate-900 sm:text-sm">How it works</p>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-teal-700">NCAA Bowl Pool</p>
-            </div>
-            <ol className="mt-3 grid gap-2 sm:grid-cols-2">
-              <li className="bowl-rule-step"><span>1</span><div><strong>Opt in</strong><p>Join before the first kickoff.</p></div></li>
-              <li className="bowl-rule-step"><span>2</span><div><strong>Pick every game</strong><p>Choose one team against the listed spread.</p></div></li>
-              <li className="bowl-rule-step"><span>3</span><div><strong>Submit your card</strong><p>Games lock individually at kickoff.</p></div></li>
-              <li className="bowl-rule-step"><span>4</span><div><strong>Complete the tiebreaker</strong><p>Enter the National Championship total.</p></div></li>
-            </ol>
-            <div className="mt-3 flex items-start gap-2 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-700 sm:text-sm"><span className="mt-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-800">Scoring</span><p>The locked spread determines the ATS winner. Every graded game is a win or loss—there are no pushes.</p></div>
+          <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
+            <h2 className="mt-1 shrink-0 font-serif text-2xl font-bold">2026-27 Bowl Pool</h2>
+            <p aria-label="Bowl Pool instructions" className="bowl-rules-compact max-w-3xl text-xs leading-5 text-slate-600">Pick every game. Selections lock at kickoff; no pick is marked <strong>Loser</strong>. Enter the tiebreaker, then click <strong>Submit</strong> to save your latest selections or changes.</p>
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
             <div className="grid grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] bg-slate-100 px-1 py-2 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
