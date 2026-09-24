@@ -50,7 +50,8 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     const day = allDays[Math.floor((timestamp - start) / 86400000)];
     const cost = providerRequestCost(run);
     day.credits += cost;
-    day[run.job_type === "scores" ? "scores" : run.job_type === "line_locks" ? "lines" : "other"] += cost;
+    const isLineRun = run.job_type === "line_locks" || run.job_type === "odds";
+    day[run.job_type === "scores" ? "scores" : isLineRun ? "lines" : "other"] += cost;
     if (cost > 0 && reported(run.details?.requestsLast) === null) day.estimatedCalls++;
     const used = reported(run.details?.requestsUsed);
     const remaining = reported(run.details?.requestsRemaining);
@@ -61,7 +62,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const scoreRuns = runs.filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
   const scoreCredits = scoreRuns.reduce((sum, run) => sum + providerRequestCost(run), 0);
   const scoreCostPerCall = scoreRuns.length ? scoreCredits / scoreRuns.length : 2;
-  const lineRuns = runs.filter((run) => run.job_type === "line_locks" && providerRequestCost(run) > 0);
+  const lineRuns = runs.filter((run) => (run.job_type === "line_locks" || run.job_type === "odds") && providerRequestCost(run) > 0);
   const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
   const firstHourChecks = Math.min(6, retryMinutes.length);
   const expectedChecks = firstHourChecks * 0.9 + retryMinutes.length * 0.1;

@@ -37,6 +37,22 @@ function minutesSince(value: string | null, now: Date) {
   return Math.max(0, minutes);
 }
 
+function normalizedLatency(game: { id: string; kickoff_at: string; finalized_at: string | null }, games: Array<{ id: string; kickoff_at: string }>) {
+  const sorted = [...games].sort((left, right) => new Date(left.kickoff_at).getTime() - new Date(right.kickoff_at).getTime());
+  let windowStart = -Infinity;
+  let windowEnd = -Infinity;
+  const windowEnds = new Map<string, number>();
+  for (const item of sorted) {
+    const kickoff = new Date(item.kickoff_at).getTime();
+    if (kickoff - windowStart > 30 * 60_000) { windowStart = kickoff; windowEnd = kickoff; }
+    else windowEnd = Math.max(windowEnd, kickoff);
+    windowEnds.set(item.id, windowEnd);
+  }
+  const finalized = game.finalized_at ? new Date(game.finalized_at).getTime() : NaN;
+  const anchor = windowEnds.get(game.id) ?? new Date(game.kickoff_at).getTime();
+  return Number.isFinite(finalized) ? Math.max(0, Math.round((finalized - anchor) / 60000)) : null;
+}
+
 function gameState(game: { status: GameStatus; kickoff_at: string; finalized_at: string | null }, pending: number, now: Date) {
   if (game.status === "final") return pending > 0 ? "needs_review" : "settled";
   if (game.status === "live") return "live";
@@ -81,7 +97,7 @@ export async function GET(request: NextRequest) {
     const seasonPeriodIds = (periods ?? []).map((item) => item.id);
     const [gamesResult, scheduleGamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult] = await Promise.all([
       supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status, away_score, home_score, finalized_at, away_team_id, home_team_id").eq("scoring_period_id", period.id).order("kickoff_at"),
-      seasonPeriodIds.length ? supabaseAdmin.from("games").select("scoring_period_id, kickoff_at, finalized_at, status").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
+      seasonPeriodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, finalized_at, status").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
       supabaseAdmin.from("game_lines").select("game_id, locked_spread, locked_at, manual_override").in("game_id", (await supabaseAdmin.from("games").select("id").eq("scoring_period_id", period.id)).data?.map((game) => game.id) ?? []),
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
@@ -91,7 +107,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
       providerRunsSince(new Date(Math.min(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1), now.getTime() - 30 * 86400000)).toISOString(), now.toISOString()),
-      previousPeriod ? supabaseAdmin.from("games").select("kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
+      previousPeriod ? supabaseAdmin.from("games").select("id, kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
     ]);
     if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
 
@@ -171,18 +187,19 @@ export async function GET(request: NextRequest) {
       const newFinals = ladderCounts.get(rung) ?? 0;
       return { rung, windowMinutes, newFinals, pickedUp: newFinals, percentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0, newFinalsPercentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0 };
     });
-    const settlementLatencies = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => Math.max(0, Math.round((new Date(game.finalizedAt!).getTime() - new Date(game.kickoffAt).getTime()) / 60000)));
+    const settlementLatencies = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => normalizedLatency({ id: game.id, kickoff_at: game.kickoffAt, finalized_at: game.finalizedAt }, gameRows.map((item) => ({ id: item.id, kickoff_at: item.kickoffAt })))).filter((value): value is number => value !== null);
     const settlementLatency = { averageMinutes: settlementLatencies.length ? Math.round(settlementLatencies.reduce((sum, value) => sum + value, 0) / settlementLatencies.length) : null, slowestMinutes: settlementLatencies.length ? Math.max(...settlementLatencies) : null, samples: settlementLatencies.length };
-    const previousLatencies = (previousGamesResult.data ?? []).filter((game) => game.status === "final" && game.finalized_at).map((game) => Math.max(0, Math.round((new Date(game.finalized_at!).getTime() - new Date(game.kickoff_at).getTime()) / 60000)));
+    const previousGames = (previousGamesResult.data ?? []).map((game) => ({ id: game.id, kickoff_at: game.kickoff_at, finalized_at: game.finalized_at, status: game.status }));
+    const previousLatencies = previousGames.filter((game) => game.status === "final" && game.finalized_at).map((game) => normalizedLatency(game, previousGames)).filter((value): value is number => value !== null);
     const previousAverage = previousLatencies.length ? Math.round(previousLatencies.reduce((sum, value) => sum + value, 0) / previousLatencies.length) : null;
     const latencyHistory = gameRows.filter((game) => game.state === "settled" && game.finalizedAt).map((game) => ({
       label: `${game.away} at ${game.home} · ${new Date(game.kickoffAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
       shortLabel: new Date(game.kickoffAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      minutes: Math.max(0, Math.round((new Date(game.finalizedAt!).getTime() - new Date(game.kickoffAt).getTime()) / 60000)),
+      minutes: normalizedLatency({ id: game.id, kickoff_at: game.kickoffAt, finalized_at: game.finalizedAt }, gameRows.map((item) => ({ id: item.id, kickoff_at: item.kickoffAt }))) ?? 0,
     }));
     const periodLatencyHistory = (periods ?? []).map((item) => {
       const values = (scheduleGamesResult.data ?? []).filter((game) => game.scoring_period_id === item.id && game.status === "final" && game.finalized_at)
-        .map((game) => Math.max(0, Math.round((new Date(game.finalized_at!).getTime() - new Date(game.kickoff_at).getTime()) / 60000)));
+        .map((game) => normalizedLatency(game, (scheduleGamesResult.data ?? []).map((item) => ({ id: item.id, kickoff_at: item.kickoff_at })))).filter((value): value is number => value !== null);
       return { id: item.id, label: item.display_name, shortLabel: item.display_name, averageMinutes: values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null, samples: values.length };
     }).filter((item) => item.samples > 0);
     const pollingPlans = simulatePollingPlans({ games: gameRows.length });
@@ -197,7 +214,7 @@ export async function GET(request: NextRequest) {
       games: gameRows,
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
-      workerRuns: (syncResult.data ?? []).slice(0, 8).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
+      workerRuns: [...new Map((syncResult.data ?? []).map((run) => [run.job_type, run])).values()].map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
       cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
       scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,

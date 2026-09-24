@@ -28,8 +28,8 @@ type Dashboard = {
 
 const stateLabels: Record<string, string> = { scheduled: "Scheduled", live: "Live", settled: "Settled", needs_review: "Needs review", stale: "Stale", held: "Held" };
 
-function local(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
-function localWithDate(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
+function local(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
+function localWithDate(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
 
 export default function GradingDashboard() {
   const [data, setData] = useState<Dashboard | null>(null);

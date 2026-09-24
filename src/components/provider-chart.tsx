@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
-export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string };
+export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string; stack?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 function scaleMax(value: number) {
   if (value <= 0) return 4;
@@ -30,7 +30,7 @@ export default function ProviderChart({ points, series, label, histogram = false
   const right = series.some((item) => item.axis === "right");
   const left = 46, edge = right ? 46 : 16, top = 22, bottom = 234;
   const plotWidth = width - left - edge, height = bottom - top;
-  const highest = Math.max(0, ...points.flatMap((point) => activeSeries.filter((item) => !item.axis).map((item) => point.values[item.key] ?? 0)));
+  const highest = Math.max(0, ...points.map((point) => activeSeries.filter((item) => !item.axis).reduce((sum, item) => item.stack ? sum + (point.values[item.key] ?? 0) : Math.max(sum, point.values[item.key] ?? 0), 0)));
   const maximum = histogram ? Math.max(4, Math.ceil(highest / 4) * 4) : scaleMax(highest);
   const domain = Math.max(1, ...points.map((point) => point.end ?? 0));
   const x = (index: number) => histogram
@@ -81,14 +81,20 @@ export default function ProviderChart({ points, series, label, histogram = false
             const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.max(2, plotWidth / Math.max(1, points.length) * .7);
             const barX = histogram ? left + (entry.start ?? 0) / domain * plotWidth : Math.min(width - edge - barWidth, Math.max(left, x(i) - barWidth / 2));
             const value = entry.values[item.key];
-            return value == null ? null : <rect key={i} x={barX} y={y(value, item)} width={barWidth} height={bottom - y(value, item)}
+            const base = item.stack ? activeSeries.slice(0, activeSeries.indexOf(item)).filter((previous) => previous.stack === item.stack).reduce((sum, previous) => sum + (entry.values[previous.key] ?? 0), 0) : 0;
+            return value == null ? null : <rect key={i} x={barX} y={y(base + value, item)} width={barWidth} height={y(base, item) - y(base + value, item)}
               fill={item.color} fillOpacity={selected === null || index === i ? .85 : .35} stroke="white" strokeWidth={histogram ? 1 : 0} />;
           })}</g>;
           const segments: string[] = [];
-          let segment = "";
+          const firstForecastIndex = item.key === "forecast" ? points.findIndex((entry) => entry.values[item.key] != null) : -1;
+          let segment = firstForecastIndex > 0 && points[firstForecastIndex - 1].values.actual != null
+            ? `M${x(firstForecastIndex - 1)},${y(points[firstForecastIndex - 1].values.actual!, item)}` : "";
           points.forEach((entry, i) => {
             const value = entry.values[item.key];
-            if (value === null || value === undefined) { if (segment) segments.push(segment); segment = ""; }
+            if (value === null || value === undefined) {
+              if (segment && !(item.key === "forecast" && i < firstForecastIndex)) segments.push(segment);
+              if (!(item.key === "forecast" && i < firstForecastIndex)) segment = "";
+            }
             else segment += `${segment ? " L" : "M"}${x(i)},${y(value, item)}`;
           });
           if (segment) segments.push(segment);

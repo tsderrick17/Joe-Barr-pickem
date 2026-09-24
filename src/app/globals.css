@@ -2814,6 +2814,13 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) {
   background-color: #f3f0e8 !important;
 }
+.bowl-pool-page #bowl-selections .bowl-title-row { border-bottom-color: #b9cfc8; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: #52665f; }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
+  background: #e8f3f0 !important;
+  border-color: #b9cfc8 !important;
+  color: #155e59 !important;
+}
 .bowl-pool-page .bowl-team-label--selected::before {
   background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
   box-shadow: 0 1px 0 rgba(15, 118, 110, .3);
@@ -2888,6 +2895,24 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
   box-shadow: inset -1px 0 0 rgba(200, 159, 0, .45), inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
 }
+/* One quiet, continuous viewer rail: the row owns the highlight, not each
+   individual result cell. This keeps the name, score and game columns aligned. */
+.bowl-card-section .bowl-standings-player-row.is-viewer > span,
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  background: #f8edcf !important;
+  color: #4a3a12 !important;
+  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
+  border-left: 4px solid #c89f00;
+  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
+  box-shadow: inset -1px 0 0 #d8b84d, inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky * { color: #4a3a12 !important; }
+.bowl-card-section .pickem-ledger-masthead { border-top-color: #155e59 !important; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   border-color: #52707a !important;
   border-top-color: #55b8aa !important;
@@ -3864,6 +3889,16 @@ html[data-theme="night"] .playoff-scoreboard {
 [aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }
 [aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }
 [aria-labelledby="grading-dashboard-title"] h3 { text-wrap: balance; }
+
+/* Keep the grading control surface compact and readable at dashboard widths. */
+[aria-labelledby="grading-dashboard-title"] > .sticky { padding: .85rem 1.1rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.65rem !important; line-height: 1.08; margin-top: .2rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky p.max-w-3xl { display: none; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; gap: .7rem !important; }
+@media (max-width: 900px) {
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1.5rem; padding: clamp(1.15rem, 3vw, 2rem); }
 .commissioner-tool-card--write { border-left-color: #a76311; }
