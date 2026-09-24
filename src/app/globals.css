@@ -3865,6 +3865,16 @@ html[data-theme="night"] .playoff-scoreboard {
 [aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }
 [aria-labelledby="grading-dashboard-title"] h3 { text-wrap: balance; }
 
+/* Keep the grading control surface compact and readable at dashboard widths. */
+[aria-labelledby="grading-dashboard-title"] > .sticky { padding: .85rem 1.1rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.65rem !important; line-height: 1.08; margin-top: .2rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky p.max-w-3xl { display: none; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; gap: .7rem !important; }
+@media (max-width: 900px) {
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1.5rem; padding: clamp(1.15rem, 3vw, 2rem); }
 .commissioner-tool-card--write { border-left-color: #a76311; }
 .commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
