@@ -65,12 +65,12 @@ export default function SeasonSnapshot({ standings }: { standings: Player[] }) {
   const maxWins = Math.max(1, ...(weeks ?? []).flatMap((week) => week.scores.map((score) => score.wins)));
   const step = Math.max(1, Math.ceil(maxWins / 5));
   const ceiling = Math.ceil(maxWins / step) * step;
-  const width = Math.max(320, 42 + (weeks?.length ?? 0) * 52 + 20);
-  const height = 322;
+  const width = Math.max(320, 68 + (weeks?.length ?? 0) * 52 + 20);
+  const height = 350;
   const top = 16;
-  const bottom = 35;
+  const bottom = 52;
   const plotHeight = height - top - bottom;
-  const x = (index: number) => 36 + (index + 1) * 52;
+  const x = (index: number) => 62 + (index + 1) * 52;
   const y = (wins: number) => top + plotHeight * (1 - wins / ceiling);
   const selectedPlayer = inspected ? standings.find((player) => player.id === inspected.playerId) : null;
 
@@ -83,9 +83,11 @@ export default function SeasonSnapshot({ standings }: { standings: Player[] }) {
       {loading ? <p className="season-snapshot-message">Loading settled weeks…</p> : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => void loadSnapshot()} type="button">Retry</button></div> : weeks?.length === 0 ? <p className="season-snapshot-message">The first point appears when Week 1 settles.</p> : weeks ? <>
         <div className="season-snapshot-layout">
           <div aria-label="Cumulative Pick’em wins by settled week" className="season-snapshot-plot-scroll" role="group">
-            <svg aria-label={`${weeks.length} settled week${weeks.length === 1 ? "" : "s"} of cumulative Pick’em wins`} height={height} role="group" width={width}>
-              {Array.from({ length: ceiling / step + 1 }, (_, index) => index * step).map((tick) => <g key={tick}><line stroke="#d9d2c3" strokeWidth="1" x1="36" x2={width - 12} y1={y(tick)} y2={y(tick)} /><text fill="#746c62" fontFamily="Arial, sans-serif" fontSize="10" textAnchor="end" x="29" y={y(tick) + 3}>{tick}</text></g>)}
-              {weeks.map((week, index) => <g key={week.id}><line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index)} x2={x(index)} y1={top} y2={height - bottom} /><text fill="#555d6b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" x={x(index)} y={height - 11}><title>{week.label}</title>{shortWeek(week.label)}</text></g>)}
+            <svg aria-label={`${weeks.length} settled week${weeks.length === 1 ? "" : "s"} of cumulative Pick'em wins`} height={height} role="group" width={width}>
+              {Array.from({ length: ceiling / step + 1 }, (_, index) => index * step).map((tick) => <g key={tick}><line stroke="#d9d2c3" strokeWidth="1" x1="62" x2={width - 12} y1={y(tick)} y2={y(tick)} /><text fill="#746c62" fontFamily="Arial, sans-serif" fontSize="10" textAnchor="end" x="55" y={y(tick) + 3}>{tick}</text></g>)}
+              <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" letterSpacing=".5" textAnchor="middle" transform={`translate(13 ${top + plotHeight / 2}) rotate(-90)`}>CUMULATIVE WINS</text>
+              {weeks.map((week, index) => <g key={week.id}><line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index)} x2={x(index)} y1={top} y2={height - bottom} /><text fill="#555d6b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" x={x(index)} y={height - 27}><title>{week.label}</title>{shortWeek(week.label)}</text></g>)}
+              <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" letterSpacing=".5" textAnchor="middle" x={(62 + width - 12) / 2} y={height - 7}>SETTLED WEEK</text>
               {chartPlayers.map((player) => {
                 const style = styleById.get(player.id)!;
                 const scores = weeks.map((week) => week.scores.find((score) => score.playerId === player.id)?.wins ?? 0);

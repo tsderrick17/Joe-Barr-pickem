@@ -5,6 +5,11 @@ import { useEffect, useId, useRef, useState } from "react";
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
 export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string; stack?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
+function niceStep(value: number) {
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, .01)));
+  const fraction = value / magnitude;
+  return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10) * magnitude;
+}
 function scaleMax(value: number) {
   if (value <= 0) return 4;
   // Keep the top gridline close to the observed data. The previous 1/2/5
@@ -12,8 +17,8 @@ function scaleMax(value: number) {
   return Math.max(4, Math.ceil((value * 1.15) / 10) * 10);
 }
 
-export default function ProviderChart({ points, series, label, histogram = false }: {
-  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean;
+export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel }: {
+  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(760);
@@ -31,12 +36,22 @@ export default function ProviderChart({ points, series, label, histogram = false
   const left = 46, edge = right ? 46 : 16, top = 22, bottom = 234;
   const plotWidth = width - left - edge, height = bottom - top;
   const highest = Math.max(0, ...points.map((point) => activeSeries.filter((item) => !item.axis).reduce((sum, item) => item.stack ? sum + (point.values[item.key] ?? 0) : Math.max(sum, point.values[item.key] ?? 0), 0)));
-  const maximum = histogram ? Math.max(4, Math.ceil(highest / 4) * 4) : scaleMax(highest);
+  const observed = points.flatMap((point) => activeSeries.filter((item) => !item.axis).map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
+  const observedMin = observed.length ? Math.min(...observed) : 0;
+  const observedMax = observed.length ? Math.max(...observed) : 0;
+  const rawRange = Math.max(observedMax - observedMin, Math.abs(observedMax) * .08, 1);
+  const tightStep = niceStep(rawRange / 4);
+  const minimum = yScale === "tight" && observed.length ? Math.max(0, Math.floor((observedMin - tightStep) / tightStep) * tightStep) : 0;
+  const maximum = histogram ? Math.max(4, Math.ceil(highest / 4) * 4) : yScale === "tight" && observed.length
+    ? Math.max(minimum + tightStep, Math.ceil((observedMax + tightStep) / tightStep) * tightStep)
+    : scaleMax(highest);
   const domain = Math.max(1, ...points.map((point) => point.end ?? 0));
   const x = (index: number) => histogram
     ? left + (((points[index].start ?? 0) + (points[index].end ?? 0)) / 2 / domain) * plotWidth
-    : left + (points.length === 1 ? plotWidth / 2 : index * plotWidth / Math.max(1, points.length - 1));
-  const y = (value: number, item: ChartSeries) => bottom - value / (item.axis ? 100 : maximum) * height;
+    : left + ((index + .5) / Math.max(1, points.length)) * plotWidth;
+  const y = (value: number, item: ChartSeries) => item.axis
+    ? bottom - value / 100 * height
+    : bottom - (value - minimum) / Math.max(1, maximum - minimum) * height;
   const index = Math.min(selected ?? Math.max(0, points.length - 1), Math.max(0, points.length - 1));
   const point = points[index];
   // On a phone, two labels make a multi-slate chart look like one broken
@@ -47,7 +62,7 @@ export default function ProviderChart({ points, series, label, histogram = false
     const bounds = container.current?.getBoundingClientRect();
     if (!bounds || !points.length) return;
     const position = Math.max(0, Math.min(1, (clientX - bounds.left - left) / plotWidth));
-    setSelected(histogram ? Math.max(0, points.findIndex((entry) => position * domain <= (entry.end ?? 0))) : Math.round(position * (points.length - 1)));
+    setSelected(histogram ? Math.max(0, points.findIndex((entry) => position * domain <= (entry.end ?? 0))) : Math.max(0, Math.min(points.length - 1, Math.floor(position * points.length))));
   }
   return <div ref={container} className="min-w-0">
     <div className="provider-chart-legend mb-4 flex flex-wrap gap-x-5 gap-y-2">
@@ -73,9 +88,10 @@ export default function ProviderChart({ points, series, label, histogram = false
         </linearGradient>)}</defs>
         {[0, .25, .5, .75, 1].map((fraction) => <g key={fraction}>
           <line x1={left} x2={width - edge} y1={bottom - fraction * height} y2={bottom - fraction * height} stroke="#e9eaef" strokeDasharray={fraction ? "3 4" : undefined} />
-          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(maximum * fraction)}</text>
+          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}</text>
           {right ? <text x={width - edge + 8} y={bottom - fraction * height + 4} fill="#047857" fontSize="10">{fraction * 100}%</text> : null}
         </g>)}
+        {yAxisLabel ? <text x="11" y={(top + bottom) / 2} fill="#71717a" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(-90 11 ${(top + bottom) / 2})`}>{yAxisLabel}</text> : null}
         {activeSeries.map((item) => {
           if (item.kind === "bar") return <g key={item.key}>{points.map((entry, i) => {
             const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.max(2, plotWidth / Math.max(1, points.length) * .56);

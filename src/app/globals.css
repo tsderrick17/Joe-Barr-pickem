@@ -1444,8 +1444,18 @@ html[data-theme="night"] .survivor-selection-footer {
 @media (max-width: 480px) {
   .season-snapshot.is-expanded { margin-left: 0; max-width: 100%; transform: none; width: 100%; }
   .season-snapshot-body { padding: .45rem; }
-  .season-snapshot-layout { gap: .3rem; grid-template-columns: minmax(0, 1fr) 7.3rem; }
-  .season-snapshot-key { padding-left: .35rem; }
+  /* Keep the chart wide enough to read as a timeline on phones. The ordered
+     standings key remains adjacent, but moves below the plot at this width. */
+  .season-snapshot-layout { gap: .5rem; grid-template-columns: minmax(0, 1fr); }
+  .season-snapshot-key {
+    border-left: 0;
+    border-top: 1px solid #d4cbbb;
+    display: grid;
+    gap: 0 .45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: .35rem 0 0;
+  }
+  .season-snapshot-key-title { grid-column: 1 / -1; }
   .season-snapshot-key-row { font-size: .66rem; }
 }
 
@@ -1919,6 +1929,26 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-picker-name { white-space: nowrap; }
 
 @media (max-width: 767px) {
+  /* Final games need less room for a short date and spread than a pregame
+     kickoff time. Give that recovered width to both team/result blocks. */
+  .slate-game-row.no-survivor-layout.is-final {
+    grid-template-columns: 2rem minmax(0, 1fr) 2.4rem minmax(0, 1fr);
+  }
+  .slate-game-row.no-survivor-layout.is-final .slate-team-result-mark { font-size: .75rem; }
+
+  /* Survivor chips remain easy to tap, but their desktop-sized reserved lanes
+     make team names and final scores collide on narrow phones. Scale both the
+     lane and chip together so the matchup gets the reclaimed width. */
+  .slate-game-row.has-survivor-layout {
+    grid-template-columns: 2.3rem minmax(0, 1fr) 2.7rem 2.45rem 2.7rem minmax(0, 1fr);
+  }
+  .slate-survivor-chip-button {
+    height: 2.45rem;
+    transform: translate(-50%, -50%) scale(1.08);
+    width: 2.45rem;
+  }
+  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.16); }
+  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.1); }
   .slate-team-result-line { gap: .2rem; }
   .slate-game-row .slate-final-team-stack {
     column-gap: .24rem;
@@ -1937,11 +1967,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      wrapping long full names into the score lane. */
   .slate-game-row.is-final .slate-team-name-full { display: none; }
   .slate-game-row.is-final .slate-team-name-short { display: inline; }
-  .slate-spread-cell { transform: translateX(-1.15rem); }
+  .slate-game-row.no-survivor-layout.is-final .slate-spread-cell { transform: translateX(-1rem); }
+  .slate-game-row.has-survivor-layout .slate-spread-cell { transform: none; }
 }
 
 @media (min-width: 380px) and (max-width: 767px) {
-  .slate-spread-cell { transform: translateX(-1.3rem); }
+  .slate-game-row.no-survivor-layout.is-final .slate-spread-cell { transform: translateX(-1rem); }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
@@ -2778,6 +2809,17 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-selection > strong {
   font: 900 .84rem/1.1 "Courier New", monospace;
+}
+
+@media (max-width: 379px) {
+  .slate-game-row.has-survivor-layout {
+    grid-template-columns: 2rem minmax(0, 1fr) 2.4rem 2.2rem 2.4rem minmax(0, 1fr);
+  }
+  .slate-survivor-chip-button {
+    height: 2.1rem;
+    transform: translate(-50%, -50%) scale(1.06);
+    width: 2.1rem;
+  }
 }
 
 .my-ticket-team-result {
@@ -4049,13 +4091,21 @@ html[data-theme="night"] .playoff-scoreboard {
 [aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }
 [aria-labelledby="grading-dashboard-title"] h3 { text-wrap: balance; }
 
-/* Keep the grading control surface compact and readable at dashboard widths. */
-[aria-labelledby="grading-dashboard-title"] > .sticky { padding: .85rem 1.1rem !important; }
-[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.65rem !important; line-height: 1.08; margin-top: .2rem !important; }
-[aria-labelledby="grading-dashboard-title"] > .sticky p.max-w-3xl { display: none; }
-[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; gap: .7rem !important; }
+/* The period picker is a utility rail, not a second hero. Keep it to one
+   compact row so it remains useful while sticky without covering the work. */
+[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem !important; top: .25rem; }
+[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.15rem !important; line-height: 1.05; margin: 0 !important; white-space: nowrap; }
+[aria-labelledby="grading-dashboard-title"] > .sticky p.max-w-3xl,
+[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:first-child > p:first-child { display: none; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; flex-wrap: nowrap; gap: .5rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:last-child { flex-wrap: nowrap; gap: .35rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky select,
+[aria-labelledby="grading-dashboard-title"] > .sticky button { font-size: .72rem !important; line-height: 1.1; padding: .38rem .55rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky select { max-width: 15rem; }
 @media (max-width: 900px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 .grid.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1100px) and (min-width: 640px) {
@@ -4091,9 +4141,18 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
 
 @media (max-width: 639px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] > .sticky { padding: .3rem .45rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky > div { gap: .35rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: .92rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky label,
+  [aria-labelledby="grading-dashboard-title"] > .sticky span.text-xs.text-zinc-400,
+  [aria-labelledby="grading-dashboard-title"] > .sticky button:first-of-type { display: none; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky select { min-width: 0; max-width: 9rem; padding: .34rem .4rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky button { padding: .34rem .45rem !important; }
   .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
-  .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: 1.2rem; }
-  .commissioner-command-bar h1 { font-size: 2.25rem; }
+  .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: .9rem; }
+  .commissioner-command-bar h1 { font-size: 1.9rem; margin-top: .3rem; }
   .commissioner-command-links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .commissioner-command-links a { padding: .68rem .55rem; }
   .commissioner-command-links strong { font-size: .73rem; }
@@ -4115,6 +4174,40 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
   .provider-efficiency-summary strong { font-size: 1.05rem; }
   .provider-efficiency-summary span { font-size: .57rem; }
   .provider-efficiency-summary small { font-size: .62rem; }
+}
+
+/* Tighten the commissioner overview as a whole; inputs keep their full target
+   size, while repeated decoration and vertical gaps give space back. */
+.commissioner-command-bar { gap: .75rem; padding: clamp(.8rem, 1.6vw, 1.25rem); }
+.commissioner-panel-nav { padding: .5rem 0 .35rem; }
+.commissioner-panel-tab { font-size: .96rem; padding: .42rem .58rem; }
+.commissioner-panel-description { margin-top: .2rem; }
+.commissioner-map { padding-block: 1rem !important; }
+.commissioner-map-banner { margin-top: 1rem !important; padding: .75rem .9rem; }
+.commissioner-map-metrics { gap: .45rem; margin-top: .7rem !important; }
+.commissioner-map-metric { gap: .2rem; padding: .55rem .65rem; }
+.commissioner-map-metric strong { font-size: 1.08rem; }
+.commissioner-flow { margin-top: 1.25rem !important; }
+.commissioner-flow-button { min-height: 5.25rem; }
+.commissioner-flow-node { flex-basis: 2.35rem; height: 2.35rem; width: 2.35rem; }
+.commissioner-flow-step:not(:last-child)::after { top: 1.17rem; }
+.commissioner-flow-label { font-size: .88rem; margin-top: .45rem; }
+.commissioner-map-detail { gap: .8rem; margin-top: 1rem !important; padding: .7rem .8rem; }
+.commissioner-workspace-section { padding: .9rem 0; }
+.commissioner-route-card { min-height: 7.25rem; padding: .68rem; }
+.commissioner-tool-card { margin-bottom: .65rem; padding: clamp(.7rem, 1.5vw, 1rem); }
+
+@media (max-width: 900px) {
+  .commissioner-map-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+  .commissioner-map-banner { gap: .75rem; }
+  .commissioner-map-banner .font-serif { font-size: 1.25rem; }
+  .commissioner-flow { margin-top: .9rem !important; }
+  .commissioner-flow-button { min-height: 4.5rem; }
+  .commissioner-map-detail { grid-template-columns: minmax(0, 1fr); }
+  .commissioner-map-next { border-left: 0; border-top: 1px solid #c7c0b5; padding: .6rem 0 0; }
 }
 
 /* The Bowl receipt has a deliberately wide desktop layout, but its flexible

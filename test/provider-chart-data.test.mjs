@@ -56,6 +56,18 @@ test("monthly credit forecast covers the full month and pools nearby kickoff win
   assert.match(result.forecastAssumptions, /90%/);
 });
 
+test("regular-season Sunday average counts elapsed game Sundays only", () => {
+  const result = monthlyCreditSeries([
+    { started_at: "2026-09-13T17:00:00Z", job_type: "scores", details: { requestsLast: 6 } },
+    { started_at: "2026-09-13T18:00:00Z", job_type: "line_locks", details: { requestsLast: 2 } },
+    { started_at: "2026-09-20T17:00:00Z", job_type: "scores", details: { requestsLast: 40 } },
+  ], new Date("2026-09-14T12:00:00Z"), [], undefined, [
+    "2026-09-13T17:00:00Z", "2026-09-20T17:00:00Z", "2026-09-27T17:00:00Z",
+  ]);
+  assert.equal(result.regularSundaysElapsed, 1);
+  assert.equal(result.sundayAverageCredits, 8);
+});
+
 test("slates pool kickoffs within 30 minutes and never absorb later unrelated polls", () => {
   const games = [{ kickoff_at: "2026-09-20T17:00:00Z", finalized_at: "2026-09-20T20:30:00Z" }];
   const rows = [
