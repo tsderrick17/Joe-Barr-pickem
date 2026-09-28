@@ -8,6 +8,7 @@ import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { recommendPollingPlan, simulatePollingPlans } from "@/lib/polling-plan.js";
 import { monthlyCreditSeries, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
+import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
 
 type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 const GAME_STATUS_GRACE_MINUTES = 15;
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("teams").select("id, abbreviation, full_name"),
-      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").in("job_type", ["scores", "bowl_scores"]).order("started_at", { ascending: false }).limit(1000),
+      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").in("job_type", ["scores", "line_locks", "bowl_scores"]).order("started_at", { ascending: false }).limit(1000),
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
@@ -222,7 +223,7 @@ export async function GET(request: NextRequest) {
       games: gameRows,
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
-      workerRuns: [...new Map((syncResult.data ?? []).map((run) => [run.job_type, run])).values()].map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
+      workerRuns: latestWorkerRuns(syncResult.data ?? []).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
       cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
       scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,

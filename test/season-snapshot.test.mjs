@@ -38,3 +38,15 @@ test("snapshot stays unavailable to ordinary players and loads only when expande
   assert.match(scoreboard, /isCommissioner\s*\?\s*<SeasonSnapshot/);
   assert.match(snapshot, /if \(!expanded && !loading\) void loadSnapshot\(\)/);
 });
+
+test("snapshot labels weeks on the horizontal axis and cumulative wins on the vertical axis", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+
+  assert.match(snapshot, /SETTLED WEEK/);
+  assert.match(snapshot, /CUMULATIVE WINS/);
+  assert.match(snapshot, /x=\{x\(index\)\} y=\{height - 27\}/);
+  assert.match(snapshot, /y1=\{y\(tick\)\} y2=\{y\(tick\)\}/);
+  assert.match(css, /\.season-snapshot-layout \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) 8\.65rem/);
+  assert.match(css, /@media \(max-width: 480px\)[\s\S]*?\.season-snapshot-layout \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*\.season-snapshot-key \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+});

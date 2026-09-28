@@ -32,6 +32,8 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /useEffect\(\(\) => \{ periodIdRef\.current = periodId; \}, \[periodId\]\)/);
   assert.match(component, /Worker activity/);
   assert.match(route, /workerRuns/);
+  assert.match(route, /\["scores", "line_locks", "bowl_scores"\]/);
+  assert.match(route, /latestWorkerRuns\(syncResult\.data \?\? \[\]\)/);
   assert.match(component, /GAME INSPECTOR/);
   assert.match(component, /Copy snapshot/);
   assert.match(component, /Incident posture/);

@@ -110,7 +110,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const days = allDays.slice(0, todayIndex + 1);
   const regularSundayKeys = [...new Set(regularSeasonGameDates
     .map((value) => dateKeyInZone(new Date(value), timeZone))
-    .filter((key) => new Date(`${key}T12:00:00Z`).getUTCDay() === 0))];
+    .filter((key) => new Date(`${key}T12:00:00Z`).getUTCDay() === 0 && key <= dateKeyInZone(now, timeZone)))];
   const sundayCredits = new Map(regularSundayKeys.map((key) => [key, 0]));
   for (const run of runs) {
     const timestamp = Date.parse(run.completed_at ?? run.started_at);
@@ -133,6 +133,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     untrackedCredits,
     remaining: provider?.remaining ?? null,
     sundayAverageCredits,
+    regularSundaysElapsed: regularSundayKeys.length,
     reportedAt: provider?.reportedAt ?? null,
   };
 }
