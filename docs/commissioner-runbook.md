@@ -22,14 +22,36 @@ gameweek-pin, audit, and atomicity protections.
 
 ### Application-only change
 
-1. Run `npm run test:all`, `npm run lint`, and `npm run build`.
-2. Open a pull request and wait for application, Vercel, and relevant database
-   checks.
-3. The isolated browser check must pass for player/session work. It signs in
-   and writes fixtures only in `isolated-test`.
+1. Finish the intended changes on one named release branch. Run
+   `npm run test:all`, `npm run lint`, and `npm run build` before the final
+   commit. Keep other work in a separate checkout.
+2. Run `npm run release:fetch`, update the release branch from current `main`
+   if needed, and run `npm run release:check`. The check confirms the GitHub
+   account, a credential-free repository URL, a clean branch, and current
+   `main`. `npm run release:push -- --dry-run` verifies the upload path without
+   starting CI.
+3. Run `npm run release:push` once, then open one pull request. Wait for
+   application, Vercel, and relevant database checks. The isolated browser
+   check must pass for player/session work; it uses only `isolated-test`.
 4. Merge only green work and wait for **Production smoke gate** after Vercel
    reports the live deployment. Smoke-test the changed player or Commissioner
    path when the release is user-visible.
+
+The release helper reads the existing GitHub CLI login and passes a temporary
+authorization header to Git. It never saves a token in the repository URL or
+Git config. On Windows it uses Git's OpenSSL backend for this operation, which
+avoids the Schannel credential failure seen on this machine. If the check says
+GitHub is unreachable in Codex, grant network access and retry before starting
+another device login. If GitHub actually returns HTTP 401, run
+`gh auth login --hostname github.com --git-protocol https --web`; the code can
+be approved at `https://github.com/login/device` on a phone. Press Enter in
+the waiting CLI after approval so it saves the result.
+
+A newer push to the same pull request cancels its older application run. The
+main-branch quality run still executes after merge: current branch protection
+requires the isolated database check but does not require application quality
+and permits administrator bypass. Do not remove that main-branch check until
+the corresponding branch protections are strengthened.
 
 ### Database change
 

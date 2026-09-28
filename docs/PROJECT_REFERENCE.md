@@ -463,6 +463,12 @@ Manual controls are recovery paths, not alternate implementations.
   exact confirmation value `isolated` is required before integration work.
 - Application changes pass tests, lint, build, GitHub quality checks, and a
   Vercel preview before merge.
+- Release work uses one clean branch and one push after local verification.
+  The release helper checks GitHub reachability before treating a saved login
+  as expired, rejects credentials in the remote URL, and passes authorization
+  to Git only for the command being run. New commits to one pull request cancel
+  superseded application-quality runs. The post-merge main-branch quality run
+  remains until branch protection requires that check and prevents bypass.
 - Every human-authored pull request runs the real PIN/session/player flow
   against the confirmed isolated project, including account navigation, a
   transient profile-read failure, pick persistence, and Survivor replacement.
