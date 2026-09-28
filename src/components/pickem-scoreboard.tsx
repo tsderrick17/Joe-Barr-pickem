@@ -51,8 +51,7 @@ export default function PickemScoreboard({
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
-  const weekNumber = Number(week.match(/week\s*(\d+)/i)?.[1] ?? 0);
-  const showSeasonSnapshot = isCommissioner && (isPlayoff || weekNumber >= 6);
+  const showSeasonSnapshot = isCommissioner;
   const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
 
   return (
