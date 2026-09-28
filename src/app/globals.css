@@ -1338,8 +1338,15 @@ html[data-theme="night"] .survivor-selection-footer {
   /* A scorepad puts the two handwritten entries immediately after the
      names.  Keep this deliberately narrower on wide screens; phones still
      use their full available width. */
-  max-width: 30rem;
+  max-width: 100%;
   width: 100%;
+}
+
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-ledger-masthead,
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-standings-table {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 30rem;
 }
 
 .season-snapshot {
@@ -1347,13 +1354,17 @@ html[data-theme="night"] .survivor-selection-footer {
   border-top: 1px solid #bdb3a3;
   color: #25334a;
   margin-top: .55rem;
+  width: 100%;
+}
+
+.season-snapshot:not(.is-expanded) {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 30rem;
 }
 
 .season-snapshot.is-expanded {
-  margin-left: 50%;
-  max-width: calc(100vw - 2rem);
-  transform: translateX(-50%);
-  width: var(--standings-module-width);
+  width: 100%;
 }
 
 .season-snapshot-heading {
@@ -1399,6 +1410,11 @@ html[data-theme="night"] .survivor-selection-footer {
   max-width: none;
 }
 
+.season-snapshot-charts { display: grid; gap: 1rem; min-width: 0; }
+.season-snapshot-chart { min-width: 0; }
+.season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
+.season-snapshot-chart-note { color: #57637a; font: 600 .66rem/1.4 Arial, sans-serif; margin-bottom: .25rem; }
+
 .season-snapshot-key {
   border-left: 1px solid #d4cbbb;
   min-width: 0;
@@ -1441,8 +1457,8 @@ html[data-theme="night"] .survivor-selection-footer {
 .season-snapshot-data td { border-bottom: 1px solid #d4cbbb; padding: .18rem .35rem; white-space: nowrap; }
 .season-snapshot-data th:first-child { text-align: left; }
 
-@media (max-width: 480px) {
-  .season-snapshot.is-expanded { margin-left: 0; max-width: 100%; transform: none; width: 100%; }
+@media (max-width: 700px) {
+  .season-snapshot.is-expanded { width: 100%; }
   .season-snapshot-body { padding: .45rem; }
   /* Keep the chart wide enough to read as a timeline on phones. The ordered
      standings key remains adjacent, but moves below the plot at this width. */

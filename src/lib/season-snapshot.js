@@ -1,22 +1,40 @@
-/** A point is added only when the scoring period has fully settled. */
+/** Build exact weekly positions, including a finished card in an active week. */
 export function buildSeasonSnapshot(periods, players, picks) {
-  const settled = periods
-    .filter((period) => period.status === "complete")
-    .sort((a, b) => a.display_order - b.display_order);
-  const playerIds = new Set(players.map((player) => player.id));
-  const winsByPeriod = new Map();
+  const playerIds = players.map((player) => player.id);
+  const picksByPeriodAndPlayer = new Map();
   for (const pick of picks) {
-    if (pick.result !== "win" || !playerIds.has(pick.player_id)) continue;
     const key = `${pick.scoring_period_id}:${pick.player_id}`;
-    winsByPeriod.set(key, (winsByPeriod.get(key) ?? 0) + 1);
+    const playerPicks = picksByPeriodAndPlayer.get(key) ?? [];
+    playerPicks.push(pick);
+    picksByPeriodAndPlayer.set(key, playerPicks);
   }
-  const totals = new Map(players.map((player) => [player.id, 0]));
-  return settled.map((period) => {
-    const scores = players.map((player) => {
-      const total = (totals.get(player.id) ?? 0) + (winsByPeriod.get(`${period.id}:${player.id}`) ?? 0);
-      totals.set(player.id, total);
-      return { playerId: player.id, wins: total };
-    });
-    return { id: period.id, label: period.display_name, scores };
-  });
+  const snapshot = { regular: [], playoffs: [] };
+  const totals = new Map(playerIds.map((id) => [id, 0]));
+  const ordered = periods
+    .filter((period) => ["regular", "playoff"].includes(period.period_type))
+    .filter((period) => ["complete", "active"].includes(period.status))
+    .sort((a, b) => a.display_order - b.display_order);
+
+  for (const period of ordered) {
+    const scores = [];
+    const requiredPicks = Number.isInteger(period.max_picks) && period.max_picks > 0 ? period.max_picks : Infinity;
+    for (const playerId of playerIds) {
+      const playerPicks = picksByPeriodAndPlayer.get(`${period.id}:${playerId}`) ?? [];
+      const graded = playerPicks.filter((pick) => pick.result === "win" || pick.result === "loss");
+      if (period.status === "active" && graded.length < requiredPicks) continue;
+      const wins = graded.filter((pick) => pick.result === "win").length;
+      const total = (totals.get(playerId) ?? 0) + wins;
+      totals.set(playerId, total);
+      scores.push({ playerId, wins: total });
+    }
+    if (period.status === "complete" || scores.length) {
+      snapshot[period.period_type === "regular" ? "regular" : "playoffs"].push({
+        id: period.id,
+        label: period.display_name,
+        complete: period.status === "complete",
+        scores,
+      });
+    }
+  }
+  return snapshot;
 }
