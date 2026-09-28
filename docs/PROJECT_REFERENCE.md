@@ -104,10 +104,14 @@ be replayed.
   never become wins by inference.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
-- The Pick'em Pad's Season Snapshot is commissioner-only until explicitly
-  released. Its cumulative ATS-win points include only complete scoring
-  periods, in season order. The right-hand key follows the current standings
-  order, which can include wins from an active week not yet plotted.
+- The Pick'em Pad's default-minimized Season Snapshot appears for commissioners
+  starting in Week 6 and stays unavailable to players until explicitly released.
+  Everyone begins at zero on the regular-season chart. Completed periods carry
+  every player's cumulative ATS wins forward; an active period adds a player
+  only after their full card is graded. A separate playoff chart starts at each
+  player's final regular-season total and continues season totals. All players
+  share exact week columns; overlapping lines and circular points layer in
+  current standings order. The right-hand color key also follows that order.
 
 ## Survivor selection and scoring
 

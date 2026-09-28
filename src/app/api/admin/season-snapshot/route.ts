@@ -15,21 +15,21 @@ export async function GET(request: NextRequest) {
   }
 
   const [periodsResult, playersResult] = await Promise.all([
-    supabaseAdmin.from("scoring_periods").select("id, display_name, display_order, status").eq("season_id", seasonResult.data.id).order("display_order"),
+    supabaseAdmin.from("scoring_periods").select("id, display_name, display_order, status, period_type, max_picks").eq("season_id", seasonResult.data.id).order("display_order"),
     supabaseAdmin.from("players").select("id").eq("active", true),
   ]);
   if (periodsResult.error || playersResult.error) {
     return NextResponse.json({ error: "The season snapshot could not be loaded." }, { status: 503 });
   }
 
-  const settledIds = (periodsResult.data ?? []).filter((period) => period.status === "complete").map((period) => period.id);
-  const picksResult = settledIds.length
-    ? await supabaseAdmin.from("picks").select("player_id, scoring_period_id, result").in("scoring_period_id", settledIds)
+  const visibleIds = (periodsResult.data ?? []).filter((period) => period.status === "complete" || period.status === "active").map((period) => period.id);
+  const picksResult = visibleIds.length
+    ? await supabaseAdmin.from("picks").select("player_id, scoring_period_id, result").in("scoring_period_id", visibleIds)
     : { data: [], error: null };
   if (picksResult.error) {
-    return NextResponse.json({ error: "Settled picks could not be loaded." }, { status: 503 });
+    return NextResponse.json({ error: "Graded picks could not be loaded." }, { status: 503 });
   }
 
-  const weeks = buildSeasonSnapshot(periodsResult.data ?? [], playersResult.data ?? [], picksResult.data ?? []);
-  return NextResponse.json({ weeks }, { headers: { "Cache-Control": "private, no-store" } });
+  const snapshot = buildSeasonSnapshot(periodsResult.data ?? [], playersResult.data ?? [], picksResult.data ?? []);
+  return NextResponse.json(snapshot, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -2,10 +2,13 @@
 
 ## Control-center overview
 
-The Standings page has a commissioner-only Season Snapshot beneath the Pick'em
-Pad. Expand it to inspect cumulative wins through settled weeks. Its right-hand
-key reflects live standings and may include a partly graded current week; the
-chart itself waits for the period to complete. Reopening refreshes the graph.
+Starting in Week 6, the Standings page shows commissioners a minimized Season
+Snapshot beneath the Pick'em Pad. Expand it to inspect cumulative wins, starting
+from zero. A current-week point appears for a player once their entire card is
+graded, even if other games remain. The separate playoff chart continues from
+the regular-season totals. The right-hand key follows live standings; a player
+with unfinished picks may have a live total not yet plotted for that week.
+The chart refreshes with the normal standings update while open.
 
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and

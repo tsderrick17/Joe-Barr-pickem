@@ -51,6 +51,9 @@ export default function PickemScoreboard({
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
+  const weekNumber = Number(week.match(/week\s*(\d+)/i)?.[1] ?? 0);
+  const showSeasonSnapshot = isCommissioner && (isPlayoff || weekNumber >= 6);
+  const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
 
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""}`}>
@@ -109,7 +112,7 @@ export default function PickemScoreboard({
           </tbody>
         </table>
       </div>
-      {isCommissioner ? <SeasonSnapshot standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /> : null}
+      {showSeasonSnapshot ? <SeasonSnapshot isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /> : null}
     </section>
   );
 }
