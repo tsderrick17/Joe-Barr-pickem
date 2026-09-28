@@ -39,3 +39,28 @@ test("isolated rehearsal strips only live schedules and retains preflight functi
   assert.match(source, /stricter preflight functions/);
 });
 
+test("minute line-lock gate preserves disrupted-pick voiding before skipping Vercel", async () => {
+  const sql = await readFile(new URL("../supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql", import.meta.url), "utf8");
+  assert.match(sql, /public\.dispatch_line_lock_if_due\(\)/);
+  assert.match(sql, /public\.line_lock_work_is_due\(\)/);
+  assert.match(sql, /game\.line_lock_at <= statement_timestamp\(\)/);
+  assert.match(sql, /public\.picks pick[\s\S]*game\.status in \('postponed', 'cancelled', 'no_contest'\)/);
+  assert.match(sql, /public\.survivor_picks pick[\s\S]*game\.status in \('postponed', 'cancelled', 'no_contest'\)/);
+  assert.match(sql, /if not public\.line_lock_work_is_due\(\) then return false; end if;[\s\S]*net\.http_post/);
+});
+
+test("five-minute reminder delivery no longer reconciles future schedules", async () => {
+  const [worker, maintenance, route, migration] = await Promise.all([
+    readFile(new URL("../src/lib/reminder-worker.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/automatic-reminder-maintenance.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/api/cron/maintain-reminders/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql", import.meta.url), "utf8"),
+  ]);
+  assert.doesNotMatch(worker, /ensureAutomaticEmailPlanMessages|ensureAutomaticWeeklyRecap|ensureAutomaticBowlPoolEmails/);
+  assert.match(maintenance, /ensureAutomaticEmailPlanMessages\(\)/);
+  assert.match(maintenance, /ensureAutomaticWeeklyRecap\(\)/);
+  assert.match(maintenance, /ensureAutomaticBowlPoolEmails\(\)/);
+  assert.match(route, /runWithAutomationLease\("reminder_schedule"/);
+  assert.match(migration, /reconcile-pickem-email-schedule-every-fifteen-minutes/);
+});
+

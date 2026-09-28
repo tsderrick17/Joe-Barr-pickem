@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { CURRENT_SEASON_YEAR } from "@/lib/season";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { assessBowlPoolIntegrity } from "@/lib/bowl-pool-integrity";
+import { assessBowlPoolIntegrity, countMissingBowlTeamSlots } from "@/lib/bowl-pool-integrity";
 import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   ]);
   if (gamesError) return NextResponse.json({ error: "Bowl Pool readiness could not be read." }, { status: 500 });
   const future = (games ?? []).filter((game) => new Date(game.kickoff_at).getTime() > Date.now());
-  const missingTeams = (games ?? []).filter((game) => !game.away_team_id || !game.home_team_id).length;
+  const missingTeams = countMissingBowlTeamSlots(games ?? []);
   const lockedGames = (games ?? []).filter((game) => game.status !== "scheduled").length;
   const beforeFirstKickoff = !season.first_kickoff_at || new Date() < new Date(season.first_kickoff_at);
   const assessedIntegrity = assessBowlPoolIntegrity(games ?? [], lines ?? []);

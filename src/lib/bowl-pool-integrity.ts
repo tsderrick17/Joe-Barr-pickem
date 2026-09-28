@@ -1,4 +1,4 @@
-import { assessBowlPoolIntegrity as assess } from "./bowl-pool-integrity.js";
+import { assessBowlPoolIntegrity as assess, countMissingBowlTeamSlots as countMissing } from "./bowl-pool-integrity.js";
 
 export type BowlIntegrityGame = {
   id: string;
@@ -13,3 +13,4 @@ export type BowlIntegrityLine = { game_id: string };
 
 /** Pure integrity checks shared by the readiness page and automation tests. */
 export const assessBowlPoolIntegrity: (games: BowlIntegrityGame[], lines: BowlIntegrityLine[], now?: Date) => { healthy: boolean; problems: string[]; missingLines: number; gameCount: number } = assess;
+export const countMissingBowlTeamSlots: (games: BowlIntegrityGame[]) => number = countMissing;

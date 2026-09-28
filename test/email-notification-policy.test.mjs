@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { emailPreferenceColumn } from "../src/lib/email-plan-preferences.js";
 import { automaticEmailSubject } from "../src/lib/email-subjects.js";
-import { publicRevealSelectionReadiness } from "../src/lib/reminder-readiness-rules.js";
+import { finalLinesSelectionReadiness, publicRevealSelectionReadiness } from "../src/lib/reminder-readiness-rules.js";
 import { weeklyRecapTemplateId } from "../src/lib/weekly-recap-template.js";
 
 test("maps the four pick reminders to three independent player choices", () => {
@@ -28,6 +28,19 @@ test("an empty public-pick window is a terminal suppression rather than a retry"
     reason: "No player selected a game in this public-pick window.",
   });
   assert.equal(publicRevealSelectionReadiness({ kickoffReady: { ready: true, reason: null }, selectedPickCount: 1 }).ready, true);
+});
+
+test("final-lines reminders suppress when nobody can still pick from that slate", () => {
+  assert.deepEqual(finalLinesSelectionReadiness({ slateReady: { ready: true, reason: null }, eligiblePlayerCount: 0 }), {
+    ready: false,
+    terminal: true,
+    reason: "No player can still make a Pick'em selection for these games.",
+  });
+  assert.equal(finalLinesSelectionReadiness({ slateReady: { ready: true, reason: null }, eligiblePlayerCount: 1 }).ready, true);
+  assert.deepEqual(finalLinesSelectionReadiness({ slateReady: { ready: false, reason: "Lines are pending." }, eligiblePlayerCount: 0 }), {
+    ready: false,
+    reason: "Lines are pending.",
+  });
 });
 
 test("weekly recap keeps Survivor for its finish, then switches to Pick'em-only", () => {

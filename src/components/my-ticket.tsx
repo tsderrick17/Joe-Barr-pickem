@@ -87,7 +87,7 @@ export default function MyTicket({
                   {pick ? (
                     <>
                       <span className="my-ticket-selection">
-                        <strong>{pick.team}<AtsResultStamp className="my-ticket-result" result={pick.resultMark} tilted={false} variant="ticket" /></strong>
+                        <strong className="my-ticket-team-result"><span>{pick.team}</span><AtsResultStamp className="my-ticket-result" result={pick.resultMark} tilted={false} variant="ticket" /></strong>
                         <small>{pick.kickoff}</small>
                       </span>
                       <span className={`my-ticket-line ${pick.lineLocked ? "is-locked" : ""}`}>
@@ -117,7 +117,7 @@ export default function MyTicket({
             <div className="my-ticket-survivor-pick">
               <div>
                 <small>OFFICIAL SELECTION</small>
-                <strong>{survivorPick.team}<AtsResultStamp className="my-ticket-result" result={survivorPick.resultMark} tilted={false} variant="ticket" /></strong>
+                <strong className="my-ticket-team-result"><span>{survivorPick.team}</span><AtsResultStamp className="my-ticket-result" result={survivorPick.resultMark} tilted={false} variant="ticket" /></strong>
                 <small>{survivorPick.kickoff}</small>
               </div>
             </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, type MouseEvent, useState } from "react";
 
 const steps = [
   { time: "Before kickoff", title: "Verify readiness", body: "Run Automation Preflight and the read-only checks. A red result identifies the exact setup item to resolve before game day.", href: "#automation-preflight", action: "Open readiness checks" },
@@ -14,6 +13,17 @@ const steps = [
 export default function GameDayPlaybook() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = steps[selectedIndex];
+
+  function openMatchingCheck(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    const target = document.getElementById(selected.href.slice(1));
+    if (!target) return;
+
+    const collapsedPanel = target.closest("details");
+    if (collapsedPanel) collapsedPanel.open = true;
+    window.history.pushState(null, "", selected.href);
+    window.requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 
   return <section className="game-day-playbook border-b-2 border-zinc-900 py-8">
     <div className="flex flex-wrap items-end justify-between gap-3">
@@ -32,7 +42,7 @@ export default function GameDayPlaybook() {
 
     <div className="commissioner-map-detail is-active mt-6">
       <div><p className="text-xs font-black tracking-[0.14em]">STEP {selectedIndex + 1} · {selected.time.toUpperCase()}</p><p className="mt-2 font-serif text-xl font-bold">{selected.title}</p><p className="mt-1 text-sm leading-5 text-zinc-700">{selected.body}</p></div>
-      <div className="commissioner-map-next"><p className="text-xs font-black tracking-[0.14em]">OPEN THE MATCHING CHECK</p><Link className="mt-2 inline-block text-sm font-bold underline" href={selected.href}>{selected.action}</Link></div>
+      <div className="commissioner-map-next"><p className="text-xs font-black tracking-[0.14em]">OPEN THE MATCHING CHECK</p><a className="mt-2 inline-block text-sm font-bold underline" href={selected.href} onClick={openMatchingCheck}>{selected.action}</a></div>
     </div>
   </section>;
 }

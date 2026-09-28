@@ -18,6 +18,24 @@ function reported(value) {
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
+export function latestProviderCreditSnapshot(runs, fallbackLimit = 500) {
+  let latest = null;
+  for (const run of runs) {
+    const timestamp = Date.parse(run.completed_at ?? run.started_at);
+    if (!Number.isFinite(timestamp)) continue;
+    const used = reported(run.details?.requestsUsed);
+    const remaining = reported(run.details?.requestsRemaining);
+    if (used === null && remaining === null) continue;
+    const limit = used !== null && remaining !== null ? used + remaining : fallbackLimit;
+    const coherentUsed = used ?? Math.max(0, limit - remaining);
+    const coherentRemaining = remaining ?? Math.max(0, limit - coherentUsed);
+    if (!latest || timestamp > latest.timestamp) {
+      latest = { timestamp, used: coherentUsed, remaining: coherentRemaining, limit };
+    }
+  }
+  return latest ? { ...latest, reportedAt: new Date(latest.timestamp).toISOString() } : null;
+}
+
 function scheduleSlates(games) {
   const sorted = [...games].sort((a, b) => Date.parse(a.kickoff_at ?? a.kickoffAt) - Date.parse(b.kickoff_at ?? b.kickoffAt));
   const groups = [];
@@ -31,7 +49,7 @@ function scheduleSlates(games) {
   return groups;
 }
 
-export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = DEFAULT_SCORE_RETRY_MINUTES) {
+export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = DEFAULT_SCORE_RETRY_MINUTES, regularSeasonGameDates = []) {
   const timeZone = "America/New_York";
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
   const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
@@ -43,7 +61,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0,
   }));
   const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
-  let latest = null;
   for (const run of runs) {
     const timestamp = Date.parse(run.completed_at ?? run.started_at);
     if (timestamp < start || timestamp > now.getTime() || !Number.isFinite(timestamp)) continue;
@@ -53,9 +70,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     const isLineRun = run.job_type === "line_locks" || run.job_type === "odds";
     day[run.job_type === "scores" ? "scores" : isLineRun ? "lines" : "other"] += cost;
     if (cost > 0 && reported(run.details?.requestsLast) === null) day.estimatedCalls++;
-    const used = reported(run.details?.requestsUsed);
-    const remaining = reported(run.details?.requestsRemaining);
-    if (used !== null && remaining !== null && (!latest || timestamp > latest.timestamp)) latest = { timestamp, used, remaining };
   }
   let cumulative = 0;
   for (const day of allDays) { cumulative += day.credits; day.cumulative = cumulative; }
@@ -94,14 +108,32 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   }
   const forecastCredits = Math.round(allDays.reduce((sum, day) => sum + day.forecast, 0));
   const days = allDays.slice(0, todayIndex + 1);
+  const regularSundayKeys = [...new Set(regularSeasonGameDates
+    .map((value) => dateKeyInZone(new Date(value), timeZone))
+    .filter((key) => new Date(`${key}T12:00:00Z`).getUTCDay() === 0))];
+  const sundayCredits = new Map(regularSundayKeys.map((key) => [key, 0]));
+  for (const run of runs) {
+    const timestamp = Date.parse(run.completed_at ?? run.started_at);
+    if (!Number.isFinite(timestamp)) continue;
+    const key = dateKeyInZone(new Date(timestamp), timeZone);
+    if (sundayCredits.has(key)) sundayCredits.set(key, sundayCredits.get(key) + providerRequestCost(run));
+  }
+  const sundayAverageCredits = regularSundayKeys.length
+    ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
+    : null;
+  const provider = latestProviderCreditSnapshot(runs);
+  const untrackedCredits = provider ? Math.max(0, Math.round(provider.used - cumulative)) : null;
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
     forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one daily request, including days without games.`,
-    days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: latest?.used ?? null,
-    remaining: latest?.remaining ?? null,
-    reportedAt: latest ? new Date(latest.timestamp).toISOString() : null,
+    days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
+    providerLimit: provider?.limit ?? null,
+    untrackedCredits,
+    remaining: provider?.remaining ?? null,
+    sundayAverageCredits,
+    reportedAt: provider?.reportedAt ?? null,
   };
 }
 

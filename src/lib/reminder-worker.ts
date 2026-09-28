@@ -2,9 +2,6 @@ import {
   deliverEmailReminder,
   ReminderPreparationError,
 } from "@/lib/email-reminders";
-import { ensureAutomaticWeeklyRecap } from "@/lib/automatic-weekly-recap";
-import { ensureAutomaticBowlPoolEmails } from "@/lib/automatic-bowl-pool-emails";
-import { ensureAutomaticEmailPlanMessages } from "@/lib/automatic-email-plan";
 import type {
   ReminderAudience,
   ReminderCategory,
@@ -50,9 +47,6 @@ async function updateClaimedReminder(
 }
 
 export async function sendDueReminders() {
-  await ensureAutomaticEmailPlanMessages();
-  await ensureAutomaticWeeklyRecap();
-  await ensureAutomaticBowlPoolEmails();
   // The table/RPC retain their historical push-oriented names so this cleanup
   // does not risk a destructive production data migration.
   const { data: reminders, error } = await supabaseAdmin.rpc(

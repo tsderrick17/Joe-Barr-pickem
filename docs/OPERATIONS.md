@@ -138,6 +138,17 @@ week as complete scheduling evidence. It does not rewrite historical copies,
 and duplicate legacy records cannot prevent the normal reminder worker from
 processing other due messages.
 
+Email artwork is rendered by the reminder worker before delivery, then stored
+in the public `email-artwork` Supabase Storage bucket under a content-addressed
+path. Email opens fetch the immutable PNG directly from Storage instead of
+invoking Vercel's recap-image renderer. A per-reminder manifest avoids rendering
+again when a queued send retries. The Vercel image route remains for messages
+sent before this change and as a delivery fallback if static storage is
+unavailable. The bucket is public because recap PNGs have always been
+email-accessible without a login; service-role credentials are required to
+upload. Storage links are immutable, so bump the artwork render version when
+changing the image renderer's output contract.
+
 Automatic email-plan scheduling updates existing unsent occurrences and inserts
 only genuinely missing ones. This deliberately avoids treating the partial
 automation-key uniqueness guard as an upsert target; schedule reconciliation

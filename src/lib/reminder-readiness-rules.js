@@ -61,3 +61,15 @@ export function publicRevealSelectionReadiness({ kickoffReady, selectedPickCount
     reason: "No player selected a game in this public-pick window.",
   };
 }
+
+export function finalLinesSelectionReadiness({ slateReady, eligiblePlayerCount }) {
+  if (!slateReady.ready) return slateReady;
+  if (eligiblePlayerCount === 0) {
+    return {
+      ready: false,
+      terminal: true,
+      reason: "No player can still make a Pick'em selection for these games.",
+    };
+  }
+  return { ready: true, reason: null };
+}

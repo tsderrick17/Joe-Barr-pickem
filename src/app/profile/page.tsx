@@ -158,8 +158,6 @@ export default function ProfilePage() {
       <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
       <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-white px-3 py-2 outline-none focus:border-[#007e72]" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
       <label className="mt-5 flex items-start gap-3 border-y border-zinc-300 py-5 text-sm"><input checked={enabled} className="mt-1 size-4 accent-[#007e72]" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send pool emails to this address</strong>You can change the pace below whenever you like.</span></label>
-      {enabled ? <aside className="mt-4 border-l-4 border-[#007e72] bg-white px-4 py-3 text-sm leading-5"><strong className="block">Keep PickemJB out of spam</strong>Add <span className="break-all font-mono font-bold">{profile?.senderEmail || "the PickemJB From address shown in your email"}</span> to your contacts or safe-senders list as <span className="font-bold">PickemJB</span>. This is the address that appears as the sender.</aside> : null}
-
       {enabled ? <div className="mt-7 space-y-8">
         <section><h2 className="text-sm font-black tracking-[.14em]">CHOOSE YOUR EMAIL PLAN</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><PaceCard active={pace === "essentials"} detail="Selection reminders and the Tuesday recap." onChoose={() => setPreferences(essentials)} title="Essentials" /><PaceCard active={pace === "regular"} detail="Essentials, plus the Slate, final lines, Int’l locks, and playoff recaps." onChoose={() => setPreferences(regular)} recommended title="Regular" /><PaceCard active={pace === "full"} detail="Everything in Regular, plus every public pick reveal." onChoose={() => setPreferences(full)} title="Full Card" /></div>{pace === "custom" ? <p className="mt-3 text-sm font-semibold text-[#007e72]">You have a custom mix. Your choices are preserved below.</p> : null}</section>
 
@@ -172,6 +170,7 @@ export default function ProfilePage() {
         </div> : null}</section>
       </div> : null}
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}{message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
+      {enabled ? <aside className="mt-4 border-l-4 border-[#007e72] bg-white px-4 py-3 text-sm leading-5"><strong className="block">Keep PickemJB out of spam</strong>Add <span className="break-all font-mono font-bold">{profile?.senderEmail || "the PickemJB From address shown in your email"}</span> to your contacts or safe-senders list as <span className="font-bold">PickemJB</span>. This is the address that appears as the sender.</aside> : null}
       <button className="mt-6 min-h-12 bg-[#007e72] px-5 py-3 font-bold text-white shadow-[0_2px_0_#07564f] transition hover:bg-[#086f66] disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving…" : "Save notification choices"}</button>
     </form>
   </div></main>;

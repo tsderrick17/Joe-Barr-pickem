@@ -24,6 +24,7 @@ type Player = {
   loginPin: string | null;
   active: boolean;
   isCommissioner: boolean;
+  emailNotificationsEnabled: boolean;
   createdAt?: string;
   lastActiveAt?: string | null;
 };
@@ -129,7 +130,7 @@ export default function PlayerManagementPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3e8] px-5 py-10 text-zinc-900 md:px-10">
+    <main className="commissioner-subpage min-h-screen bg-[#f7f3e8] px-5 py-8 text-zinc-900 md:px-10">
       <div className="mx-auto max-w-5xl">
         <header className="border-b-2 border-zinc-900 pb-7">
           <div className="flex items-start justify-between gap-6">
@@ -157,7 +158,7 @@ export default function PlayerManagementPage() {
           </div>
         </header>
 
-        <div className="grid gap-10 py-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <div className="grid gap-6 py-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <section>
             <h2 className="font-serif text-3xl font-bold">
               Add a Player
@@ -269,7 +270,7 @@ PINs are unique login identifiers and may be viewed here at any time.
               </div>
             ) : null}
 
-            <div className="mt-6 border-y-2 border-zinc-900">
+            <div className="mt-4 border-y-2 border-zinc-900">
               {isLoading ? (
                 <p className="py-5 text-zinc-600">
                   Loading players...
@@ -281,16 +282,21 @@ PINs are unique login identifiers and may be viewed here at any time.
               ) : (
                 players.map((player) => (
                   <div
-                    className="flex items-center justify-between gap-4 border-b border-slate-400 py-4 last:border-b-0"
+                    className="flex items-center justify-between gap-4 border-b border-slate-400 py-2.5 last:border-b-0"
                     key={player.id}
                   >
                     <div>
                       <span className="font-serif text-2xl">
                         {player.firstName}
                       </span>
-                      <p className="mt-1 text-xs font-semibold text-slate-600">
-                        {lastActiveLabel(player.lastActiveAt)}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <p className="text-xs font-semibold text-slate-600">
+                          {lastActiveLabel(player.lastActiveAt)}
+                        </p>
+                        <span className={`text-[10px] font-bold uppercase tracking-[0.08em] ${player.emailNotificationsEnabled ? "text-emerald-800" : "text-slate-500"}`}>
+                          {player.emailNotificationsEnabled ? "Emails on" : "Emails off"}
+                        </span>
+                      </div>
                     </div>
 
 <div className="text-right">

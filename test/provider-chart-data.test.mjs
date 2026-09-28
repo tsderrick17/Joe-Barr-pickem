@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { monthlyCreditSeries, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
+import { latestProviderCreditSnapshot, monthlyCreditSeries, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
 
 test("monthly credits include charged failures, zero days and only the current month through now", () => {
@@ -27,6 +27,18 @@ test("missing costs use estimates, explicit zero stays free and quota null is un
   assert.equal(data.days[0].estimatedCalls, 1);
   assert.equal(data.reportedUsed, null);
   assert.equal(data.remaining, null);
+});
+
+test("every dashboard uses the newest coherent provider balance regardless of worker", () => {
+  const snapshot = latestProviderCreditSnapshot([
+    { started_at: "2026-09-20T12:00:00Z", job_type: "scores", details: { requestsUsed: "196", requestsRemaining: "304" } },
+    { started_at: "2026-09-20T12:05:00Z", job_type: "line_locks", details: { requestsUsed: "197", requestsRemaining: "303" } },
+    { started_at: "2026-09-20T12:10:00Z", job_type: "scores", details: { requestsUsed: null, requestsRemaining: null } },
+  ]);
+  assert.equal(snapshot.used, 197);
+  assert.equal(snapshot.remaining, 303);
+  assert.equal(snapshot.limit, 500);
+  assert.equal(snapshot.reportedAt, "2026-09-20T12:05:00.000Z");
 });
 
 test("monthly credit forecast covers the full month and pools nearby kickoff windows", () => {

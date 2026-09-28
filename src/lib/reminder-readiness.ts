@@ -2,12 +2,14 @@ import type { ReminderCategory } from "@/lib/reminder-audience";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import {
+  finalLinesSelectionReadiness,
   isFreshSlateReady,
   isPlayoffDayRecapReady,
   publicRevealSelectionReadiness,
   isSundayWindowReady,
 } from "@/lib/reminder-readiness-rules.js";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
+import { eligiblePlayerIds } from "@/lib/reminder-audience";
 
 type ReminderReadiness = { ready: boolean; reason: string | null; terminal?: boolean };
 
@@ -68,9 +70,10 @@ async function gameDaySlateReady(sourceGameIds: string[] = []): Promise<Reminder
     ? (games ?? []).filter((game) => sourceIds.has(game.id))
     : (games ?? []).filter((game) => easternDate(new Date(game.kickoff_at)) === day);
   if (!today.length) return { ready: false, reason: "There are no games on today’s Slate." };
-  return await hasOfficialLines(today.map((game) => game.id))
-    ? { ready: true, reason: null }
-    : { ready: false, reason: "Today’s official lines are still being finalized." };
+  const officialLinesReady = await hasOfficialLines(today.map((game) => game.id));
+  if (!officialLinesReady) return { ready: false, reason: "Today’s official lines are still being finalized." };
+  const eligiblePlayers = await eligiblePlayerIds("ats_due", today.map((game) => game.id));
+  return finalLinesSelectionReadiness({ slateReady: { ready: true, reason: null }, eligiblePlayerCount: eligiblePlayers.length });
 }
 
 async function earlyLockReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {

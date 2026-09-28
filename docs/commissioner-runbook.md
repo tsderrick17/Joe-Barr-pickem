@@ -2,6 +2,11 @@
 
 ## Control-center overview
 
+The Standings page has a commissioner-only Season Snapshot beneath the Pick'em
+Pad. Expand it to inspect cumulative wins through settled weeks. Its right-hand
+key reflects live standings and may include a partly graded current week; the
+chart itself waits for the period to complete. Reopening refreshes the graph.
+
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and
 week/round handoff. Its at-a-glance cards show the current stage, watchdog

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { assessBowlPoolIntegrity } from "../src/lib/bowl-pool-integrity.js";
+import { assessBowlPoolIntegrity, countMissingBowlTeamSlots } from "../src/lib/bowl-pool-integrity.js";
 
 const games = [
   { id: "a", kickoff_at: "2026-12-15T17:30:00Z", order_index: 1, status: "scheduled", away_team_id: "away-a", home_team_id: "home-a" },
@@ -28,4 +28,11 @@ test("Bowl Pool integrity catches missing teams, duplicate order, and overdue li
 test("Bowl Pool integrity allows a postponed game without requiring a line", () => {
   const result = assessBowlPoolIntegrity([{ ...games[0], status: "postponed" }], [], new Date("2026-12-16T00:00:00Z"));
   assert.equal(result.healthy, true);
+});
+
+test("Bowl readiness counts each missing team slot rather than incomplete games", () => {
+  assert.equal(countMissingBowlTeamSlots([
+    { ...games[0], away_team_id: null, home_team_id: null },
+    { ...games[1], away_team_id: "away-b", home_team_id: null },
+  ]), 3);
 });

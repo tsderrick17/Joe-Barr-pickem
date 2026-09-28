@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
-      providerRunsSince(new Date(Math.min(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1), now.getTime() - 30 * 86400000)).toISOString(), now.toISOString()),
+      providerRunsSince(new Date(Date.UTC(season.year, 0, 1)).toISOString(), now.toISOString()),
       previousPeriod ? supabaseAdmin.from("games").select("id, kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
     ]);
     if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
@@ -149,7 +149,10 @@ export async function GET(request: NextRequest) {
         line: lineByGame.get(game.id) ? { spread: lineByGame.get(game.id)!.locked_spread, lockedAt: lineByGame.get(game.id)!.locked_at, manual: lineByGame.get(game.id)!.manual_override } : null,
         picks: { total: picksVisible ? pickCounts.total : 0, pending: picksVisible ? pickCounts.pending : 0, graded: picksVisible ? pickCounts.graded : 0, visible: picksVisible },
         survivor: picksVisible ? survivorCounts : { total: 0, pending: 0 },
-        needsAttention: state === "needs_review" || state === "stale" || (new Date(game.line_lock_at).getTime() < now.getTime() && !lineByGame.has(game.id) && game.status === "scheduled"),
+        // A game being underway without a final is normal. Only finalized
+        // games with pending grades, or a missing locked line, belong in the
+        // commissioner review queue.
+        needsAttention: state === "needs_review" || (new Date(game.line_lock_at).getTime() < now.getTime() && !lineByGame.has(game.id) && game.status === "scheduled"),
       };
     });
     const latestScoreRun = (syncResult.data ?? [])[0] ?? null;
@@ -171,9 +174,14 @@ export async function GET(request: NextRequest) {
     const pickOutcomeCounts = (picksResult.data ?? []).reduce((counts, pick) => { counts[pick.result as "win" | "loss" | "void" | "pending"] += 1; return counts; }, { win: 0, loss: 0, void: 0, pending: 0 });
     const survivorEntryCounts = (survivorEntriesResult.data ?? []).reduce((counts, entry) => { counts[entry.status as "active" | "eliminated" | "complete"] += 1; return counts; }, { active: 0, eliminated: 0, complete: 0 });
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
+    const periodTypeById = new Map((periods ?? []).map((item) => [item.id, item.period_type]));
+    const regularSeasonGameDates = (scheduleGamesResult.data ?? [])
+      .filter((game) => periodTypeById.get(game.scoring_period_id) === "regular")
+      .filter((game) => Date.parse(game.kickoff_at) <= now.getTime())
+      .map((game) => game.kickoff_at);
     const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= now.getTime() - 30 * 86400000), now);
     const efficiencyHistory = slateEfficiencySeries(scheduleGamesResult.data ?? [], oddsRunsResult.data ?? [], now);
-    const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now, scheduleGamesResult.data ?? [], [...SCORE_POLLING_RETRY_MINUTES]);
+    const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now, scheduleGamesResult.data ?? [], [...SCORE_POLLING_RETRY_MINUTES], regularSeasonGameDates);
     const ladderCounts = new Map<number, number>();
     for (const run of syncResult.data ?? []) {
       if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
@@ -209,7 +217,7 @@ export async function GET(request: NextRequest) {
       status: attention.length ? "attention" : "healthy",
       periods: (periods ?? []).map((item) => ({ id: item.id, displayName: item.display_name, status: item.status, type: item.period_type })),
       period: { id: period.id, displayName: period.display_name, type: period.period_type, status: period.status },
-      metrics: { games: gameRows.length, live, settled, awaitingGrade: pendingGrades, gradeEligibleGames, gradeCompleteGames, pendingGradeGames, attention: attention.length, activePlayers: playersResult.count ?? 0, lastScoreSyncAt: latestRunAt, lastScoreSyncAgeMinutes: minutesSince(latestRunAt, now), latestScoreSyncStatus: latestScoreRun?.status ?? "none", providerAllowance: health.providerAllowance, pickOutcomes: pickOutcomeCounts, survivorEntries: survivorEntryCounts, reminders: reminderCounts, efficiency: { totalCredits: efficiency.totalCredits, scoreCredits: efficiency.scoreCredits, spreadCredits: efficiency.spreadCredits, finalizedGames: efficiency.finalizedGames, creditsPerFinal: efficiency.creditsPerFinal, productiveRate: efficiency.productiveRate, trend: efficiency.trend, history: efficiencyHistory }, settlementLatency: { ...settlementLatency, history: latencyHistory }, comparison: { previousPeriod: previousPeriod?.display_name ?? null, previousAverageMinutes: previousAverage, deltaMinutes: settlementLatency.averageMinutes !== null && previousAverage !== null ? settlementLatency.averageMinutes - previousAverage : null, history: periodLatencyHistory }, readiness: { scheduleLoaded: gameRows.length > 0, linesLocked: lineLockedCount, lineTotal: gameRows.length, nextKickoffAt: futureGames[0]?.kickoffAt ?? null, nextLineLockAt: futureGames.filter((game) => game.lineLockAt).sort((left, right) => new Date(left.lineLockAt).getTime() - new Date(right.lineLockAt).getTime())[0]?.lineLockAt ?? null } },
+      metrics: { games: gameRows.length, live, settled, awaitingGrade: pendingGrades, gradeEligibleGames, gradeCompleteGames, pendingGradeGames, attention: attention.length, activePlayers: playersResult.count ?? 0, lastScoreSyncAt: latestRunAt, lastScoreSyncAgeMinutes: minutesSince(latestRunAt, now), latestScoreSyncStatus: latestScoreRun?.status ?? "none", providerAllowance: creditUsage.remaining, pickOutcomes: pickOutcomeCounts, survivorEntries: survivorEntryCounts, reminders: reminderCounts, efficiency: { totalCredits: efficiency.totalCredits, scoreCredits: efficiency.scoreCredits, spreadCredits: efficiency.spreadCredits, finalizedGames: efficiency.finalizedGames, creditsPerFinal: efficiency.creditsPerFinal, productiveRate: efficiency.productiveRate, trend: efficiency.trend, history: efficiencyHistory }, settlementLatency: { ...settlementLatency, history: latencyHistory }, comparison: { previousPeriod: previousPeriod?.display_name ?? null, previousAverageMinutes: previousAverage, deltaMinutes: settlementLatency.averageMinutes !== null && previousAverage !== null ? settlementLatency.averageMinutes - previousAverage : null, history: periodLatencyHistory }, readiness: { scheduleLoaded: gameRows.length > 0, linesLocked: lineLockedCount, lineTotal: gameRows.length, nextKickoffAt: futureGames[0]?.kickoffAt ?? null, nextLineLockAt: futureGames.filter((game) => game.lineLockAt).sort((left, right) => new Date(left.lineLockAt).getTime() - new Date(right.lineLockAt).getTime())[0]?.lineLockAt ?? null } },
       polling: { recommendedPlan, plans: pollingPlans, assumptions: { approvalRequired: true, appliesAutomatically: false } },
       games: gameRows,
       attention,

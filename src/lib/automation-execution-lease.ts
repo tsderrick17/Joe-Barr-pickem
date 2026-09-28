@@ -1,13 +1,14 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 
-export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "season_bootstrap" | "watchdog" | "schedule_refresh";
+export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "reminder_schedule" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
 const leaseSecondsByJob: Record<AutomationJob, number> = {
   line_locks: 120,
   scores: 300,
   bowl_scores: 300,
   reminders: 600,
+  reminder_schedule: 600,
   season_bootstrap: 600,
   watchdog: 120,
   schedule_refresh: 600,
@@ -18,6 +19,7 @@ const executionTimeoutSecondsByJob: Record<AutomationJob, number> = {
   scores: 270,
   bowl_scores: 270,
   reminders: 540,
+  reminder_schedule: 540,
   season_bootstrap: 540,
   watchdog: 90,
   schedule_refresh: 540,
@@ -62,6 +64,8 @@ export class AutomationAlreadyRunningError extends Error {
           ? "Season schedule bootstrap"
           : job === "watchdog"
             ? "Operations watchdog"
+            : job === "reminder_schedule"
+              ? "Reminder schedule maintenance"
             : "Email reminder delivery";
     super(`${label} is already running.`);
     this.name = "AutomationAlreadyRunningError";

@@ -7,9 +7,9 @@ export type ChartSeries = { key: string; label: string; color: string; axis?: "r
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 function scaleMax(value: number) {
   if (value <= 0) return 4;
-  const unit = 10 ** Math.floor(Math.log10(value / 4));
-  const step = [1, 2, 5, 10].find((step) => step * unit >= value / 4)! * unit;
-  return step * 4;
+  // Keep the top gridline close to the observed data. The previous 1/2/5
+  // ladder could turn a ~200-minute period into a 400-minute chart.
+  return Math.max(4, Math.ceil((value * 1.15) / 10) * 10);
 }
 
 export default function ProviderChart({ points, series, label, histogram = false }: {
@@ -78,7 +78,7 @@ export default function ProviderChart({ points, series, label, histogram = false
         </g>)}
         {activeSeries.map((item) => {
           if (item.kind === "bar") return <g key={item.key}>{points.map((entry, i) => {
-            const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.max(2, plotWidth / Math.max(1, points.length) * .7);
+            const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.max(2, plotWidth / Math.max(1, points.length) * .56);
             const barX = histogram ? left + (entry.start ?? 0) / domain * plotWidth : Math.min(width - edge - barWidth, Math.max(left, x(i) - barWidth / 2));
             const value = entry.values[item.key];
             const base = item.stack ? activeSeries.slice(0, activeSeries.indexOf(item)).filter((previous) => previous.stack === item.stack).reduce((sum, previous) => sum + (entry.values[previous.key] ?? 0), 0) : 0;
