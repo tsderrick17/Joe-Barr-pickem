@@ -467,7 +467,7 @@ Shared responsive charts provide crosshairs, touch and keyboard exploration,
 separate efficiency axes, and a data table. Ladder widths retain actual gap
 proportions, with fresh-final counts controlling bar height.
 
-## 2026-09-28 — Commissioner-only Season Snapshot prototype
+## 2026-09-28 - Commissioner-only Season Snapshot prototype
 
 The Pick'em Pad contains a default-minimized Season Snapshot. The graph plots
 each active player's cumulative ATS wins after each completed scoring period;
@@ -476,3 +476,20 @@ standings order even if the current week is still active. A commissioner-only
 endpoint supplies the historical series only when the section opens, keeping
 private scoring history out of the ordinary player response and avoiding
 background polling. The feature remains hidden from players pending review.
+
+## 2026-09-28 - One credential path and fewer superseded release runs
+
+**Status:** Accepted
+
+Use a clean release branch and verify the existing GitHub CLI login after
+network access is available. The release helper rejects credentials embedded in
+the remote URL, uses a temporary Git authorization header, and selects OpenSSL
+for Git on Windows. A newer commit to the same pull request cancels its older
+application-quality run. The isolated database gate and production smoke gate
+remain unchanged.
+
+**Reason:** Restricted network access had made a valid login look expired, and
+the Windows Git TLS/credential path caused release hangs and unsafe workarounds.
+One final push avoids repeated preview and CI runs. We retain main-branch
+application quality after merge because branch protection currently requires
+only the database lifecycle check and does not enforce those rules for admins.

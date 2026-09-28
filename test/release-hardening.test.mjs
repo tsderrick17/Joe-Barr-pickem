@@ -67,10 +67,10 @@ test("successful production deployments receive an independent smoke gate", asyn
   assert.match(smoke, /contentType\.startsWith\("image\/"\)/);
 });
 
-test("application quality cancellation is scoped to one commit", async () => {
+test("a newer PR commit cancels only the prior quality run for that PR", async () => {
   const workflow = await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8");
 
-  assert.match(workflow, /group:\s*application-quality-\$\{\{ github\.ref \}\}-\$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /group:\s*application-quality-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}/);
   assert.match(workflow, /cancel-in-progress:\s*true/);
 });
 

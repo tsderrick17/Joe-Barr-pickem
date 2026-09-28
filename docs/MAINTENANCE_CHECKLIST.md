@@ -13,6 +13,9 @@ records.
 - Review unresolved Commissioner incidents; do not delete open or unresolved
   records.
 - Run `npm run test:all`, `npm run lint`, and `npm run build` before a release.
+- Use `npm run release:fetch`, `npm run release:check`, then one
+  `npm run release:push` after the final commit; see the Commissioner release
+  gate for authentication and production verification.
 
 ## Monthly
 
