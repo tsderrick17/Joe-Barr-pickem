@@ -104,6 +104,10 @@ be replayed.
   never become wins by inference.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
+- The Pick'em Pad's Season Snapshot is commissioner-only until explicitly
+  released. Its cumulative ATS-win points include only complete scoring
+  periods, in season order. The right-hand key follows the current standings
+  order, which can include wins from an active week not yet plotted.
 
 ## Survivor selection and scoring
 
@@ -368,6 +372,10 @@ may enrich spreads but cannot override canonical schedule assignments.
   crowns the Pick'em champion or co-champions. After Survivor concludes, weekly recaps automatically use
   Pick'em-only wording; the championship-week recap still memorializes the
   Survivor champion.
+- Email artwork is pre-rendered by the reminder worker and served from the
+  public `email-artwork` Supabase Storage bucket. Reminder manifests make
+  retries reuse the same assets; the Vercel image route remains for older sent
+  messages and as a fallback when static storage is unavailable.
 - Multiple valid pool emails may be delivered on one day when the live schedule
   and the player's choices call for them. Every occurrence retains an immutable
   source-game snapshot, and the unique reminder/player delivery receipt plus

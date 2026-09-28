@@ -2,17 +2,18 @@ import { checkReminderHealth } from "@/lib/reminder-health";
 import { checkCriticalWorkerHealth } from "@/lib/critical-worker-health";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { latestProviderCreditSnapshot } from "@/lib/provider-chart-data.js";
 
 export type AutomationRun = {
-  job_type: "line_locks" | "scores";
+  job_type: "line_locks" | "scores" | "odds";
   status: "started" | "success" | "failed";
   started_at: string;
   completed_at: string | null;
   error_message: string | null;
-  details: { requestsRemaining?: string | null; quotaProtected?: boolean } | null;
+  details: { requestsRemaining?: string | null; requestsUsed?: string | null; quotaProtected?: boolean } | null;
 };
 
-function latestByJob(runs: AutomationRun[], job: AutomationRun["job_type"]) {
+function latestByJob(runs: AutomationRun[], job: "line_locks" | "scores") {
   return runs.find((run) => run.job_type === job) ?? null;
 }
 
@@ -24,7 +25,7 @@ export async function checkAutomationHealth(now = new Date()) {
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
-      .in("job_type", ["line_locks", "scores"])
+      .in("job_type", ["line_locks", "scores", "odds"])
       .order("started_at", { ascending: false })
       .limit(20),
     supabaseAdmin
@@ -82,11 +83,8 @@ export async function checkAutomationHealth(now = new Date()) {
   const latestScores = latestByJob(runs, "scores");
   const latestSuccessfulLocks = runs.find((run) => run.job_type === "line_locks" && run.status === "success") ?? null;
   const latestSuccessfulScores = runs.find((run) => run.job_type === "scores" && run.status === "success") ?? null;
-  const providerRemainingRaw = latestSuccessfulScores?.details?.requestsRemaining;
-  const providerAllowance =
-    typeof providerRemainingRaw === "string" && /^\d+$/.test(providerRemainingRaw)
-      ? Number(providerRemainingRaw)
-      : null;
+  const providerCreditSnapshot = latestProviderCreditSnapshot(runs);
+  const providerAllowance = providerCreditSnapshot?.remaining ?? null;
   const lockedIds = new Set((linesResult.data ?? []).map((line) => line.game_id));
   const missingOfficialLines = lineCandidateIds.filter((id) => !lockedIds.has(id)).length;
   const scoreCandidates = scoreCandidateIds.length;
@@ -173,6 +171,7 @@ export async function checkAutomationHealth(now = new Date()) {
     scoreProviderRetryAt: scoreProviderFailureStreak > 0 ? scoreRetryTimes[0] ?? null : null,
     scoreCheckStatus,
     providerAllowance,
+    providerCreditSnapshot,
     scheduleProviderCircuit: scheduleCircuitResult.data,
     scheduleProviderCooldownActive: Boolean(
       scheduleCircuitResult.data &&

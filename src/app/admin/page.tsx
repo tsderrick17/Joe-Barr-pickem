@@ -284,7 +284,7 @@ export default function AdminPage() {
               <p className="mt-1 max-w-2xl text-sm text-zinc-700">Use the live map above for the pool’s status. These routes are for the work around it.</p>
             </div>
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Link className="commissioner-route-card" href="/admin/players"><span>ROSTER CONTROL</span><p>Players</p><small>Add players, review activity, and manage private PINs.</small><strong>OPEN PLAYERS →</strong></Link>
             <Link className="commissioner-route-card" href="/admin/reminders"><span>PLAYER DELIVERY</span><p>Email center</p><small>Check delivery, send a private test, or update future wording.</small><strong>OPEN EMAILS →</strong></Link>
             <button className="commissioner-route-card text-left" onClick={() => setActivePanel("bowl-pool")} type="button"><span>SEPARATE COMPETITION</span><p>Bowl Pool</p><small>Review Bowl lines, schedule readiness, entries, and exceptions.</small><strong>OPEN BOWL POOL →</strong></button>

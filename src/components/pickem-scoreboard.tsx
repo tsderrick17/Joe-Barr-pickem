@@ -1,6 +1,7 @@
 import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
+import SeasonSnapshot from "@/components/season-snapshot";
 
 export type PickemScoreboardPick = {
   label: string | null;
@@ -35,6 +36,7 @@ type Props = {
   week: string;
   hideEliminatedRows?: boolean;
   onToggleEliminatedRows?: () => void;
+  isCommissioner?: boolean;
 };
 
 export default function PickemScoreboard({
@@ -44,6 +46,7 @@ export default function PickemScoreboard({
   week,
   hideEliminatedRows = false,
   onToggleEliminatedRows,
+  isCommissioner = false,
 }: Props) {
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
@@ -106,6 +109,7 @@ export default function PickemScoreboard({
           </tbody>
         </table>
       </div>
+      {isCommissioner ? <SeasonSnapshot standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /> : null}
     </section>
   );
 }

@@ -1,3 +1,10 @@
+export function countMissingBowlTeamSlots(games) {
+  return games.reduce(
+    (total, game) => total + (game.away_team_id ? 0 : 1) + (game.home_team_id ? 0 : 1),
+    0,
+  );
+}
+
 export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   const problems = [];
   const ordered = [...games].sort((a, b) => a.order_index - b.order_index);

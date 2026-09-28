@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         stage("results", "Results & recap", "complete", "The final results are complete.", "Recap receipts remain available."),
         stage("handoff", "Season finish", "complete", "The final playoff round turned over successfully.", "The next automatic lifecycle step is the new-season bootstrap."),
       ];
-      return NextResponse.json({ checkedAt: now.toISOString(), overall: "healthy", headline: "The season is complete", summary: "Every operational gate is settled and the full season remains preserved.", currentStageId: "handoff", openIncidentCount: watchdog.openAlerts.length, providerAllowance: health.providerAllowance, release, stages: completedStages });
+      return NextResponse.json({ checkedAt: now.toISOString(), overall: "healthy", headline: "The season is complete", summary: "Every operational gate is settled and the full season remains preserved.", currentStageId: "handoff", openIncidentCount: watchdog.openAlerts.length, providerAllowance: health.providerAllowance, providerCreditSnapshot: health.providerCreditSnapshot, release, stages: completedStages });
     }
 
     const { data: periods, error: periodsError } = await supabaseAdmin
@@ -214,6 +214,7 @@ export async function GET(request: NextRequest) {
       currentStageId: current.id,
       openIncidentCount,
       providerAllowance: health.providerAllowance,
+      providerCreditSnapshot: health.providerCreditSnapshot,
       release,
       stages,
     });

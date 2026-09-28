@@ -364,7 +364,11 @@ export default function HomePage() {
         return;
       }
       const target = container.querySelector<HTMLElement>(`[data-bowl-game-index="${currentDayIndex}"]`);
-      if (target) container.scrollLeft = Math.max(0, target.offsetLeft - 128);
+      if (target) {
+        const targetLeft = target.getBoundingClientRect().left - container.getBoundingClientRect().left + container.scrollLeft;
+        const stickyColumns = Number.parseFloat(window.getComputedStyle(container).scrollPaddingLeft) || 0;
+        container.scrollLeft = Math.max(0, targetLeft - stickyColumns);
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, [bowlGames, bowlPoolMinimized]);
@@ -505,6 +509,7 @@ export default function HomePage() {
 
         <PickemScoreboard
           hideEliminatedRows={data.hidePickemEliminatedRows}
+          isCommissioner={data.isCommissioner}
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           onToggleEliminatedRows={() => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}

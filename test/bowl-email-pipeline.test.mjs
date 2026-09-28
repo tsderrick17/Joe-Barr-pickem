@@ -46,12 +46,15 @@ test("Bowl line-lock readiness waits for every playable game to have a locked li
 test("Bowl score automation has its own fifteen-minute endpoint", () => {
   const route = read("src/app/api/cron/sync-bowl-scores/route.ts");
   const nflRoute = read("src/app/api/cron/sync-scores/route.ts");
-  const migration = read("supabase/migrations/20260922020000_isolate_bowl_pool_cron.sql");
+  const migration = read("supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql");
   assert.match(route, /runWithAutomationLease\("bowl_scores", syncBowlPool\)/);
   assert.doesNotMatch(nflRoute, /syncBowlPool/);
   assert.match(migration, /refresh-bowl-pool-every-fifteen-minutes/);
-  assert.match(migration, /'\/api\/cron\/sync-bowl-scores'/);
-  assert.match(migration, /'\*\/15 \* \* \* \*'/);
+  assert.match(migration, /public\.dispatch_bowl_sync_if_due\(\)/);
+  assert.match(migration, /min_interval := interval '15 minutes'/);
+  assert.match(migration, /interval '1 hour'/);
+  assert.match(migration, /min_interval := interval '24 hours'/);
+  assert.match(migration, /'https:\/\/pickemjb\.vercel\.app\/api\/cron\/sync-bowl-scores'/);
 });
 
 test("Bowl score settlement works from ESPN without a paid NCAAF odds key", () => {

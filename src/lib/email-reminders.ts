@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   eligiblePlayerIds,
   type ReminderAudience,
@@ -5,6 +6,7 @@ import {
 } from "@/lib/reminder-audience";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { renderEmailArtwork, type EmailArtworkSnapshot } from "@/lib/email-artwork";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 import { ensureBowlDailyRecapSnapshot, ensureBowlLineLockSnapshot } from "@/lib/bowl-pool-recap";
 import { emailArtworkOptions, emailArtworkKinds, emailArtworkTemplateId, type EmailArtworkOptions } from "@/lib/email-artwork-options";
@@ -19,6 +21,7 @@ type Reminder = {
   recap_snapshot?: unknown;
   source_game_ids?: string[];
   imageOptions?: EmailArtworkOptions;
+  artworkUrls?: Record<string, string>;
 };
 
 type EmailRecipient = {
@@ -103,28 +106,28 @@ const publicReceiptImageFrameStyle = "box-sizing:border-box;margin:16px auto 0;m
 const recapImageStyle = "display:block;height:auto;margin:0 0 18px;max-width:100%;width:100%";
 const recapImageStyleNoMargin = "display:block;height:auto;max-width:100%;width:100%";
 
-function recapImage({ alt, href, kind, reminderId, style, width = 560, density = "compact" }: { density?: string; alt: string; href: string; kind: string; reminderId: string; style: string; width?: number }) {
+function recapImage({ alt, href, kind, reminderId, style, width = 560, density = "compact", artworkUrls }: { density?: string; alt: string; href: string; kind: string; reminderId: string; style: string; width?: number; artworkUrls?: Record<string, string> }) {
   // Version the artwork URL so a transient 404/timeout cached by an email
   // provider cannot poison every later open of the same message.
-  const source = `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=5&density=${density}`;
+  const source = artworkUrls?.[kind] ?? `${siteUrl}/api/recap-image?reminder=${encodeURIComponent(reminderId)}&kind=${kind}&v=5&density=${density}`;
   return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="${width}" style="${style}"></a>`;
 }
 
 export function messageHtml(reminder: Reminder) {
   const recapImages = reminder.category === "bowl_line_lock"
-    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool official lines", href: `${siteUrl}/bowl-pool`, kind: "bowl-lines", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin })}</div>`
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool official lines", href: `${siteUrl}/bowl-pool`, kind: "bowl-lines", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin })}</div>`
     : reminder.category === "bowl_daily_recap"
-    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool results and standings", href: `${siteUrl}/bowl-pool`, kind: "bowl", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyle })}</div>`
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool results and standings", href: `${siteUrl}/bowl-pool`, kind: "bowl", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyle })}</div>`
     : reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap"
-    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Pick'em standings and this week's picks", href: siteUrl, kind: "summary", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyle })}${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? recapImage({ alt: "Active Survivor board", href: `${siteUrl}/board#slate-matchups`, kind: "survivor", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin }) : ""}</div>`
+    ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Pick'em standings and this week's picks", href: siteUrl, kind: "summary", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyle })}${reminder.category === "weekly_recap" && survivorIsStillRunning(reminder.recap_snapshot) ? recapImage({ alt: "Active Survivor board", href: `${siteUrl}/board#slate-matchups`, kind: "survivor", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin }) : ""}</div>`
     : reminder.category === "weekly"
-      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "This week's preliminary Slate", href: `${siteUrl}/board`, kind: "fresh", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin })}</div>`
+      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "This week's preliminary Slate", href: `${siteUrl}/board`, kind: "fresh", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin })}</div>`
       : reminder.category === "final_lines" || reminder.category === "sunday_final_lines"
-      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Today's official Slate", href: `${siteUrl}/board`, kind: "gameday", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin })}</div>`
+      ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Today's official Slate", href: `${siteUrl}/board`, kind: "gameday", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin })}</div>`
       : reminder.category === "early_lock"
-        ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "International game official line", href: `${siteUrl}/board`, kind: "earlylock", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin })}</div>`
+        ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "International game official line", href: `${siteUrl}/board`, kind: "earlylock", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin })}</div>`
         : reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal" || reminder.category === "playoff_public_reveal"
-          ? `<div style="${publicReceiptImageFrameStyle}">${recapImage({ alt: "Public Pick'em standings and revealed selections", href: siteUrl, kind: "reveal", reminderId: reminder.id, density: reminder.imageOptions?.density, style: recapImageStyleNoMargin, width: 560 })}</div>`
+          ? `<div style="${publicReceiptImageFrameStyle}">${recapImage({ alt: "Public Pick'em standings and revealed selections", href: siteUrl, kind: "reveal", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin, width: 560 })}</div>`
         : "";
   const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
@@ -139,6 +142,71 @@ export function messageHtml(reminder: Reminder) {
   const bowlCopy = bowlRecapCopy(reminder.recap_snapshot);
   const bowlBlock = bowlCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(bowlCopy)}</p>` : "";
   return `<main style="box-sizing:border-box;width:100%;background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:24px;line-height:1.15;margin:0 0 14px">${escapeHtml(reminder.title)}</h1><p style="font:16px/1.45 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${survivorUpdateBlock}${bowlBlock}${recapImages}<p style="margin:20px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:24px 0 14px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0"><a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+}
+
+const EMAIL_ARTWORK_BUCKET = "email-artwork";
+const EMAIL_ARTWORK_RENDER_VERSION = 1;
+
+/** Render each reminder image before delivery and point emails at immutable
+ * public Storage objects. Keep dynamic URLs as a safe fallback while the
+ * bucket or additive manifest column is being deployed. */
+async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<string, string> | undefined> {
+  const snapshot = reminder.recap_snapshot as EmailArtworkSnapshot | null | undefined;
+  const kinds = emailArtworkKinds(reminder.category, snapshot);
+  if (!snapshot || !kinds.length) return undefined;
+
+  const density = reminder.imageOptions?.density ?? "compact";
+  const fingerprint = createHash("sha256")
+    .update(JSON.stringify({ version: EMAIL_ARTWORK_RENDER_VERSION, snapshot, kinds, density }))
+    .digest("hex");
+  const manifestResult = await supabaseAdmin.from("push_reminders").select("artwork_assets").eq("id", reminder.id).maybeSingle();
+  if (manifestResult.error || !manifestResult.data) {
+    console.warn("Static email artwork manifest is unavailable; using the image route.", { code: manifestResult.error?.code ?? "missing-reminder" });
+    return undefined;
+  }
+
+  const savedManifest = manifestResult.data.artwork_assets;
+  const manifest = savedManifest && typeof savedManifest === "object" && !Array.isArray(savedManifest)
+    ? savedManifest as Record<string, Record<string, string>>
+    : {};
+  const savedPaths = manifest[fingerprint] && typeof manifest[fingerprint] === "object" ? manifest[fingerprint] : {};
+  const paths: Record<string, string> = { ...savedPaths };
+  const imageUrls: Record<string, string> = {};
+  let uploadedAny = false;
+
+  for (const kind of kinds) {
+    if (typeof paths[kind] === "string") {
+      imageUrls[kind] = supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).getPublicUrl(paths[kind]).data.publicUrl;
+      continue;
+    }
+
+    try {
+      const rendered = await renderEmailArtwork(snapshot, kind, { density });
+      const image = Buffer.from(await rendered.arrayBuffer());
+      const objectPath = `v${EMAIL_ARTWORK_RENDER_VERSION}/${fingerprint}/${kind}.png`;
+      const { error } = await supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).upload(objectPath, image, {
+        cacheControl: "31536000",
+        contentType: "image/png",
+        upsert: true,
+      });
+      if (error) {
+        console.warn("Static email artwork upload failed; using the image route for this image.", { kind, code: error.statusCode ?? "storage-error" });
+        continue;
+      }
+      paths[kind] = objectPath;
+      uploadedAny = true;
+      imageUrls[kind] = supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).getPublicUrl(objectPath).data.publicUrl;
+    } catch (error) {
+      console.warn("Static email artwork rendering failed; using the image route for this image.", { kind, message: error instanceof Error ? error.message : "render-error" });
+    }
+  }
+
+  if (uploadedAny) {
+    const { error } = await supabaseAdmin.from("push_reminders").update({ artwork_assets: { [fingerprint]: paths } }).eq("id", reminder.id);
+    if (error) console.warn("Static email artwork was uploaded but its retry manifest could not be saved.", { code: error.code ?? "database-error" });
+  }
+
+  return Object.keys(imageUrls).length ? imageUrls : undefined;
 }
 
 async function recipientsForReminder(reminder: Reminder) {
@@ -403,6 +471,9 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
       suppressed: true,
       suppressionReason: "No player has an outstanding Pick'em selection.",
     };
+  }
+  if (recipients.length && emailArtworkKinds(reminder.category, reminder.recap_snapshot).length) {
+    reminder.artworkUrls = await prepareEmailArtworkUrls(reminder);
   }
   let sent = 0;
   let failed = 0;

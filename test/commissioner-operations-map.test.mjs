@@ -27,5 +27,5 @@ test("commissioner operations map keeps key health signals visible at a glance",
   assert.match(component, /Operations at a glance/);
   assert.match(component, /CURRENT STAGE/);
   assert.match(component, /WATCHDOG/);
-  assert.match(component, /PROVIDER CREDITS/);
+  assert.match(component, /PROVIDER BALANCE/);
 });

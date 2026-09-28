@@ -15,7 +15,7 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /email_reminder_deliveries/);
   assert.match(capacity, /sync_runs/);
   assert.match(capacity, /summarizeProviderEfficiency/);
-  assert.match(capacity, /summarizeProviderCalendarMonth/);
+  assert.match(capacity, /monthlyCreditSeries/);
   assert.match(capacity, /efficiencyStart/);
   assert.doesNotMatch(capacity, /api\.the-odds-api\.com/);
   assert.match(route, /requireCommissioner/);
@@ -25,7 +25,8 @@ test("account capacity gauges use existing provider records and database details
   assert.match(panel, /Unknown plan limits show a live count/);
   assert.match(panel, /30-DAY EFFICIENCY/);
   assert.match(panel, /CALENDAR MONTH/);
-  assert.match(panel, /provisional month-end/);
+  assert.match(panel, /scheduled month-end/);
+  assert.match(panel, /not in app logs/);
   assert.match(panel, /credits \/ final/);
   assert.match(panel, /Dashboard only/);
   assert.match(panel, /liveCountWithoutLimit/);

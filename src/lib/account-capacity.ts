@@ -1,5 +1,7 @@
 import { easternCalendarDayWindow } from "@/lib/eastern-calendar-day";
-import { summarizeProviderCalendarMonth, summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
+import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
+import { monthlyCreditSeries } from "@/lib/provider-chart-data.js";
+import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type ProviderEfficiency = {
@@ -39,7 +41,13 @@ export type AccountCapacity = {
     scoreCredits: number;
     lineLockCredits: number;
     oddsCredits: number;
-    projectedCredits: number;
+    forecastCredits: number;
+    forecastTotal: number;
+    providerUsed: number | null;
+    providerRemaining: number | null;
+    providerLimit: number | null;
+    untrackedCredits: number | null;
+    reportedAt: string | null;
   };
 };
 
@@ -59,15 +67,30 @@ let uptimeRobotCache: { expiresAt: number; account: AccountCapacity } | null = n
 let githubUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 let sentryUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 
+async function providerRunsSince(since: string) {
+  const page = (offset: number) => supabaseAdmin
+    .from("sync_runs")
+    .select("id, job_type, status, details, completed_at, started_at")
+    .eq("provider", "The Odds API")
+    .in("status", ["success", "failed"])
+    .gte("started_at", since)
+    .order("started_at", { ascending: true })
+    .order("id", { ascending: true })
+    .range(offset, offset + 999);
+  const first = await page(0);
+  if (first.error) return first;
+  const rows = [...(first.data ?? [])];
+  for (let offset = 1000; rows.length === offset; offset += 1000) {
+    const more = await page(offset);
+    if (more.error) return { data: null, error: more.error };
+    rows.push(...(more.data ?? []));
+  }
+  return { data: rows, error: null };
+}
+
 function wholeNumber(value: unknown) {
   const numeric = typeof value === "number" ? value : Number(value);
   return Number.isFinite(numeric) ? Math.max(0, numeric) : null;
-}
-
-function latestRemaining(details: unknown) {
-  if (!details || typeof details !== "object") return null;
-  const value = (details as { requestsRemaining?: unknown }).requestsRemaining;
-  return typeof value === "string" && /^\d+$/.test(value) ? Number(value) : null;
 }
 
 export function usageHealth(used: number | null, limit: number | null) {
@@ -252,7 +275,8 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
   const efficiencyStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const historyStart = new Date(Math.min(Date.parse(efficiencyStart), Date.parse(monthStart))).toISOString();
-  const [databaseResult, emailResult, oddsResult, uptimeRobot, github, sentry] = await Promise.all([
+  const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+  const [databaseResult, emailResult, oddsResult, monthGamesResult, uptimeRobot, github, sentry] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
       .from("email_reminder_deliveries")
@@ -260,14 +284,13 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .eq("status", "sent")
       .gte("delivered_at", day.start)
       .lt("delivered_at", day.end),
+    providerRunsSince(historyStart),
     supabaseAdmin
-      .from("sync_runs")
-      .select("job_type, details, completed_at, started_at")
-      .eq("provider", "The Odds API")
-      .in("status", ["success", "failed"])
-      .gte("started_at", historyStart)
-      .order("completed_at", { ascending: false })
-      .limit(1000),
+      .from("games")
+      .select("id, kickoff_at, finalized_at, status")
+      .gte("kickoff_at", monthStart)
+      .lt("kickoff_at", monthEnd)
+      .order("kickoff_at"),
     loadUptimeRobotCapacity(now),
     loadGitHubCapacity(now),
     loadSentryCapacity(now),
@@ -275,13 +298,34 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
 
   const databaseBytes = databaseResult.error ? null : wholeNumber(databaseResult.data);
   const databaseMb = databaseBytes === null ? null : Number((databaseBytes / (1024 * 1024)).toFixed(1));
-  const latestOddsRun = (oddsResult.data ?? []).find((run) => latestRemaining(run.details) !== null) ?? null;
   const providerEfficiency = summarizeProviderEfficiency(oddsResult.data ?? [], now) as ProviderEfficiency;
-  const providerCalendarMonth = summarizeProviderCalendarMonth(oddsResult.data ?? [], now);
-  const remainingOddsCredits = latestOddsRun ? latestRemaining(latestOddsRun.details) : null;
-  const oddsUsed = remainingOddsCredits === null
-    ? null
-    : Math.max(0, ODDS_API_FREE_MONTHLY_CREDITS - remainingOddsCredits);
+  const creditUsage = monthlyCreditSeries(
+    oddsResult.data ?? [],
+    now,
+    monthGamesResult.error ? [] : monthGamesResult.data ?? [],
+    [...SCORE_POLLING_RETRY_MINUTES],
+  );
+  const oddsUsed = creditUsage.reportedUsed;
+  const remainingOddsCredits = creditUsage.remaining;
+  const sourceCredits = (jobType: string) => creditUsage.days.reduce((sum: number, day: { scores: number; lines: number; other: number }) => sum + (jobType === "scores" ? day.scores : jobType === "lines" ? day.lines : day.other), 0);
+  const providerCalendarMonth = {
+    monthLabel: creditUsage.monthLabel,
+    daysInMonth: creditUsage.calendarDays.length,
+    daysElapsed: creditUsage.days.length,
+    sundaysInMonth: creditUsage.calendarDays.filter((day: { date: string }) => new Date(day.date).getUTCDay() === 0).length,
+    providerCalls: (oddsResult.data ?? []).filter((run) => new Date(run.completed_at ?? run.started_at).getTime() >= new Date(monthStart).getTime()).length,
+    creditsTracked: creditUsage.trackedCredits,
+    scoreCredits: sourceCredits("scores"),
+    lineLockCredits: sourceCredits("lines"),
+    oddsCredits: sourceCredits("other"),
+    forecastCredits: creditUsage.forecastCredits,
+    forecastTotal: creditUsage.forecastTotal,
+    providerUsed: creditUsage.reportedUsed,
+    providerRemaining: creditUsage.remaining,
+    providerLimit: creditUsage.providerLimit,
+    untrackedCredits: creditUsage.untrackedCredits,
+    reportedAt: creditUsage.reportedAt,
+  };
 
   return [
     {
@@ -289,10 +333,10 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       service: "The Odds API",
       metric: "NFL credits",
       used: oddsUsed,
-      limit: ODDS_API_FREE_MONTHLY_CREDITS,
+      limit: creditUsage.providerLimit ?? ODDS_API_FREE_MONTHLY_CREDITS,
       unit: "credits",
       period: "this month",
-      observedAt: latestOddsRun?.completed_at ?? latestOddsRun?.started_at ?? null,
+      observedAt: creditUsage.reportedAt,
       detail: remainingOddsCredits === null
         ? "The next successful line or score update will capture this reading automatically; this screen never spends an Odds API credit to check."
         : `${remainingOddsCredits} credits remain from the latest normal provider response. Bowl Pool uses ESPN by default and does not consume this NFL credit pool; an explicitly enabled NCAAF Odds API fallback would use the same monthly allowance.`,

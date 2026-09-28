@@ -1,6 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type StageState = "complete" | "active" | "waiting" | "attention";
@@ -13,15 +14,16 @@ type OperationsMap = {
   currentStageId: string;
   openIncidentCount: number;
   providerAllowance?: number | null;
+  providerCreditSnapshot?: { used: number; remaining: number; limit: number; reportedAt: string } | null;
   release?: string | null;
   stages: Stage[];
 };
 
-type OperationsWorkspace = "overview" | "grading" | "game-day" | "season-setup" | "system";
+type OperationsWorkspace = "grading" | "game-day" | "season-setup" | "system";
 
-const workspaceForStage: Record<string, { panel: OperationsWorkspace; label: string }> = {
+const workspaceForStage: Record<string, { panel?: OperationsWorkspace; href?: string; label: string }> = {
   schedule: { panel: "season-setup", label: "Open season workspace" },
-  selections: { panel: "overview", label: "Open pool overview" },
+  selections: { href: "/", label: "Open pool standings" },
   lines: { panel: "game-day", label: "Open game-day workspace" },
   scores: { panel: "game-day", label: "Open game-day workspace" },
   results: { panel: "grading", label: "Open grading workspace" },
@@ -102,7 +104,7 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
         <div className="commissioner-map-metrics mt-4" aria-label="Operations at a glance">
           <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">CURRENT STAGE</span><strong>{selected?.label ?? "—"}</strong><span>{selected ? stateLabel[selected.state] : "Waiting for status"}</span></div>
           <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">WATCHDOG</span><strong>{map.openIncidentCount ? map.openIncidentCount : "Quiet"}</strong><span>{map.openIncidentCount ? `Open incident${map.openIncidentCount === 1 ? "" : "s"}` : "No open incidents"}</span></div>
-          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">PROVIDER CREDITS</span><strong>{map.providerAllowance ?? "—"}</strong><span>{map.providerAllowance === null || map.providerAllowance === undefined ? "Not reported" : "Remaining this period"}</span></div>
+          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">PROVIDER BALANCE</span><strong>{map.providerCreditSnapshot?.remaining ?? map.providerAllowance ?? "—"}</strong><span>{map.providerCreditSnapshot ? `${map.providerCreditSnapshot.used} of ${map.providerCreditSnapshot.limit} used` : map.providerAllowance === null || map.providerAllowance === undefined ? "Not reported" : "Remaining this month"}</span></div>
           <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">DEPLOYED RELEASE</span><strong className="commissioner-map-release">{map.release ? map.release.slice(0, 7) : "Local"}</strong><span>{map.release ? "Vercel commit" : "Release not reported"}</span></div>
         </div>
 
@@ -130,7 +132,9 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
           <div className="commissioner-map-next">
             <p className="text-xs font-black tracking-[0.14em]">WHAT HAPPENS NEXT</p>
             <p className="mt-1 text-sm leading-5">{selected.next}</p>
-            {onOpenWorkspace && workspaceForStage[selected.id] ? <button className="commissioner-inline-action mt-3" onClick={() => onOpenWorkspace(workspaceForStage[selected.id].panel)} type="button">
+            {workspaceForStage[selected.id]?.href ? <Link className="commissioner-inline-action mt-3" href={workspaceForStage[selected.id].href!}>
+              {workspaceForStage[selected.id].label} <span aria-hidden="true">→</span>
+            </Link> : onOpenWorkspace && workspaceForStage[selected.id]?.panel ? <button className="commissioner-inline-action mt-3" onClick={() => onOpenWorkspace(workspaceForStage[selected.id].panel!)} type="button">
               {workspaceForStage[selected.id].label} <span aria-hidden="true">→</span>
             </button> : null}
           </div>
