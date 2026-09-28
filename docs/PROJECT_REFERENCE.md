@@ -104,8 +104,9 @@ be replayed.
   never become wins by inference.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
-- The Pick'em Pad's default-minimized Season Snapshot appears for commissioners
-  starting in Week 6 and stays unavailable to players until explicitly released.
+- The Pick'em Pad's default-minimized Season Snapshot is available to
+  commissioners for preview, including before Week 6, and stays unavailable to
+  players until explicitly released.
   Everyone begins at zero on the regular-season chart. Completed periods carry
   every player's cumulative ATS wins forward; an active period adds a player
   only after their full card is graded. A separate playoff chart starts at each

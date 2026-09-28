@@ -80,12 +80,13 @@ test("playoff baseline carries final regular-season totals into the first round"
   ]);
 });
 
-test("snapshot is commissioner-only, hidden before week six, and loads on expansion", () => {
+test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
   const route = fs.readFileSync(path.join(root, "src/app/api/admin/season-snapshot/route.ts"), "utf8");
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
   assert.ok(route.indexOf("requireCommissioner(request)") < route.indexOf('supabaseAdmin.from("seasons")'));
-  assert.match(scoreboard, /isCommissioner && \(isPlayoff \|\| weekNumber >= 6\)/);
+  assert.match(scoreboard, /const showSeasonSnapshot = isCommissioner;/);
+  assert.match(scoreboard, /showSeasonSnapshot \? <SeasonSnapshot/);
   assert.match(snapshot, /if \(!expanded\) return;/);
   assert.match(snapshot, /fetchSnapshot\(\)\.then/);
   assert.match(snapshot, /CUMULATIVE WINS/);

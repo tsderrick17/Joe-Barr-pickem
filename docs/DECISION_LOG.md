@@ -479,18 +479,18 @@ background polling. The feature remains hidden from players pending review.
 
 ## 2026-09-28 - Season Snapshot week alignment and release timing
 
-**Status:** Accepted
+**Status:** Accepted, revised for commissioner preview
 
-Keep the snapshot hidden from everyone until Week 6; after that, it remains
-commissioner-only pending approval. Plot a zero-win regular-season baseline and
-align every player on the same week x coordinate. Once all of one player's
-weekly picks are graded, plot their cumulative result without waiting for the
-rest of the period. Use one circular marker style and vivid stable player colors.
-When results overlap exactly, paint nested colored lines and concentric circles
-in live standings order instead of offsetting players horizontally. Show a
-separate playoff plot that continues cumulative season totals, with a dynamic
-vertical range around those totals. Refresh it from the existing standings
-cadence, without an independent polling loop.
+Keep the snapshot available to commissioners for review, including before Week
+6; players do not see it until it is explicitly released. Plot a zero-win
+regular-season baseline and align every player on the same week x coordinate.
+Once all of one player's weekly picks are graded, plot their cumulative result
+without waiting for the rest of the period. Use one circular marker style and
+vivid stable player colors. When results overlap exactly, paint nested colored
+lines and concentric circles in live standings order instead of offsetting
+players horizontally. Show a separate playoff plot that continues cumulative
+season totals, with a dynamic vertical range around those totals. Refresh it
+from the existing standings cadence, without an independent polling loop.
 
 ## 2026-09-28 - One credential path and fewer superseded release runs
 

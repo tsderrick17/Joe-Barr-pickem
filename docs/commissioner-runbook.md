@@ -2,9 +2,10 @@
 
 ## Control-center overview
 
-Starting in Week 6, the Standings page shows commissioners a minimized Season
-Snapshot beneath the Pick'em Pad. Expand it to inspect cumulative wins, starting
-from zero. A current-week point appears for a player once their entire card is
+The Standings page shows commissioners a minimized Season Snapshot beneath the
+Pick'em Pad for preview, including before Week 6. Players do not see it unless
+it is explicitly released. Expand it to inspect cumulative wins, starting from
+zero. A current-week point appears for a player once their entire card is
 graded, even if other games remain. The separate playoff chart continues from
 the regular-season totals. The right-hand key follows live standings; a player
 with unfinished picks may have a live total not yet plotted for that week.
