@@ -123,11 +123,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: player } = await supabaseAdmin
+  const { data: player, error: playerError } = await supabaseAdmin
     .from("players")
     .select("id, active")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+
+  // A database hiccup must not tell a real player their profile is inactive.
+  if (playerError) {
+    return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
+  }
 
   if (!player || !player.active) {
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function requireCommissioner(request: NextRequest) {
@@ -14,11 +15,15 @@ export async function requireCommissioner(request: NextRequest) {
   );
   if (!user) return null;
 
-  const { data: player } = await supabaseAdmin
+  // Retry a brief database hiccup so the Commissioner is not shown "access
+  // required" for a transient error. A persistent error still denies access
+  // (fail closed) but is logged so it isn't mistaken for a permissions problem.
+  const { data: player, error } = await retrySafeRead(() => supabaseAdmin
     .from("players")
     .select("id, first_name, active, is_commissioner")
     .eq("auth_user_id", user.id)
-    .maybeSingle();
+    .maybeSingle());
+  if (error) console.error("Commissioner access could not be verified because the player record could not be read.");
 
   return player?.active && player.is_commissioner ? player : null;
 }

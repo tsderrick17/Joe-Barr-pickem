@@ -101,7 +101,10 @@ export async function POST(request: NextRequest) {
 
   // A successful player sign-in clears prior failures from the same source so
   // a shared household or office cannot create a false security incident.
-  await supabaseAdmin.rpc("clear_failed_pin_logins", { attempt_source_fingerprint: sourceFingerprint });
+  const { error: clearError } = await supabaseAdmin.rpc("clear_failed_pin_logins", { attempt_source_fingerprint: sourceFingerprint });
+  // Never block a correct PIN over bookkeeping, but make the miss visible:
+  // uncleared failures could otherwise trigger a false cooldown for this source.
+  if (clearError) console.error("Prior failed PIN attempts could not be cleared after a successful sign-in.");
   const { data: player } = await supabaseAdmin
     .from("players")
     .select("id")
