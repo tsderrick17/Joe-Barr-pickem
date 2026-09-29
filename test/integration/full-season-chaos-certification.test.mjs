@@ -405,7 +405,7 @@ test("one-button full-season chaos certification", {
       update public.games
       set kickoff_at = greatest(
             clock_timestamp() - interval '2 hours',
-            (date_trunc('day', clock_timestamp() at time zone 'America/New_York') at time zone 'America/New_York') + interval '1 minute'
+            (date_trunc('day', clock_timestamp() at time zone 'America/New_York') at time zone 'America/New_York')
           ),
           line_lock_at = greatest(
             clock_timestamp() - interval '3 hours',

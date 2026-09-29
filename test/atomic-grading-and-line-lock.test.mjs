@@ -91,8 +91,13 @@ test("a watchdog alert is not sent unless its attempt time was saved", () => {
   const guard = watchdog.indexOf("so the alert was not sent");
   const send = watchdog.indexOf("await notifyCommissioners(signal)");
   assert.ok(attempt > 0 && guard > attempt && send > guard, "attempt must be saved and checked before sending");
+  // A failed write on one incident is counted and skipped, never thrown, so one bad
+  // row cannot stop every other incident from being opened or sent.
+  assert.match(watchdog, /bookkeepingFailures \+= 1;/);
   assert.match(watchdog, /Recovered watchdog incidents could not be closed/);
   assert.match(watchdog, /An open watchdog incident could not be refreshed/);
+  assert.doesNotMatch(watchdog, /throw new Error\("(Recovered watchdog incidents could not be closed|An open watchdog incident could not be refreshed|A watchdog alert attempt could not be recorded)/);
+  assert.match(watchdog, /bookkeepingFailures,\s+criticalWorkerRecovery/);
 });
 
 test("the ESPN Bowl sync never replaces a locked official line", () => {
@@ -157,4 +162,19 @@ test("the retired polling simulator is gone and the real retry ladder is the onl
   assert.doesNotMatch(route, /polling-plan|simulatePollingPlans|recommendPollingPlan/);
   const backoff = await readFile(new URL("../src/lib/score-check-backoff.ts", import.meta.url), "utf8");
   assert.match(backoff, /SCORE_POLLING_RETRY_MINUTES = \[10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240\]/);
+});
+
+test("activation takes the per-season lock before locking any period row", async () => {
+  const fix = await readFile(new URL("../supabase/migrations/20260929030000_activation_lock_order.sql", import.meta.url), "utf8");
+  const lock = fix.indexOf("pg_advisory_xact_lock");
+  const rowLock = fix.indexOf("for update;");
+  assert.ok(lock > 0 && rowLock > lock, "the advisory lock must come before the period row lock");
+  assert.doesNotMatch(fix.slice(0, lock), /for update/);
+  assert.match(fix, /grant execute on function public\.activate_scoring_period_atomically\(uuid, timestamptz\) to service_role;/);
+});
+
+test("a Bowl game already linked to its ESPN event stays on the protected update path", () => {
+  assert.match(bowlSync, /candidate\.provider_game_id === `espn:\$\{event\.id\}`/);
+  assert.match(bowlSync, /const gameId = matched\?\.id;/);
+  assert.match(bowlSync, /matched\.kickoff_at !== kickoff/);
 });

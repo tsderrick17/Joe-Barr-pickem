@@ -104,7 +104,9 @@ test("lock_official_lines_atomically saves lines, history, and audit together or
     assert.ok(notArray.error, "decisions must be an array");
   } finally {
     if (seasonId) {
-      await admin.from("games").delete().eq("scoring_period_id", (await admin.from("scoring_periods").select("id").eq("season_id", seasonId)).data?.[0]?.id ?? "");
+      const { data: periodRows } = await admin.from("scoring_periods").select("id").eq("season_id", seasonId);
+      const periodIds = (periodRows ?? []).map((row) => row.id);
+      if (periodIds.length) await admin.from("games").delete().in("scoring_period_id", periodIds);
       await admin.from("scoring_periods").delete().eq("season_id", seasonId);
       await admin.from("seasons").delete().eq("id", seasonId);
     }

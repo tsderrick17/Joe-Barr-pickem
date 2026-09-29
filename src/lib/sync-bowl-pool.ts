@@ -60,7 +60,13 @@ async function syncAnnualSchedule(now: Date) {
     const bowlName = (event.name ?? event.shortName ?? "Bowl").replace(/\s+\((?:CFP|College Football Playoff)[^)]*\)/gi, "").replace(/\s+Bowl Classic$/i, "").trim();
     const kickoff = new Date(event.date).toISOString();
     const match = (existing ?? []).filter((candidate) => !used.has(candidate.id)).map((candidate) => ({ candidate, distance: Math.abs(new Date(candidate.kickoff_at).getTime() - new Date(kickoff).getTime()) })).sort((a, b) => a.distance - b.distance)[0];
-    const gameId = match && match.distance <= 6 * 60 * 60 * 1000 ? match.candidate.id : undefined;
+    // A game already linked to this ESPN event is the same game even if its kickoff
+    // moved by more than the proximity window (a postponement). Matching it by id
+    // keeps it on the protected update path instead of the upsert, which would
+    // rename it and reset a commissioner-recorded status.
+    const linked = (existing ?? []).find((candidate) => candidate.provider_game_id === `espn:${event.id}` && !used.has(candidate.id));
+    const matched = linked ?? (match && match.distance <= 6 * 60 * 60 * 1000 ? match.candidate : undefined);
+    const gameId = matched?.id;
     const teamIds = await Promise.all([away, home].map(async (competitor) => {
       const name = competitor.team?.displayName ?? "Team TBD";
       const id = competitor.team?.id ?? name;
@@ -73,7 +79,7 @@ async function syncAnnualSchedule(now: Date) {
     // An existing game also keeps its curated bowl name and display order; the
     // provider only links it (provider_game_id) and corrects timing and teams.
     const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
-    if (gameId && match && match.candidate.kickoff_at !== kickoff) await cancelQueuedBowlReminders(gameId);
+    if (gameId && matched && matched.kickoff_at !== kickoff) await cancelQueuedBowlReminders(gameId);
     const { data: saved, error } = gameId
       ? await supabaseAdmin.from("bowl_pool_games").update(existingGameUpdate(row)).eq("id", gameId).select("id").single()
       : await supabaseAdmin.from("bowl_pool_games").upsert({ ...row, status: "scheduled" }, { onConflict: "provider_game_id" }).select("id").single();

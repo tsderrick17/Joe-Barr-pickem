@@ -545,7 +545,9 @@ from `sync-bowl-pool.ts`, `sync-final-scores.ts`, and `lock-due-lines.ts`.
 **Status:** Accepted
 
 A watchdog alert is sent only after its attempt time is saved, and incident
-open, refresh, and close writes fail the watchdog run instead of being ignored.
+open, refresh, and close writes are counted in the run details (bookkeepingFailures)
+and skipped for that incident, so one bad row cannot stop the others from being
+opened or sent.
 Run outcomes go through one helper that retries once and reports in the server
 log. The ESPN Bowl sync never replaces a locked official line, and its line,
 reminder-cancellation, and season-status writes are checked.
