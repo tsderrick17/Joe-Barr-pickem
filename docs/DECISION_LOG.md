@@ -771,3 +771,15 @@ storage; if storage is unavailable the defaults apply.
 wanted a tighter, more readable recent view, and wanted the chart to open the
 way it was last left. Device storage avoids a schema change for a view
 preference. Supersedes the cool gray back.
+
+## 2026-09-29 - Straight weekly bands in the Season Snapshot
+
+**Status:** Accepted
+
+Each week of a line is one straight band from the player's slot at the start
+of the week to their slot at the end; the eased lane changes are removed. The
+All / 6 Wk toggle halves are equal width.
+
+**Reason:** Easing lane changes inside a week added visible S-bends on phones.
+Straight bands bend only at week boundaries, like an ordinary line chart, and
+keep stacking order so shared paths never cross. Supersedes the eased lanes.

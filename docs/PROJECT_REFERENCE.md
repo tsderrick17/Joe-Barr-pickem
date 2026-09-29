@@ -120,9 +120,9 @@ be replayed.
   sits above another if it held the greater total more recently: compare their
   totals from the latest week back and stop at the first week they differ.
   Identical histories keep current-standings order, and lanes never swap
-  mid-chart. A line moving between a shared week point and a bundle eases in
-  and out over the outer 30% of the week, so reordering never makes a sharp
-  kink. Inset highlights and shaded edges distinguish bands without gaps
+  mid-chart. Each week is one straight band from a player's slot at the
+  start of the week to their slot at the end, so lines bend only at week
+  boundaries. Inset highlights and shaded edges distinguish bands without gaps
   or overlapping strokes. Bands join at common week boundaries and taper to the
   zero baseline. The only text is the title. During the playoffs the playoff
   chart replaces the regular-season chart. Each person has a permanent color: eleven validated hues, shuffled

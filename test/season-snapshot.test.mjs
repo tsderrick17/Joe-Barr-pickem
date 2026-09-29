@@ -89,8 +89,8 @@ test("tied ribbons touch without overlap in standings order and join across week
         assert.equal(bundle[index - 1].points[sample].bottom, point.top);
       });
     }
-    // Mid-week (sample 6 is the halfway point) the bundle is centered on the line.
-    assert.ok(Math.abs((bundle[0].points[6].top + bundle.at(-1).points[6].bottom) / 2 - (200 - (week + 0.5) * 40)) < 1e-9);
+    // At both ends of the week the bundle is centered on the score.
+    [0, 1].forEach((end) => assert.ok(Math.abs((bundle[0].points[end].top + bundle.at(-1).points[end].bottom) / 2 - (200 - (week + end) * 40)) < 1e-9));
     if (week === 0) bundle.forEach((ribbon) => assert.deepEqual(ribbon.points[0], { x: 0, top: 200, bottom: 200 }));
     if (week > 0) bundle.forEach((ribbon) => {
       const previous = ribbons.find((entry) => entry.weekIndex === week - 1 && entry.playerId === ribbon.playerId);
@@ -109,8 +109,8 @@ test("ribbons keep joined endpoints when bundles split and merge", () => {
   }
   const first = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "first");
   const third = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "third");
-  // Through the middle of the week (fractions .3 to .7) the shared bundle touches.
-  for (const sample of [5, 6, 7]) assert.ok(Math.abs(first.points[sample].bottom - third.points[sample].top) < 1e-9);
+  // A shared path keeps its stacking order and never overlaps along the week.
+  for (const sample of [0, 1]) assert.ok(first.points[sample].bottom <= third.points[sample].top + 1e-9);
 });
 
 test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
@@ -160,7 +160,7 @@ test("the stacking order puts the most recent leader in the upper lane of a shar
   const y = (wins) => 200 - wins * 40;
   const order = snapshotStackOrder(weeksOf({ A: 1, B: 2 }, { A: 3, B: 3 }), players("A", "B"));
   const ribbons = snapshotRibbons(weeksOf({ A: 3, B: 3 }), order, {}, (week) => week * 100, y);
-  const top = (playerId) => ribbons.find((ribbon) => ribbon.playerId === playerId).points[2].top;
+  const top = (playerId) => ribbons.find((ribbon) => ribbon.playerId === playerId).points[1].top;
   assert.ok(top("B") < top("A"), "the player ahead most recently occupies the upper lane");
 });
 
@@ -271,19 +271,17 @@ test("players see the Season Snapshot from Week 6 until the next season starts",
   assert.equal(seasonSnapshotReleased([week(1, "upcoming"), week(6, "upcoming")]), false);
 });
 
-test("lane changes ease in and out instead of jogging, so reordering adds no sharp kinks", () => {
+test("each week is one straight band, so lines bend only at week boundaries", () => {
   const standings = players("A", "B", "C");
   // Week 1: all tied at 1. Week 2: A and C win, B does not, so the group splits.
-  const weeks = weeksOf({ A: 1, B: 1, C: 1 }, { A: 2, B: 1, C: 2 });
-  const y = (wins) => 200 - wins * 40;
-  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, y);
-  const c = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "C");
-  const offsets = c.points.map((point) => point.top - (200 - (1 + (point.x - 100) / 100) * 40));
-  // The lane offset changes smoothly: no single sample step exceeds 40% of
-  // the whole change, and it is flat through the middle of the week.
-  const total = Math.abs(offsets[5] - offsets[0]);
-  for (let index = 1; index <= 5; index++) assert.ok(Math.abs(offsets[index] - offsets[index - 1]) <= total * 0.4 + 1e-9);
-  assert.ok(Math.abs(offsets[5] - offsets[6]) < 1e-9 && Math.abs(offsets[6] - offsets[7]) < 1e-9);
+  const weeks = weeksOf({ A: 1, B: 1, C: 1 }, { A: 2, B: 1, C: 2 }, { A: 3, B: 2, C: 2 });
+  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, (wins) => 200 - wins * 40);
+  // Two points per week means no interior bends, eased or otherwise.
+  for (const ribbon of ribbons) {
+    assert.equal(ribbon.points.length, 2);
+    assert.equal(ribbon.points[0].x, ribbon.weekIndex * 100);
+    assert.equal(ribbon.points[1].x, (ribbon.weekIndex + 1) * 100);
+  }
 });
 
 test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by week", () => {
@@ -298,6 +296,7 @@ test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by w
   assert.match(snapshot, /if \(element && scrolls\) element\.scrollLeft = element\.scrollWidth;/);
   assert.match(snapshot, /className="season-snapshot-snap" key=\{index\} style=\{\{ left: index \* step \}\}/);
   assert.match(css, /scroll-snap-type: x mandatory;/);
+  assert.match(css, /.season-snapshot-range {[^}]*grid-template-columns: 1fr 1fr;/, "both halves of the toggle are the same width");
   assert.match(css, /\.season-snapshot-snap \{[^}]*scroll-snap-align: start;/);
   // The y-axis sits outside the scrolling plot, with tight margins.
   assert.match(snapshot, /className="season-snapshot-yaxis"/);

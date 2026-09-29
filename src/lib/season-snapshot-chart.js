@@ -69,21 +69,12 @@ export function snapshotLayers(weeks, standings, startWinsById = {}) {
   return { segments };
 }
 
-/** Sample points along each segment. Lane changes happen only in the outer 30%
- * at each end, so a bundle holds together through the middle of the week. */
-const RIBBON_FRACTIONS = [0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.5, 0.7, 0.76, 0.82, 0.88, 0.94, 1];
-const LANE_EASE = 0.3;
-
-/** Smootherstep: zero slope at both ends, so a lane change never makes a corner. */
-function ease(t) {
-  return t * t * t * (t * (t * 6 - 15) + 10);
-}
-
 /** Touching ribbon lanes, centered on each score; current leaders sit above peers.
  * Shared node boundaries keep joins continuous when a bundle splits or merges.
- * Inside a segment, only players sharing that path occupy its bundle. Moving
- * between a node's lane and the bundle's lane is eased rather than a straight
- * jog, which keeps reordering from putting sharp kinks in a line.
+ * Each week is one straight band from the player's slot at the start of the
+ * week to their slot at the end, so a line only bends at week boundaries, the
+ * same as an ordinary line chart. Slots keep the same stacking order at both
+ * ends, so bands on a shared path never cross or overlap.
  */
 export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3) {
   const scores = [standings.map((player) => ({ playerId: player.id, wins: baseline[player.id] ?? 0 })), ...weeks.map((week) => week.scores)];
@@ -109,22 +100,10 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3)
   });
   return snapshotLayers(weeks, standings, baseline).segments.flatMap((segment) => {
     const ids = [...segment.playerIds].reverse();
-    return ids.map((playerId, rank) => {
+    return ids.map((playerId) => {
       const start = nodes[segment.weekIndex].get(playerId);
       const end = nodes[segment.weekIndex + 1].get(playerId);
-      const topOffset = (rank - ids.length / 2) * thickness;
-      const startLane = { top: start.top - y(segment.from), bottom: start.bottom - y(segment.from) };
-      const endLane = { top: end.top - y(segment.to), bottom: end.bottom - y(segment.to) };
-      const bundleLane = { top: topOffset, bottom: topOffset + thickness };
-      const blend = (from, to, t) => ({ top: from.top + (to.top - from.top) * ease(t), bottom: from.bottom + (to.bottom - from.bottom) * ease(t) });
-      const points = RIBBON_FRACTIONS.map((fraction) => {
-        const center = y(segment.from) + (y(segment.to) - y(segment.from)) * fraction;
-        const lane = fraction <= LANE_EASE ? blend(startLane, bundleLane, fraction / LANE_EASE)
-          : fraction >= 1 - LANE_EASE ? blend(bundleLane, endLane, (fraction - (1 - LANE_EASE)) / LANE_EASE)
-            : bundleLane;
-        const bounds = fraction === 0 ? start : fraction === 1 ? end : { top: center + lane.top, bottom: center + lane.bottom };
-        return { x: x(segment.weekIndex) + (x(segment.weekIndex + 1) - x(segment.weekIndex)) * fraction, ...bounds };
-      });
+      const points = [{ x: x(segment.weekIndex), ...start }, { x: x(segment.weekIndex + 1), ...end }];
       return { playerId, weekIndex: segment.weekIndex, points };
     });
   });
