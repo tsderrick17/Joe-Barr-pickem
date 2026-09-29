@@ -1380,16 +1380,12 @@ html[data-theme="night"] .survivor-selection-footer {
   font: 800 1.1rem/1.1 Georgia, serif;
 }
 
-.season-snapshot-heading p {
-  color: var(--ledger-muted);
-  font: 700 .62rem/1.4 Arial, sans-serif;
-  margin-top: .15rem;
-}
-
 .season-snapshot-body {
-  background: var(--snapshot-paper);
+  background: radial-gradient(120% 90% at 0% 0%, #fffdf6 0%, var(--snapshot-paper) 55%, #f4ecda 100%);
   border: 1px solid #d4cbbb;
-  padding: .7rem;
+  border-radius: .9rem;
+  box-shadow: 0 1px 0 rgb(255 255 255 / .7) inset, 0 .5rem 1.4rem -.9rem rgb(37 51 74 / .45);
+  padding: .9rem;
 }
 
 .season-snapshot-layout {
@@ -1414,40 +1410,68 @@ html[data-theme="night"] .survivor-selection-footer {
 .season-snapshot-charts { display: grid; gap: 1rem; min-width: 0; }
 .season-snapshot-chart { min-width: 0; }
 .season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
-.season-snapshot-chart-note { color: #57637a; font: 600 .66rem/1.4 Arial, sans-serif; margin-bottom: .25rem; }
 
-.season-snapshot-key {
-  border-left: 1px solid #d4cbbb;
-  min-width: 0;
-  padding-left: .5rem;
+/* Lines draw in from the left once, then fade rather than jump when someone is
+   hovered, hidden, or shown. */
+.season-snapshot-lines { animation: season-snapshot-reveal .9s cubic-bezier(.22, .7, .2, 1) both; }
+.season-snapshot-ribbon { transition: opacity .2s ease; }
+.season-snapshot-ribbon.is-dim { opacity: .14; }
+@keyframes season-snapshot-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season-snapshot-lines { animation: none; }
+  .season-snapshot-ribbon,
+  .season-snapshot-key-row { transition: none; }
 }
 
-.season-snapshot-key-title {
-  color: #57637a;
-  font: 900 .6rem/1.2 Arial, sans-serif;
-  letter-spacing: .07em;
-  margin-bottom: .38rem;
+.season-snapshot-key {
+  min-width: 0;
+  padding-left: .2rem;
 }
 
 .season-snapshot-key-row {
   align-items: center;
-  border-bottom: 1px solid #e2dacb;
+  background: rgb(255 255 255 / .55);
+  border: 1px solid #e2dacb;
+  border-radius: .7rem;
   display: grid;
   font: 700 .72rem/1.2 Arial, sans-serif;
-  gap: .3rem;
-  grid-template-columns: 1rem minmax(0, 1fr) auto;
-  min-height: 1.52rem;
-  padding: .17rem 0;
+  gap: .4rem;
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+  margin-bottom: .3rem;
+  min-height: 1.7rem;
+  padding: .2rem .5rem;
   text-align: left;
+  transition: background .15s ease, box-shadow .15s ease, opacity .2s ease, transform .15s ease;
   width: 100%;
 }
 
 .season-snapshot-key-row:hover,
-.season-snapshot-key-row:focus-visible,
-.season-snapshot-key-row[aria-pressed="true"] { background: #e8eff0; }
-.season-snapshot-key-row.is-dimmed { opacity: .52; }
+.season-snapshot-key-row:focus-visible {
+  background: #fff;
+  box-shadow: 0 .2rem .6rem -.3rem rgb(37 51 74 / .5);
+  transform: translateX(-2px);
+}
+.season-snapshot-key-row:focus-visible { outline: 2px solid #2a78d6; outline-offset: 1px; }
+.season-snapshot-key-row.is-hidden { background: transparent; border-style: dashed; opacity: .5; }
+.season-snapshot-key-row.is-hidden .season-snapshot-key-name { text-decoration: line-through; }
+.season-snapshot-key-row.is-hidden .season-snapshot-swatch { filter: grayscale(1); opacity: .6; }
 .season-snapshot-key-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.season-snapshot-swatch { height: .25rem; width: 1rem; box-shadow: inset 0 1px rgb(255 255 255 / .32), inset 0 -1px rgb(16 32 48 / .3); }
+.season-snapshot-swatch { border-radius: 999px; box-shadow: inset 0 1px rgb(255 255 255 / .32), inset 0 -1px rgb(16 32 48 / .3); height: .32rem; width: 1.1rem; }
+.season-snapshot-show-all {
+  border: 1px solid #25334a;
+  border-radius: 999px;
+  color: #25334a;
+  font: 800 .66rem/1.2 Arial, sans-serif;
+  margin-top: .15rem;
+  padding: .28rem .8rem;
+  transition: background .15s ease, color .15s ease;
+  width: 100%;
+}
+.season-snapshot-show-all:hover,
+.season-snapshot-show-all:focus-visible { background: #25334a; color: #fbf7ec; }
 .season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; }
 .season-snapshot-message { margin: 0; padding: 1rem .3rem; }
 
@@ -1465,7 +1489,7 @@ html[data-theme="night"] .survivor-selection-footer {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: .35rem 0 0;
   }
-  .season-snapshot-key-title { grid-column: 1 / -1; }
+  .season-snapshot-show-all { grid-column: 1 / -1; }
   .season-snapshot-key-row { font-size: .66rem; }
 }
 

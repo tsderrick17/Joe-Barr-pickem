@@ -517,3 +517,21 @@ the Windows Git TLS/credential path caused release hangs and unsafe workarounds.
 One final push avoids repeated preview and CI runs. We retain main-branch
 application quality after merge because branch protection currently requires
 only the database lifecycle check and does not enforce those rules for admins.
+
+## 2026-09-29 - Season Snapshot: recency stacking, hide/show, fixed colors
+
+**Status:** Accepted
+
+Lines that share a path stack by who held the greater total most recently
+(latest week back to the first difference), replacing current-standings order.
+Players can be hidden and shown from the key; the axis and stacking recompute
+for whoever remains, and hovering highlights one player. Each person keeps one
+of eleven validated hues (assigned alphabetically) regardless of visibility.
+All explanatory text was removed; only the title remains.
+
+**Reason:** With eleven players the old order made overlapping lines hard to
+read and the leader always drew on top even after being passed. Recency shows
+who is actually ahead right now, hiding lets a viewer follow only the players
+they care about, and stable colors keep a person recognizable when the chart
+changes. This supersedes the higher-current-standing-above rule and the
+single-player focus mode.

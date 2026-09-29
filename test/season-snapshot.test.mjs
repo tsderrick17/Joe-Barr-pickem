@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotLayers, snapshotRibbons, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -121,4 +121,77 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   assert.match(snapshot, /textAnchor=\{index === weeks.length - 1 \? "end" : "middle"\}/);
   assert.doesNotMatch(snapshot, /lane =/);
   assert.doesNotMatch(snapshot, /<rect|<polyline/);
+});
+
+const ids = (players) => players.map((player) => player.id).join("");
+const players = (...list) => list.map((id) => ({ id }));
+const weeksOf = (...rows) => rows.map((row) => ({ scores: Object.entries(row).map(([playerId, wins]) => ({ playerId, wins })) }));
+
+test("a line sits above another if it held the greater total more recently", () => {
+  // B is ahead at the latest week, so B tops A even though A led earlier.
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 2, B: 0 }, { A: 2, B: 3 }), players("A", "B"))), "BA");
+  // Tied now: the most recent week they differed decides (B was ahead in week 1).
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 1, B: 2 }, { A: 3, B: 3 }), players("A", "B"))), "BA");
+  // The most recent difference wins over an older opposite one (A led week 1, B led week 2, tied after).
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 3, B: 1 }, { A: 3, B: 4 }, { A: 5, B: 5 }), players("A", "B"))), "BA");
+  // Identical histories keep the order given (current standings).
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 1, B: 1 }), players("B", "A"))), "BA");
+  // Always-tied pairs stay together while a leader separates cleanly.
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 2, B: 0, C: 1, D: 1 }, { A: 2, B: 3, C: 1, D: 1 }), players("A", "B", "C", "D"))), "BACD");
+  // An unfinished card (no score this week) carries the previous total forward.
+  assert.equal(ids(snapshotStackOrder([{ scores: [{ playerId: "A", wins: 2 }, { playerId: "B", wins: 1 }] }, { scores: [{ playerId: "B", wins: 2 }] }], players("A", "B"))), "AB");
+  // Playoff baselines count as the starting point.
+  assert.equal(ids(snapshotStackOrder(weeksOf({ A: 21, B: 21 }), players("A", "B"), { A: 19, B: 20 })), "BA");
+});
+
+test("the stacking order puts the most recent leader in the upper lane of a shared path", () => {
+  const y = (wins) => 200 - wins * 40;
+  const order = snapshotStackOrder(weeksOf({ A: 1, B: 2 }, { A: 3, B: 3 }), players("A", "B"));
+  const ribbons = snapshotRibbons(weeksOf({ A: 3, B: 3 }), order, {}, (week) => week * 100, y);
+  const top = (playerId) => ribbons.find((ribbon) => ribbon.playerId === playerId).points[2].top;
+  assert.ok(top("B") < top("A"), "the player ahead most recently occupies the upper lane");
+});
+
+test("Season Snapshot shows only its title, with no explanatory prose", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  assert.match(snapshot, /<h3>Season Snapshot<\/h3>/);
+  for (const prose of ["Commissioner-only", "cumulative Pick’em wins by week", "Weekly totals appear", "Season totals continue", "CURRENT STANDINGS"]) {
+    assert.ok(!snapshot.includes(prose), `prose must be gone: ${prose}`);
+  }
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.doesNotMatch(css, /season-snapshot-chart-note|season-snapshot-key-title|season-snapshot-heading p/);
+  // A chart title only appears when two charts must be told apart.
+  assert.match(snapshot, /const showTitles = showPlayoffs;/);
+});
+
+test("players can be hidden and shown, and the chart rescales to whoever remains", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  assert.match(snapshot, /const \[hidden, setHidden\] = useState<Set<string>>/);
+  assert.match(snapshot, /const visible = standings\.filter\(\(player\) => !hidden\.has\(player\.id\)\);/);
+  assert.match(snapshot, /players=\{visible\}/);
+  // The axis is built only from visible players, so hiding the leader rescales it.
+  assert.match(snapshot, /const shownIds = new Set\(players\.map\(\(player\) => player\.id\)\);/);
+  assert.match(snapshot, /week\.scores\.filter\(\(score\) => shownIds\.has\(score\.playerId\)\)/);
+  assert.match(snapshot, /snapshotStackOrder\(weeks, players, baseline\)/);
+  assert.match(snapshot, /aria-pressed=\{shown\}/);
+  assert.match(snapshot, /Show all/);
+  assert.doesNotMatch(snapshot, /focusedId/);
+});
+
+test("each person keeps the same color no matter who is hidden, using eleven distinct hues", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const colors = snapshot.match(/const palette = \[([\s\S]*?)\];/)[1].match(/#[0-9a-f]{6}/gi);
+  assert.equal(colors.length, 11);
+  assert.equal(new Set(colors.map((color) => color.toLowerCase())).size, 11);
+  // Colors are assigned from the full alphabetical roster, never from the visible subset.
+  assert.match(snapshot, /const alphabetical = \[\.\.\.standings\]\.sort/);
+  assert.match(snapshot, /new Map\(alphabetical\.map/);
+  assert.doesNotMatch(snapshot, /visible\.map\(\(player, index\) => \[player\.id, palette/);
+});
+
+test("motion respects reduced-motion and the key gives hidden players a visible state", () => {
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.season-snapshot-lines \{ animation: none; \}/);
+  assert.match(css, /\.season-snapshot-key-row\.is-hidden/);
+  assert.match(css, /\.season-snapshot-ribbon\.is-dim/);
 });

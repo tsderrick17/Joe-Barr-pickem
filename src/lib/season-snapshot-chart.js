@@ -5,6 +5,43 @@ export function snapshotX(weekIndex, weekCount, width = 700) {
   return left + weekIndex * ((width - left - right) / Math.max(1, weekCount));
 }
 
+/**
+ * Stacking order for lines that share a path: top lane first.
+ *
+ * A line sits above another if it held the greater total more recently. For each
+ * pair, look back from the latest week to the baseline and stop at the first week
+ * their totals differ; whoever was higher then goes on top. Comparing each
+ * player's totals from newest week to oldest is a single consistent ordering, so
+ * lanes never swap mid-chart. Players whose histories are identical keep the
+ * order they were given (current standings). A week a player has no score for
+ * (an unfinished card) carries their previous total forward.
+ *
+ * @template {{ id: string }} T
+ * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
+ * @param {T[]} players
+ * @param {Record<string, number>} [baseline]
+ * @returns {T[]}
+ */
+export function snapshotStackOrder(weeks, players, baseline = {}) {
+  const timelines = new Map(players.map((player) => [player.id, [baseline[player.id] ?? 0]]));
+  for (const week of weeks) {
+    const scores = new Map(week.scores.map((score) => [score.playerId, score.wins]));
+    for (const player of players) {
+      const line = timelines.get(player.id);
+      line.push(scores.has(player.id) ? scores.get(player.id) : line[line.length - 1]);
+    }
+  }
+  return players
+    .map((player, index) => ({ player, index, line: timelines.get(player.id) }))
+    .sort((a, b) => {
+      for (let week = a.line.length - 1; week >= 0; week -= 1) {
+        if (a.line[week] !== b.line[week]) return b.line[week] - a.line[week];
+      }
+      return a.index - b.index;
+    })
+    .map((entry) => entry.player);
+}
+
 /** Lower-ranked colors are painted widest first; leaders remain visible inside. */
 export function snapshotLayers(weeks, standings, startWinsById = {}) {
   const segments = [];

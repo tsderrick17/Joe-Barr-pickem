@@ -113,11 +113,18 @@ be replayed.
   player's final regular-season total and continues season totals. All players
   share exact week columns. The horizontal scale fits the visible weeks from
   baseline through the current week. Lines have no point markers or data table;
-  shared paths use touching three-pixel ribbons, centered on the score, with
-  the higher current standing above the lower. Inset highlights and shaded
-  edges distinguish bands without gaps or overlapping strokes. Bands join at
-  common week boundaries and taper to the zero baseline. The right-hand
-  color key also follows that order.
+  shared paths use touching three-pixel ribbons, centered on the score. A line
+  sits above another if it held the greater total more recently: compare their
+  totals from the latest week back and stop at the first week they differ.
+  Identical histories keep current-standings order, and lanes never swap
+  mid-chart. Inset highlights and shaded edges distinguish bands without gaps
+  or overlapping strokes. Bands join at common week boundaries and taper to the
+  zero baseline. The only text is the title; two charts are labeled only when
+  both appear. Each person has a fixed color (eleven validated hues assigned
+  alphabetically) that never changes when others are hidden. The right-hand
+  key lists everyone in current-standings order; pressing a name hides or shows
+  that person, the axis and stacking recompute for whoever remains, and
+  hovering a name or line highlights one player.
 
 ## Survivor selection and scoring
 
