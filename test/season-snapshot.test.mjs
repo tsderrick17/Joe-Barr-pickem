@@ -210,14 +210,19 @@ test("colors never shift when someone is hidden, inactive, or new", () => {
   assert.match(snapshot, /\[\.\.\.known, \.\.\.extras\]\.map\(\(id, index\) => \[id, palette\[index % palette\.length\]\]\)/);
 });
 
-test("the flip card has real depth, swaps faces edge-on, and the arrows spin once per turn", () => {
+test("the flip card turns flat, widens to the Survivor rail, and the arrows stay slim", () => {
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
-  assert.match(scoreboard, /className="pad-edge pad-edge-left"/);
-  assert.match(scoreboard, /className="pad-edge pad-edge-right"/);
+  assert.doesNotMatch(scoreboard, /pad-edge/, "no slab edges");
+  assert.doesNotMatch(css, /--pad-depth|\.pad-(front|back) \{[^}]*translateZ/, "no 3D thickness");
   assert.match(scoreboard, /markerEnd=/, "two arrowed half circles");
+  assert.match(scoreboard, /markerUnits="userSpaceOnUse" markerWidth="5"/, "arrowheads do not scale with the stroke");
+  assert.match(scoreboard, /d="M2\.2 1\.6 L7 5 L2\.2 8\.4" fill="none"/, "open chevron heads");
+  assert.match(scoreboard, /strokeWidth="1\.6"/);
   assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
-  assert.match(css, /transform: translateZ\(calc\(var\(--pad-depth\) \/ 2\)\)/);
+  assert.match(css, /\.has-pad-flip\.is-flipped \.pad-flip-inner \{ max-width: 100%; \}/);
+  assert.match(css, /max-width \.7s cubic-bezier\(\.45, \.05, \.55, \.95\)/);
+  assert.match(css, /\.has-pad-flip \.pad-back \{ background: #f1f4f8; \}/);
   assert.match(css, /transition: transform \.7s cubic-bezier\(\.45, \.05, \.55, \.95\);/);
   assert.match(css, /\.pad-face \{ transition: visibility 0s linear \.35s; \}/, "faces swap at exactly half of the .7s turn");
   assert.match(css, /\.pad-flip-icon\.is-spinning \{ animation: pad-flip-spin \.7s/);
