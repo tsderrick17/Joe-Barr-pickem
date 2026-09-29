@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotX } from "@/lib/season-snapshot-chart.js";
 
@@ -39,17 +39,18 @@ function SnapshotChart({
   isPlayoff: boolean;
 }) {
   const plotRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(700);
+  const [size, setSize] = useState({ width: 700, height: 300 });
   useEffect(() => {
     const element = plotRef.current;
     if (!element) return;
     const observer = new ResizeObserver(([entry]) => {
-      const nextWidth = Math.round(entry.contentRect.width);
-      setWidth((current) => current === nextWidth ? current : nextWidth);
+      const next = { width: Math.round(entry.contentRect.width), height: Math.max(180, Math.round(entry.contentRect.height)) };
+      setSize((current) => current.width === next.width && current.height === next.height ? current : next);
     });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  const { width, height } = size;
 
   // Only the players still on the chart shape the axis, so hiding the leader
   // rescales the chart to the people who remain.
@@ -60,11 +61,10 @@ function SnapshotChart({
   const high = Math.max(low + 2, ...observedValues) + 1;
   const tickStep = Math.max(1, Math.ceil((high - low) / 5));
   const ceiling = low + Math.ceil((high - low) / tickStep) * tickStep;
-  const height = 300;
   const left = 44;
   const right = 18;
-  const top = 16;
-  const bottom = 34;
+  const top = 12;
+  const bottom = 40;
   const plotHeight = height - top - bottom;
   const x = (weekIndex: number) => snapshotX(weekIndex, weeks.length, width);
   const y = (wins: number) => top + plotHeight * (1 - (wins - low) / (ceiling - low));
@@ -85,8 +85,10 @@ function SnapshotChart({
         </g>)}
         {weeks.map((week, index) => <g key={week.id}>
           <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={top} y2={height - bottom} />
-          <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 12}>{shortWeek(week.label)}</text>
+          <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 24}>{shortWeek(week.label)}</text>
         </g>)}
+        <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(11 ${top + plotHeight / 2}) rotate(-90)`}>Wins</text>
+        <text className="season-snapshot-axis-label" textAnchor="middle" x={left + (width - left - right) / 2} y={height - 6}>Week</text>
         <g className="season-snapshot-lines">
           {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
             <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
@@ -135,16 +137,18 @@ export function SnapshotView({ standings, snapshot, isPlayoff }: { standings: Pl
           <span className="season-snapshot-key-name">{player.firstName}</span><strong>{player.wins}</strong>
         </button>;
       })}
-      {hidden.size ? <button className="season-snapshot-show-all" onClick={() => { setHidden(new Set()); setHoverId(null); }} type="button">Show all</button> : null}
+      <button className="season-snapshot-show-all" disabled={hidden.size === 0} onClick={() => { setHidden(new Set()); setHoverId(null); }} type="button">Show all</button>
     </div>
   </div>;
 }
 
-export default function SeasonSnapshot({ standings, refreshKey, isPlayoff }: { standings: Player[]; refreshKey: string; isPlayoff: boolean }) {
-  const [expanded, setExpanded] = useState(false);
+/** The back of the Pick'em Pad. Loads the first time it is turned over. */
+export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, flipButton }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; flipButton: ReactNode }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const [opened, setOpened] = useState(false);
+  if (active && !opened) setOpened(true);
 
   const fetchSnapshot = useCallback(async () => {
     const response = await fetchWithSession("/api/admin/season-snapshot");
@@ -155,7 +159,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff }: { s
 
   // The normal home refresh already detects new grades; no extra polling loop.
   useEffect(() => {
-    if (!expanded) return;
+    if (!opened) return;
     let cancelled = false;
     void fetchSnapshot().then((data) => {
       if (cancelled) return;
@@ -165,15 +169,15 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff }: { s
       if (!cancelled) setError(reason instanceof Error ? reason.message : "Season Snapshot could not be loaded.");
     });
     return () => { cancelled = true; };
-  }, [expanded, refreshKey, retry, fetchSnapshot]);
+  }, [opened, refreshKey, retry, fetchSnapshot]);
 
-  return <div className={`season-snapshot ${expanded ? "is-expanded" : ""}`}>
-    <div className="season-snapshot-heading">
-      <h3>Season Snapshot</h3>
-      <button aria-expanded={expanded} aria-label={expanded ? "Minimize Season Snapshot" : "Expand Season Snapshot"} className="survivor-title-toggle" onClick={() => setExpanded((current) => !current)} type="button">{expanded ? "−" : "+"}</button>
+  return <div className="season-snapshot">
+    <div className="pickem-ledger-masthead">
+      <h2>Season Snapshot</h2>
+      {flipButton}
     </div>
-    {expanded ? <div className="season-snapshot-body">
+    <div className="season-snapshot-body">
       {error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} snapshot={snapshot} standings={standings} />}
-    </div> : null}
+    </div>
   </div>;
 }

@@ -1429,50 +1429,59 @@ html[data-theme="night"] .survivor-selection-footer {
   max-width: 30rem;
 }
 
-.season-snapshot {
-  --snapshot-paper: #fbf7ec;
-  border-top: 1px solid #bdb3a3;
-  color: #25334a;
-  margin-top: .55rem;
-  width: 100%;
-}
-
-.season-snapshot:not(.is-expanded) {
+/* The Pick'em Pad is a two-sided card for commissioners: the scorepad on the
+   front, the Season Snapshot on the back. Both faces share one grid cell, so
+   the card keeps the front's size and the chart fills the back's full height. */
+.pickem-scoreboard-ledger.has-pad-flip { perspective: 1600px; }
+.pad-flip-inner {
+  display: grid;
   margin-left: auto;
   margin-right: auto;
   max-width: 30rem;
+  transform-style: preserve-3d;
+  transition: transform .7s cubic-bezier(.2, .75, .2, 1);
 }
-
-.season-snapshot.is-expanded {
-  width: 100%;
-}
-
-.season-snapshot-heading {
+.playoff-scoreboard .pad-flip-inner { max-width: none; }
+.has-pad-flip.is-flipped .pad-flip-inner { transform: rotateY(180deg); }
+.pad-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; grid-area: 1 / 1; min-width: 0; }
+.pad-back { background: var(--ledger-paper); display: flex; flex-direction: column; transform: rotateY(180deg); }
+.has-pad-flip .pad-front > .pickem-ledger-masthead,
+.has-pad-flip .pad-front > .pickem-standings-table { max-width: none; }
+.has-pad-flip .pickem-ledger-masthead { align-items: center; }
+.pad-flip-button {
   align-items: center;
+  background: #fffdf8;
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  color: #40516a;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 1.9rem;
+  justify-content: center;
+  margin-left: auto;
+  transition: background .15s ease, transform .35s ease;
+  width: 1.9rem;
+}
+.pad-flip-button > span { font-size: 1.05rem; line-height: 1; }
+.pad-flip-button:hover,
+.pad-flip-button:focus-visible { background: #fff; transform: rotate(-90deg); }
+.pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+.pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
+@media (prefers-reduced-motion: reduce) {
+  .pad-flip-inner, .pad-flip-button { transition: none; }
+}
+
+.season-snapshot {
+  --snapshot-paper: #fbf7ec;
+  color: #25334a;
   display: flex;
-  gap: .75rem;
-  justify-content: space-between;
-  padding: .7rem .15rem .45rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
 }
-
-.season-snapshot-heading h3 {
-  color: var(--ledger-ink);
-  font: 800 1.1rem/1.1 Georgia, serif;
-}
-
-.season-snapshot-body {
-  background: radial-gradient(120% 90% at 0% 0%, #fffdf6 0%, var(--snapshot-paper) 55%, #f4ecda 100%);
-  border: 1px solid #d4cbbb;
-  border-radius: .9rem;
-  box-shadow: 0 1px 0 rgb(255 255 255 / .7) inset, 0 .5rem 1.4rem -.9rem rgb(37 51 74 / .45);
-  padding: .9rem;
-}
-
-.season-snapshot-layout {
-  display: grid;
-  gap: .6rem;
-  grid-template-columns: minmax(0, 1fr) 8.65rem;
-}
+.season-snapshot-body { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; padding-top: .5rem; }
+.season-snapshot-layout { display: flex; flex: 1 1 auto; flex-direction: column; gap: .5rem; min-height: 0; }
+.season-snapshot-axis-label { fill: #536077; font: 800 10px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 
 .season-snapshot-plot-scroll {
   min-width: 0;
@@ -1487,8 +1496,9 @@ html[data-theme="night"] .survivor-selection-footer {
   max-width: none;
 }
 
-.season-snapshot-charts { display: grid; gap: 1rem; min-width: 0; }
-.season-snapshot-chart { min-width: 0; }
+.season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
+.season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 0; min-width: 0; }
+.season-snapshot-chart .season-snapshot-plot-scroll { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
 
 /* Lines draw in from the left once, then fade rather than jump when someone is
@@ -1507,9 +1517,12 @@ html[data-theme="night"] .survivor-selection-footer {
 }
 
 .season-snapshot-key {
+  display: grid;
+  gap: .3rem .35rem;
+  grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr));
   min-width: 0;
-  padding-left: .2rem;
 }
+.season-snapshot-key .season-snapshot-key-row { margin-bottom: 0; }
 
 .season-snapshot-key-row {
   align-items: center;
@@ -1550,26 +1563,15 @@ html[data-theme="night"] .survivor-selection-footer {
   transition: background .15s ease, color .15s ease;
   width: 100%;
 }
-.season-snapshot-show-all:hover,
-.season-snapshot-show-all:focus-visible { background: #25334a; color: #fbf7ec; }
+.season-snapshot-show-all:not(:disabled):hover,
+.season-snapshot-show-all:not(:disabled):focus-visible { background: #25334a; color: #fbf7ec; }
+.season-snapshot-show-all { grid-column: 1 / -1; }
+.season-snapshot-show-all:disabled { border-color: #c9c2b5; color: #a39c90; cursor: default; }
 .season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; }
 .season-snapshot-message { margin: 0; padding: 1rem .3rem; }
 
 @media (max-width: 700px) {
-  .season-snapshot.is-expanded { width: 100%; }
-  .season-snapshot-body { padding: .45rem; }
-  /* Keep the chart wide enough to read as a timeline on phones. The ordered
-     standings key remains adjacent, but moves below the plot at this width. */
-  .season-snapshot-layout { gap: .5rem; grid-template-columns: minmax(0, 1fr); }
-  .season-snapshot-key {
-    border-left: 0;
-    border-top: 1px solid #d4cbbb;
-    display: grid;
-    gap: 0 .45rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: .35rem 0 0;
-  }
-  .season-snapshot-show-all { grid-column: 1 / -1; }
+  .season-snapshot-key { grid-template-columns: repeat(auto-fill, minmax(5.8rem, 1fr)); }
   .season-snapshot-key-row { font-size: .66rem; }
 }
 

@@ -104,7 +104,8 @@ be replayed.
   never become wins by inference.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
-- The Pick'em Pad's default-minimized Season Snapshot is available to
+- The Season Snapshot is the back of the Pick'em Pad; a round button at the pad's
+  top right turns it over. It is available to
   commissioners for preview, including before Week 6, and stays unavailable to
   players until explicitly released.
   Everyone begins at zero on the regular-season chart. Completed periods carry
