@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
 
@@ -98,6 +98,10 @@ type CommissionerPanel = (typeof commissionerPanels)[number][0];
 export default function AdminPage() {
   const [activePanel, setActivePanel] = useState<CommissionerPanel>("overview");
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  // On phones the tab strip scrolls sideways; keep the chosen tab in view.
+  useEffect(() => {
+    document.querySelector(".commissioner-panel-tab.is-active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [activePanel]);
   const [preview, setPreview] = useState<OddsPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -247,7 +251,6 @@ export default function AdminPage() {
           <div className="commissioner-command-title">
             <p className="text-[11px] font-black tracking-[0.22em] text-emerald-200">JOE BARR PICK’EM · COMMISSIONER</p>
             <h1 className="mt-2 font-serif text-4xl font-bold sm:text-5xl">Operations desk</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">One calm place to see the pool’s live state, understand the next move, and act without disturbing scheduled automation.</p>
           </div>
 
           <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
@@ -271,36 +274,15 @@ export default function AdminPage() {
             </button>
           ))}
           </div>
-          <p className="commissioner-panel-description">{commissionerPanels.find(([panel]) => panel === activePanel)?.[2]}</p>
         </nav>
 
         {activePanel === "overview" ? <>
         <CommissionerOperationsMap onOpenWorkspace={setActivePanel} />
-        <section className="commissioner-workspace-section">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black tracking-[.16em] text-zinc-600">QUICK ROUTES</p>
-              <h2 className="mt-1 font-serif text-2xl font-bold">Common commissioner work</h2>
-              <p className="mt-1 max-w-2xl text-sm text-zinc-700">Use the live map above for the pool’s status. These routes are for the work around it.</p>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <Link className="commissioner-route-card" href="/admin/players"><span>ROSTER CONTROL</span><p>Players</p><small>Add players, review activity, and manage private PINs.</small><strong>OPEN PLAYERS →</strong></Link>
-            <Link className="commissioner-route-card" href="/admin/reminders"><span>PLAYER DELIVERY</span><p>Email center</p><small>Check delivery, send a private test, or update future wording.</small><strong>OPEN EMAILS →</strong></Link>
-            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("bowl-pool")} type="button"><span>SEPARATE COMPETITION</span><p>Bowl Pool</p><small>Review Bowl lines, schedule readiness, entries, and exceptions.</small><strong>OPEN BOWL POOL →</strong></button>
-            <button className="commissioner-route-card text-left" onClick={() => setActivePanel("season-setup")} type="button"><span>SEASON CONTROL</span><p>Season work</p><small>Review the schedule and imports before the season begins.</small><strong>OPEN SEASON →</strong></button>
-          </div>
-        </section>
         </> : null}
 
         {activePanel === "grading" ? <GradingDashboard /> : null}
 
         {activePanel === "game-day" ? <>
-          <section className="commissioner-workspace-intro">
-            <p>LIVE RUNBOOK</p>
-            <h2>Game day operations</h2>
-            <span>Use the playbook first. Open the manual groups only when a check is late, a game needs intervention, or an audit correction is required.</span>
-          </section>
           <GameDayPlaybook />
           <section className="commissioner-diagnostics">
             <details>
@@ -318,49 +300,36 @@ export default function AdminPage() {
         </> : null}
 
         {activePanel === "bowl-pool" ? <>
-          <section className="commissioner-workspace-intro">
-            <p>SEPARATE COMPETITION</p>
-            <h2>Bowl Pool control room</h2>
-            <span>Use this workspace for the college bowl competition only: confirm the schedule, secure each spread before kickoff, monitor entries, and resolve schedule or game exceptions.</span>
-          </section>
           <BowlPoolReadiness />
           <BowlPoolExceptions />
         </> : null}
 
         {activePanel === "system" ? <>
-          <section className="commissioner-workspace-intro">
-            <p>QUIET BY DESIGN</p>
-            <h2>System health & safety</h2>
-            <span>Use this page when the overview shows a hold, a provider limit is unclear, or an automation needs recovery. Most of it should stay green and untouched.</span>
-          </section>
           <AccountCapacityPanel />
           <SentryVerification />
           <section className="commissioner-diagnostics">
             <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>
-              <summary>Diagnostics and manual recovery <span>Open only when a live status flags a hold</span></summary>
-              <p className="mt-2 max-w-2xl text-sm text-zinc-700">Open this when the operations map identifies a hold, or when you specifically need a full readiness report.</p>
+              <summary>Automation health and alerts <span>Open when the overview flags a hold</span></summary>
               {showDiagnostics ? <>
-                <OpeningWeekChecklist />
                 <AutomationWatchdog />
                 <AutomationHealth />
-                <SeasonReadiness />
-                <CommissionerHandbook />
               </> : null}
+            </details>
+            <details>
+              <summary>Commissioner handbook <span>Runbook, pool rules, and rare controls</span></summary>
+              <CommissionerHandbook />
             </details>
           </section>
         </> : null}
 
         {activePanel === "season-setup" ? <>
-        <section className="commissioner-workspace-intro">
-          <p>SEASON CONTROL</p>
-          <h2>Prepare carefully. Preserve forever.</h2>
-          <span>Use this before opening a season or changing its schedule. Validate first, write once, and leave routine game-day work to the live runbook.</span>
-        </section>
         <SeasonBootstrapStatus />
-        <section className="commissioner-workspace-section">
-          <p className="text-xs font-black tracking-[.16em] text-zinc-600">PRACTICE & CONTROL</p>
-          <h2 className="mt-1 font-serif text-2xl font-bold">Rehearse safely, then publish</h2>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-700">Use the live Slate and its receipts for settled history; this workspace stays focused on season setup.</p>
+        <section className="commissioner-diagnostics">
+          <details>
+            <summary>Season readiness checks <span>Before the opener or a rare lifecycle recovery</span></summary>
+            <SeasonReadiness />
+            <OpeningWeekChecklist />
+          </details>
         </section>
         <section className="commissioner-tool-card mt-8">
           <p className="commissioner-tool-eyebrow">READ-ONLY PROVIDER CHECK</p>

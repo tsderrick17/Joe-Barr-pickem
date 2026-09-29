@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
 
+const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
+
 export default function SiteNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -34,7 +36,7 @@ export default function SiteNav() {
   useEffect(() => {
     let active = true;
 
-    async function loadNavigation() {
+    async function loadNavigation(attempt = 0) {
       try {
         const response = await fetchWithSession("/api/profile");
         if (response.status === 401) throw new SessionUnavailableError();
@@ -57,7 +59,14 @@ export default function SiteNav() {
 
         // Preserve any already-verified identity through a temporary read
         // failure. A transient request must never make account controls blink
-        // out while the rest of the signed-in page remains on screen.
+        // out while the rest of the signed-in page remains on screen. Retry a
+        // few times so one slow or failed profile read cannot leave the
+        // Commissioner link and account controls missing until the next page.
+        if (active && attempt < NAVIGATION_RETRY_DELAYS_MS.length) {
+          window.setTimeout(() => {
+            if (active) void loadNavigation(attempt + 1);
+          }, NAVIGATION_RETRY_DELAYS_MS[attempt]);
+        }
       }
     }
 

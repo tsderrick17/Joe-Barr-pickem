@@ -53,7 +53,7 @@ export default function SeasonBootstrapStatus() {
     finally { setBusy(false); }
   }
   return (
-    <section className="border-b-2 border-zinc-900 py-7">
+    <section className="commissioner-tool">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-black tracking-[0.16em] text-zinc-600">AUTOMATIC SEASON HANDOFF</p>

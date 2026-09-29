@@ -4143,6 +4143,11 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
 .commissioner-panel-tab.is-active { background: #173c35; border-color: #173c35; color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
 .commissioner-panel-tab.is-active > span { color: #9bdbca; }
+/* Every desk tool shares one light card rhythm instead of heavy black rules. */
+.commissioner-tool { border-bottom: 1px solid #c8c2b7; padding: 1.25rem 0; }
+.commissioner-tool:first-child { padding-top: .75rem; }
+html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
+@media (max-width: 639px) { .commissioner-tool { padding: 1rem 0; } }
 .commissioner-panel-description { color: #656159; font-size: .82rem; margin-top: .4rem; }
 
 .commissioner-workspace-intro { border-bottom: 1px solid #c8c2b7; padding: 1.3rem 0 1rem; }
@@ -4172,12 +4177,6 @@ html[data-theme="night"] .playoff-scoreboard {
    panels a clear visual rhythm on both desktop and mobile. */
 [aria-labelledby="grading-dashboard-title"] .grid > * { min-width: 0; }
 [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 > * { min-width: 0; }
-[aria-labelledby="grading-dashboard-title"] > .mt-5 { margin-top: 1rem; }
-[aria-labelledby="grading-dashboard-title"] > .mt-4.grid > div { padding: .8rem; }
-[aria-labelledby="grading-dashboard-title"] > .mt-4.rounded-xl,
-[aria-labelledby="grading-dashboard-title"] > section.mt-5.rounded-xl { padding: .9rem; }
-[aria-labelledby="grading-dashboard-title"] > .mt-5.border-zinc-300.bg-white { padding: .85rem; }
-[aria-labelledby="grading-dashboard-title"] > .mt-5.grid > div.border-zinc-300.bg-white { padding: .85rem; }
 [aria-labelledby="grading-dashboard-title"] .grid p,
 [aria-labelledby="grading-dashboard-title"] dd,
 [aria-labelledby="grading-dashboard-title"] td,
@@ -4209,17 +4208,62 @@ html[data-theme="night"] .playoff-scoreboard {
    compact row so it remains useful while sticky without covering the work. */
 [aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem !important; top: .25rem; }
 [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.15rem !important; line-height: 1.05; margin: 0 !important; white-space: nowrap; }
-[aria-labelledby="grading-dashboard-title"] > .sticky p.max-w-3xl,
-[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:first-child > p:first-child { display: none; }
 [aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; flex-wrap: nowrap; gap: .5rem !important; }
 [aria-labelledby="grading-dashboard-title"] > .sticky > div > div:last-child { flex-wrap: nowrap; gap: .35rem !important; }
 [aria-labelledby="grading-dashboard-title"] > .sticky select,
 [aria-labelledby="grading-dashboard-title"] > .sticky button { font-size: .72rem !important; line-height: 1.1; padding: .38rem .55rem !important; }
 [aria-labelledby="grading-dashboard-title"] > .sticky select { max-width: 15rem; }
+
+/* Grading desk: one status row, a scannable game list, and short fact lists.
+   Built to read on a phone first; font sizes match the existing tiles. */
+.grading-status { align-items: center; border: 1px solid; border-radius: .75rem; display: grid; gap: .9rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin-top: 1rem; padding: .9rem 1rem; }
+.grading-status.is-clear { background: #ecfdf5; border-color: #a7f3d0; }
+.grading-status.is-attention { background: #fef2f2; border-color: #fecaca; }
+.grading-status-headline { display: grid; gap: .15rem; min-width: 0; }
+.grading-status-headline > span { font-size: .75rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.grading-status.is-clear .grading-status-headline > span { color: #065f46; }
+.grading-status.is-attention .grading-status-headline > span { color: #991b1b; }
+.grading-status-headline > strong { font-family: Georgia, serif; font-size: 1.5rem; line-height: 1.15; }
+.grading-status-headline > small { color: #3f3f46; font-size: .875rem; }
+.grading-kpis { display: grid; gap: .5rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grading-kpi { background: #fff; border: 1px solid #e4e4e7; border-radius: .6rem; min-width: 0; padding: .55rem .65rem; }
+.grading-kpi.is-alert { border-color: #fca5a5; }
+.grading-kpi > p { color: #71717a; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.grading-kpi > strong { display: block; font-family: Georgia, serif; font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.grading-kpi > small { color: #52525b; font-size: .75rem; }
+.grading-kpi-bar { background: #f4f4f5; border-radius: 999px; height: .35rem; margin-top: .3rem; overflow: hidden; }
+.grading-kpi-bar > div { border-radius: 999px; height: 100%; }
+.grading-issues { display: grid; gap: .5rem; margin-top: .75rem; }
+.grading-issues > div { background: #fef2f2; border-left: 4px solid #b91c1c; padding: .6rem .8rem; }
+.grading-facts { display: grid; gap: .35rem; }
+.grading-facts > div { border-bottom: 1px solid #f4f4f5; display: flex; font-size: .875rem; gap: .75rem; justify-content: space-between; padding-bottom: .35rem; }
+.grading-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.grading-facts dt { color: #52525b; flex: 0 0 auto; }
+.grading-facts dd { font-weight: 600; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.grading-log { background: #fff; border: 1px solid #e4e4e7; border-radius: .75rem; margin-top: 1rem; padding: .8rem 1rem; }
+.grading-log > summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 700; }
+.grading-log > summary > span { color: #71717a; display: block; font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700; }
+@media (max-width: 767px) {
+  /* The phone nav is sticky too; park the grading rail just below it. */
+  .grading-desk > .sticky { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }
+}
+html[data-theme="night"] .grading-kpi, html[data-theme="night"] .grading-log { background: #172522; border-color: #3b514c; }
+html[data-theme="night"] .grading-status.is-clear { background: #12302a; border-color: #2b685d; }
+html[data-theme="night"] .grading-status.is-attention { background: #3a1616; border-color: #7f1d1d; }
+html[data-theme="night"] .grading-status-headline > small, html[data-theme="night"] .grading-facts dt { color: #b9c1bd; }
+html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
+@media (max-width: 900px) {
+  .grading-status { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639px) {
+  .grading-desk { border-radius: .75rem; padding: .6rem !important; }
+  .grading-status { padding: .75rem; }
+  .grading-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grading-facts > div { flex-direction: column; gap: .1rem; }
+  .grading-facts dd { text-align: left; }
+}
 @media (max-width: 900px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
-  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
-  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 .grid.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1100px) and (min-width: 640px) {
@@ -4255,7 +4299,6 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
 
 @media (max-width: 639px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
-  [aria-labelledby="grading-dashboard-title"] > .mt-5.grid.md\:grid-cols-2 .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
   [aria-labelledby="grading-dashboard-title"] > .sticky { padding: .3rem .45rem !important; }
   [aria-labelledby="grading-dashboard-title"] > .sticky > div { gap: .35rem !important; }
   [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: .92rem !important; }

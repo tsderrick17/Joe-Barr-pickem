@@ -13,13 +13,17 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /watchdog\.openAlerts/);
   assert.match(route, /audit_logs/);
   assert.match(route, /pick grades are still pending/);
-  assert.match(component, /GRADING CONTROL CENTER/);
+  assert.match(component, /id="grading-dashboard-title">Grading</);
   assert.match(component, /Game pipeline/);
   assert.match(component, /Review queue/);
   assert.match(component, /Recent operational history/);
   assert.match(component, /Participant impact/);
   assert.match(component, /Notification readiness/);
-  assert.match(component, /Release readiness/);
+  assert.match(component, /Up next/);
+  assert.match(component, /Provider performance/);
+  assert.match(component, /Activity log/);
+  // The old text sanitizer that rewrote every "?" is gone; separators are real.
+  assert.doesNotMatch(component, /MutationObserver/);
   assert.match(component, /<EfficiencyTrendPanel/);
   assert.match(component, /<LadderHistogram items=\{data\.ladderSummary\}/);
   assert.match(component, /New game finals by polling rung/);

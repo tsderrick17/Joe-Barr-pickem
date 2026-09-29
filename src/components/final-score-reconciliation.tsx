@@ -40,7 +40,7 @@ export default function FinalScoreReconciliation() {
   }
 
   return (
-    <section className="border-b-2 border-zinc-900 py-8" id="final-score-reconciliation">
+    <section className="commissioner-tool" id="final-score-reconciliation">
       <h2 className="font-serif text-2xl font-bold">Final Score Reconciliation</h2>
       <p className="mt-2 text-zinc-700">Read-only comparison of recently saved finals against the score provider. It never alters scores, grades, or Survivor entries.</p>
       <button className="mt-5 bg-zinc-900 px-5 py-3 font-bold text-white disabled:opacity-40" disabled={isChecking} onClick={check} type="button">{isChecking ? "Reconciling finals..." : "Reconcile recent finals"}</button>

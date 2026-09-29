@@ -81,7 +81,6 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
         <div>
           <p className="text-xs font-black tracking-[0.16em] text-zinc-600">LIVE OPERATIONS MAP</p>
           <h2 className="mt-1 font-serif text-3xl font-bold" id="operations-map-title">Where the pool stands</h2>
-          <p className="mt-2 max-w-2xl text-zinc-700">Follow the active path. If something stops, the first red stage explains the hold and the next safe move.</p>
         </div>
         <button className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">
           {loading ? "Checking…" : "Refresh map"}
