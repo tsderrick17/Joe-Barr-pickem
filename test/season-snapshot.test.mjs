@@ -112,8 +112,10 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
   assert.ok(route.indexOf("requireCommissioner(request)") < route.indexOf('supabaseAdmin.from("seasons")'));
   assert.match(scoreboard, /const showSeasonSnapshot = isCommissioner;/);
-  assert.match(scoreboard, /showSeasonSnapshot \? <SeasonSnapshot/);
-  assert.match(snapshot, /if \(!expanded\) return;/);
+  assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
+  // It loads the first time the pad is turned over, not on page load.
+  assert.match(snapshot, /if \(!opened\) return;/);
+  assert.match(snapshot, /if \(active && !opened\) setOpened\(true\);/);
   assert.match(snapshot, /fetchSnapshot\(\)\.then/);
   assert.doesNotMatch(snapshot, />CUMULATIVE WINS<|<details className="season-snapshot-data"|season-snapshot-readout/);
   assert.doesNotMatch(snapshot, /<circle/);
@@ -154,7 +156,7 @@ test("the stacking order puts the most recent leader in the upper lane of a shar
 
 test("Season Snapshot shows only its title, with no explanatory prose", () => {
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(snapshot, /<h3>Season Snapshot<\/h3>/);
+  assert.match(snapshot, /<h2>Season Snapshot<\/h2>/);
   for (const prose of ["Commissioner-only", "cumulative Pick’em wins by week", "Weekly totals appear", "Season totals continue", "CURRENT STANDINGS"]) {
     assert.ok(!snapshot.includes(prose), `prose must be gone: ${prose}`);
   }
@@ -194,4 +196,24 @@ test("motion respects reduced-motion and the key gives hidden players a visible 
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.season-snapshot-lines \{ animation: none; \}/);
   assert.match(css, /\.season-snapshot-key-row\.is-hidden/);
   assert.match(css, /\.season-snapshot-ribbon\.is-dim/);
+});
+
+test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round button", () => {
+  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(scoreboard, /className="pad-flip-button"/);
+  assert.match(scoreboard, /aria-pressed=\{flipped\}/);
+  // Only the visible face is reachable by keyboard and screen readers.
+  assert.match(scoreboard, /className="pad-face pad-front" aria-hidden=\{flipped\} inert=\{flipped\}/);
+  assert.match(scoreboard, /className="pad-face pad-back" aria-hidden=\{!flipped\} inert=\{!flipped\}/);
+  assert.match(css, /\.has-pad-flip\.is-flipped \.pad-flip-inner \{ transform: rotateY\(180deg\); \}/);
+  assert.match(css, /backface-visibility: hidden; grid-area: 1 \/ 1;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pad-flip-inner, \.pad-flip-button \{ transition: none; \}/);
+  // Axis labels, a chart that fills the height, and a Show all that is always there.
+  assert.match(snapshot, />Wins<\/text>/);
+  assert.match(snapshot, />Week<\/text>/);
+  assert.match(snapshot, /height: Math\.max\(180, Math\.round\(entry\.contentRect\.height\)\)/);
+  assert.match(snapshot, /disabled=\{hidden\.size === 0\}/);
+  assert.match(css, /\.season-snapshot-show-all:disabled \{/);
 });

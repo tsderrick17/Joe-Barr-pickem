@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
@@ -53,9 +54,14 @@ export default function PickemScoreboard({
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
   const showSeasonSnapshot = isCommissioner;
   const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
+  // Commissioners can turn the pad over to see the season chart on its back.
+  const [flipped, setFlipped] = useState(false);
+  const flipButton = showSeasonSnapshot ? <button aria-label={flipped ? "Show the Pick'em Pad" : "Show the Season Snapshot"} aria-pressed={flipped} className="pad-flip-button" onClick={() => setFlipped((current) => !current)} title={flipped ? "Back to the pad" : "Season Snapshot"} type="button"><span aria-hidden="true">↻</span></button> : null;
 
   return (
-    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""}`}>
+    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""}`}>
+      <div className="pad-flip-inner">
+      <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
       <div className="pickem-ledger-masthead">
         <div className="flex items-center gap-2">
           <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Pad"}</h2>
@@ -68,6 +74,7 @@ export default function PickemScoreboard({
           >{hideEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}
         </div>
         {isPlayoff ? <p className="pickem-ledger-period">{week.toUpperCase()}</p> : null}
+        {flipButton}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`${isPlayoff ? (isDensePlayoffRound ? "min-w-[40rem]" : "min-w-[48rem]") : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
@@ -111,7 +118,9 @@ export default function PickemScoreboard({
           </tbody>
         </table>
       </div>
-      {showSeasonSnapshot ? <SeasonSnapshot isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /> : null}
+      </div>
+      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} flipButton={flipButton} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /></div> : null}
+      </div>
     </section>
   );
 }

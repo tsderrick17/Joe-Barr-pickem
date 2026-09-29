@@ -683,3 +683,17 @@ Commissioner link cannot stay missing after one transient error.
 
 **Reason:** The desk had the right tools but spent a screen of prose before
 reaching them.
+
+## 2026-09-29 - The Season Snapshot is the back of the Pick'em Pad
+
+**Status:** Accepted
+
+Instead of a collapsed section under the pad, the Season Snapshot is the pad's
+back face. A round button at the top right turns the card over with a 3D flip
+(instant under reduced motion). Both faces share the front's size, the chart
+fills the back's height with Wins and Week axis labels, the player key sits
+below it, and Show all is always visible and greyed out when everyone is shown.
+Still commissioner-only until released.
+
+**Reason:** The chart belongs to the pad it summarizes, and a fixed card size
+keeps the page from jumping. This supersedes the default-minimized section.
