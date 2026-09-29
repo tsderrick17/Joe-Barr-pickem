@@ -40,7 +40,9 @@ test("activate_scoring_period_atomically opens only the right period, once", { s
     ]).select("id");
     assert.equal(teamsError, null, teamsError?.message);
     teamIds = teams.map((team) => team.id);
-    const kickoff = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    // The gameweek pin requires the game and its period to fall in the same NFL
+    // gameweek, so the game shares the period's start time.
+    const kickoff = past;
     const { error: gameError } = await admin.from("games").insert({ external_game_id: token, scoring_period_id: first.id, away_team_id: teamIds[0], home_team_id: teamIds[1], kickoff_at: kickoff, line_lock_at: kickoff });
     assert.equal(gameError, null, gameError?.message);
 
