@@ -727,6 +727,7 @@ is a compact four-column grid.
 joins, leaves, or is hidden. The midpoint swap removes the brief mirrored front
 face, and the compact key gives the chart more room on phones. Supersedes
 alphabetical color assignment.
+
 ## 2026-09-29 - Cut idle Vercel CPU from polling and reminder ticks
 
 **Status:** Accepted
