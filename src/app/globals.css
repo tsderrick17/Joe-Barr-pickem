@@ -1527,10 +1527,12 @@ html[data-theme="night"] .survivor-selection-footer {
 .season-snapshot-week-label { color: #536077; font: 800 10px/1 Arial, sans-serif; letter-spacing: .12em; margin: .15rem 0 0; padding-left: 30px; text-align: center; text-transform: uppercase; }
 
 /* All / 6 Wk sits between the title and the flip button. */
+/* Two equal columns: both halves take the wider label's width. */
 .season-snapshot-range {
   border: 1px solid #a59b8d;
   border-radius: 999px;
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
   flex: 0 0 auto;
   margin-left: auto;
   overflow: hidden;
@@ -1540,7 +1542,7 @@ html[data-theme="night"] .survivor-selection-footer {
   color: #40516a;
   font: 800 .66rem/1 Arial, sans-serif;
   min-height: 1.9rem;
-  padding: 0 .7rem;
+  padding: 0 .5rem;
   transition: background .15s ease, color .15s ease;
 }
 .season-snapshot-range button + button { border-left: 1px solid #a59b8d; }
