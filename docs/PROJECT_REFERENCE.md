@@ -426,7 +426,11 @@ the condition genuinely recurs.
 
 ## Commissioner controls
 
-The Grading charts share the dashboard's selected period and minute refresh.
+The Grading charts share the dashboard's selected period and minute refresh,
+which pauses while the tab is hidden and refreshes on return. The Standings
+page polls every three minutes while visible, refreshes when the player returns
+(at most every 30 seconds), and refreshes exactly at each pick reveal. Reminder
+delivery is gated in Supabase so idle ticks never call Vercel.
 Monthly credit usage runs from the first UTC day through today, with daily and
 cumulative views of recorded provider costs (charged failures included).
 Provider-reported quota snapshots remain separate from logged costs. Receipt

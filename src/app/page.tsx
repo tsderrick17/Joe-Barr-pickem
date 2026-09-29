@@ -149,6 +149,9 @@ function ticketKickoff(value: string | undefined) {
   return `${date} · ${time}`;
 }
 
+const HOME_REFRESH_MS = 3 * 60_000;
+const RETURN_REFRESH_GAP_MS = 30_000;
+
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -167,8 +170,10 @@ export default function HomePage() {
     let revealTimer: number | null = null;
     let activeRequest: AbortController | null = null;
     let hasLoaded = false;
+    let lastLoadStartedAt = 0;
 
     async function loadHome() {
+      lastLoadStartedAt = Date.now();
       const request = new AbortController();
       let requestTimedOut = false;
       const requestTimer = window.setTimeout(() => {
@@ -249,17 +254,23 @@ export default function HomePage() {
 
     void loadHome();
 
+    // Grades land on the ten-minute score sync and reveals have their own
+    // exact timer, so a slow background poll plus a refresh whenever the
+    // player returns keeps the page current without constant server work.
     const refreshInterval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         void loadHome();
       }
-    }, 60_000);
+    }, HOME_REFRESH_MS);
 
-    const refreshOnFocus = () => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastLoadStartedAt < RETURN_REFRESH_GAP_MS) return;
       void loadHome();
     };
 
-    window.addEventListener("focus", refreshOnFocus);
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
 
     return () => {
       window.clearInterval(refreshInterval);
@@ -267,7 +278,8 @@ export default function HomePage() {
         window.clearTimeout(revealTimer);
       }
       activeRequest?.abort();
-      window.removeEventListener("focus", refreshOnFocus);
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
     };
   }, [retryNonce]);
 

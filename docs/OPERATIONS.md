@@ -196,6 +196,15 @@ playoff retry cadences, and both daylight/standard-safe pre-lock windows remain
 installed. The runtime Eastern-time guard ensures only one of those pre-lock
 windows spends a credit each day.
 
+Migration `20260929070000_gate_reminder_dispatch.sql` gates reminder delivery
+the same way as line locks: the five-minute cron runs
+`dispatch_reminders_if_due()` inside Supabase and calls Vercel only when a
+scheduled reminder is due or a stale "sending" claim needs requeueing, the same
+rows `claim_due_push_reminders()` would act on. The watchdog still judges the
+reminder worker only when reminders are due, so idle skips never raise alerts.
+Score sync is deliberately not gated because each run also performs season
+rollover, week advancement, and Survivor no-pick eliminations.
+
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing
 result proves the full cron definitions and Vault authorization, the deployed

@@ -91,6 +91,19 @@ test("pool chat refreshes less often and pauses while hidden", async () => {
   assert.match(source, /document\.addEventListener\("visibilitychange", refreshOnVisibility\)/);
 });
 
+test("home and grading polling pause while hidden and home polls slowly", async () => {
+  const home = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+  const grading = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
+  assert.match(home, /const HOME_REFRESH_MS = 3 \* 60_000;/);
+  assert.match(home, /}, HOME_REFRESH_MS\);/);
+  assert.match(home, /Date\.now\(\) - lastLoadStartedAt < RETURN_REFRESH_GAP_MS/);
+  assert.match(home, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
+  // Reveals still refresh at the exact kickoff instead of waiting for the poll.
+  assert.match(home, /revealTimer = window\.setTimeout/);
+  assert.match(grading, /setInterval\(\(\) => \{ if \(document\.visibilityState === "visible"\) void refresh\(\); \}, 60000\)/);
+  assert.match(grading, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
+});
+
 test("launch preflight names and rejects the compatibility credential fallback", async () => {
   const admin = await readFile(new URL("../src/lib/supabase-admin.ts", import.meta.url), "utf8");
   const preflight = await readFile(new URL("../src/lib/launch-preflight.ts", import.meta.url), "utf8");

@@ -49,6 +49,17 @@ test("minute line-lock gate preserves disrupted-pick voiding before skipping Ver
   assert.match(sql, /if not public\.line_lock_work_is_due\(\) then return false; end if;[\s\S]*net\.http_post/);
 });
 
+test("reminder delivery calls Vercel only when the claim would find work", async () => {
+  const sql = await readFile(new URL("../supabase/migrations/20260929070000_gate_reminder_dispatch.sql", import.meta.url), "utf8");
+  // Mirrors claim_due_push_reminders(): due scheduled rows and stale claims.
+  assert.match(sql, /reminder\.status = 'scheduled'\s+and reminder\.scheduled_for <= clock_timestamp\(\)/);
+  assert.match(sql, /reminder\.status = 'sending'\s+and reminder\.processing_started_at < clock_timestamp\(\) - interval '20 minutes'/);
+  assert.match(sql, /if not public\.reminder_delivery_is_due\(\) then return false; end if;[\s\S]*\/api\/cron\/send-reminders/);
+  assert.match(sql, /cron\.schedule\('send-pickem-browser-reminders-every-five-minutes', '\*\/5 \* \* \* \*', 'select public\.dispatch_reminders_if_due\(\);'\)/);
+  assert.match(sql, /'send-pickem-browser-reminders-every-five-minutes', 'Reminder delivery: gated every five minutes', '\*\/5 \* \* \* \*', 'dispatch_reminders_if_due', 'dispatch_reminders_if_due'/);
+  assert.match(sql, /to_regprocedure\('cron\.schedule\(text,text,text\)'\) is not null/);
+});
+
 test("five-minute reminder delivery no longer reconciles future schedules", async () => {
   const [worker, maintenance, route, migration] = await Promise.all([
     readFile(new URL("../src/lib/reminder-worker.ts", import.meta.url), "utf8"),

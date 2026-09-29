@@ -711,3 +711,17 @@ time, once every game has kicked off and no Pick'em pick is pending.
 **Reason:** A mid-season reveal keeps early weeks from spoiling the race, and
 plotting everyone together avoids a line that jumps ahead of players whose
 games have not finished. This supersedes per-player plotting of the active week.
+
+## 2026-09-29 - Cut idle Vercel CPU from polling and reminder ticks
+
+**Status:** Accepted
+
+The home page background poll slows from one to three minutes, and returning
+to the tab (focus or visibility) refreshes at once, at most every 30 seconds.
+The exact kickoff reveal timer is unchanged. The Grading tab polls only while
+visible. Reminder delivery is gated in Supabase so idle five-minute ticks never
+call Vercel. Score sync and the watchdog keep their cadences.
+
+**Reason:** The project was near the Vercel Fluid active-CPU limit. Grades only
+change on the ten-minute score sync, so one-minute home polling did mostly
+redundant work, and nearly every reminder tick found nothing to send.
