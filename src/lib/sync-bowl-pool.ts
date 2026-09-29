@@ -21,7 +21,8 @@ function normalizedTeamName(value: string) { return value.toLowerCase().replace(
 function joinedTeamName(value: { display_name?: string } | Array<{ display_name?: string }> | null | undefined) { return Array.isArray(value) ? value[0]?.display_name ?? "" : value?.display_name ?? ""; }
 
 async function teamIdFor(name: string, providerId: string, abbreviation?: string | null) {
-  const { data: existing } = await supabaseAdmin.from("bowl_pool_teams").select("id").eq("display_name", name).maybeSingle();
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_teams").select("id").eq("display_name", name).maybeSingle();
+  if (existingError) throw new Error("Bowl Pool teams could not be loaded.");
   if (existing?.id) return existing.id;
   const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: providerId, display_name: name, short_name: name, abbreviation: abbreviation ?? null }, { onConflict: "provider_team_id" }).select("id").single();
   return error || !data ? null : data.id;
@@ -48,7 +49,8 @@ async function syncAnnualSchedule(now: Date) {
   if (!response?.ok) return 0;
   const payload = await response.json().catch(() => null) as { events?: EspnEvent[] } | null;
   const events = (payload?.events ?? []).filter((event) => event.season?.type === 3 && event.competitions?.[0]?.competitors?.length === 2);
-  const { data: existing } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, order_index").eq("season_id", season.id).order("order_index");
+  const { data: existing, error: existingGamesError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, order_index").eq("season_id", season.id).order("order_index");
+  if (existingGamesError) throw new Error("Bowl Pool games could not be loaded.");
   const used = new Set<string>(); let imported = 0; let order = 0; let championshipGameId: string | null = null;
   for (const event of events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())) {
     const competition = event.competitions?.[0];
@@ -109,12 +111,15 @@ function parseScore(value: string | number | null | undefined) {
 
 async function syncScheduleAndLines(now: Date) {
   const seasonYear = seasonYearAt(now);
-  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYear).maybeSingle();
+  const { data: season, error: seasonReadError } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYear).maybeSingle();
+  if (seasonReadError) throw new Error("The Bowl Pool season could not be loaded.");
   if (!season) return { scheduleGames: 0, linesLocked: 0 };
-  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id, away:bowl_pool_teams!bowl_pool_games_away_team_id_fkey(display_name), home:bowl_pool_teams!bowl_pool_games_home_team_id_fkey(display_name)").eq("season_id", season.id).in("status", ["scheduled", "live"]);
+  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, line_lock_at, odds_event_id, away_team_id, home_team_id, away:bowl_pool_teams!bowl_pool_games_away_team_id_fkey(display_name), home:bowl_pool_teams!bowl_pool_games_home_team_id_fkey(display_name)").eq("season_id", season.id).in("status", ["scheduled", "live"]);
+  if (gamesReadError) throw new Error("Bowl Pool games could not be loaded.");
   if (!games?.length) return { scheduleGames: 0, linesLocked: 0 };
   const events = await providerEvents("sports/americanfootball_ncaaf/odds", { regions: "us", markets: "spreads", oddsFormat: "american", dateFormat: "iso" });
-  const { data: lockedLines } = await supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at, locked_at").in("game_id", games.map((game) => game.id));
+  const { data: lockedLines, error: lockedLinesReadError } = await supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at, locked_at").in("game_id", games.map((game) => game.id));
+  if (lockedLinesReadError) throw new Error("Bowl Pool lines could not be loaded.");
   const lineByGame = new Map((lockedLines ?? []).map((line) => [line.game_id, line]));
   const alreadyLocked = new Set((lockedLines ?? []).filter((line) => line.locked_at).map((line) => line.game_id));
   const used = new Set<string>(); let scheduleGames = 0; let linesLocked = 0;
@@ -166,7 +171,8 @@ async function syncScheduleAndLines(now: Date) {
 }
 
 async function syncScores(now: Date) {
-  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id").in("status", ["scheduled", "live"]);
+  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id").in("status", ["scheduled", "live"]);
+  if (gamesReadError) throw new Error("Bowl Pool games awaiting scores could not be loaded.");
   if (!games?.length) return 0;
   // ESPN is the no-cost source of truth for bowl results. The Odds API score
   // feed remains an optional fallback when explicitly enabled, but score
@@ -203,9 +209,11 @@ async function syncScores(now: Date) {
 
 async function refreshSeasonStatus(now: Date) {
   const year = seasonYearAt(now);
-  const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id, player_visible_at, first_kickoff_at").eq("season_year", year).maybeSingle();
+  const { data: season, error: seasonReadError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, player_visible_at, first_kickoff_at").eq("season_year", year).maybeSingle();
+  if (seasonReadError) throw new Error("The Bowl Pool season could not be loaded.");
   if (!season) return;
-  const { data: games } = await supabaseAdmin.from("bowl_pool_games").select("status").eq("season_id", season.id);
+  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("status").eq("season_id", season.id);
+  if (gamesReadError) throw new Error("Bowl Pool game statuses could not be loaded.");
   const allTerminal = Boolean(games?.length) && games!.every((game) => ["final", "cancelled", "no_contest"].includes(game.status));
   const status = allTerminal ? "complete" : season.first_kickoff_at && now >= new Date(season.first_kickoff_at) ? "live" : now >= new Date(season.player_visible_at) ? "open" : "scheduled";
   const { error: statusError } = await supabaseAdmin.from("bowl_pool_seasons").update({ status, completed_at: status === "complete" ? now.toISOString() : null }).eq("id", season.id);
