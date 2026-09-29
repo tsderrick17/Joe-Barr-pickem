@@ -23,3 +23,10 @@ The site and its email artwork share a small set of visual rules. Keep future ch
 ## State styling
 
 Use teal for official/healthy, amber for waiting, and red for blocked/error. Status should be communicated by text as well as color. Focus states use the shared ring rather than a page-specific outline.
+
+## Receipt ticket
+
+- The Slate receipt strip is transparent. Each section paints its own paper on a masked `::before` layer, so notches and serrated ends are real cutouts and content is never clipped.
+- Tune the cuts with `--receipt-notch` (round notch radius) and `--receipt-scallop` (serrated end radius); both shrink on phones.
+- The stub has a serrated left end; the last section on the ticket has the serrated right end; every perforation has a notch at top and bottom with a dashed line between.
+- Do not add a background, border, or box-shadow to the strip itself; they would show through the cutouts. The drop shadow comes from `--receipt-shadow`.
