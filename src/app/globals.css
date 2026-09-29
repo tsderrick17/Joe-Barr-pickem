@@ -1468,13 +1468,11 @@ html[data-theme="night"] .survivor-selection-footer {
 .pad-flip-button:focus-visible { background: #fff; }
 .pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
 /* The card turns flat, like a sheet of paper. Turned over, it widens to the
-   full Standings rail (the Survivor Table's width) so the chart has room, and
-   the back uses a cool gray surface rather than the pad's parchment. */
+   full Standings rail (the Survivor Table's width) so the chart has room. Both
+   sides share the pad's parchment. */
 .pad-flip-inner { transition: transform .7s cubic-bezier(.45, .05, .55, .95), max-width .7s cubic-bezier(.45, .05, .55, .95); }
 .has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
 .has-pad-flip .pad-front { background: var(--ledger-paper); }
-.has-pad-flip .pad-back { background: #f1f4f8; }
-html[data-theme="night"] .has-pad-flip .pad-back { background: var(--ledger-paper); }
 /* Belt and braces for browsers that ignore backface-visibility on complex
    faces: each face switches off exactly at the halfway point of the turn, so
    the mirrored side can never show through. */
@@ -1505,22 +1503,53 @@ html[data-theme="night"] .has-pad-flip .pad-back { background: var(--ledger-pape
 .season-snapshot-layout { display: flex; flex: 1 1 auto; flex-direction: column; gap: .5rem; min-height: 0; }
 .season-snapshot-axis-label { fill: #536077; font: 800 10px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 
+/* The y-axis stays put while the plot scrolls beside it in the 6-week view. */
+.season-snapshot-row { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.season-snapshot-yaxis { display: block; flex: 0 0 auto; }
 .season-snapshot-plot-scroll {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
+  overflow: hidden;
   scrollbar-color: #9bb9de transparent;
   scrollbar-width: thin;
 }
-
-.season-snapshot-plot-scroll svg {
-  display: block;
-  width: 100%;
-  max-width: none;
+.season-snapshot-plot-scroll.is-windowed {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 6px; /* keeps the scrollbar off the week numbers */
+  scroll-snap-type: x mandatory;
 }
+.season-snapshot-plot-scroll:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+.season-snapshot-plot-track { position: relative; }
+.season-snapshot-plot-track svg { display: block; max-width: none; }
+/* One notch per week: the view always lands on an exact six-week window. */
+.season-snapshot-snap { height: 1px; pointer-events: none; position: absolute; scroll-snap-align: start; top: 0; width: 1px; }
+.season-snapshot-week-label { color: #536077; font: 800 10px/1 Arial, sans-serif; letter-spacing: .12em; margin: .15rem 0 0; padding-left: 30px; text-align: center; text-transform: uppercase; }
+
+/* All / 6 Wk sits between the title and the flip button. */
+.season-snapshot-range {
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-left: auto;
+  overflow: hidden;
+}
+.season-snapshot-range button {
+  background: #fffdf8;
+  color: #40516a;
+  font: 800 .66rem/1 Arial, sans-serif;
+  min-height: 1.9rem;
+  padding: 0 .7rem;
+  transition: background .15s ease, color .15s ease;
+}
+.season-snapshot-range button + button { border-left: 1px solid #a59b8d; }
+.season-snapshot-range button[aria-pressed="true"] { background: #25334a; color: #fbf7ec; }
+.season-snapshot-range button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
+.season-snapshot-range + .pad-flip-button { margin-left: .5rem; }
 
 .season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
-.season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 0; min-width: 0; }
-.season-snapshot-chart .season-snapshot-plot-scroll { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem; min-width: 0; }
 .season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
 
 /* Lines draw in from the left once, then fade rather than jump when someone is

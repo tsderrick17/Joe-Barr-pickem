@@ -137,7 +137,7 @@ export default function PickemScoreboard({
         </table>
       </div>
       </div>
-      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} flipButton={flipButton} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins }))} /></div> : null}
+      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} flipButton={flipButton} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
       </div>
     </section>
   );
