@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotLayers, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotLayers, snapshotRibbons, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -71,6 +71,39 @@ test("playoff baseline carries final regular-season totals into the first round"
     { weekIndex: 0, from: 20, to: 21, playerIds: ["al"] },
     { weekIndex: 0, from: 19, to: 19, playerIds: ["tyler"] },
   ]);
+});
+
+test("tied ribbons touch without overlap in standings order and join across weeks", () => {
+  const standings = Array.from({ length: 11 }, (_, index) => ({ id: String(index) }));
+  const weeks = [1, 2, 3].map((wins) => ({ scores: standings.map(({ id }) => ({ playerId: id, wins })) }));
+  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, (wins) => 200 - wins * 40);
+  for (let week = 0; week < 3; week++) {
+    const bundle = ribbons.filter((ribbon) => ribbon.weekIndex === week);
+    for (let index = 1; index < bundle.length; index++) {
+      bundle[index].points.forEach((point, sample) => {
+        assert.equal(bundle[index - 1].points[sample].bottom, point.top);
+      });
+    }
+    assert.ok(Math.abs((bundle[0].points[2].top + bundle.at(-1).points[2].bottom) / 2 - (200 - (week + 0.82) * 40)) < 1e-9);
+    if (week === 0) bundle.forEach((ribbon) => assert.deepEqual(ribbon.points[0], { x: 0, top: 200, bottom: 200 }));
+    if (week > 0) bundle.forEach((ribbon) => {
+      const previous = ribbons.find((entry) => entry.weekIndex === week - 1 && entry.playerId === ribbon.playerId);
+      assert.deepEqual(previous.points.at(-1), ribbon.points[0]);
+    });
+  }
+});
+
+test("ribbons keep joined endpoints when bundles split and merge", () => {
+  const standings = [{ id: "first" }, { id: "second" }, { id: "third" }];
+  const weeks = [[1, 1, 1], [2, 1, 2], [3, 3, 3]].map((wins) => ({ scores: standings.map(({ id }, index) => ({ playerId: id, wins: wins[index] })) }));
+  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, (wins) => 200 - wins * 40);
+  for (const ribbon of ribbons.filter((entry) => entry.weekIndex > 0)) {
+    const previous = ribbons.find((entry) => entry.weekIndex === ribbon.weekIndex - 1 && entry.playerId === ribbon.playerId);
+    assert.deepEqual(previous.points.at(-1), ribbon.points[0]);
+  }
+  const first = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "first");
+  const third = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "third");
+  for (const sample of [1, 2, 3]) assert.equal(first.points[sample].bottom, third.points[sample].top);
 });
 
 test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {

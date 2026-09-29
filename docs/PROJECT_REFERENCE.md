@@ -113,7 +113,10 @@ be replayed.
   player's final regular-season total and continues season totals. All players
   share exact week columns. The horizontal scale fits the visible weeks from
   baseline through the current week. Lines have no point markers or data table;
-  overlaps use slim color layers in current standings order. The right-hand
+  shared paths use touching three-pixel ribbons, centered on the score, with
+  the higher current standing above the lower. Inset highlights and shaded
+  edges distinguish bands without gaps or overlapping strokes. Bands join at
+  common week boundaries and taper to the zero baseline. The right-hand
   color key also follows that order.
 
 ## Survivor selection and scoring

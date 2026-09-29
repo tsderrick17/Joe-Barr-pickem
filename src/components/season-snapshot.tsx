@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotLayers, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotRibbons, snapshotRibbonPath, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -44,7 +44,6 @@ function SnapshotChart({
   }, []);
 
   const shownPlayers = focusedId ? standings.filter((player) => player.id === focusedId) : standings;
-  const { segments } = snapshotLayers(weeks, shownPlayers, baseline);
   const values = [...shownPlayers.map((player) => baseline[player.id] ?? 0), ...weeks.flatMap((week) => week.scores.map((score) => score.wins))];
   const observedValues = values.length ? values : [0];
   const low = isPlayoff ? Math.max(0, Math.floor((Math.min(...observedValues) - 1) / 2) * 2) : 0;
@@ -59,6 +58,7 @@ function SnapshotChart({
   const plotHeight = height - top - bottom;
   const x = (weekIndex: number) => snapshotX(weekIndex, weeks.length, width);
   const y = (wins: number) => top + plotHeight * (1 - (wins - low) / (ceiling - low));
+  const ribbons = snapshotRibbons(weeks, shownPlayers, baseline, x, y);
 
   return <section className="season-snapshot-chart">
     <h4 className="season-snapshot-chart-title">{title}</h4>
@@ -73,14 +73,11 @@ function SnapshotChart({
           <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={top} y2={height - bottom} />
           <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 12}>{shortWeek(week.label)}</text>
         </g>)}
-        {segments.flatMap((segment, segmentIndex) => segment.playerIds.map((playerId: string, layerIndex: number) => <line
-          key={`${segmentIndex}:${playerId}`}
-          stroke={colors.get(playerId)}
-          strokeLinecap="round"
-          strokeWidth={2 + (segment.playerIds.length - layerIndex - 1) * 0.6}
-          x1={x(segment.weekIndex)} x2={x(segment.weekIndex + 1)}
-          y1={y(segment.from)} y2={y(segment.to)}
-        />))}
+        {ribbons.map((ribbon) => <g key={`${ribbon.weekIndex}:${ribbon.playerId}`}>
+          <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
+          <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
+          <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
+        </g>)}
       </svg>
     </div>
   </section>;
