@@ -399,11 +399,18 @@ test("one-button full-season chaos certification", {
     const wildcard = periods[18];
     // Move the first playoff day into the current clock window so the
     // production snapshot guard evaluates a real game day rather than
-    // correctly refusing a future-day page read.
+    // correctly refusing a future-day page read. The snapshot is per Eastern
+    // game day, so "two hours ago" must not reach back past Eastern midnight.
     await advanceFixtureClock(client, `
       update public.games
-      set kickoff_at = clock_timestamp() - interval '2 hours',
-          line_lock_at = clock_timestamp() - interval '3 hours'
+      set kickoff_at = greatest(
+            clock_timestamp() - interval '2 hours',
+            (date_trunc('day', clock_timestamp() at time zone 'America/New_York') at time zone 'America/New_York') + interval '1 minute'
+          ),
+          line_lock_at = greatest(
+            clock_timestamp() - interval '3 hours',
+            (date_trunc('day', clock_timestamp() at time zone 'America/New_York') at time zone 'America/New_York')
+          )
       where scoring_period_id = $1
     `, [wildcard.id]);
     const playoffBoundary = await one(client, `

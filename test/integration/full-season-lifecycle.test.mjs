@@ -10,6 +10,25 @@ function iso(offsetMs) {
   return new Date(Date.now() + offsetMs).toISOString();
 }
 
+// Playoff eligibility snapshots are per Eastern game day, so a "later today"
+// game must stay on today's Eastern date. Near Eastern midnight, +1 hour would
+// land tomorrow and the snapshot would (correctly) find no game today. Clamp the
+// offset to end at least a minute before Eastern midnight; if less than five
+// minutes remain, wait for the new day so the normal offset is valid again.
+async function easternSafeFutureOffsetMs(desiredMs) {
+  const secondsIntoEasternDay = () => {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hourCycle: "h23", hour: "numeric", minute: "numeric", second: "numeric" }).formatToParts(new Date());
+    const value = (type) => Number(parts.find((part) => part.type === type).value);
+    return value("hour") * 3600 + value("minute") * 60 + value("second");
+  };
+  let remainingMs = (86400 - secondsIntoEasternDay()) * 1000;
+  if (remainingMs < 5 * 60 * 1000) {
+    await new Promise((resolve) => setTimeout(resolve, remainingMs + 5000));
+    remainingMs = (86400 - secondsIntoEasternDay()) * 1000;
+  }
+  return Math.min(desiredMs, remainingMs - 60 * 1000);
+}
+
 async function insertOne(client, sql, values = []) {
   const result = await client.query(sql, values);
   assert.equal(result.rowCount, 1);
@@ -124,6 +143,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
       survivor_picks_graded: 0,
     });
 
+    const laterTodayOffsetMs = await easternSafeFutureOffsetMs(60 * 60 * 1000);
     await client.query(`
       update public.games
       set kickoff_at = $1, line_lock_at = $2
@@ -131,7 +151,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     `, [iso(-24 * 60 * 60 * 1000), iso(-25 * 60 * 60 * 1000), playoffGames.slice(0, 2).map((game) => game.id)]);
     await client.query(`
       update public.games set kickoff_at = $1, line_lock_at = $2 where id = $3
-    `, [iso(60 * 60 * 1000), iso(0), playoffGames[2].id]);
+    `, [iso(laterTodayOffsetMs), iso(0), playoffGames[2].id]);
 
     await client.query(
       "select * from public.complete_scoring_period_atomically($1, $2, $3)",
@@ -154,7 +174,7 @@ test("isolated full season preserves scoring, day-start playoff eligibility, his
     // to lock a fresh line and finish the season.
     const rescheduled = await insertOne(client, `
       select * from public.reschedule_game_atomically($1, $2, $3, null)
-    `, [playoffGames[2].id, iso(60 * 60 * 1000), iso(0)]);
+    `, [playoffGames[2].id, iso(laterTodayOffsetMs), iso(0)]);
     assert.equal(rescheduled.line_reopened, true);
     const removedLine = await insertOne(client,
       "select count(*)::integer as count from public.game_lines where game_id = $1",
