@@ -162,8 +162,10 @@ be replayed.
   game's kickoff, only the owner can see their selection; after kickoff the
   represented pick is public. Final cells show a full green win or red loss.
 - Final standings sort by ATS wins, then the smallest absolute difference from
-  the combined points scored in the CFP national championship. Remaining ties
-  create co-champions.
+  the combined points scored in the CFP national championship. The guess is optional:
+  a missing guess loses the tiebreaker to any guess but never outranks more wins.
+  Remaining ties, including leaders who all skipped the guess, create
+  co-champions.
 - Active participants with pool email enabled receive an individual reminder
   three hours before an unpicked game's kickoff and a 5:00 AM Eastern recap on
   the following day after that gameday's results are terminal. Recaps may
