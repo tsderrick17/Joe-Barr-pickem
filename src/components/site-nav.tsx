@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 
 export default function SiteNav() {
   const pathname = usePathname();
@@ -103,7 +103,7 @@ export default function SiteNav() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setIsBowlPoolLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(CURRENT_SEASON_YEAR)));
+      setIsBowlPoolLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(currentSeasonYear())));
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);

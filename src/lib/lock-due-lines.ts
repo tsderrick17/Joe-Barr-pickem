@@ -49,6 +49,8 @@ type LockDecision = {
   sourceCapturedAt: string;
   usedFallback: boolean;
   wasPickEm: boolean;
+  // Fresh provider lines also join the preliminary-spread history.
+  recordHistory: boolean;
 };
 
 export type LockLinesResult = {
@@ -74,13 +76,14 @@ export async function lockDueLines(
     const message =
       error instanceof Error ? error.message : "The official line check failed.";
 
-    await supabaseAdmin.from("sync_runs").insert({
+    const { error: failureRunError } = await supabaseAdmin.from("sync_runs").insert({
       provider: "The Odds API",
       job_type: "line_locks",
       status: "failed",
       completed_at: new Date().toISOString(),
       error_message: message,
     });
+    if (failureRunError) console.error("A failed line-lock run could not be recorded.");
 
     throw error;
   }
@@ -253,7 +256,15 @@ async function lockDueLinesInternal(
         "The live odds provider was unavailable. Last known lines were used where possible.",
       );
     } else {
-      oddsEvents = (await response.json()) as OddsEvent[];
+      const payload: unknown = await response.json();
+      if (Array.isArray(payload)) {
+        oddsEvents = payload as OddsEvent[];
+      } else {
+        providerAvailable = false;
+        warnings.push(
+          "The live odds provider returned an unexpected response. Last known lines were used where possible.",
+        );
+      }
     }
   } catch {
     providerAvailable = false;
@@ -267,13 +278,6 @@ async function lockDueLinesInternal(
   );
 
   const decisions: LockDecision[] = [];
-  const newHistoryRows: Array<{
-    game_id: string;
-    favorite_team_id: string;
-    spread: number;
-    source: string;
-    captured_at: string;
-  }> = [];
   const missingGames: string[] = [];
 
   for (const game of dueGames) {
@@ -316,15 +320,9 @@ async function lockDueLinesInternal(
           sourceCapturedAt: checkedAt,
           usedFallback: false,
           wasPickEm: false,
+          recordHistory: true,
         });
 
-        newHistoryRows.push({
-          game_id: game.id,
-          favorite_team_id: favoriteTeamId,
-          spread,
-          source: "DraftKings",
-          captured_at: checkedAt,
-        });
 
         continue;
       }
@@ -343,15 +341,9 @@ async function lockDueLinesInternal(
         sourceCapturedAt: checkedAt,
         usedFallback: false,
         wasPickEm: true,
+        recordHistory: true,
       });
 
-      newHistoryRows.push({
-        game_id: game.id,
-        favorite_team_id: favoriteTeamId,
-        spread: 0,
-        source: "DraftKings",
-        captured_at: checkedAt,
-      });
 
       continue;
     }
@@ -370,6 +362,7 @@ async function lockDueLinesInternal(
         sourceCapturedAt: previousLine.captured_at,
         usedFallback: true,
         wasPickEm: Number(previousLine.spread) === 0,
+        recordHistory: false,
       });
 
       continue;
@@ -393,62 +386,36 @@ async function lockDueLinesInternal(
     }
   }
 
-  if (newHistoryRows.length > 0) {
-    const { error: snapshotError } = await supabaseAdmin
-      .from("spread_history")
-      .insert(newHistoryRows);
-
-    if (snapshotError) {
-      warnings.push(
-        "Official lines were captured, but their preliminary-history snapshots could not be saved.",
-      );
-    }
-  }
+  let lockedCount = 0;
 
   if (decisions.length > 0) {
-    const { error: lockError } = await supabaseAdmin
-      .from("game_lines")
-      .upsert(
-        decisions.map((decision) => ({
+    // The official line, its history snapshot, and its audit entry are saved
+    // together. If any part fails, none of it is saved and the next run retries.
+    const { data: savedCount, error: lockError } = await supabaseAdmin.rpc(
+      "lock_official_lines_atomically",
+      {
+        decisions: decisions.map((decision) => ({
           game_id: decision.gameId,
           favorite_team_id: decision.favoriteTeamId,
-          locked_spread: decision.spread,
+          spread: decision.spread,
           source: decision.source,
           source_captured_at: decision.sourceCapturedAt,
-          locked_at: checkedAt,
-          manual_override: false,
+          used_fallback: decision.usedFallback,
+          pick_em: decision.wasPickEm,
+          record_history: decision.recordHistory,
         })),
-        {
-          onConflict: "game_id",
-          ignoreDuplicates: true,
-        },
-      );
+        locked_at: checkedAt,
+      },
+    );
 
-    if (lockError) {
+    if (lockError || typeof savedCount !== "number") {
       throw new Error("The official game lines could not be saved.");
     }
 
-    const { error: auditError } = await supabaseAdmin
-      .from("audit_logs")
-      .insert(
-        decisions.map((decision) => ({
-          actor_player_id: null,
-          action: "official_line_locked",
-          entity_type: "game",
-          entity_id: decision.gameId,
-          details: {
-            spread: decision.spread,
-            source: decision.source,
-            source_captured_at: decision.sourceCapturedAt,
-            used_fallback: decision.usedFallback,
-            pick_em: decision.wasPickEm,
-          },
-        })),
-      );
-
-    if (auditError) {
+    lockedCount = savedCount;
+    if (lockedCount < decisions.length) {
       warnings.push(
-        "The official lines were saved, but the audit entries could not be recorded.",
+        "Some official lines were already locked by another process and were left unchanged.",
       );
     }
   }
@@ -456,7 +423,7 @@ async function lockDueLinesInternal(
   const result = {
     checkedAt,
     dueGames: dueGames.length,
-    lockedGames: decisions.length,
+    lockedGames: lockedCount,
     fallbackLocks: decisions.filter(
       (decision) => decision.usedFallback,
     ).length,

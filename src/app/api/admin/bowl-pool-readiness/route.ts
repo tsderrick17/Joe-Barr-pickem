@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { assessBowlPoolIntegrity, countMissingBowlTeamSlots } from "@/lib/bowl-pool-integrity";
@@ -7,7 +7,7 @@ import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  const { data: season, error } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
+  const { data: season, error } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at").eq("season_year", currentSeasonYear()).maybeSingle();
   if (error || !season) return NextResponse.json({ error: "Bowl Pool season is not configured." }, { status: 404 });
   const [{ data: games, error: gamesError }, { data: lines }, { data: heartbeats, error: heartbeatError }, { data: entries }, { data: picks }, { data: results }, { count: openScheduleChanges }] = await Promise.all([
     supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, order_index, away_team_id, home_team_id, status").eq("season_id", season.id).order("kickoff_at"),

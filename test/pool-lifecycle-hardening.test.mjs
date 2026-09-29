@@ -62,7 +62,7 @@ test("reminder claims are bounded and only receipt-free stale claims recover", a
   assert.match(sql, /processing_started_at < clock_timestamp\(\) - interval '20 minutes'/);
   assert.match(sql, /not exists \([\s\S]*email_reminder_deliveries/);
   assert.match(sql, /limit 3\s+for update skip locked/);
-  assert.match(lease, /reminders: 600/);
+  assert.match(lease, /reminders: { leaseSeconds: 600,/);
 });
 
 test("PIN failures use progressive source cooldowns without locking a player PIN", async () => {

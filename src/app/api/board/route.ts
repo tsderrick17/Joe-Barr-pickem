@@ -9,7 +9,7 @@ import {
   selectAvailableScoringPeriods,
   selectDefaultScoringPeriod,
 } from "@/lib/scoring-period";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
     const { data: season, error: seasonError } = await supabaseAdmin
       .from("seasons")
       .select("id")
-      .eq("year", CURRENT_SEASON_YEAR)
+      .eq("year", currentSeasonYear())
       .maybeSingle();
 
     if (seasonError || !season) {
