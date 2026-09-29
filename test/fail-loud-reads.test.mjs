@@ -31,3 +31,29 @@ test("react and react-dom are the same version", async () => {
   const pkg = JSON.parse(await read("package.json"));
   assert.equal(pkg.dependencies["react-dom"], pkg.dependencies.react);
 });
+
+test("the commissioner gate retries a transient read and logs a persistent one", async () => {
+  const gate = await read("src/lib/require-commissioner.ts");
+  assert.match(gate, /const \{ data: player, error \} = await retrySafeRead\(/);
+  assert.match(gate, /if \(error\) console\.error\(/);
+  assert.match(gate, /return player\?\.active && player\.is_commissioner \? player : null;/, "still fails closed");
+});
+
+test("the Bowl dispatcher uses the same Eastern August 1 season year as the app", async () => {
+  const sql = await read("supabase/migrations/20260929040000_bowl_dispatch_eastern_season_year.sql");
+  assert.match(sql, /season_year_value integer := extract\(year from \(clock_timestamp\(\) at time zone 'America\/New_York'\)\)::integer;/);
+  assert.match(sql, /season_month integer := extract\(month from \(clock_timestamp\(\) at time zone 'America\/New_York'\)\)::integer;/);
+  assert.match(sql, /if season_month < 8 then season_year_value := season_year_value - 1; end if;/);
+  assert.match(sql, /net\.http_post/, "preflight still recognizes the gated dispatcher");
+  assert.match(sql, /decrypted_secrets/);
+  assert.match(sql, /grant execute on function public\.dispatch_bowl_sync_if_due\(\) to service_role;/);
+});
+
+test("Sentry uses one SDK version with its own replay, and unused packages are gone", async () => {
+  const client = await read("instrumentation-client.ts");
+  assert.match(client, /Sentry\.replayIntegration\(\{/);
+  assert.doesNotMatch(client, /@sentry\/replay|as unknown as/);
+  const pkg = JSON.parse(await read("package.json"));
+  assert.equal(pkg.dependencies["@sentry/replay"], undefined);
+  assert.equal(pkg.dependencies["js-yaml"], undefined);
+});

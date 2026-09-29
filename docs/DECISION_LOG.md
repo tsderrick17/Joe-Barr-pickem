@@ -630,3 +630,18 @@ succeeds. react-dom now matches react (19.3.0).
 
 **Reason:** A wrong message about a player's own account erodes trust, and a
 silent empty run hides a real outage from the watchdog.
+
+## 2026-09-29 - One Sentry version; Eastern season year in the Bowl dispatcher
+
+**Status:** Accepted
+
+The browser Sentry setup uses the SDK's own replay integration instead of a
+separately versioned `@sentry/replay` package, so one SDK version loads. The
+unused `js-yaml` direct dependency was removed (ESLint keeps its own copy). The
+Bowl sync dispatcher now takes its season year from Eastern time, matching the
+application's August 1 rule. The Commissioner access check retries a transient
+database error and logs a persistent one; it still denies access on failure.
+
+**Reason:** Mismatched Sentry packages loaded two SDK cores and needed a type
+cast to fit; an unused dependency is maintenance with no benefit; and the
+dispatcher could create next season's Bowl row about four hours early.
