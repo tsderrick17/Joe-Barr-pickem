@@ -1,5 +1,16 @@
-/** Build exact weekly positions, including a finished card in an active week. */
-export function buildSeasonSnapshot(periods, players, picks) {
+/** Players see the Season Snapshot from Week 6 on. A new season (Aug 1) starts
+ * with every period upcoming, so it disappears again until that season's Week 6. */
+export const SNAPSHOT_RELEASE_WEEK = 6;
+export function seasonSnapshotReleased(periods) {
+  return periods.some((period) =>
+    ["active", "complete"].includes(period.status)
+    && (period.period_type === "playoff" || (period.period_type === "regular" && period.display_order >= SNAPSHOT_RELEASE_WEEK)));
+}
+
+/** Build weekly positions. Everyone is plotted together for a week, and the
+ * active week appears only once its last Pick'em pick has settled: every game
+ * has kicked off (no pick can still be added) and no pick is pending. */
+export function buildSeasonSnapshot(periods, players, picks, activeWeekSettled = new Set()) {
   const playerIds = players.map((player) => player.id);
   const picksByPeriodAndPlayer = new Map();
   for (const pick of picks) {
@@ -17,11 +28,10 @@ export function buildSeasonSnapshot(periods, players, picks) {
 
   for (const period of ordered) {
     const scores = [];
-    const requiredPicks = Number.isInteger(period.max_picks) && period.max_picks > 0 ? period.max_picks : Infinity;
     for (const playerId of playerIds) {
       const playerPicks = picksByPeriodAndPlayer.get(`${period.id}:${playerId}`) ?? [];
       const graded = playerPicks.filter((pick) => pick.result === "win" || pick.result === "loss");
-      if (period.status === "active" && graded.length < requiredPicks) continue;
+      if (period.status === "active" && !activeWeekSettled.has(period.id)) continue;
       const wins = graded.filter((pick) => pick.result === "win").length;
       const total = (totals.get(playerId) ?? 0) + wins;
       totals.set(playerId, total);

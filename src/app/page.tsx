@@ -39,6 +39,7 @@ type HomeData = {
   serverTime: string;
   viewerPlayerId: string;
   isCommissioner: boolean;
+  seasonSnapshotReleased?: boolean;
   showSurvivorStandings: boolean;
   showBowlCard: boolean;
   showPoolChat: boolean;
@@ -510,6 +511,7 @@ export default function HomePage() {
         <PickemScoreboard
           hideEliminatedRows={data.hidePickemEliminatedRows}
           isCommissioner={data.isCommissioner}
+          seasonSnapshotReleased={data.seasonSnapshotReleased ?? false}
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           onToggleEliminatedRows={() => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}

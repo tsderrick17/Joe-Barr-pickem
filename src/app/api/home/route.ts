@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { seasonSnapshotReleased } from "@/lib/season-snapshot.js";
 import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
@@ -581,6 +582,7 @@ export async function GET(request: NextRequest) {
     serverTime: currentTime.toISOString(),
     viewerPlayerId: viewer.id,
     isCommissioner: viewer.is_commissioner,
+    seasonSnapshotReleased: seasonSnapshotReleased(periods),
     showSurvivorStandings: viewer.show_survivor_standings,
     showBowlCard: viewer.show_bowl_card,
     showPoolChat: viewer.show_pool_chat,

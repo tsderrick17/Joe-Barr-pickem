@@ -697,3 +697,17 @@ Still commissioner-only until released.
 
 **Reason:** The chart belongs to the pad it summarizes, and a fixed card size
 keeps the page from jumping. This supersedes the default-minimized section.
+
+## 2026-09-29 - Season Snapshot opens to players at Week 6; weeks plot together
+
+**Status:** Accepted
+
+Players get the flip button and the snapshot data from Week 6 (or any playoff
+round) until the August 1 rollover; commissioners always have it. The data route
+moved from /api/admin to /api/season-snapshot and checks the release rule
+before reading any picks. The active week is plotted for everyone at the same
+time, once every game has kicked off and no Pick'em pick is pending.
+
+**Reason:** A mid-season reveal keeps early weeks from spoiling the race, and
+plotting everyone together avoids a line that jumps ahead of players whose
+games have not finished. This supersedes per-player plotting of the active week.
