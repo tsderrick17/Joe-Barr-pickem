@@ -1,4 +1,3 @@
-import { gradeAtsPick } from "@/lib/ats-grading";
 import {
   advanceScoringPeriods,
   type WeekRolloverResult,
@@ -11,6 +10,7 @@ import {
   type ScorePollingMode,
 } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
@@ -32,12 +32,6 @@ type GameRow = {
   status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
 };
 type TeamRow = { id: string; full_name: string };
-type LockedLineRow = {
-  game_id: string;
-  favorite_team_id: string | null;
-  locked_spread: number | string;
-};
-type PickRow = { id: string; game_id: string; selected_team_id: string };
 type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
 type ScoreCheckBackoffRow = {
   game_id: string;
@@ -108,93 +102,18 @@ function parseCreditHeader(value: unknown) {
 }
 
 async function recoverPendingFinalPickGrades() {
-  const { data: pendingPicks, error: pendingPicksError } = await supabaseAdmin
-    .from("picks")
-    .select("id, game_id, selected_team_id")
-    .eq("result", "pending");
+  // One database call grades every pending pick on a verified final together,
+  // so an interruption can never leave a week half-graded.
+  const { data, error } = await supabaseAdmin.rpc("recover_pending_ats_grades");
+  const row = (data as Array<{ picks_graded: number; picks_awaiting_line: number }> | null)?.[0];
 
-  if (pendingPicksError || !pendingPicks) {
-    throw new Error("Pending final pick grades could not be loaded.");
+  if (error || !row) {
+    throw new Error("Pending final pick grades could not be recovered safely.");
   }
-
-  const picks = pendingPicks as PickRow[];
-  const gameIds = [...new Set(picks.map((pick) => pick.game_id))];
-
-  if (gameIds.length === 0) {
-    return { picksGraded: 0, picksAwaitingLine: 0 };
-  }
-
-  const [{ data: games, error: gamesError }, { data: lines, error: linesError }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("games")
-        .select("id, external_game_id, odds_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status, away_score, home_score")
-        .in("id", gameIds)
-        .eq("status", "final"),
-      supabaseAdmin
-        .from("game_lines")
-        .select("game_id, favorite_team_id, locked_spread")
-        .in("game_id", gameIds),
-    ]);
-
-  if (gamesError || linesError) {
-    throw new Error("Pending final pick grades could not be prepared.");
-  }
-
-  const finalGames = ((games ?? []) as Array<
-    GameRow & { away_score: number | null; home_score: number | null }
-  >).flatMap((game) => {
-    if (!Number.isInteger(game.away_score) || !Number.isInteger(game.home_score)) {
-      return [];
-    }
-
-    return [{ ...game, awayScore: game.away_score, homeScore: game.home_score }];
-  }) as FinalGameRow[];
-  const gameById = new Map(finalGames.map((game) => [game.id, game]));
-  const lineByGameId = new Map(
-    ((lines ?? []) as LockedLineRow[]).map((line) => [line.game_id, line]),
-  );
-  const updates = picks.flatMap((pick) => {
-    const game = gameById.get(pick.game_id);
-    const line = lineByGameId.get(pick.game_id);
-
-    if (!game || !line) return [];
-
-    const result = gradeAtsPick({
-      selectedTeamId: pick.selected_team_id,
-      favoriteTeamId: line.favorite_team_id,
-      lockedSpread: Number(line.locked_spread),
-      awayTeamId: game.away_team_id,
-      homeTeamId: game.home_team_id,
-      awayScore: game.awayScore,
-      homeScore: game.homeScore,
-    });
-
-    return result === "pending" ? [] : [{ id: pick.id, result }];
-  });
-  const pickIdsByResult = new Map<string, string[]>();
-
-  for (const update of updates) {
-    const pickIds = pickIdsByResult.get(update.result) ?? [];
-    pickIds.push(update.id);
-    pickIdsByResult.set(update.result, pickIds);
-  }
-
-  const gradeResults = await Promise.all(
-    [...pickIdsByResult.entries()].map(([result, pickIds]) =>
-      supabaseAdmin.from("picks").update({ result }).in("id", pickIds),
-    ),
-  );
-
-  if (gradeResults.some((gradeResult) => gradeResult.error)) {
-    throw new Error("Pending final pick grades could not be saved.");
-  }
-
-  const finalPickCount = picks.filter((pick) => gameById.has(pick.game_id)).length;
 
   return {
-    picksGraded: updates.length,
-    picksAwaitingLine: finalPickCount - updates.length,
+    picksGraded: row.picks_graded,
+    picksAwaitingLine: row.picks_awaiting_line,
   };
 }
 
@@ -303,7 +222,8 @@ export async function syncFinalScores({
     eligibleGames.some((game) => playoffPeriodIds.has(game.scoring_period_id)),
   );
 
-  const noScoreResult = {
+  // Every outcome reports the same fields; only what actually differs is passed in.
+  const buildResult = (overrides: Partial<ScoreSyncResult> = {}): ScoreSyncResult => ({
     checkedAt,
     eligibleGames: 0,
     providerChecked: false,
@@ -316,11 +236,13 @@ export async function syncFinalScores({
     requestsRemaining: null,
     requestsUsed: null,
     requestsLast: null,
-    pollingMode: "idle" as const,
+    pollingMode: "idle",
     warnings,
     weekRollover,
     survivorNoPickEliminations: noPickResult.entries_eliminated,
-  };
+    ...overrides,
+  });
+  const noScoreResult = buildResult();
   const shouldRecordRollover =
     weekRollover.action === "activated" ||
     weekRollover.action === "completed" ||
@@ -359,16 +281,12 @@ export async function syncFinalScores({
     warnings.push(
       `Score polling is conserving the remaining Odds API allowance (${lastRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,
     );
-    return {
-      ...noScoreResult,
+    return buildResult({
       eligibleGames: eligibleGames.length,
       requestsRemaining: String(lastRemaining),
-      requestsUsed: null,
-      requestsLast: null,
       pollingMode,
-      warnings,
       quotaProtected: true,
-    };
+    });
   }
 
   const run = await supabaseAdmin
@@ -382,14 +300,11 @@ export async function syncFinalScores({
   }
 
   if (eligibleGames.length === 0) {
-    await supabaseAdmin
-      .from("sync_runs")
-      .update({
+    await finishSyncRun(run.data.id, {
         status: "success",
         completed_at: new Date().toISOString(),
         details: noScoreResult,
-      })
-      .eq("id", run.data.id);
+      });
     return noScoreResult;
   }
 
@@ -437,28 +352,15 @@ export async function syncFinalScores({
 
     if (completedEvents.length === 0) {
       await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
-      const result = {
-        checkedAt,
+      const result = buildResult({
         eligibleGames: eligibleGames.length,
         providerChecked: true,
-        completedGamesFound: 0,
-        finalScoresImported: 0,
-        newFinals: 0,
-        newFinalsByRung: {},
-        picksGraded: recoveredGrades.picksGraded,
-        picksAwaitingLine: recoveredGrades.picksAwaitingLine,
         requestsRemaining,
         requestsUsed,
         requestsLast,
         pollingMode,
-        warnings,
-        weekRollover,
-        survivorNoPickEliminations: noPickResult.entries_eliminated,
-      };
-      await supabaseAdmin
-        .from("sync_runs")
-        .update({ status: "success", completed_at: new Date().toISOString(), details: result })
-        .eq("id", run.data.id);
+      });
+      await finishSyncRun(run.data.id, { status: "success", completed_at: new Date().toISOString(), details: result });
       return result;
     }
 
@@ -551,8 +453,7 @@ export async function syncFinalScores({
         counts[rung] = (counts[rung] ?? 0) + 1;
         return counts;
       }, {});
-      const result = {
-        checkedAt,
+      const result = buildResult({
         eligibleGames: eligibleGames.length,
         providerChecked: true,
         completedGamesFound: completedEvents.length,
@@ -567,14 +468,9 @@ export async function syncFinalScores({
         requestsUsed,
         requestsLast,
         pollingMode,
-        warnings,
         weekRollover: completedWeekRollover,
-        survivorNoPickEliminations: noPickResult.entries_eliminated,
-      };
-      await supabaseAdmin
-        .from("sync_runs")
-        .update({ status: "success", completed_at: new Date().toISOString(), details: result })
-        .eq("id", run.data.id);
+      });
+      await finishSyncRun(run.data.id, { status: "success", completed_at: new Date().toISOString(), details: result });
       return result;
     }
 
@@ -590,15 +486,15 @@ export async function syncFinalScores({
         // The five-minute cron can then exit without spending another credit.
         await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
       } catch {
-        await supabaseAdmin.from("sync_runs").update({
+        await finishSyncRun(run.data.id, {
           status: "failed",
           completed_at: new Date().toISOString(),
           error_message: `${message} The polling cooldown could not be saved safely.`,
-        }).eq("id", run.data.id);
+        });
         throw new Error(`${message} The polling cooldown could not be saved safely.`);
       }
     }
-    await supabaseAdmin.from("sync_runs").update({
+    await finishSyncRun(run.data.id, {
       status: "failed",
       completed_at: new Date().toISOString(),
       error_message: message,
@@ -609,7 +505,7 @@ export async function syncFinalScores({
         requestsLast: failedRequestsLast,
         pollingMode,
       },
-    }).eq("id", run.data.id);
+    });
     throw error;
   }
 }

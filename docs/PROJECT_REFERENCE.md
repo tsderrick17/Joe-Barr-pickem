@@ -438,13 +438,14 @@ any number of opted-in players after launch.
 The Commissioner area is the operational control plane. Its intended order is:
 
 1. Read the quiet watchdog and Automation Health.
-2. Run Season Readiness, Opening Week Checklist, Automation Preflight, or the
-   read-only Integrity Rehearsal as appropriate.
+2. Run Season Readiness, Opening Week Checklist, or Automation Preflight as
+   appropriate.
 3. Let scheduled automation run normally.
 4. Use the matching manual line, score, schedule, reminder, or watchdog control
    once when recovery is required.
 5. Use final-score reconciliation or Game Exceptions for verified anomalies.
-6. Use Season Recovery Rehearsal before a rare lifecycle recovery.
+6. Confirm Season Readiness and every settled game and pick before a rare
+   lifecycle recovery.
 
 The Email image studio renders the same PNG artwork and HTML used by delivery,
 with phone/desktop previews and image downloads. Standings and recap selections

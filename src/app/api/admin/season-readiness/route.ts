@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assessSeasonReadiness } from "@/lib/season-readiness";
 import { requireCommissioner } from "@/lib/require-commissioner";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
     .select("id, state")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", currentSeasonYear())
     .maybeSingle();
 
   if (seasonError || !season) {

@@ -1,5 +1,5 @@
 import { weekRolloverAt } from "@/lib/week-rollover";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 
@@ -32,7 +32,7 @@ export async function advanceScoringPeriods(
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", currentSeasonYear())
     .maybeSingle();
 
   if (seasonError || !season) {
@@ -53,6 +53,7 @@ export async function advanceScoringPeriods(
   const activePeriod = allPeriods.find((period) => period.status === "active");
 
   if (!activePeriod) {
+    // The earliest due period opens first; the database refuses to skip one.
     const readyPeriod = allPeriods
       .filter(
         (period) =>
@@ -60,7 +61,7 @@ export async function advanceScoringPeriods(
           period.starts_at &&
           new Date(period.starts_at) <= now,
       )
-      .at(-1);
+      .sort((left, right) => left.display_order - right.display_order)[0];
 
     if (!readyPeriod) {
       return {
@@ -72,13 +73,27 @@ export async function advanceScoringPeriods(
       };
     }
 
-    const { error: activateError } = await supabaseAdmin
-      .from("scoring_periods")
-      .update({ status: "active" })
-      .eq("id", readyPeriod.id);
+    const { data: activation, error: activateError } = await supabaseAdmin.rpc(
+      "activate_scoring_period_atomically",
+      {
+        target_scoring_period_id: readyPeriod.id,
+        activated_at: now.toISOString(),
+      },
+    );
+    const activationRow = (activation as Array<{ activated: boolean; blocked_reason: string | null }> | null)?.[0];
 
-    if (activateError) {
+    if (activateError || !activationRow) {
       throw new Error("The next scoring period could not be activated.");
+    }
+
+    if (!activationRow.activated) {
+      return {
+        action: "blocked",
+        currentWeek: null,
+        nextWeek: readyPeriod.display_name,
+        rolloverAt: null,
+        reason: activationRow.blocked_reason ?? "The next scoring period is not ready to activate.",
+      };
     }
 
     return {
@@ -140,6 +155,27 @@ export async function advanceScoringPeriods(
       nextWeek: nextPeriod?.display_name ?? null,
       rolloverAt: null,
       reason: "Final-game picks still need an official line or grade.",
+    };
+  }
+
+  const { count: pendingSurvivorCount, error: pendingSurvivorError } =
+    await supabaseAdmin
+      .from("survivor_picks")
+      .select("id", { count: "exact", head: true })
+      .eq("scoring_period_id", activePeriod.id)
+      .eq("result", "pending");
+
+  if (pendingSurvivorError) {
+    throw new Error("Survivor grades could not be checked for rollover.");
+  }
+
+  if ((pendingSurvivorCount ?? 0) > 0) {
+    return {
+      action: "blocked",
+      currentWeek: activePeriod.display_name,
+      nextWeek: nextPeriod?.display_name ?? null,
+      rolloverAt: null,
+      reason: "Survivor picks still need a final grade or audited void.",
     };
   }
 

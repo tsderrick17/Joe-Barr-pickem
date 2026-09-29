@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { seasonYearAt } from "@/lib/season";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function seasonGames() {
-  const year = new Date().getUTCMonth() >= 7 ? new Date().getUTCFullYear() : new Date().getUTCFullYear() - 1;
+  const year = seasonYearAt();
   const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", year).maybeSingle();
   if (!season) return [];
   const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, bowl_name, kickoff_at, status, away_team_id, home_team_id").eq("season_id", season.id).order("kickoff_at");

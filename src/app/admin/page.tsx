@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 
 const GameExceptions = dynamic(() => import("@/components/game-exceptions"));
 const BowlPoolExceptions = dynamic(() => import("@/components/bowl-pool-exceptions"));
@@ -23,7 +23,7 @@ const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstra
 const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
-  const GradingDashboard = dynamic(() => import("@/components/grading-dashboard-live"));
+const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
 
 type Spread = {
   team: string;
@@ -181,7 +181,7 @@ export default function AdminPage() {
     }
 
     const confirmed = window.confirm(
-      `Import ${importPreview.games.length} scheduled games into the ${CURRENT_SEASON_YEAR} season?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
+      `Import ${importPreview.games.length} scheduled games into the ${currentSeasonYear()} season?\n\nThis adds games and preliminary DraftKings spread history. It does not lock any official lines.`,
     );
 
     if (!confirmed) {
