@@ -662,9 +662,9 @@ body {
 
 @media (max-width: 639px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
-  .slate-receipt-strip.has-survivor { grid-template-columns: 21% 46% 33%; }
-  .slate-receipt-strip.is-pickem-only { grid-template-columns: 21% minmax(0, 79%); }
-  .slate-receipt-strip > * { padding: .38rem .34rem; }
+  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 51% 24%; }
+  .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
+  .slate-receipt-strip > * { padding: .3rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;
     padding-left: .5rem;
@@ -695,7 +695,7 @@ body {
   /* Give the Survivor chip the unused middle of the receipt instead of
      leaving that space in the flexible status row. The label and status keep
      their own tracks, so the larger chip cannot cover either one. */
-  .slate-receipt-pool { grid-template-rows: .58rem 3.39rem minmax(.58rem, auto); }
+  .slate-receipt-pool { grid-template-rows: .58rem 2.75rem minmax(.58rem, auto); }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
   .receipt-team-name-full { display: none; }
@@ -2058,11 +2058,11 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   }
   .slate-survivor-chip-button {
     height: 2.45rem;
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translate(-50%, -50%) scale(1.026); /* 5% smaller so chips clear team names */
     width: 2.45rem;
   }
-  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.16); }
-  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.1); }
+  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.102); }
+  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.045); }
   .slate-team-result-line { gap: .2rem; }
   .slate-game-row .slate-final-team-stack {
     column-gap: .24rem;
@@ -2931,7 +2931,7 @@ html[data-theme="night"] .newspaper-clipping::after {
   }
   .slate-survivor-chip-button {
     height: 2.1rem;
-    transform: translate(-50%, -50%) scale(1.06);
+    transform: translate(-50%, -50%) scale(1.007);
     width: 2.1rem;
   }
 }

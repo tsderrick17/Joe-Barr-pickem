@@ -12,6 +12,7 @@ export default function SiteNav() {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef<HTMLElement | null>(null);
+  const mobileNavRef = useRef<HTMLElement | null>(null);
 
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
@@ -80,26 +81,30 @@ export default function SiteNav() {
 
   // The Slate's small receipt bar sits directly beneath the sticky player
   // navigation on phones. The account strip intentionally scrolls away.
+  // Measure whichever navigation is actually visible (the desktop bar is
+  // display:none on phones and would report 0, letting the receipt slide under
+  // the phone nav), and re-measure after navigation because the bar is not
+  // rendered on the sign-in page.
   useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
+    const navs = [navRef.current, mobileNavRef.current].filter((nav): nav is HTMLElement => Boolean(nav));
+    if (!navs.length) return;
 
     const syncHeight = () => {
-      document.documentElement.style.setProperty(
-        "--site-nav-height",
-        `${Math.ceil(nav.getBoundingClientRect().height)}px`,
-      );
+      const height = Math.max(...navs.map((nav) => nav.getBoundingClientRect().height));
+      if (height > 0) {
+        document.documentElement.style.setProperty("--site-nav-height", `${Math.ceil(height)}px`);
+      }
     };
 
     syncHeight();
     const observer = new ResizeObserver(syncHeight);
-    observer.observe(nav);
+    navs.forEach((nav) => observer.observe(nav));
     window.addEventListener("resize", syncHeight);
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", syncHeight);
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -252,7 +257,7 @@ export default function SiteNav() {
           </div>
       </div>
     </nav>
-    <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={navRef}>
+    <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-black bg-[#171719] text-[#f5f0e6] md:hidden" ref={mobileNavRef}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
         <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>
