@@ -92,7 +92,14 @@ export default function GradingDashboard() {
     } finally { if (requestSequence === requestSequenceRef.current) setLoading(false); }
   }, []);
   useEffect(() => { periodIdRef.current = periodId; }, [periodId]);
-  useEffect(() => { const initial = window.setTimeout(() => void refresh(), 0); const timer = window.setInterval(() => void refresh(), 60000); return () => { window.clearTimeout(initial); window.clearInterval(timer); }; }, [refresh]);
+  // Poll only while the tab is on screen; returning to it refreshes at once.
+  useEffect(() => {
+    const initial = window.setTimeout(() => void refresh(), 0);
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 60000);
+    const refreshOnReturn = () => { if (document.visibilityState === "visible") void refresh(); };
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => { window.clearTimeout(initial); window.clearInterval(timer); document.removeEventListener("visibilitychange", refreshOnReturn); };
+  }, [refresh]);
 
   const filteredGames = useMemo(() => [...(data?.games.filter((game) => filter === "all" || (filter === "attention" ? game.needsAttention : filter === game.state)) ?? [])].sort((left, right) => { const rank = (game: Dashboard["games"][number]) => game.needsAttention ? 0 : game.state === "live" ? 1 : game.picks.pending + game.survivor.pending > 0 ? 2 : game.state === "scheduled" ? 3 : 4; return rank(left) - rank(right) || new Date(left.kickoffAt).getTime() - new Date(right.kickoffAt).getTime(); }), [data, filter]);
   const metric = data?.metrics;
