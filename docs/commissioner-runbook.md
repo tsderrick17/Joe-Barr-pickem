@@ -9,6 +9,9 @@ zero. A current-week point appears for a player once their entire card is
 graded, even if other games remain. The separate playoff chart continues from
 the regular-season totals. The right-hand key follows live standings; a player
 with unfinished picks may have a live total not yet plotted for that week.
+Shared paths appear as touching shaded ribbons, with the higher current
+standing above the lower. The bundle is centered on the true cumulative score.
+Select a name in the key to inspect that player's path alone.
 The chart refreshes with the normal standings update while open.
 
 Start at **Commissioner → Overview**. The live operations map is the first

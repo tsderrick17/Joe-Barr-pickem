@@ -492,6 +492,15 @@ that continues cumulative season totals, with a dynamic vertical range around
 those totals. Refresh it from the existing standings cadence, without an
 independent polling loop.
 
+## 2026-09-28 - Touching Season Snapshot ribbons
+
+Replace overlapping strokes with slim touching ribbons. On a shared trajectory,
+the higher current standing occupies the upper band. Center each bundle on its
+actual score and keep common week endpoints continuous as players split or join.
+Inset light and dark edges provide a restrained bevel without outside shadows,
+dash patterns, gaps, or markers. This supersedes the nested stroke treatment;
+the regular-season baseline still starts at zero and all week columns align.
+
 ## 2026-09-28 - One credential path and fewer superseded release runs
 
 **Status:** Accepted
