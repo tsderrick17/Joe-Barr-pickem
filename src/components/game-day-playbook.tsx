@@ -25,7 +25,7 @@ export default function GameDayPlaybook() {
     window.requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
-  return <section className="game-day-playbook border-b-2 border-zinc-900 py-8">
+  return <section className="game-day-playbook commissioner-tool">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><p className="text-xs font-black tracking-[0.16em] text-zinc-600">GAMEDAY OPERATIONS PLAYBOOK</p><h2 className="mt-1 font-serif text-3xl font-bold">Follow the safe path</h2><p className="mt-2 text-zinc-700">Tap a stage for the exact check. Scheduled automation remains the primary path.</p></div>
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-600">Ready → Lock → Grade → Verify → Resolve</p>

@@ -37,7 +37,7 @@ export default function SeasonReadiness() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  return <section className="border-b-2 border-zinc-900 py-8" id="season-readiness">
+  return <section className="commissioner-tool" id="season-readiness">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h2 className="font-serif text-2xl font-bold">Season Readiness</h2>

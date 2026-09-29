@@ -151,7 +151,7 @@ export default function AccountCapacityPanel() {
     queueMicrotask(() => { void load(); });
   }, []);
 
-  return <section className="border-b-2 border-zinc-900 py-7">
+  return <section className="commissioner-tool">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><p className="text-xs font-black tracking-[.16em] text-zinc-600">CONNECTED SYSTEMS</p><h3 className="mt-1 font-serif text-2xl font-bold">Keep every account inside its free lane</h3><p className="mt-1 max-w-2xl text-sm text-zinc-700">Open a service from its card when you need its own dashboard. Live dials use existing pool records and never make an extra Odds API request.</p></div>
       <button className="border border-zinc-900 bg-white px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void load()} type="button">{loading ? "Checking..." : "Refresh gauges"}</button>

@@ -65,7 +65,7 @@ export default function AutomationPreflight() {
     })}
   </div> : null;
 
-  return <section className="border-b-2 border-zinc-900 py-8" id="automation-preflight">
+  return <section className="commissioner-tool" id="automation-preflight">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
         <p className="text-xs font-black tracking-[0.16em] text-zinc-600">BEFORE GAME DAY</p>

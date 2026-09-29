@@ -4143,6 +4143,11 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
 .commissioner-panel-tab.is-active { background: #173c35; border-color: #173c35; color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
 .commissioner-panel-tab.is-active > span { color: #9bdbca; }
+/* Every desk tool shares one light card rhythm instead of heavy black rules. */
+.commissioner-tool { border-bottom: 1px solid #c8c2b7; padding: 1.25rem 0; }
+.commissioner-tool:first-child { padding-top: .75rem; }
+html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
+@media (max-width: 639px) { .commissioner-tool { padding: 1rem 0; } }
 .commissioner-panel-description { color: #656159; font-size: .82rem; margin-top: .4rem; }
 
 .commissioner-workspace-intro { border-bottom: 1px solid #c8c2b7; padding: 1.3rem 0 1rem; }
