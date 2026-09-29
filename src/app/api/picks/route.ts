@@ -47,11 +47,14 @@ export async function POST(request: NextRequest) {
   ));
   if (!user) return NextResponse.json({ error: "Your sign-in session could not be verified." }, { status: 401 });
 
-  const { data: player } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle());
+  // A database hiccup must not be reported as "not active" or "not found".
+  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle());
+  if (playerError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
   if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
   await recordPlayerActivity(player.id);
 
-  const { data: period } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
+  const { data: period, error: periodError } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
+  if (periodError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
   if (!period) return NextResponse.json({ error: "That week could not be found." }, { status: 404 });
   if (period.status === "complete") return NextResponse.json({ error: "This completed week is read-only." }, { status: 400 });
   if (selections.length > period.max_picks) return NextResponse.json({ error: `You cannot submit more than ${period.max_picks} picks for this scoring period.` }, { status: 400 });

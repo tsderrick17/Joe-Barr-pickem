@@ -615,3 +615,18 @@ who is actually ahead right now, hiding lets a viewer follow only the players
 they care about, and stable colors keep a person recognizable when the chart
 changes. This supersedes the higher-current-standing-above rule and the
 single-player focus mode.
+
+## 2026-09-29 - Database hiccups are reported as hiccups
+
+**Status:** Accepted
+
+When the pick-save or Slate route cannot read the player or week, the player now
+sees "Pick'em is having trouble reaching its records right now. Please try
+again in a minute." (HTTP 503) instead of being told their profile is inactive
+or the week does not exist. The Bowl sync stops with a clear error when a
+database read fails, rather than finishing as an empty, healthy run. A failure
+to clear old PIN attempts after a correct sign-in is logged; sign-in still
+succeeds. react-dom now matches react (19.3.0).
+
+**Reason:** A wrong message about a player's own account erodes trust, and a
+silent empty run hides a real outage from the watchdog.
