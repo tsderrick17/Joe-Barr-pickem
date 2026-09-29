@@ -105,12 +105,14 @@ be replayed.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
 - The Season Snapshot is the back of the Pick'em Pad; a round button at the pad's
-  top right turns it over. It is available to
-  commissioners for preview, including before Week 6, and stays unavailable to
-  players until explicitly released.
+  top right turns it over. Commissioners always have it. Players get it from
+  Week 6 (or any playoff round) until the August 1 season rollover, when the new
+  season's periods are all upcoming and it disappears until that season's
+  Week 6. The same rule gates the data route.
   Everyone begins at zero on the regular-season chart. Completed periods carry
-  every player's cumulative ATS wins forward; an active period adds a player
-  only after their full card is graded. A separate playoff chart starts at each
+  every player's cumulative ATS wins forward; the active period is plotted for
+  everyone at once, after its last Pick'em pick settles (every game has kicked
+  off and no pick is pending). A separate playoff chart starts at each
   player's final regular-season total and continues season totals. All players
   share exact week columns. The horizontal scale fits the visible weeks from
   baseline through the current week. Lines have no point markers or data table;

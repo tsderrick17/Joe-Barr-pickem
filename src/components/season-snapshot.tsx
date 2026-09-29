@@ -151,7 +151,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   if (active && !opened) setOpened(true);
 
   const fetchSnapshot = useCallback(async () => {
-    const response = await fetchWithSession("/api/admin/season-snapshot");
+    const response = await fetchWithSession("/api/season-snapshot");
     const payload = await response.json() as Snapshot & { error?: string };
     if (!response.ok) throw new Error(payload.error ?? "Season Snapshot could not be loaded.");
     return { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [] };

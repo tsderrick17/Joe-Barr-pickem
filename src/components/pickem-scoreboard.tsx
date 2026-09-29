@@ -38,6 +38,7 @@ type Props = {
   hideEliminatedRows?: boolean;
   onToggleEliminatedRows?: () => void;
   isCommissioner?: boolean;
+  seasonSnapshotReleased?: boolean;
 };
 
 export default function PickemScoreboard({
@@ -48,11 +49,13 @@ export default function PickemScoreboard({
   hideEliminatedRows = false,
   onToggleEliminatedRows,
   isCommissioner = false,
+  seasonSnapshotReleased = false,
 }: Props) {
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
-  const showSeasonSnapshot = isCommissioner;
+  // Commissioners always; players from Week 6 until the Aug 1 season reset.
+  const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;
   const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
   // Commissioners can turn the pad over to see the season chart on its back.
   const [flipped, setFlipped] = useState(false);

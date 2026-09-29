@@ -8,7 +8,7 @@ import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("active weekly point waits for both graded picks and carries totals into playoffs", () => {
+test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
     { id: "wild", display_name: "Wild Card", display_order: 19, period_type: "playoff", max_picks: 2, status: "active" },
     { id: "two", display_name: "Week 2", display_order: 2, period_type: "regular", max_picks: 2, status: "complete" },
@@ -26,28 +26,33 @@ test("active weekly point waits for both graded picks and carries totals into pl
     { player_id: "al", scoring_period_id: "wild", result: "loss" },
     { player_id: "tyler", scoring_period_id: "wild", result: "win" },
   ];
-  assert.deepEqual(buildSeasonSnapshot(periods, players, picks), {
-    regular: [
-      { id: "one", label: "Week 1", complete: true, scores: [{ playerId: "al", wins: 1 }, { playerId: "tyler", wins: 0 }] },
-      { id: "two", label: "Week 2", complete: true, scores: [{ playerId: "al", wins: 2 }, { playerId: "tyler", wins: 1 }] },
-    ],
+  const regular = [
+    { id: "one", label: "Week 1", complete: true, scores: [{ playerId: "al", wins: 1 }, { playerId: "tyler", wins: 0 }] },
+    { id: "two", label: "Week 2", complete: true, scores: [{ playerId: "al", wins: 2 }, { playerId: "tyler", wins: 1 }] },
+  ];
+  // Not settled yet: nobody is plotted for the active week, even Al with a full card.
+  assert.deepEqual(buildSeasonSnapshot(periods, players, picks), { regular, playoffs: [] });
+  // Settled: everyone is plotted at the same time.
+  assert.deepEqual(buildSeasonSnapshot(periods, players, picks, new Set(["wild"])), {
+    regular,
     playoffs: [
-      { id: "wild", label: "Wild Card", complete: false, scores: [{ playerId: "al", wins: 3 }] },
+      { id: "wild", label: "Wild Card", complete: false, scores: [{ playerId: "al", wins: 3 }, { playerId: "tyler", wins: 2 }] },
     ],
   });
 });
 
-test("an active regular week plots only fully graded cards, including two losses", () => {
+test("an active regular week is plotted for everyone together, including a card with two losses", () => {
   const periods = [{ id: "six", display_name: "Week 6", display_order: 6, period_type: "regular", max_picks: 2, status: "active" }];
   const players = [{ id: "al" }, { id: "tyler" }];
   const picks = [
     { player_id: "al", scoring_period_id: "six", result: "loss" },
     { player_id: "al", scoring_period_id: "six", result: "loss" },
     { player_id: "tyler", scoring_period_id: "six", result: "win" },
-    { player_id: "tyler", scoring_period_id: "six", result: "pending" },
+    { player_id: "tyler", scoring_period_id: "six", result: "loss" },
   ];
-  assert.deepEqual(buildSeasonSnapshot(periods, players, picks).regular, [
-    { id: "six", label: "Week 6", complete: false, scores: [{ playerId: "al", wins: 0 }] },
+  assert.deepEqual(buildSeasonSnapshot(periods, players, picks).regular, []);
+  assert.deepEqual(buildSeasonSnapshot(periods, players, picks, new Set(["six"])).regular, [
+    { id: "six", label: "Week 6", complete: false, scores: [{ playerId: "al", wins: 0 }, { playerId: "tyler", wins: 1 }] },
   ]);
 });
 
@@ -107,11 +112,14 @@ test("ribbons keep joined endpoints when bundles split and merge", () => {
 });
 
 test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
-  const route = fs.readFileSync(path.join(root, "src/app/api/admin/season-snapshot/route.ts"), "utf8");
+  const route = fs.readFileSync(path.join(root, "src/app/api/season-snapshot/route.ts"), "utf8");
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.ok(route.indexOf("requireCommissioner(request)") < route.indexOf('supabaseAdmin.from("seasons")'));
-  assert.match(scoreboard, /const showSeasonSnapshot = isCommissioner;/);
+  assert.ok(route.indexOf("authenticatedProfilePlayer(request)") < route.indexOf('supabaseAdmin.from("seasons")'));
+  // Players are refused until Week 6; commissioners always get it.
+  assert.ok(route.includes("if (!viewer.is_commissioner && !seasonSnapshotReleased(periodsResult.data ?? [])) {"));
+  assert.ok(route.indexOf("seasonSnapshotReleased(periodsResult") < route.indexOf('from("picks")'), "no pick data is read before the release check");
+  assert.ok(scoreboard.includes("const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;"));
   assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
   // It loads the first time the pad is turned over, not on page load.
   assert.match(snapshot, /if \(!opened\) return;/);
@@ -216,4 +224,14 @@ test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round
   assert.match(snapshot, /height: Math\.max\(180, Math\.round\(entry\.contentRect\.height\)\)/);
   assert.match(snapshot, /disabled=\{hidden\.size === 0\}/);
   assert.match(css, /\.season-snapshot-show-all:disabled \{/);
+});
+
+test("players see the Season Snapshot from Week 6 until the next season starts", async () => {
+  const { seasonSnapshotReleased } = await import("../src/lib/season-snapshot.js");
+  const week = (order, status) => ({ id: String(order), display_order: order, period_type: "regular", status });
+  assert.equal(seasonSnapshotReleased([week(4, "complete"), week(5, "active"), week(6, "upcoming")]), false);
+  assert.equal(seasonSnapshotReleased([week(5, "complete"), week(6, "active")]), true);
+  assert.equal(seasonSnapshotReleased([{ id: "wc", display_order: 19, period_type: "playoff", status: "active" }]), true);
+  // After the Aug 1 rollover every period of the new season is upcoming.
+  assert.equal(seasonSnapshotReleased([week(1, "upcoming"), week(6, "upcoming")]), false);
 });
