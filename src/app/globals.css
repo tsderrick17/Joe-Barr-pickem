@@ -181,10 +181,8 @@ body {
   --receipt-paper: #fffdf8;
   --receipt-ink: #25334a;
   --receipt-rule: #b7aea0;
-  background: var(--receipt-paper);
-  border-bottom: 1px solid var(--receipt-rule);
-  border-top: 1px solid var(--receipt-rule);
-  box-shadow: 0 7px 13px rgba(37, 30, 18, .1);
+  --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
+  filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
   color: var(--receipt-ink);
   display: grid;
   grid-template-columns: 21% 46% 33%;
@@ -207,7 +205,87 @@ body {
   z-index: 1;
 }
 
-.slate-receipt-pool { border-left: 1px dashed var(--receipt-rule); }
+/* The receipt is a die-cut ticket. Each section paints its own paper on a masked
+   layer behind its content, so the corner notches and serrated ends are true
+   cutouts (the page shows through as you scroll) and nothing inside is clipped.
+   Round notches sit on the two perforation lines; serrated ends appear only
+   where the ticket really ends, so when Survivor is torn off the Pick'em
+   section takes over the same serrated right end. */
+.slate-receipt-strip {
+  --receipt-notch: .42rem;
+  --receipt-scallop: .17rem;
+  --receipt-bite-serrated-left: radial-gradient(circle at 0 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-serrated-right: radial-gradient(circle at 100% 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-top-left: radial-gradient(circle at 0 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-left: radial-gradient(circle at 0 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-top-right: radial-gradient(circle at 100% 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-right: radial-gradient(circle at 100% 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-serration-pitch: calc(var(--receipt-scallop) * 2.6);
+}
+
+/* The shared sticky receipt bar paints a white background and rectangular
+   shadow. Both would show through the notches, so the strip is transparent and
+   the drop shadow follows the ticket's real outline. */
+.slate-mini-nav.slate-receipt-strip {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.slate-receipt-ticket::before,
+.slate-receipt-pool::before {
+  background: var(--receipt-paper);
+  border-bottom: 1px solid var(--receipt-rule);
+  border-top: 1px solid var(--receipt-rule);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Stub: serrated left end, round notches at the first perforation. */
+.slate-receipt-ticket::before {
+  -webkit-mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  -webkit-mask-repeat: repeat-y, no-repeat, no-repeat;
+  mask-repeat: repeat-y, no-repeat, no-repeat;
+  -webkit-mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%;
+  mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%;
+}
+
+/* Middle section with Survivor beside it: notches on both perforations. */
+.slate-receipt-pool::before {
+  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  -webkit-mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* The last section on the ticket ends with the serrated edge. */
+.slate-receipt-strip.is-pickem-only .slate-receipt-pool::before,
+.slate-receipt-pool.slate-receipt-survivor::before {
+  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-serrated-right);
+  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-serrated-right);
+  -webkit-mask-repeat: no-repeat, no-repeat, repeat-y;
+  mask-repeat: no-repeat, no-repeat, repeat-y;
+  -webkit-mask-size: 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+  mask-size: 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+}
+
+/* Perforation between two sections, running between its two notches. */
+.slate-receipt-pool::after {
+  border-left: 1px dashed var(--receipt-rule);
+  bottom: var(--receipt-notch);
+  content: "";
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: var(--receipt-notch);
+}
 
 .slate-receipt-ticket,
 .slate-receipt-pool {
@@ -571,6 +649,7 @@ body {
 
 .slate-receipt-warning,
 .slate-receipt-success {
+  background: var(--receipt-paper);
   border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
   font-weight: 700;
@@ -582,6 +661,7 @@ body {
 .slate-receipt-success { color: #08764e; }
 
 @media (max-width: 639px) {
+  .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
   .slate-receipt-strip.has-survivor { grid-template-columns: 21% 46% 33%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 21% minmax(0, 79%); }
   .slate-receipt-strip > * { padding: .38rem .34rem; }
@@ -2298,7 +2378,7 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-paper: #132129;
   --receipt-ink: #eaf0ed;
   --receipt-rule: #4f7478;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, .42);
+  --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
 }
 
 html[data-theme="night"] .slate-receipt-strip > * {

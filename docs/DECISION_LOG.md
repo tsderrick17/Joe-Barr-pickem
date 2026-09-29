@@ -579,6 +579,25 @@ every run. Overwriting bowl names and order every 15 minutes could undo curated
 values, and the simulator recommended plans that could never be applied. This
 supersedes the latest-due-period activation and the provider-owned bowl names.
 
+## 2026-09-29 - The Slate receipt is a die-cut ticket
+
+**Status:** Accepted
+
+The receipt is drawn as a real die-cut ticket: a stub (Submit), the Pick'em
+section, and Survivor when it applies. Round notches are cut at the top and
+bottom of each perforation and the two ends are serrated. Each section paints
+its own paper on a masked layer behind its content, so the notches are true
+cutouts (the page shows through as it scrolls under the sticky receipt) and
+nothing inside is clipped. When Survivor is not shown, the Pick'em section
+takes over the serrated right end. The shadow follows the ticket's outline.
+The Pick'em section still grows to fit playoff rounds (three chips per row for
+five or six picks).
+
+**Reason:** A rectangular bar with painted-on punches could not show the page
+behind it, and a fixed shape would not survive Survivor appearing or
+disappearing. Per-section masks keep the notches on the perforations whatever
+the section widths. This supersedes the single-background receipt strip.
+
 ## 2026-09-29 - Season Snapshot: recency stacking, hide/show, fixed colors
 
 **Status:** Accepted
