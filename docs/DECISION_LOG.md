@@ -469,28 +469,28 @@ proportions, with fresh-final counts controlling bar height.
 
 ## 2026-09-28 - Commissioner-only Season Snapshot prototype
 
-The Pick'em Pad contains a default-minimized Season Snapshot. The graph plots
-each active player's cumulative ATS wins after each completed scoring period;
-active weeks do not get premature points. The color key stays in current
-standings order even if the current week is still active. A commissioner-only
-endpoint supplies the historical series only when the section opens, keeping
-private scoring history out of the ordinary player response and avoiding
-background polling. The feature remains hidden from players pending review.
+The Pick'em Pad contains a default-minimized Season Snapshot, visible only to
+commissioners until release. The graph uses historical period results, and its
+commissioner-only endpoint loads only while expanded. The original settled-week
+chart treatment was superseded by the alignment, active-card, and visual rules
+below.
 
 ## 2026-09-28 - Season Snapshot week alignment and release timing
 
-**Status:** Accepted, revised for commissioner preview
+**Status:** Accepted, revised for commissioner preview and simplified chart
 
 Keep the snapshot available to commissioners for review, including before Week
 6; players do not see it until it is explicitly released. Plot a zero-win
 regular-season baseline and align every player on the same week x coordinate.
 Once all of one player's weekly picks are graded, plot their cumulative result
-without waiting for the rest of the period. Use one circular marker style and
-vivid stable player colors. When results overlap exactly, paint nested colored
-lines and concentric circles in live standings order instead of offsetting
-players horizontally. Show a separate playoff plot that continues cumulative
-season totals, with a dynamic vertical range around those totals. Refresh it
-from the existing standings cadence, without an independent polling loop.
+without waiting for the rest of the period. Use vivid stable player colors and
+no point markers or bottom data table. Fit the plotted weeks across the full
+available graph width so the current week always lands at the far edge. When
+results overlap exactly, use narrow layered line colors in live standings
+order instead of offsetting players horizontally. Show a separate playoff plot
+that continues cumulative season totals, with a dynamic vertical range around
+those totals. Refresh it from the existing standings cadence, without an
+independent polling loop.
 
 ## 2026-09-28 - One credential path and fewer superseded release runs
 
