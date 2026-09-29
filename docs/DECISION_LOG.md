@@ -669,3 +669,17 @@ id as a foreign key, so every delete failed: a player could not remove a
 selection, and purging withdrawn drafts at the first kickoff failed and stopped
 the Bowl sync. A cleared pick is now recorded with no pick reference and the old
 id, game, and team in its details. Found by the new isolated Bowl season test.
+
+## 2026-09-29 - Leaner commissioner desk
+
+**Status:** Accepted
+
+The desk drops repeated navigation (Quick Routes duplicated the header links and
+tabs), every per-tab intro block, the tab description line, and an empty Season
+section. Season readiness checks moved to the Season tab; the handbook is its own
+collapsed section under System. On phones the active tab scrolls into view. No
+tool was removed. The account nav retries a failed profile read so the
+Commissioner link cannot stay missing after one transient error.
+
+**Reason:** The desk had the right tools but spent a screen of prose before
+reaching them.

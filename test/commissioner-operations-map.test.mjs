@@ -17,7 +17,6 @@ test("commissioner operations map keeps all six operational gates in order", () 
 
 test("commissioner operations map exposes the hold and the next safe transition", () => {
   assert.match(component, /WHAT HAPPENS NEXT/);
-  assert.match(component, /first red stage explains the hold/);
   assert.match(component, /aria-current=\{current \? "step"/);
   assert.match(route, /Round handoff/);
   assert.match(route, /Season finish/);
