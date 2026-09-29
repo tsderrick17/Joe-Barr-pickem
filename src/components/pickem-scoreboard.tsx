@@ -46,12 +46,12 @@ function FlipIcon({ spin }: { spin: number }) {
   const markerId = `flip-arrow-${useId().replace(/:/g, "")}`;
   return <svg aria-hidden="true" className={spin ? "pad-flip-icon is-spinning" : "pad-flip-icon"} fill="none" height="18" key={spin} viewBox="0 0 24 24" width="18">
     <defs>
-      <marker id={markerId} markerHeight="5" markerWidth="5" orient="auto-start-reverse" refX="2.2" refY="2.5" viewBox="0 0 5 5">
-        <path d="M0 0 L5 2.5 L0 5 z" fill="currentColor" />
+      <marker id={markerId} markerHeight="5" markerUnits="userSpaceOnUse" markerWidth="5" orient="auto" refX="6" refY="5" viewBox="0 0 10 10">
+        <path d="M2.2 1.6 L7 5 L2.2 8.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.2" />
       </marker>
     </defs>
-    <path d="M4.48 9.26 A8 8 0 0 1 18.2 7.2" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
-    <path d="M19.52 14.74 A8 8 0 0 1 5.8 16.8" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
+    <path d="M4.48 9.26 A8 8 0 0 1 18.2 7.2" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+    <path d="M19.52 14.74 A8 8 0 0 1 5.8 16.8" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
   </svg>;
 }
 
@@ -78,7 +78,7 @@ export default function PickemScoreboard({
 
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""}`}>
-      <div className="pad-flip-inner">{showSeasonSnapshot ? <><span aria-hidden="true" className="pad-edge pad-edge-left" /><span aria-hidden="true" className="pad-edge pad-edge-right" /></> : null}
+      <div className="pad-flip-inner">
       <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
       <div className="pickem-ledger-masthead">
         <div className="flex items-center gap-2">

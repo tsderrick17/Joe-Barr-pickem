@@ -741,3 +741,15 @@ call Vercel. Score sync and the watchdog keep their cadences.
 **Reason:** The project was near the Vercel Fluid active-CPU limit. Grades only
 change on the ten-minute score sync, so one-minute home polling did mostly
 redundant work, and nearly every reminder tick found nothing to send.
+
+## 2026-09-29 - Flat, wide Season Snapshot flip
+
+**Status:** Accepted
+
+The slab depth is removed; the pad turns flat. The back widens to the full
+Standings rail, matching the Survivor Table, and uses a cool gray surface
+instead of the pad's parchment. The flip arrows use thinner strokes and small
+open chevron heads. Supersedes the slab-style flip.
+
+**Reason:** The commissioner preferred a flat, elegant turn, and the wider back
+gives the chart room to read.
