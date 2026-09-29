@@ -88,8 +88,11 @@ export function gradeBowlPoolPick({
 export function compareBowlPoolStandings(first, second, finalCombinedPoints = null) {
   if (first.wins !== second.wins) return second.wins - first.wins;
   if (!Number.isInteger(finalCombinedPoints)) return first.playerName.localeCompare(second.playerName);
-  const firstDifference = Math.abs(first.tiebreakerTotal - finalCombinedPoints);
-  const secondDifference = Math.abs(second.tiebreakerTotal - finalCombinedPoints);
-  if (firstDifference !== secondDifference) return firstDifference - secondDifference;
+  // A missing guess loses the tiebreaker to any guess (it is not a guess of 0).
+  const firstDifference = Number.isInteger(first.tiebreakerTotal) ? Math.abs(first.tiebreakerTotal - finalCombinedPoints) : null;
+  const secondDifference = Number.isInteger(second.tiebreakerTotal) ? Math.abs(second.tiebreakerTotal - finalCombinedPoints) : null;
+  if (firstDifference !== null && secondDifference === null) return -1;
+  if (firstDifference === null && secondDifference !== null) return 1;
+  if (firstDifference !== null && secondDifference !== null && firstDifference !== secondDifference) return firstDifference - secondDifference;
   return first.playerName.localeCompare(second.playerName);
 }

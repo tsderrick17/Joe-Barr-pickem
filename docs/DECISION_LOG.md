@@ -645,3 +645,17 @@ database error and logs a persistent one; it still denies access on failure.
 **Reason:** Mismatched Sentry packages loaded two SDK cores and needed a type
 cast to fit; an unused dependency is maintenance with no benefit; and the
 dispatcher could create next season's Bowl row about four hours early.
+
+## 2026-09-29 - A skipped Bowl tiebreaker only loses the tiebreaker
+
+**Status:** Accepted
+
+The Bowl Pool champion calculation ignored every entry without a championship
+total guess, so a player with the most wins who skipped the optional guess
+could not be crowned, and a season with no guesses crowned no one. Entries
+without a guess now count; they lose the tiebreaker to any guess, and leaders
+who all skipped it are co-champions. The standings sort follows the same rule.
+A new isolated test certifies a full Bowl season end to end.
+
+**Reason:** Wins are the competition; the guess is only a tiebreaker. This
+supersedes the guess-required champion query.

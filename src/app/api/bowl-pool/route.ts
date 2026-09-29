@@ -104,9 +104,14 @@ export async function GET(request: NextRequest) {
       if (wins) return wins;
       const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
       const finalTotal = finalGame && Number.isInteger(finalGame.away_score) && Number.isInteger(finalGame.home_score) ? finalGame.away_score! + finalGame.home_score! : null;
-      if (finalTotal !== null && a.tiebreakerTotal !== null && b.tiebreakerTotal !== null) {
-        const difference = Math.abs(a.tiebreakerTotal - finalTotal) - Math.abs(b.tiebreakerTotal - finalTotal);
-        if (difference) return difference;
+      if (finalTotal !== null) {
+        // Same rule as the database champion: a guess beats no guess, then the
+        // closest guess wins; no guess on either side stays a tie here.
+        const aGuess = Number.isInteger(a.tiebreakerTotal) ? Math.abs(a.tiebreakerTotal! - finalTotal) : null;
+        const bGuess = Number.isInteger(b.tiebreakerTotal) ? Math.abs(b.tiebreakerTotal! - finalTotal) : null;
+        if (aGuess !== null && bGuess === null) return -1;
+        if (aGuess === null && bGuess !== null) return 1;
+        if (aGuess !== null && bGuess !== null && aGuess !== bGuess) return aGuess - bGuess;
       }
       return a.losses - b.losses || String(a.playerId).localeCompare(String(b.playerId));
     });
