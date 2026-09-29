@@ -89,7 +89,8 @@ test("tied ribbons touch without overlap in standings order and join across week
         assert.equal(bundle[index - 1].points[sample].bottom, point.top);
       });
     }
-    assert.ok(Math.abs((bundle[0].points[2].top + bundle.at(-1).points[2].bottom) / 2 - (200 - (week + 0.82) * 40)) < 1e-9);
+    // Mid-week (sample 6 is the halfway point) the bundle is centered on the line.
+    assert.ok(Math.abs((bundle[0].points[6].top + bundle.at(-1).points[6].bottom) / 2 - (200 - (week + 0.5) * 40)) < 1e-9);
     if (week === 0) bundle.forEach((ribbon) => assert.deepEqual(ribbon.points[0], { x: 0, top: 200, bottom: 200 }));
     if (week > 0) bundle.forEach((ribbon) => {
       const previous = ribbons.find((entry) => entry.weekIndex === week - 1 && entry.playerId === ribbon.playerId);
@@ -108,7 +109,8 @@ test("ribbons keep joined endpoints when bundles split and merge", () => {
   }
   const first = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "first");
   const third = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "third");
-  for (const sample of [1, 2, 3]) assert.equal(first.points[sample].bottom, third.points[sample].top);
+  // Through the middle of the week (fractions .3 to .7) the shared bundle touches.
+  for (const sample of [5, 6, 7]) assert.ok(Math.abs(first.points[sample].bottom - third.points[sample].top) < 1e-9);
 });
 
 test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
@@ -123,7 +125,7 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
   // It loads the first time the pad is turned over, not on page load.
   assert.match(snapshot, /if \(!opened\) return;/);
-  assert.match(snapshot, /if \(active && !opened\) setOpened\(true\);/);
+  assert.match(snapshot, /if \(active && !opened\) \{\s*setOpened\(true\);/);
   assert.match(snapshot, /fetchSnapshot\(\)\.then/);
   assert.doesNotMatch(snapshot, />CUMULATIVE WINS<|<details className="season-snapshot-data"|season-snapshot-readout/);
   assert.doesNotMatch(snapshot, /<circle/);
@@ -170,8 +172,9 @@ test("Season Snapshot shows only its title, with no explanatory prose", () => {
   }
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
   assert.doesNotMatch(css, /season-snapshot-chart-note|season-snapshot-key-title|season-snapshot-heading p/);
-  // A chart title only appears when two charts must be told apart.
-  assert.match(snapshot, /const showTitles = showPlayoffs;/);
+  // One chart at a time: the playoff chart replaces the regular season.
+  assert.doesNotMatch(snapshot, /showTitles/);
+  assert.match(snapshot, /\{showPlayoffs\s*\? <SnapshotChart baseline=\{playoffBaseline\}[^\n]*\n\s*: <SnapshotChart baseline=\{\{\}\}/);
 });
 
 test("players can be hidden and shown, and the chart rescales to whoever remains", () => {
@@ -222,7 +225,9 @@ test("the flip card turns flat, widens to the Survivor rail, and the arrows stay
   assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
   assert.match(css, /\.has-pad-flip\.is-flipped \.pad-flip-inner \{ max-width: 100%; \}/);
   assert.match(css, /max-width \.7s cubic-bezier\(\.45, \.05, \.55, \.95\)/);
-  assert.match(css, /\.has-pad-flip \.pad-back \{ background: #f1f4f8; \}/);
+  // Both sides share the pad's parchment.
+  assert.doesNotMatch(css, /\.has-pad-flip \.pad-back \{ background/);
+  assert.match(css, /\.pad-back \{ background: var\(--ledger-paper\);/);
   assert.match(css, /transition: transform \.7s cubic-bezier\(\.45, \.05, \.55, \.95\);/);
   assert.match(css, /\.pad-face \{ transition: visibility 0s linear \.35s; \}/, "faces swap at exactly half of the .7s turn");
   assert.match(css, /\.pad-flip-icon\.is-spinning \{ animation: pad-flip-spin \.7s/);
@@ -249,8 +254,9 @@ test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pad-flip-inner, \.pad-flip-button \{ transition: none; \}/);
   // Axis labels, a chart that fills the height, and a Show all that is always there.
   assert.match(snapshot, />Wins<\/text>/);
-  assert.match(snapshot, />Week<\/text>/);
-  assert.match(snapshot, /height: Math\.max\(180, Math\.round\(entry\.contentRect\.height\)\)/);
+  assert.match(snapshot, /className="season-snapshot-week-label">Week<\/p>/);
+  assert.match(snapshot, /height: Math\.max\(100, Math\.round\(entry\.contentRect\.height\)\)/);
+  assert.match(css, /\.season-snapshot-chart \{ display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem;/);
   assert.match(snapshot, /disabled=\{hidden\.size === 0\}/);
   assert.match(css, /\.season-snapshot-show-all:disabled \{/);
 });
@@ -263,4 +269,57 @@ test("players see the Season Snapshot from Week 6 until the next season starts",
   assert.equal(seasonSnapshotReleased([{ id: "wc", display_order: 19, period_type: "playoff", status: "active" }]), true);
   // After the Aug 1 rollover every period of the new season is upcoming.
   assert.equal(seasonSnapshotReleased([week(1, "upcoming"), week(6, "upcoming")]), false);
+});
+
+test("lane changes ease in and out instead of jogging, so reordering adds no sharp kinks", () => {
+  const standings = players("A", "B", "C");
+  // Week 1: all tied at 1. Week 2: A and C win, B does not, so the group splits.
+  const weeks = weeksOf({ A: 1, B: 1, C: 1 }, { A: 2, B: 1, C: 2 });
+  const y = (wins) => 200 - wins * 40;
+  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, y);
+  const c = ribbons.find((entry) => entry.weekIndex === 1 && entry.playerId === "C");
+  const offsets = c.points.map((point) => point.top - (200 - (1 + (point.x - 100) / 100) * 40));
+  // The lane offset changes smoothly: no single sample step exceeds 40% of
+  // the whole change, and it is flat through the middle of the week.
+  const total = Math.abs(offsets[5] - offsets[0]);
+  for (let index = 1; index <= 5; index++) assert.ok(Math.abs(offsets[index] - offsets[index - 1]) <= total * 0.4 + 1e-9);
+  assert.ok(Math.abs(offsets[5] - offsets[6]) < 1e-9 && Math.abs(offsets[6] - offsets[7]) < 1e-9);
+});
+
+test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by week", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(snapshot, /export const WINDOW_WEEKS = 6;/);
+  assert.match(snapshot, /<h2>Season Snapshot<\/h2>\s*\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
+  assert.match(snapshot, />All<\/button>/);
+  assert.match(snapshot, />6 Wk<\/button>/);
+  // Every week keeps a sixth of the view; the view opens on the latest six weeks.
+  assert.match(snapshot, /const step = \(viewport - PLOT_LEFT - PLOT_RIGHT\) \/ \(scrolls \? WINDOW_WEEKS : weekCount\);/);
+  assert.match(snapshot, /if \(element && scrolls\) element\.scrollLeft = element\.scrollWidth;/);
+  assert.match(snapshot, /className="season-snapshot-snap" key=\{index\} style=\{\{ left: index \* step \}\}/);
+  assert.match(css, /scroll-snap-type: x mandatory;/);
+  assert.match(css, /\.season-snapshot-snap \{[^}]*scroll-snap-align: start;/);
+  // The y-axis sits outside the scrolling plot, with tight margins.
+  assert.match(snapshot, /className="season-snapshot-yaxis"/);
+  assert.match(snapshot, /const AXIS_WIDTH = 30;/);
+  assert.match(snapshot, /const PLOT_BOTTOM = 18;/);
+  // Not a playoff feature.
+  assert.match(snapshot, /title="Regular season" weeks=\{snapshot\.regular\} windowed=\{range === "six"\}/);
+});
+
+test("chart choices are remembered, and the playoff chart starts without eliminated players", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
+  assert.match(snapshot, /const RANGE_KEY = "pickem\.seasonSnapshot\.range";/);
+  assert.match(snapshot, /pickem\.seasonSnapshot\.hidden\.\$\{phase\}/);
+  assert.match(snapshot, /try \{ return window\.localStorage\.getItem\(key\); \} catch \{ return null; \}/);
+  assert.match(snapshot, /saveSetting\(RANGE_KEY, next\);/);
+  assert.match(snapshot, /saveSetting\(hiddenKey\(phase\), JSON\.stringify\(\[\.\.\.next\]\)\);/);
+  // The saved range is read on first turn-over, never during the first render.
+  assert.match(snapshot, /useState<Range>\("all"\)/);
+  assert.match(snapshot, /setOpened\(true\);\s*setRange\(readSetting\(RANGE_KEY\) === "six" \? "six" : "all"\);/);
+  // With no saved choice, playoffs default to hiding players out of the race.
+  assert.match(snapshot, /return new Set\(showPlayoffs \? standings\.filter\(\(player\) => player\.eliminated\)\.map\(\(player\) => player\.id\) : \[\]\);/);
+  assert.match(scoreboard, /eliminated: row\.playoffEliminated/);
+  assert.match(snapshot, /key=\{showPlayoffs \? "playoffs" : "regular"\}/);
 });

@@ -120,19 +120,27 @@ be replayed.
   sits above another if it held the greater total more recently: compare their
   totals from the latest week back and stop at the first week they differ.
   Identical histories keep current-standings order, and lanes never swap
-  mid-chart. Inset highlights and shaded edges distinguish bands without gaps
+  mid-chart. A line moving between a shared week point and a bundle eases in
+  and out over the outer 30% of the week, so reordering never makes a sharp
+  kink. Inset highlights and shaded edges distinguish bands without gaps
   or overlapping strokes. Bands join at common week boundaries and taper to the
-  zero baseline. The only text is the title; two charts are labeled only when
-  both appear. Each person has a permanent color: eleven validated hues, shuffled
+  zero baseline. The only text is the title. During the playoffs the playoff
+  chart replaces the regular-season chart. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the
   pool (inactive players keep their slot), so hiding, leaving, or joining never
   repaints anyone. The pad turns over flat; turned over, it widens to the full
-  Standings rail (the Survivor Table's width) on a cool gray surface, and each
+  Standings rail (the Survivor Table's width) on the same parchment, and each
   face hides at the edge-on moment so no mirrored text shows.
-  On phones the key is a compact four-column grid. The right-hand
-  key lists everyone in current-standings order; pressing a name hides or shows
-  that person, the axis and stacking recompute for whoever remains, and
-  hovering a name or line highlights one player.
+  An All / 6 Wk toggle (regular season only) sits between the title and the
+  flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
+  at a time with the y-axis fixed, and always opens on the most recent six
+  weeks. Axis margins are kept tight. On phones the key is a compact
+  four-column grid. The key lists everyone in current-standings order;
+  pressing a name hides or shows that person, the axis and stacking recompute
+  for whoever remains, and hovering a name or line highlights one player. The
+  playoff chart starts with players out of the playoff race hidden. The
+  week-range choice and each phase's hidden players are remembered on the
+  device (browser storage) and restored next time.
 
 ## Survivor selection and scoring
 

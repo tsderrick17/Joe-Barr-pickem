@@ -753,3 +753,21 @@ open chevron heads. Supersedes the slab-style flip.
 
 **Reason:** The commissioner preferred a flat, elegant turn, and the wider back
 gives the chart room to read.
+
+## 2026-09-29 - Season Snapshot views, eased lanes, and remembered choices
+
+**Status:** Accepted
+
+The back of the pad returns to the pad's parchment. Lane changes between a
+shared week point and a bundle now ease over the outer 30% of each week
+instead of a sharp jog. An All / 6 Wk toggle (regular season only) shows the
+whole season or an exact, week-notched six-week window that opens on the
+latest six weeks. During the playoffs the playoff chart replaces the
+regular-season chart and hides players out of the race by default.
+The range choice and hidden players are remembered per device in browser
+storage; if storage is unavailable the defaults apply.
+
+**Reason:** The commissioner preferred the parchment, saw distracting kinks,
+wanted a tighter, more readable recent view, and wanted the chart to open the
+way it was last left. Device storage avoids a schema change for a view
+preference. Supersedes the cool gray back.
