@@ -1439,7 +1439,9 @@ html[data-theme="night"] .survivor-selection-footer {
   margin-right: auto;
   max-width: 30rem;
   transform-style: preserve-3d;
-  transition: transform .7s cubic-bezier(.2, .75, .2, 1);
+  /* Symmetric easing: the card is exactly edge-on at the halfway mark, which
+     is when the two faces swap (see .pad-face below). */
+  transition: transform .7s cubic-bezier(.45, .05, .55, .95);
 }
 .playoff-scoreboard .pad-flip-inner { max-width: none; }
 .has-pad-flip.is-flipped .pad-flip-inner { transform: rotateY(180deg); }
@@ -1462,10 +1464,40 @@ html[data-theme="night"] .survivor-selection-footer {
   transition: background .15s ease, transform .35s ease;
   width: 1.9rem;
 }
-.pad-flip-button > span { font-size: 1.05rem; line-height: 1; }
 .pad-flip-button:hover,
-.pad-flip-button:focus-visible { background: #fff; transform: rotate(-90deg); }
+.pad-flip-button:focus-visible { background: #fff; }
 .pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+/* The pad is a thin card with real thickness: each face sits half the depth in
+   front of or behind the center, and two paper edges close the sides. Edges
+   are edge-on (invisible) when the card is still and only show while it turns. */
+.pickem-scoreboard-ledger.has-pad-flip { --pad-depth: 12px; }
+.pad-flip-inner { position: relative; }
+.has-pad-flip .pad-front { background: var(--ledger-paper); transform: translateZ(calc(var(--pad-depth) / 2)); }
+.has-pad-flip .pad-back { transform: rotateY(180deg) translateZ(calc(var(--pad-depth) / 2)); }
+.pad-edge {
+  background: repeating-linear-gradient(0deg, #efe6d3 0 2px, #ddd1ba 2px 3px);
+  box-shadow: inset 0 0 0 1px rgb(120 104 80 / .25);
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: var(--pad-depth);
+}
+.pad-edge-left { left: calc(var(--pad-depth) / -2); transform: rotateY(-90deg); }
+.pad-edge-right { right: calc(var(--pad-depth) / -2); transform: rotateY(90deg); }
+/* Belt and braces for browsers that ignore backface-visibility on complex
+   faces: each face switches off exactly at the halfway point of the turn, so
+   the mirrored side can never show through. */
+.pad-face { transition: visibility 0s linear .35s; }
+.has-pad-flip.is-flipped .pad-front,
+.has-pad-flip:not(.is-flipped) .pad-back { visibility: hidden; }
+/* The arrows spin once, in step with the page turning. */
+.pad-flip-icon.is-spinning { animation: pad-flip-spin .7s cubic-bezier(.2, .75, .2, 1); }
+@keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .pad-face { transition: none; }
+  .pad-flip-icon.is-spinning { animation: none; }
+}
 .pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
 @media (prefers-reduced-motion: reduce) {
   .pad-flip-inner, .pad-flip-button { transition: none; }
@@ -1571,7 +1603,10 @@ html[data-theme="night"] .survivor-selection-footer {
 .season-snapshot-message { margin: 0; padding: 1rem .3rem; }
 
 @media (max-width: 700px) {
-  .season-snapshot-key { grid-template-columns: repeat(auto-fill, minmax(5.8rem, 1fr)); }
+  .season-snapshot-key { gap: .2rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .season-snapshot-key-row { border-radius: .45rem; gap: .25rem; grid-template-columns: .7rem minmax(0, 1fr) auto; min-height: 1.35rem; padding: .08rem .3rem; }
+  .season-snapshot-swatch { width: .7rem; }
+  .season-snapshot-show-all { grid-column: auto; padding: .08rem .3rem; }
   .season-snapshot-key-row { font-size: .66rem; }
 }
 

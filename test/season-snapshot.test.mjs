@@ -193,10 +193,34 @@ test("each person keeps the same color no matter who is hidden, using eleven dis
   const colors = snapshot.match(/const palette = \[([\s\S]*?)\];/)[1].match(/#[0-9a-f]{6}/gi);
   assert.equal(colors.length, 11);
   assert.equal(new Set(colors.map((color) => color.toLowerCase())).size, 11);
-  // Colors are assigned from the full alphabetical roster, never from the visible subset.
-  assert.match(snapshot, /const alphabetical = \[\.\.\.standings\]\.sort/);
-  assert.match(snapshot, /new Map\(alphabetical\.map/);
+  // The frozen, thrice-shuffled order; a change here would recolor everyone.
+  assert.deepEqual(colors.map((color) => color.toLowerCase()), ["#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4", "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300"]);
+  // Colors follow join order from the server, never the visible subset or rank.
+  assert.match(snapshot, /const colors = snapshotColors\(standings, snapshot\.colorOrder\);/);
   assert.doesNotMatch(snapshot, /visible\.map\(\(player, index\) => \[player\.id, palette/);
+  const route = fs.readFileSync(path.join(root, "src/app/api/season-snapshot/route.ts"), "utf8");
+  assert.match(route, /from\("players"\)\.select\("id"\)\.order\("created_at"\)\.order\("id"\)/);
+  assert.doesNotMatch(route.slice(route.indexOf('order("created_at")') - 80, route.indexOf('order("created_at")')), /eq\("active", true\)/, "inactive players keep their slot");
+});
+
+test("colors never shift when someone is hidden, inactive, or new", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  // Every id in the join order keeps its slot; unknown players come after.
+  assert.match(snapshot, /const known = colorOrder;/);
+  assert.match(snapshot, /\[\.\.\.known, \.\.\.extras\]\.map\(\(id, index\) => \[id, palette\[index % palette\.length\]\]\)/);
+});
+
+test("the flip card has real depth, swaps faces edge-on, and the arrows spin once per turn", () => {
+  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(scoreboard, /className="pad-edge pad-edge-left"/);
+  assert.match(scoreboard, /className="pad-edge pad-edge-right"/);
+  assert.match(scoreboard, /markerEnd=/, "two arrowed half circles");
+  assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
+  assert.match(css, /transform: translateZ\(calc\(var\(--pad-depth\) \/ 2\)\)/);
+  assert.match(css, /transition: transform \.7s cubic-bezier\(\.45, \.05, \.55, \.95\);/);
+  assert.match(css, /\.pad-face \{ transition: visibility 0s linear \.35s; \}/, "faces swap at exactly half of the .7s turn");
+  assert.match(css, /\.pad-flip-icon\.is-spinning \{ animation: pad-flip-spin \.7s/);
 });
 
 test("motion respects reduced-motion and the key gives hidden players a visible state", () => {

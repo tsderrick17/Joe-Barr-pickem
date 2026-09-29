@@ -711,3 +711,19 @@ time, once every game has kicked off and no Pick'em pick is pending.
 **Reason:** A mid-season reveal keeps early weeks from spoiling the race, and
 plotting everyone together avoids a line that jumps ahead of players whose
 games have not finished. This supersedes per-player plotting of the active week.
+
+## 2026-09-29 - Permanent snapshot colors and a slab-style flip
+
+**Status:** Accepted
+
+The eleven-hue palette was shuffled three times with a secure random source and
+frozen. Colors follow join order (players.created_at, including inactive
+players) instead of alphabetical order. The flip button is two chasing arrows
+that spin once per turn; the pad turns as a thin slab with paper edges, faces
+swap visibility at the edge-on midpoint with symmetric easing, and the phone key
+is a compact four-column grid.
+
+**Reason:** Random-then-frozen colors are fair and never shift when someone
+joins, leaves, or is hidden. The midpoint swap removes the brief mirrored front
+face, and the compact key gives the chart more room on phones. Supersedes
+alphabetical color assignment.

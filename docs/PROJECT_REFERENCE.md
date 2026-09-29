@@ -123,8 +123,12 @@ be replayed.
   mid-chart. Inset highlights and shaded edges distinguish bands without gaps
   or overlapping strokes. Bands join at common week boundaries and taper to the
   zero baseline. The only text is the title; two charts are labeled only when
-  both appear. Each person has a fixed color (eleven validated hues assigned
-  alphabetically) that never changes when others are hidden. The right-hand
+  both appear. Each person has a permanent color: eleven validated hues, shuffled
+  three times at random and frozen, assigned in the order players joined the
+  pool (inactive players keep their slot), so hiding, leaving, or joining never
+  repaints anyone. The pad turns over as a thin slab with visible paper edges
+  mid-turn, and each face hides at the edge-on moment so no mirrored text shows.
+  On phones the key is a compact four-column grid. The right-hand
   key lists everyone in current-standings order; pressing a name hides or shows
   that person, the axis and stacking recompute for whoever remains, and
   hovering a name or line highlights one player.

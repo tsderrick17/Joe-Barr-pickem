@@ -13,11 +13,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
   }
 
-  const [periodsResult, playersResult] = await Promise.all([
+  const [periodsResult, playersResult, colorOrderResult] = await Promise.all([
     supabaseAdmin.from("scoring_periods").select("id, display_name, display_order, status, period_type, max_picks").eq("season_id", seasonResult.data.id).order("display_order"),
     supabaseAdmin.from("players").select("id").eq("active", true),
+    // Colors follow join order across every player ever added, so a new or
+    // inactive player never changes anyone else's color.
+    supabaseAdmin.from("players").select("id").order("created_at").order("id"),
   ]);
-  if (periodsResult.error || playersResult.error) {
+  if (periodsResult.error || playersResult.error || colorOrderResult.error) {
     return NextResponse.json({ error: "The season snapshot could not be loaded." }, { status: 503 });
   }
 
@@ -49,5 +52,5 @@ export async function GET(request: NextRequest) {
     return allKickedOff && nothingPending;
   }));
   const snapshot = buildSeasonSnapshot(periodsResult.data ?? [], playersResult.data ?? [], picksResult.data ?? [], activeWeekSettled);
-  return NextResponse.json(snapshot, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json({ ...snapshot, colorOrder: (colorOrderResult.data ?? []).map((player) => player.id) }, { headers: { "Cache-Control": "private, no-store" } });
 }
