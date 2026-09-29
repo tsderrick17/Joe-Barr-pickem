@@ -6,18 +6,27 @@ import { snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotX } fr
 
 type Player = { id: string; firstName: string; wins: number };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
-type Snapshot = { regular: Week[]; playoffs: Week[] };
+type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
 
-// Eleven hues in a fixed order, assigned alphabetically so each person keeps
-// their color no matter who is hidden. Checked with the dataviz palette
-// validator on the chart's cream surface: lightness band, chroma floor, and
-// adjacent color-blind and normal-vision separation all pass. Contrast against
-// the paper is under 3:1 for a few hues, so identity never depends on color
+// Eleven validated hues (lightness, chroma, and color-blind separation pass on
+// the cream surface). Their order was shuffled three times with a secure random
+// source on 2026-09-29 and then frozen, so nobody's color is picked on purpose.
+// Players take colors in the order they joined the pool and keep them for good.
+// Contrast is under 3:1 for a few hues, so identity never depends on color
 // alone: every line has a named key entry and hover highlights one player.
 const palette = [
-  "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300",
-  "#4a3aa7", "#e34948", "#00a3c4", "#b13fd0", "#8ab800",
+  "#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4",
+  "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300",
 ];
+
+/** Permanent colors: join order first, then anyone the order does not list. */
+export function snapshotColors(standings: Player[], colorOrder: string[] = []) {
+  // Keep every listed id, including players who are no longer active, so the
+  // slots of everyone after them never shift.
+  const known = colorOrder;
+  const extras = [...standings].filter((player) => !known.includes(player.id)).sort((a, b) => a.firstName.localeCompare(b.firstName)).map((player) => player.id);
+  return new Map([...known, ...extras].map((id, index) => [id, palette[index % palette.length]]));
+}
 
 function shortWeek(label: string) {
   const regular = label.match(/week\s*(\d+)/i);
@@ -107,8 +116,7 @@ export function SnapshotView({ standings, snapshot, isPlayoff }: { standings: Pl
   const [hoverId, setHoverId] = useState<string | null>(null);
 
   // Colors follow the person, never their rank or who is visible.
-  const alphabetical = [...standings].sort((a, b) => a.firstName.localeCompare(b.firstName));
-  const colors = new Map(alphabetical.map((player, index) => [player.id, palette[index % palette.length]]));
+  const colors = snapshotColors(standings, snapshot.colorOrder);
   const visible = standings.filter((player) => !hidden.has(player.id));
   const toggle = (id: string) => {
     setHidden((current) => {
@@ -154,7 +162,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
     const response = await fetchWithSession("/api/season-snapshot");
     const payload = await response.json() as Snapshot & { error?: string };
     if (!response.ok) throw new Error(payload.error ?? "Season Snapshot could not be loaded.");
-    return { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [] };
+    return { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [], colorOrder: payload.colorOrder ?? [] };
   }, []);
 
   // The normal home refresh already detects new grades; no extra polling loop.

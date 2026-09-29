@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
@@ -41,6 +41,20 @@ type Props = {
   seasonSnapshotReleased?: boolean;
 };
 
+/** Two half-circle arrows chasing each other with a gap between them. */
+function FlipIcon({ spin }: { spin: number }) {
+  const markerId = `flip-arrow-${useId().replace(/:/g, "")}`;
+  return <svg aria-hidden="true" className={spin ? "pad-flip-icon is-spinning" : "pad-flip-icon"} fill="none" height="18" key={spin} viewBox="0 0 24 24" width="18">
+    <defs>
+      <marker id={markerId} markerHeight="5" markerWidth="5" orient="auto-start-reverse" refX="2.2" refY="2.5" viewBox="0 0 5 5">
+        <path d="M0 0 L5 2.5 L0 5 z" fill="currentColor" />
+      </marker>
+    </defs>
+    <path d="M4.48 9.26 A8 8 0 0 1 18.2 7.2" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
+    <path d="M19.52 14.74 A8 8 0 0 1 5.8 16.8" markerEnd={`url(#${markerId})`} stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
+  </svg>;
+}
+
 export default function PickemScoreboard({
   isPlayoff = false,
   rows,
@@ -59,11 +73,12 @@ export default function PickemScoreboard({
   const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
   // Commissioners can turn the pad over to see the season chart on its back.
   const [flipped, setFlipped] = useState(false);
-  const flipButton = showSeasonSnapshot ? <button aria-label={flipped ? "Show the Pick'em Pad" : "Show the Season Snapshot"} aria-pressed={flipped} className="pad-flip-button" onClick={() => setFlipped((current) => !current)} title={flipped ? "Back to the pad" : "Season Snapshot"} type="button"><span aria-hidden="true">↻</span></button> : null;
+  const [spin, setSpin] = useState(0);
+  const flipButton = showSeasonSnapshot ? <button aria-label={flipped ? "Show the Pick'em Pad" : "Show the Season Snapshot"} aria-pressed={flipped} className="pad-flip-button" onClick={() => { setFlipped((current) => !current); setSpin((current) => current + 1); }} title={flipped ? "Back to the pad" : "Season Snapshot"} type="button"><FlipIcon spin={spin} /></button> : null;
 
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""}`}>
-      <div className="pad-flip-inner">
+      <div className="pad-flip-inner">{showSeasonSnapshot ? <><span aria-hidden="true" className="pad-edge pad-edge-left" /><span aria-hidden="true" className="pad-edge pad-edge-right" /></> : null}
       <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
       <div className="pickem-ledger-masthead">
         <div className="flex items-center gap-2">
