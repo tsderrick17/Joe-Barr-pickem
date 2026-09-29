@@ -659,3 +659,13 @@ A new isolated test certifies a full Bowl season end to end.
 
 **Reason:** Wins are the competition; the guess is only a tiebreaker. This
 supersedes the guess-required champion query.
+
+## 2026-09-29 - Clearing a Bowl pick is audited without a dangling reference
+
+**Status:** Accepted
+
+The Bowl pick audit trigger runs after a delete and recorded the deleted pick's
+id as a foreign key, so every delete failed: a player could not remove a
+selection, and purging withdrawn drafts at the first kickoff failed and stopped
+the Bowl sync. A cleared pick is now recorded with no pick reference and the old
+id, game, and team in its details. Found by the new isolated Bowl season test.

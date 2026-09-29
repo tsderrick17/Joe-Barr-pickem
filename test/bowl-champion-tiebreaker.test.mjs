@@ -23,3 +23,9 @@ test("the database champion includes entries without a guess and shares the titl
   const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
   assert.match(route, /if \(aGuess !== null && bGuess === null\) return -1;/);
 });
+
+test("clearing a Bowl pick never writes a history row that points at the deleted pick", async () => {
+  const sql = await readFile(new URL("../supabase/migrations/20260929060000_fix_bowl_pick_clear_audit.sql", import.meta.url), "utf8");
+  assert.match(sql, /values\(null, old\.entry_id, actor, 'cleared', jsonb_build_object\('pick_id', old\.id/);
+  assert.doesNotMatch(sql, /values\(old\.id, old\.entry_id/);
+});

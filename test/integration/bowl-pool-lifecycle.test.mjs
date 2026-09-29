@@ -106,7 +106,14 @@ test("isolated Bowl Pool season: entries, locks, grading, disruptions, receipts,
     await submit(A, true, [[g1, away(g1)], [g2, away(g2)], [g3, away(g3)], [g4, away(g4)]], null);
     await submit(A, true, [[g1, home(g1)], [g2, away(g2)], [g3, away(g3)], [g4, away(g4)]], null);
     await submit(B, true, [[g1, away(g1)], [g2, away(g2)], [g3, home(g3)], [g4, home(g4)]], 60);
+    await submit(C, true, [[g1, home(g1)], [g2, home(g2)], [g3, away(g3)], [g4, home(g4)]], 49);
     await submit(C, true, [[g1, home(g1)], [g3, away(g3)], [g4, home(g4)]], 49);
+    const cleared = await one(client, `
+      select count(*)::integer as count from public.bowl_pool_pick_history history
+      join public.bowl_pool_entries entry on entry.id = history.entry_id
+      where entry.player_id = $1 and history.action = 'cleared' and history.details->>'game_id' = $2
+    `, [C, g2]);
+    assert.equal(cleared.count, 1, "a player can remove a selection before kickoff, and it is audited");
     await submit(D, true, [[g1, home(g1)]], 55);
     await submit(D, false, [], null);
 
@@ -221,8 +228,8 @@ test("isolated Bowl Pool tiebreaker: closest guess wins a tie, a missing guess l
       const t1 = (await one(client, "insert into public.bowl_pool_teams (provider_team_id, display_name, short_name) values ($1, $1, 'X') returning id", [`${token}-${season.id}-x`])).id;
       const t2 = (await one(client, "insert into public.bowl_pool_teams (provider_team_id, display_name, short_name) values ($1, $1, 'Y') returning id", [`${token}-${season.id}-y`])).id;
       const game = (await one(client, `
-        insert into public.bowl_pool_games (season_id, provider_game_id, bowl_name, kickoff_at, line_lock_at, away_team_id, home_team_id)
-        values ($1, $2, 'Title', $3, $3, $4, $5) returning id
+        insert into public.bowl_pool_games (season_id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, away_team_id, home_team_id)
+        values ($1, $2, 'Title', $3, $3, 1, $4, $5) returning id
       `, [season.id, `${token}-${season.id}`, at(2 * HOUR), t1, t2])).id;
       await client.query("update public.bowl_pool_seasons set championship_game_id = $2 where id = $1", [season.id, game]);
       await client.query("insert into public.bowl_pool_game_lines (game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at) values ($1, $2, 3.5, 3.5, 'tie-test', clock_timestamp())", [game, t2]);
