@@ -111,8 +111,10 @@ be replayed.
   every player's cumulative ATS wins forward; an active period adds a player
   only after their full card is graded. A separate playoff chart starts at each
   player's final regular-season total and continues season totals. All players
-  share exact week columns; overlapping lines and circular points layer in
-  current standings order. The right-hand color key also follows that order.
+  share exact week columns. The horizontal scale fits the visible weeks from
+  baseline through the current week. Lines have no point markers or data table;
+  overlaps use slim color layers in current standings order. The right-hand
+  color key also follows that order.
 
 ## Survivor selection and scoring
 

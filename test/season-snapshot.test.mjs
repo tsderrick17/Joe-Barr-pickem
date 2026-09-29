@@ -51,19 +51,16 @@ test("an active regular week plots only fully graded cards, including two losses
   ]);
 });
 
-test("all players use exact same week x, and tied colors layer in standings order", () => {
+test("weeks share exact x positions and the current week always reaches the chart edge", () => {
   const standings = [{ id: "leader" }, { id: "runner" }, { id: "third" }];
   const weeks = [{ scores: [
     { playerId: "leader", wins: 1 }, { playerId: "runner", wins: 1 }, { playerId: "third", wins: 1 },
   ] }];
-  assert.equal(snapshotX(0), 62);
-  assert.equal(snapshotX(1), 116);
-  const { segments, pointGroups } = snapshotLayers(weeks, standings);
+  assert.equal(snapshotX(0, 3, 700), 48);
+  assert.equal(snapshotX(3, 3, 700), 682);
+  assert.equal(snapshotX(18, 18, 700), 682);
+  const { segments } = snapshotLayers(weeks, standings);
   assert.deepEqual(segments, [{ weekIndex: 0, from: 0, to: 1, playerIds: ["third", "runner", "leader"] }]);
-  assert.deepEqual(pointGroups, [
-    { weekIndex: 0, wins: 0, playerIds: ["third", "runner", "leader"] },
-    { weekIndex: 1, wins: 1, playerIds: ["third", "runner", "leader"] },
-  ]);
 });
 
 test("playoff baseline carries final regular-season totals into the first round", () => {
@@ -73,10 +70,6 @@ test("playoff baseline carries final regular-season totals into the first round"
   assert.deepEqual(layers.segments, [
     { weekIndex: 0, from: 20, to: 21, playerIds: ["al"] },
     { weekIndex: 0, from: 19, to: 19, playerIds: ["tyler"] },
-  ]);
-  assert.deepEqual(layers.pointGroups.slice(0, 2), [
-    { weekIndex: 0, wins: 20, playerIds: ["al"] },
-    { weekIndex: 0, wins: 19, playerIds: ["tyler"] },
   ]);
 });
 
@@ -89,8 +82,10 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   assert.match(scoreboard, /showSeasonSnapshot \? <SeasonSnapshot/);
   assert.match(snapshot, /if \(!expanded\) return;/);
   assert.match(snapshot, /fetchSnapshot\(\)\.then/);
-  assert.match(snapshot, /CUMULATIVE WINS/);
-  assert.match(snapshot, />WEEK<\/text>/);
+  assert.doesNotMatch(snapshot, />CUMULATIVE WINS<|<details className="season-snapshot-data"|season-snapshot-readout/);
+  assert.doesNotMatch(snapshot, /<circle/);
+  assert.match(snapshot, /regular\[1\]/);
+  assert.match(snapshot, /textAnchor=\{index === weeks.length - 1 \? "end" : "middle"\}/);
   assert.doesNotMatch(snapshot, /lane =/);
   assert.doesNotMatch(snapshot, /<rect|<polyline/);
 });

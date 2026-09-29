@@ -1407,6 +1407,7 @@ html[data-theme="night"] .survivor-selection-footer {
 
 .season-snapshot-plot-scroll svg {
   display: block;
+  width: 100%;
   max-width: none;
 }
 
@@ -1447,15 +1448,8 @@ html[data-theme="night"] .survivor-selection-footer {
 .season-snapshot-key-row.is-dimmed { opacity: .52; }
 .season-snapshot-key-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .season-snapshot-swatch { border-radius: 999px; height: .25rem; width: 1rem; }
-.season-snapshot-readout,
 .season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; }
 .season-snapshot-message { margin: 0; padding: 1rem .3rem; }
-.season-snapshot-data { color: #57637a; font: 600 .64rem/1.5 Arial, sans-serif; margin-top: .55rem; }
-.season-snapshot-data summary { cursor: pointer; }
-.season-snapshot-data table { border-collapse: collapse; margin-top: .35rem; min-width: 100%; text-align: right; }
-.season-snapshot-data th,
-.season-snapshot-data td { border-bottom: 1px solid #d4cbbb; padding: .18rem .35rem; white-space: nowrap; }
-.season-snapshot-data th:first-child { text-align: left; }
 
 @media (max-width: 700px) {
   .season-snapshot.is-expanded { width: 100%; }
