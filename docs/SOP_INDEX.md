@@ -57,9 +57,8 @@ of [OPERATIONS.md](OPERATIONS.md).
 
 ### A weekly or annual transition appears stuck
 
-Run the read-only Season Readiness and Integrity Rehearsal first. Confirm every
-game and applicable pick is settled. Use **Season Recovery Rehearsal** before
-any corrective action. Never force a status past a pending line, grade, or
+Run the read-only Season Readiness check first. Confirm every game and
+applicable pick is settled before any corrective action. Never force a status past a pending line, grade, or
 disruption review.
 
 ### Automation or provider calls keep failing

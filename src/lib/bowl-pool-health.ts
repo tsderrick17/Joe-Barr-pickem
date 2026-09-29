@@ -1,10 +1,10 @@
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { assessBowlPoolIntegrity } from "@/lib/bowl-pool-integrity";
 import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function checkBowlPoolHealth() {
-  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, status, player_visible_at, first_kickoff_at").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle();
+  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id, status, player_visible_at, first_kickoff_at").eq("season_year", currentSeasonYear()).maybeSingle();
   if (seasonError) throw seasonError;
   if (!season) return { configured: false, healthy: true, problems: [], integrity: null, settlement: null };
   // Before player visibility, placeholders are expected. Once the pool is

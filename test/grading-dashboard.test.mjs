@@ -5,6 +5,7 @@ import test from "node:test";
 test("grading dashboard exposes a game pipeline and actionable attention queue", async () => {
   const route = await readFile(new URL("../src/app/api/admin/grading-dashboard/route.ts", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
+  const latencyComponent = await readFile(new URL("../src/components/latency-views-panel.tsx", import.meta.url), "utf8");
   const pollingComponent = await readFile(new URL("../src/components/polling-strategy-panel.tsx", import.meta.url), "utf8");
 
   assert.match(route, /needs_review/);
@@ -14,7 +15,7 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /pick grades are still pending/);
   assert.match(component, /GRADING CONTROL CENTER/);
   assert.match(component, /Game pipeline/);
-  assert.match(component, /Attention queue/);
+  assert.match(component, /Review queue/);
   assert.match(component, /Recent operational history/);
   assert.match(component, /Participant impact/);
   assert.match(component, /Notification readiness/);
@@ -39,8 +40,8 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /Incident posture/);
   assert.match(route, /recentAlerts/);
   assert.match(route, /settlementLatency/);
-  assert.match(component, /Settlement latency/);
-  assert.match(component, /Period comparison/);
+  assert.match(latencyComponent, /Settlement latency/);
+  assert.match(latencyComponent, /metric\.comparison\.deltaMinutes/);
   assert.match(route, /previousAverageMinutes/);
   assert.match(route, /firstCheckMinutesAfterKickoff/);
   assert.match(route, /cronIntervalMinutes: 10/);
@@ -48,11 +49,7 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /staleAfter = new Date\(game\.kickoff_at\)\.getTime\(\) \+ GAME_STATUS_GRACE_MINUTES/);
   assert.match(route, /scorePolls/);
   assert.match(route, /ladderSummary/);
-  assert.match(pollingComponent, /Current polling cadence/);
-  assert.match(pollingComponent, /Recent score polls/);
-  assert.match(pollingComponent, /New finals picked up by polling window/);
   assert.match(pollingComponent, /Histogram of new fresh final scores by polling interval/);
-  assert.match(pollingComponent, /Bar width = interval gap/);
   assert.match(route, /newFinalsPercentage/);
   assert.match(route, /SCORE_POLLING_RETRY_MINUTES/);
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");

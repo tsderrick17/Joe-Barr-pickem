@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getFreshSession } from "@/lib/auth-session";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabase } from "@/lib/supabase";
 
 type Period = { id: string; display_name: string; display_order: number; period_type: "regular" | "playoff"; starts_at: string | null };
@@ -21,7 +21,7 @@ export default function ArchivePage() {
     async function loadArchive() {
       const session = await getFreshSession();
       if (!session) { window.location.replace("/login"); return; }
-      const { data: season, error: seasonError } = await supabase.from("seasons").select("id").eq("year", CURRENT_SEASON_YEAR).maybeSingle();
+      const { data: season, error: seasonError } = await supabase.from("seasons").select("id").eq("year", currentSeasonYear()).maybeSingle();
       if (seasonError || !season) { if (active) setError("The season archive could not be loaded."); return; }
       const { data, error: periodsError } = await supabase.from("scoring_periods").select("id, display_name, display_order, period_type, starts_at").eq("season_id", season.id).eq("status", "complete").order("display_order", { ascending: false });
       if (periodsError) { if (active) setError("The completed-week archive could not be loaded."); return; }

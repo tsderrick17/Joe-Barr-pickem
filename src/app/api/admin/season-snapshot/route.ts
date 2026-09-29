@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { buildSeasonSnapshot } from "@/lib/season-snapshot.js";
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   }
 
-  const seasonResult = await supabaseAdmin.from("seasons").select("id").eq("year", CURRENT_SEASON_YEAR).maybeSingle();
+  const seasonResult = await supabaseAdmin.from("seasons").select("id").eq("year", currentSeasonYear()).maybeSingle();
   if (seasonResult.error || !seasonResult.data) {
     return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
   }

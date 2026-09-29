@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { getWatchdogStatus } from "@/lib/automation-watchdog";
 import { requireCommissioner } from "@/lib/require-commissioner";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { weekRolloverAt } from "@/lib/week-rollover";
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const now = new Date();
     const [seasonResult, activePlayersResult, health, watchdog] = await Promise.all([
-      supabaseAdmin.from("seasons").select("id, state").eq("year", CURRENT_SEASON_YEAR).maybeSingle(),
+      supabaseAdmin.from("seasons").select("id, state").eq("year", currentSeasonYear()).maybeSingle(),
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       checkAutomationHealth(now),
       getWatchdogStatus(),
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         checkedAt: now.toISOString(),
         overall: "attention",
         headline: "The season needs setup",
-        summary: `Create the ${CURRENT_SEASON_YEAR} season before the operating flow can begin.`,
+        summary: `Create the ${currentSeasonYear()} season before the operating flow can begin.`,
         currentStageId: "schedule",
         openIncidentCount: watchdog.openAlerts.length,
         release,

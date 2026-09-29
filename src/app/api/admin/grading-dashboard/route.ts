@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWatchdogStatus } from "@/lib/automation-watchdog";
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { requireCommissioner } from "@/lib/require-commissioner";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
-import { recommendPollingPlan, simulatePollingPlans } from "@/lib/polling-plan.js";
 import { monthlyCreditSeries, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
   try {
     const now = new Date();
     const [seasonResult, health, watchdog, remindersResult] = await Promise.all([
-      supabaseAdmin.from("seasons").select("id, year, state").eq("year", CURRENT_SEASON_YEAR).maybeSingle(),
+      supabaseAdmin.from("seasons").select("id, year, state").eq("year", currentSeasonYear()).maybeSingle(),
       checkAutomationHealth(now),
       getWatchdogStatus(),
       supabaseAdmin.from("push_reminders").select("id, category, title, scheduled_for, status, sent_at").order("scheduled_for", { ascending: false }).limit(30),
@@ -211,15 +210,12 @@ export async function GET(request: NextRequest) {
         .map((game) => normalizedLatency(game, (scheduleGamesResult.data ?? []).map((item) => ({ id: item.id, kickoff_at: item.kickoff_at })))).filter((value): value is number => value !== null);
       return { id: item.id, label: item.display_name, shortLabel: item.display_name, averageMinutes: values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null, samples: values.length };
     }).filter((item) => item.samples > 0);
-    const pollingPlans = simulatePollingPlans({ games: gameRows.length });
-    const recommendedPlan = recommendPollingPlan({ observedCreditsPerFinal: efficiency.creditsPerFinal, settlementAverageMinutes: settlementLatency.averageMinutes });
     return NextResponse.json({
       checkedAt: now.toISOString(),
       status: attention.length ? "attention" : "healthy",
       periods: (periods ?? []).map((item) => ({ id: item.id, displayName: item.display_name, status: item.status, type: item.period_type })),
       period: { id: period.id, displayName: period.display_name, type: period.period_type, status: period.status },
       metrics: { games: gameRows.length, live, settled, awaitingGrade: pendingGrades, gradeEligibleGames, gradeCompleteGames, pendingGradeGames, attention: attention.length, activePlayers: playersResult.count ?? 0, lastScoreSyncAt: latestRunAt, lastScoreSyncAgeMinutes: minutesSince(latestRunAt, now), latestScoreSyncStatus: latestScoreRun?.status ?? "none", providerAllowance: creditUsage.remaining, pickOutcomes: pickOutcomeCounts, survivorEntries: survivorEntryCounts, reminders: reminderCounts, efficiency: { totalCredits: efficiency.totalCredits, scoreCredits: efficiency.scoreCredits, spreadCredits: efficiency.spreadCredits, finalizedGames: efficiency.finalizedGames, creditsPerFinal: efficiency.creditsPerFinal, productiveRate: efficiency.productiveRate, trend: efficiency.trend, history: efficiencyHistory }, settlementLatency: { ...settlementLatency, history: latencyHistory }, comparison: { previousPeriod: previousPeriod?.display_name ?? null, previousAverageMinutes: previousAverage, deltaMinutes: settlementLatency.averageMinutes !== null && previousAverage !== null ? settlementLatency.averageMinutes - previousAverage : null, history: periodLatencyHistory }, readiness: { scheduleLoaded: gameRows.length > 0, linesLocked: lineLockedCount, lineTotal: gameRows.length, nextKickoffAt: futureGames[0]?.kickoffAt ?? null, nextLineLockAt: futureGames.filter((game) => game.lineLockAt).sort((left, right) => new Date(left.lineLockAt).getTime() - new Date(right.lineLockAt).getTime())[0]?.lineLockAt ?? null } },
-      polling: { recommendedPlan, plans: pollingPlans, assumptions: { approvalRequired: true, appliesAutomatically: false } },
       games: gameRows,
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),

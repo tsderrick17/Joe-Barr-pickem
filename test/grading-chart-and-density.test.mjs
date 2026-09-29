@@ -4,7 +4,7 @@ import test from "node:test";
 
 const chart = await readFile(new URL("../src/components/provider-chart.tsx", import.meta.url), "utf8");
 const latency = await readFile(new URL("../src/components/latency-views-panel.tsx", import.meta.url), "utf8");
-const dashboard = await readFile(new URL("../src/components/grading-dashboard-live.tsx", import.meta.url), "utf8");
+const dashboard = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
 const efficiency = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
 const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
 

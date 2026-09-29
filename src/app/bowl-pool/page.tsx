@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { bowlPoolLaunchAt, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
@@ -46,7 +46,7 @@ export default function BowlPoolPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setHasLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(CURRENT_SEASON_YEAR)));
+      setHasLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(currentSeasonYear())));
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
