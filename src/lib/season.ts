@@ -20,5 +20,8 @@ export function seasonYearAt(date = new Date()) {
   return month >= 8 ? year : year - 1;
 }
 
-export const CURRENT_SEASON_YEAR = seasonYearAt();
+/** Evaluated on every call so a long-lived server instance rolls over on August 1. */
+export function currentSeasonYear() {
+  return seasonYearAt();
+}
 export { EASTERN_TIME_ZONE };

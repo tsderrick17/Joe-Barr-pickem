@@ -2,6 +2,7 @@ import { fullSchedulePeriodAssignments, NFLVERSE_SCHEDULE_URL, parseNflverseRegu
 import { seasonYearAt } from "@/lib/season";
 import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { finishSyncRun } from "@/lib/sync-run";
 
 type TeamRow = { id: string; abbreviation: string };
 type PeriodRow = { id: string; display_order: number; starts_at: string | null; ends_at: string | null };
@@ -121,15 +122,15 @@ export async function bootstrapFullSchedule({ automatic = false, now = new Date(
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected full-schedule import did not complete.");
     const result = { outcome: "loaded" as const, seasonYear: prepared.seasonYear, ...data[0] };
-    await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details: { automatic, ...result } }).eq("id", run.id);
+    await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: { automatic, ...result } });
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "The full schedule could not be imported.";
     const waiting = /has \d+ regular-season games; expected 272|has not been set up yet/i.test(message);
-    await supabaseAdmin.from("sync_runs").update({
+    await finishSyncRun(run.id, {
       status: waiting ? "success" : "failed", completed_at: new Date().toISOString(),
       error_message: waiting ? null : message, details: { automatic, outcome: waiting ? "waiting_for_complete_feed" : "failed", message },
-    }).eq("id", run.id);
+    });
     if (waiting) return { outcome: "waiting_for_complete_feed" as const, seasonYear: before.seasonYear, message };
     throw error;
   }

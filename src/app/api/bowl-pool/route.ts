@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 
@@ -26,7 +26,7 @@ async function currentPlayer(request: NextRequest): Promise<PlayerLookup> {
 }
 
 async function seasonAndGames() {
-  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", CURRENT_SEASON_YEAR).maybeSingle());
+  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", currentSeasonYear()).maybeSingle());
   if (seasonError || !season) return { season: null, games: [], error: seasonError ?? new Error("Bowl Pool season is not configured.") };
   const { data: games, error } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, is_cfp, away_team_id, home_team_id, away_score, home_score, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index"));
   if (error) return { season, games: [], error };
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   const context = await seasonAndGames();
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
-  if (!player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]))];
   const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     }
   }
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
-  const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+  const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
     ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
     : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     losses: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),
     tiebreakerTotal: entry.championship_total_guess,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
-  })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(CURRENT_SEASON_YEAR))
+  })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
     ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
     : []).sort((a, b) => {
       const wins = b.wins - a.wins;
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       return a.losses - b.losses || String(a.playerId).localeCompare(String(b.playerId));
     });
   return NextResponse.json({
-    season: { ...context.season, launchAt: bowlPoolLaunchAt(CURRENT_SEASON_YEAR) },
+    season: { ...context.season, launchAt: bowlPoolLaunchAt(currentSeasonYear()) },
     isCommissioner: Boolean(player.is_commissioner),
     optedIn: ownEntry?.status === "active" || ownEntry?.status === "complete",
     entry: ownEntry ?? null,

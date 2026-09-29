@@ -6,6 +6,7 @@ import { lockDueLines } from "@/lib/lock-due-lines";
 import { sendDueReminders } from "@/lib/reminder-worker";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { finishSyncRun } from "@/lib/sync-run";
 import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
@@ -175,10 +176,19 @@ export async function runAutomationWatchdog(now = new Date()) {
       .select("id, signal_key, notified_at, notification_attempted_at, resolved_at")
       .order("detected_at", { ascending: false }).limit(100);
     if (alertsError) throw new Error("Open watchdog incidents could not be loaded.");
+    // A failed bookkeeping write on one incident must not stop the others from
+    // being opened or sent, so it is counted and reported rather than thrown.
+    let bookkeepingFailures = 0;
     const activeKeys = new Set(signals.map((signal) => signal.key));
     const openAlerts = (recentAlerts ?? []).filter((alert) => !alert.resolved_at);
     const resolvedIds = (openAlerts ?? []).filter((alert) => !activeKeys.has(alert.signal_key)).map((alert) => alert.id);
-    if (resolvedIds.length) await supabaseAdmin.from("automation_alerts").update({ resolved_at: now.toISOString(), last_seen_at: now.toISOString() }).in("id", resolvedIds);
+    if (resolvedIds.length) {
+      const { error: resolveError } = await supabaseAdmin.from("automation_alerts").update({ resolved_at: now.toISOString(), last_seen_at: now.toISOString() }).in("id", resolvedIds);
+      if (resolveError) {
+        bookkeepingFailures += 1;
+        console.error("Recovered watchdog incidents could not be closed.");
+      }
+    }
     const openByKey = new Map((openAlerts ?? []).map((alert) => [alert.signal_key, alert as AlertRow]));
     const lastNotifiedByKey = new Map<string, string>();
     for (const alert of recentAlerts ?? []) {
@@ -199,18 +209,31 @@ export async function runAutomationWatchdog(now = new Date()) {
         alert = inserted as AlertRow;
         opened += 1;
       } else {
-        await supabaseAdmin.from("automation_alerts").update({ last_seen_at: now.toISOString(), severity: signal.severity, title: signal.title, detail: signal.detail, details: signal }).eq("id", alert.id);
+        const { error: refreshError } = await supabaseAdmin.from("automation_alerts").update({ last_seen_at: now.toISOString(), severity: signal.severity, title: signal.title, detail: signal.detail, details: signal }).eq("id", alert.id);
+        if (refreshError) {
+          bookkeepingFailures += 1;
+          console.error("An open watchdog incident could not be refreshed.", { signalKey: signal.key });
+        }
       }
       const repeatQuiet = !wasAlreadyOpen && !isWatchdogRepeatNotificationDue(lastNotifiedByKey.get(signal.key), now);
       const retryDue = !alert.notification_attempted_at || now.getTime() - new Date(alert.notification_attempted_at).getTime() >= 30 * 60 * 1000;
       if (!alert.notified_at && !repeatQuiet && retryDue) {
-        await supabaseAdmin.from("automation_alerts").update({ notification_attempted_at: now.toISOString() }).eq("id", alert.id);
+        // The attempt time is what limits alerts to one every 30 minutes. If it
+        // cannot be saved, do not send: an unrecorded send would repeat on every run.
+        const { error: attemptError } = await supabaseAdmin.from("automation_alerts").update({ notification_attempted_at: now.toISOString() }).eq("id", alert.id);
+        if (attemptError) {
+          bookkeepingFailures += 1;
+          console.error("A watchdog alert attempt could not be recorded, so the alert was not sent.", { signalKey: signal.key });
+          continue;
+        }
         try {
           const recipients = await notifyCommissioners(signal);
-          await supabaseAdmin.from("automation_alerts").update({ notified_at: now.toISOString(), notification_recipients: recipients, notification_error: null }).eq("id", alert.id);
           notified += 1;
+          const { error: receiptError } = await supabaseAdmin.from("automation_alerts").update({ notified_at: now.toISOString(), notification_recipients: recipients, notification_error: null }).eq("id", alert.id);
+          if (receiptError) console.error("A sent watchdog alert receipt could not be saved.", { signalKey: signal.key });
         } catch (error) {
-          await supabaseAdmin.from("automation_alerts").update({ notification_error: error instanceof Error ? error.message : "Alert delivery failed." }).eq("id", alert.id);
+          const { error: failureRecordError } = await supabaseAdmin.from("automation_alerts").update({ notification_error: error instanceof Error ? error.message : "Alert delivery failed." }).eq("id", alert.id);
+          if (failureRecordError) console.error("A watchdog alert delivery failure could not be saved.", { signalKey: signal.key });
         }
       }
     }
@@ -219,15 +242,16 @@ export async function runAutomationWatchdog(now = new Date()) {
       opened,
       resolved: resolvedIds.length,
       notified,
+      bookkeepingFailures,
       criticalWorkerRecovery,
       configurationChecks: configurationChecks.length,
       storagePruned: storagePrune.data ?? undefined,
     };
-    await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details }).eq("id", run.id);
+    await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details });
     return details;
   } catch (error) {
     const message = error instanceof Error ? error.message : "The watchdog failed.";
-    await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.id);
+    await finishSyncRun(run.id, { status: "failed", completed_at: new Date().toISOString(), error_message: message });
     throw error;
   }
 }

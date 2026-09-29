@@ -7,7 +7,6 @@ import { nextScoreCheckAt } from "../src/lib/score-check-backoff.ts";
 import { shouldHoldScorePollingForQuota } from "../src/lib/score-check-backoff.ts";
 import { providerRequestCost, summarizeProviderCalendarMonth, summarizeProviderEfficiency } from "../src/lib/provider-efficiency.js";
 import { isEasternPrelockRefreshWindow } from "../src/lib/prelock-refresh-window.ts";
-import { shouldRunBowlScoreSync } from "../src/lib/score-worker-cadence.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -114,12 +113,6 @@ test("one paid score response settles every due completed game it already contai
   assert.match(source, /const dueGameByExternalId = new Map\([\s\S]*scoreDueGames\.flatMap/);
   assert.match(source, /const savedGames = scoreDueGames\.filter/);
   assert.match(source, /period\.period_type === "playoff"/);
-});
-
-test("the faster NFL worker preserves the bowl sync's 15-minute cadence", () => {
-  assert.equal(shouldRunBowlScoreSync(new Date("2026-09-20T20:00:00.000Z")), true);
-  assert.equal(shouldRunBowlScoreSync(new Date("2026-09-20T20:05:00.000Z")), false);
-  assert.equal(shouldRunBowlScoreSync(new Date("2026-09-20T20:15:00.000Z")), true);
 });
 
 test("ten-minute worker remains reproducible and isolated rehearsals strip its live schedule", async () => {

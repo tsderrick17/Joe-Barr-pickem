@@ -517,3 +517,64 @@ the Windows Git TLS/credential path caused release hangs and unsafe workarounds.
 One final push avoids repeated preview and CI runs. We retain main-branch
 application quality after merge because branch protection currently requires
 only the database lifecycle check and does not enforce those rules for admins.
+
+## 2026-09-29 - Grades and official lines are saved in one database call
+
+**Status:** Accepted
+
+NFL pending-grade recovery, Bowl Pool grading, and official line locking each
+run as a single database function (`recover_pending_ats_grades`,
+`grade_bowl_pool_final_picks`, `lock_official_lines_atomically`). Bowl grades
+and their result receipts are written together, and the Bowl function also
+repairs any graded pick whose receipt an earlier two-step write left missing.
+An official line, its preliminary-history snapshot, and its audit entry are
+saved together, and only lines actually inserted are audited. The Bowl sync now
+uses the shared Eastern August 1 season year instead of a UTC calculation.
+Grading rules are unchanged: a cover wins, an ATS push is a loss, a Bowl PK is
+straight up, and a tie is a loss.
+
+**Reason:** Separate application writes could leave a graded pick without its
+receipt (never retried, because only pending picks were reloaded), a locked line
+without its audit record, or a week half-graded after an interruption. One
+transaction leaves either the old state or the complete new state, so retries
+are safe. This supersedes the per-pick and per-step writes previously issued
+from `sync-bowl-pool.ts`, `sync-final-scores.ts`, and `lock-due-lines.ts`.
+
+## 2026-09-29 - Bookkeeping writes are checked
+
+**Status:** Accepted
+
+A watchdog alert is sent only after its attempt time is saved, and incident
+open, refresh, and close writes are counted in the run details (bookkeepingFailures)
+and skipped for that incident, so one bad row cannot stop the others from being
+opened or sent.
+Run outcomes go through one helper that retries once and reports in the server
+log. The ESPN Bowl sync never replaces a locked official line, and its line,
+reminder-cancellation, and season-status writes are checked.
+
+**Reason:** An unrecorded alert attempt would repeat the Commissioner email on
+every five-minute run, and an unrecorded run outcome leaves a run stuck at
+started. These make failures visible rather than silent.
+
+## 2026-09-29 - Period activation is atomic; Bowl refresh keeps curated names
+
+**Status:** Accepted
+
+Opening a scoring period when none is active now uses
+`activate_scoring_period_atomically`, under the same per-season lock as the
+weekly handoff. It refuses to skip an unfinished earlier period, to open a
+second active period, or to open one with no imported schedule, and it reports
+the reason instead of failing the score worker. The earliest due period opens
+first. The weekly handoff also checks pending Survivor picks in the application
+and reports "blocked" with a reason, matching the ATS check, instead of failing
+every score run on the database exception. The ESPN Bowl refresh may link a game
+(`provider_game_id`), correct its kickoff, teams, and venue, and add new games,
+but never renames or reorders an existing game. The unused polling-plan
+simulator and its "suggested plan" were removed; the fixed retry ladder is the
+only score-polling policy.
+
+**Reason:** The old activation was a plain update that could skip a period or
+open an empty one. A pending Survivor pick made the handoff throw generically on
+every run. Overwriting bowl names and order every 15 minutes could undo curated
+values, and the simulator recommended plans that could never be applied. This
+supersedes the latest-due-period activation and the provider-owned bowl names.

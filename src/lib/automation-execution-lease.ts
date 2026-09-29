@@ -3,26 +3,19 @@ import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat
 
 export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "reminder_schedule" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
-const leaseSecondsByJob: Record<AutomationJob, number> = {
-  line_locks: 120,
-  scores: 300,
-  bowl_scores: 300,
-  reminders: 600,
-  reminder_schedule: 600,
-  season_bootstrap: 600,
-  watchdog: 120,
-  schedule_refresh: 600,
-};
-
-const executionTimeoutSecondsByJob: Record<AutomationJob, number> = {
-  line_locks: 90,
-  scores: 270,
-  bowl_scores: 270,
-  reminders: 540,
-  reminder_schedule: 540,
-  season_bootstrap: 540,
-  watchdog: 90,
-  schedule_refresh: 540,
+// One row per job: the database lease length, the in-process safety timeout
+// (always shorter, so the lease outlives a timed-out run), and the wording used
+// when a duplicate run is refused. Adding a job means adding one row here plus
+// the matching database constraint.
+const jobSettings: Record<AutomationJob, { leaseSeconds: number; timeoutSeconds: number; label: string }> = {
+  line_locks: { leaseSeconds: 120, timeoutSeconds: 90, label: "Official line locking" },
+  scores: { leaseSeconds: 300, timeoutSeconds: 270, label: "Final-score sync" },
+  bowl_scores: { leaseSeconds: 300, timeoutSeconds: 270, label: "Bowl Pool score sync" },
+  reminders: { leaseSeconds: 600, timeoutSeconds: 540, label: "Email reminder delivery" },
+  reminder_schedule: { leaseSeconds: 600, timeoutSeconds: 540, label: "Reminder schedule maintenance" },
+  season_bootstrap: { leaseSeconds: 600, timeoutSeconds: 540, label: "Season schedule bootstrap" },
+  watchdog: { leaseSeconds: 120, timeoutSeconds: 90, label: "Operations watchdog" },
+  schedule_refresh: { leaseSeconds: 600, timeoutSeconds: 540, label: "NFL schedule refresh" },
 };
 
 const LEASE_CLAIM_RETRY_DELAYS_MS = [150, 450];
@@ -31,7 +24,7 @@ async function claimAutomationLease(job: AutomationJob) {
   for (let attempt = 0; attempt <= LEASE_CLAIM_RETRY_DELAYS_MS.length; attempt += 1) {
     const { data: token, error } = await supabaseAdmin.rpc(
       "claim_automation_execution_lease",
-      { target_job_name: job, lease_seconds: leaseSecondsByJob[job] },
+      { target_job_name: job, lease_seconds: jobSettings[job].leaseSeconds },
     );
 
     if (!error) return { token, error: null };
@@ -52,22 +45,7 @@ async function claimAutomationLease(job: AutomationJob) {
 
 export class AutomationAlreadyRunningError extends Error {
   constructor(job: AutomationJob) {
-    const label = job === "line_locks"
-      ? "Official line locking"
-      : job === "scores"
-        ? "Final-score sync"
-        : job === "bowl_scores"
-          ? "Bowl Pool score sync"
-        : job === "schedule_refresh"
-          ? "NFL schedule refresh"
-        : job === "season_bootstrap"
-          ? "Season schedule bootstrap"
-          : job === "watchdog"
-            ? "Operations watchdog"
-            : job === "reminder_schedule"
-              ? "Reminder schedule maintenance"
-            : "Email reminder delivery";
-    super(`${label} is already running.`);
+    super(`${jobSettings[job].label} is already running.`);
     this.name = "AutomationAlreadyRunningError";
   }
 }
@@ -80,7 +58,7 @@ export class AutomationExecutionTimeoutError extends Error {
 }
 
 async function withExecutionTimeout<T>(job: AutomationJob, task: () => Promise<T>) {
-  const timeoutMs = executionTimeoutSecondsByJob[job] * 1000;
+  const timeoutMs = jobSettings[job].timeoutSeconds * 1000;
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([

@@ -233,11 +233,11 @@ worker table and provider efficiency details before intervening.
 The **Incident posture** card shows both open and recently resolved watchdog
 signals. Treat an open item as the current source of truth; resolved items are
 there for context when reviewing whether a retry actually recovered the system.
-### Polling strategy simulator
+### Score polling cadence
 
-The Grading panel includes a read-only simulator comparing conservative, balanced, and responsive score polling. It projects credits for the current slate and a 30-day month, highlights the current recommendation, and clearly labels the result as approval-required. The simulator never changes cron schedules or provider behavior. Use the settlement-latency and credits-per-final metrics alongside it before authorizing a future schedule change.
+The fixed retry ladder below is the only score-polling policy. There is no polling simulator or suggested plan, and nothing here changes the cadence.
 
-The same panel documents the live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
+The live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
 
 Provider efficiency uses one point per exact kickoff slate in the selected period,
 with credits per final on the left axis and productive checks on the right.

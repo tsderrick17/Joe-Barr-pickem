@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("seasons")
       .select("id")
-      .eq("year", CURRENT_SEASON_YEAR)
+      .eq("year", currentSeasonYear())
       .maybeSingle(),
     supabaseAdmin
       .from("players")
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
   if (!season) {
     return NextResponse.json(
-      { error: `The ${CURRENT_SEASON_YEAR} season has not been set up.` },
+      { error: `The ${currentSeasonYear()} season has not been set up.` },
       { status: 404 },
     );
   }

@@ -3,7 +3,7 @@ import { assessOpeningWeekChecklist } from "@/lib/opening-week-checklist";
 import { assessSeasonReadiness } from "@/lib/season-readiness";
 import { runLaunchPreflight } from "@/lib/launch-preflight";
 import { requireCommissioner } from "@/lib/require-commissioner";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")
     .select("id, state")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", currentSeasonYear())
     .maybeSingle();
   if (seasonError || !season) return NextResponse.json({ error: "The current season could not be read for the opening-week checklist." }, { status: 500 });
 

@@ -1,6 +1,7 @@
 import { NFLVERSE_SCHEDULE_URL, parseNflverseRegularSeason } from "@/lib/full-schedule-provider";
 import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { finishSyncRun } from "@/lib/sync-run";
 
 type Team = { id: string; abbreviation: string };
 type Period = { id: string; display_order: number };
@@ -63,11 +64,11 @@ export async function reconcileFullSeasonSchedule(now = new Date()) {
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected schedule reconciliation did not complete.");
     const result = { outcome: "reconciled" as const, seasonYear, ...data[0] };
-    await supabaseAdmin.from("sync_runs").update({ status: "success", completed_at: new Date().toISOString(), details: result }).eq("id", run.id);
+    await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: result });
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "The full schedule reconciliation failed.";
-    await supabaseAdmin.from("sync_runs").update({ status: "failed", completed_at: new Date().toISOString(), error_message: message }).eq("id", run.id);
+    await finishSyncRun(run.id, { status: "failed", completed_at: new Date().toISOString(), error_message: message });
     throw error;
   }
 }

@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import { retrySafeRead } from "@/lib/retry-safe-read";
@@ -96,10 +96,10 @@ async function survivorContext(request: NextRequest) {
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin
     .from("seasons")
     .select("id, survivor_champion_player_id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", currentSeasonYear())
     .maybeSingle());
   if (seasonError) return { error: "The current season could not be loaded.", status: 503 as const };
-  if (!season) return { error: `The ${CURRENT_SEASON_YEAR} season has not been set up.`, status: 404 as const };
+  if (!season) return { error: `The ${currentSeasonYear()} season has not been set up.`, status: 404 as const };
 
   const ensured = await supabaseAdmin.rpc("ensure_survivor_entries", {
     target_season_id: season.id,

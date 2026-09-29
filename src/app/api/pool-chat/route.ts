@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
-import { CURRENT_SEASON_YEAR } from "@/lib/season";
+import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ChatMessageRow = {
@@ -16,7 +16,7 @@ async function currentSeason() {
   const { data, error } = await supabaseAdmin
     .from("seasons")
     .select("id")
-    .eq("year", CURRENT_SEASON_YEAR)
+    .eq("year", currentSeasonYear())
     .maybeSingle();
 
   if (error || !data) return null;
