@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { HEALTH_CDN_SECONDS, healthProbeCacheControl } from "@/lib/health-cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export async function GET() {
     const { data: games, error } = await supabaseAdmin.from("games").select("id, kickoff_at, status").lte("kickoff_at", cutoff).not("status", "in", `(${SETTLED_STATUSES.join(",")})`);
     if (error) throw error;
     if ((games ?? []).length > 0) return NextResponse.json({ status: "unavailable", checkedAt: checkedAt.toISOString() }, { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } });
-    return NextResponse.json({ status: "ok", checkedAt: checkedAt.toISOString() }, { headers: { "Cache-Control": "no-store, max-age=0" } });
+    return NextResponse.json({ status: "ok", checkedAt: checkedAt.toISOString() }, { headers: { "Cache-Control": healthProbeCacheControl(true, HEALTH_CDN_SECONDS.settlement) } });
   } catch (error) {
     console.error("Settlement freshness check could not be completed.", { name: error instanceof Error ? error.name : "UnknownError", message: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ status: "unavailable", checkedAt: checkedAt.toISOString() }, { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } });

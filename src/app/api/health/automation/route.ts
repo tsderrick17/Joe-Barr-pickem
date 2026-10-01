@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assessAutomationWorkerHeartbeat } from "@/lib/automation-heartbeat";
+import { HEALTH_CDN_SECONDS, healthProbeCacheControl } from "@/lib/health-cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export async function GET() {
         : { status: "unavailable", checkedAt: checkedAt.toISOString() },
       {
         status: heartbeat.healthy ? 200 : 503,
-        headers: { "Cache-Control": "no-store, max-age=0" },
+        headers: { "Cache-Control": healthProbeCacheControl(heartbeat.healthy, HEALTH_CDN_SECONDS.automation) },
       },
     );
   } catch (error) {

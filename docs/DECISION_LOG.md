@@ -817,3 +817,17 @@ advisory in next/og ImageResponse, affecting versions 16.2.0 through 16.3.5.
 
 **Reason:** Keep the critical-audit gate meaningful and the app patched. The pin
 stays exact, as before.
+
+## 2026-10-01 - Cut Vercel CPU from uptime probes and the watchdog
+
+**Status:** Accepted
+
+Healthy answers from the automation, worker, settlement, Bowl Pool, and backup
+probes are cached at Vercel's CDN (10, 10, 15, 15, and 60 minutes), each well
+inside the probe's own grace window. Failures are never cached, and /api/health
+always runs live. The operations watchdog moves from every five to every ten
+minutes; its 35-minute heartbeat window still leaves slack.
+
+**Reason:** The project neared the Vercel Hobby 4-hour monthly active-CPU limit.
+Eight five-minute uptime monitors were about 2,300 function calls a day, far
+more than the scheduled jobs, and the earlier polling cuts did not touch them.

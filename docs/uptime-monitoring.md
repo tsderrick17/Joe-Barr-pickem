@@ -23,6 +23,14 @@ Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
 timeout, or missed heartbeat as down. Configure both outage and recovery
 notifications. Keep the Commissioner alert destination current.
 
+To save Vercel CPU, a healthy answer from the slower-changing probes is cached
+at Vercel's CDN, so most five-minute checks never start a function: automation
+heartbeat and the three worker probes for 10 minutes, settlement and Bowl Pool
+for 15 minutes, and backup for an hour. Each window sits well inside that
+probe's own grace period. A failing (503) answer is never cached, and the core
+`/api/health` probe always runs live. A newly failing signal can therefore show
+up to one cache window later than before.
+
 All eight endpoints deliberately return only HTTP 200 or 503. They never expose
 database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
