@@ -783,3 +783,14 @@ All / 6 Wk toggle halves are equal width.
 **Reason:** Easing lane changes inside a week added visible S-bends on phones.
 Straight bands bend only at week boundaries, like an ordinary line chart, and
 keep stacking order so shared paths never cross. Supersedes the eased lanes.
+
+## 2026-10-01 - Patch Next.js for a critical advisory
+
+**Status:** Accepted
+
+Next.js is pinned to 16.3.8 (was 16.3.3). The Application quality audit gate
+(npm audit, critical level) began failing on a new Next.js remote-code-execution
+advisory in next/og ImageResponse, affecting versions 16.2.0 through 16.3.5.
+
+**Reason:** Keep the critical-audit gate meaningful and the app patched. The pin
+stays exact, as before.
