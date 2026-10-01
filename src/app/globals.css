@@ -2073,6 +2073,17 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     position: static;
     width: auto;
   }
+  /* The kickoff time is a real lane here, so the desktop centering nudge on
+     the spread would push it into the favorite's name. Keep it centered in
+     its own column. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell {
+    transform: none;
+  }
+  /* The early-lock note wraps inside the spread column instead of running
+     into the underdog's name. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell > p {
+    white-space: normal;
+  }
 }
 
 .slate-team-picker-list {
