@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assessBackupWorkflowRun } from "@/lib/backup-heartbeat.js";
+import { HEALTH_CDN_SECONDS, healthProbeCacheControl } from "@/lib/health-cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -37,7 +38,7 @@ export async function GET() {
     }
     return NextResponse.json(
       { status: heartbeat.healthy ? "ok" : "unavailable", checkedAt: checkedAt.toISOString() },
-      { status: heartbeat.healthy ? 200 : 503, headers: { "Cache-Control": "no-store, max-age=0" } },
+      { status: heartbeat.healthy ? 200 : 503, headers: { "Cache-Control": healthProbeCacheControl(heartbeat.healthy, HEALTH_CDN_SECONDS.backup) } },
     );
   } catch (error) {
     console.error("The encrypted-backup health check could not be completed.", {

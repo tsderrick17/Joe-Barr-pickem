@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkCriticalWorkerHealth, type CriticalWorkerName } from "@/lib/critical-worker-health";
+import { HEALTH_CDN_SECONDS, healthProbeCacheControl } from "@/lib/health-cache";
 import { isProbeHealthyAfterDebounce } from "@/lib/health-probe-debounce.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -34,7 +35,7 @@ export async function respondToCriticalWorkerHealth(probeName: string, worker?: 
     }
     return NextResponse.json(
       { status: debouncedHealthy ? "ok" : "unavailable", checkedAt: checkedAt.toISOString() },
-      { status: debouncedHealthy ? 200 : 503, headers: { "Cache-Control": "no-store, max-age=0" } },
+      { status: debouncedHealthy ? 200 : 503, headers: { "Cache-Control": healthProbeCacheControl(debouncedHealthy, HEALTH_CDN_SECONDS.criticalWorkers) } },
     );
   } catch (error) {
     console.error("Critical worker heartbeat could not be completed.", {

@@ -109,7 +109,9 @@ the rest of the schedule continues reconciling normally.
 
 ## Quiet operations watchdog
 
-The watchdog evaluates operations every five minutes but sends email only when
+The watchdog evaluates operations every ten minutes (migration
+`20261001010000_watchdog_every_ten_minutes.sql`, to stay inside the Vercel
+Fluid active-CPU allowance) but sends email only when
 commissioner action is likely required. It opens one incident per condition,
 sends one notification for that incident, and automatically resolves the
 incident after recovery. A resolved condition can alert again if it genuinely

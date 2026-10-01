@@ -25,7 +25,7 @@ type CriticalWorkerRecovery = {
 };
 
 function isWeeklyStoragePruneDue(now: Date) {
-  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 5;
+  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 10;
 }
 
 function escapeHtml(value: string) {
