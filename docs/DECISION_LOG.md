@@ -796,3 +796,13 @@ Green remains reserved for "ready" status and red for problems.
 
 **Reason:** The commissioner found the green heavy and the minimized heading
 line inconsistent. Supersedes the teal-and-gold Bowl identity.
+
+## 2026-10-01 - Brown accents for Bowl spreads and countdown
+
+**Status:** Accepted
+
+The Bowl Card's spreads and the Games Remaining countdown tiles use brown
+accents; countdown digits stay white. Night theme spreads use a light tan.
+
+**Reason:** The commissioner wants to lean into brown accents alongside the gold
+Bowl palette. Extends the gold theme.

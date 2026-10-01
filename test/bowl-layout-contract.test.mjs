@@ -22,3 +22,9 @@ test("Bowl Card uses a gold theme and keeps the standard heading rule", () => {
   assert.doesNotMatch(bowl, /#0f766e|#155e59|#e8f3f0|#b9cfc8|#55b8aa/i);
   assert.match(css, /\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child span:not\(\[aria-hidden\]\) \{\s*background: #8a6a1d !important;/);
 });
+
+test("Bowl countdown tiles and spreads use brown accents, with white digits", () => {
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(css, /\.bowl-flip-digit \{\s*background: #5a3a22;[\s\S]*?color: #fffdf8;/);
+  assert.match(css, /\.bowl-standings-line \{\s*color: #7a4a22 !important;/);
+});
