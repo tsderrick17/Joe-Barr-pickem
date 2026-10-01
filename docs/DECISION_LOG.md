@@ -831,3 +831,14 @@ minutes; its 35-minute heartbeat window still leaves slack.
 **Reason:** The project neared the Vercel Hobby 4-hour monthly active-CPU limit.
 Eight five-minute uptime monitors were about 2,300 function calls a day, far
 more than the scheduled jobs, and the earlier polling cuts did not touch them.
+
+## 2026-10-01 - Phone slate rows without Survivor chips
+
+**Status:** Accepted
+
+On phones, rows without Survivor chips no longer apply the desktop centering
+nudge to the spread (the kickoff time already has its own lane there), and the
+early-lock note wraps inside the spread column.
+
+**Reason:** The nudge pushed spreads into the favorite's name and the lock note
+into the underdog's name for players whose Survivor chips are hidden.

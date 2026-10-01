@@ -13,3 +13,12 @@ test("pregame rows reclaim unused Survivor lanes while final phone rows use comp
   assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final\s*\{\s*grid-template-columns:\s*2rem minmax\(0, 1fr\) 2\.4rem minmax\(0, 1fr\)/);
   assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final \.slate-team-result-mark/);
 });
+
+test("phone rows without Survivor chips keep the spread and lock note out of the team names", async () => {
+  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const phone = css.slice(css.indexOf("@media (max-width: 767px) {\n  .slate-game-row.no-survivor-layout:not(.is-final) {".replace(/\n/g, css.includes("\r\n") ? "\r\n" : "\n")));
+  const block = phone.slice(0, phone.indexOf("\n}") + 2);
+  // The kickoff time is its own lane on phones, so the desktop centering nudge must be undone.
+  assert.match(block, /\.slate-game-row\.no-survivor-layout:not\(\.is-final\) \.slate-spread-cell \{\s*transform: none;/);
+  assert.match(block, /\.slate-game-row\.no-survivor-layout:not\(\.is-final\) \.slate-spread-cell > p \{\s*white-space: normal;/);
+});
