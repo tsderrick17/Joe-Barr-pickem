@@ -783,3 +783,16 @@ All / 6 Wk toggle halves are equal width.
 **Reason:** Easing lane changes inside a week added visible S-bends on phones.
 Straight bands bend only at week boundaries, like an ordinary line chart, and
 keep stacking order so shared paths never cross. Supersedes the eased lanes.
+
+## 2026-10-01 - Bowl Pool gold theme and standard heading rule
+
+**Status:** Accepted
+
+The Bowl Pool's teal/green treatment (Bowl Card header band, game cells, rules
+panel, selections page, and commissioner Bowl panels) is replaced by a subtle
+gold palette, in light and night themes. The Bowl Card's heading line, including
+when minimized, now uses the same ledger rule as the other standings headings.
+Green remains reserved for "ready" status and red for problems.
+
+**Reason:** The commissioner found the green heavy and the minimized heading
+line inconsistent. Supersedes the teal-and-gold Bowl identity.
