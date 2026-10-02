@@ -2,8 +2,9 @@
 
 ## Routine production smoke
 
-The **Weekly production smoke summary** runs every Monday at 7:30 AM Pacific
-and can also be dispatched manually from GitHub Actions. It checks the
+The **Weekly production smoke summary** is scheduled Mondays at 14:30 UTC
+(7:30 AM Pacific daylight time, 6:30 AM Pacific standard time) and can also
+be dispatched manually from GitHub Actions. It checks the
 canonical site plus the public availability, automation, worker, backup, and
 Bowl Pool health contracts. A failure means the corresponding contract needs
 investigation; it does not authorize manual scoring, reminder, or schedule
@@ -51,7 +52,9 @@ Each successful score run records newly finalized games by ladder window. The
 Commissioner grading panel aggregates those records and shows the percentage
 of new finals captured by each window; a game is counted once, at the first
 poll that safely records it as final.
-The bowl worker retains its 15-minute cadence.
+The Bowl Pool gate wakes every 15 minutes inside Supabase, but invokes Vercel
+daily outside the active season, hourly during the 30-day pregame ramp-up, and
+at most every 15 minutes while games remain active.
 
 Each provider response records the reported request cost and remaining balance;
 older runs without cost headers use a conservative endpoint-cost estimate.
@@ -60,9 +63,10 @@ finals imported, productive score checks, credits per final, and the seven-day
 direction. Use that evidence—not guesswork—to adjust thresholds after real game
 weeks. The two daylight-saving-safe pre-lock schedules remain installed, but
 only the invocation that is actually 7:00 AM Eastern may call the provider.
-The same card also shows calendar-month quota usage, a provisional month-end
-projection, source breakdown, and the number of Sundays in that month. The
-provider quota resets monthly, so the calendar view is the planning view for
+The same card also shows calendar-month quota usage, a schedule-based month-end
+forecast, source breakdown, and average tracked credits per elapsed
+regular-season Sunday. The provider quota resets monthly, so the calendar view
+is the planning view for
 five-Sunday months; the rolling view is for efficiency comparisons.
 
 The Bowl Pool is not part of this NFL allowance by default. Its schedule and
@@ -75,7 +79,7 @@ The season handoff no longer depends on a commissioner loading the schedule.
 Each day in August and September, the bootstrap job creates the new preseason
 when needed, requests the full regular-season provider schedule, validates it,
 and imports the schedule atomically. The season's length comes from the feed
-(272 games over 18 weeks today): every week must have games and all 32 teams
+(currently 272 games over 18 weeks): every week must have games and all 32 teams
 must play the same number of games. If the feed has more weeks than last year's
 template (for example an 18-game season over 19 weeks), the missing weeks are
 added before the playoff rounds, in preseason only; weeks are never removed. A
@@ -114,7 +118,7 @@ the rest of the schedule continues reconciling normally.
 
 The yearly cycle runs on its own: on August 1 (Eastern) the score worker creates
 the new season from last year's scoring-period template; each day in August and
-September the bootstrap loads the full 272-game schedule from nflverse; the
+September the bootstrap loads a complete, structurally validated schedule from nflverse; the
 first run after the prior season is certified does the annual cleanup and opens
 Survivor for every active player; the Bowl Pool season row is created by its own
 dispatcher. Championships and season completion are recorded by database
@@ -231,14 +235,11 @@ reported separately in Commissioner → Automation Health and do not poison this
 liveness signal. This monitor is separate from the existing public-site
 monitor.
 
-The third required UptimeRobot monitor must check
-`https://pickemjb.vercel.app/api/health/workers` every five minutes. It confirms
-recent successful line-lock, reminder, and final-score worker executions using
-three fixed-size heartbeat rows. Public responses stay opaque; use Automation
-Health to identify the affected worker.
-
-The fourth required free HTTP monitor must check
-`https://pickemjb.vercel.app/api/health/backup` every five minutes. The endpoint
+The aggregate `/api/health/workers` contract is included in the deployment
+smoke gate. UptimeRobot separately monitors `/api/health/workers/line-locks`,
+`/api/health/workers/scores`, and `/api/health/workers/reminders` so its alert
+identifies the affected worker. All are opaque; use Automation Health for
+details. The required `/api/health/backup` monitor checks every five minutes. It
 uses the existing server-only GitHub read token to inspect the latest completed
 encrypted-backup workflow and returns 200 only for a successful run within the
 last eight days. The wider window prevents a delayed weekly runner from causing
@@ -247,14 +248,14 @@ details or require UptimeRobot's paid push-heartbeat feature.
 
 ## Reproducible critical schedules and launch preflight
 
-Migration `20260818013000_rebuild_critical_automation.sql` defines the original
-three game-critical workflows. Migration
-`20260921030000_add_adaptive_score_polling.sql` is the current idempotent
-override: official line locking remains every minute, the due-work-gated NFL
-score worker wakes every five minutes to support the fixed regular-season and
-playoff retry cadences, and both daylight/standard-safe pre-lock windows remain
-installed. The runtime Eastern-time guard ensures only one of those pre-lock
-windows spends a credit each day.
+Migration `20260818013000_rebuild_critical_automation.sql` established the
+original critical schedules. The current schedule contract is in
+`20261001010000_watchdog_every_ten_minutes.sql`: the guarded line-lock gate
+checks every minute; the NFL score worker and watchdog wake every ten minutes;
+reminder delivery is gated every five minutes; reminder schedule maintenance
+runs every 15 minutes; and the Bowl gate checks every 15 minutes. The NFL
+pre-lock refresh keeps two daylight/standard-safe UTC schedules, with a runtime
+Eastern-time guard so only the real 7:00 AM Eastern window spends a credit.
 
 Migration `20260929070000_gate_reminder_dispatch.sql` gates reminder delivery
 the same way as line locks: the five-minute cron runs
@@ -285,7 +286,8 @@ picks, revises Survivor, and removes every fixture afterward. The harness
 refuses the production Supabase project before making a request.
 
 After Vercel reports a successful Production deployment, GitHub Actions retries
-the canonical page and all four public health contracts for up to two minutes.
+the canonical page and its five selected health contracts (availability,
+automation, aggregate workers, backup, and Bowl Pool) for up to two minutes.
 This proves the deployed environment—not merely the preview build—can use its
 real dependencies. The manual workflow is also safe to run after a secret
 rotation.
@@ -307,8 +309,8 @@ automatically: use a manual rehearsal once the cause is understood, so one
 fault cannot create a daily alert loop. Manual rehearsals remain available at
 any time.
 
-The selected run builds an isolated database, installs the latest direct package
-versions without committing them, applies all migrations, runs the deterministic
+The selected run uses the confirmed isolated-test database, installs the latest
+direct package versions without committing them, applies all migrations, runs the deterministic
 full-season lifecycle drill, then runs lint and a production build. The rehearsal
 does not deploy, alter production, or create player-site downtime. Moving it off
 gamedays merely keeps optional CI load and failure alerts away from peak pool

@@ -23,7 +23,8 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
    times. International games should show their earlier schedule naturally.
 4. Treat automatic full-schedule bootstrap and reconciliation as the primary
    schedule path. Use preview/import controls only for a diagnosed recovery;
-   they retain the same validation and gameweek pins.
+   they retain the same validation and gameweek pins. Check the imported
+   season rather than assuming a fixed number of regular weeks or games.
 
 ## Game day
 

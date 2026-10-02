@@ -1,6 +1,6 @@
 # Joe Barr Memorial Pick'em project reference
 
-Last verified against `main`: 2026-08-26.
+Last verified against `main`: 2026-10-02 (commit `2dd8e31`).
 
 This is the durable product and system reference for the Joe Barr Memorial
 Pick'em application. It explains what must remain true across code changes,
@@ -54,10 +54,13 @@ be replayed.
   health endpoint, and manual recovery controls.
 - **Supabase/Postgres** owns durable state, row-level security, integrity
   triggers, atomic mutations, audit logs, execution leases, and scheduled jobs.
-- **NFL schedule provider** supplies the canonical 272-game regular-season
-  structure and ongoing kickoff corrections.
+- **nflverse** supplies the canonical NFL regular-season structure and ongoing
+  kickoff corrections. The importer validates the feed's season length instead
+  of assuming a fixed game count.
 - **Odds/final-score provider** supplies preliminary spreads, official-line
   inputs, and verified final scores.
+- **ESPN** supplies Bowl Pool schedule, preliminary lines when available, and
+  final scores. NCAAF Odds API calls are an explicitly enabled fallback.
 - **Brevo** delivers reminders, reveals, recaps, and actionable watchdog email.
 - **GitHub Actions** runs application quality, database migration workflows,
   isolated lifecycle checks, encrypted backups, and monthly upgrade rehearsals.
@@ -134,7 +137,8 @@ be replayed.
   start of the week to their slot at the end, so lines bend only at week
   boundaries. Inset highlights and shaded edges distinguish bands without gaps
   or overlapping strokes. Bands join at common week boundaries and taper to the
-  zero baseline. The only text is the title. During the playoffs the playoff
+  zero baseline. The chart has sparse axis labels but no point callouts or
+  duplicate data table. During the playoffs the playoff
   chart replaces the regular-season chart. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the
   pool (inactive players keep their slot), so hiding, leaving, or joining never
@@ -264,10 +268,11 @@ playoff wins.
 
 - The annual bootstrap creates the new preseason when needed, downloads the
   complete regular-season schedule, and accepts it only if every game and
-  week validates. The season's length is read from the feed (272 games over
-  18 weeks today): every week must have games, all 32 teams must play the same
-  number of games, and a longer season adds its missing weeks before the playoff
-  rounds in preseason, so an 18-game season loads without a code change.
+  week validates. The season's length is read from the feed (currently 272
+  games over 18 weeks); every week must have games and all 32 teams must play
+  the same number of games. A longer season adds its missing weeks before the
+  playoff rounds in preseason, so a changed NFL format does not silently fit
+  into the old template.
 - A partial, malformed, duplicate, or structurally inconsistent schedule makes
   no database change and is retried later.
 - Initial import assigns and permanently pins every game to its scoring period
@@ -345,8 +350,8 @@ may enrich spreads but cannot override canonical schedule assignments.
   the final 240-minute window reserved for emergencies.
 - Remaining credits do not change the normal cadence. Repeated polling pauses
   only below the protected 50-credit emergency reserve. Every paid response can
-  settle all due completed games it contains, and the bowl worker remains on a
-  15-minute cadence.
+  settle all due completed games it contains. The Bowl dispatcher checks every
+  15 minutes but calls the app only when its seasonal schedule says work is due.
 - Provider response headers feed a 30-day Commissioner efficiency summary of
   credits, imported finals, productive checks, credits per final, and the
   seven-day trend. Only the real 7:00 AM Eastern pre-lock window may spend the
@@ -358,8 +363,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   ambiguous or missing polling attribution are excluded from that cost trend;
   separate game- and period-level latency charts are not shown in this card.
 - Commissioner Connected Systems also reports calendar-month quota usage,
-  provisional month-end load, source breakdown, and Sunday count. This is the
-  planning view for the provider's monthly reset; the 30-day view is strictly
+  scheduled month-end forecast, source breakdown, and average tracked credits
+  per elapsed regular-season Sunday. This is the planning view for the
+  provider's monthly reset; the 30-day view is strictly
   an efficiency trend. Bowl Pool schedule and scores use ESPN by default and
   do not consume NFL Odds API credits unless the NCAAF fallback is explicitly
   enabled.
@@ -440,11 +446,11 @@ may enrich spreads but cannot override canonical schedule assignments.
   source-game snapshot, and the unique reminder/player delivery receipt plus
   uncertain-retry guard prevent duplicate copies without suppressing a different
   valid message.
-- CollegeFootballData is the canonical NCAA schedule and result source. The
-  existing Odds API integration supplies live NCAAF spreads. Both inputs are
-  stored before a bowl line becomes official, and either provider failing must
-  block only the affected bowl-game transition rather than guess or overwrite
-  a saved record.
+- ESPN is the default NCAA Bowl Pool schedule, preliminary-line, and final-score
+  source. The Odds API's NCAAF markets are used only when
+  `BOWL_POOL_ODDS_API_ENABLED=true`; an existing preliminary line may lock when
+  no fresh market is available. Locked lines and commissioner-curated bowl
+  names, order, or exception status survive provider refreshes.
 
 ## Action-only watchdog
 
@@ -523,9 +529,9 @@ The Commissioner area is the operational control plane. Its intended order is:
 The Email image studio renders the same PNG artwork and HTML used by delivery,
 with phone/desktop previews and image downloads. Standings and recap selections
 share one row per player. Images fit their content; Survivor shows at most six
-completed weeks, with earlier history on the website. Compact/comfortable
-spacing and wording are saved per template. Spacing is embedded in outgoing
-image URLs so later preference edits cannot change sent message spacing.
+completed weeks, with earlier history on the website. Commissioners edit
+template wording, not image density; sent artwork uses an immutable rendered
+asset so later wording or renderer changes do not restyle an earlier email.
 Preview generation does not send mail, queue messages, or persist a recap
 snapshot. Saved data and fictional layout samples are explicitly distinguished
 when final data is unavailable. Grading remains the place to correct results.
@@ -561,8 +567,10 @@ Manual controls are recovery paths, not alternate implementations.
   Application quality still validates them without privileged credentials.
   Production is explicitly rejected by the browser-test harness.
 - A successful Vercel production deployment starts an independent smoke gate.
-  It retries the canonical site plus the availability, watchdog, worker, and
-  backup contracts until all return HTTP 200 or the release is marked failed.
+  It retries the canonical site plus availability, automation, aggregate-worker,
+  backup, and Bowl Pool contracts until all return HTTP 200 or the release is
+  marked failed. Individual worker and settlement monitors remain separate
+  UptimeRobot signals; they are not part of this smoke script.
 - The public worker contract stays deliberately opaque, but its exact same
   due-work and heartbeat evaluation powers the Commissioner Automation Status
   card. A 503 can therefore be diagnosed there by responsibility (line locks,
@@ -573,9 +581,10 @@ Manual controls are recovery paths, not alternate implementations.
 - Database changes are new timestamped migrations. The production migration
   workflow dry-runs before applying them; the isolated project receives them
   first for lifecycle-sensitive work.
-- Full-season certification covers 18 regular weeks, four playoff rounds, 285
-  games, schedule changes, disruptions, scoring, eligibility, privacy,
-  Survivor, archives, and annual rollover.
+- The current full-season certification fixture covers 18 regular weeks, four
+  playoff rounds, and 285 games, plus schedule changes, disruptions, scoring,
+  eligibility, privacy, Survivor, archives, and annual rollover. It deliberately
+  tests the current format; production schedule validation is feed-driven.
 - The scheduled Wednesday isolated workflow also rehearses one realistic live
   week: revised ATS and Survivor saves, final grading, historical retention,
   and an atomic next-week handoff. Its transaction is always rolled back.

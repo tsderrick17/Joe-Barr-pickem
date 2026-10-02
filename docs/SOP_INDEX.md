@@ -8,7 +8,7 @@ guarded recovery tools for a specific observed condition.
 
 | When | Expected automatic behavior | Human check |
 | --- | --- | --- |
-| Preseason | Create the new preseason, validate 272 games, import and pin 18 regular weeks | Review Season Readiness and bootstrap status |
+| Preseason | Create the new preseason, validate the complete feed, add any required regular weeks, then import and pin every game | Review Season Readiness and bootstrap status |
 | Before the first lock | Refresh schedule/spreads and prepare due official lines | Run Opening Week Checklist and Launch Preflight; confirm the production, heartbeat, line-lock, score, reminder, backup, and Bowl Pool monitors are green |
 | At each line lock | Save the official spread for the due game | Act only if health or watchdog reports a missing line |
 | Three hours after kickoff onward | Poll eligible unfinished games and grade verified finals | Avoid repeated manual polling |
@@ -17,7 +17,7 @@ guarded recovery tools for a specific observed condition.
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
 | Wednesday | Rehearse one complete save, revision, scoring, and week-handoff cycle in isolated-test | Review only a failed workflow |
 | Weekly | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
-| First non-gameday each month | Run isolated dependency/migration/lifecycle rehearsal; retry only on another non-gameday if needed | Review the artifact if it fails |
+| First eligible non-gameday in the first ten Eastern dates of each month | Run one isolated dependency/migration/lifecycle rehearsal | Review a failure, then use a deliberate manual retry; scheduled attempts do not repeat that month |
 | August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |
 
 ## Choose the right procedure
@@ -96,7 +96,10 @@ lifecycle tests, dry-run production, then apply through the guarded workflow.
 
 Use [isolated-integration-tests.md](isolated-integration-tests.md) for the
 full-season drill and [OPERATIONS.md](OPERATIONS.md) for the monthly upgrade
-rehearsal. Never turn a rehearsal result into an automatic production upgrade.
+rehearsal. A failed scheduled monthly attempt sends a real workflow failure
+notice; diagnose its isolated report before manually retrying. The schedule
+does not repeatedly rerun a failed attempt that month. Never turn a rehearsal
+result into an automatic production upgrade.
 
 ### The site is unavailable
 
@@ -104,7 +107,9 @@ Check the public health endpoint and hosting/database status. Follow
 [uptime-monitoring.md](uptime-monitoring.md). Availability alerts and pool
 integrity alerts are intentionally separate. After a deployment, also open
 GitHub Actions → **Production smoke gate**; it records the status of the site
-and every health contract without exposing their response bodies.
+and its selected availability, automation, aggregate-worker, backup, and Bowl
+Pool contracts without exposing their response bodies. Check the separate
+UptimeRobot probes for individual workers and settlement freshness.
 
 ### The site works but automation heartbeat is down
 

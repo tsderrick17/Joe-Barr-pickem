@@ -10,7 +10,9 @@ This project uses Sentry for actionable production errors and a small amount of 
 
 ## Recommended project alerts
 
-Configure these in Sentry for the production environment:
+These are recommended production alert rules, not a claim that each is already
+configured. Verify the active project settings in Sentry after changing an
+alert or environment:
 
 1. **New production issue:** notify when a new issue is first seen, with the route and release in the notification.
 2. **Error spike:** notify when an issue exceeds 5 events in 5 minutes or 20 events in 1 hour. This catches a broken deploy without paging on a single mobile network blip.

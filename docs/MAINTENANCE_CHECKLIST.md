@@ -26,6 +26,12 @@ records.
   deployment settings. Retire compatibility fallbacks only after a successful
   production preflight confirms the managed credential path.
 - Check mobile and desktop pages at the exact widths used by the visual guards.
+- Compare the project reference's stated cadence, provider sources, and season
+  assumptions with the newest migrations and executable tests. Update stale
+  runbook steps and mark superseded decision-log guidance explicitly.
+- Review the monthly upgrade rehearsal's latest isolated report. A scheduled
+  failure waits for a deliberate manual retry; do not silence the notification
+  without understanding the failed test or dependency.
 
 ## Release hygiene
 
@@ -34,3 +40,6 @@ records.
 - Keep `supabase/.temp/` and other local tool state untracked.
 - Verify the canonical production site after deployment; never infer health
   from a successful build alone.
+- Check Markdown links and examples in the same pull request as a documentation
+  change. Keep the README understandable without access to private accounts or
+  player data; put operational detail in the linked runbooks.
