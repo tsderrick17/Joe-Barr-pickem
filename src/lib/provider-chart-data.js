@@ -151,8 +151,13 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
   }
   const slates = groups.map(({ firstKickoff, games: slateGames }) => {
     const slateStartedAt = new Date(firstKickoff).toISOString();
+    const latestKickoff = Math.max(...slateGames.map((game) => Date.parse(game.kickoff_at)));
+    const complete = slateGames.every((game) => game.finalized_at && (game.status == null || game.status === "final") && Number.isFinite(Date.parse(game.finalized_at)));
+    const latencyMinutes = complete
+      ? Math.round(slateGames.reduce((total, game) => total + Math.max(0, (Date.parse(game.finalized_at) - latestKickoff) / 60000), 0) / slateGames.length)
+      : null;
     return {
-    slateStartedAt, games: slateGames.length, credits: 0, finals: 0, calls: 0, productive: 0,
+    slateStartedAt, games: slateGames.length, settledGames: complete ? slateGames.length : 0, latencyMinutes, credits: 0, finals: 0, calls: 0, productive: 0,
     ambiguous: false,
     start: Date.parse(slateStartedAt) + 170 * 60000,
     end: slateGames.every((game) => game.finalized_at)
@@ -172,9 +177,29 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
   }
   return slates.map((slate) => ({
     slateStartedAt: slate.slateStartedAt, games: slate.games, credits: slate.credits,
-    finals: slate.finals, calls: slate.calls,
+    finals: slate.finals, calls: slate.calls, settledGames: slate.settledGames, latencyMinutes: slate.latencyMinutes,
     attribution: slate.ambiguous ? "unavailable" : slate.calls ? "estimated" : "no-data",
+    creditsPerGame: !slate.ambiguous && slate.calls > 0 && slate.settledGames > 0 ? slate.credits / slate.settledGames : null,
     creditsPerFinal: !slate.ambiguous && slate.finals > 0 ? slate.credits / slate.finals : null,
     productiveRate: !slate.ambiguous && slate.calls > 0 ? 100 * slate.productive / slate.calls : null,
   }));
+}
+
+// Fifteen Eastern calendar dates, including the point's date. Weight by games,
+// not by slate, so a single-game Thursday does not count like a Sunday slate.
+const easternDayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
+export function rollingCreditsPerGame15Days(points, index) {
+  if (points[index]?.creditsPerGame == null) return null;
+  const day = (value) => {
+    const parts = easternDayFormatter.formatToParts(new Date(value));
+    const valueOf = (type) => Number(parts.find((part) => part.type === type)?.value);
+    return Date.UTC(valueOf("year"), valueOf("month") - 1, valueOf("day")) / 86400000;
+  };
+  const lastDay = day(points[index].slateStartedAt);
+  const eligible = points.slice(0, index + 1).filter((point) => {
+    const age = lastDay - day(point.slateStartedAt);
+    return age >= 0 && age < 15 && point.creditsPerGame !== null && point.creditsPerGame !== undefined && point.settledGames > 0;
+  });
+  const games = eligible.reduce((sum, point) => sum + point.settledGames, 0);
+  return games ? eligible.reduce((sum, point) => sum + point.credits, 0) / games : null;
 }

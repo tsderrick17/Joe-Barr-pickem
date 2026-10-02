@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { latestProviderCreditSnapshot, monthlyCreditSeries, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
+import { latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
 
 test("monthly credits include charged failures, zero days and only the current month through now", () => {
@@ -101,4 +101,32 @@ test("pooled slates avoid false overlap; future games never appear", () => {
   assert.equal(result[0].games, 2);
   assert.equal(result[0].creditsPerFinal, 2);
   assert.equal(result[0].attribution, "estimated");
+});
+
+test("combined slate points use one settled-game denominator and pooled-kickoff latency", () => {
+  const games = [
+    { kickoff_at: "2026-10-01T17:00:00Z", finalized_at: "2026-10-01T20:30:00Z", status: "final" },
+    { kickoff_at: "2026-10-01T17:20:00Z", finalized_at: "2026-10-01T20:40:00Z", status: "final" },
+  ];
+  const runs = [{ started_at: "2026-10-01T20:00:00Z", job_type: "scores", details: { requestsLast: 6, newFinals: 2 } }];
+  const [point] = slateEfficiencySeries(games, runs, new Date("2026-10-02T00:00:00Z"));
+  assert.equal(point.settledGames, 2);
+  assert.equal(point.creditsPerGame, 3);
+  assert.equal(point.latencyMinutes, 195);
+  assert.equal(rollingCreditsPerGame15Days([point], 0), 3);
+  const incomplete = slateEfficiencySeries([{ ...games[0], finalized_at: null, status: "scheduled" }], runs, new Date("2026-10-02T00:00:00Z"))[0];
+  assert.equal(incomplete.creditsPerGame, null);
+  assert.equal(incomplete.latencyMinutes, null);
+});
+
+test("15-day credits per game averages by Eastern calendar date and weights games", () => {
+  const point = (slateStartedAt, credits, settledGames) => ({ slateStartedAt, credits, settledGames, creditsPerGame: credits / settledGames });
+  const history = [
+    point("2026-10-01T17:00:00Z", 4, 1),
+    point("2026-10-15T17:00:00Z", 6, 2),
+    point("2026-10-16T17:00:00Z", 8, 1),
+  ];
+  assert.equal(rollingCreditsPerGame15Days(history, 1), 10 / 3);
+  assert.equal(rollingCreditsPerGame15Days(history, 2), 14 / 3);
+  assert.equal(rollingCreditsPerGame15Days([...history, { ...point("2026-10-17T17:00:00Z", 0, 1), creditsPerGame: null }], 3), null);
 });

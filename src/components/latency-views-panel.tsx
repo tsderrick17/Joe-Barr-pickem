@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
 
-type LatencyMetric = {
+export type LatencyMetric = {
   settlementLatency: {
     averageMinutes: number | null;
     slowestMinutes: number | null;
@@ -22,7 +22,7 @@ function minutes(value: number | null) {
   return value === null ? "-" : `${value}m`;
 }
 
-export default function LatencyViewsPanel({ metric }: { metric: LatencyMetric }) {
+export default function LatencyViewsPanel({ metric, embedded = false }: { metric: LatencyMetric; embedded?: boolean }) {
   const [view, setView] = useState<"period" | "trend">("period");
   const trend = view === "trend";
   const average = trend ? metric.comparison.previousAverageMinutes : metric.settlementLatency.averageMinutes;
@@ -41,7 +41,7 @@ export default function LatencyViewsPanel({ metric }: { metric: LatencyMetric })
     note: `${point.samples} settled sample${point.samples === 1 ? "" : "s"}`,
   }));
 
-  return <section className="mt-5 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+  return <section className={embedded ? "mt-4 min-w-0" : "mt-5 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5"}>
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400">Grading war room</p>
