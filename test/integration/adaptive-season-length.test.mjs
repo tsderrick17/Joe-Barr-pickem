@@ -50,7 +50,10 @@ test("weeks are never removed, and are only added in preseason", { skip }, async
   await withPreseason(async (client, season) => {
     // Asking for fewer weeks than exist leaves the season alone.
     assert.equal((await client.query("select public.ensure_regular_season_weeks($1, 18) as weeks", [season.id])).rows[0].weeks, 18);
+    // Each expected error rolls back to a savepoint so the test transaction stays usable.
+    await client.query("savepoint too_short");
     await assert.rejects(client.query("select public.ensure_regular_season_weeks($1, 17)", [season.id]), /between 18 and 22 weeks/);
+    await client.query("rollback to savepoint too_short");
     await client.query("savepoint before_state");
     await client.query("update public.seasons set state = 'regular_season' where id = $1", [season.id]);
     await assert.rejects(client.query("select public.ensure_regular_season_weeks($1, 19)", [season.id]), /only be added in preseason/);
