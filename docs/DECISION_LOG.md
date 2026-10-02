@@ -843,6 +843,19 @@ early-lock note wraps inside the spread column.
 **Reason:** The nudge pushed spreads into the favorite's name and the lock note
 into the underdog's name for players whose Survivor chips are hidden.
 
+## 2026-10-01 - Smaller email images
+
+**Status:** Accepted
+
+Email artwork is saved as a 256-color palette PNG instead of full-color RGBA,
+cutting each image by about two thirds (for example 74 KB to 23 KB) with no
+visible change. Both the stored email images and the fallback image route use the
+same renderer.
+
+**Reason:** Email images were slow to load on phones. The artwork is flat color
+and text, so a palette loses nothing visible, and fewer bytes load faster in every
+email client without changing the format clients already accept.
+
 ## 2026-10-01 - Faster Season Snapshot
 
 **Status:** Accepted
