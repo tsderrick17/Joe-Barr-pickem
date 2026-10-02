@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import test from "node:test";
 import pg from "pg";
+import { regularSeasonTeamPairs } from "../fixtures/balanced-regular-season.mjs";
 
 const enabled = process.env.PICKEM_FULL_SEASON_DRILL === "true"
   && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
@@ -110,11 +111,10 @@ test("one-button full-season chaos certification", {
     }));
     const providerGames = [];
     for (let weekIndex = 0; weekIndex < 18; weekIndex += 1) {
-      const gameCount = weekIndex < 2 ? 16 : 15;
       const gameweekKey = assignments[weekIndex].starts_at.slice(0, 10);
-      for (let gameIndex = 0; gameIndex < gameCount; gameIndex += 1) {
-        const away = teams[(weekIndex + gameIndex * 2) % 32];
-        const home = teams[(weekIndex + gameIndex * 2 + 1) % 32];
+      for (const [gameIndex, [awayIndex, homeIndex]] of regularSeasonTeamPairs(weekIndex).entries()) {
+        const away = teams[awayIndex];
+        const home = teams[homeIndex];
         const kickoff = baseTuesday + weekIndex * 7 * DAY + 5 * DAY + 6 * HOUR + gameIndex * 5 * 60 * 1000;
         providerGames.push({
           external_game_id: `${token}-nfl-${weekIndex + 1}-${gameIndex + 1}`,
