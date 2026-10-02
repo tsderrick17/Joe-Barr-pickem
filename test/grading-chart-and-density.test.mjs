@@ -49,8 +49,11 @@ test("the grading period control is a compact sticky rail, and commissioner card
 
 test("grading cards, worker columns, and operations actions keep stable non-overlapping layouts", async () => {
   const operations = await readFile(new URL("../src/components/commissioner-operations-map.tsx", import.meta.url), "utf8");
-  assert.match(dashboard, /grading-worker-table w-full min-w-\[48rem\] table-fixed/);
-  assert.match(dashboard, /<colgroup><col className="w-\[18%\]" \/><col className="w-\[14%\]" \/><col className="w-\[34%\]" \/><col className="w-\[34%\]" \/><\/colgroup>/);
+  assert.match(dashboard, /grading-worker-table w-full table-fixed/);
+  assert.match(dashboard, /grading-worker-status/);
+  assert.doesNotMatch(dashboard, /grading-worker-table[^\n]*min-w-\[48rem\]/);
+  assert.ok(css.includes(".grading-worker-table { min-width: 0; table-layout: fixed; }"));
+  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] .grading-worker-table tbody td:nth-child(2) { border-radius: 0;'));
   assert.match(css, /\.grading-kpi > p \{[^}]*min-height: 2\.3em/);
   assert.match(css, /\.commissioner-inline-action \{[^}]*display: inline-flex/);
   assert.match(operations, /commissioner-map-next/);
@@ -61,4 +64,6 @@ test("credit comparison replaces provider-report noise with the regular-season S
   assert.match(efficiency, /creditUsage\.sundayAverageCredits/);
   assert.match(efficiency, /regularSundaysElapsed/);
   assert.doesNotMatch(efficiency, /\[\["Provider used", creditUsage\.reportedUsed\]/);
+  assert.doesNotMatch(efficiency, /Not in app logs|untrackedCredits|provider account total/);
+  assert.doesNotMatch(efficiency, /The chart shows activity recorded by this app/);
 });

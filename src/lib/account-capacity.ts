@@ -46,7 +46,6 @@ export type AccountCapacity = {
     providerUsed: number | null;
     providerRemaining: number | null;
     providerLimit: number | null;
-    untrackedCredits: number | null;
     reportedAt: string | null;
   };
 };
@@ -315,7 +314,6 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
     providerUsed: creditUsage.reportedUsed,
     providerRemaining: creditUsage.remaining,
     providerLimit: creditUsage.providerLimit,
-    untrackedCredits: creditUsage.untrackedCredits,
     reportedAt: creditUsage.reportedAt,
   };
 
