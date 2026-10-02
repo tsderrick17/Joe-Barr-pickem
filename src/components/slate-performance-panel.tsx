@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
-import LatencyViewsPanel, { type LatencyMetric } from "@/components/latency-views-panel";
 import { rollingCreditsPerGame15Days } from "@/lib/provider-chart-data.js";
 import type { EfficiencyPoint, EfficiencySummary } from "@/components/efficiency-trend-panel";
 
@@ -12,10 +11,9 @@ const date = (value: string, time = false) => new Date(value).toLocaleString("en
 });
 const number = (value: number | null) => value === null ? "-" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
 
-export default function SlatePerformancePanel({ history, summary, latencyMetric }: {
+export default function SlatePerformancePanel({ history, summary }: {
   history: EfficiencyPoint[];
   summary: EfficiencySummary;
-  latencyMetric: LatencyMetric;
 }) {
   const [range, setRange] = useState<"all" | "14">("all");
   const first = range === "14" ? Math.max(0, history.length - 14) : 0;
@@ -66,9 +64,5 @@ export default function SlatePerformancePanel({ history, summary, latencyMetric 
       ]}
     />
     <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">Left axis: score-polling credits per settled game. Right axis: average minutes from the pooled kickoff to accepted final. The 15-day line is a game-weighted average over the current and previous 14 Eastern calendar dates; slates with missing or ambiguous credits are excluded. Credit attribution is estimated from polling times.</p>
-    <details className="mt-5 border-t border-zinc-200 pt-4">
-      <summary className="w-fit cursor-pointer text-xs font-bold text-indigo-700">Game and period latency details</summary>
-      <LatencyViewsPanel metric={latencyMetric} embedded />
-    </details>
   </section>;
 }

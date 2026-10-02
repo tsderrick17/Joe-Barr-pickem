@@ -5,7 +5,6 @@ import test from "node:test";
 test("grading dashboard exposes a game pipeline and actionable attention queue", async () => {
   const route = await readFile(new URL("../src/app/api/admin/grading-dashboard/route.ts", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
-  const latencyComponent = await readFile(new URL("../src/components/latency-views-panel.tsx", import.meta.url), "utf8");
   const pollingComponent = await readFile(new URL("../src/components/polling-strategy-panel.tsx", import.meta.url), "utf8");
 
   assert.match(route, /needs_review/);
@@ -47,8 +46,6 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(component, /Incident posture/);
   assert.match(route, /recentAlerts/);
   assert.match(route, /settlementLatency/);
-  assert.match(latencyComponent, /Settlement latency/);
-  assert.match(latencyComponent, /metric\.comparison\.deltaMinutes/);
   assert.match(route, /previousAverageMinutes/);
   assert.match(route, /firstCheckMinutesAfterKickoff/);
   assert.match(route, /cronIntervalMinutes: 10/);
@@ -66,7 +63,7 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(slateComponent, /Provider cost &amp; settlement/);
   assert.match(slateComponent, /rollingCreditsPerGame15Days/);
   assert.match(slateComponent, /rightAxis=\{\{ label: "Minutes to final"/);
-  assert.match(slateComponent, /Game and period latency details/);
+  assert.doesNotMatch(slateComponent, /Game and period latency details|<details/);
   assert.doesNotMatch(slateComponent, /Productive checks/);
 });
 

@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const chart = await readFile(new URL("../src/components/provider-chart.tsx", import.meta.url), "utf8");
-const latency = await readFile(new URL("../src/components/latency-views-panel.tsx", import.meta.url), "utf8");
 const dashboard = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
 const efficiency = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
 const slate = await readFile(new URL("../src/components/slate-performance-panel.tsx", import.meta.url), "utf8");
@@ -14,7 +13,7 @@ test("settlement latency uses a rounded, data-relative y-axis and names its unit
   assert.match(chart, /const minimum = yScale === "tight"/);
   assert.match(chart, /function niceStep\(/);
   assert.match(chart, /minimum \+ \(maximum - minimum\) \* fraction/);
-  assert.match(latency, /yScale="tight" yAxisLabel="Minutes to final"/);
+  assert.match(slate, /rightAxis=\{\{ label: "Minutes to final", suffix: "m", scale: "tight" \}\}/);
 });
 
 test("categorical charts center bars and labels inside each day instead of clipping the end bars", () => {
@@ -29,14 +28,15 @@ test("credit usage chart uses an integer-only y-axis", () => {
   assert.match(efficiency, /label="Current-month credit usage" integerYAxis/);
 });
 
-test("combined provider chart names independent credit and minute axes and nests latency detail", () => {
+test("combined provider chart names independent credit and minute axes and retains slate latency", () => {
   assert.match(chart, /rightAxis\?: \{ label: string; suffix: string; scale\?: "zero" \| "tight" \}/);
   assert.match(chart, /rightMinimum \+ \(rightMaximum - rightMinimum\) \* fraction/);
   assert.match(slate, /yAxisLabel="Credits \/ game"/);
   assert.match(slate, /rightAxis=\{\{ label: "Minutes to final", suffix: "m", scale: "tight" \}\}/);
   assert.match(slate, /15-day avg · credits\/game/);
-  assert.match(slate, /<LatencyViewsPanel metric=\{latencyMetric\} embedded \/>/);
-  assert.doesNotMatch(dashboard, /<LatencyViewsPanel metric=\{metric\} \/>/);
+  assert.match(slate, /label: "Settlement latency"/);
+  assert.doesNotMatch(slate, /Game and period latency details|<details/);
+  assert.doesNotMatch(dashboard, /latencyMetric=/);
 });
 
 test("the grading period control is a compact sticky rail, and commissioner cards collapse at tablet widths", () => {
