@@ -5,6 +5,7 @@ import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import { retrySafeRead } from "@/lib/retry-safe-read";
+import { championNames } from "@/lib/champion-names.js";
 
 export const dynamic = "force-dynamic";
 
@@ -185,6 +186,11 @@ export async function GET(request: NextRequest) {
     );
   }
   const nameByPlayerId = new Map((players ?? []).map((player) => [player.id, player.first_name]));
+  // Co-champions (a same-week finish or several survivors) are all named.
+  const { data: championRows } = context.season.survivor_champion_player_id
+    ? await supabaseAdmin.from("pool_championships").select("player_id").eq("season_id", context.season.id).eq("pool", "survivor")
+    : { data: [] as Array<{ player_id: string }> };
+  const championIds = (championRows ?? []).map((row) => row.player_id);
   const teamById = new Map(teams.map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]));
   const myPick = picks.find(
     (pick) => pick.survivor_entry_id === context.entry.id && pick.result !== "void",
@@ -200,7 +206,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     week: { id: context.period.id, name: context.period.display_name, status: context.period.status },
     entry: { status: context.season.survivor_champion_player_id ? "complete" : context.entry.status, pick: myPick },
-    champion: context.season.survivor_champion_player_id ? { playerId: context.season.survivor_champion_player_id, name: nameByPlayerId.get(context.season.survivor_champion_player_id) ?? "Survivor champion" } : null,
+    champion: context.season.survivor_champion_player_id ? { playerId: context.season.survivor_champion_player_id, name: championNames((championIds.length ? championIds : [context.season.survivor_champion_player_id]).map((id) => nameByPlayerId.get(id))) ?? "Survivor champion" } : null,
     usedTeamIds: [...new Set(usedPicks.map((pick) => pick.selected_team_id))],
     byeTeams,
     games: games.map((game) => ({
