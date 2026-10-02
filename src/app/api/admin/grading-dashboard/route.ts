@@ -8,6 +8,7 @@ import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { monthlyCreditSeries, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
+import { loadSeasonLadder, type SeasonLadder } from "@/lib/season-ladder";
 
 type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 const GAME_STATUS_GRACE_MINUTES = 15;
@@ -29,6 +30,16 @@ async function providerRunsSince(since: string, until: string) {
     rows.push(...(more.data ?? []));
   }
   return { data: rows, error: null };
+}
+
+/** The season's retry-rung record rarely changes, so the totals are kept briefly in memory. */
+const LADDER_CACHE_MS = 10 * 60 * 1000;
+let ladderCache: { key: string; at: number; ladder: SeasonLadder } | null = null;
+async function seasonLadder(seasonStart: string, now: Date) {
+  if (ladderCache && ladderCache.key === seasonStart && now.getTime() - ladderCache.at < LADDER_CACHE_MS) return ladderCache.ladder;
+  const ladder = await loadSeasonLadder(supabaseAdmin, seasonStart);
+  ladderCache = { key: seasonStart, at: now.getTime(), ladder };
+  return ladder;
 }
 
 function minutesSince(value: string | null, now: Date) {
@@ -102,7 +113,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("teams").select("id, abbreviation, full_name"),
-      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").in("job_type", ["scores", "line_locks", "bowl_scores"]).order("started_at", { ascending: false }).limit(1000),
+      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").eq("job_type", "scores").order("started_at", { ascending: false }).limit(60),
       supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true),
       supabaseAdmin.from("audit_logs").select("id, action, entity_type, entity_id, details, created_at").in("entity_type", ["game", "scoring_period"]).order("created_at", { ascending: false }).limit(20),
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
@@ -110,6 +121,9 @@ export async function GET(request: NextRequest) {
       previousPeriod ? supabaseAdmin.from("games").select("id, kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
     ]);
     if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
+    const [lineLockRunsResult, bowlRunsResult] = await Promise.all(["line_locks", "bowl_scores"].map((jobType) =>
+      supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").eq("job_type", jobType).order("started_at", { ascending: false }).limit(1)));
+    if (lineLockRunsResult.error || bowlRunsResult.error) throw new Error("The grading dashboard could not read worker activity.");
 
     const games = gamesResult.data ?? [];
     const lineByGame = new Map((linesResult.data ?? []).map((line) => [line.game_id, line]));
@@ -179,16 +193,18 @@ export async function GET(request: NextRequest) {
       .filter((game) => periodTypeById.get(game.scoring_period_id) === "regular")
       .filter((game) => Date.parse(game.kickoff_at) <= now.getTime())
       .map((game) => game.kickoff_at);
-    const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= now.getTime() - 30 * 86400000), now);
+    // Season to date: from three days before the first regular-season kickoff (the
+    // first spread refreshes), not a rolling month that would drop early weeks.
+    const firstKickoff = regularSeasonGameDates.length ? Math.min(...regularSeasonGameDates.map((value) => Date.parse(value))) : now.getTime() - 30 * 86400000;
+    const efficiency = summarizeProviderEfficiency((oddsRunsResult.data ?? []).filter((run) => Date.parse(run.started_at) >= firstKickoff - 3 * 86400000), now);
     const efficiencyHistory = slateEfficiencySeries(scheduleGamesResult.data ?? [], oddsRunsResult.data ?? [], now);
     const creditUsage = monthlyCreditSeries(oddsRunsResult.data ?? [], now, scheduleGamesResult.data ?? [], [...SCORE_POLLING_RETRY_MINUTES], regularSeasonGameDates);
-    const ladderCounts = new Map<number, number>();
-    for (const run of syncResult.data ?? []) {
-      if (run.job_type !== "scores" || !run.details || typeof run.details !== "object") continue;
-      const rungs = (run.details as Record<string, unknown>).ladderRungs;
-      if (!rungs || typeof rungs !== "object") continue;
-      for (const [rung, count] of Object.entries(rungs as Record<string, unknown>)) { const rungNumber = Number(rung); const rungCount = Number(count); if (Number.isInteger(rungNumber) && rungNumber > 0 && Number.isFinite(rungCount) && rungCount > 0) ladderCounts.set(rungNumber, (ladderCounts.get(rungNumber) ?? 0) + rungCount); }
-    }
+    // The whole season's retry-rung record, not a window of recent runs. A failure
+    // here only blanks this one chart; it never takes the dashboard down.
+    let ladder = { counts: new Map<number, number>(), runs: 0, since: null as string | null };
+    try { ladder = await seasonLadder(new Date(Date.UTC(season.year, 0, 1)).toISOString(), now); }
+    catch (error) { console.error("The score-polling histogram could not be loaded.", { message: error instanceof Error ? error.message : String(error) }); }
+    const ladderCounts = ladder.counts;
     const ladderTotal = [...ladderCounts.values()].reduce((sum, count) => sum + count, 0);
     const ladderSummary = SCORE_POLLING_RETRY_MINUTES.map((windowMinutes, index) => {
       const rung = index + 1;
@@ -219,10 +235,11 @@ export async function GET(request: NextRequest) {
       games: gameRows,
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
-      workerRuns: latestWorkerRuns(syncResult.data ?? []).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
+      workerRuns: latestWorkerRuns([...(syncResult.data ?? []), ...(lineLockRunsResult.data ?? []), ...(bowlRunsResult.data ?? [])]).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
       cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
       scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,
+      ladderCoverage: { since: ladder.since, runs: ladder.runs },
       creditUsage,
       incidents: watchdog.recentAlerts.slice(0, 8).map((alert) => ({ id: alert.id, title: alert.title, severity: alert.severity, detectedAt: alert.detected_at, lastSeenAt: alert.last_seen_at, resolvedAt: alert.resolved_at })),
       reminders: (remindersResult.data ?? []).map((reminder) => ({ id: reminder.id, category: reminder.category, title: reminder.title, scheduledFor: reminder.scheduled_for, status: reminder.status, sentAt: reminder.sent_at })),

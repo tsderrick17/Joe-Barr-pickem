@@ -929,3 +929,18 @@ workflow, and an expired token would have reported a false backup outage. The
 remaining items (Survivor with no single winner, a longer NFL season, provider
 plans, and Node runtime support) need a rule or an account decision and alert the
 commissioner when they occur.
+
+## 2026-10-02 - Grading page uses every recorded data point
+
+**Status:** Accepted
+
+The polling histogram read only the newest 1,000 score, line-lock, and bowl runs,
+which at one line-lock run a minute covered well under a day. It now reads every
+score run that recorded a retry rung since the start of the season, in pages, and
+the page states the date the record starts. "Last score sync" now reads score runs
+only (it could be a line-lock or bowl run before), Worker activity reads the latest
+run of each worker, and the efficiency totals are season to date instead of a
+rolling 30 days. A database test pins the paged read.
+
+**Reason:** The commissioner expected the histogram to cover the whole season. Rungs
+were first recorded on Sep 21, so earlier checks cannot be added without guessing.
