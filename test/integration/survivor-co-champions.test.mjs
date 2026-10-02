@@ -34,7 +34,7 @@ async function withSeason(run) {
     const periods = [];
     for (const order of [1, 2]) {
       periods.push(await one(client, `insert into public.scoring_periods (season_id, display_name, period_type, max_picks, status, display_order)
-        values ($1, $2, 'regular', 2, 'active', $3) returning id`, [season.id, `Week ${order}`, order]));
+        values ($1, $2, 'regular', 2, $4, $3) returning id`, [season.id, `Week ${order}`, order, order === 1 ? "active" : "upcoming"]));
     }
     const teams = [];
     for (let index = 0; index < 6; index += 1) {
