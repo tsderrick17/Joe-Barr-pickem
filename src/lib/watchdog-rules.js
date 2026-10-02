@@ -83,7 +83,7 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     signals.push({
       key: "season-schedule-missing", severity: "critical",
       title: `${bootstrap.seasonYear} season schedule is not loaded`,
-      detail: `${bootstrap.loadedGames}/272 regular-season games are pinned after the August 15 safety deadline. Automatic retries continue daily; the manual controls remain available.`,
+      detail: `The full regular-season schedule is not loaded (${bootstrap.loadedGames} games pinned) after the August 15 safety deadline. Automatic retries continue daily; the manual controls remain available.`,
     });
   }
   const failedPreflight = preflightChecks.filter((check) => !check.passed);

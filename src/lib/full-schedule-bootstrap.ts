@@ -1,4 +1,4 @@
-import { fullSchedulePeriodAssignments, NFLVERSE_SCHEDULE_URL, parseNflverseRegularSeason } from "@/lib/full-schedule-provider";
+import { fullSchedulePeriodAssignments, MIN_REGULAR_SEASON_GAMES, MIN_REGULAR_SEASON_WEEKS, NFLVERSE_SCHEDULE_URL, parseNflverseRegularSeason, regularSeasonShape } from "@/lib/full-schedule-provider";
 import { seasonYearAt } from "@/lib/season";
 import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -56,7 +56,7 @@ export async function getSeasonBootstrapStatus(now = new Date()): Promise<Season
   return {
     seasonYear, seasonId: season.id, seasonState: season.state,
     regularPeriods: periodIds.length, loadedGames,
-    complete: periodIds.length === 18 && loadedGames === 272,
+    complete: periodIds.length >= MIN_REGULAR_SEASON_WEEKS && loadedGames >= MIN_REGULAR_SEASON_GAMES,
     lastRun: lastRun as SeasonBootstrapStatus["lastRun"],
     turnover: turnoverStatus,
   };
@@ -79,10 +79,19 @@ export async function prepareFullSchedule(now = new Date()) {
   if (!season) throw new Error(`The ${seasonYear} season has not been set up yet.`);
   if (season.state !== "preseason") throw new Error("The full-season bootstrap is preseason-only; use live reconciliation after the season begins.");
   if (teamsError || !teams) throw new Error("The NFL team list could not be loaded.");
-  const { data: periods, error: periodsError } = await supabaseAdmin.from("scoring_periods")
+  // A longer season than last year's template adds the missing weeks before
+  // the playoffs (preseason only). A shorter one stops for review.
+  const { weeks } = regularSeasonShape(games);
+  const loadPeriods = () => supabaseAdmin.from("scoring_periods")
     .select("id, display_order, starts_at, ends_at").eq("season_id", season.id)
     .eq("period_type", "regular").order("display_order");
-  if (periodsError || !periods || periods.length !== 18) throw new Error("Exactly 18 regular-season scoring periods must exist before importing the full schedule.");
+  let { data: periods, error: periodsError } = await loadPeriods();
+  if (!periodsError && periods && periods.length < weeks) {
+    const { error: extendError } = await supabaseAdmin.rpc("ensure_regular_season_weeks", { target_season_id: season.id, week_count: weeks });
+    if (extendError) throw new Error(`The season template could not be extended to ${weeks} weeks: ${extendError.message}`);
+    ({ data: periods, error: periodsError } = await loadPeriods());
+  }
+  if (periodsError || !periods || periods.length !== weeks) throw new Error(`The ${weeks}-week schedule does not match the season's ${periods?.length ?? 0} regular-season weeks. Nothing was changed.`);
   const teamId = new Map((teams as TeamRow[]).map((team) => [team.abbreviation, team.id]));
   const unknownTeams = [...new Set(games.flatMap((game) => [game.awayAbbreviation, game.homeAbbreviation]).filter((team) => !teamId.has(team)))];
   if (unknownTeams.length) throw new Error(`The schedule contains unknown NFL teams: ${unknownTeams.sort().join(", ")}.`);
@@ -126,7 +135,7 @@ export async function bootstrapFullSchedule({ automatic = false, now = new Date(
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "The full schedule could not be imported.";
-    const waiting = /has \d+ regular-season games; expected 272|has not been set up yet/i.test(message);
+    const waiting = /has \d+ regular-season games; expected at least \d+|has not been set up yet/i.test(message);
     await finishSyncRun(run.id, {
       status: waiting ? "success" : "failed", completed_at: new Date().toISOString(),
       error_message: waiting ? null : message, details: { automatic, outcome: waiting ? "waiting_for_complete_feed" : "failed", message },

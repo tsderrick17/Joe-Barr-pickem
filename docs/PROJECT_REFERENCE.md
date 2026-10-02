@@ -263,8 +263,11 @@ playoff wins.
 ### Preseason bootstrap
 
 - The annual bootstrap creates the new preseason when needed, downloads the
-  complete regular-season schedule, and accepts it only if all 272 games and
-  all 18 weeks validate.
+  complete regular-season schedule, and accepts it only if every game and
+  week validates. The season's length is read from the feed (272 games over
+  18 weeks today): every week must have games, all 32 teams must play the same
+  number of games, and a longer season adds its missing weeks before the playoff
+  rounds in preseason, so an 18-game season loads without a code change.
 - A partial, malformed, duplicate, or structurally inconsistent schedule makes
   no database change and is retried later.
 - Initial import assigns and permanently pins every game to its scoring period

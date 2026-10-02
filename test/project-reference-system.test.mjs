@@ -70,8 +70,9 @@ test("durable lifecycle rules remain anchored to executable implementation", asy
   assert.match(weekRollover, /getUTCDate\(\),\s*3,\s*\)\.toISOString\(\)/);
   assert.match(weekRollover, /oneDayMilliseconds/);
 
-  assert.match(reference, /all 272 games and\s+all 18 weeks/);
-  assert.match(scheduleProvider, /games\.length !== 272/);
+  assert.match(reference, /every game and\s+week validates/);
+  assert.match(scheduleProvider, /games\.length < MIN_REGULAR_SEASON_GAMES/);
+  assert.match(scheduleProvider, /games\.length !== shape\.gamesPerTeam \* 16/);
 
   assert.match(reference, /omitted by the provider is reported but never deleted/);
   assert.match(reconciliation, /missingFromProvider/);

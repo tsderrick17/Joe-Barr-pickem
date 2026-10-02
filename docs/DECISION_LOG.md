@@ -912,6 +912,20 @@ slightly smaller size so it fits the spread column on phones.
 and perforation, and the lock note wrapped awkwardly (an orphaned "PM ET") and
 crowded the team names.
 
+## 2026-10-02 - Season length read from the schedule feed
+
+**Status:** Accepted
+
+The schedule import no longer assumes 18 weeks and 272 games. It reads the
+season's length from the nflverse feed, requires every week to have games and all
+32 teams to play the same number of games, and, in preseason, adds any missing
+regular-season week before the playoff rounds (ensure_regular_season_weeks). Weeks
+are never removed; a shorter feed stops for review. Live reconciliation compares
+against the season's own canonical game set instead of 272.
+
+**Reason:** The NFL has discussed an 18-game season. The commissioner chose for the
+pool to adapt on its own rather than stop and wait for a code change.
+
 ## 2026-10-02 - Unattended operation for years
 
 **Status:** Accepted
