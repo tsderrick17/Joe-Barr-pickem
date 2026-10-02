@@ -912,6 +912,41 @@ slightly smaller size so it fits the spread column on phones.
 and perforation, and the lock note wrapped awkwardly (an orphaned "PM ET") and
 crowded the team names.
 
+## 2026-10-02 - Unattended operation for years
+
+**Status:** Accepted
+
+A sweep for running a decade without anyone touching it. Fixed now: a weekly
+workflow re-enables every scheduled GitHub workflow so GitHub's 60-day idle rule
+for public repositories never stops the weekly backup; the backup health check
+falls back to an anonymous read of the public run list when its token is missing
+or expired; and the Bowl Pool title and commissioner schedule default no longer
+hardcode 2026. OPERATIONS.md now lists what resets each year, what is kept and
+removed, and what still needs a person.
+
+**Reason:** Without a commit for 60 days GitHub would have disabled the backup
+workflow, and an expired token would have reported a false backup outage. The
+remaining items (Survivor with no single winner, a longer NFL season, provider
+plans, and Node runtime support) need a rule or an account decision and alert the
+commissioner when they occur.
+
+## 2026-10-02 - Survivor co-champions
+
+**Status:** Accepted
+
+Survivor now always ends with a champion. The last entry standing wins alone;
+everyone eliminated in the same final week shares the title; several entries that
+survive the whole regular season share the title. A champion is decided only once
+the deciding week has settled (the survivor's own pick has won, or the week is
+complete), so a player who outlasts the others on Sunday but loses on Monday
+shares the title instead of winning alone. The one-Survivor-champion-per-year
+database limit is removed; each co-champion gets a trophy and is named together.
+
+**Reason:** Before this, a same-week finish or several survivors left the season
+with no Survivor champion, which blocked the annual turnover and kept the next
+season's Survivor from opening. The commissioner chose co-champions. Supersedes the
+one-champion Survivor rule and crowning the instant one entry remained.
+
 ## 2026-10-02 - Grading page uses every recorded data point
 
 **Status:** Accepted

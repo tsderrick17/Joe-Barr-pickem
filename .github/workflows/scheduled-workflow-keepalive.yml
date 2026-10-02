@@ -1,0 +1,41 @@
+name: Keep scheduled workflows enabled
+
+# GitHub disables scheduled workflows in a public repository after 60 days with
+# no repository activity. The pool must keep running (and backing up) for years
+# without anyone committing, so this re-enables every scheduled workflow each
+# week, which resets that inactivity timer. It changes no files and makes no
+# commits. If GitHub ever disables this workflow too, the backup health monitor
+# turns red within eight days and alerts the commissioner.
+
+on:
+  schedule:
+    - cron: "41 12 * * 2"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+concurrency:
+  group: scheduled-workflow-keepalive
+  cancel-in-progress: true
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Re-enable scheduled workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for workflow in \
+            scheduled-workflow-keepalive.yml \
+            database-backup.yml \
+            weekly-production-smoke.yml \
+            isolated-integration.yml \
+            monthly-upgrade-rehearsal.yml; do
+            gh api --method PUT "repos/${REPO}/actions/workflows/${workflow}/enable"
+            echo "Enabled ${workflow}"
+          done

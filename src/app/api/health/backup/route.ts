@@ -10,19 +10,23 @@ export async function GET() {
   const checkedAt = new Date();
   const token = process.env.GITHUB_USAGE_TOKEN;
   try {
-    if (!token) throw new Error("GitHub usage access is not configured.");
-    const response = await fetch(
-      "https://api.github.com/repos/tsderrick17/Joe-Barr-pickem/actions/workflows/database-backup.yml/runs?status=completed&per_page=1",
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
-          "X-GitHub-Api-Version": "2026-03-10",
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
+    // The repository is public, so the run list is readable without a token.
+    // The token only raises GitHub's rate limit; if it is missing, expired, or
+    // revoked, fall back to an anonymous read rather than reporting a false
+    // backup outage. (Healthy answers are CDN-cached for an hour, so anonymous
+    // reads stay far inside GitHub's limit.)
+    const runsUrl = "https://api.github.com/repos/tsderrick17/Joe-Barr-pickem/actions/workflows/database-backup.yml/runs?status=completed&per_page=1";
+    const read = (withToken: boolean) => fetch(runsUrl, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        ...(withToken && token ? { Authorization: `Bearer ${token}` } : {}),
+        "X-GitHub-Api-Version": "2026-03-10",
       },
-    );
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    let response = await read(Boolean(token));
+    if (token && (response.status === 401 || response.status === 403)) response = await read(false);
     if (!response.ok) throw new Error(`GitHub returned ${response.status}.`);
 
     const payload = await response.json() as { workflow_runs?: Array<{
