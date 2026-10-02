@@ -39,7 +39,8 @@ test("the grading histogram reads every recorded rung from the database, across 
     assert.equal(ladder.counts.get(3), 502, "half of the 1,005 runs recorded a rung-3 final");
     assert.equal(ladder.counts.has(-1), false);
     assert.equal(ladder.runs, 1006, "only runs that found a final on a valid rung count toward coverage");
-    assert.equal(ladder.since, at(0), "coverage starts at the first run that found a final");
+    // The database returns its own timestamp spelling (+00:00), so compare the instant.
+    assert.equal(Date.parse(ladder.since), Date.parse(at(0)), "coverage starts at the first run that found a final");
   } finally {
     for (let start = 0; start < ids.length; start += 200) {
       await admin.from("sync_runs").delete().in("id", ids.slice(start, start + 200));
