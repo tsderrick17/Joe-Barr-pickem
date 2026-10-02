@@ -136,16 +136,13 @@ scheduled workflows in a public repository after 60 days without a commit. The
 backup health check reads the public run list anonymously if its GitHub token
 expires.
 
+Survivor always ends with a champion (co-champions for a same-week finish or
+several survivors), so the annual turnover never stalls on it. A longer NFL
+season is read from the schedule feed and its extra weeks are added before the
+playoffs automatically.
+
 Still needs a person, and alerts the commissioner by email when it does:
 
-- **Survivor with no single winner.** A champion is crowned only when exactly one
-  entry remains. If the last entries are all eliminated in the same week, or
-  several survive the regular season, no champion is recorded, the annual
-  turnover stays blocked, and the next season's Survivor does not open until it
-  is resolved.
-- **A change to the NFL season's shape.** The schedule import expects 18 weeks
-  and 272 games. A longer season stops the import with a clear message and a
-  critical alert after August 15.
 - **Provider plans and accounts.** Scores and spreads use The Odds API free tier;
   email uses Brevo; hosting uses Vercel Hobby and Supabase Free. A plan change or
   a lapsed account stops the affected job and raises the matching watchdog or
