@@ -108,11 +108,21 @@ be replayed.
   top right turns it over. Commissioners always have it. Players get it from
   Week 6 (or any playoff round) until the August 1 season rollover, when the new
   season's periods are all upcoming and it disappears until that season's
-  Week 6. The same rule gates the data route.
+  Week 6. The same rule gates the data route. The route shares one finished
+  chart in memory for as long as it can be trusted (checked per viewer, never
+  before the release gate): until the active week's last kickoff, then every two
+  minutes while grades land, then an hour once the week has settled. It reads
+  picks in pages past PostgREST's 1,000-row cap. The browser loads the chart
+  only while the back is showing and only when the standings changed since it
+  last loaded, never on a timer, and keeps the last chart so the back opens
+  instantly while fresh data loads behind it.
   Everyone begins at zero on the regular-season chart. Completed periods carry
   every player's cumulative ATS wins forward; the active period is plotted for
-  everyone at once, after its last Pick'em pick settles (every game has kicked
-  off and no pick is pending). A separate playoff chart starts at each
+  everyone at once, as soon as its last Pick'em pick settles, which is usually
+  before the final game of the week because nobody has to have picked it. The
+  week is settled when no pick is pending and every active player either holds
+  all their picks for the week or every game has kicked off (a player with an open
+  pick slot could still add one, so the chart waits for the last kickoff). A separate playoff chart starts at each
   player's final regular-season total and continues season totals. All players
   share exact week columns. The horizontal scale fits the visible weeks from
   baseline through the current week. Lines have no point markers or data table;

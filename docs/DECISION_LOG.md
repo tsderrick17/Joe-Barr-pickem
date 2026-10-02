@@ -855,3 +855,44 @@ same renderer.
 **Reason:** Email images were slow to load on phones. The artwork is flat color
 and text, so a palette loses nothing visible, and fewer bytes load faster in every
 email client without changing the format clients already accept.
+
+## 2026-10-01 - Faster Season Snapshot
+
+**Status:** Accepted
+
+The snapshot route's database reads moved to a loader that shares the finished
+chart in memory (held until the active week's last kickoff, rechecked every two
+minutes while grades land, and held an hour once the week settles, instead of a
+fixed timer), merges the two player reads into one, and pages
+picks past PostgREST's 1,000-row cap. The release gate still runs before any
+pick is read, and a cached chart is never given to a player before Week 6. The
+browser keeps the last chart on the device and shows it immediately while the
+fresh one loads.
+
+**Reason:** The back of the pad waited on five or six sequential network calls on
+every open. Everyone sees the same chart and grades change on the ten-minute
+score sync, so a short shared cache and a saved copy remove most of the wait
+without a schema change. Paging also prevents silently truncated picks late in
+the season.
+
+The browser loads the chart only while the back is showing and only when the
+standings changed since it last loaded, so there is no polling and flipping back
+and forth costs nothing. The chart only changes once a week, when the last pick
+settles, so a fixed 30-second refresh was needless work.
+
+## 2026-10-01 - Plot the week when its last pick settles
+
+**Status:** Accepted
+
+The Season Snapshot plots the active week as soon as its last Pick'em pick has
+settled, not after the week's final kickoff. A week is settled when no pick is
+pending and every active player either holds all their picks for the week or every
+game has kicked off. The server holds the chart accordingly: until pending picks
+could first be graded (about three hours after their kickoffs), then rechecks every
+two minutes, and holds it an hour once the week has settled. Supersedes the rule
+that required every game of the week to have kicked off.
+
+**Reason:** Nobody has to pick the Monday night game, so the week is usually
+settled earlier, and the chart should appear then. A player with an open pick slot
+keeps the week open until the last kickoff, so the chart never plots a week that
+could still change.
