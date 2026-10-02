@@ -14,7 +14,7 @@ async function withPreseason(run) {
     const season = (await client.query("insert into public.seasons(year, state) values ($1, 'preseason') returning id", [6000 + Math.floor(Math.random() * 900)])).rows[0];
     const specs = [
       ...Array.from({ length: 18 }, (_, index) => [`Week ${index + 1}`, "regular", 2]),
-      ["Wild Card Round", "playoff", 6], ["Divisional Round", "playoff", 4], ["Conference Championships", "playoff", 2], ["Super Bowl", "playoff", 1],
+      ["Wild Card", "playoff", 6], ["Divisional Round", "playoff", 4], ["Conference Championships", "playoff", 2], ["Super Bowl", "playoff", 1],
     ];
     for (const [index, [name, type, max]] of specs.entries()) {
       await client.query("insert into public.scoring_periods (season_id, display_name, period_type, max_picks, status, display_order) values ($1, $2, $3, $4, 'upcoming', $5)", [season.id, name, type, max, index + 1]);
@@ -35,7 +35,7 @@ test("a longer season adds its missing week before the playoff rounds, once", { 
     const periods = await periodsOf(client, season.id);
     assert.equal(periods.length, 23);
     assert.deepEqual(periods.slice(17, 20).map((period) => [period.display_name, period.period_type, period.display_order]), [
-      ["Week 18", "regular", 18], ["Week 19", "regular", 19], ["Wild Card Round", "playoff", 20],
+      ["Week 18", "regular", 18], ["Week 19", "regular", 19], ["Wild Card", "playoff", 20],
     ]);
     assert.equal(periods.find((period) => period.display_name === "Week 19").max_picks, 2, "the new week copies the regular-season pick count");
     assert.equal(periods.at(-1).display_name, "Super Bowl");
