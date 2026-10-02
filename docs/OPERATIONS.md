@@ -73,11 +73,14 @@ the monthly Odds API quota.
 
 The season handoff no longer depends on a commissioner loading the schedule.
 Each day in August and September, the bootstrap job creates the new preseason
-when needed, requests the full regular-season provider schedule, validates that
-all 272 games are present, and imports the schedule atomically. A partial or
-malformed provider response changes nothing and is retried the next day. Once
-all 18 regular-season periods and 272 games are present, later runs become safe
-no-ops.
+when needed, requests the full regular-season provider schedule, validates it,
+and imports the schedule atomically. The season's length comes from the feed
+(272 games over 18 weeks today): every week must have games and all 32 teams
+must play the same number of games. If the feed has more weeks than last year's
+template (for example an 18-game season over 19 weeks), the missing weeks are
+added before the playoff rounds, in preseason only; weeks are never removed. A
+partial or malformed provider response changes nothing and is retried the next
+day. Once the full schedule is present, later runs become safe no-ops.
 
 The Commissioner **Schedule** panel shows the current handoff state and
 retains both recovery paths:
@@ -99,7 +102,7 @@ stores one permanent receipt. Retries return that receipt without repeating
 the cleanup. The Schedule panel shows either the certification or each exact
 blocker, and the watchdog alerts only when review is required.
 
-After the full schedule is loaded, the canonical 272-game provider is checked
+After the full schedule is loaded, the canonical provider schedule is checked
 throughout the season (at most once every four hours). It can move an unlocked
 future kickoff and reopen only that game's unfinalized line. A postponed game
 may cross a calendar-week boundary but remains pinned to its original scoring

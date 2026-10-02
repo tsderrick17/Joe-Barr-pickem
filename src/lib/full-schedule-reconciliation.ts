@@ -1,4 +1,4 @@
-import { NFLVERSE_SCHEDULE_URL, parseNflverseRegularSeason } from "@/lib/full-schedule-provider";
+import { MIN_REGULAR_SEASON_GAMES, MIN_REGULAR_SEASON_WEEKS, NFLVERSE_SCHEDULE_URL, parseNflverseRegularSeason } from "@/lib/full-schedule-provider";
 import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
@@ -16,14 +16,14 @@ export async function reconcileFullSeasonSchedule(now = new Date()) {
   }
   const { data: existingPeriods, error: existingPeriodsError } = await supabaseAdmin
     .from("scoring_periods").select("id, display_order").eq("season_id", season.id).eq("period_type", "regular");
-  if (existingPeriodsError || !existingPeriods || existingPeriods.length !== 18) {
+  if (existingPeriodsError || !existingPeriods || existingPeriods.length < MIN_REGULAR_SEASON_WEEKS) {
     return { outcome: "not_available" as const, seasonYear };
   }
   const { count: canonicalGameCount, error: canonicalGameError } = await supabaseAdmin
     .from("games").select("id", { count: "exact", head: true })
     .in("scoring_period_id", existingPeriods.map((period) => period.id)).eq("schedule_source", "nflverse");
   if (canonicalGameError) throw new Error("The canonical schedule state could not be inspected.");
-  if (canonicalGameCount !== 272) return { outcome: "not_available" as const, seasonYear };
+  if ((canonicalGameCount ?? 0) < MIN_REGULAR_SEASON_GAMES) return { outcome: "not_available" as const, seasonYear };
 
   const since = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
   const { data: recentRun } = await supabaseAdmin.from("sync_runs")
