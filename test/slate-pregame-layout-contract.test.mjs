@@ -22,3 +22,12 @@ test("phone rows without Survivor chips keep the spread and lock note out of the
   assert.match(block, /\.slate-game-row\.no-survivor-layout:not\(\.is-final\) \.slate-spread-cell \{\s*transform: none;/);
   assert.match(block, /\.slate-game-row\.no-survivor-layout:not\(\.is-final\) \.slate-spread-cell > p \{\s*white-space: normal;/);
 });
+
+test("the early-lock note is two short lines, day then time, centered under the spread", async () => {
+  const component = await readFile(new URL("../src/components/slate-game-row.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  assert.match(component, /function easternLockParts\(value: string\)/);
+  assert.match(component, /<p className="slate-lock-note [^"]*"><span>LOCKS \{easternLockParts\(game\.lineLockAt\)\.date\}<\/span><span>\{easternLockParts\(game\.lineLockAt\)\.time\}<\/span><\/p>/);
+  assert.match(component, /time: `\$\{time\.replace\(":00", ""\)\} ET`\.toUpperCase\(\)/);
+  assert.match(css, /\.slate-lock-note \{ display: grid; justify-items: center; white-space: nowrap; \}/);
+});

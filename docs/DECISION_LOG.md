@@ -896,3 +896,18 @@ that required every game of the week to have kicked off.
 settled earlier, and the chart should appear then. A player with an open pick slot
 keeps the week open until the last kickoff, so the chart never plots a week that
 could still change.
+
+## 2026-10-02 - Ticket corner notches and a two-line early-lock note
+
+**Status:** Accepted
+
+The receipt ticket now has a round bite in all four outer corners (the two left
+corners of the stub and the two right corners of the last section) in addition to
+the notches at both ends of every perforation, with the serrated edge between the
+corners. The early-lock note on the Slate is two short lines under the centered
+spread: the day, then the time (for example LOCKS 10/3, then 6 PM ET), in a
+slightly smaller size so it fits the spread column on phones.
+
+**Reason:** The commissioner wanted the ticket to read as die-cut at every corner
+and perforation, and the lock note wrapped awkwardly (an orphaned "PM ET") and
+crowded the team names.
