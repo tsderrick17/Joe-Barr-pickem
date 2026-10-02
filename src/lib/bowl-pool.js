@@ -1,7 +1,5 @@
 import { easternDateTimeToUtc } from "./schedule-time.js";
 
-export const BOWL_POOL_TIME_ZONE = "America/New_York";
-
 /**
  * Return the canonical compact college label for Bowl cards.  The schedule
  * import supplies official abbreviations/short names; the initials fallback

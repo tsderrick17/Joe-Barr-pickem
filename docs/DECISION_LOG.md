@@ -977,3 +977,16 @@ rolling 30 days. A database test pins the paged read.
 
 **Reason:** The commissioner expected the histogram to cover the whole season. Rungs
 were first recorded on Sep 21, so earlier checks cannot be added without guessing.
+
+## 2026-10-02 - Remove dead code and styles
+
+**Status:** Accepted
+
+Removed about 330 lines of CSS for classes no page uses (an old selection footer,
+the earlier receipt layout, newspaper-clipping styles, and retired commissioner
+panels), the JavaScript schedule reconciler that the live database reconciliation
+replaced, and four exports nothing called. The documented rule that a game omitted
+by the provider is reported and never deleted is now anchored to the live
+reconciliation function instead of the unused file.
+
+**Reason:** Less code to read and maintain, with no behavior change.

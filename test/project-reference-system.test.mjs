@@ -57,7 +57,8 @@ test("durable lifecycle rules remain anchored to executable implementation", asy
   const recapTiming = await repositoryFile("src/lib/weekly-recap-timing.js");
   const weekRollover = await repositoryFile("src/lib/week-rollover.js");
   const scheduleProvider = await repositoryFile("src/lib/full-schedule-provider.js");
-  const reconciliation = await repositoryFile("src/lib/schedule-reconciliation.js");
+  // The live schedule reconciliation (the old JS reconciler was never wired in).
+  const reconciliation = await repositoryFile("supabase/migrations/20261002020000_adaptive_regular_season_length.sql");
   const playoffEligibility = await repositoryFile(
     "supabase/migrations/20260809008000_fix_full_season_playoff_eligibility_math.sql",
   );
@@ -75,7 +76,8 @@ test("durable lifecycle rules remain anchored to executable implementation", asy
   assert.match(scheduleProvider, /games\.length !== shape\.gamesPerTeam \* 16/);
 
   assert.match(reference, /omitted by the provider is reported but never deleted/);
-  assert.match(reconciliation, /missingFromProvider/);
+  assert.match(reconciliation, /Schedule review required: the provider no longer matches the canonical game identity set/);
+  assert.doesNotMatch(reconciliation, /delete from public.games/);
 
   assert.match(reference, /future pending picks are atomically changed to `void`/);
   assert.match(playoffEligibility, /set result = 'void'/);

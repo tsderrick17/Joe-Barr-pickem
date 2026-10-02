@@ -18,7 +18,3 @@ export function isPickableGameStatus(status) {
 export function isSettledGameStatus(status) {
   return SETTLED_GAME_STATUSES.has(status);
 }
-
-export function isDisruptedGameStatus(status) {
-  return DISRUPTED_GAME_STATUSES.has(status);
-}
