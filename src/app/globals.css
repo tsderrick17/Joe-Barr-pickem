@@ -247,12 +247,12 @@ body {
 
 /* Stub: serrated left end, round notches at the first perforation. */
 .slate-receipt-ticket::before {
-  -webkit-mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
-  mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
-  -webkit-mask-repeat: repeat-y, no-repeat, no-repeat;
-  mask-repeat: repeat-y, no-repeat, no-repeat;
-  -webkit-mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%;
-  mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%;
+  -webkit-mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  -webkit-mask-repeat: repeat-y, no-repeat, no-repeat, no-repeat, no-repeat;
+  mask-repeat: repeat-y, no-repeat, no-repeat, no-repeat, no-repeat;
+  -webkit-mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
 }
 
 /* Middle section with Survivor beside it: notches on both perforations. */
@@ -268,12 +268,12 @@ body {
 /* The last section on the ticket ends with the serrated edge. */
 .slate-receipt-strip.is-pickem-only .slate-receipt-pool::before,
 .slate-receipt-pool.slate-receipt-survivor::before {
-  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-serrated-right);
-  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-serrated-right);
-  -webkit-mask-repeat: no-repeat, no-repeat, repeat-y;
-  mask-repeat: no-repeat, no-repeat, repeat-y;
-  -webkit-mask-size: 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
-  mask-size: 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right), var(--receipt-bite-serrated-right);
+  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right), var(--receipt-bite-serrated-right);
+  -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y;
+  mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y;
+  -webkit-mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+  mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
 }
 
 /* Perforation between two sections, running between its two notches. */
@@ -1908,6 +1908,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    so it is visually centered between the two team lanes, not the whole grid's
    remaining area. */
 .slate-spread-cell { transform: translateX(-2.25rem); }
+.slate-lock-note { display: grid; justify-items: center; white-space: nowrap; }
 .slate-preview-spread { display: block; transform: translateX(-2.4rem); }
 /* Survivor rows already reserve symmetric chip lanes around the spread. Do
    not apply the no-chip centering adjustment here; it pulls the line into the

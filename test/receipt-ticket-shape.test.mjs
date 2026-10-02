@@ -26,10 +26,10 @@ test("each receipt section paints its paper on a masked layer, so cutouts are re
   }
 });
 
-test("the stub has a serrated left end and round notches on the first perforation", () => {
+test("the stub has a serrated left end, round corners at both outer left corners, and notches on the first perforation", () => {
   const stub = rule(".slate-receipt-ticket::before");
-  assert.match(stub, /mask-image: var\(--receipt-bite-serrated-left\), var\(--receipt-bite-top-right\), var\(--receipt-bite-bottom-right\);/);
-  assert.match(stub, /mask-repeat: repeat-y, no-repeat, no-repeat;/);
+  assert.match(stub, /mask-image: var\(--receipt-bite-serrated-left\), var\(--receipt-bite-top-left\), var\(--receipt-bite-bottom-left\), var\(--receipt-bite-top-right\), var\(--receipt-bite-bottom-right\);/);
+  assert.match(stub, /mask-repeat: repeat-y, no-repeat, no-repeat, no-repeat, no-repeat;/);
 });
 
 test("a middle section is notched on both perforations", () => {
@@ -41,8 +41,9 @@ test("a middle section is notched on both perforations", () => {
 
 test("whichever section ends the ticket takes the serrated end, so tearing Survivor off leaves the same edge", () => {
   const last = rule(".slate-receipt-strip.is-pickem-only .slate-receipt-pool::before,\n.slate-receipt-pool.slate-receipt-survivor::before");
-  assert.match(last, /mask-image: var\(--receipt-bite-top-left\), var\(--receipt-bite-bottom-left\), var\(--receipt-bite-serrated-right\);/);
-  assert.match(last, /mask-repeat: no-repeat, no-repeat, repeat-y;/);
+  // Round bites in all four corners of the finished ticket, serrated between the right corners.
+  assert.match(last, /mask-image: var\(--receipt-bite-top-left\), var\(--receipt-bite-bottom-left\), var\(--receipt-bite-top-right\), var\(--receipt-bite-bottom-right\), var\(--receipt-bite-serrated-right\);/);
+  assert.match(last, /mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y;/);
 });
 
 test("notch and scallop bites are true half and quarter circles that shrink on phones", () => {
