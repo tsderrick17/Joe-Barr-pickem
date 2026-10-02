@@ -198,7 +198,7 @@ export default function GradingDashboard() {
 
       <details className="grading-log" onToggle={(event) => setChartsOpen(event.currentTarget.open)} open={chartsOpen}>
         <summary>Provider performance <span>Score-polling cost and settlement by kickoff slate</span></summary>
-      <EfficiencyTrendPanel history={metric.efficiency.history} creditUsage={data.creditUsage} checkedAt={data.checkedAt} summary={metric.efficiency} latencyMetric={metric} />
+      <EfficiencyTrendPanel history={metric.efficiency.history} creditUsage={data.creditUsage} checkedAt={data.checkedAt} summary={metric.efficiency} />
       <section className="mt-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5" aria-label="Fresh finals picked up by polling ladder">
         <div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-serif text-xl font-bold">New game finals by polling rung</h3><span className="text-xs font-bold text-zinc-500">Bar width = retry gap · height = finals found</span></div>
         {data.ladderCoverage?.since ? <p className="mt-1 text-xs text-zinc-500">Every fresh final recorded this season · since {new Date(data.ladderCoverage.since).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })} · found across {data.ladderCoverage.runs.toLocaleString("en-US")} score checks. Finals before that were not recorded by rung.</p> : null}

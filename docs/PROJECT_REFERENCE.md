@@ -356,7 +356,7 @@ may enrich spreads but cannot override canonical schedule assignments.
   separate labeled axes. Its credits-per-game trend is weighted by games over
   the current and prior 14 Eastern calendar dates. Incomplete slates and
   ambiguous or missing polling attribution are excluded from that cost trend;
-  game- and period-level latency remain in a collapsed detail view.
+  separate game- and period-level latency charts are not shown in this card.
 - Commissioner Connected Systems also reports calendar-month quota usage,
   provisional month-end load, source breakdown, and Sunday count. This is the
   planning view for the provider's monthly reset; the 30-day view is strictly
