@@ -1,6 +1,6 @@
 const PAGE_SIZE = 1000;
 
-type PageResult<T> = { data: T[] | null; error: unknown | null };
+type PageResult<T> = { data: T[] | null; error: { code?: string; message?: string } | null };
 
 /** Read every row from a PostgREST query without silently stopping at 1,000. */
 export async function readAllPages<T>(
