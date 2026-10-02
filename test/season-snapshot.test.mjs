@@ -122,15 +122,15 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   assert.ok(route.indexOf("authenticatedProfilePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
   assert.match(route, /status: 401/);
   // Players are refused until Week 6; commissioners always get it.
-  assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null };"));
+  assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };"));
   assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens in Week 6\." \}, \{ status: 403 \}\);/);
   assert.ok(loader.indexOf("if (!isCommissioner && !released)") < loader.indexOf("loadPicks(visibleIds)"), "no pick data is read before the release check");
   // A cached chart is never handed to a player before the release.
-  assert.match(loader, /cached\.payload && \(isCommissioner \|\| cached\.released\)/);
+  assert.match(loader, /if \(payload && \(isCommissioner \|\| released\)\) return \{ ok: true, released, payload, freshForMs \};/);
   assert.ok(scoreboard.includes("const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;"));
   assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
   // It loads the first time the pad is turned over, not on page load.
-  assert.match(snapshot, /if \(!opened\) return;/);
+  assert.match(snapshot, /if \(!active\) return;/);
   assert.match(snapshot, /if \(active && !opened\) \{\s*setOpened\(true\);/);
   assert.match(snapshot, /fetchSnapshot\(\)\.then/);
   assert.doesNotMatch(snapshot, />CUMULATIVE WINS<|<details className="season-snapshot-data"|season-snapshot-readout/);
@@ -334,7 +334,12 @@ test("chart choices are remembered, and the playoff chart starts without elimina
 test("the snapshot loads fast: shared short cache, paged picks, and a saved copy for instant opens", () => {
   const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(loader, /const CACHE_MS = 30_000;/);
+  // Freshness follows the weekly schedule instead of a fixed timer.
+  const freshness = fs.readFileSync(path.join(root, "src/lib/season-snapshot-freshness.js"), "utf8");
+  assert.match(freshness, /export const HOLD_MS = 60 \* 60 \* 1000;/);
+  assert.match(freshness, /export const WAITING_FOR_GRADES_MS = 2 \* 60 \* 1000;/);
+  assert.match(loader, /Date\.now\(\) - cached\.at < cached\.freshForMs/);
+  assert.doesNotMatch(loader, /CACHE_MS = 30_000/);
   // Simultaneous opens share one load, kept apart by viewer kind so gating still holds.
   assert.match(loader, /inFlight\[kind\] \?\?= load\(isCommissioner\)/);
   // PostgREST caps responses at 1,000 rows, so picks are read in pages.
@@ -347,4 +352,37 @@ test("the snapshot loads fast: shared short cache, paged picks, and a saved copy
   assert.match(snapshot, /saveSetting\(SNAPSHOT_KEY, JSON\.stringify\(data\)\);/);
   // An error still wins over a saved copy, so a closed or failed chart is never shown stale.
   assert.match(snapshot, /\{error \? <div className="season-snapshot-message" role="alert">/);
+});
+
+test("the chart is held until it can actually change: before the last kickoff, while grades land, and once settled", async () => {
+  const { snapshotFreshForMs } = await import("../src/lib/season-snapshot-freshness.js");
+  const HOUR = 60 * 60 * 1000;
+  const MINUTE = 60 * 1000;
+  const now = Date.parse("2026-10-04T12:00:00Z");
+  // Sunday morning: the last game kicks off tonight, so nothing can settle before then.
+  const lastKickoff = now + 10 * HOUR;
+  assert.equal(snapshotFreshForMs(now, [now + HOUR, lastKickoff], false, true), HOUR, "capped at an hour");
+  // An hour before the last kickoff, it is held exactly until that kickoff.
+  assert.equal(snapshotFreshForMs(lastKickoff - 30 * MINUTE, [lastKickoff], false, true), 30 * MINUTE);
+  // Just before kickoff it is never rechecked more often than the grade window.
+  assert.equal(snapshotFreshForMs(lastKickoff - 10_000, [lastKickoff], false, true), 2 * MINUTE);
+  // Everything has kicked off but grades are still landing: check at the score-sync pace.
+  assert.equal(snapshotFreshForMs(lastKickoff + HOUR, [now, lastKickoff], false, true), 2 * MINUTE);
+  // The week has settled and plotted: nothing is expected for a while.
+  assert.equal(snapshotFreshForMs(lastKickoff + 5 * HOUR, [now, lastKickoff], true, true), HOUR);
+  // Between weeks, with no active week, there is nothing to wait for.
+  assert.equal(snapshotFreshForMs(now, [], true, false), HOUR);
+  // An active week with no games yet is rechecked at the grade pace.
+  assert.equal(snapshotFreshForMs(now, [], false, true), 2 * MINUTE);
+});
+
+test("the back of the pad loads only when shown and only when the standings changed", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  assert.match(snapshot, /const loadedFor = useRef<string \| null>\(null\);/);
+  assert.match(snapshot, /const wanted = `\$\{refreshKey\}#\$\{retry\}`;\s*if \(loadedFor\.current === wanted\) return;/);
+  assert.match(snapshot, /loadedFor\.current = wanted;/);
+  // A newer request supersedes an older one; flipping the pad does not cancel a load.
+  assert.match(snapshot, /const id = \+\+requestId\.current;/);
+  assert.match(snapshot, /if \(id !== requestId\.current\) return;/);
+  assert.doesNotMatch(snapshot, /setInterval/);
 });

@@ -1,20 +1,19 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { buildSeasonSnapshot, seasonSnapshotReleased } from "@/lib/season-snapshot.js";
+import { CLOSED_CHART_MS, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
 
 export type SeasonSnapshotPayload = ReturnType<typeof buildSeasonSnapshot> & { colorOrder: string[] };
 export type SeasonSnapshotResult =
-  | { ok: true; released: boolean; payload: SeasonSnapshotPayload | null }
+  | { ok: true; released: boolean; payload: SeasonSnapshotPayload | null; freshForMs: number }
   | { ok: false; status: 503; error: string };
 
 /**
  * Everyone sees the same chart, so the finished payload is shared in memory for
- * a short time. Most opens (and every repeat flip) then skip all database
- * reads. Grades land on the ten-minute score sync, so thirty seconds is far
- * inside the data's own rhythm. Only the viewer gate is evaluated per request.
+ * as long as it can be trusted (see season-snapshot-freshness.js). Only the
+ * viewer gate is evaluated per request.
  */
-const CACHE_MS = 30_000;
-let cached: { at: number; released: boolean; payload: SeasonSnapshotPayload | null } | null = null;
+let cached: { at: number; freshForMs: number; released: boolean; payload: SeasonSnapshotPayload | null } | null = null;
 // Simultaneous opens by the same kind of viewer share one set of reads.
 const inFlight: Partial<Record<"commissioner" | "player", Promise<SeasonSnapshotResult>>> = {};
 
@@ -51,7 +50,7 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
   const released = seasonSnapshotReleased(periods);
   // Commissioners can always preview; players see it from Week 6 of this season.
   // No pick data is read for a viewer who is not allowed to see the chart.
-  if (!isCommissioner && !released) return { ok: true, released, payload: null };
+  if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };
 
   const everyone = playersResult.data ?? [];
   const visibleIds = periods.filter((period) => period.status === "complete" || period.status === "active").map((period) => period.id);
@@ -76,18 +75,25 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
     return allKickedOff && nothingPending;
   }));
   const snapshot = buildSeasonSnapshot(periods, everyone.filter((player) => player.active), picks, activeWeekSettled);
-  return { ok: true, released, payload: { ...snapshot, colorOrder: everyone.map((player) => player.id) } };
+  const freshForMs = snapshotFreshForMs(
+    now,
+    (activeGamesResult.data ?? []).map((game) => new Date(game.kickoff_at).getTime()),
+    activeIds.every((periodId) => activeWeekSettled.has(periodId)),
+    activeIds.length > 0,
+  );
+  return { ok: true, released, payload: { ...snapshot, colorOrder: everyone.map((player) => player.id) }, freshForMs };
 }
 
 /** Load the chart for a signed-in viewer, from the shared short-lived cache when fresh. */
 export async function loadSeasonSnapshot(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
-  if (cached && Date.now() - cached.at < CACHE_MS) {
-    if (cached.payload && (isCommissioner || cached.released)) return { ok: true, released: cached.released, payload: cached.payload };
-    if (!cached.payload && !cached.released && !isCommissioner) return { ok: true, released: false, payload: null };
+  if (cached && Date.now() - cached.at < cached.freshForMs) {
+    const { released, payload, freshForMs } = cached;
+    if (payload && (isCommissioner || released)) return { ok: true, released, payload, freshForMs };
+    if (!payload && !released && !isCommissioner) return { ok: true, released: false, payload: null, freshForMs };
   }
   const kind = isCommissioner ? "commissioner" : "player";
   inFlight[kind] ??= load(isCommissioner).then((result) => {
-    if (result.ok) cached = { at: Date.now(), released: result.released, payload: result.payload };
+    if (result.ok) cached = { at: Date.now(), freshForMs: result.freshForMs, released: result.released, payload: result.payload };
     return result;
   }).finally(() => { delete inFlight[kind]; });
   return inFlight[kind]!;
