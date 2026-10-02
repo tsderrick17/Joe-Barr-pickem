@@ -93,14 +93,6 @@ function wholeNumber(value: unknown) {
   return Number.isFinite(numeric) ? Math.max(0, numeric) : null;
 }
 
-export function usageHealth(used: number | null, limit: number | null) {
-  if (used === null || limit === null || limit <= 0) return "unknown" as const;
-  const ratio = used / limit;
-  if (ratio >= 0.9) return "critical" as const;
-  if (ratio >= 0.7) return "watch" as const;
-  return "healthy" as const;
-}
-
 async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
   const key = process.env.UPTIMEROBOT_READ_ONLY_API_KEY;
   if (!key) {

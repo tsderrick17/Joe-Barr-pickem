@@ -15,7 +15,7 @@ test("desktop Bowl Card viewport fits eight complete game columns", () => {
 
 test("Bowl Card uses a gold theme and keeps the standard heading rule", () => {
   const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
-  const bowl = css.slice(css.indexOf("Bowl Pool identity"), css.indexOf(".manage-links {"));
+  const bowl = css.slice(css.indexOf("Bowl Pool identity"), css.indexOf(".bowl-card-section.is-minimized {"));
   // The heading line is the shared ledger rule, never a Bowl-specific color.
   assert.doesNotMatch(bowl, /\.bowl-card-section \.pickem-ledger-masthead[^{]*\{[^}]*border-top-color/);
   // No teal or mint left in the Bowl Pool treatment.

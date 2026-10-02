@@ -102,7 +102,6 @@ body {
   min-height: 28rem;
   background: repeating-linear-gradient(to bottom, #fffdf8 0 3.5rem, #a9c5e7 3.5rem calc(3.5rem + 1px));
 }
-.standings-loading-rows-short { min-height: 24rem; }
 
 /* Reserve the first Bowl Pool viewport while the authenticated profile and
    schedule arrive, so the real card replaces a stable shape instead of
@@ -147,8 +146,6 @@ body {
   font-size: .66rem;
   letter-spacing: .045em;
 }
-
-.slate-receipt-picks-short { display: none; }
 
 .slate-mini-nav em {
   color: #5d6470;
@@ -647,8 +644,7 @@ body {
 .slate-receipt-survivor .is-out { color: #b42318; }
 .slate-receipt-survivor .is-quiet { color: #5d6470; }
 
-.slate-receipt-warning,
-.slate-receipt-success {
+.slate-receipt-warning{
   background: var(--receipt-paper);
   border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
@@ -658,7 +654,6 @@ body {
   padding: .28rem .7rem;
 }
 .slate-receipt-warning { color: #a82820; }
-.slate-receipt-success { color: #08764e; }
 
 @media (max-width: 639px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
@@ -707,77 +702,7 @@ body {
   }
 }
 
-/* The active save receipt is a true viewport layer. Survivor chips intentionally
-   overlap neighboring Slate rows, but never this confirmation surface. */
-.slate-selection-footer {
-  isolation: isolate;
-  position: fixed !important;
-  z-index: 2147483647 !important;
-}
-
-.slate-selection-footer-heading {
-  align-items: baseline;
-  display: flex;
-  gap: .65rem;
-}
-
-.slate-selection-footer-state {
-  color: #08764e;
-  font-size: .58rem;
-  font-weight: 900;
-  letter-spacing: .12em;
-}
-
-.slate-selection-footer-state.is-unsaved { color: #a86008; }
-
-.slate-selection-chip {
-  border-left-width: 3px;
-  min-width: 0;
-}
-
-/* Regular weeks always reserve two equal pick slots, even before the second
-   selection is made. Playoff rounds divide the same width evenly among every
-   required game so the receipt never stretches a single selection. */
-.slate-selection-footer-picks {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.slate-selection-footer-picks--playoff {
-  grid-template-columns: repeat(var(--selection-slot-count), minmax(0, 1fr));
-}
-
-.slate-selection-footer-picks .slate-selection-chip {
-  width: auto;
-}
-
-.slate-selection-chip.is-saved { border-left-color: #cf2879; }
-.slate-selection-chip.is-draft { border-left-color: #a84c85; }
-.slate-selection-chip small {
-  color: #657080;
-  font-size: .5rem;
-  font-weight: 900;
-  letter-spacing: .08em;
-}
-.slate-selection-chip small.is-official { color: var(--official-line-color); }
-
-/* Desktop can afford a touch more air around the receipt chips. Keep their
-   grid footprint fixed so this remains a purely visual adjustment. */
-@media (min-width: 768px) {
-  .slate-selection-footer-picks .slate-selection-chip {
-    transform: scale(.95);
-  }
-}
-
 @media (max-width: 767px) {
-  .slate-selection-footer-inner { padding: .55rem .75rem .65rem; }
-  .slate-selection-footer-heading { gap: .5rem; }
-  .slate-selection-footer-picks { margin-top: .3rem !important; gap: .3rem !important; }
-  .slate-selection-chip { flex: none; justify-content: space-between; padding: .3rem .25rem .3rem .45rem; }
-  .slate-selection-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .slate-selection-chip small { font-size: .45rem; }
-  .slate-selection-chip button { flex: 0 0 1.4rem; height: 1.4rem; width: 1.4rem; }
-  .slate-selection-footer-empty { font-size: .72rem; }
 
   .mobile-primary-nav {
     position: sticky;
@@ -801,15 +726,9 @@ body {
   .slate-mini-nav > a > span { font-size: .53rem; }
   .slate-mini-nav strong { font-size: .64rem; }
   .slate-mini-nav em { font-size: .5rem; }
-  .slate-receipt-picks-full { display: none; }
-  .slate-receipt-picks-short { display: inline; white-space: nowrap; }
 }
 
 @media (min-width: 640px) {
-  /* The receipt remains three tidy columns on a normal phone/tablet width. */
-  .slate-receipt-grid {
-    grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.11fr) minmax(0, 1.11fr);
-  }
 
   .slate-how-to-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -882,7 +801,6 @@ body {
   margin-top: 0;
   width: fit-content;
 }
-
 
 .slate-view-switch > span {
   color: #687179;
@@ -1277,17 +1195,6 @@ body {
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
 
-.survivor-matchup-team {
-  background: transparent;
-  border-radius: .4rem;
-  transition: background-color 160ms ease, box-shadow 160ms ease;
-}
-
-.survivor-matchup-team.is-selected {
-  background: rgba(214, 154, 32, .08);
-  box-shadow: inset 0 0 0 1px rgba(214, 154, 32, .35);
-}
-
 .survivor-chip-button {
   align-items: center;
   background: transparent;
@@ -1316,12 +1223,6 @@ body {
 
 .survivor-chip-button:disabled {
   cursor: not-allowed;
-}
-
-html[data-theme="night"] .survivor-selection-footer {
-  border-color: #6ed7ca !important;
-  background: #0f1d25 !important;
-  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1999,25 +1900,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   text-align: left;
 }
 
-/* Shared visual system primitives. Pool surfaces, email artwork, and the
-   Commissioner desk should draw from these tokens before adding a local rule. */
-.pool-eyebrow {
-  color: var(--pool-muted);
-  font-family: var(--pool-body-font);
-  font-size: .7rem;
-  font-weight: 900;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-
-.pool-panel {
-  background: var(--pool-surface);
-  border: 1px solid var(--pool-rule);
-  border-radius: var(--pool-radius-sm);
-}
-
-.pool-action:focus-visible,
-.pool-panel:focus-within {
+.pool-action:focus-visible{
   box-shadow: var(--pool-focus-ring);
 }
 
@@ -2300,68 +2183,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   transform: rotate(-5deg);
 }
 
-/* The standings summary is an information rail, not a second dashboard. */
-.week-status-week {
-  align-self: start;
-}
-
-.week-status-pick {
-  border: 1px solid #8cb9b2;
-  background: #edf5f0;
-  color: #214747;
-  padding: 0.2rem 0.45rem;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-weight: 650;
-  line-height: 1.2;
-}
-
-.week-status-action {
-  border: 1px solid #2b6666;
-  background: linear-gradient(145deg, #3f8b85, #255f63);
-  color: #f4fbf7;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 0 #173c40;
-  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.week-status-action:hover {
-  border-color: #1e5054;
-  background: linear-gradient(145deg, #55a49c, #2e7174);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 3px 0 #173c40, 0 5px 12px rgba(36, 95, 99, 0.2);
-  transform: translateY(-1px);
-}
-
-.week-status-action:active {
-  box-shadow: inset 0 2px 5px rgba(7, 38, 41, 0.35);
-  transform: translateY(1px);
-}
-
-.newspaper-clipping {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border: 1px solid #332d25;
-  background-color: #ece5d5;
-  background-image:
-    linear-gradient(90deg, rgba(66, 55, 41, 0.025), transparent 20%, transparent 80%, rgba(66, 55, 41, 0.025)),
-    repeating-linear-gradient(0deg, transparent 0 3px, rgba(66, 55, 41, 0.04) 3px 4px);
-  box-shadow:
-    2px 3px 0 rgba(51, 45, 37, 0.32),
-    0 8px 16px rgba(51, 45, 37, 0.1);
-}
-
-.newspaper-clipping::after {
-  position: absolute;
-  inset: 5px;
-  z-index: -1;
-  border: 1px solid rgba(51, 45, 37, 0.18);
-  content: "";
-  pointer-events: none;
-}
-
-.survivor-clipping {
-  background-color: #ece5d5;
-}
-
 /* A restrained late-night sportsbook palette. Page components retain their
    newspaper proportions; the theme only swaps paper, ink, and line colors. */
 html[data-theme="night"] {
@@ -2438,12 +2259,6 @@ html[data-theme="night"] [class*="bg-zinc-900"] {
   background-color: #1c4146 !important;
 }
 
-html[data-theme="night"] .slate-selection-footer {
-  border-color: #6ed7ca !important;
-  background-color: #0f1d25 !important;
-  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
-}
-
 html[data-theme="night"] .slate-receipt-strip {
   --receipt-paper: #132129;
   --receipt-ink: #eaf0ed;
@@ -2496,31 +2311,6 @@ html[data-theme="night"] .selection-chip button:hover {
 html[data-theme="night"] .selection-chip small { color: #111; }
 html[data-theme="night"] .selection-chip small.is-official { color: #0f766e; }
 
-html[data-theme="night"] .week-status-pick {
-  border-color: #5fc8bb;
-  background: #1b3941;
-  color: #eaf8f3;
-}
-
-html[data-theme="night"] .week-status-action {
-  border-color: #78d8cb;
-  background: linear-gradient(145deg, #347d79, #1c4e57);
-  color: #f1fffb;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 0 #071116, 0 0 10px rgba(120, 216, 203, 0.12);
-}
-
-html[data-theme="night"] .week-status-action:hover {
-  border-color: #b0f2e5;
-  background: linear-gradient(145deg, #4c9e98, #27616b);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 0 #071116, 0 0 16px rgba(120, 216, 203, 0.24);
-}
-
-html[data-theme="night"] .survivor-team-selection {
-  background: linear-gradient(135deg, #276d70, #15333b) !important;
-  color: #f2fffb !important;
-  box-shadow: inset 3px 0 0 #8be9dc, inset 0 0 0 1px rgba(139, 233, 220, 0.38), 0 2px 8px rgba(0, 0, 0, 0.28);
-}
-
 html[data-theme="night"] .slate-team-selection {
   background: transparent !important;
   color: #fff3fb !important;
@@ -2543,10 +2333,6 @@ html[data-theme="night"] .slate-team-label--selected::before {
 
 html[data-theme="night"] .slate-team-label--selected::after {
   display: none;
-}
-
-html[data-theme="night"] .survivor-team-selection span {
-  color: #f2fffb !important;
 }
 
 /* The instructional action cards use a deliberately dark paper surface in
@@ -2669,10 +2455,6 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
 }
 
-html[data-theme="night"] .slate-selection-footer [class*="text-slate-"] {
-  color: #d5e4e1 !important;
-}
-
 @media (max-width: 767px) {
   .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
 }
@@ -2790,20 +2572,6 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   border-color: #314651 !important;
 }
 
-html[data-theme="night"] .newspaper-clipping,
-html[data-theme="night"] .survivor-clipping {
-  border-color: #52646b;
-  background-color: #152028;
-  background-image:
-    linear-gradient(90deg, rgba(120, 216, 203, 0.06), transparent 20%, transparent 80%, rgba(120, 216, 203, 0.06)),
-    repeating-linear-gradient(0deg, transparent 0 3px, rgba(152, 176, 184, 0.06) 3px 4px);
-  box-shadow: 2px 3px 0 rgba(4, 8, 12, 0.72), 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="night"] .newspaper-clipping::after {
-  border-color: rgba(120, 216, 203, 0.18);
-}
-
 /* Thermal race ticket: intentionally compact, ink-heavy, and lightweight. */
 .my-ticket {
   --ticket-paper: #f3ead6;
@@ -2837,8 +2605,6 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-brand p,
 .my-ticket-brand span,
-.my-ticket-serial,
-.my-ticket-rule,
 .my-ticket-section-heading,
 .my-ticket-footer {
   font-family: Arial, sans-serif;
@@ -2864,13 +2630,6 @@ html[data-theme="night"] .newspaper-clipping::after {
   margin-top: .22rem;
 }
 
-.my-ticket-serial {
-  font: 800 .57rem/1.2 "Courier New", monospace;
-  letter-spacing: .12em;
-  margin-top: .38rem;
-  text-align: center;
-}
-
 .my-ticket-race {
   align-items: end;
   border-bottom: 2px solid #28221b;
@@ -2887,17 +2646,6 @@ html[data-theme="night"] .newspaper-clipping::after {
 
 .my-ticket-race span {
   font: 900 1.05rem/1 "Courier New", monospace;
-}
-
-.my-ticket-rule {
-  align-items: center;
-  border-bottom: 1px solid #28221b;
-  display: flex;
-  font-size: .68rem;
-  font-weight: 900;
-  justify-content: space-between;
-  letter-spacing: .05em;
-  padding: .32rem 0;
 }
 
 .my-ticket-columns {
@@ -3032,14 +2780,6 @@ html[data-theme="night"] .newspaper-clipping::after {
   vertical-align: middle;
 }
 
-.bowl-placeholder {
-  background: linear-gradient(90deg, rgba(238, 205, 0, .72), rgba(255, 235, 40, .54) 8%, rgba(255, 235, 40, .48));
-  clip-path: polygon(2% 0, 100% 3%, 98% 100%, 0 96%);
-  display: inline-block;
-  padding: .05em .28em .08em;
-  transform: rotate(-.6deg);
-}
-
 /* Bowl selections use the same chisel-pass motion as the Slate, but retain
    the Pool's yellow marker so the two competition cards stay distinct. */
 .bowl-team-selection {
@@ -3130,25 +2870,8 @@ html[data-theme="night"] .newspaper-clipping::after {
 .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
   border-color: #ece3c8;
 }
-.bowl-rules-panel {
-  background: linear-gradient(135deg, rgba(250, 243, 222, .78), rgba(252, 250, 244, .95));
-  border-color: #e3d6ad !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
-}
-.bowl-rule-step { align-items: flex-start; background: rgba(255, 255, 255, .72); border: 1px solid #eadfbd; border-radius: .5rem; display: flex; gap: .6rem; min-height: 3.5rem; padding: .58rem .65rem; }
-.bowl-rule-step > span { align-items: center; background: #f5e7b8; border: 1px solid #dcc27a; border-radius: 999px; color: #6b4f0f; display: flex; flex: 0 0 1.35rem; font-size: .68rem; font-weight: 900; height: 1.35rem; justify-content: center; line-height: 1; margin-top: .02rem; width: 1.35rem; }
-.bowl-rule-step strong { color: #5a430c; display: block; font-size: .76rem; line-height: 1.2; }
-.bowl-rule-step p { color: #6b6350; font-size: .7rem; line-height: 1.35; margin-top: .18rem; }
-html[data-theme="night"] .bowl-rules-panel { background: linear-gradient(135deg, rgba(58, 48, 21, .85), rgba(30, 28, 22, .95)); border-color: #7a6a3a !important; }
-html[data-theme="night"] .bowl-rule-step { background: rgba(44, 38, 22, .86); border-color: #7a6a3a; }
-html[data-theme="night"] .bowl-rule-step > span { background: #4a3d16; border-color: #b8923a; color: #f0dca0; }
-html[data-theme="night"] .bowl-rule-step strong { color: #f3e4b4; }
-html[data-theme="night"] .bowl-rule-step p { color: #c9bf9f; }
 /* Keep the Commissioner Bowl workspace on the same quiet gold paper system as
-   the player card; green stays reserved for "ready" status and red for problems. */
-.commissioner-workspace-intro:has(+ section[aria-labelledby="bowl-readiness-title"]) {
-  border-color: #e0d2a8;
-}
+   the player card;
 section[aria-labelledby="bowl-readiness-title"],
 #bowl-pool-exceptions {
   border-bottom-color: #e0d2a8 !important;
@@ -3297,15 +3020,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid
   background: #2a2618 !important;
 }
 
-/* Keep the commissioner shortcuts on one tidy row on narrow screens while
-   allowing touch/trackpad scrolling without exposing a persistent scrollbar. */
-.manage-links {
-  -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-}
-.manage-links::-webkit-scrollbar { display: none; }
-
 .bowl-card-section.is-minimized {
   margin-left: auto;
   margin-right: auto;
@@ -3404,13 +3118,6 @@ html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover {
   color: #923c24;
   font: 900 .84rem/1 "Courier New", monospace;
   letter-spacing: .12em;
-}
-
-.my-ticket-due {
-  color: #923c24;
-  font: 900 .56rem/1.2 Arial, sans-serif;
-  letter-spacing: .12em;
-  margin-top: .28rem;
 }
 
 .my-ticket-survivor-pick {
@@ -3561,7 +3268,6 @@ html[data-theme="night"] .my-ticket {
 }
 
 html[data-theme="night"] .my-ticket-race,
-html[data-theme="night"] .my-ticket-rule,
 html[data-theme="night"] .my-ticket-footer {
   border-color: #d1c4aa;
 }
@@ -3575,7 +3281,6 @@ html[data-theme="night"] .my-ticket-survivor-state {
 html[data-theme="night"] .my-ticket-selection small,
 html[data-theme="night"] .my-ticket-survivor-pick small,
 html[data-theme="night"] .my-ticket-footer small,
-html[data-theme="night"] .my-ticket-number,
 html[data-theme="night"] .my-ticket-open,
 html[data-theme="night"] .my-ticket-instructions {
   color: #bdb19b;
@@ -3640,12 +3345,6 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 /* The open chat begins immediately after the page content. Give the compact
    restore control its own modest breathing room only when chat is hidden. */
 .pool-chat-dock--collapsed { padding-top: .85rem; }
-
-/* The shared chat sits outside each page's document flow. Reserve scroll room
-   whenever an active pick footer is fixed to the viewport so every message and
-   the composer can be brought completely above it. */
-body:has(.slate-selection-footer) .pool-chat-dock { padding-bottom: 7rem; }
-body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 6rem; }
 
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
@@ -3878,14 +3577,6 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 .commissioner-map-detail.is-attention { background: #fff0ea; border-left-color: #a33c29; }
 .commissioner-map-next { border-left: 1px solid #c7c0b5; padding-left: 1.25rem; }
 
-.slate-winner-rule {
-  border-top: 1px solid #b7aea0;
-  color: #7a2e24;
-  font-weight: 800;
-  margin-top: .15rem;
-  padding-top: .55rem;
-}
-
 html[data-theme="night"] .commissioner-map-banner,
 html[data-theme="night"] .commissioner-map-detail.is-active {
   background: #213b38;
@@ -3943,8 +3634,6 @@ html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-colo
 html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: #ffffff; }
 
 @media (max-width: 639px) {
-  body:has(.slate-selection-footer) .pool-chat-dock { padding-bottom: 12rem; }
-  body:has(.survivor-selection-footer) .pool-chat-dock { padding-bottom: 10rem; }
 
   .my-ticket {
     padding: .8rem .8rem .7rem;
@@ -4217,19 +3906,7 @@ html[data-theme="night"] .playoff-scoreboard {
 .commissioner-tool:first-child { padding-top: .75rem; }
 html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
 @media (max-width: 639px) { .commissioner-tool { padding: 1rem 0; } }
-.commissioner-panel-description { color: #656159; font-size: .82rem; margin-top: .4rem; }
-
-.commissioner-workspace-intro { border-bottom: 1px solid #c8c2b7; padding: 1.3rem 0 1rem; }
-.commissioner-workspace-intro > p, .commissioner-tool-eyebrow { color: #08764e; font-size: .67rem; font-weight: 900; letter-spacing: .16em; }
-.commissioner-workspace-intro h2 { font-family: Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.45rem); font-weight: 700; line-height: 1.04; margin-top: .4rem; }
-.commissioner-workspace-intro > span { color: #5f5b54; display: block; line-height: 1.5; margin-top: .45rem; max-width: 44rem; }
-.commissioner-workspace-section { border-bottom: 1px solid #c8c2b7; padding: 1.35rem 0; }
-.commissioner-route-card { background: #fffdfa; border: 1px solid #d4cec3; box-shadow: 0 5px 13px rgba(51, 49, 42, .045); display: flex; flex-direction: column; min-height: 9rem; padding: .85rem; text-decoration: none; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-.commissioner-route-card:hover { border-color: #08764e; box-shadow: 0 12px 22px rgba(27, 61, 53, .12); transform: translateY(-2px); }
-.commissioner-route-card > span { color: #08764e; font-size: .62rem; font-weight: 900; letter-spacing: .14em; }
-.commissioner-route-card > p { font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700; margin-top: .45rem; }
-.commissioner-route-card > small { color: #625e57; font-size: .82rem; line-height: 1.45; margin-top: .4rem; }
-.commissioner-route-card > strong { color: #08764e; font-size: .67rem; letter-spacing: .11em; margin-top: auto; padding-top: .75rem; }
+ .commissioner-tool-eyebrow { color: #08764e; font-size: .67rem; font-weight: 900; letter-spacing: .16em; }
 .commissioner-inline-action { background: #173c35; color: #fff; font-size: .76rem; font-weight: 800; letter-spacing: .04em; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; }
 .commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
 .provider-chart-axis-label { align-items: center; background: #e4e4e7; border-radius: .25rem; color: #71717a; display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
@@ -4360,11 +4037,11 @@ html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
 .commissioner-subpage > div > section.grid > div.border { padding: .75rem; }
 
 html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }
-html[data-theme="night"] .commissioner-panel-nav, html[data-theme="night"] .commissioner-workspace-intro, html[data-theme="night"] .commissioner-workspace-section, html[data-theme="night"] .commissioner-diagnostics { border-color: #48514e; }
+html[data-theme="night"] .commissioner-panel-nav, html[data-theme="night"] .commissioner-diagnostics { border-color: #48514e; }
 html[data-theme="night"] .commissioner-panel-tab { color: #b9c1bd; }
 html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d; border-color: #2b685d; }
-html[data-theme="night"] .commissioner-route-card, html[data-theme="night"] .commissioner-tool-card { background: #172522; border-color: #44534e; }
-html[data-theme="night"] .commissioner-route-card > small, html[data-theme="night"] .commissioner-panel-description, html[data-theme="night"] .commissioner-workspace-intro > span, html[data-theme="night"] .commissioner-diagnostics summary span { color: #c0c9c5; }
+ html[data-theme="night"] .commissioner-tool-card { background: #172522; border-color: #44534e; }
+ html[data-theme="night"] .commissioner-diagnostics summary span { color: #c0c9c5; }
 
 @media (max-width: 639px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
@@ -4383,7 +4060,6 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
   .commissioner-command-links a { padding: .68rem .55rem; }
   .commissioner-command-links strong { font-size: .73rem; }
   .commissioner-panel-tab { font-size: .95rem; padding: .55rem .62rem; }
-  .commissioner-workspace-intro { padding-top: 1.15rem; }
 
   /* Charts are a primary mobile surface: keep the legend compact, give the
      selected observation a clean reading order, and preserve plot height. */
@@ -4407,7 +4083,6 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
 .commissioner-command-bar { gap: .75rem; padding: clamp(.8rem, 1.6vw, 1.25rem); }
 .commissioner-panel-nav { padding: .5rem 0 .35rem; }
 .commissioner-panel-tab { font-size: .96rem; padding: .42rem .58rem; }
-.commissioner-panel-description { margin-top: .2rem; }
 .commissioner-map { padding-block: 1rem !important; }
 .commissioner-map-banner { margin-top: 1rem !important; padding: .75rem .9rem; }
 .commissioner-map-metrics { gap: .45rem; margin-top: .7rem !important; }
@@ -4419,8 +4094,6 @@ html[data-theme="night"] .commissioner-route-card > small, html[data-theme="nigh
 .commissioner-flow-step:not(:last-child)::after { top: 1.17rem; }
 .commissioner-flow-label { font-size: .88rem; margin-top: .45rem; }
 .commissioner-map-detail { gap: .8rem; margin-top: 1rem !important; padding: .7rem .8rem; }
-.commissioner-workspace-section { padding: .9rem 0; }
-.commissioner-route-card { min-height: 7.25rem; padding: .68rem; }
 .commissioner-tool-card { margin-bottom: .65rem; padding: clamp(.7rem, 1.5vw, 1rem); }
 
 @media (max-width: 900px) {

@@ -12,6 +12,5 @@ test("the Commissioner map exposes release context and shared visual tokens", as
   assert.match(api, /release,/);
   assert.match(component, /DEPLOYED RELEASE/);
   assert.match(css, /--pool-display-font/);
-  assert.match(css, /\.pool-panel/);
   assert.match(guide, /Layout contracts/);
 });

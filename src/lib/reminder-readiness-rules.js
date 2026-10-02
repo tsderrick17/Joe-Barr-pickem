@@ -1,10 +1,7 @@
 import {
   DISRUPTED_GAME_STATUSES,
-  SETTLED_GAME_STATUSES,
   isSettledGameStatus,
 } from "./game-status-policy.js";
-
-export const TERMINAL_GAME_STATUSES = SETTLED_GAME_STATUSES;
 
 export function isTerminalGameStatus(status) {
   return isSettledGameStatus(status);
