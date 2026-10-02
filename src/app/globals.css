@@ -3946,6 +3946,19 @@ html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
 [aria-labelledby="grading-dashboard-title"] table td:nth-child(3),
 [aria-labelledby="grading-dashboard-title"] table th:nth-child(4),
 [aria-labelledby="grading-dashboard-title"] table td:nth-child(4) { width: 33%; }
+.grading-worker-table { min-width: 0; table-layout: fixed; }
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table th,
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table td { white-space: normal; overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(1) { width: 20%; }
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(2) { width: 14%; }
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(4) { width: 33%; }
+[aria-labelledby="grading-dashboard-title"] .grading-worker-table tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+.grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
 [aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid #e4e4e7; margin-left: .25rem; padding-left: 1rem; }
 [aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }
 [aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }

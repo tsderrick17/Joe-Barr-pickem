@@ -43,7 +43,6 @@ type AccountCapacity = {
     providerUsed: number | null;
     providerRemaining: number | null;
     providerLimit: number | null;
-    untrackedCredits: number | null;
     reportedAt: string | null;
   };
 };
@@ -166,10 +165,9 @@ export default function AccountCapacityPanel() {
         <p className="mt-3 border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-600">{account.detail}</p>
         {account.calendarMonth ? <div className="mt-3 border-t border-zinc-200 pt-3">
           <p className="text-[10px] font-black tracking-[.12em] text-zinc-600">CALENDAR MONTH · {account.calendarMonth.monthLabel.toUpperCase()}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
             <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.providerUsed ?? "—"} / {account.calendarMonth.providerLimit ?? "—"}</b>provider used</p>
             <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.creditsTracked}</b>tracked by this app</p>
-            <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.untrackedCredits ?? "—"}</b>not in app logs</p>
             <p><b className="block text-base tabular-nums text-zinc-950">{account.calendarMonth.forecastTotal}</b>scheduled month-end</p>
           </div>
           <p className="mt-2 text-xs text-zinc-600">Same balance snapshot and schedule forecast as the grading dashboard. {account.calendarMonth.providerRemaining ?? "—"} provider credits remain; {account.calendarMonth.forecastCredits} more are forecast this month.</p>

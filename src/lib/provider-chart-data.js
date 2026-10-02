@@ -122,7 +122,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
     : null;
   const provider = latestProviderCreditSnapshot(runs);
-  const untrackedCredits = provider ? Math.max(0, Math.round(provider.used - cumulative)) : null;
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
@@ -130,7 +129,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one daily request, including days without games.`,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
-    untrackedCredits,
     remaining: provider?.remaining ?? null,
     sundayAverageCredits,
     regularSundaysElapsed: regularSundayKeys.length,

@@ -26,7 +26,7 @@ test("account capacity gauges use existing provider records and database details
   assert.match(panel, /30-DAY EFFICIENCY/);
   assert.match(panel, /CALENDAR MONTH/);
   assert.match(panel, /scheduled month-end/);
-  assert.match(panel, /not in app logs/);
+  assert.doesNotMatch(panel, /not in app logs|untrackedCredits/);
   assert.match(panel, /credits \/ final/);
   assert.match(panel, /Dashboard only/);
   assert.match(panel, /liveCountWithoutLimit/);
