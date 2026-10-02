@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 type ChatMessageRow = {
   id: string;
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     body: message,
   });
   if (error) return NextResponse.json({ error: "Your note could not be sent." }, { status: 503 });
+  await recordPlayerActivity(player.id);
 
   const result = await loadMessages(season.id, player);
   if (result.error) return NextResponse.json({ error: "Your note was saved, but the Rail could not refresh." }, { status: 503 });
@@ -144,6 +146,7 @@ export async function DELETE(request: NextRequest) {
     .update({ deleted_at: new Date().toISOString(), deleted_by_player_id: player.id })
     .eq("id", message.id);
   if (error) return NextResponse.json({ error: "That message could not be removed." }, { status: 503 });
+  await recordPlayerActivity(player.id);
 
   const result = await loadMessages(season.id, player);
   if (result.error) return NextResponse.json({ error: "The message was removed, but chat could not refresh." }, { status: 503 });

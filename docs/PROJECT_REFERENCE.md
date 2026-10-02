@@ -464,11 +464,22 @@ starts from (rungs were first recorded on Sep 21; earlier checks did not record
 one and are not guessed). "Last score sync" reads score runs only, Worker activity
 shows the latest run of each worker, and the efficiency totals are season to date.
 
-The Grading charts share the dashboard's selected period and minute refresh,
-which pauses while the tab is hidden and refreshes on return. The Standings
-page polls every three minutes while visible, refreshes when the player returns
-(at most every 30 seconds), and refreshes exactly at each pick reveal. Reminder
-delivery is gated in Supabase so idle ticks never call Vercel.
+The Grading charts share the dashboard's selected period and adaptive refresh:
+every minute while games are live, attention items are open, or a scheduled
+kickoff is within 15 minutes; otherwise every five minutes. Polling pauses while
+the tab is hidden and refreshes immediately on return. A periodic poll is skipped
+while another dashboard request is in flight. The Standings page polls every
+three minutes while visible, refreshes when the player returns (at most every 30
+seconds), and refreshes exactly at each pick reveal. Reminder delivery is gated
+in Supabase so idle ticks never call Vercel.
+The Home standings read does not perform Survivor enrollment or elimination
+maintenance; those changes run through the existing scoring and selection paths.
+Season-wide pick reads paginate through PostgREST's 1,000-row response limit.
+Commissioner-facing player activity is best-effort and rate-limited to one write
+per player per 15 minutes per warm function, with a database-side cutoff to
+coalesce concurrent instances. Chat, settings, snapshot, and Home reads do not
+update activity; successful sign-in and player actions do. Board and Survivor
+reads can also refresh activity, subject to the same throttle.
 Monthly credit usage runs from the first UTC day through today, with daily and
 cumulative views of recorded provider costs (charged failures included).
 Provider-reported quota snapshots remain separate from logged costs. Receipt

@@ -4,6 +4,7 @@ import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { championNames } from "@/lib/champion-names.js";
 import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
+import { readAllPages } from "@/lib/read-all-pages";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -126,12 +127,16 @@ export async function buildPlayoffDayRecapSnapshot({ sourcePeriodId = null, sour
     .order("display_order");
   if (periodsError || !periods) throw new Error("Playoff records could not be prepared for this recap.");
   const periodIds = periods.map((item) => item.id);
-  const [{ data: games, error: gamesError }, { data: picks, error: picksError }, { data: players, error: playersError }, { data: championships, error: championshipsError }] = await Promise.all([
+  const [gamesResult, picksResult, playersResult, championshipsResult] = await Promise.all([
     supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, status").in("scoring_period_id", periodIds).order("kickoff_at"),
-    supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result").in("scoring_period_id", periodIds).neq("result", "void"),
+    readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result").in("scoring_period_id", periodIds).neq("result", "void").order("id").range(from, to)),
     supabaseAdmin.from("players").select("id, first_name").eq("active", true),
     supabaseAdmin.from("pool_championships").select("player_id").eq("season_id", period.season_id).eq("pool", "pickem"),
   ]);
+  const { data: games, error: gamesError } = gamesResult;
+  const { data: picks, error: picksError } = picksResult;
+  const { data: players, error: playersError } = playersResult;
+  const { data: championships, error: championshipsError } = championshipsResult;
   if (gamesError || picksError || playersError || championshipsError) throw new Error("The playoff recap could not be prepared.");
 
   const now = new Date();
@@ -227,15 +232,22 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   const { data: seasonPeriods, error: seasonPeriodsError } = await supabaseAdmin.from("scoring_periods").select("id, display_order").eq("season_id", period.season_id);
   if (seasonPeriodsError) throw new Error("Season records could not be prepared for the recap.");
   const seasonPeriodIds = (seasonPeriods ?? []).map((item) => item.id);
-  const [{ data: games, error: gamesError }, { data: lines, error: linesError }, { data: players, error: playersError }, { data: picks, error: picksError }, { data: entries, error: entriesError }, { data: survivorPicks, error: survivorPicksError }, { data: season, error: seasonError }] = await Promise.all([
+  const [gamesResult, linesResult, playersResult, picksResult, entriesResult, survivorPicksResult, seasonResult] = await Promise.all([
     supabaseAdmin.from("games").select("id, away_team_id, home_team_id, away_score, home_score").eq("scoring_period_id", period.id).eq("status", "final").order("kickoff_at"),
     supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread"),
     supabaseAdmin.from("players").select("id, first_name").eq("active", true),
-    seasonPeriodIds.length ? supabaseAdmin.from("picks").select("player_id, selected_team_id, result, scoring_period_id, submitted_at").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("submitted_at") : Promise.resolve({ data: [], error: null }),
+    seasonPeriodIds.length ? readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, selected_team_id, result, scoring_period_id, submitted_at").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("submitted_at").order("id").range(from, to)) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("survivor_entries").select("id, player_id, status, eliminated_at, eliminated_scoring_period_id").eq("season_id", period.season_id),
-    seasonPeriodIds.length ? supabaseAdmin.from("survivor_picks").select("survivor_entry_id, scoring_period_id, selected_team_id, result").in("scoring_period_id", seasonPeriodIds).neq("result", "void") : Promise.resolve({ data: [], error: null }),
+    seasonPeriodIds.length ? readAllPages((from, to) => supabaseAdmin.from("survivor_picks").select("survivor_entry_id, scoring_period_id, selected_team_id, result").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("id").range(from, to)) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("seasons").select("survivor_champion_player_id").eq("id", period.season_id).maybeSingle(),
   ]);
+  const { data: games, error: gamesError } = gamesResult;
+  const { data: lines, error: linesError } = linesResult;
+  const { data: players, error: playersError } = playersResult;
+  const { data: picks, error: picksError } = picksResult;
+  const { data: entries, error: entriesError } = entriesResult;
+  const { data: survivorPicks, error: survivorPicksError } = survivorPicksResult;
+  const { data: season, error: seasonError } = seasonResult;
   if (gamesError || linesError || playersError || picksError || entriesError || survivorPicksError || seasonError) throw new Error("The completed-week recap could not be prepared.");
   // Co-champions (a same-week finish or several survivors) are all named.
   const { data: survivorChampions } = season?.survivor_champion_player_id
@@ -473,11 +485,14 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   if (!revealGames.length) throw new Error("The selected Sunday kickoff window is not public yet.");
 
   const seasonPeriodIds = (seasonPeriods ?? []).map((item) => item.id);
-  const [{ data: picks, error: picksError }, { data: teams, error: teamsError }, { data: lines, error: linesError }] = await Promise.all([
-    seasonPeriodIds.length ? supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", seasonPeriodIds).neq("result", "void") : Promise.resolve({ data: [], error: null }),
+  const [picksResult, teamsResult, linesResult] = await Promise.all([
+    seasonPeriodIds.length ? readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("id").range(from, to)) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("teams").select("id, abbreviation").in("id", [...new Set(revealGames.flatMap((game) => [game.away_team_id, game.home_team_id]))]),
     supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").in("game_id", revealGames.map((game) => game.id)),
   ]);
+  const { data: picks, error: picksError } = picksResult;
+  const { data: teams, error: teamsError } = teamsResult;
+  const { data: lines, error: linesError } = linesResult;
   if (picksError || teamsError || linesError) throw new Error("Public Sunday selections could not be prepared.");
 
   const playerWins = new Map<string, number>();
@@ -544,7 +559,7 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const publicGameIds = new Set(featuredGames.map((game) => game.id));
   const periodIds = (periods ?? []).map((item) => item.id);
   const { data: picks, error: picksError } = periodIds.length
-    ? await supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void")
+    ? await readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void").order("id").range(from, to))
     : { data: [], error: null };
   if (picksError) throw new Error("Public featured-game selections could not be prepared.");
 
@@ -611,10 +626,12 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
   if (periodsError || playersError || reminderError || !seasonPeriods) throw new Error("The playoff public-pick update could not be prepared.");
 
   const periodIds = seasonPeriods.map((item) => item.id);
-  const [{ data: games, error: gamesError }, { data: picks, error: picksError }] = await Promise.all([
+  const [gamesResult, picksResult] = await Promise.all([
     supabaseAdmin.from("games").select("id, scoring_period_id, away_team_id, home_team_id, kickoff_at, status").in("scoring_period_id", periodIds).order("kickoff_at"),
-    supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void"),
+    readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, selected_team_id, result, scoring_period_id").in("scoring_period_id", periodIds).neq("result", "void").order("id").range(from, to)),
   ]);
+  const { data: games, error: gamesError } = gamesResult;
+  const { data: picks, error: picksError } = picksResult;
   if (gamesError || picksError) throw new Error("Public playoff selections could not be prepared.");
 
   const roundGames = (games ?? []).filter((game) => game.scoring_period_id === period.id && new Date(game.kickoff_at) <= now && !["postponed", "cancelled", "no_contest"].includes(game.status));

@@ -255,5 +255,6 @@ export async function POST(request: NextRequest) {
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  await recordPlayerActivity(context.player.id);
   return NextResponse.json({ message: replacementPick ? "Your Survivor pick has been saved." : "Your unlocked Survivor pick has been cleared." });
 }

@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
   const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle());
   if (playerError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
   if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
-  await recordPlayerActivity(player.id);
 
   const { data: period, error: periodError } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
   if (periodError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
@@ -115,6 +114,7 @@ export async function POST(request: NextRequest) {
   if (!includesSurvivor) {
     const { error } = await supabaseAdmin.rpc("replace_unlocked_picks", { target_player_id: player.id, target_scoring_period_id: scoringPeriodId, replacement_picks: picksToInsert });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    await recordPlayerActivity(player.id);
     return NextResponse.json({ message: pickSaveMessage(selections.length) });
   }
 
@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
     replacement_survivor_pick: survivorPickToInsert,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  await recordPlayerActivity(player.id);
   if (!survivorChanged) return NextResponse.json({ message: pickSaveMessage(selections.length) });
 
   const survivorMessage = survivorSelection
