@@ -104,8 +104,8 @@ function SlateLoadingShell() {
             </aside>
           </div>
         </header>
-        <div className="slate-loading-receipt h-[6.75rem] border-y border-[#b7aea0] sm:h-[5.8rem]" />
-        <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 sm:mt-8 sm:space-y-7">
+        <div className="slate-loading-receipt h-[6.75rem] border-y border-[#b7aea0] md:h-[5.8rem]" />
+        <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 md:mt-8 md:space-y-7">
           {Array.from({ length: 5 }, (_, index) => (
             <section key={index} className="space-y-2">
               <div className="mx-auto h-7 w-2/5 border-y-2 border-[#1d1d1f]" />
@@ -848,17 +848,17 @@ export default function BoardPage() {
             </div>
 
             <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-              <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] sm:text-xs ${survivorControlsEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorControlsEnabled ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
                 <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
                 {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
                 <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SUBMIT</strong>Review your choices, then click <span className="font-black">SUBMIT</span> to save the picks currently shown.</p>
               </div>
-              <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:gap-0">
+              <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 md:gap-0">
                 <div className="md:pl-4">
                   <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="official-line-color font-semibold">Teal lines</span> are official and will not change.</p>
                 </div>
-                <div className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-7 sm:pt-0">
+                <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
                   <p>Favorites left; home team ALL CAPS.</p>
                   <p className="mt-1">Changes allowed until kickoff time.</p>
                 </div>
@@ -947,15 +947,15 @@ export default function BoardPage() {
         ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 sm:mt-8 sm:space-y-7" id="slate-matchups">
+          <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 md:mt-8 md:space-y-7" id="slate-matchups">
             {actionOnlyActive && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}
             {visibleGamesByDay.map(([day, dayGames]) => {
               return (
                 <section key={day}>
-                  <div className="border-y-2 border-[#1d1d1f] px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                    <h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm">
+                  <div className="border-y-2 border-[#1d1d1f] px-2 py-1.5 text-center md:px-3 md:py-2">
+                    <h2 className="text-xs font-black tracking-[0.18em] text-[#171719] md:text-sm">
                       {day.toUpperCase()}
                     </h2>
                   </div>

@@ -143,7 +143,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
     const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
-    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] sm:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
+    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
@@ -226,8 +226,8 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
   };
 
   const rowColumns = survivor?.enabled
-    ? "grid-cols-[2.3rem_minmax(0,1fr)_3.45rem_2.5rem_3.45rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.9rem_2.9rem_3.9rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_4.7rem_5rem_4.7rem_minmax(0,1fr)]"
-    : "grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] sm:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)]";
+    ? "grid-cols-[2.3rem_minmax(0,1fr)_3.45rem_2.5rem_3.45rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.9rem_2.9rem_3.9rem_minmax(0,1fr)] md:grid-cols-[4.5rem_minmax(0,1fr)_4.7rem_5rem_4.7rem_minmax(0,1fr)]"
+    : "grid-cols-[2.3rem_minmax(0,1fr)_2.85rem_minmax(0,1fr)] min-[380px]:grid-cols-[2.6rem_minmax(0,1fr)_3.35rem_minmax(0,1fr)] md:grid-cols-[4.5rem_minmax(0,1fr)_6.5rem_minmax(0,1fr)]";
   const hasSurvivorSelection = survivor?.enabled && survivor.selectedTeamId && [left.id, right.id].includes(survivor.selectedTeamId);
   const statusLabel = game.status === "postponed"
     ? "POSTPONED"
@@ -239,14 +239,14 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
           ? "FINAL"
           : null;
 
-  return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
-    <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 sm:text-xs">
+  return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 md:gap-3 md:py-2 md:pl-2 md:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
+    <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 md:text-xs">
       {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
     </div>
     {teamCell(left, "left")}
     {survivorChip(left)}
-    <div className="slate-spread-cell text-center text-[10px] font-bold leading-4 text-slate-700 sm:text-xs">
-      {lockedSpread ? <span className="official-line-color font-mono text-sm font-bold sm:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 sm:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 sm:text-[9px]">AWAITING LINE</p>}
+    <div className="slate-spread-cell text-center text-[10px] font-bold leading-4 text-slate-700 md:text-xs">
+      {lockedSpread ? <span className="official-line-color font-mono text-sm font-bold md:text-base">{spreadLabel(game.officialSpread)}</span> : game.preliminarySpread !== null ? <span className="font-mono text-sm font-bold text-zinc-900 md:text-base">{spreadLabel(game.preliminarySpread)}</span> : <p className="text-[8px] font-black tracking-[0.08em] text-slate-500 md:text-[9px]">AWAITING LINE</p>}
       {showSpecialLockNote ? <p className="slate-lock-note mt-0.5 text-[6px] font-black leading-[.7rem] tracking-[-0.01em] text-teal-700 min-[380px]:text-[7px]"><span>LOCKS {easternLockParts(game.lineLockAt).date}</span><span>{easternLockParts(game.lineLockAt).time}</span></p> : null}
     </div>
     {survivorChip(right)}
