@@ -1,34 +1,11 @@
-const easternTimeZone = "America/New_York";
+import { easternDateTimeToUtc, easternParts } from "./eastern-time.js";
 
+export { easternDateTimeToUtc };
+
+/** Eastern parts with the short weekday name ("Mon") this module has always returned. */
 export function getEasternParts(date) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: easternTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-  const parts = formatter.formatToParts(date);
-  const value = (type) => Number(parts.find((part) => part.type === type)?.value);
-  return {
-    year: value("year"), month: value("month"), day: value("day"),
-    hour: value("hour"), minute: value("minute"),
-    weekday: parts.find((part) => part.type === "weekday")?.value ?? "",
-  };
-}
-
-function getEasternOffsetMilliseconds(date) {
-  const eastern = getEasternParts(date);
-  return Date.UTC(eastern.year, eastern.month - 1, eastern.day, eastern.hour, eastern.minute) - date.getTime();
-}
-
-export function easternDateTimeToUtc(year, month, day, hour, minute = 0) {
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
-  const offset = getEasternOffsetMilliseconds(utcGuess);
-  return new Date(utcGuess.getTime() - offset);
+  const { year, month, day, hour, minute, weekdayShort } = easternParts(date);
+  return { year, month, day, hour, minute, weekday: weekdayShort };
 }
 
 export function getWeekStartKey(kickoff) {

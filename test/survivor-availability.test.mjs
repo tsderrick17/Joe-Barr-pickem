@@ -1,58 +1,29 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   isSurvivorSlateEditable,
-  isSurvivorTeamUnavailable,
+  isSurvivorTeamUsed,
 } from "../src/lib/survivor-availability.js";
 
-test("keeps this week's saved Survivor pick selectable while choosing a replacement", () => {
-  assert.equal(isSurvivorTeamUnavailable({
-    teamId: "rams",
-    usedTeamIds: ["bills", "rams"],
-    savedPickTeamId: "rams",
-    gameStarted: false,
-    entryEliminated: false,
-  }), false);
+test("keeps this week's saved Survivor pick choosable while picking a replacement", () => {
+  assert.equal(isSurvivorTeamUsed({ teamId: "rams", usedTeamIds: ["bills", "rams"], selectedTeamId: "colts", savedTeamId: "rams" }), false);
 });
 
 test("allows a player to switch back after reconsidering an unsaved replacement", () => {
-  // The browser may still have the prior used-team snapshot while the player
-  // clicks from Bengals -> Colts -> Bengals before saving. The weekly saved
-  // pick remains a legal choice until its game begins.
-  assert.equal(isSurvivorTeamUnavailable({
-    teamId: "bengals",
-    usedTeamIds: ["bengals"],
-    savedPickTeamId: "bengals",
-    gameStarted: false,
-    entryEliminated: false,
-  }), false);
+  // Bengals -> Colts -> Bengals before saving: the selection is never "used".
+  assert.equal(isSurvivorTeamUsed({ teamId: "bengals", usedTeamIds: ["bengals"], selectedTeamId: "bengals", savedTeamId: null }), false);
 });
 
 test("blocks teams used in prior Survivor weeks", () => {
-  assert.equal(isSurvivorTeamUnavailable({
-    teamId: "bills",
-    usedTeamIds: ["bills", "rams"],
-    savedPickTeamId: "rams",
-    gameStarted: false,
-    entryEliminated: false,
-  }), true);
+  assert.equal(isSurvivorTeamUsed({ teamId: "bills", usedTeamIds: ["bills", "rams"], selectedTeamId: null, savedTeamId: "rams" }), true);
+  assert.equal(isSurvivorTeamUsed({ teamId: "jets", usedTeamIds: ["bills"], selectedTeamId: null, savedTeamId: null }), false);
 });
 
-test("never permits a started matchup or eliminated entry", () => {
-  assert.equal(isSurvivorTeamUnavailable({
-    teamId: "rams",
-    usedTeamIds: ["rams"],
-    savedPickTeamId: "rams",
-    gameStarted: true,
-    entryEliminated: false,
-  }), true);
-  assert.equal(isSurvivorTeamUnavailable({
-    teamId: "new-team",
-    usedTeamIds: [],
-    savedPickTeamId: null,
-    gameStarted: false,
-    entryEliminated: true,
-  }), true);
+test("the Slate uses the shared rule, and a started game is locked rather than unavailable", async () => {
+  const row = await readFile(new URL("../src/components/slate-game-row.tsx", import.meta.url), "utf8");
+  assert.match(row, /const survivorUsed = isSurvivorTeamUsed\(\{ teamId: team\.id, usedTeamIds: survivor\.usedTeamIds, selectedTeamId: survivor\.selectedTeamId, savedTeamId: survivor\.savedTeamId \}\);/);
+  assert.match(row, /const survivorLocked = hasStarted \|\| !survivor\.interactive;/);
 });
 
 test("exposes Slate Survivor chips for an editable upcoming or active regular-season entry", () => {

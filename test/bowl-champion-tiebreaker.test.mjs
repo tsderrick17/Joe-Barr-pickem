@@ -5,10 +5,10 @@ import { compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
 
 test("a missing tiebreaker guess loses the tiebreaker but never outranks more wins", () => {
   const rows = [
-    { playerName: "Al", wins: 5, tiebreakerTotal: null },
-    { playerName: "Bo", wins: 5, tiebreakerTotal: 80 },
-    { playerName: "Cy", wins: 5, tiebreakerTotal: 51 },
-    { playerName: "Di", wins: 6, tiebreakerTotal: null },
+    { playerId: "al", playerName: "Al", wins: 5, losses: 0, tiebreakerTotal: null },
+    { playerId: "bo", playerName: "Bo", wins: 5, losses: 0, tiebreakerTotal: 80 },
+    { playerId: "cy", playerName: "Cy", wins: 5, losses: 0, tiebreakerTotal: 51 },
+    { playerId: "di", playerName: "Di", wins: 6, losses: 0, tiebreakerTotal: null },
   ];
   assert.deepEqual([...rows].sort((a, b) => compareBowlPoolStandings(a, b, 50)).map((row) => row.playerName), ["Di", "Cy", "Bo", "Al"]);
 });
@@ -21,7 +21,8 @@ test("the database champion includes entries without a guess and shares the titl
   assert.match(sql, /or \(select min\(difference\) from leaders\) is null/);
   assert.match(sql, /grant execute on function public\.refresh_bowl_pool_champion\(uuid, timestamptz\) to service_role;/);
   const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
-  assert.match(route, /if \(aGuess !== null && bGuess === null\) return -1;/);
+  // The Bowl Card sorts with the tested shared order, not its own copy.
+  assert.match(route, /\.sort\(\(a, b\) => compareBowlPoolStandings\(a, b, finalCombinedPoints\)\)/);
 });
 
 test("clearing a Bowl pick never writes a history row that points at the deleted pick", async () => {

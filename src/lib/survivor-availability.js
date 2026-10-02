@@ -1,15 +1,10 @@
-export function isSurvivorTeamUnavailable({
-  teamId,
-  usedTeamIds,
-  savedPickTeamId,
-  gameStarted,
-  entryEliminated,
-}) {
-  if (entryEliminated || gameStarted) return true;
-
-  // The pick saved for this same week is included in the season-long used
-  // list, but stays editable until its game begins.
-  return usedTeamIds.includes(teamId) && teamId !== savedPickTeamId;
+/**
+ * A team this entry already used in an earlier week. The selection being made
+ * and the pick saved for this week are never "used": they stay choosable until
+ * the game starts (a started game is locked, not unavailable).
+ */
+export function isSurvivorTeamUsed({ teamId, usedTeamIds, selectedTeamId, savedTeamId }) {
+  return usedTeamIds.includes(teamId) && teamId !== selectedTeamId && teamId !== savedTeamId;
 }
 
 // The Slate is the only player-facing Survivor selector. Keep the visibility

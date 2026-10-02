@@ -10,17 +10,9 @@ import {
 } from "@/lib/reminder-readiness-rules.js";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 import { eligiblePlayerIds } from "@/lib/reminder-audience";
+import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 
 type ReminderReadiness = { ready: boolean; reason: string | null; terminal?: boolean };
-
-function easternDate(value: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(value);
-}
 
 async function activePeriod() {
   const { data, error } = await supabaseAdmin
@@ -207,14 +199,6 @@ async function featuredWindowRevealReady(sourceGameIds: string[] = []): Promise<
     ? { ready: true, reason: null }
     : { ready: false, reason: "The selected primetime or international game has not reached kickoff yet." };
   return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
-}
-
-function easternWeekday(value: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
-}
-
-function easternHour(value: string) {
-  return Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(value)));
 }
 
 async function sundayRevealReady(window: "early" | "late", sourceGameIds: string[] = []): Promise<ReminderReadiness> {

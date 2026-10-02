@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
+import { isSurvivorTeamUsed } from "@/lib/survivor-availability.js";
 
 export type SlateGameRowData = {
   id: string;
@@ -169,9 +170,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
        stays visible as the official teal/star chip while an unsaved change is
        being considered elsewhere on the Slate. */
     const survivorOfficial = survivor.savedTeamId === team.id;
-    const survivorUsed = survivor.usedTeamIds.includes(team.id)
-      && !survivorSelected
-      && team.id !== survivor.savedTeamId;
+    const survivorUsed = isSurvivorTeamUsed({ teamId: team.id, usedTeamIds: survivor.usedTeamIds, selectedTeamId: survivor.selectedTeamId, savedTeamId: survivor.savedTeamId });
     // A started game is closed to input, not unavailable. Its colored chip is
     // intentionally retained as the public audit record until grading.
     const survivorUnavailable = survivorUsed;

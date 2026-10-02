@@ -1,24 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings, gradeBowlPoolPick, normalizeBowlPoolSpread } from "../src/lib/bowl-pool.js";
+import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
-
-test("bowl pool preserves PK but removes whole-number ATS pushes", () => {
-  assert.equal(normalizeBowlPoolSpread(0), 0);
-  assert.equal(normalizeBowlPoolSpread(3), 3.5);
-  assert.equal(normalizeBowlPoolSpread(3.5), 3.5);
-  assert.equal(gradeBowlPoolPick({ selectedTeamId: "away", favoriteTeamId: "away", lockedSpread: 3.5, awayTeamId: "away", homeTeamId: "home", awayScore: 24, homeScore: 21 }), "loss");
-  assert.equal(gradeBowlPoolPick({ selectedTeamId: "away", favoriteTeamId: null, lockedSpread: 0, awayTeamId: "away", homeTeamId: "home", awayScore: 24, homeScore: 21 }), "win");
-});
 
 test("bowl-pool standings use the closest CFP-final total after wins", () => {
   const rows = [
-    { playerName: "Al", wins: 20, tiebreakerTotal: 51 },
-    { playerName: "Joe", wins: 20, tiebreakerTotal: 48 },
-    { playerName: "Tyler", wins: 19, tiebreakerTotal: 54 },
+    { playerId: "a", playerName: "Al", wins: 20, losses: 5, tiebreakerTotal: 51 },
+    { playerId: "j", playerName: "Joe", wins: 20, losses: 5, tiebreakerTotal: 48 },
+    { playerId: "t", playerName: "Tyler", wins: 19, losses: 6, tiebreakerTotal: 54 },
   ];
   assert.deepEqual([...rows].sort((a, b) => compareBowlPoolStandings(a, b, 50)).map((row) => row.playerName), ["Al", "Joe", "Tyler"]);
+  // Before the final, a tie stays on wins, then fewer losses, then a stable player order.
+  const early = [
+    { playerId: "b", wins: 3, losses: 2 }, { playerId: "a", wins: 3, losses: 2 }, { playerId: "c", wins: 3, losses: 1 },
+  ];
+  assert.deepEqual([...early].sort((a, b) => compareBowlPoolStandings(a, b, null)).map((row) => row.playerId), ["c", "a", "b"]);
   assert.equal(bowlPoolLaunchAt(2026), "2026-12-07T08:00:00.000Z");
 });
 

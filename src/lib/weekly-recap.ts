@@ -3,6 +3,7 @@ import { calculatePlayoffEligibility } from "@/lib/playoff-math.js";
 import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { championNames } from "@/lib/champion-names.js";
+import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -293,10 +294,6 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   };
 }
 
-function easternDate(value: Date) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
-}
-
 function easternDayLabel(value: Date) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(value);
 }
@@ -446,14 +443,6 @@ export async function ensurePlayoffDayRecapSnapshot(reminderId: string, existing
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The playoff day recap receipt could not be saved.");
   return snapshot;
-}
-
-function easternWeekday(value: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
-}
-
-function easternHour(value: string) {
-  return Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(value)));
 }
 
 export async function ensureSundayRevealSnapshot(reminderId: string, existing: unknown, window: "early" | "late", { persist = true } = {}) {
