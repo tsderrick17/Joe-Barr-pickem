@@ -18,6 +18,9 @@ const BOWL_ALT = "#eaf6ef";
 const BOWL_TEAL = "#0f766e";
 const BOWL_RULE = "#c7ddd4";
 const WIDTH = 760;
+// Flat colors and text compress to a 256-color palette with no visible change,
+// about two thirds smaller, so email images load faster on a phone connection.
+const ARTWORK_PNG_OPTIONS = { palette: true, quality: 90, effort: 7, compressionLevel: 9 } as const;
 const column: CSSProperties = { display: "flex", flexDirection: "column", flexShrink: 0 };
 const row: CSSProperties = { display: "flex", alignItems: "center", flexShrink: 0 };
 type PublicRow = { playerId?: string; name: string; wins: number; picks: string[] };
@@ -146,6 +149,6 @@ export async function renderEmailArtwork(snapshot: EmailArtworkSnapshot, kind: s
   // playoff cards. No row-count height cap may silently truncate players.
   const canvasHeight = Math.max(1200, 600 + JSON.stringify(snapshot).length * 2);
   const response = new ImageResponse(<div style={{ display: "flex", alignItems: "flex-start", width: WIDTH, height: "100%" }}>{tree}</div>, { width: WIDTH, height: canvasHeight });
-  const png = await sharp(Buffer.from(await response.arrayBuffer())).trim({ background: "#00000000", threshold: 0 }).png().toBuffer();
+  const png = await sharp(Buffer.from(await response.arrayBuffer())).trim({ background: "#00000000", threshold: 0 }).png(ARTWORK_PNG_OPTIONS).toBuffer();
   return new Response(new Uint8Array(png), { headers: { "Content-Type": "image/png" } });
 }

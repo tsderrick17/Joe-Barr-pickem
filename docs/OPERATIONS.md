@@ -151,6 +151,10 @@ email-accessible without a login; service-role credentials are required to
 upload. Storage links are immutable, so bump the artwork render version when
 changing the image renderer's output contract.
 
+The renderer saves each image as a 256-color palette PNG (about two thirds
+smaller than full-color, with no visible change), so emails load faster on a
+phone connection. A regression test pins both the format and a size ceiling.
+
 Automatic email-plan scheduling updates existing unsent occurrences and inserts
 only genuinely missing ones. This deliberately avoids treating the partial
 automation-key uniqueness guard as an upsert target; schedule reconciliation

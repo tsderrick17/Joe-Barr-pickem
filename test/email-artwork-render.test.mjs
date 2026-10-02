@@ -52,3 +52,23 @@ test("long playoff selections and large rosters grow instead of clipping", async
   const result = await render(snapshot, "summary");
   assert.ok(result.height > 40 * 70);
 });
+
+test("email images are palette PNGs, small enough to load quickly on a phone", async () => {
+  for (const [category, kinds] of [["weekly_recap", ["summary", "survivor"]], ["weekly", ["fresh"]], ["final_lines", ["gameday"]], ["bowl_daily_recap", ["bowl"]]]) {
+    const snapshot = emailArtworkSample(category);
+    if (!snapshot) continue;
+    for (const kind of kinds) {
+      const response = await renderEmailArtwork(snapshot, kind, { density: "compact" });
+      const png = Buffer.from(await response.arrayBuffer());
+      const metadata = await sharp(png).metadata();
+      assert.equal(metadata.paletteBitDepth !== undefined || metadata.isPalette === true, true, `${kind}: expected a palette PNG`);
+      // Full-color RGBA was 34-74 KB for these; the palette keeps each well under 30 KB.
+      assert.ok(png.length < 30_000, `${kind}: ${png.length} bytes`);
+      // Text and chips stay crisp: a palette this size must not collapse to a handful of colors.
+      const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const colors = new Set();
+      for (let i = 0; i < data.length; i += info.channels) colors.add((data[i] << 16) | (data[i + 1] << 8) | data[i + 2]);
+      assert.ok(colors.size > 8, `${kind}: only ${colors.size} colors`);
+    }
+  }
+});
