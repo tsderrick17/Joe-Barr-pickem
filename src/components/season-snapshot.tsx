@@ -40,6 +40,22 @@ function saveSetting(key: string, value: string) {
   try { window.localStorage.setItem(key, value); } catch { /* not remembered; defaults apply */ }
 }
 
+// The last chart is kept on the device so turning the pad over shows it at once
+// while the current one loads behind it. A saved copy is only a head start: it
+// is replaced as soon as fresh data arrives, and ignored if it is malformed.
+const SNAPSHOT_KEY = "pickem.seasonSnapshot.last";
+function readSavedSnapshot(): Snapshot | null {
+  const saved = readSetting(SNAPSHOT_KEY);
+  if (!saved) return null;
+  try {
+    const value = JSON.parse(saved) as Partial<Snapshot>;
+    if (Array.isArray(value.regular) && Array.isArray(value.playoffs)) {
+      return { regular: value.regular, playoffs: value.playoffs, colorOrder: Array.isArray(value.colorOrder) ? value.colorOrder : [] };
+    }
+  } catch { /* ignore a damaged copy */ }
+  return null;
+}
+
 function shortWeek(label: string) {
   const regular = label.match(/week\s*(\d+)/i);
   if (regular) return regular[1];
@@ -215,6 +231,8 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   if (active && !opened) {
     setOpened(true);
     setRange(readSetting(RANGE_KEY) === "six" ? "six" : "all");
+    const saved = readSavedSnapshot();
+    if (saved) setSnapshot(saved);
   }
 
   const fetchSnapshot = useCallback(async () => {
@@ -232,6 +250,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
       if (cancelled) return;
       setSnapshot(data);
       setError("");
+      saveSetting(SNAPSHOT_KEY, JSON.stringify(data));
     }).catch((reason) => {
       if (!cancelled) setError(reason instanceof Error ? reason.message : "Season Snapshot could not be loaded.");
     });

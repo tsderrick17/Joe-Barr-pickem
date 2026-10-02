@@ -842,3 +842,20 @@ early-lock note wraps inside the spread column.
 
 **Reason:** The nudge pushed spreads into the favorite's name and the lock note
 into the underdog's name for players whose Survivor chips are hidden.
+
+## 2026-10-01 - Faster Season Snapshot
+
+**Status:** Accepted
+
+The snapshot route's database reads moved to a loader that shares the finished
+chart in memory for 30 seconds, merges the two player reads into one, and pages
+picks past PostgREST's 1,000-row cap. The release gate still runs before any
+pick is read, and a cached chart is never given to a player before Week 6. The
+browser keeps the last chart on the device and shows it immediately while the
+fresh one loads.
+
+**Reason:** The back of the pad waited on five or six sequential network calls on
+every open. Everyone sees the same chart and grades change on the ten-minute
+score sync, so a short shared cache and a saved copy remove most of the wait
+without a schema change. Paging also prevents silently truncated picks late in
+the season.

@@ -115,12 +115,18 @@ test("ribbons keep joined endpoints when bundles split and merge", () => {
 
 test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
   const route = fs.readFileSync(path.join(root, "src/app/api/season-snapshot/route.ts"), "utf8");
+  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.ok(route.indexOf("authenticatedProfilePlayer(request)") < route.indexOf('supabaseAdmin.from("seasons")'));
+  // Sign-in is verified before anything is read.
+  assert.ok(route.indexOf("authenticatedProfilePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
+  assert.match(route, /status: 401/);
   // Players are refused until Week 6; commissioners always get it.
-  assert.ok(route.includes("if (!viewer.is_commissioner && !seasonSnapshotReleased(periodsResult.data ?? [])) {"));
-  assert.ok(route.indexOf("seasonSnapshotReleased(periodsResult") < route.indexOf('from("picks")'), "no pick data is read before the release check");
+  assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null };"));
+  assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens in Week 6\." \}, \{ status: 403 \}\);/);
+  assert.ok(loader.indexOf("if (!isCommissioner && !released)") < loader.indexOf("loadPicks(visibleIds)"), "no pick data is read before the release check");
+  // A cached chart is never handed to a player before the release.
+  assert.match(loader, /cached\.payload && \(isCommissioner \|\| cached\.released\)/);
   assert.ok(scoreboard.includes("const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;"));
   assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
   // It loads the first time the pad is turned over, not on page load.
@@ -201,9 +207,11 @@ test("each person keeps the same color no matter who is hidden, using eleven dis
   // Colors follow join order from the server, never the visible subset or rank.
   assert.match(snapshot, /const colors = snapshotColors\(standings, snapshot\.colorOrder\);/);
   assert.doesNotMatch(snapshot, /visible\.map\(\(player, index\) => \[player\.id, palette/);
-  const route = fs.readFileSync(path.join(root, "src/app/api/season-snapshot/route.ts"), "utf8");
-  assert.match(route, /from\("players"\)\.select\("id"\)\.order\("created_at"\)\.order\("id"\)/);
-  assert.doesNotMatch(route.slice(route.indexOf('order("created_at")') - 80, route.indexOf('order("created_at")')), /eq\("active", true\)/, "inactive players keep their slot");
+  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
+  // One read of everyone ever added, in join order; only the plotted lines are filtered to active players.
+  assert.match(loader, /from\("players"\)\.select\("id, active"\)\.order\("created_at"\)\.order\("id"\)/);
+  assert.match(loader, /everyone\.filter\(\(player\) => player\.active\)/);
+  assert.match(loader, /colorOrder: everyone\.map\(\(player\) => player\.id\)/);
 });
 
 test("colors never shift when someone is hidden, inactive, or new", () => {
@@ -321,4 +329,22 @@ test("chart choices are remembered, and the playoff chart starts without elimina
   assert.match(snapshot, /return new Set\(showPlayoffs \? standings\.filter\(\(player\) => player\.eliminated\)\.map\(\(player\) => player\.id\) : \[\]\);/);
   assert.match(scoreboard, /eliminated: row\.playoffEliminated/);
   assert.match(snapshot, /key=\{showPlayoffs \? "playoffs" : "regular"\}/);
+});
+
+test("the snapshot loads fast: shared short cache, paged picks, and a saved copy for instant opens", () => {
+  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  assert.match(loader, /const CACHE_MS = 30_000;/);
+  // Simultaneous opens share one load, kept apart by viewer kind so gating still holds.
+  assert.match(loader, /inFlight\[kind\] \?\?= load\(isCommissioner\)/);
+  // PostgREST caps responses at 1,000 rows, so picks are read in pages.
+  assert.match(loader, /const PAGE = 1000;/);
+  assert.match(loader, /\.order\("id"\)\.range\(from, from \+ PAGE - 1\)/);
+  assert.match(loader, /if \(\(data \?\? \[\]\)\.length < PAGE\) return \{ data: rows, error: null \};/);
+  // The device keeps the last chart so opening the back is instant; fresh data replaces it.
+  assert.match(snapshot, /const SNAPSHOT_KEY = "pickem\.seasonSnapshot\.last";/);
+  assert.match(snapshot, /const saved = readSavedSnapshot\(\);\s*if \(saved\) setSnapshot\(saved\);/);
+  assert.match(snapshot, /saveSetting\(SNAPSHOT_KEY, JSON\.stringify\(data\)\);/);
+  // An error still wins over a saved copy, so a closed or failed chart is never shown stale.
+  assert.match(snapshot, /\{error \? <div className="season-snapshot-message" role="alert">/);
 });

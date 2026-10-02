@@ -108,7 +108,10 @@ be replayed.
   top right turns it over. Commissioners always have it. Players get it from
   Week 6 (or any playoff round) until the August 1 season rollover, when the new
   season's periods are all upcoming and it disappears until that season's
-  Week 6. The same rule gates the data route.
+  Week 6. The same rule gates the data route. The route shares one finished
+  chart for 30 seconds (checked per viewer, never before the release gate),
+  reads picks in pages past PostgREST's 1,000-row cap, and each device keeps the
+  last chart so the back opens instantly while fresh data loads behind it.
   Everyone begins at zero on the regular-season chart. Completed periods carry
   every player's cumulative ATS wins forward; the active period is plotted for
   everyone at once, after its last Pick'em pick settles (every game has kicked
