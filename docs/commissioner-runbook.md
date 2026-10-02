@@ -183,7 +183,10 @@ prioritized attention queue. Use the queue as the starting point when a final
 score is late, a grade remains pending, a kickoff has passed without a live or
 final state, or a line is missing after lock.
 
-The dashboard is read-only and refreshes automatically once per minute. It does
+The dashboard is read-only and refreshes every minute during live games, open
+attention items, or a kickoff within 15 minutes; otherwise it refreshes every
+five minutes while visible. An unavailable numeric measurement shows a dash
+without hiding the rest of the Commissioner panel. It does
 not replace the guarded recovery controls on Game day. For a game in
 `Needs review`, verify the provider result and use Final Score Check or Final
 Score Reconciliation according to the normal runbook. Do not type an estimated

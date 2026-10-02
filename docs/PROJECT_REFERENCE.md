@@ -478,6 +478,8 @@ while another dashboard request is in flight. The Standings page polls every
 three minutes while visible, refreshes when the player returns (at most every 30
 seconds), and refreshes exactly at each pick reveal. Reminder delivery is gated
 in Supabase so idle ticks never call Vercel.
+If a Commissioner response omits a measurement, its
+numeric label displays a dash instead of crashing the surrounding dashboard.
 The Home standings read does not perform Survivor enrollment or elimination
 maintenance; those changes run through the existing scoring and selection paths.
 Season-wide pick reads paginate through PostgREST's 1,000-row response limit.

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
 import { rollingCreditsPerGame15Days } from "@/lib/provider-chart-data.js";
+import { formatAdminNumber } from "@/lib/format-admin-number.js";
 import type { EfficiencyPoint, EfficiencySummary } from "@/components/efficiency-trend-panel";
 
 const date = (value: string, time = false) => new Date(value).toLocaleString("en-US", {
   timeZone: "America/New_York", month: "short", day: "numeric",
   ...(time ? { hour: "numeric", minute: "2-digit" } : {}),
 });
-const number = (value: number | null) => value === null ? "-" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+const number = (value: number | null | undefined) => formatAdminNumber(value, { maximumFractionDigits: 1 });
 
 export default function SlatePerformancePanel({ history, summary }: {
   history: EfficiencyPoint[];

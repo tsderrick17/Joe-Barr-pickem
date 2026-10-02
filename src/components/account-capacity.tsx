@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
+import { formatAdminNumber } from "@/lib/format-admin-number.js";
 
 type AccountCapacity = {
   id: string;
@@ -66,7 +67,7 @@ const serviceAccess: Record<string, { href: string; purpose: string; signIn: str
 };
 
 function label(value: number | null) {
-  if (value === null) return "—";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(1);
 }
 
@@ -182,6 +183,6 @@ export default function AccountCapacityPanel() {
           </div>
         </div> : null}
       </article>;
-    })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{table.estimated_rows.toLocaleString()}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} Unknown plan limits show a live count instead of a made-up percentage.</p></> : null}
+    })}</div>{storageTables.length ? <details className="mt-5 border border-zinc-300 bg-white p-4"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-zinc-700">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-zinc-600"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{formatAdminNumber(table.estimated_rows)}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-zinc-500">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} Unknown plan limits show a live count instead of a made-up percentage.</p></> : null}
   </section>;
 }

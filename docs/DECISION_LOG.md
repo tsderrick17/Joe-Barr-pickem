@@ -1057,3 +1057,15 @@ underlying records.
 **Reason:** Cost and settlement can be compared on the same timeline without
 mixing game, period, and slate observations or treating a one-game slate as
 equal to a full Sunday slate.
+
+## 2026-10-02 - Keep Commissioner panels usable when a measurement is absent
+
+**Status:** Accepted
+
+Admin charts and capacity panels format provider and operational counts through
+one missing-value-safe formatter. A temporarily absent number displays a dash;
+other live metrics and controls remain available.
+
+**Reason:** A production `/admin` error showed that formatting an undefined
+measurement could crash a Commissioner panel. The alert did not include a
+stack trace, so the exact field was not identified.
