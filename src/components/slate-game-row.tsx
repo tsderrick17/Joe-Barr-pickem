@@ -111,8 +111,15 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     }
 
     const measurePickerLane = () => {
+      // Measure the names' natural height. The lists are sized from this very
+      // value, so reading them with it applied could only ever grow (a row
+      // measured before its font loaded stayed too tall for good). Lift it for
+      // the reading and put it straight back, within the same frame.
+      const applied = row.style.getPropertyValue("--slate-picker-lane-height");
+      row.style.removeProperty("--slate-picker-lane-height");
       const lists = Array.from(row.querySelectorAll<HTMLElement>(".slate-team-picker-list:not(.is-empty)"));
       const nextHeight = Math.ceil(Math.max(0, ...lists.map((list) => list.scrollHeight)));
+      if (applied) row.style.setProperty("--slate-picker-lane-height", applied);
       setPickerLaneHeight((current) => current === nextHeight ? current : nextHeight);
     };
 
