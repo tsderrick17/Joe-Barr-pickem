@@ -333,6 +333,7 @@ test("chart choices are remembered, and the playoff chart starts without elimina
 
 test("the snapshot loads fast: shared short cache, paged picks, and a saved copy for instant opens", () => {
   const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
+  const readPages = fs.readFileSync(path.join(root, "src/lib/read-all-pages.ts"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
   // Freshness follows the weekly schedule instead of a fixed timer.
   const freshness = fs.readFileSync(path.join(root, "src/lib/season-snapshot-freshness.js"), "utf8");
@@ -343,9 +344,11 @@ test("the snapshot loads fast: shared short cache, paged picks, and a saved copy
   // Simultaneous opens share one load, kept apart by viewer kind so gating still holds.
   assert.match(loader, /inFlight\[kind\] \?\?= load\(isCommissioner\)/);
   // PostgREST caps responses at 1,000 rows, so picks are read in pages.
-  assert.match(loader, /const PAGE = 1000;/);
-  assert.match(loader, /\.order\("id"\)\.range\(from, from \+ PAGE - 1\)/);
-  assert.match(loader, /if \(\(data \?\? \[\]\)\.length < PAGE\) return \{ data: rows, error: null \};/);
+  assert.match(loader, /import \{ readAllPages \} from "@\/lib\/read-all-pages"/);
+  assert.match(loader, /\.select\("player_id, scoring_period_id, game_id, result"\)\s*\.in\("scoring_period_id", periodIds\)\.order\("id"\)/);
+  assert.match(readPages, /const PAGE_SIZE = 1000;/);
+  assert.match(readPages, /readPage\(from, from \+ PAGE_SIZE - 1\)/);
+  assert.match(readPages, /if \(\(data \?\? \[\]\)\.length < PAGE_SIZE\) return \{ data: rows, error: null \};/);
   // The device keeps the last chart so opening the back is instant; fresh data replaces it.
   assert.match(snapshot, /const SNAPSHOT_KEY = "pickem\.seasonSnapshot\.last";/);
   assert.match(snapshot, /const saved = readSavedSnapshot\(\);\s*if \(saved\) setSnapshot\(saved\);/);

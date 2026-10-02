@@ -60,11 +60,14 @@ test("grading dashboard exposes a game pipeline and actionable attention queue",
   assert.match(route, /newFinalsPercentage/);
   assert.match(route, /SCORE_POLLING_RETRY_MINUTES/);
   const efficiencyComponent = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
+  const slateComponent = await readFile(new URL("../src/components/slate-performance-panel.tsx", import.meta.url), "utf8");
   assert.match(route, /efficiencyHistory/);
-  assert.match(efficiencyComponent, /Provider efficiency by game-time slate/);
-  assert.match(efficiencyComponent, /Each point is one kickoff slate/);
-  assert.match(efficiencyComponent, /Credits per final and productive checks by game-time slate/);
-  assert.match(efficiencyComponent, /Credits \/ final/);
+  assert.match(efficiencyComponent, /SlatePerformancePanel history=/);
+  assert.match(slateComponent, /Provider cost &amp; settlement/);
+  assert.match(slateComponent, /rollingCreditsPerGame15Days/);
+  assert.match(slateComponent, /rightAxis=\{\{ label: "Minutes to final"/);
+  assert.match(slateComponent, /Game and period latency details/);
+  assert.doesNotMatch(slateComponent, /Productive checks/);
 });
 
 test("grading dashboard keeps the current scoring period and reminder signals together", async () => {

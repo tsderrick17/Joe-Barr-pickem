@@ -1040,3 +1040,19 @@ instances are coalesced by a database-side timestamp condition.
 
 **Reason:** Keep historic data complete as the season grows while avoiding
 repeated full-season maintenance and activity writes on read-heavy pages.
+
+## 2026-10-02 - Compare provider cost and settlement at the same slate grain
+
+**Status:** Accepted
+
+The Commissioner grading dashboard pairs score-polling credits per settled
+game with average kickoff-to-accepted-final minutes for each completed
+game-time slate. The left and right axes name their units. A 15-Eastern-day
+rolling credits-per-game average is weighted by the number of games, and
+excludes incomplete slates and slates with ambiguous or missing polling
+attribution. Game and period latency detail is retained under a disclosure;
+productive-check rate is removed from this chart, not from underlying records.
+
+**Reason:** Cost and settlement can be compared on the same timeline without
+mixing game, period, and slate observations or treating a one-game slate as
+equal to a full Sunday slate.

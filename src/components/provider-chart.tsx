@@ -17,8 +17,9 @@ function scaleMax(value: number) {
   return Math.max(4, Math.ceil((value * 1.15) / 10) * 10);
 }
 
-export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel }: {
-  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string;
+export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, rightAxis }: {
+  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean;
+  rightAxis?: { label: string; suffix: string; scale?: "zero" | "tight" };
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(760);
@@ -44,13 +45,19 @@ export default function ProviderChart({ points, series, label, histogram = false
   const minimum = yScale === "tight" && observed.length ? Math.max(0, Math.floor((observedMin - tightStep) / tightStep) * tightStep) : 0;
   const maximum = histogram ? Math.max(4, Math.ceil(highest / 4) * 4) : yScale === "tight" && observed.length
     ? Math.max(minimum + tightStep, Math.ceil((observedMax + tightStep) / tightStep) * tightStep)
-    : scaleMax(highest);
+    : integerYAxis ? Math.ceil(scaleMax(highest) / 4) * 4 : scaleMax(highest);
+  const rightValues = points.flatMap((point) => activeSeries.filter((item) => item.axis === "right").map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
+  const rightMin = rightValues.length ? Math.min(...rightValues) : 0;
+  const rightMax = rightValues.length ? Math.max(...rightValues) : 0;
+  const rightStep = niceStep(Math.max(rightMax - rightMin, rightMax * .08, 1) / 4);
+  const rightMinimum = rightAxis?.scale === "tight" && rightValues.length ? Math.max(0, Math.floor((rightMin - rightStep) / rightStep) * rightStep) : 0;
+  const rightMaximum = rightAxis?.scale === "tight" && rightValues.length ? Math.max(rightMinimum + rightStep, Math.ceil((rightMax + rightStep) / rightStep) * rightStep) : rightAxis ? scaleMax(rightMax) : 100;
   const domain = Math.max(1, ...points.map((point) => point.end ?? 0));
   const x = (index: number) => histogram
     ? left + (((points[index].start ?? 0) + (points[index].end ?? 0)) / 2 / domain) * plotWidth
     : left + ((index + .5) / Math.max(1, points.length)) * plotWidth;
   const y = (value: number, item: ChartSeries) => item.axis
-    ? bottom - value / 100 * height
+    ? bottom - (value - rightMinimum) / Math.max(1, rightMaximum - rightMinimum) * height
     : bottom - (value - minimum) / Math.max(1, maximum - minimum) * height;
   const index = Math.min(selected ?? Math.max(0, points.length - 1), Math.max(0, points.length - 1));
   const point = points[index];
@@ -89,12 +96,13 @@ export default function ProviderChart({ points, series, label, histogram = false
         {[0, .25, .5, .75, 1].map((fraction) => <g key={fraction}>
           <line x1={left} x2={width - edge} y1={bottom - fraction * height} y2={bottom - fraction * height} stroke="#e9eaef" strokeDasharray={fraction ? "3 4" : undefined} />
           <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}</text>
-          {right ? <text x={width - edge + 8} y={bottom - fraction * height + 4} fill="#047857" fontSize="10">{fraction * 100}%</text> : null}
+          {right ? <text x={width - edge + 8} y={bottom - fraction * height + 4} fill="#047857" fontSize="10">{number(rightMinimum + (rightMaximum - rightMinimum) * fraction)}{rightAxis?.suffix ?? "%"}</text> : null}
         </g>)}
         {yAxisLabel ? <text x="11" y={(top + bottom) / 2} fill="#71717a" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(-90 11 ${(top + bottom) / 2})`}>{yAxisLabel}</text> : null}
+        {right && rightAxis?.label ? <text x={width - 8} y={(top + bottom) / 2} fill="#047857" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(90 ${width - 8} ${(top + bottom) / 2})`}>{rightAxis.label}</text> : null}
         {activeSeries.map((item) => {
           if (item.kind === "bar") return <g key={item.key}>{points.map((entry, i) => {
-            const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.max(2, plotWidth / Math.max(1, points.length) * .56);
+            const barWidth = histogram ? ((entry.end ?? 0) - (entry.start ?? 0)) / domain * plotWidth : Math.min(64, Math.max(2, plotWidth / Math.max(1, points.length) * .56));
             const barX = histogram ? left + (entry.start ?? 0) / domain * plotWidth : Math.min(width - edge - barWidth, Math.max(left, x(i) - barWidth / 2));
             const value = entry.values[item.key];
             const base = item.stack ? activeSeries.slice(0, activeSeries.indexOf(item)).filter((previous) => previous.stack === item.stack).reduce((sum, previous) => sum + (entry.values[previous.key] ?? 0), 0) : 0;
