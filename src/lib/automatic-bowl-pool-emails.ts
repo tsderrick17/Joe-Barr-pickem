@@ -1,13 +1,8 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
 
 type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string };
-
-function easternDate(value: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
-  }).format(value);
-}
 
 function displayDay(day: string) {
   return new Intl.DateTimeFormat("en-US", {

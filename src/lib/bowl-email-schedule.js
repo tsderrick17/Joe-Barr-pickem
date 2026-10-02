@@ -1,9 +1,5 @@
 import { easternDateTimeToUtc } from "./schedule-time.js";
-const EASTERN = "America/New_York";
-
-function easternDate(value) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: EASTERN, year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
-}
+import { easternDateKey as easternDate } from "./eastern-time.js";
 
 export function bowlDailyRecapAt(day) {
   const [year, month, date] = day.split("-").map(Number);

@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
-import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
+import { bowlPoolLaunchAt, compareBowlPoolStandings } from "@/lib/bowl-pool.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 
 type Selection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
@@ -90,6 +90,8 @@ export async function GET(request: NextRequest) {
     titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool ${(championshipCounts.get(championship.season_year) ?? 0) > 1 ? "Co-Champion" : "Champion"}`);
     trophiesByPlayerId.set(championship.player_id, titles);
   }
+  const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
+  const finalCombinedPoints = finalGame && Number.isInteger(finalGame.away_score) && Number.isInteger(finalGame.home_score) ? finalGame.away_score! + finalGame.home_score! : null;
   const standings = (allEntries ?? []).filter((entry) => entry.status === "active").map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
@@ -99,22 +101,7 @@ export async function GET(request: NextRequest) {
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
   })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
     ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
-    : []).sort((a, b) => {
-      const wins = b.wins - a.wins;
-      if (wins) return wins;
-      const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
-      const finalTotal = finalGame && Number.isInteger(finalGame.away_score) && Number.isInteger(finalGame.home_score) ? finalGame.away_score! + finalGame.home_score! : null;
-      if (finalTotal !== null) {
-        // Same rule as the database champion: a guess beats no guess, then the
-        // closest guess wins; no guess on either side stays a tie here.
-        const aGuess = Number.isInteger(a.tiebreakerTotal) ? Math.abs(a.tiebreakerTotal! - finalTotal) : null;
-        const bGuess = Number.isInteger(b.tiebreakerTotal) ? Math.abs(b.tiebreakerTotal! - finalTotal) : null;
-        if (aGuess !== null && bGuess === null) return -1;
-        if (aGuess === null && bGuess !== null) return 1;
-        if (aGuess !== null && bGuess !== null && aGuess !== bGuess) return aGuess - bGuess;
-      }
-      return a.losses - b.losses || String(a.playerId).localeCompare(String(b.playerId));
-    });
+    : []).sort((a, b) => compareBowlPoolStandings(a, b, finalCombinedPoints));
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(currentSeasonYear()) },
     isCommissioner: Boolean(player.is_commissioner),

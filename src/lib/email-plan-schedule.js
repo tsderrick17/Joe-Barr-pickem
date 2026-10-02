@@ -1,3 +1,4 @@
+import { easternParts } from "./eastern-time.js";
 const EASTERN_ZONE = "America/New_York";
 
 const weekdayIndex = {
@@ -9,28 +10,6 @@ const weekdayIndex = {
   Friday: 5,
   Saturday: 6,
 };
-
-function easternParts(value) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: EASTERN_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date(value));
-  const part = (type) => parts.find((item) => item.type === type)?.value;
-  return {
-    year: Number(part("year")),
-    month: Number(part("month")),
-    day: Number(part("day")),
-    weekday: part("weekday"),
-    hour: Number(part("hour")),
-    minute: Number(part("minute")),
-  };
-}
 
 function easternWallTime(year, month, day, hour, minute = 0) {
   const noonUtc = new Date(Date.UTC(year, month - 1, day, 12));

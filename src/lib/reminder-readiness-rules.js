@@ -14,22 +14,6 @@ export function isFreshSlateReady({ activePeriod, gameCount }) {
     : { ready: false, reason: "The new week does not yet have a full Slate." };
 }
 
-export function isGameDaySlateReady({ activePeriod, games, officialLineGameIds, easternDay, now }) {
-  if (!activePeriod) return { ready: false, reason: "There is no active week for today’s Slate." };
-  const today = games.filter((game) => easternDay(game.kickoff_at) === easternDay(now.toISOString()));
-  if (!today.length) return { ready: false, reason: "There are no games on today’s Slate." };
-  return today.every((game) => officialLineGameIds.has(game.id))
-    ? { ready: true, reason: null }
-    : { ready: false, reason: "Today’s official lines are still being finalized." };
-}
-
-export function isRecapReady({ period, games, pendingAtsCount, pendingSurvivorCount }) {
-  if (!period) return { ready: false, reason: "The completed week has not been finalized yet." };
-  const settled = games.length > 0 && games.every((game) => isTerminalGameStatus(game.status));
-  if (!settled || pendingAtsCount > 0 || pendingSurvivorCount > 0) return { ready: false, reason: "Final scores and standings are still being settled." };
-  return { ready: true, reason: null };
-}
-
 export function isPlayoffDayRecapReady({ period, games, pendingAtsCount, now, easternDay }) {
   if (!period) return { ready: false, reason: "A playoff round is not active yet." };
   const started = games.filter((game) => new Date(game.kickoff_at) <= now);

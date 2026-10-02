@@ -1,26 +1,4 @@
-const timeZone = "America/New_York";
-
-function easternParts(date) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(date);
-  const read = (type) => parts.find((part) => part.type === type)?.value ?? "";
-  return {
-    year: Number(read("year")),
-    month: Number(read("month")),
-    day: Number(read("day")),
-    weekday: read("weekday"),
-    hour: Number(read("hour")),
-    minute: Number(read("minute")),
-  };
-}
+import { easternParts } from "./eastern-time.js";
 
 function offsetMilliseconds(date) {
   const parts = easternParts(date);

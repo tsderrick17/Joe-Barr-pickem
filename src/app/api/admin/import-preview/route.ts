@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getWeekStartKey } from "@/lib/schedule-time.js";
 
 type OddsOutcome = {
   name: string;
@@ -30,38 +31,6 @@ type PeriodRow = {
   ends_at: string | null;
 };
 
-const easternTimeZone = "America/New_York";
-
-function getEasternParts(date: Date) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: easternTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  const parts = formatter.formatToParts(date);
-  const value = (type: string) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: value("year"),
-    month: value("month"),
-    day: value("day"),
-  };
-}
-
-function getWeekStartKey(kickoff: Date) {
-  const eastern = getEasternParts(kickoff);
-  const date = new Date(
-    Date.UTC(eastern.year, eastern.month - 1, eastern.day),
-  );
-
-  const daysSinceTuesday = (date.getUTCDay() - 2 + 7) % 7;
-  date.setUTCDate(date.getUTCDate() - daysSinceTuesday);
-
-  return date.toISOString().slice(0, 10);
-}
 
 export async function GET(request: NextRequest) {
   const seasonYear = seasonYearAt();

@@ -11,10 +11,6 @@ export const DISRUPTED_GAME_STATUSES = new Set([
   "no_contest",
 ]);
 
-export function isPickableGameStatus(status) {
-  return PICKABLE_GAME_STATUSES.has(status);
-}
-
 export function isSettledGameStatus(status) {
   return SETTLED_GAME_STATUSES.has(status);
 }

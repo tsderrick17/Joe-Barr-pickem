@@ -49,48 +49,22 @@ export function bowlPoolLaunchAt(seasonYear) {
   return easternDateTimeToUtc(seasonYear, 12, 7, 3).toISOString();
 }
 
-/**
- * Bowl-pool policy removes ATS pushes without changing a genuine PK game.
- * A whole-number line becomes the next half point; a half-point line is kept.
- */
-export function normalizeBowlPoolSpread(spread) {
-  if (!Number.isFinite(spread) || spread < 0) throw new Error("A bowl spread must be a non-negative number.");
-  if (spread === 0) return 0;
-  return Number.isInteger(spread) ? spread + 0.5 : spread;
-}
-
-export function gradeBowlPoolPick({
-  selectedTeamId,
-  favoriteTeamId,
-  lockedSpread,
-  awayTeamId,
-  homeTeamId,
-  awayScore,
-  homeScore,
-}) {
-  if (!Number.isFinite(lockedSpread) || !Number.isInteger(awayScore) || !Number.isInteger(homeScore)) return "pending";
-  if (selectedTeamId !== awayTeamId && selectedTeamId !== homeTeamId) return "pending";
-
-  const selectedScore = selectedTeamId === awayTeamId ? awayScore : homeScore;
-  const opponentScore = selectedTeamId === awayTeamId ? homeScore : awayScore;
-  if (lockedSpread === 0) return selectedScore > opponentScore ? "win" : "loss";
-  if (!favoriteTeamId) return "pending";
-
-  const adjustedMargin = selectedTeamId === favoriteTeamId
-    ? selectedScore - opponentScore - lockedSpread
-    : selectedScore - opponentScore + lockedSpread;
-  return adjustedMargin > 0 ? "win" : "loss";
-}
-
 /** Sort by ATS wins, then smallest absolute difference from the CFP final total. */
+/**
+ * Bowl standings order, used by the Bowl Card. Most wins first. Once the
+ * championship game is final, the same rule as the database champion: a guess
+ * beats no guess, then the closest guess wins. Remaining ties: fewer losses,
+ * then a stable player order.
+ */
 export function compareBowlPoolStandings(first, second, finalCombinedPoints = null) {
   if (first.wins !== second.wins) return second.wins - first.wins;
-  if (!Number.isInteger(finalCombinedPoints)) return first.playerName.localeCompare(second.playerName);
-  // A missing guess loses the tiebreaker to any guess (it is not a guess of 0).
-  const firstDifference = Number.isInteger(first.tiebreakerTotal) ? Math.abs(first.tiebreakerTotal - finalCombinedPoints) : null;
-  const secondDifference = Number.isInteger(second.tiebreakerTotal) ? Math.abs(second.tiebreakerTotal - finalCombinedPoints) : null;
-  if (firstDifference !== null && secondDifference === null) return -1;
-  if (firstDifference === null && secondDifference !== null) return 1;
-  if (firstDifference !== null && secondDifference !== null && firstDifference !== secondDifference) return firstDifference - secondDifference;
-  return first.playerName.localeCompare(second.playerName);
+  if (Number.isInteger(finalCombinedPoints)) {
+    // A missing guess loses the tiebreaker to any guess (it is not a guess of 0).
+    const firstDifference = Number.isInteger(first.tiebreakerTotal) ? Math.abs(first.tiebreakerTotal - finalCombinedPoints) : null;
+    const secondDifference = Number.isInteger(second.tiebreakerTotal) ? Math.abs(second.tiebreakerTotal - finalCombinedPoints) : null;
+    if (firstDifference !== null && secondDifference === null) return -1;
+    if (firstDifference === null && secondDifference !== null) return 1;
+    if (firstDifference !== null && secondDifference !== null && firstDifference !== secondDifference) return firstDifference - secondDifference;
+  }
+  return (first.losses ?? 0) - (second.losses ?? 0) || String(first.playerId).localeCompare(String(second.playerId));
 }

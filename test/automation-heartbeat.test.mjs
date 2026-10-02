@@ -1,20 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { assessAutomationHeartbeat, assessAutomationWorkerHeartbeat } from "../src/lib/automation-heartbeat.js";
+import { assessAutomationWorkerHeartbeat } from "../src/lib/automation-heartbeat.js";
 
 const now = new Date("2026-09-13T16:00:00Z");
 
-test("automation heartbeat accepts a recent successful watchdog receipt", () => {
-  const result = assessAutomationHeartbeat({ status: "success", started_at: "2026-09-13T15:54:00Z", completed_at: "2026-09-13T15:55:00Z" }, now);
+test("automation heartbeat accepts a recent successful watchdog check-in", () => {
+  const result = assessAutomationWorkerHeartbeat({ last_succeeded_at: "2026-09-13T15:55:00Z" }, now);
   assert.deepEqual(result, { healthy: true, reason: "current", ageSeconds: 300 });
 });
 
-test("automation heartbeat fails closed for stale, failed, missing, or malformed receipts", () => {
-  assert.equal(assessAutomationHeartbeat({ status: "success", completed_at: "2026-09-13T15:24:59Z" }, now).healthy, false);
-  assert.deepEqual(assessAutomationHeartbeat({ status: "failed", completed_at: "2026-09-13T15:59:00Z" }, now), { healthy: false, reason: "failed" });
-  assert.deepEqual(assessAutomationHeartbeat(null, now), { healthy: false, reason: "missing" });
-  assert.deepEqual(assessAutomationHeartbeat({ status: "success", completed_at: "not-a-date" }, now), { healthy: false, reason: "invalid" });
+test("automation heartbeat fails closed for stale, missing, or malformed check-ins", () => {
+  assert.equal(assessAutomationWorkerHeartbeat({ last_succeeded_at: "2026-09-13T15:24:59Z" }, now).healthy, false);
+  assert.deepEqual(assessAutomationWorkerHeartbeat({ last_succeeded_at: null, last_failed_at: "2026-09-13T15:59:00Z" }, now), { healthy: false, reason: "missing" });
+  assert.deepEqual(assessAutomationWorkerHeartbeat(null, now), { healthy: false, reason: "missing" });
+  assert.deepEqual(assessAutomationWorkerHeartbeat({ last_succeeded_at: "not-a-date" }, now), { healthy: false, reason: "invalid" });
 });
 
 test("worker heartbeat stays current through an older diagnostic failure", () => {
@@ -30,7 +30,7 @@ test("worker heartbeat stays current through an older diagnostic failure", () =>
 });
 
 test("automation heartbeat allows a delayed watchdog delivery within the grace window", () => {
-  const result = assessAutomationHeartbeat({ status: "success", completed_at: "2026-09-13T15:25:00Z" }, now);
+  const result = assessAutomationWorkerHeartbeat({ last_succeeded_at: "2026-09-13T15:25:00Z" }, now);
   assert.equal(result.healthy, true);
 });
 

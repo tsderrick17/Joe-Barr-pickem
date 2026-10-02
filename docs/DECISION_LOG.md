@@ -990,3 +990,25 @@ by the provider is reported and never deleted is now anchored to the live
 reconciliation function instead of the unused file.
 
 **Reason:** Less code to read and maintain, with no behavior change.
+
+## 2026-10-02 - One Eastern-time module; tests cover the real rules
+
+**Status:** Accepted
+
+About 16 copies of the Eastern date and clock helpers across week rollover, line
+locks, reminders, recaps, and Bowl emails now read one module (eastern-time.js).
+A test compares it with verbatim copies of the old helpers over two years of
+timestamps, every daylight-saving switch, and every midnight; they match exactly.
+Two one-off display formats were left as they are.
+
+JavaScript copies of rules that only tests used were removed: Bowl grading and
+spread rounding (the database grades, and the Bowl lifecycle database test covers
+it), two reminder-readiness rules, an outdated Survivor availability rule, a pickable
+status check, an older heartbeat check, and a calendar-month credit summary. Where
+the real rule lived inline, it moved into the tested library instead: the Bowl Card
+sorts with the shared standings order (unchanged for players: wins, tiebreaker once
+the final is in, then fewer losses), the Slate's Survivor "already used" check, and
+the live heartbeat check.
+
+**Reason:** Fewer places for time math to drift, and tests that check the code
+players actually use.

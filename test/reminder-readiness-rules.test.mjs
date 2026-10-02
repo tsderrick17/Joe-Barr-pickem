@@ -2,9 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   isFreshSlateReady,
-  isGameDaySlateReady,
   isPlayoffDayRecapReady,
-  isRecapReady,
   isSundayWindowReady,
 } from "../src/lib/reminder-readiness-rules.js";
 
@@ -17,21 +15,6 @@ test("does not announce a fresh Slate until the active period has a usable sched
   assert.equal(isFreshSlateReady({ activePeriod: active, gameCount: 1 }).ready, false);
   assert.equal(isFreshSlateReady({ activePeriod: active, gameCount: 2 }).ready, true);
   assert.equal(isFreshSlateReady({ activePeriod: null, gameCount: 18 }).ready, false);
-});
-
-test("withholds final-line mail until every playable game today has an official line", () => {
-  const now = new Date("2026-09-13T16:00:00.000Z");
-  const games = [{ id: "a", kickoff_at: "2026-09-13T17:00:00.000Z" }, { id: "b", kickoff_at: "2026-09-13T20:00:00.000Z" }];
-  assert.equal(isGameDaySlateReady({ activePeriod: active, games, officialLineGameIds: new Set(["a"]), easternDay, now }).ready, false);
-  assert.equal(isGameDaySlateReady({ activePeriod: active, games, officialLineGameIds: new Set(["a", "b"]), easternDay, now }).ready, true);
-});
-
-test("weekly recaps wait for all grades, while disrupted games settle without a box score", () => {
-  const period = { id: "week-6" };
-  assert.equal(isRecapReady({ period, games: [{ status: "final" }, { status: "postponed" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, true);
-  assert.equal(isRecapReady({ period, games: [{ status: "cancelled" }, { status: "no_contest" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, true);
-  assert.equal(isRecapReady({ period, games: [{ status: "final" }], pendingAtsCount: 1, pendingSurvivorCount: 0 }).ready, false);
-  assert.equal(isRecapReady({ period, games: [{ status: "live" }], pendingAtsCount: 0, pendingSurvivorCount: 0 }).ready, false);
 });
 
 test("playoff-day recaps wait for the latest started day to settle and grade", () => {

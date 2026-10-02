@@ -6,7 +6,6 @@ import {
   isFallbackLineFresh,
 } from "../src/lib/line-fallback-policy.js";
 import {
-  isPickableGameStatus,
   isSettledGameStatus,
 } from "../src/lib/game-status-policy.js";
 
@@ -23,11 +22,7 @@ test("last-known lines expire after exactly 24 hours", () => {
   assert.equal(isFallbackLineFresh("not-a-date", checkedAt), false);
 });
 
-test("only scheduled games accept picks and every disruption settles a period", () => {
-  assert.equal(isPickableGameStatus("scheduled"), true);
-  for (const status of ["live", "final", "postponed", "cancelled", "no_contest"]) {
-    assert.equal(isPickableGameStatus(status), false);
-  }
+test("every disruption settles a period", () => {
   for (const status of ["final", "postponed", "cancelled", "no_contest"]) {
     assert.equal(isSettledGameStatus(status), true);
   }
