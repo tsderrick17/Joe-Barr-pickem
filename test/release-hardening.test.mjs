@@ -91,7 +91,7 @@ test("pool chat refreshes less often and pauses while hidden", async () => {
   assert.match(source, /document\.addEventListener\("visibilitychange", refreshOnVisibility\)/);
 });
 
-test("home and grading polling pause while hidden and home polls slowly", async () => {
+test("home and grading polling pause while hidden and grading adapts to workload", async () => {
   const home = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const grading = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
   assert.match(home, /const HOME_REFRESH_MS = 3 \* 60_000;/);
@@ -100,7 +100,12 @@ test("home and grading polling pause while hidden and home polls slowly", async 
   assert.match(home, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
   // Reveals still refresh at the exact kickoff instead of waiting for the poll.
   assert.match(home, /revealTimer = window\.setTimeout/);
-  assert.match(grading, /setInterval\(\(\) => \{ if \(document\.visibilityState === "visible"\) void refresh\(\); \}, 60000\)/);
+  assert.match(grading, /const FAST_REFRESH_MS = 60_000;/);
+  assert.match(grading, /const QUIET_REFRESH_MS = 5 \* 60_000;/);
+  assert.match(grading, /if \(data\.metrics\?\.live \|\| data\.attention\.length\) return FAST_REFRESH_MS;/);
+  assert.match(grading, /return kickoffIsNear \? FAST_REFRESH_MS : QUIET_REFRESH_MS;/);
+  assert.match(grading, /document\.visibilityState === "visible" && inFlightRequestsRef\.current === 0/);
+  assert.match(grading, /window\.setInterval\(refreshIfIdle, pollingInterval\)/);
   assert.match(grading, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
 });
 

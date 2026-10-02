@@ -1012,3 +1012,31 @@ the live heartbeat check.
 
 **Reason:** Fewer places for time math to drift, and tests that check the code
 players actually use.
+
+## 2026-10-02 - Adapt commissioner grading refresh to workload
+
+**Status:** Accepted
+
+The grading dashboard refreshes every minute while games are live, attention
+items are open, or a scheduled kickoff is within 15 minutes. It refreshes every
+five minutes during quiet periods, pauses while hidden, and refreshes on return.
+Periodic refreshes are skipped while another dashboard request is in flight.
+
+**Reason:** Production route measurements showed the grading dashboard was the
+largest observed source of server work. Adaptive polling preserves timely game-day
+updates while reducing requests during quiet periods.
+
+## 2026-10-02 - Bound repeated reads and incidental writes
+
+**Status:** Accepted
+
+Season-wide picks reads in standings, recap, and snapshot paths paginate beyond
+PostgREST's 1,000-row response cap. The Home standings endpoint is read-only with
+respect to Survivor enrollment and no-pick elimination; those changes remain on
+the existing scoring and selection paths. Chat and settings polling use a narrow
+player projection and do not write activity. Activity timestamps are best-effort,
+rate-limited per player per warm function to once per 15 minutes, and concurrent
+instances are coalesced by a database-side timestamp condition.
+
+**Reason:** Keep historic data complete as the season grows while avoiding
+repeated full-season maintenance and activity writes on read-heavy pages.

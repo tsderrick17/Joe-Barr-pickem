@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 export async function GET(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
+  const player = await authenticatedProfilePlayer(request, true);
   if (!player) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
+  const player = await authenticatedProfilePlayer(request, true);
   if (!player) {
     return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
   }
@@ -112,5 +113,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Your notification settings could not be saved." }, { status: 500 });
   }
 
+  await recordPlayerActivity(player.id);
   return NextResponse.json({ message: "Notification settings saved." });
 }

@@ -29,6 +29,21 @@ type Filter = "all" | "attention" | "live" | "settled";
 
 const stateLabels: Record<string, string> = { scheduled: "Scheduled", live: "Live", settled: "Settled", needs_review: "Needs review", stale: "Stale", held: "Held" };
 const filters: Array<[Filter, string]> = [["all", "All"], ["attention", "Attention"], ["live", "Live"], ["settled", "Settled"]];
+const FAST_REFRESH_MS = 60_000;
+const QUIET_REFRESH_MS = 5 * 60_000;
+const KICKOFF_REFRESH_WINDOW_MS = 15 * 60_000;
+
+function refreshInterval(data: Dashboard | null) {
+  if (!data) return FAST_REFRESH_MS;
+  if (data.metrics?.live || data.attention.length) return FAST_REFRESH_MS;
+  const now = Date.now();
+  const kickoffIsNear = data.games.some((game) => {
+    if (game.state !== "scheduled") return false;
+    const kickoffAt = Date.parse(game.kickoffAt);
+    return Number.isFinite(kickoffAt) && Math.abs(kickoffAt - now) <= KICKOFF_REFRESH_WINDOW_MS;
+  });
+  return kickoffIsNear ? FAST_REFRESH_MS : QUIET_REFRESH_MS;
+}
 
 function local(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
 function shortTime(value: string) { return new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", minute: "2-digit" }); }
@@ -72,9 +87,11 @@ export default function GradingDashboard() {
   const [chartsOpen, setChartsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 767px)").matches);
   const periodIdRef = useRef("");
   const requestSequenceRef = useRef(0);
+  const inFlightRequestsRef = useRef(0);
 
   const refresh = useCallback(async (requestedPeriodId = periodIdRef.current) => {
     const requestSequence = ++requestSequenceRef.current;
+    inFlightRequestsRef.current += 1;
     setLoading(true); setError("");
     try {
       const response = await fetchWithSession(requestedPeriodId ? `/api/admin/grading-dashboard?periodId=${encodeURIComponent(requestedPeriodId)}` : "/api/admin/grading-dashboard");
@@ -90,17 +107,31 @@ export default function GradingDashboard() {
       if (requestSequence !== requestSequenceRef.current) return;
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
       else setError(reason instanceof Error ? reason.message : "The grading dashboard could not load.");
-    } finally { if (requestSequence === requestSequenceRef.current) setLoading(false); }
+    } finally {
+      inFlightRequestsRef.current = Math.max(0, inFlightRequestsRef.current - 1);
+      if (requestSequence === requestSequenceRef.current) setLoading(false);
+    }
   }, []);
   useEffect(() => { periodIdRef.current = periodId; }, [periodId]);
-  // Poll only while the tab is on screen; returning to it refreshes at once.
+  // Fetch immediately once, then adapt the polling cadence to the live workload.
   useEffect(() => {
     const initial = window.setTimeout(() => void refresh(), 0);
-    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 60000);
-    const refreshOnReturn = () => { if (document.visibilityState === "visible") void refresh(); };
-    document.addEventListener("visibilitychange", refreshOnReturn);
-    return () => { window.clearTimeout(initial); window.clearInterval(timer); document.removeEventListener("visibilitychange", refreshOnReturn); };
+    return () => window.clearTimeout(initial);
   }, [refresh]);
+  // Live games, attention items, and nearby kickoffs stay responsive. Quiet
+  // periods poll less often; hidden tabs pause and refresh immediately on return.
+  const pollingInterval = refreshInterval(data);
+  useEffect(() => {
+    const refreshIfIdle = () => {
+      if (document.visibilityState === "visible" && inFlightRequestsRef.current === 0) void refresh();
+    };
+    const timer = window.setInterval(refreshIfIdle, pollingInterval);
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", refreshOnReturn); };
+  }, [pollingInterval, refresh]);
 
   const filteredGames = useMemo(() => [...(data?.games.filter((game) => filter === "all" || (filter === "attention" ? game.needsAttention : filter === game.state)) ?? [])].sort((left, right) => { const rank = (game: Dashboard["games"][number]) => game.needsAttention ? 0 : game.state === "live" ? 1 : game.picks.pending + game.survivor.pending > 0 ? 2 : game.state === "scheduled" ? 3 : 4; return rank(left) - rank(right) || new Date(left.kickoffAt).getTime() - new Date(right.kickoffAt).getTime(); }), [data, filter]);
   const metric = data?.metrics;

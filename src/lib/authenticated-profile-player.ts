@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { recordPlayerActivity } from "@/lib/player-activity";
 
-export async function authenticatedProfilePlayer(request: NextRequest) {
+const BASIC_PLAYER_FIELDS = "id, first_name, active, is_commissioner";
+const PROFILE_PREFERENCE_FIELDS = `${BASIC_PLAYER_FIELDS}, notification_email, email_notifications_enabled, email_weekly_enabled, email_final_lines_enabled, email_sunday_final_lines_enabled, email_early_lock_enabled, email_pick_due_enabled, email_pick_due_sunday_early_enabled, email_pick_due_sunday_afternoon_enabled, email_pick_due_primetime_enabled, email_weekly_recap_enabled, email_playoff_day_recap_enabled, email_playoff_public_reveal_enabled, email_ats_due_enabled, email_survivor_due_enabled, email_sunday_early_reveal_enabled, email_sunday_late_reveal_enabled, email_featured_window_reveal_enabled, email_custom_enabled, show_survivor_standings, show_bowl_card, show_pool_action, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows`;
+
+export async function authenticatedProfilePlayer(request: NextRequest, includePreferences = false) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authorization = request.headers.get("authorization");
@@ -17,11 +19,10 @@ export async function authenticatedProfilePlayer(request: NextRequest) {
 
   const { data: player } = await supabaseAdmin
     .from("players")
-    .select("id, first_name, active, is_commissioner, notification_email, email_notifications_enabled, email_weekly_enabled, email_final_lines_enabled, email_sunday_final_lines_enabled, email_early_lock_enabled, email_pick_due_enabled, email_pick_due_sunday_early_enabled, email_pick_due_sunday_afternoon_enabled, email_pick_due_primetime_enabled, email_weekly_recap_enabled, email_playoff_day_recap_enabled, email_playoff_public_reveal_enabled, email_ats_due_enabled, email_survivor_due_enabled, email_sunday_early_reveal_enabled, email_sunday_late_reveal_enabled, email_featured_window_reveal_enabled, email_custom_enabled, show_survivor_standings, show_bowl_card, show_pool_action, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows")
+    .select(includePreferences ? PROFILE_PREFERENCE_FIELDS : BASIC_PLAYER_FIELDS)
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (!player?.active) return null;
-  await recordPlayerActivity(player.id);
   return player;
 }

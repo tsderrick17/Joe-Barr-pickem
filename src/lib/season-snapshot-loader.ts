@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { buildSeasonSnapshot, seasonSnapshotReleased } from "@/lib/season-snapshot.js";
 import { CLOSED_CHART_MS, activeWeekState, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
+import { readAllPages } from "@/lib/read-all-pages";
 
 export type SeasonSnapshotPayload = ReturnType<typeof buildSeasonSnapshot> & { colorOrder: string[] };
 export type SeasonSnapshotResult =
@@ -17,17 +18,10 @@ let cached: { at: number; freshForMs: number; released: boolean; payload: Season
 // Simultaneous opens by the same kind of viewer share one set of reads.
 const inFlight: Partial<Record<"commissioner" | "player", Promise<SeasonSnapshotResult>>> = {};
 
-// PostgREST returns at most 1,000 rows per request, so read picks in pages.
-const PAGE = 1000;
 async function loadPicks(periodIds: string[]) {
-  const rows: Array<{ player_id: string; scoring_period_id: string; game_id: string; result: string }> = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabaseAdmin.from("picks").select("player_id, scoring_period_id, game_id, result")
-      .in("scoring_period_id", periodIds).order("id").range(from, from + PAGE - 1);
-    if (error) return { data: null, error };
-    rows.push(...(data ?? []));
-    if ((data ?? []).length < PAGE) return { data: rows, error: null };
-  }
+  return readAllPages((from, to) => supabaseAdmin.from("picks")
+    .select("player_id, scoring_period_id, game_id, result")
+    .in("scoring_period_id", periodIds).order("id").range(from, to));
 }
 
 async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {

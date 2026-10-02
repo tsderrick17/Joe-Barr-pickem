@@ -151,6 +151,16 @@ Still needs a person, and alerts the commissioner by email when it does:
   Node.js version that Vercel still supports (Node 22 reaches end of life in
   April 2027).
 
+## App read load
+
+The commissioner Grading page polls once per minute during live games, open
+attention items, or the 15 minutes around kickoff; otherwise it polls every five
+minutes. Hidden tabs pause polling and refresh on return. The Home standings route
+does not run Survivor enrollment or elimination maintenance. Whole-season pick
+queries paginate past PostgREST's 1,000-row cap, and activity timestamps are
+best-effort and throttled to one write per player per 15 minutes per warm app
+instance. Chat and settings reads do not write activity.
+
 ## Quiet operations watchdog
 
 The watchdog evaluates operations every ten minutes (migration

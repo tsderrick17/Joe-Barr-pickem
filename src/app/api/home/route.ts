@@ -6,10 +6,9 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
 import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
-import { recordPlayerActivity } from "@/lib/player-activity";
 import { championNames } from "@/lib/champion-names.js";
+import { readAllPages } from "@/lib/read-all-pages";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +144,6 @@ export async function GET(request: NextRequest) {
   }
 
   const viewer = viewerResult.data;
-  if (viewer) await recordPlayerActivity(viewer.id);
 
   if (!viewer) {
     return NextResponse.json(
@@ -206,13 +204,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: picks, error: picksError } = await supabaseAdmin
-    .from("picks")
-    .select(
-      "player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result",
-    )
-    .in("scoring_period_id", periodIds)
-    .neq("result", "void");
+  const { data: picks, error: picksError } = await readAllPages((from, to) =>
+    supabaseAdmin
+      .from("picks")
+      .select("player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result")
+      .in("scoring_period_id", periodIds)
+      .neq("result", "void")
+      .order("id")
+      .range(from, to),
+  );
 
   if (picksError) {
     return NextResponse.json(
@@ -427,22 +427,6 @@ export async function GET(request: NextRequest) {
   }> = [];
   let survivorGames: GameRow[] = [];
 
-  const [ensuredEntries, noPickEvaluation] = await Promise.all([
-    supabaseAdmin.rpc("ensure_survivor_entries", {
-      target_season_id: season.id,
-    }),
-    eliminateSurvivorNoPicks().catch(() => null),
-  ]);
-
-  // Enrollment and no-pick evaluation are maintenance steps. They can
-  // transiently fail during a concurrent cron run, but that must not hide a
-  // standings table whose read-only data is still available.
-  if (ensuredEntries.error || !noPickEvaluation) {
-    console.error("Survivor enrollment failed.", {
-      code: ensuredEntries.error?.code ?? "no-pick-evaluation-failed",
-    });
-  }
-
   {
     const [
       { data: survivorEntries, error: survivorEntriesError },
@@ -452,11 +436,13 @@ export async function GET(request: NextRequest) {
         .from("survivor_entries")
         .select("id, player_id, status, eliminated_at, eliminated_scoring_period_id")
         .eq("season_id", season.id),
-      supabaseAdmin
+      readAllPages((from, to) => supabaseAdmin
         .from("survivor_picks")
         .select("survivor_entry_id, game_id, selected_team_id, scoring_period_id, result")
         .in("scoring_period_id", periodIds)
-        .neq("result", "void"),
+        .neq("result", "void")
+        .order("id")
+        .range(from, to)),
     ]);
 
     if (survivorEntriesError || survivorPicksError) {
