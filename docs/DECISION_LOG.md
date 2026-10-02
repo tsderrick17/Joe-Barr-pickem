@@ -866,3 +866,20 @@ The browser loads the chart only while the back is showing and only when the
 standings changed since it last loaded, so there is no polling and flipping back
 and forth costs nothing. The chart only changes once a week, when the last pick
 settles, so a fixed 30-second refresh was needless work.
+
+## 2026-10-01 - Plot the week when its last pick settles
+
+**Status:** Accepted
+
+The Season Snapshot plots the active week as soon as its last Pick'em pick has
+settled, not after the week's final kickoff. A week is settled when no pick is
+pending and every active player either holds all their picks for the week or every
+game has kicked off. The server holds the chart accordingly: until pending picks
+could first be graded (about three hours after their kickoffs), then rechecks every
+two minutes, and holds it an hour once the week has settled. Supersedes the rule
+that required every game of the week to have kicked off.
+
+**Reason:** Nobody has to pick the Monday night game, so the week is usually
+settled earlier, and the chart should appear then. A player with an open pick slot
+keeps the week open until the last kickoff, so the chart never plots a week that
+could still change.

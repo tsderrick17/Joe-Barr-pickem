@@ -354,26 +354,63 @@ test("the snapshot loads fast: shared short cache, paged picks, and a saved copy
   assert.match(snapshot, /\{error \? <div className="season-snapshot-message" role="alert">/);
 });
 
-test("the chart is held until it can actually change: before the last kickoff, while grades land, and once settled", async () => {
-  const { snapshotFreshForMs } = await import("../src/lib/season-snapshot-freshness.js");
+test("the week settles when the last Pick'em pick settles, usually before the final game", async () => {
+  const { activeWeekState } = await import("../src/lib/season-snapshot-freshness.js");
+  const HOUR = 60 * 60 * 1000;
+  const sunday = Date.parse("2026-10-04T17:00:00Z");
+  const mondayNight = sunday + 31 * HOUR;
+  const games = [{ id: "sun1", kickoff_at: new Date(sunday).toISOString() }, { id: "sun2", kickoff_at: new Date(sunday + 3 * HOUR).toISOString() }, { id: "mnf", kickoff_at: new Date(mondayNight).toISOString() }];
+  const playerIds = ["a", "b"];
+  const pick = (player_id, game_id, result) => ({ player_id, game_id, result });
+  const week = (now, picks, maxPicks = 2) => activeWeekState({ now, maxPicks, games, picks, playerIds });
+
+  // Monday afternoon: nobody picked the Monday night game, every pick is graded,
+  // and everyone holds both picks. The week is settled hours before the last kickoff.
+  const graded = [pick("a", "sun1", "win"), pick("a", "sun2", "loss"), pick("b", "sun1", "loss"), pick("b", "sun2", "win")];
+  assert.equal(week(mondayNight - 4 * HOUR, graded).settled, true);
+  // A pick still pending keeps the week open.
+  assert.equal(week(mondayNight - 4 * HOUR, [...graded.slice(0, 3), pick("b", "sun2", "pending")]).settled, false);
+  // A player with an open pick slot could still pick Monday night, so it waits for that kickoff.
+  const missing = graded.slice(0, 3);
+  assert.equal(week(mondayNight - 4 * HOUR, missing).settled, false);
+  assert.equal(week(mondayNight + HOUR, missing).settled, true);
+  // Voided picks do not fill a slot.
+  assert.equal(week(mondayNight - 4 * HOUR, [...missing, pick("b", "sun2", "void")]).settled, false);
+  // A week with no games, or with an unknown pick count, is never settled early.
+  assert.equal(activeWeekState({ now: mondayNight, maxPicks: 2, games: [], picks: [], playerIds }).settled, false);
+  assert.equal(activeWeekState({ now: mondayNight - 4 * HOUR, maxPicks: null, games, picks: graded, playerIds }).settled, false);
+  assert.equal(activeWeekState({ now: mondayNight + HOUR, maxPicks: null, games, picks: graded, playerIds }).settled, true);
+});
+
+test("the chart is held until it can change: while picks await grading, while a pick slot is open, and once settled", async () => {
+  const { activeWeekState, snapshotFreshForMs } = await import("../src/lib/season-snapshot-freshness.js");
   const HOUR = 60 * 60 * 1000;
   const MINUTE = 60 * 1000;
-  const now = Date.parse("2026-10-04T12:00:00Z");
-  // Sunday morning: the last game kicks off tonight, so nothing can settle before then.
-  const lastKickoff = now + 10 * HOUR;
-  assert.equal(snapshotFreshForMs(now, [now + HOUR, lastKickoff], false, true), HOUR, "capped at an hour");
-  // An hour before the last kickoff, it is held exactly until that kickoff.
-  assert.equal(snapshotFreshForMs(lastKickoff - 30 * MINUTE, [lastKickoff], false, true), 30 * MINUTE);
-  // Just before kickoff it is never rechecked more often than the grade window.
-  assert.equal(snapshotFreshForMs(lastKickoff - 10_000, [lastKickoff], false, true), 2 * MINUTE);
-  // Everything has kicked off but grades are still landing: check at the score-sync pace.
-  assert.equal(snapshotFreshForMs(lastKickoff + HOUR, [now, lastKickoff], false, true), 2 * MINUTE);
-  // The week has settled and plotted: nothing is expected for a while.
-  assert.equal(snapshotFreshForMs(lastKickoff + 5 * HOUR, [now, lastKickoff], true, true), HOUR);
+  const sunday = Date.parse("2026-10-04T17:00:00Z");
+  const late = sunday + 3 * HOUR;
+  const mondayNight = sunday + 31 * HOUR;
+  const games = [{ id: "sun1", kickoff_at: new Date(sunday).toISOString() }, { id: "sun2", kickoff_at: new Date(late).toISOString() }, { id: "mnf", kickoff_at: new Date(mondayNight).toISOString() }];
+  const playerIds = ["a"];
+  const state = (now, picks, maxPicks = 2) => activeWeekState({ now, maxPicks, games, picks, playerIds });
+  const pick = (game_id, result) => ({ player_id: "a", game_id, result });
+
+  // Sunday afternoon with a pick pending on the 12:00-ish game: nothing can be graded
+  // until about three hours after its kickoff, so the chart is held until then.
+  const pending = state(sunday + HOUR, [pick("sun1", "pending"), pick("sun2", "pending")]);
+  assert.equal(snapshotFreshForMs(sunday + HOUR, [pending]), HOUR, "capped at an hour");
+  // Close to that moment it is checked at the score-sync pace.
+  assert.equal(snapshotFreshForMs(late + 170 * MINUTE + MINUTE, [state(late + 170 * MINUTE + MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 2 * MINUTE);
+  // Exactly on time, the wait is the time remaining, never less than the grade pace.
+  assert.equal(snapshotFreshForMs(late + 170 * MINUTE - 30 * MINUTE, [state(late + 140 * MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 30 * MINUTE);
+  // Everything graded but a player has an open slot: held until the last kickoff (an hour at most).
+  const open = state(mondayNight - 90 * MINUTE, [pick("sun1", "win")]);
+  assert.equal(snapshotFreshForMs(mondayNight - 90 * MINUTE, [open]), HOUR);
+  assert.equal(snapshotFreshForMs(mondayNight - 20 * MINUTE, [state(mondayNight - 20 * MINUTE, [pick("sun1", "win")])]), 20 * MINUTE);
+  // Settled: nothing is expected for a while.
+  const settled = state(mondayNight - 4 * HOUR, [pick("sun1", "win"), pick("sun2", "loss")]);
+  assert.equal(snapshotFreshForMs(mondayNight - 4 * HOUR, [settled]), HOUR);
   // Between weeks, with no active week, there is nothing to wait for.
-  assert.equal(snapshotFreshForMs(now, [], true, false), HOUR);
-  // An active week with no games yet is rechecked at the grade pace.
-  assert.equal(snapshotFreshForMs(now, [], false, true), 2 * MINUTE);
+  assert.equal(snapshotFreshForMs(sunday, []), HOUR);
 });
 
 test("the back of the pad loads only when shown and only when the standings changed", () => {

@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { buildSeasonSnapshot, seasonSnapshotReleased } from "@/lib/season-snapshot.js";
-import { CLOSED_CHART_MS, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
+import { CLOSED_CHART_MS, activeWeekState, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
 
 export type SeasonSnapshotPayload = ReturnType<typeof buildSeasonSnapshot> & { colorOrder: string[] };
 export type SeasonSnapshotResult =
@@ -20,9 +20,9 @@ const inFlight: Partial<Record<"commissioner" | "player", Promise<SeasonSnapshot
 // PostgREST returns at most 1,000 rows per request, so read picks in pages.
 const PAGE = 1000;
 async function loadPicks(periodIds: string[]) {
-  const rows: Array<{ player_id: string; scoring_period_id: string; result: string }> = [];
+  const rows: Array<{ player_id: string; scoring_period_id: string; game_id: string; result: string }> = [];
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabaseAdmin.from("picks").select("player_id, scoring_period_id, result")
+    const { data, error } = await supabaseAdmin.from("picks").select("player_id, scoring_period_id, game_id, result")
       .in("scoring_period_id", periodIds).order("id").range(from, from + PAGE - 1);
     if (error) return { data: null, error };
     rows.push(...(data ?? []));
@@ -58,29 +58,31 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
   const [picksResult, activeGamesResult] = await Promise.all([
     visibleIds.length ? loadPicks(visibleIds) : Promise.resolve({ data: [], error: null }),
     activeIds.length
-      ? supabaseAdmin.from("games").select("scoring_period_id, kickoff_at").in("scoring_period_id", activeIds)
+      ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at").in("scoring_period_id", activeIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
   if (picksResult.error || activeGamesResult.error) {
     return { ok: false, status: 503, error: "Graded picks could not be loaded." };
   }
 
-  // The active week is plotted for everyone at once, after its last pick settles.
+  // The active week is plotted for everyone at once, as soon as its last
+  // Pick'em pick has settled (see season-snapshot-freshness.js).
   const now = Date.now();
   const picks = picksResult.data ?? [];
-  const activeWeekSettled = new Set(activeIds.filter((periodId) => {
-    const games = (activeGamesResult.data ?? []).filter((game) => game.scoring_period_id === periodId);
-    const allKickedOff = games.length > 0 && games.every((game) => new Date(game.kickoff_at).getTime() <= now);
-    const nothingPending = !picks.some((pick) => pick.scoring_period_id === periodId && pick.result === "pending");
-    return allKickedOff && nothingPending;
+  const activePlayerIds = everyone.filter((player) => player.active).map((player) => player.id);
+  const weekStates = activeIds.map((periodId) => ({
+    periodId,
+    ...activeWeekState({
+      now,
+      maxPicks: periods.find((period) => period.id === periodId)?.max_picks,
+      games: (activeGamesResult.data ?? []).filter((game) => game.scoring_period_id === periodId),
+      picks: picks.filter((pick) => pick.scoring_period_id === periodId),
+      playerIds: activePlayerIds,
+    }),
   }));
+  const activeWeekSettled = new Set(weekStates.filter((week) => week.settled).map((week) => week.periodId));
   const snapshot = buildSeasonSnapshot(periods, everyone.filter((player) => player.active), picks, activeWeekSettled);
-  const freshForMs = snapshotFreshForMs(
-    now,
-    (activeGamesResult.data ?? []).map((game) => new Date(game.kickoff_at).getTime()),
-    activeIds.every((periodId) => activeWeekSettled.has(periodId)),
-    activeIds.length > 0,
-  );
+  const freshForMs = snapshotFreshForMs(now, weekStates);
   return { ok: true, released, payload: { ...snapshot, colorOrder: everyone.map((player) => player.id) }, freshForMs };
 }
 

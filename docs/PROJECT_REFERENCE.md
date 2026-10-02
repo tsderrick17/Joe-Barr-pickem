@@ -118,8 +118,11 @@ be replayed.
   instantly while fresh data loads behind it.
   Everyone begins at zero on the regular-season chart. Completed periods carry
   every player's cumulative ATS wins forward; the active period is plotted for
-  everyone at once, after its last Pick'em pick settles (every game has kicked
-  off and no pick is pending). A separate playoff chart starts at each
+  everyone at once, as soon as its last Pick'em pick settles, which is usually
+  before the final game of the week because nobody has to have picked it. The
+  week is settled when no pick is pending and every active player either holds
+  all their picks for the week or every game has kicked off (a player with an open
+  pick slot could still add one, so the chart waits for the last kickoff). A separate playoff chart starts at each
   player's final regular-season total and continues season totals. All players
   share exact week columns. The horizontal scale fits the visible weeks from
   baseline through the current week. Lines have no point markers or data table;

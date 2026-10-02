@@ -8,8 +8,9 @@ export function seasonSnapshotReleased(periods) {
 }
 
 /** Build weekly positions. Everyone is plotted together for a week, and the
- * active week appears only once its last Pick'em pick has settled: every game
- * has kicked off (no pick can still be added) and no pick is pending. */
+ * active week appears only once its last Pick'em pick has settled (see
+ * season-snapshot-freshness.js): every player has all their picks in or every
+ * game has kicked off, and no pick is pending. */
 export function buildSeasonSnapshot(periods, players, picks, activeWeekSettled = new Set()) {
   const playerIds = players.map((player) => player.id);
   const picksByPeriodAndPlayer = new Map();
