@@ -40,6 +40,22 @@ function saveSetting(key: string, value: string) {
   try { window.localStorage.setItem(key, value); } catch { /* not remembered; defaults apply */ }
 }
 
+// The last chart is kept on the device so turning the pad over shows it at once
+// while the current one loads behind it. A saved copy is only a head start: it
+// is replaced as soon as fresh data arrives, and ignored if it is malformed.
+const SNAPSHOT_KEY = "pickem.seasonSnapshot.last";
+function readSavedSnapshot(): Snapshot | null {
+  const saved = readSetting(SNAPSHOT_KEY);
+  if (!saved) return null;
+  try {
+    const value = JSON.parse(saved) as Partial<Snapshot>;
+    if (Array.isArray(value.regular) && Array.isArray(value.playoffs)) {
+      return { regular: value.regular, playoffs: value.playoffs, colorOrder: Array.isArray(value.colorOrder) ? value.colorOrder : [] };
+    }
+  } catch { /* ignore a damaged copy */ }
+  return null;
+}
+
 function shortWeek(label: string) {
   const regular = label.match(/week\s*(\d+)/i);
   if (regular) return regular[1];
@@ -215,6 +231,8 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   if (active && !opened) {
     setOpened(true);
     setRange(readSetting(RANGE_KEY) === "six" ? "six" : "all");
+    const saved = readSavedSnapshot();
+    if (saved) setSnapshot(saved);
   }
 
   const fetchSnapshot = useCallback(async () => {
@@ -224,19 +242,27 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
     return { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [], colorOrder: payload.colorOrder ?? [] };
   }, []);
 
-  // The normal home refresh already detects new grades; no extra polling loop.
+  // The chart only changes when a week's last pick settles, which also changes
+  // the standings the page already refreshes. So it loads only while the back is
+  // showing, and only when those standings differ from what it last loaded this
+  // visit. Turning the pad back and forth costs nothing, and there is no polling.
+  const loadedFor = useRef<string | null>(null);
+  const requestId = useRef(0);
   useEffect(() => {
-    if (!opened) return;
-    let cancelled = false;
+    if (!active) return;
+    const wanted = `${refreshKey}#${retry}`;
+    if (loadedFor.current === wanted) return;
+    const id = ++requestId.current;
     void fetchSnapshot().then((data) => {
-      if (cancelled) return;
+      if (id !== requestId.current) return;
+      loadedFor.current = wanted;
       setSnapshot(data);
       setError("");
+      saveSetting(SNAPSHOT_KEY, JSON.stringify(data));
     }).catch((reason) => {
-      if (!cancelled) setError(reason instanceof Error ? reason.message : "Season Snapshot could not be loaded.");
+      if (id === requestId.current) setError(reason instanceof Error ? reason.message : "Season Snapshot could not be loaded.");
     });
-    return () => { cancelled = true; };
-  }, [opened, refreshKey, retry, fetchSnapshot]);
+  }, [active, refreshKey, retry, fetchSnapshot]);
 
   // The week-range toggle is for the regular season only.
   const showPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
