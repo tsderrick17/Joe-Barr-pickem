@@ -911,3 +911,21 @@ slightly smaller size so it fits the spread column on phones.
 **Reason:** The commissioner wanted the ticket to read as die-cut at every corner
 and perforation, and the lock note wrapped awkwardly (an orphaned "PM ET") and
 crowded the team names.
+
+## 2026-10-02 - Unattended operation for years
+
+**Status:** Accepted
+
+A sweep for running a decade without anyone touching it. Fixed now: a weekly
+workflow re-enables every scheduled GitHub workflow so GitHub's 60-day idle rule
+for public repositories never stops the weekly backup; the backup health check
+falls back to an anonymous read of the public run list when its token is missing
+or expired; and the Bowl Pool title and commissioner schedule default no longer
+hardcode 2026. OPERATIONS.md now lists what resets each year, what is kept and
+removed, and what still needs a person.
+
+**Reason:** Without a commit for 60 days GitHub would have disabled the backup
+workflow, and an expired token would have reported a false backup outage. The
+remaining items (Survivor with no single winner, a longer NFL season, provider
+plans, and Node runtime support) need a rule or an account decision and alert the
+commissioner when they occur.

@@ -107,6 +107,50 @@ period and gameweek. Changes involving a locked or settled game, different
 teams, or a different scoring period are quarantined for commissioner review;
 the rest of the schedule continues reconciling normally.
 
+## Running unattended for years
+
+The yearly cycle runs on its own: on August 1 (Eastern) the score worker creates
+the new season from last year's scoring-period template; each day in August and
+September the bootstrap loads the full 272-game schedule from nflverse; the
+first run after the prior season is certified does the annual cleanup and opens
+Survivor for every active player; the Bowl Pool season row is created by its own
+dispatcher. Championships and season completion are recorded by database
+triggers when the last period completes.
+
+Kept forever: seasons, scoring periods, games, official lines, every graded
+Pick'em and Survivor selection, championships, Bowl Pool records, email and push
+delivery receipts, the final pre-kickoff save for each pick, the last spread per
+game, and one turnover receipt per year. Removed: superseded pre-kickoff save
+snapshots and preliminary spreads (at turnover), score backoffs, expired leases
+and provider circuit state, PIN attempts after 24 hours, PIN incidents after 180
+days, and sync runs, resolved alerts, and resolved schedule reviews after 180
+days (weekly prune). At this pool's size that is a few megabytes a year, far
+inside the free database and storage limits.
+
+Scheduled GitHub workflows (weekly backup, smoke summary, rehearsals) are kept
+enabled by **Keep scheduled workflows enabled**, because GitHub switches off
+scheduled workflows in a public repository after 60 days without a commit. The
+backup health check reads the public run list anonymously if its GitHub token
+expires.
+
+Still needs a person, and alerts the commissioner by email when it does:
+
+- **Survivor with no single winner.** A champion is crowned only when exactly one
+  entry remains. If the last entries are all eliminated in the same week, or
+  several survive the regular season, no champion is recorded, the annual
+  turnover stays blocked, and the next season's Survivor does not open until it
+  is resolved.
+- **A change to the NFL season's shape.** The schedule import expects 18 weeks
+  and 272 games. A longer season stops the import with a clear message and a
+  critical alert after August 15.
+- **Provider plans and accounts.** Scores and spreads use The Odds API free tier;
+  email uses Brevo; hosting uses Vercel Hobby and Supabase Free. A plan change or
+  a lapsed account stops the affected job and raises the matching watchdog or
+  uptime alert.
+- **Runtime support.** The deployed app keeps running, but new deployments need a
+  Node.js version that Vercel still supports (Node 22 reaches end of life in
+  April 2027).
+
 ## Quiet operations watchdog
 
 The watchdog evaluates operations every ten minutes (migration
