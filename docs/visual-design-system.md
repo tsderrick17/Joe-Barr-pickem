@@ -17,12 +17,18 @@ The site and its email artwork share a small set of visual rules. Keep future ch
 
 - Matchup rows have equal team lanes around a dedicated line lane. Pregame rows may reclaim unused Survivor space; settled rows retain their score geometry.
 - Dense tables scroll horizontally only when the viewport cannot fit the full matrix; they do not create incidental vertical scrollbars.
-- Email artwork is rendered at a tighter canvas than desktop Slate artwork so iOS Mail does not shrink headings and team labels unnecessarily.
-- Email images always have a link and descriptive fallback text. Dynamic artwork URLs are versioned and successful renders are cacheable.
+- Email artwork is rendered at a tighter canvas than desktop Slate artwork so iOS Mail does not shrink headings and team labels unnecessarily. The editor changes wording, not a user-facing image-spacing setting.
+- Email images always have a link and descriptive fallback text. New messages use pre-rendered, immutable Storage assets; the versioned Vercel route remains for older messages and fallback delivery.
 
 ## State styling
 
 Use teal for official/healthy, amber for waiting, and red for blocked/error. Status should be communicated by text as well as color. Focus states use the shared ring rather than a page-specific outline.
+
+The Bowl Pool has its own restrained gold/brown identity. Do not borrow green
+for a decorative Bowl surface: green still means ready or won, and red means
+blocked or lost. The Season Snapshot's player colors are persistent identity
+cues; the standings key must retain names and win totals so color is never the
+only way to identify a line.
 
 ## Receipt ticket
 

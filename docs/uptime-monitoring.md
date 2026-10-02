@@ -1,7 +1,8 @@
 # Uptime monitoring
 
-UptimeRobot is an independent alarm system. The app owns eight public, opaque
-health contracts; additional page monitors are useful but do not replace them.
+UptimeRobot is an independent alarm system. It monitors eight selected public,
+opaque health contracts; the app also exposes an aggregate worker contract for
+deployment smoke checks. Additional page monitors do not replace these.
 The live monitor count is shown under **Commissioner → Connected systems**,
 while UptimeRobot remains the source of truth for exact monitor names, URLs,
 contacts, and current incidents.
@@ -77,8 +78,10 @@ without turning an ordinary provider delay into a whole-site outage.
    authorization before changing schedules. A valid-looking website can still
    have stale automation credentials.
 
-The GitHub **Production smoke gate** performs the same public checks immediately
-after a successful Vercel production deployment. Its retry window avoids a
+The GitHub **Production smoke gate** checks the canonical page and five selected
+contracts after a successful Vercel production deployment: availability,
+automation, aggregate workers, backup, and Bowl Pool. It does not replace the
+separate line-lock, score, reminder, or settlement monitors. Its retry window avoids a
 false alarm while the alias settles. If two or more contracts remain red, the
 run labels the result as a likely shared deployment or authorization problem;
 it does not imply that each worker independently broke.

@@ -2,17 +2,16 @@
 
 ## Control-center overview
 
-The Standings page shows commissioners a minimized Season Snapshot beneath the
-Pick'em Pad for preview, including before Week 6. Players do not see it unless
-it is explicitly released. Expand it to inspect cumulative wins, starting from
-zero. A current-week point appears for a player once their entire card is
-graded, even if other games remain. The separate playoff chart continues from
-the regular-season totals. The right-hand key follows live standings; a player
-with unfinished picks may have a live total not yet plotted for that week.
-Shared paths appear as touching shaded ribbons, with the higher current
-standing above the lower. The bundle is centered on the true cumulative score.
-Select a name in the key to inspect that player's path alone.
-The chart refreshes with the normal standings update while open.
+The Season Snapshot is the reverse of the Pick'em Pad on Standings, opened by
+its flip button. Commissioners can inspect it before Week 6; players receive
+the same button and data from Week 6 onward. The regular-season chart starts
+everyone at zero. It adds the active week for everyone together only when no
+Pick'em pick is pending and each active player has a full card or every game
+has kicked off. The playoff view carries forward regular-season totals. The
+key follows current standings; select a player to hide or show a ribbon, or
+use **Show all** to restore the full field. Touching shaded ribbons make tied
+paths distinguishable without moving anyone off their actual win total. The
+chart loads only while visible and follows the normal standings refresh.
 
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and
@@ -130,17 +129,16 @@ Never overwrite the original audit event or type an estimated score.
 
 Open **Commissioner → Email → Email image studio**. Choose the email type,
 review the generated PNGs at Phone or Desktop width, and use the download
-links to inspect an image at full resolution. Change subject, message, or
-Compact/Comfortable spacing, select **Refresh preview**, then **Save email
-changes**. Saving is disabled until the current draft has rendered.
+links to inspect an image at full resolution. Change the subject or message,
+select **Refresh preview**, then **Save email changes**. Saving is disabled
+until the current draft has rendered.
 
 **View email images** on a queued or sent card uses that message's saved
 snapshot when available. If upcoming results are not ready, the preview is
 explicitly marked as fictional sample data; it is not approval of results.
 Previewing never sends an email or freezes delivery data. Standard wording
-changes apply to newly queued messages; image spacing applies when delivery
-builds its URLs. Already sent messages keep their original data and URL
-spacing, though the current renderer can improve their visual treatment.
+changes apply to future messages. Already sent messages keep their source
+snapshot and rendered artwork; do not expect an editor change to restyle them.
 Competitive corrections belong in Grading, not the image editor.
 
 ### Delivery diagnosis
@@ -174,7 +172,8 @@ Pause writes, preserve the current audit evidence, and restore into an isolated
 project first. Verify the restored application before considering any
 production recovery. Detailed retention and backup behavior lives in
 [OPERATIONS.md](OPERATIONS.md).
-# Grading control center
+
+## Grading control center
 
 The Commissioner Desk's **Grading** panel is the operational view for live
 settlement. It shows the active scoring period, game-by-game state, pending
@@ -208,8 +207,10 @@ line lock. A partial line count is expected before the slate is fully locked;
 only a missing line after its deadline should enter the attention queue.
 
 The **Provider efficiency** card is a decision aid, not a dynamic polling
-switch. It reports observed credits, finalized games, productive checks, and
-the seven-day trend while the score cadence remains predictable week to week.
+switch. It compares score-check credits per settled game with settlement
+latency by exact kickoff slate, and retains the 15-day game-weighted moving
+average for credits per game. Missing or ambiguous attribution is shown as a
+gap, not a zero.
 
 Use the **Period** selector to inspect a completed or upcoming scoring period
 without changing the player-facing default week. Historical views are
@@ -229,13 +230,10 @@ time, Pick'em grades, and Survivor grades. **Copy snapshot** creates a small
 text handoff for a support note or incident log; it does not expose picks or
 change any pool record.
 
-The **Settlement latency** card measures kickoff-to-finalization time for the
-selected period. It is a trend signal, not a new grading threshold; use the
-worker table and provider efficiency details before intervening.
-
 The **Incident posture** card shows both open and recently resolved watchdog
 signals. Treat an open item as the current source of truth; resolved items are
 there for context when reviewing whether a retry actually recovered the system.
+
 ### Score polling cadence
 
 The fixed retry ladder below is the only score-polling policy. There is no polling simulator or suggested plan, and nothing here changes the cadence.
@@ -243,7 +241,7 @@ The fixed retry ladder below is the only score-polling policy. There is no polli
 The live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
 
 Provider efficiency uses one point per exact kickoff slate in the selected period,
-with credits per final on the left axis and productive checks on the right.
+with credits per settled game on the left axis and settlement latency on the right.
 Historical receipts have no slate IDs: non-overlapping polling windows are
 estimated, while overlapping windows remain unplotted. A gap is not a zero.
 Use hover, touch, or the Explore slider for exact values, and View chart data
@@ -251,6 +249,8 @@ for the accessible table.
 
 Current-month credit usage starts on the first UTC day and ends today. Switch
 between Month to date and Daily spend. Tracked request costs include charged
-failures and clearly identify older estimated costs. Provider reports used and
-Remaining are the latest monthly quota snapshot, not a fabricated reconciliation
-of the local logs. All charts refresh with the dashboard and retain selections.
+failures and clearly identify older estimated costs. The summary shows actual
+tracked credits, a schedule-based month-end forecast, and average credits per
+elapsed regular-season Sunday. The provider's used/remaining figures are one
+separate quota snapshot, not a fabricated reconciliation of local run records.
+All charts refresh with the dashboard and retain selections.

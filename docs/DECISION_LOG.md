@@ -1,24 +1,8 @@
 # Durable decision log
 
-## 2026-09-22 - Email artwork and preview share one renderer
-
-**Status:** Accepted
-
-Replace guessed-height recap canvases and separate roster sections with an
-intrinsically sized card, trimmed from its transparent working canvas.
-Standings, recap wins and selections appear together by player identity.
-Keep all rows at readable width instead of shrinking large rosters into two
-columns. Survivor omits future empty weeks and shows up to six completed weeks.
-The Commissioner Email image studio uses the delivery PNG renderer and HTML,
-supports private phone/desktop inspection and downloads, and saves spacing
-alongside standard wording. Preview calls are read-only; unavailable results
-are explicitly fictional samples. Saved delivery snapshots remain immutable.
-Image spacing is included in outgoing URLs so later preference edits do not
-restyle sent messages. Pixel-based renderer checks cover short and long cards.
-
 This log records project rules that future changes must not casually reverse.
-Entries describe the current accepted decision; a later change adds a new entry
-that explicitly supersedes the old one.
+Entries preserve the original reasoning; a later change marks an older detail
+as superseded and records the current contract rather than rewriting history.
 
 ## 2026-08-09 — REF-001 — Layer project guidance
 
@@ -46,9 +30,10 @@ calendar boundary, but cannot change its original scoring period or gameweek.
 Database constraints backstop application reconciliation. Ambiguous, locked,
 settled, re-paired, or cross-period changes go to review.
 
-## 2026-08-09 — REF-004 — Treat provider omission as incomplete input
+## 2026-08-09 - REF-004 - Treat provider omission as incomplete input
 
-**Status:** Accepted
+**Status:** Accepted for omission safety; the fixed 272-game import requirement
+was superseded by the 2026-10-02 season-length decision below.
 
 A partial schedule feed cannot delete saved games. The initial full-season
 import requires exactly 272 validated regular-season games; in-season refreshes
@@ -100,9 +85,10 @@ scoring, stuck scheduled messages, an overdue incomplete season schedule, or a
 missing production automation prerequisite. Intentional cooldowns and isolated
 recipient failures do not produce commissioner incidents.
 
-## 2026-08-09 — REF-010 — Protect provider and compute allowance
+## 2026-08-09 - REF-010 - Protect provider and compute allowance
 
-**Status:** Accepted
+**Status:** Accepted for quota protection; the earlier exponential score
+cooldown was superseded by the fixed retry ladder and ten-minute worker schedule.
 
 Score checks use per-game exponential cooldown through six hours. Schedule
 refresh failures use a shared circuit breaker, scheduled/manual paths share
@@ -179,7 +165,8 @@ preliminary spread snapshots no more than once per Eastern day while preserving
 all changed snapshots. A service-role-only per-table size report makes the
 remaining database use visible to the Commissioner without opening metadata to
 players.
-### REF-017 — Harden advisor findings without opening data access (2026-08-18)
+
+### REF-017 - Harden advisor findings without opening data access (2026-08-18)
 
 **Decision:** Pin the `search_path` of every public-schema function that does
 not already declare one, and make the legacy `rls_auto_enable()` helper
@@ -330,9 +317,11 @@ favorite-side position. Slow repeated PIN guesses by source fingerprint after
 five and ten failures without ever locking an individual player's valid PIN.
 Treat verified postponed, cancelled, and no-contest selections as audited
 voids—not losses—and allow those settled disruptions to stop holding rollover.
-## 2026-09-07 — REF-028 — Keep the NCAA Bowl Pool separate, voluntary, and push-free
 
-**Status:** Accepted
+## 2026-09-07 - REF-028 - Keep the NCAA Bowl Pool separate, voluntary, and push-free
+
+**Status:** Accepted for competition rules; the named schedule/result provider
+was superseded by the ESPN-backed implementation described below.
 
 Create a separate annual Bowl Pool rather than bending the NFL season model.
 Players opt in beginning December 7 at 3:00 AM Eastern and may withdraw before
@@ -346,7 +335,8 @@ the original provider value. Rank by wins, then the closest absolute combined
 points prediction for the CFP national championship; remaining ties crown
 co-champions. Use CollegeFootballData as the no-cost schedule/result source
 and the existing Odds API integration for current NCAAF lines.
-## 2026-09-08 — REF-029 — Make production worker failures actionable to the Commissioner
+
+## 2026-09-08 - REF-029 - Make production worker failures actionable to the Commissioner
 
 **Status:** Accepted
 
@@ -388,7 +378,8 @@ then inserts only keys that are absent. The table's partial unique key remains
 the final duplicate guard, but is not used as a PostgREST upsert conflict
 target. This retains immutable delivery records and prevents schedule setup
 from blocking the reminder worker.
-## REF-033 — Agile NCAA bowl schedule staging
+
+## REF-033 - Agile NCAA bowl schedule staging
 
 - **Decision:** Stage bowl games with a stable commissioner-supplied key and
   canonical sponsor-free display name; allow team and spread fields to remain
@@ -454,7 +445,26 @@ path and leaves an existing Survivor pick untouched.
 **Reason:** Once a Survivor game begins, its selection must stay sealed. That
 constraint applies only to Survivor changes; it must not prevent a player from
 adding or revising a still-open Pick'em selection later in the same week.
-## 2026-09-22 — Interactive provider charts and monthly credit accounting
+
+## 2026-09-22 - Email artwork and preview share one renderer
+
+**Status:** Accepted for shared rendering; the image-spacing editor choice was
+later removed. The density field remains an internal compatibility detail, not
+a commissioner control.
+
+Replace guessed-height recap canvases and separate roster sections with an
+intrinsically sized card, trimmed from its transparent working canvas.
+Standings, recap wins and selections appear together by player identity.
+Keep all rows at readable width instead of shrinking large rosters into two
+columns. Survivor omits future empty weeks and shows up to six completed weeks.
+The Commissioner Email image studio uses the delivery PNG renderer and HTML,
+supports private phone/desktop inspection and downloads, and saves spacing
+alongside standard wording. Preview calls are read-only; unavailable results
+are explicitly fictional samples. Saved delivery snapshots remain immutable.
+Image spacing is included in outgoing URLs so later preference edits do not
+restyle sent messages. Pixel-based renderer checks cover short and long cards.
+
+## 2026-09-22 - Interactive provider charts and monthly credit accounting
 
 Grading charts now share the dashboard refresh and period selection. Use a
 daily/cumulative UTC calendar-month credit chart and paginate receipts to avoid
@@ -469,6 +479,9 @@ proportions, with fresh-final counts controlling bar height.
 
 ## 2026-09-28 - Commissioner-only Season Snapshot prototype
 
+**Status:** Superseded by the Pick'em Pad flip, Week 6 release gate, and
+all-player week plotting decisions below.
+
 The Pick'em Pad contains a default-minimized Season Snapshot, visible only to
 commissioners until release. The graph uses historical period results, and its
 commissioner-only endpoint loads only while expanded. The original settled-week
@@ -477,7 +490,8 @@ below.
 
 ## 2026-09-28 - Season Snapshot week alignment and release timing
 
-**Status:** Accepted, revised for commissioner preview and simplified chart
+**Status:** Accepted for aligned axes and styling; the per-player active-week
+plotting rule was superseded by the all-player rule below.
 
 Keep the snapshot available to commissioners for review, including before Week
 6; players do not see it until it is explicitly released. Plot a zero-win
@@ -1069,3 +1083,22 @@ other live metrics and controls remain available.
 **Reason:** A production `/admin` error showed that formatting an undefined
 measurement could crash a Commissioner panel. The alert did not include a
 stack trace, so the exact field was not identified.
+
+## 2026-10-02 - Reconcile the documented operating contract
+
+**Status:** Documentation clarification; no runtime rule changed in this entry.
+
+Keep historical decisions as a record of why a design existed, but identify
+superseded details explicitly. The current implementation uses a feed-validated
+NFL season length, a ten-minute NFL score-worker schedule with a fixed per-game
+retry ladder, ESPN as the default Bowl schedule/result source, an optional
+NCAAF Odds API fallback, and pre-rendered email artwork without a commissioner
+spacing switch. The 18-week, 285-game isolated drill is a regression fixture,
+not a production season-length constant. A scheduled monthly upgrade rehearsal
+attempts only the selected non-gameday once; a failure requires a deliberate
+manual retry. These statements reflect the current migration, test, and code
+contracts and supersede conflicting wording in earlier entries.
+
+**Reason:** A portfolio-quality operating record must distinguish current
+behavior from earlier design decisions without silently editing history or
+claiming that a documentation correction changed production.

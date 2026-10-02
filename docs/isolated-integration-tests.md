@@ -7,7 +7,10 @@ Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_T
 ## One-time setup
 
 1. Create a separate free Supabase project named something unmistakable, such as `Joe Barr Pick'em Test`.
-2. Apply the same current schema and seed data as production, including the 2026 season, scoring periods, and NFL teams. The test project is allowed to receive disposable fixtures; production never is.
+2. Apply the current schema and enough non-personal seed data to exercise the
+   current season template, scoring periods, and all 32 NFL teams. Do not copy
+   production player records. The test project may receive disposable fixtures;
+   production never does.
 3. For a local rehearsal, create an ignored file named `.env.test.local` in the project folder with:
 
    ```text
@@ -70,7 +73,13 @@ cleanly if a runner was interrupted before teardown without weakening audit rule
 
 ## Full-season certification
 
-Run **Isolated integration checks** manually with `full_season_drill` enabled. The certification fast-forwards a disposable 22-period, 285-game season through schedule import, every regular week, all playoff rounds, scoring, Survivor, championship recording, historical preservation, and annual rollover.
+Run **Isolated integration checks** manually with `full_season_drill` enabled.
+The certification fast-forwards a disposable 22-period, 285-game fixture through
+schedule import, every regular week, all playoff rounds, scoring, Survivor,
+championship recording, historical preservation, and annual rollover. The
+fixture models the current NFL format: 272 regular-season games, 17 appearances
+and one bye per team. Production import is not limited to that fixture's season
+length; it validates the complete schedule provided for the actual season.
 
 The same run deliberately exercises partial provider responses, kickoff changes, a rejected cross-gameweek move, cancellation, no-contest, postponement and recovery, a missing official line, and retrying schedule imports, final scores, and rollover. Its fast test layer also performs 5,000 seeded comparisons against an independent playoff-eligibility oracle and checks Eastern midnight plus both daylight-saving transitions.
 
