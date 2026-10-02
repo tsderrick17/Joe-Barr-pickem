@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calculatePlayoffEligibility } from "@/lib/playoff-math.js";
 import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
+import { championNames } from "@/lib/champion-names.js";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -235,6 +236,10 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
     supabaseAdmin.from("seasons").select("survivor_champion_player_id").eq("id", period.season_id).maybeSingle(),
   ]);
   if (gamesError || linesError || playersError || picksError || entriesError || survivorPicksError || seasonError) throw new Error("The completed-week recap could not be prepared.");
+  // Co-champions (a same-week finish or several survivors) are all named.
+  const { data: survivorChampions } = season?.survivor_champion_player_id
+    ? await supabaseAdmin.from("pool_championships").select("player_id").eq("season_id", period.season_id).eq("pool", "survivor")
+    : { data: [] as Array<{ player_id: string }> };
 
   const teamIds = [...new Set([...(games ?? []).flatMap((game) => [game.away_team_id, game.home_team_id]), ...(picks ?? []).map((pick) => pick.selected_team_id), ...(survivorPicks ?? []).map((pick) => pick.selected_team_id)])];
   const { data: teams, error: teamsError } = teamIds.length ? await supabaseAdmin.from("teams").select("id, full_name, abbreviation").in("id", teamIds) : { data: [], error: null };
@@ -253,8 +258,9 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   const orderByPeriod = new Map((seasonPeriods ?? []).map((item) => [item.id, item.display_order]));
   const visibleWeeks = Math.max(10, period.display_order);
   const entryById = new Map((entries ?? []).map((entry) => [entry.id, entry]));
+  const championIds = (survivorChampions ?? []).map((row) => row.player_id);
   const championName = season?.survivor_champion_player_id
-    ? (players ?? []).find((player) => player.id === season.survivor_champion_player_id)?.first_name ?? "Survivor champion"
+    ? championNames((championIds.length ? championIds : [season.survivor_champion_player_id]).map((id) => (players ?? []).find((player) => player.id === id)?.first_name)) ?? "Survivor champion"
     : null;
   const championCrownedInRecapWeek = Boolean(
     championName && (entries ?? []).some((entry) => entry.eliminated_scoring_period_id === period.id),

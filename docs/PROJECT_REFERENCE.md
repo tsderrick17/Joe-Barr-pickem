@@ -166,6 +166,11 @@ be replayed.
   be replaced while a legal future game remains. If no legal replacement
   remains, the disruption does not eliminate the entry or hold week rollover.
 - Survivor results never count toward season-long ATS wins or ATS percentage.
+- Survivor always ends with a champion, decided only once the deciding week has
+  settled: the last entry standing wins alone (as soon as its own pick that week
+  wins, or the week completes); if everyone left is eliminated in the same week,
+  they share the title; if several entries survive the whole regular season, they
+  share the title. Every co-champion gets a trophy and is named together.
 
 ## NCAA Bowl Pool
 
