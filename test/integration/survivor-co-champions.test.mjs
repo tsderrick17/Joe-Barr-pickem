@@ -46,7 +46,7 @@ async function withSeason(run) {
       for (let slot = 0; slot < 3; slot += 1) {
         const kickoff = new Date(Date.now() - (2 - index) * 7 * 86400000 - slot * 3600000).toISOString();
         games.push((await fixture(client, `insert into public.games (external_game_id, odds_event_id, schedule_source, schedule_source_event_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, line_lock_at, gameweek_key)
-          values ($1, $1, 'certification', $1, $2, $3, $4, $5, $5, $6) returning id, scoring_period_id, away_team_id`,
+          values ($1, $1, 'certification', $1, $2, $3, $4, $5, $5, $6) returning id, scoring_period_id, away_team_id, home_team_id`,
           [`${token}-${index}-${slot}`, period.id, teams[slot * 2].id, teams[slot * 2 + 1].id, kickoff, kickoff.slice(0, 10)])).rows[0]);
       }
     }
@@ -61,7 +61,9 @@ async function withSeason(run) {
       client, season, periods, entries, players,
       // A Survivor pick for an entry in a week, with a result.
       pick: (entryIndex, periodIndex, result) => fixture(client, `insert into public.survivor_picks (survivor_entry_id, scoring_period_id, game_id, selected_team_id, result)
-        values ($1, $2, $3, $4, $5)`, [entries[entryIndex].id, periods[periodIndex].id, games[periodIndex * 3 + entryIndex].id, games[periodIndex * 3 + entryIndex].away_team_id, result]),
+        values ($1, $2, $3, $4, $5)`, [entries[entryIndex].id, periods[periodIndex].id, games[periodIndex * 3 + entryIndex].id,
+        // Survivor never reuses a team: away side in week 1, home side in week 2.
+        periodIndex === 0 ? games[periodIndex * 3 + entryIndex].away_team_id : games[periodIndex * 3 + entryIndex].home_team_id, result]),
       eliminate: (entryIndex, periodIndex) => fixture(client, "update public.survivor_entries set status = 'eliminated', eliminated_scoring_period_id = $2, eliminated_at = clock_timestamp() where id = $1", [entries[entryIndex].id, periods[periodIndex].id]),
       completeWeek: (periodIndex) => fixture(client, "update public.scoring_periods set status = 'complete' where id = $1", [periods[periodIndex].id]),
       crown: async () => (await one(client, "select public.refresh_survivor_champion($1) as champion", [season.id])).champion,
