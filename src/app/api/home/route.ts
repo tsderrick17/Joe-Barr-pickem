@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import { championNames } from "@/lib/champion-names.js";
 
 export const dynamic = "force-dynamic";
 
@@ -303,8 +304,13 @@ export async function GET(request: NextRequest) {
     )?.id ??
     null;
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
+  // Co-champions (a same-week finish or several survivors) are all named.
+  const survivorChampionIds = ((championshipRows ?? []) as ChampionshipRow[])
+    .filter((row) => row.pool === "survivor" && row.season_year === currentSeasonYear())
+    .map((row) => row.player_id);
   const survivorChampionName = championSeason?.survivor_champion_player_id
-    ? players.find((player) => player.id === championSeason.survivor_champion_player_id)?.first_name ?? "Survivor champion"
+    ? championNames((survivorChampionIds.length ? survivorChampionIds : [championSeason.survivor_champion_player_id])
+      .map((id) => players.find((player) => player.id === id)?.first_name)) ?? "Survivor champion"
     : null;
   const games = gamesResult.data;
   const teams = teamsResult.data;

@@ -6,6 +6,11 @@ import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
 
+/** Bowls span the turn of the year: the 2026 season is labeled "2026-27". */
+function bowlSeasonLabel(seasonYear: number) {
+  return `${seasonYear}-${String((seasonYear + 1) % 100).padStart(2, "0")}`;
+}
+
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
   id: string;
@@ -189,7 +194,7 @@ export default function BowlPoolPage() {
           </section> : null}
           {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
-            <h2 className="mt-1 shrink-0 font-serif text-2xl font-bold">2026-27 Bowl Pool</h2>
+            <h2 className="mt-1 shrink-0 font-serif text-2xl font-bold">{bowlSeasonLabel(currentSeasonYear())} Bowl Pool</h2>
             <p aria-label="Bowl Pool instructions" className="bowl-rules-compact max-w-3xl text-xs leading-5 text-slate-600">Pick every game. Selections lock at kickoff; no pick is marked <strong>Loser</strong>. Enter the tiebreaker, then click <strong>Submit</strong> to save your latest selections or changes.</p>
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
