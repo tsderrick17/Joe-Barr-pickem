@@ -449,6 +449,13 @@ the condition genuinely recurs.
 
 ## Commissioner controls
 
+The Grading page uses every data point recorded, not a window of recent rows. The
+polling histogram (new game finals by retry rung) reads every score run that
+recorded a rung since the start of the season, in pages, and says which date it
+starts from (rungs were first recorded on Sep 21; earlier checks did not record
+one and are not guessed). "Last score sync" reads score runs only, Worker activity
+shows the latest run of each worker, and the efficiency totals are season to date.
+
 The Grading charts share the dashboard's selected period and minute refresh,
 which pauses while the tab is hidden and refreshes on return. The Standings
 page polls every three minutes while visible, refreshes when the player returns
