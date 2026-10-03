@@ -71,6 +71,7 @@ type BoardResponse = {
     chipsVisible: boolean;
     notice: string | null;
     status: "active" | "eliminated" | "complete";
+    showOnReceipt?: boolean;
     pick: { game_id: string; selected_team_id: string } | null;
     usedTeamIds: string[];
   };
@@ -148,6 +149,7 @@ export default function BoardPage() {
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
+  const [survivorOnReceipt, setSurvivorOnReceipt] = useState(true);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -219,6 +221,7 @@ export default function BoardPage() {
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
       setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+      setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
       setSurvivorStatus(data.survivor.status);
       setClockSynchronized(true);
     } catch (error) {
@@ -298,6 +301,7 @@ export default function BoardPage() {
         setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
         setSurvivorAvailable(data.survivor.available);
         setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+        setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
         setSurvivorStatus(data.survivor.status);
         setClockSynchronized(true);
       } catch (error) {
@@ -518,8 +522,10 @@ export default function BoardPage() {
     selectedGameKickoffAt: survivorLockGame?.kickoffAt ?? null,
     now: new Date(currentTime),
   });
+  // The Survivor section leaves the receipt the week after a player is out (or
+  // after a champion is crowned) and returns with the next season.
   const showSurvivorReceipt = week?.period_type === "regular" &&
-    survivorAvailable && survivorStatus === "active";
+    survivorAvailable && survivorOnReceipt;
   const survivorTeamName = (pick: SelectedPick | null) => {
     if (!pick) return "";
     const game = games.find((item) => item.id === pick.gameId);
@@ -888,15 +894,17 @@ export default function BoardPage() {
             >
               SUBMIT
             </button>
-            <span
-              aria-live="polite"
-              className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`}
-              role="status"
-            >
-              <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
-              <span>{isSubmitting ? "PRINTING" : ""}</span>
+            <span className="slate-receipt-footnote">
+              <span
+                aria-live="polite"
+                className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`}
+                role="status"
+              >
+                <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
+                <span>{isSubmitting ? "PRINTING" : ""}</span>
+              </span>
+              <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
             </span>
-            <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
           </div>
           <div className="slate-receipt-pool slate-receipt-pickem">
             <span>PICK&apos;EM</span>
@@ -917,8 +925,8 @@ export default function BoardPage() {
           {showSurvivorReceipt ? (
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
-              <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
-                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.abbreviation} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
+              <div aria-label={!receiptIsLoading && survivorPickDetails ? survivorPickDetails.name : undefined} className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`} role={!receiptIsLoading && survivorPickDetails ? "img" : undefined}>
+                {!receiptIsLoading && survivorPickDetails ? <SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.name} /> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
             </div>

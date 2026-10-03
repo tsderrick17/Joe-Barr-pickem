@@ -182,7 +182,7 @@ body {
   filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
   color: var(--receipt-ink);
   display: grid;
-  grid-template-columns: 21% 46% 33%;
+  grid-template-columns: 21% 58% 21%;
   margin: 0;
   overflow: visible;
   position: relative;
@@ -192,6 +192,19 @@ body {
 
 .slate-receipt-strip.is-pickem-only {
   grid-template-columns: 21% minmax(0, 79%);
+}
+
+/* The ticket is symmetric: the stub and the Survivor section are the same
+   width. Once a player is out of Survivor, that section is torn off and its
+   space stays empty for the rest of the season; the stub and Pick'em that
+   remain sit centered in the same overall width. */
+.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem {
+  grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto);
+}
+.slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) {
+  grid-template-columns: 26.5823% minmax(0, 1fr);
+  margin-inline: auto;
+  width: 79%;
 }
 
 .slate-receipt-strip > * {
@@ -308,7 +321,7 @@ body {
   align-items: flex-start;
   display: flex;
   flex-direction: column;
-  gap: .28rem;
+  gap: .2rem;
   justify-content: flex-start;
   padding-left: .68rem;
   position: relative;
@@ -338,7 +351,7 @@ body {
 .slate-receipt-ticket a {
   align-self: start;
   color: #1d3551;
-  display: inline-flex;
+  display: inline-block;
   font-size: .66rem;
   font-weight: 900;
   justify-self: start;
@@ -348,7 +361,7 @@ body {
   text-decoration: none;
   z-index: 5;
 }
-.slate-receipt-ticket a::after { content: "›"; font-size: .88rem; line-height: .55; margin-left: .22rem; }
+.slate-receipt-ticket a::after { content: "›"; font-size: .88rem; line-height: 0; margin-left: .22rem; }
 .slate-receipt-ticket a:hover,
 .slate-receipt-ticket a:focus-visible {
   background: transparent;
@@ -367,9 +380,9 @@ body {
   font-size: .68rem;
   font-weight: 900;
   letter-spacing: .07em;
-  margin-top: .08rem;
+  margin-top: 0;
   margin-inline: auto;
-  min-height: 1.82rem;
+  min-height: 1.5rem;
   overflow: hidden;
   padding: .2rem .32rem;
   position: relative;
@@ -416,8 +429,8 @@ body {
   font-weight: 700;
   gap: .22rem;
   letter-spacing: .09em;
-  line-height: .62rem;
-  min-height: .62rem;
+  line-height: .5rem;
+  min-height: .5rem;
   overflow: hidden;
   padding-left: 0;
   text-transform: uppercase;
@@ -439,6 +452,12 @@ body {
 .receipt-printing-status.is-printing .receipt-printing-marks i { animation: receipt-printer-feed 1.05s steps(2, end) infinite; }
 .receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(2) { animation-delay: .15s; }
 .receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(3) { animation-delay: .3s; }
+/* The printer line and the hint share one row, so there is no empty reserved
+   line under Submit: "PRINTING" takes the hint's place while a save runs. */
+.slate-receipt-ticket > .slate-receipt-footnote { align-items: center; align-self: stretch; display: grid; gap: 0; grid-template-columns: minmax(0, 1fr); letter-spacing: 0; width: 100%; }
+.slate-receipt-footnote > * { grid-area: 1 / 1; margin-top: 0; }
+.slate-receipt-footnote .receipt-printing-status { justify-content: center; min-height: 0; }
+.slate-receipt-footnote .receipt-printing-status.is-printing ~ .slate-receipt-submit-hint { visibility: hidden; }
 .slate-receipt-submit-hint {
   color: #5d6470;
   display: block;
@@ -446,7 +465,7 @@ body {
   font-weight: 900;
   letter-spacing: .08em;
   line-height: 1.15;
-  margin-top: .18rem;
+  margin-top: .08rem;
   text-align: center;
 }
 
@@ -623,6 +642,7 @@ body {
   align-items: center;
   display: flex;
   gap: .35rem;
+  justify-content: center;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -659,8 +679,15 @@ body {
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
-  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 51% 24%; }
+  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 50% 25%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
+  .slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
+  /* The torn ticket is narrower on a phone, so a six-game Wild Card round
+     stacks as two columns of three instead of three narrow columns. */
+  .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); }
   .slate-receipt-strip > * { padding: .3rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;

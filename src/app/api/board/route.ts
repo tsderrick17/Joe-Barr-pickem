@@ -3,6 +3,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
+import { shouldShowSurvivorOnReceipt } from "@/lib/survivor-receipt-visibility";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import {
@@ -397,6 +398,7 @@ export async function GET(request: NextRequest) {
     notice: string | null;
     status: "active" | "eliminated" | "complete";
     requiredThisPeriod: boolean;
+    showOnReceipt: boolean;
     pick: SurvivorPickRow | null;
     usedTeamIds: string[];
   } = {
@@ -406,6 +408,7 @@ export async function GET(request: NextRequest) {
       "Survivor is temporarily unavailable. ATS picks remain available.",
     status: "active",
     requiredThisPeriod: false,
+    showOnReceipt: false,
     pick: null,
     usedTeamIds: [],
   };
@@ -478,6 +481,13 @@ export async function GET(request: NextRequest) {
           chipsVisible: survivorChipsVisible,
           notice: null,
           requiredThisPeriod: survivorEntry.status === "active" || survivorEntry.eliminated_scoring_period_id === scoringPeriodId,
+          showOnReceipt: shouldShowSurvivorOnReceipt({
+            periodType: period.period_type,
+            available: true,
+            requiredThisPeriod: survivorEntry.status === "active" || survivorEntry.eliminated_scoring_period_id === scoringPeriodId,
+            championCrownedAt: season.survivor_champion_player_id ? season.survivor_champion_crowned_at : null,
+            periodFirstKickoffAt: gamesResult.data?.[0]?.kickoff_at ?? null,
+          }),
           status: season.survivor_champion_player_id ? "complete" : survivorEntry.status,
           pick: survivorPick as SurvivorPickRow | null,
           usedTeamIds: (usedSurvivorPicks ?? []).map(
@@ -557,6 +567,7 @@ export async function GET(request: NextRequest) {
       notice: "Survivor has concluded for the season.",
       status: "complete",
       requiredThisPeriod: false,
+      showOnReceipt: false,
       pick: null,
       usedTeamIds: [],
     };

@@ -1128,15 +1128,20 @@ and backup six hours; worker probes stay at ten minutes to respect their
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
 
-## 2026-10-03 - A more convincing Pick'em Pad flip
+## 2026-10-03 - Symmetric Slate ticket; Survivor section torn off after elimination
 
 **Status:** Accepted
 
-The pad's turn is driven by one animated angle (`--pad-turn`), so the lift
-toward the reader, the slight tilt, and the shading across the paper all follow
-the card's real position. The card changes width in a single step at the
-halfway point, when it is edge-on, instead of stretching while it turns. The
-turn takes 0.9 seconds; the faces still swap exactly at the midpoint.
+The Slate ticket keeps its overall width and is symmetric: the left stub and
+the Survivor section are the same width, with Pick'em between them. The
+Survivor section is part of a week's ticket while the player is in the pool
+and through the week they are knocked out. After that, and in the playoffs, it
+is torn off: the stub and Pick'em that remain (same sizes) sit centered in the
+same width, and the empty space stays until the next season, when Survivor
+returns. After a champion is crowned the section stays for that week and then
+leaves for everyone. On phones the six picks of a Wild Card round stack as two
+columns of three on the narrower torn ticket. The board API reports this as
+`survivor.showOnReceipt`.
 
-**Reason:** Widening the card during the turn made the paper stretch and the
-text reflow while visible, so the text seemed to slide across the paper.
+**Reason:** An out player's ticket kept a dead Survivor column, and the
+single-column version stretched wider than the picks needed.
