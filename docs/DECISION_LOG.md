@@ -1217,3 +1217,7 @@ Each open team button on the Slate now has an invisible margin (about 0.7rem abo
 ### Slate spread alignment and ticket outlines
 
 Pregame phone rows now mirror the kickoff lane with an empty right column, so the spread sits at the true center of the row, in line with the spread on finished rows. On finished rows the spread rides the team-name line instead of floating at the middle of the taller row. The ticket's notch rings are one pixel like the straight edges, and the perforation starts just below each ring over a strip of paper that hides the hairline where two sections meet.
+
+### Slate names centered on the line, and no ET on times
+
+On the desktop Slate, a game that has not kicked off now puts the favorite right-aligned and the underdog left-aligned, so both names sit the same distance from the spread and the spreads line up in one column. On finished games the right-hand team is left-justified like the left-hand one. Times on the Slate (kickoff, lock note, and the two header notes) no longer carry "ET".

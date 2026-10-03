@@ -1961,9 +1961,8 @@ button.slate-team-side:not(:disabled)::after {
   text-align: left;
 }
 .slate-game-row .slate-final-team-stack.is-right {
-  justify-content: end;
-  justify-items: end;
-  text-align: right;
+  justify-items: start;
+  text-align: left;
 }
 .slate-game-row .slate-team-result-line.is-right .slate-team-label {
   text-align: left;
@@ -1982,18 +1981,17 @@ button.slate-team-side:not(:disabled)::after {
      whichever name happens to be on that row. */
   .slate-game-row.is-final .slate-team-label-lane { display: contents; }
   .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
-  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 2.3ch max-content; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 2; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 3; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 4; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 1; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 3; }
   .slate-game-row.is-final .slate-team-label,
   .slate-game-row.is-final .slate-team-score,
   .slate-game-row.is-final .slate-team-result-mark { grid-row: 1; }
   .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; max-width: none; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-picker-list { text-align: right; }
 }
 
 /* Upcoming rows have no score/result columns. Give each team name a full,
@@ -2050,11 +2048,11 @@ button.slate-team-side:not(:disabled)::after {
     width: min(100%, 25rem);
   }
 
-  /* Upcoming rows have no score/result marks. Align their right team name to
-     the same outside edge used by the completed right-side score block. */
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-right {
-    text-align: right;
-  }
+  /* Upcoming rows: both names hug the line, the favorite from its left and the
+     underdog from its right, so they sit the same distance from it. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-label { text-align: right; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-picker-list { justify-content: flex-end; text-align: right; }
 }
 
 @media (max-width: 767px) {
@@ -2142,7 +2140,6 @@ button.slate-team-side:not(:disabled)::after {
     line-height: .95rem;
     text-align: left;
   }
-  .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
   .slate-team-score { font-size: 1em; }
   /* Final score rows are a two-sided scoreboard. Use the compact team mark
      at phone widths so both score columns keep one stable baseline instead of
