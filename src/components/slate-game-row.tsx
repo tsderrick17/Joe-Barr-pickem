@@ -78,6 +78,19 @@ type Props = {
   };
 };
 
+/** A fresh, barely-there wobble for each highlighter stroke. Seeded from the team and
+ *  the click, so it stays put on re-render but changes the next time it is marked. */
+function strokeJitter(seed: string): CSSProperties {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) hash = Math.imul(hash ^ seed.charCodeAt(index), 16777619);
+  const unit = (shift: number) => (((hash >>> shift) & 255) / 255) * 2 - 1;
+  return {
+    "--ink-x": `${(unit(0) * 0.06).toFixed(3)}em`,
+    "--ink-y": `${(unit(8) * 0.035).toFixed(3)}em`,
+    "--ink-turn": `${(unit(16) * 0.45).toFixed(2)}deg`,
+  } as CSSProperties;
+}
+
 export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
   const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
   const [pickerLaneHeight, setPickerLaneHeight] = useState(0);
@@ -143,11 +156,12 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
     const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
+    const inkStyle = selected ? strokeJitter(`${team.id}-${feedbackType ? selectionFeedback?.token : 0}`) : undefined;
     const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
     const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
-          <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
+          <span style={inkStyle} className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
           {hasStarted && (isFinal || team.pickers.length) ? <span aria-hidden={team.pickers.length ? undefined : true} className={`slate-team-picker-list ${team.pickers.length ? (selected ? "text-slate-200" : "text-slate-600") : "is-empty"}`}>{team.pickers.map((picker, index) => <span className="slate-team-picker-name" key={`${picker}-${index}`}>{picker}{index < team.pickers.length - 1 ? "," : ""}</span>)}</span> : null}
         </span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}

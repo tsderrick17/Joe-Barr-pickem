@@ -1806,7 +1806,9 @@ html[data-theme="night"] .playoff-scoreboard {
   content: "";
   inset: -.04em -.32em -.16em;
   position: absolute;
-  transform: rotate(-1.1deg);
+  /* --ink-* is a tiny per-stroke wobble (set in slate-game-row.tsx), so no two
+     marks land in exactly the same place. */
+  transform: translate(var(--ink-x, 0), var(--ink-y, 0)) rotate(calc(-1.1deg + var(--ink-turn, 0deg)));
   transform-origin: center;
   z-index: 0;
 }
