@@ -87,14 +87,15 @@ test("Sentry drops only the confirmed runtime.sendMessage browser noise", async 
 test("pool chat refreshes less often and pauses while hidden", async () => {
   const source = await readFile(new URL("../src/components/pool-chat.tsx", import.meta.url), "utf8");
   assert.match(source, /document\.visibilityState === "visible"/);
-  assert.match(source, /}, 60_000\);/);
+  assert.match(source, /const CHAT_REFRESH_MS = 3 \* 60_000;/);
+  assert.match(source, /}, CHAT_REFRESH_MS\);/);
   assert.match(source, /document\.addEventListener\("visibilitychange", refreshOnVisibility\)/);
 });
 
 test("home and grading polling pause while hidden and grading adapts to workload", async () => {
   const home = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const grading = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
-  assert.match(home, /const HOME_REFRESH_MS = 3 \* 60_000;/);
+  assert.match(home, /const HOME_REFRESH_MS = 5 \* 60_000;/);
   assert.match(home, /}, HOME_REFRESH_MS\);/);
   assert.match(home, /Date\.now\(\) - lastLoadStartedAt < RETURN_REFRESH_GAP_MS/);
   assert.match(home, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);

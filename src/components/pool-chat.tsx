@@ -17,6 +17,11 @@ type Message = {
 // around picks, bad beats, wins, and chirping without turning the composer into
 // an endless emoji catalogue. Avoid newer/poorly-supported glyphs so every
 // option renders cleanly on the phones the pool is most likely to use.
+// Chat refreshes on return to the tab and every three minutes while visible;
+// every player-facing page mounts it, so a faster poll was the largest steady
+// source of Vercel active CPU.
+const CHAT_REFRESH_MS = 3 * 60_000;
+
 const EMOJI_GROUPS = [
   { label: "Reactions and faces", emojis: ["😀", "😂", "🤣", "😭", "😤", "😮", "😳", "🤔", "😏", "😎", "🤡", "💀", "😈", "😬"] },
   { label: "Hands, arms, and eyes", emojis: ["👀", "👍", "👎", "👏", "🙌", "🙏", "👊", "🤞", "👌", "💪", "👆", "👇", "👉", "👈", "🖕", "🤝"] },
@@ -70,7 +75,7 @@ export default function PoolChat({ onHide }: Props) {
     const initialLoad = window.setTimeout(() => void loadMessages(), 0);
     const refresh = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadMessages(true);
-    }, 60_000);
+    }, CHAT_REFRESH_MS);
     const refreshOnVisibility = () => {
       if (document.visibilityState === "visible") void loadMessages(true);
     };

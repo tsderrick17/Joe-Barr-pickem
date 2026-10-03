@@ -149,7 +149,7 @@ function ticketKickoff(value: string | undefined) {
   return `${date} · ${time}`;
 }
 
-const HOME_REFRESH_MS = 3 * 60_000;
+const HOME_REFRESH_MS = 5 * 60_000;
 const RETURN_REFRESH_GAP_MS = 30_000;
 
 export default function HomePage() {
