@@ -275,7 +275,9 @@ body {
 
 /* Perforation between two sections, running between its two notches. */
 .slate-receipt-pool::after {
-  border-left: 1px dashed var(--receipt-rule);
+  /* Long dashes with wide gaps, the same rhythm as the punched edges. */
+  background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 .32rem, transparent .32rem .64rem);
+  width: 1px;
   bottom: var(--receipt-notch);
   content: "";
   left: 0;
