@@ -655,7 +655,7 @@ body {
 }
 .slate-receipt-warning { color: #a82820; }
 
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
   .slate-receipt-strip.has-survivor { grid-template-columns: 25% 51% 24%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
@@ -728,7 +728,7 @@ body {
   .slate-mini-nav em { font-size: .5rem; }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
 
   .slate-how-to-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2147,7 +2147,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:focus-visible { outline: 2px solid #16877f; outline-offset: 2px; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .slate-survivor-chip-slot { min-height: 4.7rem; }
   .slate-survivor-chip-button { height: 3.79rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.79rem; }
   .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
@@ -4125,7 +4125,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 
 /* The Bowl receipt has a deliberately wide desktop layout, but its flexible
    pool lane must never retain the desktop minimum on a phone. */
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   .slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
     grid-template-columns: minmax(5.75rem, 6.5rem) minmax(0, 1fr);
     width: 100%;
