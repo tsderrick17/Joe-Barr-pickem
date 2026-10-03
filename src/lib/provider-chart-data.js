@@ -64,12 +64,42 @@ export function firstHourSettleShare(games, now = new Date()) {
   return { share: Math.min(0.99, Math.max(0.5, settledFast / total)), slates: total, measured: true };
 }
 
+function normalCdf(x) {
+  // Abramowitz and Stegun 7.1.26, accurate to about 1e-7.
+  const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  const erf = 1 - poly * Math.exp(-(x * x) / 2);
+  return 0.5 * (1 + (x >= 0 ? erf : -erf));
+}
+
+/**
+ * Expected number of checks for a slate that settles inside the first hour when
+ * its settle time is normally distributed across that hour (centered, with the
+ * hour spanning plus or minus two standard deviations), cut off at the hour.
+ */
+function firstHourExpectedChecks(rungMinutes) {
+  const total = rungMinutes.reduce((sum, minutes) => sum + minutes, 0);
+  const mean = total / 2;
+  const deviation = total / 4;
+  const low = normalCdf((0 - mean) / deviation);
+  const span = normalCdf((total - mean) / deviation) - low;
+  let elapsed = 0;
+  let expected = 0;
+  rungMinutes.forEach((minutes, index) => {
+    const before = normalCdf((elapsed - mean) / deviation);
+    elapsed += minutes;
+    expected += (index + 1) * ((normalCdf((elapsed - mean) / deviation) - before) / span);
+  });
+  return expected;
+}
+
 /** Expected provider score checks for one slate given the retry ladder and the first-hour share. */
 export function expectedScoreChecks(retryMinutes, firstHourShare) {
   let elapsed = 0;
   let firstHour = 0;
   let index = 0;
   while (index < retryMinutes.length && elapsed < 60) { elapsed += retryMinutes[index]; firstHour++; index++; }
+  const firstHourRungs = retryMinutes.slice(0, firstHour);
   let nextHour = 0;
   while (index < retryMinutes.length && elapsed < 120) { elapsed += retryMinutes[index]; nextHour++; index++; }
   // The 120- and 240-minute rungs are emergencies, so a slate that is still open
@@ -78,7 +108,7 @@ export function expectedScoreChecks(retryMinutes, firstHourShare) {
   const rest = (1 - firstHourShare) / 2;
   const nextHourMean = nextHour ? (nextHour + 1) / 2 : 0;
   return {
-    checks: firstHourShare * firstHour + rest * (firstHour + nextHourMean) + rest * (firstHour + nextHour + cooldown),
+    checks: firstHourShare * firstHourExpectedChecks(firstHourRungs) + rest * (firstHour + nextHourMean) + rest * (firstHour + nextHour + cooldown),
     firstHour, nextHour, cooldown,
   };
 }

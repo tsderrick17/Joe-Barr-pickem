@@ -135,8 +135,9 @@ test("score checks follow the retry ladder and the measured first-hour share", (
   const ladder = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
   const base = expectedScoreChecks(ladder, 0.9);
   assert.deepEqual([base.firstHour, base.nextHour, base.cooldown], [6, 3, 1]);
-  // 90% finish by check 6; 5% use 6 + a 1-3 check mean of 2; 5% reach the cooldown check (6 + 3 + 1).
-  assert.ok(Math.abs(base.checks - (0.9 * 6 + 0.05 * 8 + 0.05 * 10)) < 1e-9);
+  // 5% use 6 + a 1-3 check mean of 2; 5% reach the cooldown check (6 + 3 + 1).
+  // A normal settle time centered in the hour averages 3.5 checks for the first-hour group.
+  assert.ok(Math.abs(base.checks - (0.9 * 3.5 + 0.05 * 8 + 0.05 * 10)) < 1e-5);
   assert.ok(expectedScoreChecks(ladder, 0.99).checks < base.checks);
   assert.ok(expectedScoreChecks(ladder, 0.6).checks > base.checks);
 });
