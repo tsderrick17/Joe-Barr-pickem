@@ -1916,8 +1916,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    both chip lanes around the spread. */
 @media (min-width: 768px) {
   .slate-game-row.no-survivor-layout {
-    grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr);
+    /* The empty last column mirrors the time rail, so the line sits at the
+       true center of the row and of the gap between the two team lanes. */
+    grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr) 4.5rem;
   }
+
+  .slate-game-row.no-survivor-layout .slate-spread-cell { transform: none; }
 
   .slate-game-row.no-survivor-layout > :first-child {
     position: static;
