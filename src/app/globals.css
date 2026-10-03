@@ -182,7 +182,7 @@ body {
   filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
   color: var(--receipt-ink);
   display: grid;
-  grid-template-columns: 21% 46% 33%;
+  grid-template-columns: 21% 58% 21%;
   margin: 0;
   overflow: visible;
   position: relative;
@@ -192,6 +192,16 @@ body {
 
 .slate-receipt-strip.is-pickem-only {
   grid-template-columns: 21% minmax(0, 79%);
+}
+
+/* The ticket is symmetric: the stub and the Survivor section are the same
+   width. Once a player is out of Survivor, that section is torn off and its
+   space stays empty for the rest of the season; the stub and Pick'em that
+   remain sit centered in the same overall width. */
+.slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) {
+  grid-template-columns: 26.5823% minmax(0, 1fr);
+  margin-inline: auto;
+  width: 79%;
 }
 
 .slate-receipt-strip > * {
@@ -657,8 +667,15 @@ body {
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
-  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 51% 24%; }
+  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 50% 25%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
+  .slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
+  /* The torn ticket is narrower on a phone, so a six-game Wild Card round
+     stacks as two columns of three instead of three narrow columns. */
+  .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: .4rem;
+  }
   .slate-receipt-strip > * { padding: .3rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;

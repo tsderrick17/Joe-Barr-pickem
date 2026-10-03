@@ -13,8 +13,10 @@ test("the sticky receipt offset measures the visible nav and re-measures after n
   assert.match(nav, /\}, \[pathname\]\);/, "re-measure after leaving the sign-in page");
 });
 
-test("on phones the receipt is shorter and the Survivor section narrower", () => {
-  assert.match(css, /  \.slate-receipt-strip\.has-survivor \{ grid-template-columns: 25% 51% 24%; \}/);
+test("on phones the receipt is shorter and the Survivor section matches the stub", () => {
+  assert.match(css, /  \.slate-receipt-strip\.has-survivor \{ grid-template-columns: 25% 50% 25%; \}/);
+  // Torn ticket: the stub and Pick'em stay the same size and sit centered.
+  assert.match(css, /\.is-pickem-only:not\(\.bowl-receipt-strip\) \{ grid-template-columns: 33\.3333% minmax\(0, 1fr\); width: 75%; \}/);
   assert.match(css, /  \.slate-receipt-strip\.is-pickem-only \{ grid-template-columns: 25% minmax\(0, 75%\); \}/);
   assert.match(css, /  \.slate-receipt-pool \{ grid-template-rows: \.58rem 2\.75rem minmax\(\.58rem, auto\); \}/);
 });

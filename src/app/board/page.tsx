@@ -71,6 +71,7 @@ type BoardResponse = {
     chipsVisible: boolean;
     notice: string | null;
     status: "active" | "eliminated" | "complete";
+    showOnReceipt?: boolean;
     pick: { game_id: string; selected_team_id: string } | null;
     usedTeamIds: string[];
   };
@@ -148,6 +149,7 @@ export default function BoardPage() {
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
+  const [survivorOnReceipt, setSurvivorOnReceipt] = useState(true);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
   const [playoffEliminated, setPlayoffEliminated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -219,6 +221,7 @@ export default function BoardPage() {
       setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
       setSurvivorAvailable(data.survivor.available);
       setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+      setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
       setSurvivorStatus(data.survivor.status);
       setClockSynchronized(true);
     } catch (error) {
@@ -298,6 +301,7 @@ export default function BoardPage() {
         setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
         setSurvivorAvailable(data.survivor.available);
         setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+        setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
         setSurvivorStatus(data.survivor.status);
         setClockSynchronized(true);
       } catch (error) {
@@ -518,8 +522,10 @@ export default function BoardPage() {
     selectedGameKickoffAt: survivorLockGame?.kickoffAt ?? null,
     now: new Date(currentTime),
   });
+  // The Survivor section leaves the receipt the week after a player is out (or
+  // after a champion is crowned) and returns with the next season.
   const showSurvivorReceipt = week?.period_type === "regular" &&
-    survivorAvailable && survivorStatus === "active";
+    survivorAvailable && survivorOnReceipt;
   const survivorTeamName = (pick: SelectedPick | null) => {
     if (!pick) return "";
     const game = games.find((item) => item.id === pick.gameId);

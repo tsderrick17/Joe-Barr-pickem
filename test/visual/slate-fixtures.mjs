@@ -117,6 +117,7 @@ export const SCENARIOS = {
   "complete-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "picked" },
   "complete-no-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
   "playoff-upcoming": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true },
+  "playoff-six-picks": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"], ["g5", "sf"]], survivor: "off", playoff: true },
   "playoff-live": { now: "2027-01-10T19:00:00Z", phase: "live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"]], survivor: "off", playoff: true },
 };
 
@@ -137,6 +138,7 @@ export function boardResponse(name) {
       chipsVisible: scenario.survivor === "open" || scenario.survivor === "picked",
       notice: null,
       status: scenario.survivor === "hidden" ? "eliminated" : "active",
+      showOnReceipt: scenario.survivor === "open" || scenario.survivor === "picked",
       pick: survivorPick,
       usedTeamIds: ["kc", "det", "phi", "sf", ...(survivorPick ? ["buf"] : [])],
     },

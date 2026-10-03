@@ -1127,3 +1127,21 @@ and backup six hours; worker probes stay at ten minutes to respect their
 **Reason:** Observability showed the Grading dashboard as the largest single
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
+
+## 2026-10-03 - Symmetric Slate ticket; Survivor section torn off after elimination
+
+**Status:** Accepted
+
+The Slate ticket keeps its overall width and is symmetric: the left stub and
+the Survivor section are the same width, with Pick'em between them. The
+Survivor section is part of a week's ticket while the player is in the pool
+and through the week they are knocked out. After that, and in the playoffs, it
+is torn off: the stub and Pick'em that remain (same sizes) sit centered in the
+same width, and the empty space stays until the next season, when Survivor
+returns. After a champion is crowned the section stays for that week and then
+leaves for everyone. On phones the six picks of a Wild Card round stack as two
+columns of three on the narrower torn ticket. The board API reports this as
+`survivor.showOnReceipt`.
+
+**Reason:** An out player's ticket kept a dead Survivor column, and the
+single-column version stretched wider than the picks needed.
