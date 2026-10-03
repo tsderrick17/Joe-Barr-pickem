@@ -243,7 +243,15 @@ body {
 
 .slate-receipt-ticket::before,
 .slate-receipt-pool::before {
-  background: var(--receipt-paper);
+  /* A hairline ring hugs each round cut so the notches read as outlined, like
+     the straight edges, instead of as plain gaps. */
+  background:
+    radial-gradient(circle at 0 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
+    radial-gradient(circle at 0 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
+    radial-gradient(circle at 100% 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
+    radial-gradient(circle at 100% 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
+    var(--receipt-paper);
+  background-origin: border-box;
   border-bottom: 1px solid var(--receipt-rule);
   border-top: 1px solid var(--receipt-rule);
   content: "";
@@ -312,6 +320,9 @@ body {
    selection chip. */
 .slate-receipt-pool {
   grid-template-rows: .72rem 3.48rem minmax(.68rem, auto);
+}
+.slate-receipt-pool.slate-receipt-survivor {
+  grid-template-rows: .72rem 3.9rem minmax(.68rem, auto);
 }
 .slate-receipt-ticket {
   /* This is a compact tear-off stub. Keep the receipt title, link, and print
@@ -655,12 +666,12 @@ body {
 .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
   aspect-ratio: 1;
   flex: 0 0 auto;
-  height: min(3.19rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
-  max-height: 3.19rem;
-  max-width: 3.19rem;
+  height: min(3.7rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+  max-height: 3.7rem;
+  max-width: 3.7rem;
   min-height: 0;
   min-width: 0;
-  width: min(3.19rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+  width: min(3.7rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
 }
 .slate-receipt-survivor .is-due { color: #a82820; }
 .slate-receipt-survivor .is-out { color: #b42318; }
@@ -720,13 +731,14 @@ body {
      leaving that space in the flexible status row. The label and status keep
      their own tracks, so the larger chip cannot cover either one. */
   .slate-receipt-pool { grid-template-rows: .58rem 2.75rem minmax(.58rem, auto); }
+  .slate-receipt-pool.slate-receipt-survivor { grid-template-rows: .58rem 3.1rem minmax(.58rem, auto); }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
   .receipt-team-name-full { display: none; }
   .receipt-team-name-short { display: inline; }
   .slate-receipt-survivor-pick { --receipt-chip-buffer: .1rem; }
   .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
-    height: min(3.19rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+    height: min(2.95rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
     width: auto;
   }
 }
@@ -1387,19 +1399,6 @@ body {
 .pickem-ledger-pick { overflow-wrap: break-word; }
 .pickem-ledger-spread { margin-left: .25rem; }
 .pickem-ledger-spread.is-open { color: var(--color-slate-700); }
-.pickem-ledger-out-mark {
-  border: 1px solid var(--color-red-700);
-  color: var(--color-red-800);
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: .08em;
-  margin-top: .125rem;
-  padding: 1px .125rem;
-  transform: rotate(-6deg);
-}
-html[data-theme="night"] .pickem-ledger-out-mark { border-color: #d87b89; color: #ffbdc4; }
 .pickem-ledger-table {
   background: var(--ledger-paper);
   border-top: 0;
@@ -1543,6 +1542,25 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
   .playoff-scoreboard-pick { font-size: .86rem; }
+  /* The round name drops to its own line under the title instead of squeezing
+     "Playoff Ledger" and its OUT toggle onto two lines each. */
+  .playoff-scoreboard .pickem-ledger-masthead { flex-wrap: wrap; }
+  .playoff-scoreboard .pickem-ledger-masthead h2 { white-space: nowrap; }
+  .playoff-scoreboard .pickem-ledger-period { flex-basis: 100%; order: 3; text-align: left; }
+  /* Four, five, or six picks do not fit across a phone, so each player's picks
+     wrap into two short lines beside the score and name instead of scrolling
+     sideways: 2 x 2 for four picks, 3 x 2 for five or six. */
+  .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: 100%; }
+  .playoff-scoreboard .pickem-ledger-grid tbody { display: block; }
+  .playoff-scoreboard .pickem-ledger-grid tr {
+    display: grid;
+    grid-template-columns: 2.4rem 4.4rem repeat(3, minmax(0, 1fr));
+  }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="4"] tr { grid-template-columns: 2.4rem 4.4rem repeat(2, minmax(0, 1fr)); }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-player { align-items: center; display: flex; grid-row: 1 / span 2; }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
 }
 html[data-theme="night"] .playoff-scoreboard {
   background:
@@ -2037,6 +2055,10 @@ html[data-theme="night"] .playoff-scoreboard {
     position: static;
     width: auto;
   }
+  /* Short names hug the line from both sides: the favorite reads right-to-left
+     toward it, the underdog left-to-right away from it. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left { text-align: right; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-picker-list { justify-content: flex-end; text-align: right; }
   /* The early-lock note wraps inside the spread column instead of running
      into the underdog's name. */
   .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell > p {
@@ -2928,9 +2950,14 @@ html[data-theme="night"] .my-ticket-barcode {
   .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
   .my-ticket-section { padding: .58rem 0; }
 
-  .my-ticket-columns.is-playoff .my-ticket-picks {
+  .my-ticket-columns.is-playoff .my-ticket-picks,
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4,
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
     column-gap: 0;
+    grid-auto-flow: row;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
   }
 
   .my-ticket-section + .my-ticket-section {

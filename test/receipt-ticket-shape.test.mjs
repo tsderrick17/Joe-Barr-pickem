@@ -14,7 +14,9 @@ const rule = (selector, tail = " {") => {
 
 test("each receipt section paints its paper on a masked layer, so cutouts are real and content is never clipped", () => {
   const layer = rule(".slate-receipt-ticket::before,\n.slate-receipt-pool::before");
-  assert.match(layer, /background: var\(--receipt-paper\);/);
+  // The paper sits under a hairline ring on each round cut, so the notches are outlined.
+  assert.match(layer, /var\(--receipt-paper\);\s*background-origin: border-box;/);
+  assert.equal((layer.match(/radial-gradient\(circle at (0|100%) (0|100%), transparent calc\(var\(--receipt-notch\) \+ \.5px\), var\(--receipt-rule\)/g) ?? []).length, 4);
   assert.match(layer, /position: absolute;/);
   assert.match(layer, /z-index: -1;/);
   assert.match(layer, /pointer-events: none;/);

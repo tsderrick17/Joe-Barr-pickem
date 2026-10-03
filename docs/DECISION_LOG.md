@@ -1192,3 +1192,21 @@ the Bowl Card's styles were deliberately left alone while its design is reworked
 **Reason:** The Slate cleanup showed the approach is safe when every state is
 screenshot-tested, and the ticket and pad had their styles scattered across many
 parts of a 4,000-line file.
+
+## 2026-10-03 - Batch of Slate, ticket, and ledger refinements
+
+**Status:** Accepted
+
+The round cut-outs on the receipt are outlined with a hairline ring like the
+straight edges. The Survivor chip on the receipt is larger (3.7 rem on desktop)
+and centered in its section. On phones, pregame Slate rows without Survivor chips
+set the favorite's name against the line from the left so the two names sit
+symmetrically about it. The Pick'em Pad no longer shows an OUT mark under an
+eliminated player's score (the ELIMINATED stamp over the picks remains). On a
+phone, four, five, and six pick playoff rounds stack on the Standings ticket in
+one column, and the playoff ledger wraps each player's picks onto two lines
+(2 x 2 for four picks, 3 x 2 for five or six) instead of scrolling sideways; the
+round name sits under the ledger title.
+
+**Reason:** The Wild Card ticket's two-column picks overlapped the spreads on a
+phone, and a six-pick ledger needed horizontal scrolling to be read.
