@@ -1905,9 +1905,23 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   /* Picker names are supporting detail and must not determine the primary
      team/score column width. Cap their measure so a popular team (such as
      Buffalo) wraps beneath its label while the score stays close to the W/L. */
-  .slate-game-row.is-final .slate-team-picker-list {
-    max-width: 12ch;
-  }
+  /* Finished rows: picker names sit under the whole team block and the rule
+     above them runs the full team width on every row, instead of the width of
+     whichever name happens to be on that row. */
+  .slate-game-row.is-final .slate-team-label-lane { display: contents; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
+  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 2.3ch max-content; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 3; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 4; }
+  .slate-game-row.is-final .slate-team-label,
+  .slate-game-row.is-final .slate-team-score,
+  .slate-game-row.is-final .slate-team-result-mark { grid-row: 1; }
+  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; max-width: none; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-picker-list { text-align: right; }
 }
 
 /* Upcoming rows have no score/result columns. Give each team name a full,
@@ -2034,7 +2048,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      make team names and final scores collide on narrow phones. Scale both the
      lane and chip together so the matchup gets the reclaimed width. */
   .slate-game-row.has-survivor-layout {
-    grid-template-columns: 2.3rem minmax(0, 1fr) 2.9rem 2.45rem 2.9rem minmax(0, 1fr);
+    grid-template-columns: 2.3rem minmax(0, 1fr) 2.9rem 2.8rem 2.9rem minmax(0, 1fr);
   }
   .slate-team-result-line { gap: .2rem; }
   .slate-game-row .slate-final-team-stack {
@@ -2049,7 +2063,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   .slate-game-row.is-final .slate-team-label { grid-column: 1; grid-row: 1; justify-self: start; }
   .slate-game-row.is-final .slate-team-score { grid-column: 2; grid-row: 1; }
   .slate-game-row.is-final .slate-team-result-mark { grid-column: 3; grid-row: 1; }
-  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; }
+  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
   .slate-team-picker-list {
     font-size: .7rem;
     line-height: .95rem;
