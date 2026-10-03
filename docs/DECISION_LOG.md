@@ -1225,3 +1225,7 @@ Each time a team is marked on the Slate, its highlighter stroke lands with a bar
 ### The Slate warning hangs off the Pick'em section
 
 The red warning under the receipt (for example, "You already have 2 selections") now sits under the middle Pick'em section only, as a tab of the same paper, instead of a flat strip across the whole ticket.
+
+### Finished games ignore the mouse
+
+Finished Slate games render their teams as plain text rather than buttons, and a started game no longer underlines on hover, since there is nothing to pick.

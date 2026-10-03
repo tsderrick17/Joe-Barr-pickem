@@ -157,7 +157,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const inkStyle = selected ? strokeJitter(`${team.id}-${feedbackType ? selectionFeedback?.token : 0}`) : undefined;
-    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
+    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection && !hasStarted ? "hover:underline" : ""}`;
     const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
@@ -176,7 +176,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     // names anchored to the same team lane instead of the row's open edge.
     const content = <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
-    const pickemControl = allowSelection
+    const pickemControl = allowSelection && !isFinal
       ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
       : <div className={className}>{content}</div>;
 
