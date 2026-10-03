@@ -1973,7 +1973,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     /* With Survivor removed, keep kickoff time as a real lane instead of
        overlaying it in the team area. That gives the favorite a little
        breathing room and keeps the row easy to scan at a glance. */
-    grid-template-columns: 3.15rem minmax(0, 1fr) 3.35rem minmax(0, 1fr);
+    grid-template-columns: 3.15rem minmax(0, 1fr) 3.75rem minmax(0, 1fr);
     column-gap: .35rem;
     padding-left: .35rem;
   }
@@ -2042,6 +2042,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     grid-template-columns: minmax(0, 1fr) max-content max-content;
   }
   .slate-game-row .slate-team-label-lane { width: 100%; }
+  /* Finished rows: the picker names sit under the whole team block (name and
+     score), not under the name alone, so "Tyler, Chris" stays on one line
+     and the rule above them runs the full width of the team. */
+  .slate-game-row.is-final .slate-team-label-lane { display: contents; }
+  .slate-game-row.is-final .slate-team-label { grid-column: 1; grid-row: 1; justify-self: start; }
+  .slate-game-row.is-final .slate-team-score { grid-column: 2; grid-row: 1; }
+  .slate-game-row.is-final .slate-team-result-mark { grid-column: 3; grid-row: 1; }
+  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; }
   .slate-team-picker-list {
     font-size: .7rem;
     line-height: .95rem;
