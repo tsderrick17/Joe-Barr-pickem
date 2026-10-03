@@ -681,12 +681,14 @@ body {
 .slate-receipt-survivor .is-out { color: #b42318; }
 .slate-receipt-survivor .is-quiet { color: #5d6470; }
 
+/* The warning hangs off the Pick'em section like a tab of the same paper: it
+   sits under that column only, and the strip's outline follows its edges. */
 .slate-receipt-warning{
   background: var(--receipt-paper);
   border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
   font-weight: 700;
-  grid-column: 1 / -1;
+  grid-column: 2;
   margin: 0;
   padding: .28rem .7rem;
 }

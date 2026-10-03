@@ -1221,3 +1221,7 @@ Pregame phone rows now mirror the kickoff lane with an empty right column, so th
 ### A little wobble in each highlighter stroke
 
 Each time a team is marked on the Slate, its highlighter stroke lands with a barely noticeable random offset (about 0.06em across, 0.035em up or down) and tilt (under half a degree). The wobble is seeded from the team and the click, so it holds still on re-render and changes the next time the pick is marked.
+
+### The Slate warning hangs off the Pick'em section
+
+The red warning under the receipt (for example, "You already have 2 selections") now sits under the middle Pick'em section only, as a tab of the same paper, instead of a flat strip across the whole ticket.
