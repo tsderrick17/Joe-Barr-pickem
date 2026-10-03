@@ -1379,6 +1379,27 @@ body {
   line-height: 1;
   margin: .18rem 0 0;
 }
+/* The table itself, and the small marks inside it. */
+.pickem-ledger-grid { border-collapse: collapse; text-align: left; font-variant-numeric: tabular-nums; }
+.pickem-ledger-grid.is-regular { table-layout: fixed; width: 100%; }
+.pickem-ledger-grid.is-playoff { min-width: 48rem; }
+.pickem-ledger-grid.is-playoff-dense { min-width: 40rem; }
+.pickem-ledger-pick { overflow-wrap: break-word; }
+.pickem-ledger-spread { margin-left: .25rem; }
+.pickem-ledger-spread.is-open { color: var(--color-slate-700); }
+.pickem-ledger-out-mark {
+  border: 1px solid var(--color-red-700);
+  color: var(--color-red-800);
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  margin-top: .125rem;
+  padding: 1px .125rem;
+  transform: rotate(-6deg);
+}
+html[data-theme="night"] .pickem-ledger-out-mark { border-color: #d87b89; color: #ffbdc4; }
 .pickem-ledger-table {
   background: var(--ledger-paper);
   border-top: 0;
@@ -1441,7 +1462,7 @@ body {
   font-weight: 700;
   line-height: 1;
 }
-.pickem-ledger-pick .font-mono {
+.pickem-ledger-pick .pickem-ledger-spread {
   font-family: var(--ledger-hand-font);
   font-size: .88rem;
 }
@@ -1452,7 +1473,7 @@ body {
   .pickem-ledger-row td { padding: .32rem .38rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: 1.05rem; }
-  .pickem-ledger-pick .font-mono { font-size: .96rem; }
+  .pickem-ledger-pick .pickem-ledger-spread { font-size: .96rem; }
   .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
 }
 html[data-theme="night"] .pickem-ledger {
