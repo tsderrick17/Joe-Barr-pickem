@@ -1741,7 +1741,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 .slate-team-label--selected > span { position: relative; z-index: 1; }
 
-.slate-team-label--selected::before {
+.slate-team-label--selected::before,
+.slate-team-label--selected:not(.slate-team-label--chips) > span::before {
   /* A single translucent, textbook-pink highlighter pass: a touch of
      denser pink at the nib melts immediately into the familiar marker
      body, with no second block or visible seam between them. */
@@ -1766,6 +1767,28 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-team-label--selected::after {
   display: none;
 }
+
+/* Wrapped names: the marker belongs to the words, not to the label box. A
+   label box is as wide as its lane once a name wraps ("Green Bay / Packers"),
+   so the ink ran far past the text. Drawing it on the name itself makes it
+   follow the longest line. Survivor rows keep their centered label marker. */
+.slate-team-label--selected:not(.slate-team-label--chips) {
+  display: block;
+  isolation: auto;
+  margin: 0;
+  padding: 0;
+  position: static;
+  width: auto;
+}
+.slate-team-label--selected:not(.slate-team-label--chips)::before { content: none; }
+.slate-team-label--selected:not(.slate-team-label--chips) > span {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  isolation: isolate;
+  margin: 0 -.13em;
+  padding: .04em .13em .08em;
+}
+.slate-team-label--selected:not(.slate-team-label--chips) > span::before { z-index: -1; }
 
 .slate-team-name-full { display: inline; }
 .slate-team-name-short { display: none; }
@@ -2062,7 +2085,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   .scoreboard-team-name-short { display: inline; }
 }
 
-.slate-team-label--new::before {
+.slate-team-label--new::before,
+.slate-team-label--new:not(.slate-team-label--chips) > span::before {
   will-change: clip-path;
   /* Reveal fresh ink from the left. Unlike scaleX, already-painted ink never
      stretches or shifts while the marker continues across the word. */
@@ -2076,7 +2100,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 
 @media (max-width: 767px) {
-  .slate-team-label--new::before {
+  .slate-team-label--new::before,
+  .slate-team-label--new:not(.slate-team-label--chips) > span::before {
     animation-duration: 780ms;
   }
 }
@@ -2320,7 +2345,8 @@ html[data-theme="night"] .slate-team-label--selected {
   background: transparent;
 }
 
-html[data-theme="night"] .slate-team-label--selected::before {
+html[data-theme="night"] .slate-team-label--selected::before,
+html[data-theme="night"] .slate-team-label--selected:not(.slate-team-label--chips) > span::before {
   background: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,
