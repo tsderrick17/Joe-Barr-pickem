@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAutomationHealth } from "@/lib/automation-health";
-import { getWatchdogStatus } from "@/lib/automation-watchdog";
+import { getWatchdogStatus } from "@/lib/watchdog-status";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";

@@ -1159,3 +1159,19 @@ keep the crowning week.)
 
 **Reason:** An out player kept seeing "ENTRY CLOSED · OUT" on their ticket for
 the rest of the season.
+
+## 2026-10-03 - Trim Vercel Functions Storage
+
+**Status:** Accepted
+
+Functions Storage counts the function bundles of every deployment, and each
+pushed branch was adding a preview deployment (about 90 deployments a day, 10.4
+GB over 30 days). Vercel now skips preview builds except for `main` and
+branches named `preview/...` (`scripts/vercel-ignore-build.mjs`); name a branch
+`preview/<name>` when a phone preview is wanted. Separately, the two dashboard
+routes no longer bundle the reminder worker and the image renderer (sharp, about
+14 MB each) because the watchdog status read moved to `src/lib/watchdog-status.ts`.
+The routes that really render email images keep it.
+
+**Reason:** Functions Storage was at the edge of the Hobby allowance and the
+project will not move to Pro.
