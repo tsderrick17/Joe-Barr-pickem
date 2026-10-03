@@ -894,15 +894,17 @@ export default function BoardPage() {
             >
               SUBMIT
             </button>
-            <span
-              aria-live="polite"
-              className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`}
-              role="status"
-            >
-              <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
-              <span>{isSubmitting ? "PRINTING" : ""}</span>
+            <span className="slate-receipt-footnote">
+              <span
+                aria-live="polite"
+                className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`}
+                role="status"
+              >
+                <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
+                <span>{isSubmitting ? "PRINTING" : ""}</span>
+              </span>
+              <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
             </span>
-            <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
           </div>
           <div className="slate-receipt-pool slate-receipt-pickem">
             <span>PICK&apos;EM</span>
