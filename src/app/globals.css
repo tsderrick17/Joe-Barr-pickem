@@ -2950,15 +2950,32 @@ html[data-theme="night"] .my-ticket-barcode {
   .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
   .my-ticket-section { padding: .58rem 0; }
 
-  .my-ticket-columns.is-playoff .my-ticket-picks,
+  .my-ticket-columns.is-playoff .my-ticket-picks {
+    column-gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Rounds with more than two picks keep two columns on a phone (read down the
+     first, then the second). Each pick stacks inside its column: the team name
+     on top (it may wrap), the kickoff beneath it on the left, the spread on the
+     right, so nothing runs into its neighbor. */
   .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4,
   .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
-  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
-    column-gap: 0;
-    grid-auto-flow: row;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-  }
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 { column-gap: .75rem; }
+  .my-ticket-picks.is-playoff-picks--4 li,
+  .my-ticket-picks.is-playoff-picks--5 li,
+  .my-ticket-picks.is-playoff-picks--6 li { align-items: end; grid-template-columns: minmax(0, 1fr) auto; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-selection,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-selection,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-selection { display: contents; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-selection > strong,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-selection > strong,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-selection > strong { grid-column: 1 / -1; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-team-result,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-team-result,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-team-result { flex-wrap: wrap; white-space: normal; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-line,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-line,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-line { min-width: 0; }
 
   .my-ticket-section + .my-ticket-section {
     border-left: 0;

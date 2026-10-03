@@ -1203,8 +1203,7 @@ and centered in its section. On phones, pregame Slate rows without Survivor chip
 set the favorite's name against the line from the left so the two names sit
 symmetrically about it. The Pick'em Pad no longer shows an OUT mark under an
 eliminated player's score (the ELIMINATED stamp over the picks remains). On a
-phone, four, five, and six pick playoff rounds stack on the Standings ticket in
-one column, and the playoff ledger wraps each player's picks onto two lines
+phone, playoff rounds with more than two picks keep two columns on the Standings ticket, with each pick stacked (team, then kickoff and spread) so nothing overlaps, and the playoff ledger wraps each player's picks onto two lines
 (2 x 2 for four picks, 3 x 2 for five or six) instead of scrolling sideways; the
 round name sits under the ledger title.
 
