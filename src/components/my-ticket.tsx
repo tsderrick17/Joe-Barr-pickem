@@ -51,6 +51,14 @@ export default function MyTicket({
     survivorStatus,
   });
   const status = isFilled ? "SUBMITTED" : "OPEN";
+  // The Survivor section is torn off once a player is out (from the week after
+  // their elimination week) and once the pool has a champion.
+  const showSurvivor = !isPlayoff && survivorStatus !== "complete" && survivorRequired !== false;
+  const instructions = <div className="my-ticket-instructions">
+    <p>Current spreads appear here; teal lines are official.</p>
+    <p>Selections are revealed to others at kickoff.</p>
+    <p>Only winners count; pushes and ties are losers.</p>
+  </div>;
 
   return (
     <section className="my-ticket" aria-label={`Your current ticket for ${week}`} id="my-ticket">
@@ -73,7 +81,7 @@ export default function MyTicket({
         <span>TICKET</span>
       </div>
 
-      <div className={`my-ticket-columns ${isPlayoff ? "is-playoff" : ""}`}>
+      <div className={`my-ticket-columns ${isPlayoff ? "is-playoff" : ""} ${!isPlayoff && !showSurvivor ? "is-single" : ""}`}>
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
@@ -108,7 +116,7 @@ export default function MyTicket({
           </ol>
         </div>
 
-        {!isPlayoff ? <div className="my-ticket-section my-ticket-survivor">
+        {showSurvivor ? <div className="my-ticket-section my-ticket-survivor">
           <div className="my-ticket-section-heading">
             <Link className="my-ticket-section-link" href="/board#slate-matchups">SURVIVOR WINNER</Link>
             <strong>STRAIGHT-UP</strong>
@@ -123,8 +131,6 @@ export default function MyTicket({
             </div>
           ) : survivorStatus === "eliminated" ? (
             <p className="my-ticket-survivor-state">ENTRY CLOSED &middot; OUT</p>
-          ) : survivorStatus === "complete" ? (
-            <p className="my-ticket-survivor-state">POOL COMPLETE</p>
           ) : survivorAvailable ? (
             <div className="my-ticket-survivor-pick is-open">
               <strong className="my-ticket-open">OPEN</strong>
@@ -132,12 +138,9 @@ export default function MyTicket({
           ) : (
             <p className="my-ticket-survivor-state">NOT AVAILABLE</p>
           )}
-          <div className="my-ticket-instructions">
-            <p>Current spreads appear here; teal lines are official.</p>
-            <p>Selections are revealed to others at kickoff.</p>
-            <p>Only winners count; pushes and ties are losers.</p>
-          </div>
+          {instructions}
         </div> : null}
+        {!isPlayoff && !showSurvivor ? <div className="my-ticket-section my-ticket-notes">{instructions}</div> : null}
       </div>
 
       <div className="my-ticket-footer">

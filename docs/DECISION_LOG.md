@@ -1146,16 +1146,16 @@ columns of three on the narrower torn ticket. The board API reports this as
 **Reason:** An out player's ticket kept a dead Survivor column, and the
 single-column version stretched wider than the picks needed.
 
-## 2026-10-03 - First-hour score checks follow a normal settle time
+## 2026-10-03 - The Standings ticket tears off Survivor too
 
 **Status:** Accepted
 
-In the credit forecast, a slate that settles in the first hour is assumed to do
-so at a normally distributed time across that hour (centered, the hour spanning
-plus or minus two standard deviations), so it costs about 3.5 checks on the
-ten-minute ladder instead of all six. The slates that run past the first hour
-are unchanged. At a 90% first-hour share the forecast is about 4.05 checks per
-slate (it was 6.3).
+The full ticket on Standings follows the same rule as the Slate receipt: its
+Survivor section stays while a player is in and through their elimination week,
+then is gone from the week after; it is also gone once the pool has a champion
+and in the playoffs. Without it the ticket is a single column with the notes
+beneath the picks. (Unlike the Slate receipt, the Standings ticket does not
+keep the crowning week.)
 
-**Reason:** Counting all six first-hour checks for every fast slate overstated
-the forecast; a slate stops being polled once its last game is graded.
+**Reason:** An out player kept seeing "ENTRY CLOSED · OUT" on their ticket for
+the rest of the season.
