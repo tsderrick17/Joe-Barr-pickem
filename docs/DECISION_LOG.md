@@ -1221,3 +1221,7 @@ Pregame phone rows now mirror the kickoff lane with an empty right column, so th
 ### A real 3D poker chip, and a test chip on the Operations desk
 
 The Survivor chip is now built as a true cylinder at a real chip's proportions (thickness about 8.5% of the diameter, like a 39 mm by 3.3 mm casino chip): two identical faces half a thickness either side of center, and 32 flat edge segments around the rim. Each quarter has one 16-degree segment carrying the face's colored insert over the edge, and the edge darkens as it faces away from the light, so it reads as round when the chip flips or spins. Head on it looks the same as before. A Raiders test chip sits to the right of Email center on the Operations desk heading: click to flip it, drag to turn it by hand. The "View chart data" tables on the grading dashboard are now plain ledgers instead of picking up the dashboard's pill-shaped row styling.
+
+### A pick keeps its column
+
+The Pick'em Pad and the ticket now place each player's picks by earliest kickoff, with the game id breaking a tie (src/lib/pick-column-order.js). Before, the Pad used submission order, so editing a pick, or two players entering the same picks in a different order, moved a pick between columns. The order uses only public facts about the game, so it does not change when a pick is revealed or settled. The ticket's instruction lines now wrap inside the Survivor column instead of running to the ticket edge.

@@ -2821,9 +2821,12 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
 .my-ticket-instructions p + p { margin-top: .28rem; }
 @media (min-width: 640px) {
   /* These are short printed guidance lines, not flowing body copy. Keep each
-     instruction intact as the ticket narrows so its hierarchy stays crisp. */
-  .my-ticket-instructions p { white-space: nowrap; }
+     one intact when it has the whole ticket width; inside the Survivor column
+     it wraps, so it never runs out to the ticket's edge. */
+  .my-ticket-notes .my-ticket-instructions p { white-space: nowrap; }
 }
+.my-ticket-survivor .my-ticket-instructions { padding-right: .6rem; }
+.my-ticket-survivor .my-ticket-instructions p { text-wrap: balance; }
 .my-ticket-footer {
   align-items: end;
   border-top: 2px solid #28221b;

@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
+import { comparePickColumns } from "@/lib/pick-column-order.js";
 
 export const dynamic = "force-dynamic";
 
@@ -224,12 +225,7 @@ export async function GET(request: NextRequest) {
   const allPicks = (picks ?? []) as PickRow[];
 
   const currentWeekPicks = allPicks
-    .filter((pick) => pick.scoring_period_id === currentWeek.id)
-    .sort(
-      (first, second) =>
-        new Date(first.submitted_at).getTime() -
-        new Date(second.submitted_at).getTime(),
-    );
+    .filter((pick) => pick.scoring_period_id === currentWeek.id);
 
   const gameIds = [
     ...new Set(currentWeekPicks.map((pick) => pick.game_id)),
@@ -341,8 +337,13 @@ export async function GET(request: NextRequest) {
         allPicks.filter((pick) => pick.player_id === player.id),
       );
 
+      // A pick keeps its column: kickoff order, not submission order.
       const weeklyPicks = currentWeekPicks
         .filter((pick) => pick.player_id === player.id)
+        .sort((first, second) => comparePickColumns(
+          { gameId: first.game_id, kickoffAt: gameById.get(first.game_id)?.kickoff_at },
+          { gameId: second.game_id, kickoffAt: gameById.get(second.game_id)?.kickoff_at },
+        ))
         .map((pick) => {
           const game = gameById.get(pick.game_id);
 
