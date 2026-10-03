@@ -1217,3 +1217,15 @@ Each open team button on the Slate now has an invisible margin (about 0.7rem abo
 ### Slate spread alignment and ticket outlines
 
 Pregame phone rows now mirror the kickoff lane with an empty right column, so the spread sits at the true center of the row, in line with the spread on finished rows. On finished rows the spread rides the team-name line instead of floating at the middle of the taller row. The ticket's notch rings are one pixel like the straight edges, and the perforation starts just below each ring over a strip of paper that hides the hairline where two sections meet.
+
+### A little wobble in each highlighter stroke
+
+Each time a team is marked on the Slate, its highlighter stroke lands with a barely noticeable random offset (about 0.06em across, 0.035em up or down) and tilt (under half a degree). The wobble is seeded from the team and the click, so it holds still on re-render and changes the next time the pick is marked.
+
+### The Slate warning hangs off the Pick'em section
+
+The red warning under the receipt (for example, "You already have 2 selections") now sits under the middle Pick'em section only, as a tab of the same paper, instead of a flat strip across the whole ticket.
+
+### Finished games ignore the mouse
+
+Finished Slate games render their teams as plain text rather than buttons, and a started game no longer underlines on hover, since there is nothing to pick.
