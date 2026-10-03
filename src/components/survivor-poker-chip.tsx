@@ -32,6 +32,26 @@ const chipLogoScales: Record<string, number> = {
   WAS: 1.18,
 };
 
+// The chip is a real cylinder: two identical faces a chip's thickness apart and
+// a band of flat edge segments around the rim. Each quarter of the rim has one
+// 16-degree insert segment (the same colored spot printed on the face, carried
+// over the edge) and seven plain segments. Each segment is darkened a little
+// by how far it faces away from the light above, so the edge reads as round.
+const EDGE_INSERT = 16;
+const EDGE_PLAIN = (90 - EDGE_INSERT) / 7;
+const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
+  { angle: quarter * 90, span: EDGE_INSERT, insert: true },
+  ...Array.from({ length: 7 }, (_, step) => ({ angle: quarter * 90 + EDGE_INSERT / 2 + EDGE_PLAIN * (step + 0.5), span: EDGE_PLAIN, insert: false })),
+]).flat().map(({ angle, span, insert }) => ({
+  insert,
+  style: {
+    "--seg-a": `${angle.toFixed(3)}deg`,
+    // A chord of `span` degrees, as a share of the diameter.
+    "--seg-w": `${(Math.sin((span * Math.PI) / 360) * 100).toFixed(3)}%`,
+    "--seg-dark": (0.22 * (1 - Math.cos((angle * Math.PI) / 180)) / 2).toFixed(3),
+  } as CSSProperties,
+}));
+
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
@@ -41,25 +61,22 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const accent = teamChipAccents(logoAbbreviation);
   const logoScale = chipLogoScales[logoAbbreviation] ?? 1;
   const state = official ? "official" : selected ? "picked" : "available";
+  const face = (
+    <span className="survivor-poker-chip-face" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
+      <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
+    </span>
+  );
 
   return (
     <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={tooltip ?? teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${idleSpin ? " is-idle-spinning" : ""}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
-        <span className="survivor-poker-chip-rim survivor-poker-chip-rim-front" />
-        <span className="survivor-poker-chip-rim survivor-poker-chip-rim-back" />
-        <span className="survivor-poker-chip-edge" />
-        <span className="survivor-poker-chip-core">
-          <span className="survivor-poker-chip-face survivor-poker-chip-front" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
-            <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
-          </span>
-          <span className="survivor-poker-chip-face survivor-poker-chip-back" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
-            <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
-          </span>
-        </span>
+        {edgeSegments.map((segment, index) => <span className={`survivor-poker-chip-edge-seg${segment.insert ? " is-insert" : ""}`} key={index} style={segment.style} />)}
+        <span className="survivor-poker-chip-side survivor-poker-chip-front">{face}</span>
+        <span className="survivor-poker-chip-side survivor-poker-chip-back">{face}</span>
       </span>
       {selected && !official ? <span className="survivor-poker-chip-pick-mark">SURVIVOR</span> : null}
-      {official ? <span className="survivor-poker-chip-seal">{"\u2605"}</span> : null}
+      {official ? <span className="survivor-poker-chip-seal">{"★"}</span> : null}
     </span>
   );
 }
