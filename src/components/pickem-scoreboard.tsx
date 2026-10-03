@@ -95,7 +95,7 @@ export default function PickemScoreboard({
         {flipButton}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
-        <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`}>
+        <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`} data-picks={maxPicks}>
           {!isPlayoff ? <colgroup>
             <col className="pickem-ledger-wins-column" />
             <col className="pickem-ledger-player-column" />
@@ -108,7 +108,7 @@ export default function PickemScoreboard({
             {displayedRows.map((row) => {
               return (
                 <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} key={row.id}>
-                  <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}{row.playoffEliminated ? <span className="pickem-ledger-out-mark" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
+                  <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (
                     <td className="pickem-ledger-pick" colSpan={maxPicks}>

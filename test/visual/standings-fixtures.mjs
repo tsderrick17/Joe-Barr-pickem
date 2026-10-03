@@ -98,6 +98,8 @@ export const SCENARIOS = {
   "regular-complete": { ...base, survivorComplete: true, survivorChampionPlayerId: "p0", survivorChampionName: "Gary", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }).map((row) => ({ ...row, status: "complete" })) },
   // Wild Card weekend: six picks each, Survivor is over.
   "playoff-wildcard": { ...base, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
+  // Divisional round: four picks each.
+  "playoff-divisional": { ...base, isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   // A commissioner can turn the pad over to the Season Snapshot.
   "commissioner": { ...base, isCommissioner: true, seasonSnapshotReleased: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
 };
