@@ -1128,19 +1128,15 @@ and backup six hours; worker probes stay at ten minutes to respect their
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
 
-## 2026-10-03 - Credit forecast from the schedule, the ladder, and measured settling
+## 2026-10-03 - A more convincing Pick'em Pad flip
 
 **Status:** Accepted
 
-The month-end provider-credit forecast now counts line requests as one 7 AM
-Eastern pre-lock refresh every day plus one fetch for each distinct line-lock
-time (6 PM the day before for early games, 8 AM game day otherwise). Score
-checks per slate come from the retry ladder: a first-hour share of slates
-settles in the first hour (a trailing 15-day average of real slates, 90% until
-four slates of history exist), half of the rest settles across the three
-20-minute checks, and half on the 60-minute cooldown check. The 120- and
-240-minute rungs are emergencies and are not forecast.
+The pad's turn is driven by one animated angle (`--pad-turn`), so the lift
+toward the reader, the slight tilt, and the shading across the paper all follow
+the card's real position. The card changes width in a single step at the
+halfway point, when it is edge-on, instead of stretching while it turns. The
+turn takes 0.9 seconds; the faces still swap exactly at the midpoint.
 
-**Reason:** The old forecast charged one line request per slate and one per
-day, missed the 6 PM early-lock fetch, and assumed a flat 10% of slates ran
-the whole ladder.
+**Reason:** Widening the card during the turn made the paper stretch and the
+text reflow while visible, so the text seemed to slide across the paper.
