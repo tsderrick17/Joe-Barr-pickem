@@ -1127,3 +1127,20 @@ and backup six hours; worker probes stay at ten minutes to respect their
 **Reason:** Observability showed the Grading dashboard as the largest single
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
+
+## 2026-10-03 - Credit forecast from the schedule, the ladder, and measured settling
+
+**Status:** Accepted
+
+The month-end provider-credit forecast now counts line requests as one 7 AM
+Eastern pre-lock refresh every day plus one fetch for each distinct line-lock
+time (6 PM the day before for early games, 8 AM game day otherwise). Score
+checks per slate come from the retry ladder: a first-hour share of slates
+settles in the first hour (a trailing 15-day average of real slates, 90% until
+four slates of history exist), half of the rest settles across the three
+20-minute checks, and half on the 60-minute cooldown check. The 120- and
+240-minute rungs are emergencies and are not forecast.
+
+**Reason:** The old forecast charged one line request per slate and one per
+day, missed the 6 PM early-lock fetch, and assumed a flat 10% of slates ran
+the whole ladder.
