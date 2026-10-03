@@ -1175,3 +1175,20 @@ The routes that really render email images keep it.
 
 **Reason:** Functions Storage was at the edge of the Hobby allowance and the
 project will not move to Pro.
+
+## 2026-10-03 - Standings screenshot baseline and stylesheet cleanup
+
+**Status:** Accepted
+
+The Standings page (ticket, Pick'em Pad, Survivor Table, Bowl Card, and the
+commissioner's flip to the Season Snapshot) has the same exact-match screenshot
+baseline as the Slate (`npm run test:visual`, 44 images across phone, tablet and
+desktop, with night mode on the busiest states). Against it, 49 style
+declarations that provably changed nothing were removed, the ticket, Pick'em Pad
+and Survivor Table rules were each gathered into one section, the flip rules were
+rewritten as one block, and repeated rules were merged. Appearance is unchanged;
+the Bowl Card's styles were deliberately left alone while its design is reworked.
+
+**Reason:** The Slate cleanup showed the approach is safe when every state is
+screenshot-tested, and the ticket and pad had their styles scattered across many
+parts of a 4,000-line file.
