@@ -288,7 +288,9 @@ body {
 
 /* Perforation between two sections, running between its two notches. */
 .slate-receipt-pool::after {
-  border-left: 1px dashed var(--receipt-rule);
+  /* Long dashes with wide gaps, the same rhythm as the punched edges. */
+  background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 .32rem, transparent .32rem .64rem);
+  width: 1px;
   bottom: var(--receipt-notch);
   content: "";
   left: 0;
@@ -1360,7 +1362,15 @@ body {
 /* The Pick'em Pad is a two-sided card for commissioners: the scorepad on the
    front, the Season Snapshot on the back. Both faces share one grid cell, so
    the card keeps the front's size and the chart fills the back's full height. */
-.pickem-scoreboard-ledger.has-pad-flip { perspective: 1600px; }
+/* The turn is one animated angle, --pad-turn, so the lift, tilt, and shading
+   below all follow the paper's real position instead of running on their own
+   clocks. sin() is 0 at rest and 1 when the card is edge-on. */
+@property --pad-turn { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+.pickem-scoreboard-ledger.has-pad-flip {
+  perspective: 1600px;
+  transition: --pad-turn .9s cubic-bezier(.45, .05, .55, .95);
+}
+.has-pad-flip.is-flipped { --pad-turn: 180deg; }
 .pad-flip-inner {
   display: grid;
   margin-left: auto;
@@ -1368,12 +1378,22 @@ body {
   max-width: 30rem;
   transform-style: preserve-3d;
   /* Symmetric easing: the card is exactly edge-on at the halfway mark, which
-     is when the two faces swap (see .pad-face below). */
-  transition: transform .7s cubic-bezier(.45, .05, .55, .95);
+     is when the two faces swap (see .pad-face below). It also lifts toward the
+     reader and tips slightly as it turns, like a sheet picked up by an edge. */
+  transform: translateZ(calc(sin(var(--pad-turn)) * 2.75rem)) rotateX(calc(sin(var(--pad-turn)) * -5deg)) rotateY(var(--pad-turn));
 }
 .playoff-scoreboard .pad-flip-inner { max-width: none; }
-.has-pad-flip.is-flipped .pad-flip-inner { transform: rotateY(180deg); }
-.pad-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; grid-area: 1 / 1; min-width: 0; }
+.pad-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; grid-area: 1 / 1; min-width: 0; position: relative; }
+/* Light falls off across the paper as it turns away, strongest when edge-on. */
+.pad-face::after {
+  background: linear-gradient(90deg, rgba(45, 32, 14, 0), rgba(45, 32, 14, .55));
+  content: "";
+  inset: 0;
+  opacity: calc(sin(var(--pad-turn)) * .85);
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+}
 .pad-back { background: var(--ledger-paper); display: flex; flex-direction: column; transform: rotateY(180deg); }
 .has-pad-flip .pad-front > .pickem-ledger-masthead,
 .has-pad-flip .pad-front > .pickem-standings-table { max-width: none; }
@@ -1398,17 +1418,20 @@ body {
 /* The card turns flat, like a sheet of paper. Turned over, it widens to the
    full Standings rail (the Survivor Table's width) so the chart has room. Both
    sides share the pad's parchment. */
-.pad-flip-inner { transition: transform .7s cubic-bezier(.45, .05, .55, .95), max-width .7s cubic-bezier(.45, .05, .55, .95); }
+/* The width changes in one step at the halfway mark, when the card is edge-on
+   and invisible, so the paper never stretches (and the text on it never
+   reflows) while it is in view. Both directions use the same moment. */
+.pad-flip-inner { transition: max-width 0s linear .45s; }
 .has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
 .has-pad-flip .pad-front { background: var(--ledger-paper); }
 /* Belt and braces for browsers that ignore backface-visibility on complex
    faces: each face switches off exactly at the halfway point of the turn, so
    the mirrored side can never show through. */
-.pad-face { transition: visibility 0s linear .35s; }
+.pad-face { transition: visibility 0s linear .45s; }
 .has-pad-flip.is-flipped .pad-front,
 .has-pad-flip:not(.is-flipped) .pad-back { visibility: hidden; }
 /* The arrows spin once, in step with the page turning. */
-.pad-flip-icon.is-spinning { animation: pad-flip-spin .7s cubic-bezier(.2, .75, .2, 1); }
+.pad-flip-icon.is-spinning { animation: pad-flip-spin .9s cubic-bezier(.2, .75, .2, 1); }
 @keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .pad-face { transition: none; }
@@ -1416,7 +1439,7 @@ body {
 }
 .pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
 @media (prefers-reduced-motion: reduce) {
-  .pad-flip-inner, .pad-flip-button { transition: none; }
+  .pad-flip-inner, .pad-flip-button, .pickem-scoreboard-ledger.has-pad-flip { transition: none; }
 }
 
 .season-snapshot {
@@ -1817,6 +1840,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 .slate-team-label--selected:not(.slate-team-label--chips) > span::before { z-index: -1; }
 
+/* Names that wrap break into even lines ("Philadelphia / Eagles") instead of a
+   long first line and a stray last word. */
+.slate-team-label { text-wrap: balance; }
 .slate-team-name-full { display: inline; }
 .slate-team-name-short { display: none; }
 .scoreboard-team-name-full { display: none; }
@@ -1910,6 +1936,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      name and its W/L mark on one baseline instead of letting a long Week 1
      label spill onto a second line; picker names may still wrap below it. */
   .slate-game-row.is-final .slate-team-label { white-space: nowrap; }
+}
+@media (min-width: 768px) and (max-width: 999px) {
+  /* Below the full desktop width a finished team's cell is narrower than the
+     longest full name plus its score, and the name cannot wrap, so the score
+     was drawn over it. Use the compact team mark, as phones do. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
 }
 .slate-game-row .slate-final-team-stack.is-left {
   justify-items: start;
