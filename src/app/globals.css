@@ -681,12 +681,14 @@ body {
 .slate-receipt-survivor .is-out { color: #b42318; }
 .slate-receipt-survivor .is-quiet { color: #5d6470; }
 
+/* The warning hangs off the Pick'em section like a tab of the same paper: it
+   sits under that column only, and the strip's outline follows its edges. */
 .slate-receipt-warning{
   background: var(--receipt-paper);
   border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
   font-weight: 700;
-  grid-column: 1 / -1;
+  grid-column: 2;
   margin: 0;
   padding: .28rem .7rem;
 }
@@ -1795,7 +1797,9 @@ html[data-theme="night"] .playoff-scoreboard {
   content: "";
   inset: -.04em -.32em -.16em;
   position: absolute;
-  transform: rotate(-1.1deg);
+  /* --ink-* is a tiny per-stroke wobble (set in slate-game-row.tsx), so no two
+     marks land in exactly the same place. */
+  transform: translate(var(--ink-x, 0), var(--ink-y, 0)) rotate(calc(-1.1deg + var(--ink-turn, 0deg)));
   transform-origin: center;
   z-index: 0;
 }
@@ -1950,9 +1954,8 @@ button.slate-team-side:not(:disabled)::after {
   text-align: left;
 }
 .slate-game-row .slate-final-team-stack.is-right {
-  justify-content: end;
-  justify-items: end;
-  text-align: right;
+  justify-items: start;
+  text-align: left;
 }
 .slate-game-row .slate-team-result-line.is-right .slate-team-label {
   text-align: left;
@@ -1971,18 +1974,17 @@ button.slate-team-side:not(:disabled)::after {
      whichever name happens to be on that row. */
   .slate-game-row.is-final .slate-team-label-lane { display: contents; }
   .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
-  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 2.3ch max-content; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 2; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 3; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 4; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 1; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 3; }
   .slate-game-row.is-final .slate-team-label,
   .slate-game-row.is-final .slate-team-score,
   .slate-game-row.is-final .slate-team-result-mark { grid-row: 1; }
   .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; max-width: none; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-picker-list { text-align: right; }
 }
 
 /* Upcoming rows have no score/result columns. Give each team name a full,
@@ -2039,11 +2041,11 @@ button.slate-team-side:not(:disabled)::after {
     width: min(100%, 25rem);
   }
 
-  /* Upcoming rows have no score/result marks. Align their right team name to
-     the same outside edge used by the completed right-side score block. */
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-right {
-    text-align: right;
-  }
+  /* Upcoming rows: both names hug the line, the favorite from its left and the
+     underdog from its right, so they sit the same distance from it. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-label { text-align: right; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-picker-list { justify-content: flex-end; text-align: right; }
 }
 
 @media (max-width: 767px) {
@@ -2131,7 +2133,6 @@ button.slate-team-side:not(:disabled)::after {
     line-height: .95rem;
     text-align: left;
   }
-  .slate-team-result-line.is-right + .slate-team-picker-list { text-align: right; }
   .slate-team-score { font-size: 1em; }
   /* Final score rows are a two-sided scoreboard. Use the compact team mark
      at phone widths so both score columns keep one stable baseline instead of

@@ -861,7 +861,7 @@ export default function BoardPage() {
               </div>
               <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 md:gap-0">
                 <div className="md:pl-4">
-                  <p>Lines lock at 8 AM ET on gameday, unless otherwise noted.</p>
+                  <p>Lines lock at 8 AM on gameday, unless otherwise noted.</p>
                   <p className="mt-1"><span className="official-line-color font-semibold">Teal lines</span> are official and will not change.</p>
                 </div>
                 <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
@@ -871,7 +871,7 @@ export default function BoardPage() {
               </div>
               {hasEarlyGame ? (
                 <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold md:pl-4">
-                  EARLY GAME: spreads post at 6 PM ET the night before.
+                  EARLY GAME: spreads post at 6 PM the night before.
                 </p>
               ) : null}
             </aside>

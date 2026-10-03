@@ -45,7 +45,7 @@ function easternShortDate(value: string) {
 /** The early-lock note is two short lines: the day, then the time. */
 function easternLockParts(value: string) {
   const time = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value));
-  return { date: easternShortDate(value), time: `${time.replace(":00", "")} ET`.toUpperCase() };
+  return { date: easternShortDate(value), time: time.replace(":00", "").toUpperCase() };
 }
 
 function spreadLabel(spread: number | null) {
@@ -77,6 +77,19 @@ type Props = {
     onChoose: (gameId: string, teamId: string) => void;
   };
 };
+
+/** A fresh, barely-there wobble for each highlighter stroke. Seeded from the team and
+ *  the click, so it stays put on re-render but changes the next time it is marked. */
+function strokeJitter(seed: string): CSSProperties {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) hash = Math.imul(hash ^ seed.charCodeAt(index), 16777619);
+  const unit = (shift: number) => (((hash >>> shift) & 255) / 255) * 2 - 1;
+  return {
+    "--ink-x": `${(unit(0) * 0.06).toFixed(3)}em`,
+    "--ink-y": `${(unit(8) * 0.035).toFixed(3)}em`,
+    "--ink-turn": `${(unit(16) * 0.45).toFixed(2)}deg`,
+  } as CSSProperties;
+}
 
 export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
   const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
@@ -143,11 +156,12 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
     const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
-    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection ? "hover:underline" : ""}`;
+    const inkStyle = selected ? strokeJitter(`${team.id}-${feedbackType ? selectionFeedback?.token : 0}`) : undefined;
+    const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection && !hasStarted ? "hover:underline" : ""}`;
     const teamResult = <>
       <span className={`slate-team-result-line ${align === "right" ? "is-right" : "is-left"}`}>
         <span className={`slate-team-label-lane is-${align}`}>
-          <span className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
+          <span style={inkStyle} className={`slate-team-label ${survivor?.enabled ? "slate-team-label--chips" : ""} ${selected ? `slate-team-label--selected slate-team-label--from-${align}` : ""} ${feedbackType === "sweep" ? "slate-team-label--new" : ""}`}><span className={`slate-team-name-full ${survivor?.enabled ? "slate-team-name-full--chips" : ""}`}>{label}</span><span aria-label={label} className={`slate-team-name-short ${survivor?.enabled ? "slate-team-name-short--chips" : ""}`}>{compactLabel}</span></span>
           {hasStarted && (isFinal || team.pickers.length) ? <span aria-hidden={team.pickers.length ? undefined : true} className={`slate-team-picker-list ${team.pickers.length ? (selected ? "text-slate-200" : "text-slate-600") : "is-empty"}`}>{team.pickers.map((picker, index) => <span className="slate-team-picker-name" key={`${picker}-${index}`}>{picker}{index < team.pickers.length - 1 ? "," : ""}</span>)}</span> : null}
         </span>
         {isFinal && team.score !== null ? <span className="slate-team-score font-mono font-black tabular-nums">{team.score}</span> : null}
@@ -162,7 +176,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     // names anchored to the same team lane instead of the row's open edge.
     const content = <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>;
     const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
-    const pickemControl = allowSelection
+    const pickemControl = allowSelection && !isFinal
       ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
       : <div className={className}>{content}</div>;
 
@@ -241,7 +255,7 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
 
   return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 md:gap-3 md:py-2 md:pl-2 md:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
     <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 md:text-xs">
-      {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">ET</p></>}
+      {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p></>}
     </div>
     {teamCell(left, "left")}
     {survivorChip(left)}
