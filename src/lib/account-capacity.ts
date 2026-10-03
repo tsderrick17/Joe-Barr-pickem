@@ -3,6 +3,7 @@ import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
 import { monthlyCreditSeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { estimateFluidCpu, estimateFunctionsStorageBytes, FLUID_CPU_LIMIT_SECONDS, FUNCTIONS_STORAGE_LIMIT_BYTES } from "@/lib/vercel-usage-estimate.js";
 
 export type ProviderEfficiency = {
   windowDays: number;
@@ -29,7 +30,7 @@ export type AccountCapacity = {
   period: string;
   observedAt: string | null;
   detail: string;
-  connection: "live" | "awaiting_connection" | "not_reported";
+  connection: "live" | "estimated" | "awaiting_connection" | "not_reported";
   efficiency?: ProviderEfficiency;
   calendarMonth?: {
     monthLabel: string;
@@ -62,6 +63,7 @@ const ODDS_API_FREE_MONTHLY_CREDITS = 500;
 const BREVO_FREE_DAILY_EMAILS = 300;
 const SUPABASE_FREE_DATABASE_MB = 500;
 let uptimeRobotCache: { expiresAt: number; account: AccountCapacity } | null = null;
+let vercelDeploymentCache: { expiresAt: number; count: number } | null = null;
 let sentryUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 
 async function providerRunsSince(since: string) {
@@ -157,6 +159,59 @@ async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
   }
 }
 
+/** Vercel deployments (production and previews) created in the last 30 days, from the public deployment list. */
+async function countVercelDeployments(now: Date): Promise<number | null> {
+  if (vercelDeploymentCache && vercelDeploymentCache.expiresAt > now.getTime()) return vercelDeploymentCache.count;
+  const since = now.getTime() - 30 * 86_400_000;
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (process.env.GITHUB_USAGE_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_USAGE_TOKEN}`;
+  try {
+    let count = 0;
+    for (let page = 1; page <= 15; page++) {
+      const response = await fetch(`https://api.github.com/repos/tsderrick17/Joe-Barr-pickem/deployments?per_page=100&page=${page}`, { headers, cache: "no-store" });
+      if (!response.ok) throw new Error(`GitHub returned ${response.status}.`);
+      const rows = await response.json() as Array<{ environment: string; created_at: string }>;
+      if (!rows.length) break;
+      for (const row of rows) {
+        if (Date.parse(row.created_at) < since) {
+          vercelDeploymentCache = { expiresAt: now.getTime() + 60 * 60_000, count };
+          return count;
+        }
+        // Only Vercel's environments count; the isolated database test environment is not a Vercel deployment.
+        if (/^(production|preview)$/i.test(row.environment)) count++;
+      }
+    }
+    vercelDeploymentCache = { expiresAt: now.getTime() + 60 * 60_000, count };
+    return count;
+  } catch {
+    return null;
+  }
+}
+
+async function loadVercelEstimates(now: Date): Promise<AccountCapacity[]> {
+  const since = new Date(now.getTime() - 7 * 86_400_000).toISOString();
+  const [{ count: activePlayers }, deployments] = await Promise.all([
+    supabaseAdmin.from("players").select("id", { count: "exact", head: true }).eq("active", true).gte("last_active_at", since),
+    countVercelDeployments(now),
+  ]);
+  const cpu = estimateFluidCpu({ activePlayers: activePlayers ?? 0 });
+  const hours = (seconds: number) => Math.round((seconds / 3600) * 10) / 10;
+  const accounts: AccountCapacity[] = [{
+    id: "vercel-cpu", service: "Vercel", metric: "Fluid Active CPU", used: hours(cpu.seconds), limit: hours(FLUID_CPU_LIMIT_SECONDS), unit: "hours",
+    period: "rolling 30 days, estimated", observedAt: now.toISOString(), connection: "estimated",
+    detail: `Estimate, not Vercel's meter: scheduled jobs and uptime probes about ${hours(cpu.backgroundSeconds)} h, plus ${activePlayers ?? 0} recently active players about ${hours(cpu.playerSeconds)} h. Calibrated to Vercel's Usage page; compare and adjust.`,
+  }];
+  accounts.push(deployments === null ? {
+    id: "vercel-storage", service: "Vercel", metric: "Functions Storage", used: null, limit: null, unit: "GB", period: "rolling 30 days, estimated",
+    observedAt: null, connection: "not_reported", detail: "The deployment count could not be read right now.",
+  } : {
+    id: "vercel-storage", service: "Vercel", metric: "Functions Storage", used: Math.round((estimateFunctionsStorageBytes(deployments) / 1024 ** 3) * 10) / 10,
+    limit: Math.round(FUNCTIONS_STORAGE_LIMIT_BYTES / 1024 ** 3), unit: "GB", period: "rolling 30 days, estimated", observedAt: now.toISOString(), connection: "estimated",
+    detail: `Estimate, not Vercel's meter: ${deployments} deployments (production and previews) in 30 days at about 14 MB of function code each. Every pushed branch adds a preview, so fewer, larger batches of work lower it. The 10 GB limit is read off Vercel's usage chart; confirm it.`,
+  });
+  return accounts;
+}
+
 async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
   const token = process.env.SENTRY_USAGE_TOKEN;
   if (!token) {
@@ -220,7 +275,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const historyStart = new Date(Math.min(Date.parse(efficiencyStart), Date.parse(monthStart))).toISOString();
   const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-  const [databaseResult, emailResult, oddsResult, monthGamesResult, uptimeRobot, sentry] = await Promise.all([
+  const [databaseResult, emailResult, oddsResult, monthGamesResult, uptimeRobot, sentry, vercelEstimates] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
       .from("email_reminder_deliveries")
@@ -237,6 +292,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .order("kickoff_at"),
     loadUptimeRobotCapacity(now),
     loadSentryCapacity(now),
+    loadVercelEstimates(now),
   ]);
 
   const databaseBytes = databaseResult.error ? null : wholeNumber(databaseResult.data);
@@ -312,18 +368,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
         : "This is actual database space, not an estimate. Egress and file storage are separate allowances.",
       connection: databaseMb === null ? "not_reported" : "live",
     },
-    {
-      id: "vercel",
-      service: "Vercel",
-      metric: "Bandwidth & functions",
-      used: null,
-      limit: null,
-      unit: "usage",
-      period: "current billing cycle",
-      observedAt: null,
-      detail: "Vercel does not provide Hobby-plan billing usage to this read-only app connection. Check Usage in the Vercel dashboard.",
-      connection: "not_reported",
-    },
+    ...vercelEstimates,
     sentry,
     uptimeRobot,
   ];

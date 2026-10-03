@@ -14,7 +14,7 @@ type AccountCapacity = {
   period: string;
   observedAt: string | null;
   detail: string;
-  connection: "live" | "awaiting_connection" | "not_reported";
+  connection: "live" | "estimated" | "awaiting_connection" | "not_reported";
   efficiency?: {
     windowDays: number;
     providerCalls: number;
@@ -60,7 +60,8 @@ const serviceAccess: Record<string, { href: string; purpose: string; signIn: str
   "odds-api": { href: "https://the-odds-api.com/", purpose: "NFL odds source", signIn: "Start with Google" },
   brevo: { href: "https://app.brevo.com/", purpose: "Reminder email delivery", signIn: "Start with Google" },
   supabase: { href: "https://supabase.com/dashboard/project/qtuycmgjiizrahfchsxe", purpose: "Database, sign-in, and scheduled automation", signIn: "Start with GitHub" },
-  vercel: { href: "https://vercel.com/tsderrick/pickem", purpose: "Live site and deployments", signIn: "Start with GitHub" },
+  "vercel-cpu": { href: "https://vercel.com/tsderrick/~/usage", purpose: "Live site and deployments", signIn: "Start with GitHub" },
+  "vercel-storage": { href: "https://vercel.com/tsderrick/~/usage", purpose: "Live site and deployments", signIn: "Start with GitHub" },
   sentry: { href: "https://sentry.io/", purpose: "Application error reports", signIn: "Start with GitHub" },
   uptimerobot: { href: "https://dashboard.uptimerobot.com/", purpose: "External health alerts", signIn: "Start with Google" },
 };
@@ -85,7 +86,7 @@ function CapacityDial({ account }: { account: AccountCapacity }) {
     ? Math.min(1, account.used / account.limit)
     : null;
   const liveCountWithoutLimit = account.connection === "live" && account.used !== null && account.limit === null;
-  const dashboardOnly = account.id === "vercel" && account.connection === "not_reported";
+  const dashboardOnly = false;
   const color = ratio === null ? "#a8a29e" : dialColor(ratio);
   const dialStyle = liveCountWithoutLimit
     ? { background: "conic-gradient(#007e72 0deg 4deg, #e7e5e4 4deg 360deg)" }

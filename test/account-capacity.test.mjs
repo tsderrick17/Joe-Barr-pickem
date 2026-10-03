@@ -35,7 +35,11 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /getAccountDetails/);
   assert.match(capacity, /cached for five minutes/);
   // GitHub Actions minutes are not tracked: this repository is public, so they are free.
-  assert.doesNotMatch(capacity, /GITHUB_USAGE_TOKEN|GitHub Actions/);
+  assert.doesNotMatch(capacity, /GitHub Actions|settings\/billing|GITHUB_FREE_ACTIONS_MINUTES/);
+  // The two Vercel allowances that run close to their limits are estimated from this project's own records.
+  assert.match(capacity, /Fluid Active CPU/);
+  assert.match(capacity, /Functions Storage/);
+  assert.match(capacity, /connection: "estimated"/);
   assert.match(capacity, /SENTRY_USAGE_TOKEN/);
   assert.match(capacity, /stats_v2/);
   assert.match(capacity, /SENTRY_ERROR_EVENT_LIMIT/);
@@ -48,4 +52,12 @@ test("account capacity gauges use existing provider records and database details
   assert.match(watchdog, /prune_operational_storage/);
   assert.match(guardrails, /revoke all.*storage_table_usage.*from public, anon, authenticated/i);
   assert.match(panel, /See what uses database space/);
+});
+
+test("the Vercel estimates reproduce the observed 30-day figures", async () => {
+  const { estimateFluidCpu, estimateFunctionsStorageBytes } = await import("../src/lib/vercel-usage-estimate.js");
+  // Calibration points from Vercel's Usage page: about 4h of CPU with 11 active players, 10.4 GB over 730 deployments.
+  assert.ok(Math.abs(estimateFluidCpu({ activePlayers: 11 }).seconds / 3600 - 4) < 0.1);
+  assert.ok(Math.abs(estimateFunctionsStorageBytes(730) / 1024 ** 3 - 10.4) < 0.05);
+  assert.ok(estimateFluidCpu({ activePlayers: 5 }).seconds < estimateFluidCpu({ activePlayers: 11 }).seconds);
 });
