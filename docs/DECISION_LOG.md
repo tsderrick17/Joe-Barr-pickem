@@ -1209,3 +1209,7 @@ round name sits under the ledger title.
 
 **Reason:** The Wild Card ticket's two-column picks overlapped the spreads on a
 phone, and a six-pick ledger needed horizontal scrolling to be read.
+
+### Larger tap target for Slate picks
+
+Each open team button on the Slate now has an invisible margin (about 0.7rem above and below, 0.35rem at the sides) that counts as a tap on that team, so a pick no longer needs an exact click. The margin sits behind other controls, so Survivor chips and links keep their own taps, and nothing changes visually.

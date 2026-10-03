@@ -1840,6 +1840,16 @@ html[data-theme="night"] .playoff-scoreboard {
 /* A narrow team cell (a phone) shows the short team name instead of wrapping or
    crowding the spread. The cell measures itself, so no breakpoint is guessed. */
 .slate-team-side { container-type: inline-size; }
+/* A pick is easy to hit without being exact: an invisible margin around each
+   open team button counts as a click on it. It sits behind everything else, so
+   the Survivor chips and other controls keep their own taps. */
+button.slate-team-side:not(:disabled) { position: relative; }
+button.slate-team-side:not(:disabled)::after {
+  content: "";
+  inset: -.7rem -.35rem;
+  position: absolute;
+  z-index: -1;
+}
 @container (max-width: 8.5rem) {
   .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-full { display: none; }
   .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-short { display: inline; }
