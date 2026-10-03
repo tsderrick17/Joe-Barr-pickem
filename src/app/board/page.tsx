@@ -925,7 +925,7 @@ export default function BoardPage() {
           {showSurvivorReceipt ? (
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
-              <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
+              <div aria-label={!receiptIsLoading && survivorPickDetails ? survivorPickDetails.name : undefined} className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`} role={!receiptIsLoading && survivorPickDetails ? "img" : undefined}>
                 {!receiptIsLoading && survivorPickDetails ? <SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.name} /> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
