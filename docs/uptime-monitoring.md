@@ -26,8 +26,8 @@ notifications. Keep the Commissioner alert destination current.
 
 To save Vercel CPU, a healthy answer from the slower-changing probes is cached
 at Vercel's CDN, so most five-minute checks never start a function: automation
-heartbeat and the three worker probes for 10 minutes, settlement and Bowl Pool
-for 15 minutes, and backup for an hour. Each window sits well inside that
+heartbeat for 20 minutes, the three worker probes for 10 minutes, settlement and
+Bowl Pool for an hour, and backup for six hours. Each window sits well inside that
 probe's own grace period. A failing (503) answer is never cached, and the core
 `/api/health` probe always runs live. A newly failing signal can therefore show
 up to one cache window later than before.

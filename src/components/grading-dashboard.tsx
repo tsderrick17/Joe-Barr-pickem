@@ -30,7 +30,7 @@ type Filter = "all" | "attention" | "live" | "settled";
 const stateLabels: Record<string, string> = { scheduled: "Scheduled", live: "Live", settled: "Settled", needs_review: "Needs review", stale: "Stale", held: "Held" };
 const filters: Array<[Filter, string]> = [["all", "All"], ["attention", "Attention"], ["live", "Live"], ["settled", "Settled"]];
 const FAST_REFRESH_MS = 60_000;
-const QUIET_REFRESH_MS = 5 * 60_000;
+const QUIET_REFRESH_MS = 15 * 60_000;
 const KICKOFF_REFRESH_WINDOW_MS = 15 * 60_000;
 
 function refreshInterval(data: Dashboard | null) {

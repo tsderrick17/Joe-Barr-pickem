@@ -1113,3 +1113,17 @@ three). Return-to-tab refreshes and the exact kickoff reveal timer are unchanged
 
 **Reason:** Vercel reported 100% of the included Fluid Active CPU. Chat mounts on
 every player-facing page, so its one-minute poll was the largest steady source.
+
+## 2026-10-03 - Further Vercel CPU cuts: quiet grading poll and longer health caching
+
+**Status:** Accepted
+
+The commissioner Grading page polls every 15 minutes (was five) when no game is
+near or live; the one-minute live/attention cadence is unchanged. Healthy
+automation probes are CDN-cached 20 minutes, settlement and Bowl Pool one hour,
+and backup six hours; worker probes stay at ten minutes to respect their
+12-minute line-lock window.
+
+**Reason:** Observability showed the Grading dashboard as the largest single
+route and the health probes together about a third of background CPU, with the
+30-day Fluid Active CPU total at the 4-hour allowance.
