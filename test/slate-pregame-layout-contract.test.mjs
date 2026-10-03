@@ -10,7 +10,7 @@ test("pregame rows reclaim unused Survivor lanes while final phone rows use comp
   assert.match(css, /\.slate-game-row\.no-survivor-layout:not\(\.is-final\)/);
   assert.match(css, /grid-template-columns:\s*4\.5rem minmax\(0, 1fr\) 6\.5rem minmax\(0, 1fr\)/);
   assert.match(css, /grid-template-columns:\s*3\.15rem minmax\(0, 1fr\) 3\.35rem minmax\(0, 1fr\)/);
-  assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final\s*\{\s*grid-template-columns:\s*2rem minmax\(0, 1fr\) 2\.4rem minmax\(0, 1fr\)/);
+  assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final\s*\{\s*grid-template-columns:\s*2rem minmax\(0, 1fr\) 3rem minmax\(0, 1fr\) 2rem/);
   assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final \.slate-team-result-mark/);
 });
 
