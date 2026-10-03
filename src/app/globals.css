@@ -1884,6 +1884,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      label spill onto a second line; picker names may still wrap below it. */
   .slate-game-row.is-final .slate-team-label { white-space: nowrap; }
 }
+@media (min-width: 768px) and (max-width: 999px) {
+  /* Below the full desktop width a finished team's cell is narrower than the
+     longest full name plus its score, and the name cannot wrap, so the score
+     was drawn over it. Use the compact team mark, as phones do. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
+}
 .slate-game-row .slate-final-team-stack.is-left {
   justify-items: start;
   text-align: left;
