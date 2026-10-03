@@ -1,4 +1,5 @@
 import { providerRequestCost } from "./provider-efficiency.js";
+import { getLineLock } from "./schedule-time.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 const DEFAULT_SCORE_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
@@ -36,6 +37,52 @@ export function latestProviderCreditSnapshot(runs, fallbackLimit = 500) {
   return latest ? { ...latest, reportedAt: new Date(latest.timestamp).toISOString() } : null;
 }
 
+const HISTORY_DAYS = 15;
+const MIN_HISTORY_SLATES = 4;
+const PRIOR_FIRST_HOUR_SHARE = 0.9;
+
+/**
+ * Share of recent slates whose last game settled inside the first hour of
+ * score polling (polling starts 170 minutes after a slate's last kickoff).
+ * It is a 15-day moving average; with too little history the
+ * 90% prior stands in.
+ */
+export function firstHourSettleShare(games, now = new Date()) {
+  const since = now.getTime() - HISTORY_DAYS * 86400000;
+  let settledFast = 0;
+  let total = 0;
+  for (const slate of scheduleSlates(games)) {
+    const kickoffs = slate.games.map((game) => Date.parse(game.kickoff_at ?? game.kickoffAt));
+    const pollingStart = Math.max(...kickoffs) + 170 * 60000;
+    if (pollingStart < since || pollingStart > now.getTime()) continue;
+    const finals = slate.games.map((game) => Date.parse(game.finalized_at ?? ""));
+    if (!finals.every(Number.isFinite)) continue;
+    total++;
+    if (Math.max(...finals) <= pollingStart + 60 * 60000) settledFast++;
+  }
+  if (total < MIN_HISTORY_SLATES) return { share: PRIOR_FIRST_HOUR_SHARE, slates: total, measured: false };
+  return { share: Math.min(0.99, Math.max(0.5, settledFast / total)), slates: total, measured: true };
+}
+
+/** Expected provider score checks for one slate given the retry ladder and the first-hour share. */
+export function expectedScoreChecks(retryMinutes, firstHourShare) {
+  let elapsed = 0;
+  let firstHour = 0;
+  let index = 0;
+  while (index < retryMinutes.length && elapsed < 60) { elapsed += retryMinutes[index]; firstHour++; index++; }
+  let nextHour = 0;
+  while (index < retryMinutes.length && elapsed < 120) { elapsed += retryMinutes[index]; nextHour++; index++; }
+  // The 120- and 240-minute rungs are emergencies, so a slate that is still open
+  // after the next hour settles on the 60-minute cooldown check.
+  const cooldown = index < retryMinutes.length ? 1 : 0;
+  const rest = (1 - firstHourShare) / 2;
+  const nextHourMean = nextHour ? (nextHour + 1) / 2 : 0;
+  return {
+    checks: firstHourShare * firstHour + rest * (firstHour + nextHourMean) + rest * (firstHour + nextHour + cooldown),
+    firstHour, nextHour, cooldown,
+  };
+}
+
 function scheduleSlates(games) {
   const sorted = [...games].sort((a, b) => Date.parse(a.kickoff_at ?? a.kickoffAt) - Date.parse(b.kickoff_at ?? b.kickoffAt));
   const groups = [];
@@ -58,7 +105,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const allDays = Array.from({ length: daysInMonth }, (_, index) => ({
     date: new Date(start + index * 86400000).toISOString(), credits: 0, cumulative: 0,
     scores: 0, lines: 0, other: 0, estimatedCalls: 0,
-    forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0,
+    forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0, forecastRefreshes: 0, forecastLockFetches: 0,
   }));
   const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
   for (const run of runs) {
@@ -78,8 +125,9 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const scoreCostPerCall = scoreRuns.length ? scoreCredits / scoreRuns.length : 2;
   const lineRuns = runs.filter((run) => (run.job_type === "line_locks" || run.job_type === "odds") && providerRequestCost(run) > 0);
   const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
-  const firstHourChecks = Math.min(6, retryMinutes.length);
-  const expectedChecks = firstHourChecks * 0.9 + retryMinutes.length * 0.1;
+  const settle = firstHourSettleShare(games, now);
+  const expected = expectedScoreChecks(retryMinutes, settle.share);
+  const expectedChecks = expected.checks;
   const monthEnd = start + daysInMonth * 86400000;
   for (const slate of scheduleSlates(games)) {
     const kickoff = slate.firstKickoff;
@@ -91,13 +139,27 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     day.forecastGames += slate.games.length;
     day.forecastSlates += 1;
     day.forecastScores += expectedChecks * scoreCostPerCall;
-    day.forecastLines += lineCostPerCall;
   }
+  // Line requests: the 7 AM Eastern pre-lock refresh runs every day, and each
+  // distinct lock moment makes one lock-time fetch on the Eastern day it falls
+  // on (6 PM the day before for early games, 8 AM on game day for the rest).
+  const lockMoments = new Set();
+  for (const game of games) {
+    const kickoff = Date.parse(game.kickoff_at ?? game.kickoffAt);
+    if (!Number.isFinite(kickoff) || kickoff <= now.getTime()) continue;
+    const lockAt = Date.parse(game.line_lock_at ?? game.lineLockAt ?? getLineLock(new Date(kickoff)).lineLockAt);
+    if (!Number.isFinite(lockAt) || lockAt <= now.getTime() || lockAt >= monthEnd) continue;
+    lockMoments.add(Math.floor(lockAt / 60000));
+  }
+  for (const minute of lockMoments) {
+    const day = daysByKey.get(dateKeyInZone(new Date(minute * 60000), timeZone));
+    if (day) day.forecastLockFetches += 1;
+  }
+  const todayRefreshPending = Number(new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hour12: false }).format(now)) < 7;
   for (const day of allDays) {
-    if (day.date.slice(0, 10) > todayKey) {
-      // One daily line check is always expected, even on a no-game day.
-      day.forecastLines = 1;
-    }
+    const key = day.date.slice(0, 10);
+    if (key > todayKey || (key === todayKey && todayRefreshPending)) day.forecastRefreshes = 1;
+    day.forecastLines = (day.forecastRefreshes + day.forecastLockFetches) * lineCostPerCall;
     day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   }
   let forecastCumulative = cumulative;
@@ -126,7 +188,8 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Future score slates use ${Math.round(expectedChecks * 10) / 10} expected provider checks: 90% settle in the first ${firstHourChecks * 10} minutes and 10% follow the full retry ladder. Future line checks use one daily request, including days without games.`,
+    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} twenty-minute checks and half on the 60-minute cooldown check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.`,
+    forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
     remaining: provider?.remaining ?? null,
