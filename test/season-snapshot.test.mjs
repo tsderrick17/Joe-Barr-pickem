@@ -233,7 +233,7 @@ test("the flip card turns flat, widens to the Survivor rail, and the arrows stay
   assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
   assert.match(css, /\.has-pad-flip\.is-flipped \.pad-flip-inner \{ max-width: 100%; \}/);
   // The width changes in one step while the card is edge-on (half of the .9s turn).
-  assert.match(css, /\.pad-flip-inner \{ transition: max-width 0s linear \.45s; \}/);
+  assert.match(css, /\.pad-flip-inner \{[^}]*transition: max-width 0s linear \.45s;[^}]*\}/);
   // Both sides share the pad's parchment.
   assert.doesNotMatch(css, /\.has-pad-flip \.pad-back \{ background/);
   assert.match(css, /\.pad-back \{ background: var\(--ledger-paper\);/);
@@ -242,7 +242,7 @@ test("the flip card turns flat, widens to the Survivor rail, and the arrows stay
   assert.match(css, /transition: --pad-turn \.9s cubic-bezier\(\.45, \.05, \.55, \.95\);/);
   assert.match(css, /rotateY\(var\(--pad-turn\)\);/);
   assert.match(css, /opacity: calc\(sin\(var\(--pad-turn\)\) \* \.85\);/);
-  assert.match(css, /\.pad-face \{ transition: visibility 0s linear \.45s; \}/, "faces swap at exactly half of the .9s turn");
+  assert.match(css, /\.pad-face \{[^}]*transition: visibility 0s linear \.45s;[^}]*\}/, "faces swap at exactly half of the .9s turn");
   assert.match(css, /\.pad-flip-icon\.is-spinning \{ animation: pad-flip-spin \.9s/);
 });
 
@@ -263,8 +263,8 @@ test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round
   assert.match(scoreboard, /className="pad-face pad-front" aria-hidden=\{flipped\} inert=\{flipped\}/);
   assert.match(scoreboard, /className="pad-face pad-back" aria-hidden=\{!flipped\} inert=\{!flipped\}/);
   assert.match(css, /\.has-pad-flip\.is-flipped \{ --pad-turn: 180deg; \}/);
-  assert.match(css, /backface-visibility: hidden; grid-area: 1 \/ 1;/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pad-flip-inner, \.pad-flip-button, \.pickem-scoreboard-ledger\.has-pad-flip \{ transition: none; \}/);
+  assert.match(css, /backface-visibility: hidden;\s*grid-area: 1 \/ 1;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pad-face,\s*\.pad-flip-inner,\s*\.pad-flip-button,\s*\.pickem-scoreboard-ledger\.has-pad-flip \{ transition: none; \}/);
   // Axis labels, a chart that fills the height, and a Show all that is always there.
   assert.match(snapshot, />Wins<\/text>/);
   assert.match(snapshot, /className="season-snapshot-week-label">Week<\/p>/);

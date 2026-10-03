@@ -900,27 +900,6 @@ body {
 #slate-matchups,
 #my-ticket { scroll-margin-top: calc(var(--site-nav-height, 7rem) + 5rem); }
 
-.survivor-sticky-status,
-.survivor-sticky-name {
-  align-items: center;
-  align-self: stretch;
-  background-color: var(--survivor-row-bg, #f5f0e6);
-  display: flex;
-  position: sticky;
-  z-index: 4;
-}
-
-.survivor-sticky-status {
-  justify-content: center;
-  left: 0;
-}
-
-.survivor-sticky-name {
-  border-right: 1px solid rgba(23, 23, 25, .09);
-  justify-content: flex-start;
-  left: 3rem;
-}
-
 .survivor-poker-chip-wrap {
   --chip-primary: #1d1d1f;
   --chip-secondary: #f5f0e6;
@@ -1262,62 +1241,6 @@ body {
   .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core { transform: none; }
   .survivor-poker-chip-wrap[data-state="picked"] .survivor-poker-chip-pick-mark { animation: none; opacity: 1; }
 }
-
-.survivor-standings-header {
-  --survivor-row-bg: #ebe3d4;
-  background-color: var(--survivor-row-bg);
-}
-
-.survivor-standings-row {
-  --survivor-row-bg: #f5f0e6;
-  background-color: var(--survivor-row-bg);
-}
-
-.survivor-standings-row.is-alt {
-  --survivor-row-bg: #f0eadf;
-}
-
-.viewer-row {
-  --survivor-row-bg: #e6f2ee;
-  background-color: var(--survivor-row-bg) !important;
-  box-shadow: inset 0 0 0 1px rgba(22, 135, 127, 0.18);
-}
-
-.viewer-row .survivor-sticky-status {
-  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
-}
-
-.viewer-row .survivor-sticky-name {
-  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
-}
-
-.survivor-standings-row.viewer-row {
-  --survivor-row-bg: #dff0eb;
-  box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
-}
-
-/* Carry the same viewer marker across both standings ledgers: a quiet teal
-   field, a left-hand rail, and a complete row outline. */
-.pickem-standings-row.viewer-row > td {
-  background-color: #dff0eb;
-  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
-}
-
-.pickem-standings-row.viewer-row > td:first-child {
-  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
-}
-
-.pickem-standings-row.viewer-row > td:last-child {
-  box-shadow: inset -1px 0 0 rgba(22, 135, 127, .3), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
-}
-
-/* The Pick'em Pad stays impartial: its ruled paper should not color a
-   player's whole line. Survivor retains its stronger personal marker. */
-.pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
-  background-color: transparent;
-  box-shadow: none;
-}
-
 /* Pick'em is the pool's long-running scorebook: deliberately more like a
    compact ballpark ledger than the Survivor grid beside it. */
 .pickem-ledger {
@@ -1330,60 +1253,65 @@ body {
   --scorepad-blue: #9bb9de;
   --scorepad-red: #c76862;
 }
-
-/* The four pieces of the Standings page are one reading surface: ticket,
-   Pick'em Pad, Survivor Table, and pool chat. Keep their outer edges aligned
-   instead of letting each component choose a different card width. */
-:root {
-  --standings-module-width: 39.6rem;
-}
-
 /* A hand-kept weekly pad should feel compact in a broad browser, while still
    using every available pixel on a phone. */
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) {
-  margin-left: auto;
-  margin-right: auto;
   /* Keep the weekly card compact enough that Pick 1 and Pick 2 read as
      handwritten columns rather than a stretched dashboard. */
   /* A scorepad puts the two handwritten entries immediately after the
      names.  Keep this deliberately narrower on wide screens; phones still
      use their full available width. */
   max-width: 100%;
-  width: 100%;
 }
-
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-ledger-masthead,
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-standings-table {
   margin-left: auto;
   margin-right: auto;
   max-width: 30rem;
 }
-
-/* The Pick'em Pad is a two-sided card for commissioners: the scorepad on the
-   front, the Season Snapshot on the back. Both faces share one grid cell, so
-   the card keeps the front's size and the chart fills the back's full height. */
-/* The turn is one animated angle, --pad-turn, so the lift, tilt, and shading
-   below all follow the paper's real position instead of running on their own
-   clocks. sin() is 0 at rest and 1 when the card is edge-on. */
-@property --pad-turn { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+/* The pad is a two-sided card. Both faces share one grid cell, so the card keeps
+   the front's size and the chart fills the back's full height. One animated
+   angle, --pad-turn, drives the turn, the lift and tilt, and the shading, so
+   they all follow the paper's real position. sin() is 0 at rest and 1 when the
+   card is edge-on. */
 .pickem-scoreboard-ledger.has-pad-flip {
   perspective: 1600px;
   transition: --pad-turn .9s cubic-bezier(.45, .05, .55, .95);
 }
 .has-pad-flip.is-flipped { --pad-turn: 180deg; }
+.has-pad-flip .pickem-ledger-masthead { align-items: center; }
+.has-pad-flip .pad-front { background: var(--ledger-paper); }
+
+/* The card lifts toward the reader and tips slightly as it turns, like a sheet
+   picked up by an edge. The easing is symmetric, so it is exactly edge-on at the
+   halfway mark, which is when the faces swap and the width changes. The width
+   changes in one step then (card edge-on and invisible), so the paper never
+   stretches, and the text on it never reflows, while it is in view. */
 .pad-flip-inner {
   display: grid;
   margin-left: auto;
   margin-right: auto;
   max-width: 30rem;
   transform-style: preserve-3d;
-  /* Symmetric easing: the card is exactly edge-on at the halfway mark, which
-     is when the two faces swap (see .pad-face below). It also lifts toward the
-     reader and tips slightly as it turns, like a sheet picked up by an edge. */
   transform: translateZ(calc(sin(var(--pad-turn)) * 2.75rem)) rotateX(calc(sin(var(--pad-turn)) * -5deg)) rotateY(var(--pad-turn));
+  transition: max-width 0s linear .45s;
 }
 .playoff-scoreboard .pad-flip-inner { max-width: none; }
-.pad-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; grid-area: 1 / 1; min-width: 0; position: relative; }
+.has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
+
+/* Each face switches off exactly at the halfway point of the turn, so the
+   mirrored side can never show through (belt and braces for browsers that
+   ignore backface-visibility on complex faces). */
+.pad-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  grid-area: 1 / 1;
+  min-width: 0;
+  position: relative;
+  transition: visibility 0s linear .45s;
+}
+.has-pad-flip.is-flipped .pad-front,
+.has-pad-flip:not(.is-flipped) .pad-back { visibility: hidden; }
 /* Light falls off across the paper as it turns away, strongest when edge-on. */
 .pad-face::after {
   background: linear-gradient(90deg, rgba(45, 32, 14, 0), rgba(45, 32, 14, .55));
@@ -1395,9 +1323,7 @@ body {
   z-index: 5;
 }
 .pad-back { background: var(--ledger-paper); display: flex; flex-direction: column; transform: rotateY(180deg); }
-.has-pad-flip .pad-front > .pickem-ledger-masthead,
-.has-pad-flip .pad-front > .pickem-standings-table { max-width: none; }
-.has-pad-flip .pickem-ledger-masthead { align-items: center; }
+
 .pad-flip-button {
   align-items: center;
   background: #fffdf8;
@@ -1415,32 +1341,210 @@ body {
 .pad-flip-button:hover,
 .pad-flip-button:focus-visible { background: #fff; }
 .pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
-/* The card turns flat, like a sheet of paper. Turned over, it widens to the
-   full Standings rail (the Survivor Table's width) so the chart has room. Both
-   sides share the pad's parchment. */
-/* The width changes in one step at the halfway mark, when the card is edge-on
-   and invisible, so the paper never stretches (and the text on it never
-   reflows) while it is in view. Both directions use the same moment. */
-.pad-flip-inner { transition: max-width 0s linear .45s; }
-.has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
-.has-pad-flip .pad-front { background: var(--ledger-paper); }
-/* Belt and braces for browsers that ignore backface-visibility on complex
-   faces: each face switches off exactly at the halfway point of the turn, so
-   the mirrored side can never show through. */
-.pad-face { transition: visibility 0s linear .45s; }
-.has-pad-flip.is-flipped .pad-front,
-.has-pad-flip:not(.is-flipped) .pad-back { visibility: hidden; }
+.pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
 /* The arrows spin once, in step with the page turning. */
 .pad-flip-icon.is-spinning { animation: pad-flip-spin .9s cubic-bezier(.2, .75, .2, 1); }
-@keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .pad-face { transition: none; }
+  .pad-face,
+  .pad-flip-inner,
+  .pad-flip-button,
+  .pickem-scoreboard-ledger.has-pad-flip { transition: none; }
   .pad-flip-icon.is-spinning { animation: none; }
 }
-.pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
-@media (prefers-reduced-motion: reduce) {
-  .pad-flip-inner, .pad-flip-button, .pickem-scoreboard-ledger.has-pad-flip { transition: none; }
+.pickem-ledger-masthead {
+  align-items: end;
+  border-top: 3px solid var(--ledger-ink);
+  border-bottom: 1px solid #bdb3a3;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .55rem;
+  padding: .6rem .15rem .52rem;
 }
+.pickem-ledger-period {
+  color: var(--ledger-muted);
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+  line-height: 1.1;
+  padding-bottom: .08rem;
+  text-align: right;
+}
+.pickem-ledger-masthead h2 {
+  color: var(--ledger-ink);
+  font-family: Georgia, serif;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1;
+  margin: .18rem 0 0;
+}
+.pickem-ledger-table {
+  background: var(--ledger-paper);
+  border-top: 0;
+  border-bottom: 0;
+  font-family: var(--ledger-hand-font);
+  overflow: hidden;
+}
+.pickem-ledger-row {
+  border-bottom: 1px solid var(--scorepad-blue);
+}
+.pickem-ledger-row:last-child { border-bottom: 0; }
+.pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
+.pickem-ledger-week-row th {
+  /* The week is written directly on the same blue ruled line as the pad. */
+  background: linear-gradient(to bottom, transparent calc(100% - 1px), var(--scorepad-blue) calc(100% - 1px));
+  border-bottom: 0;
+  padding: .7rem .5rem .08rem;
+  text-align: center;
+}
+.pickem-ledger-week-row span {
+  border-bottom: 2px solid currentColor;
+  color: var(--ledger-ink);
+  display: inline-block;
+  font-size: clamp(1rem, 2.3vw, 1.28rem);
+  letter-spacing: .12em;
+  line-height: 1;
+  position: relative;
+  top: .08em;
+  text-transform: uppercase;
+}
+.pickem-ledger-row td {
+  /* Keep the writing close to its blue rule, like ink on a narrow-ruled pad. */
+  padding: .24rem .28rem;
+}
+.pickem-ledger-wins {
+  border-right: 2px solid var(--scorepad-red);
+  /* A narrow score margin, like the hand-written totals beside a ruled pad. */
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding-right: .38rem !important;
+  text-align: right;
+}
+/* Dad's paper scorecards kept the running total and name in a tight left
+   gutter; picks earned the broad writing space.  Make that geometry explicit
+   instead of letting the table split all remaining columns evenly. */
+.pickem-ledger-wins-column { width: clamp(2.7rem, 4vw, 3.25rem); }
+.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
+.pickem-ledger-player {
+  border-right: 0;
+  font-size: clamp(.95rem, 2.5vw, 1.12rem);
+  font-weight: 800;
+  line-height: 1.06;
+}
+.pickem-ledger-pick {
+  color: #273349;
+  /* Match the handwritten names more closely without changing the ruled-row
+     rhythm; the player cell already establishes each row's minimum height. */
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.pickem-ledger-pick .font-mono {
+  font-family: var(--ledger-hand-font);
+  font-size: .88rem;
+}
+/* Give the first pick a quiet visual gutter after the player-name lane. */
+.pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
+@media (min-width: 640px) {
+  .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
+  .pickem-ledger-row td { padding: .32rem .38rem; }
+  .pickem-ledger-wins { font-size: 1.25rem; }
+  .pickem-ledger-pick { font-size: 1.05rem; }
+  .pickem-ledger-pick .font-mono { font-size: .96rem; }
+  .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
+}
+html[data-theme="night"] .pickem-ledger {
+  --ledger-ink: #ede6d9;
+  --ledger-muted: #b7c4d3;
+  --ledger-paper: #252722;
+  --scorepad-blue: #55769a;
+  --scorepad-red: #b86d68;
+}
+html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
+html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
+html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
+.pickem-eliminated-stamp {
+  border: 3px solid #b42318;
+  box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
+  color: #b42318;
+  display: inline-block;
+  font-size: clamp(.9rem, 2.5vw, 1.35rem);
+  font-weight: 950;
+  letter-spacing: .12em;
+  opacity: .88;
+  padding: .18rem .45rem .14rem;
+  transform: rotate(-5deg);
+}
+/* Standings is intentionally a tighter scorecard surface than the Slate.
+   Keep both the visible chat and its compact restore control on that same
+   rail instead of leaving a Slate-width gutter around the table. */
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock .pool-chat,
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
+  max-width: var(--standings-module-width) !important;
+}
+/* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
+   texts without creating a separate source of truth from the regular board. */
+.playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(75, 126, 183, .18) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
+    #fbf8ef;
+  border-left: 1px solid rgba(167, 62, 55, .3);
+  padding-left: .5rem;
+  padding-right: .5rem;
+}
+.playoff-scoreboard tbody tr { background: transparent !important; }
+.playoff-scoreboard-pick {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: .95rem;
+  letter-spacing: .025em;
+}
+/* Wild Card and Divisional rounds carry six and four picks per player. Keep
+   those handwritten columns close enough to scan as one ledger rather than
+   stretching them across the broad regular-season rhythm. */
+.playoff-scoreboard--dense .pickem-ledger-row td {
+  padding-left: .2rem;
+  padding-right: .2rem;
+}
+.playoff-scoreboard--dense .pickem-ledger-wins {
+  padding-right: .24rem !important;
+  width: 2.4rem;
+}
+.playoff-scoreboard--dense .pickem-ledger-player {
+  width: 5.5rem;
+}
+.playoff-scoreboard--dense .playoff-scoreboard-pick {
+  white-space: nowrap;
+}
+@media (max-width: 639px) {
+  .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
+  .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .playoff-scoreboard-pick { font-size: .86rem; }
+}
+html[data-theme="night"] .playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(96, 178, 198, .14) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
+    #172027;
+}
+
+/* The four pieces of the Standings page are one reading surface: ticket,
+   Pick'em Pad, Survivor Table, and pool chat. Keep their outer edges aligned
+   instead of letting each component choose a different card width. */
+:root {
+  --standings-module-width: 39.6rem;
+}
+
+/* The Pick'em Pad is a two-sided card for commissioners: the scorepad on the
+   front, the Season Snapshot on the back. Both faces share one grid cell, so
+   the card keeps the front's size and the chart fills the back's full height. */
+/* The turn is one animated angle, --pad-turn, so the lift, tilt, and shading
+   below all follow the paper's real position instead of running on their own
+   clocks. sin() is 0 at rest and 1 when the card is edge-on. */
+@property --pad-turn { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+@keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .season-snapshot {
   --snapshot-paper: #fbf7ec;
@@ -1582,43 +1686,6 @@ body {
   .season-snapshot-key-row { font-size: .66rem; }
 }
 
-.pickem-ledger-masthead {
-  align-items: end;
-  border-top: 3px solid var(--ledger-ink);
-  border-bottom: 1px solid #bdb3a3;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: .55rem;
-  padding: .6rem .15rem .52rem;
-}
-
-.pickem-ledger-period {
-  color: var(--ledger-muted);
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: .62rem;
-  font-weight: 900;
-  letter-spacing: .2em;
-  line-height: 1.1;
-}
-
-.pickem-ledger-masthead h2 {
-  color: var(--ledger-ink);
-  font-family: Georgia, serif;
-  font-size: clamp(1.35rem, 3vw, 1.9rem);
-  font-weight: 800;
-  letter-spacing: -.035em;
-  line-height: 1;
-  margin: .18rem 0 0;
-}
-
-.pickem-ledger-period {
-  padding-bottom: .08rem;
-  text-align: right;
-}
-
-.survivor-ledger-masthead h2 { margin: 0; }
-
 .survivor-title-toggle {
   align-items: center;
   background: #fffdf8;
@@ -1626,13 +1693,10 @@ body {
   border-radius: 999px;
   color: #40516a;
   display: inline-flex;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: 1rem;
   font-weight: 900;
   height: 1.35rem;
   justify-content: center;
   line-height: 1;
-  padding: 0;
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
   width: 1.35rem;
 }
@@ -1654,116 +1718,6 @@ body {
   padding: 0 .28rem;
   width: auto;
 }
-
-.pickem-ledger-table {
-  background: var(--ledger-paper);
-  border-top: 0;
-  border-bottom: 0;
-  font-family: var(--ledger-hand-font);
-  overflow: hidden;
-}
-
-.pickem-ledger-row {
-  background: transparent;
-  border-bottom: 1px solid var(--scorepad-blue);
-}
-
-.pickem-ledger-row:last-child { border-bottom: 0; }
-.pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
-
-.pickem-ledger-week-row th {
-  /* The week is written directly on the same blue ruled line as the pad. */
-  background: linear-gradient(to bottom, transparent calc(100% - 1px), var(--scorepad-blue) calc(100% - 1px));
-  border-bottom: 0;
-  padding: .7rem .5rem .08rem;
-  text-align: center;
-}
-
-.pickem-ledger-week-row span {
-  border-bottom: 2px solid currentColor;
-  color: var(--ledger-ink);
-  display: inline-block;
-  font-family: var(--ledger-hand-font);
-  font-size: clamp(1rem, 2.3vw, 1.28rem);
-  font-weight: 700;
-  letter-spacing: .12em;
-  line-height: 1;
-  padding-bottom: 0;
-  position: relative;
-  top: .08em;
-  text-transform: uppercase;
-}
-
-.pickem-ledger-row td {
-  /* Keep the writing close to its blue rule, like ink on a narrow-ruled pad. */
-  padding: .24rem .28rem;
-  vertical-align: middle;
-}
-
-.pickem-ledger-wins {
-  border-right: 2px solid var(--scorepad-red);
-  /* A narrow score margin, like the hand-written totals beside a ruled pad. */
-  font-family: var(--ledger-hand-font);
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1;
-  padding-right: .38rem !important;
-  text-align: right;
-}
-
-/* Dad's paper scorecards kept the running total and name in a tight left
-   gutter; picks earned the broad writing space.  Make that geometry explicit
-   instead of letting the table split all remaining columns evenly. */
-.pickem-ledger-wins-column { width: clamp(2.7rem, 4vw, 3.25rem); }
-.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
-
-.pickem-ledger-player {
-  border-right: 0;
-  font-family: var(--ledger-hand-font);
-  font-size: clamp(.95rem, 2.5vw, 1.12rem);
-  font-weight: 800;
-  line-height: 1.06;
-}
-
-.pickem-ledger-pick {
-  color: #273349;
-  font-family: var(--ledger-hand-font);
-  /* Match the handwritten names more closely without changing the ruled-row
-     rhythm; the player cell already establishes each row's minimum height. */
-  font-size: .95rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.pickem-ledger-pick .font-mono {
-  font-family: var(--ledger-hand-font);
-  font-size: .88rem;
-  font-weight: 900;
-}
-
-/* Give the first pick a quiet visual gutter after the player-name lane. */
-.pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
-
-@media (min-width: 640px) {
-  .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
-  .pickem-ledger-row td { padding: .32rem .38rem; }
-  .pickem-ledger-wins { font-size: 1.25rem; }
-  .pickem-ledger-pick { font-size: 1.05rem; }
-  .pickem-ledger-pick .font-mono { font-size: .96rem; }
-  .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
-}
-
-html[data-theme="night"] .pickem-ledger {
-  --ledger-ink: #ede6d9;
-  --ledger-muted: #b7c4d3;
-  --ledger-paper: #252722;
-  --scorepad-blue: #55769a;
-  --scorepad-red: #b86d68;
-}
-
-html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
-html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
-html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 
 /* A selected ATS team reads like a marked betting ticket, not an inverted
    black block that fights the newspaper slate. */
@@ -2274,21 +2228,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .selection-chip small { color: #111; }
 .selection-chip small.is-official { color: var(--official-line-color); }
 
-.pickem-eliminated-stamp {
-  border: 3px solid #b42318;
-  box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
-  color: #b42318;
-  display: inline-block;
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  font-size: clamp(.9rem, 2.5vw, 1.35rem);
-  font-weight: 950;
-  letter-spacing: .12em;
-  line-height: 1;
-  opacity: .88;
-  padding: .18rem .45rem .14rem;
-  transform: rotate(-5deg);
-}
-
 /* A restrained late-night sportsbook palette. Page components retain their
    newspaper proportions; the theme only swaps paper, ink, and line colors. */
 html[data-theme="night"] {
@@ -2467,66 +2406,6 @@ html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
   border-color: #536f75 !important;
 }
 
-/* Keep the sticky player identity cells and the scrollable Survivor cells as
-   one continuous active row in night mode. */
-html[data-theme="night"] .survivor-standings-row.viewer-row > td {
-  background-color: #16333a !important;
-  color: #e8f5f1 !important;
-}
-
-html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
-html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
-  background-color: #16333a !important;
-  color: #e8f5f1 !important;
-}
-
-/* Your own scorecard row gets a quiet teal ticket treatment in night mode,
-   instead of disappearing into the alternating table surfaces. */
-html[data-theme="night"] .viewer-row {
-  --survivor-row-bg: #16333a;
-  background-color: #16333a !important;
-  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
-}
-
-html[data-theme="night"] .survivor-sticky-status,
-html[data-theme="night"] .survivor-sticky-name {
-  background-color: var(--survivor-row-bg, #101c24);
-}
-
-html[data-theme="night"] .survivor-standings-header {
-  --survivor-row-bg: #17242c;
-}
-
-html[data-theme="night"] .survivor-standings-row {
-  --survivor-row-bg: #101c24;
-}
-
-html[data-theme="night"] .survivor-standings-row.is-alt {
-  --survivor-row-bg: #13232b;
-}
-
-html[data-theme="night"] .survivor-standings-row.viewer-row {
-  --survivor-row-bg: #16333a;
-}
-
-html[data-theme="night"] .pickem-standings-row.viewer-row > td {
-  background-color: #16333a;
-  box-shadow: inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-
-html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
-  box-shadow: inset 4px 0 0 #8be9dc, inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-
-html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
-  box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-
-html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
-  background-color: transparent;
-  box-shadow: none;
-}
-
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
 @media (max-width: 767px) {
   html[data-theme="night"] .slate-mini-nav { background: #1b2527; }
@@ -2548,19 +2427,6 @@ html[data-theme="night"] .slate-view-switch button { background: linear-gradient
 html[data-theme="night"] .slate-view-switch button > span { background: linear-gradient(180deg, #f1f2eb, #bdc3be); border-color: #30383b; }
 html[data-theme="night"] .slate-view-switch.is-action-only button { background: linear-gradient(180deg, #536164, #303a3d); }
 html[data-theme="night"] .slate-action-empty { border-color: #6d746c; color: #c3d1ce; }
-
-html[data-theme="night"] .viewer-row .survivor-sticky-status,
-html[data-theme="night"] .viewer-row .survivor-sticky-name {
-  background-color: var(--survivor-row-bg);
-}
-
-html[data-theme="night"] .viewer-row .survivor-sticky-status {
-  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
-}
-
-html[data-theme="night"] .viewer-row .survivor-sticky-name {
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
-}
 
 @media (max-width: 767px) {
   .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
@@ -2678,6 +2544,7 @@ html[data-theme="night"] [class*="border-[#d1c9ba]"],
 html[data-theme="night"] [class*="border-[#91afd0]"] {
   border-color: #314651 !important;
 }
+/* ==== The ticket on Standings ==== */
 
 /* Thermal race ticket: intentionally compact, ink-heavy, and lightweight. */
 .my-ticket {
@@ -2695,9 +2562,7 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   max-width: 30rem;
   padding: .9rem 1.05rem .8rem;
   position: relative;
-  width: 100%;
 }
-
 .my-ticket-survivor-chip {
   pointer-events: none;
   position: absolute;
@@ -2705,30 +2570,22 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   top: -.85rem;
   z-index: 3;
 }
-
 .my-ticket-brand {
   text-align: center;
 }
-
 .my-ticket-brand p,
 .my-ticket-brand span,
 .my-ticket-section-heading,
-.my-ticket-footer {
-  font-family: Arial, sans-serif;
-}
-
 .my-ticket-brand p {
   font-size: .52rem;
   font-weight: 900;
   letter-spacing: .2em;
 }
-
 .my-ticket-brand h1 {
   font: 900 1.72rem/.95 Georgia, serif;
   letter-spacing: -.04em;
   margin-top: .12rem;
 }
-
 .my-ticket-brand span {
   display: block;
   font-size: .5rem;
@@ -2736,7 +2593,6 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   letter-spacing: .15em;
   margin-top: .22rem;
 }
-
 .my-ticket-race {
   align-items: end;
   border-bottom: 2px solid #28221b;
@@ -2745,64 +2601,53 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   margin-top: .6rem;
   padding-bottom: .25rem;
 }
-
 .my-ticket-race strong {
   font: 900 1.35rem/1 "Courier New", monospace;
   text-transform: uppercase;
 }
-
 .my-ticket-race span {
   font: 900 1.05rem/1 "Courier New", monospace;
 }
-
 .my-ticket-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
 /* Out of Survivor: the Pick'em section takes the whole ticket and the notes sit
    beneath it, so the ticket reads as one column. */
 .my-ticket-columns.is-single { grid-template-columns: minmax(0, 1fr); }
 .my-ticket-columns.is-single .my-ticket-section { padding-right: 0; }
 .my-ticket-columns.is-single .my-ticket-section + .my-ticket-section { border-left: 0; border-top: 0; padding-left: 0; padding-top: 0; }
-
 /* Once Survivor ends, the ticket becomes a full-round Pick'em receipt. Each
    playoff game remains visible at once; nothing collapses into a daily view. */
 .my-ticket-columns.is-playoff .my-ticket-playoff {
   grid-column: 1 / -1;
   padding-right: 0;
 }
-
 .my-ticket-columns.is-playoff .my-ticket-picks {
   column-gap: 1.35rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
 /* In the two larger playoff rounds, read each stub straight down before
    crossing to the next column—just like a printed bracket sheet. */
 .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4 {
   grid-auto-flow: column;
   grid-template-rows: repeat(2, minmax(2.45rem, auto));
 }
-
 .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
 .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
   grid-auto-flow: column;
   grid-template-rows: repeat(3, minmax(2.45rem, auto));
 }
-
 .my-ticket-section {
   min-width: 0;
   padding: .68rem .75rem .58rem 0;
 }
-
 .my-ticket-section + .my-ticket-section {
   border-left: 1px dashed #958a77;
   padding-left: .8rem;
   padding-right: 0;
 }
-
 .my-ticket-section-heading {
   align-items: center;
   display: flex;
@@ -2812,31 +2657,23 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   letter-spacing: .13em;
   min-height: .76rem;
 }
-
 .my-ticket-section-heading strong {
-  color: inherit;
   font-size: .55rem;
 }
-
 .my-ticket-section-link {
-  color: inherit;
   border-bottom: 1px solid currentColor;
   line-height: 1.2;
   padding-bottom: .08rem;
-  text-decoration: none;
 }
-
 .my-ticket-section-link:hover,
 .my-ticket-section-link:focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: .18rem;
 }
-
 .my-ticket-picks {
   margin-top: .35rem;
 }
-
 .my-ticket-picks li {
   align-items: center;
   border-top: 1px dotted #9b907e;
@@ -2846,14 +2683,256 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   min-height: 2.45rem;
   padding: .28rem 0;
 }
-
 .my-ticket-selection {
   display: grid;
   min-width: 0;
 }
-
 .my-ticket-selection > strong {
   font: 900 .84rem/1.1 "Courier New", monospace;
+}
+.my-ticket-team-result {
+  align-items: center;
+  display: flex;
+  gap: .18rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+.my-ticket-team-result > span {
+  min-width: 0;
+}
+.my-ticket-selection > .my-ticket-team-result {
+  font-size: .82rem;
+  letter-spacing: -.01em;
+}
+.my-ticket-result {
+  top: -.1rem;
+  vertical-align: middle;
+}
+.my-ticket-result.is-w { color: #16834e; }
+.my-ticket-result.is-l { color: #bd3028; }
+.my-ticket-selection small {
+  color: #665e51;
+  font: 700 .55rem/1.2 Arial, sans-serif;
+  margin-top: .16rem;
+}
+.my-ticket-line {
+  font: 900 .8rem/1 "Courier New", monospace;
+  min-width: 2.5rem;
+  text-align: right;
+}
+.my-ticket-line.is-locked {
+  color: var(--official-line-color);
+  font-size: .9rem;
+}
+.my-ticket-open {
+  color: #923c24;
+  font: 900 .84rem/1 "Courier New", monospace;
+  letter-spacing: .12em;
+}
+.my-ticket-survivor-pick {
+  /* Matches the Pick'em list gap so both top receipt rules share one line. */
+  margin-top: .35rem;
+  border-block: 1px dotted #958a77;
+  padding: .7rem 0;
+}
+.my-ticket-survivor-pick div {
+  display: grid;
+}
+.my-ticket-survivor-pick small {
+  color: #665e51;
+  font: 800 .5rem/1.2 Arial, sans-serif;
+  letter-spacing: .1em;
+}
+.my-ticket-survivor-pick > div > strong {
+  font: 900 .84rem/1.15 "Courier New", monospace;
+  margin-top: .16rem;
+}
+.my-ticket-survivor-pick.is-open {
+  min-height: 2.45rem;
+  padding: .72rem 0;
+}
+.my-ticket-survivor-pick.is-open .my-ticket-open {
+  margin: 0;
+}
+.my-ticket-survivor-state {
+  border-block: 1px dotted #958a77;
+  font: 900 .75rem/1.2 "Courier New", monospace;
+  margin-top: .35rem;
+  padding: .8rem 0;
+}
+.my-ticket-instructions {
+  border-top: 1px dashed #958a77;
+  color: #665e51;
+  font: 700 .58rem/1.35 Arial, sans-serif;
+  margin-top: .7rem;
+  padding-top: .55rem;
+}
+.my-ticket-instructions p + p { margin-top: .28rem; }
+@media (min-width: 640px) {
+  /* These are short printed guidance lines, not flowing body copy. Keep each
+     instruction intact as the ticket narrows so its hierarchy stays crisp. */
+  .my-ticket-instructions p { white-space: nowrap; }
+}
+.my-ticket-footer {
+  align-items: end;
+  border-top: 2px solid #28221b;
+  display: grid;
+  font-family: Arial, sans-serif;
+  gap: .5rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  padding-top: .48rem;
+}
+.my-ticket-footer > span {
+  font: 900 .68rem/1 "Courier New", monospace;
+}
+.my-ticket-completion {
+  align-self: stretch;
+  color: #665e51;
+  display: grid;
+  gap: .16rem;
+}
+.my-ticket-change-note {
+  align-self: start;
+  font: 700 .58rem/1.15 Arial, sans-serif;
+  letter-spacing: .02em;
+}
+.my-ticket-completion > span:last-child {
+  align-self: end;
+}
+.my-ticket-completion.is-open > span:last-child { color: #a82820; }
+.my-ticket-completion.is-filled > span:last-child { color: #08764e; }
+.my-ticket-footer > div {
+  align-self: stretch;
+  grid-column: 2;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  line-height: 1;
+}
+.my-ticket-footer small {
+  align-self: start;
+  color: #665e51;
+  font-size: .46rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+.my-ticket-footer strong {
+  align-self: end;
+  font: 900 .64rem/1.25 Arial, sans-serif;
+  letter-spacing: .08em;
+}
+.my-ticket-footer strong.is-open { color: #a82820; }
+.my-ticket-footer strong.is-filled { color: #08764e; }
+.my-ticket-barcode {
+  align-self: end;
+  grid-column: 3;
+  justify-self: end;
+  background: linear-gradient(90deg,
+    #28221b 0 2%, transparent 2% 4%, #28221b 4% 5%, transparent 5% 8%, #28221b 8% 12%, transparent 12% 14%,
+    #28221b 14% 15%, transparent 15% 18%, #28221b 18% 21%, transparent 21% 23%, #28221b 23% 24%, transparent 24% 28%,
+    #28221b 28% 33%, transparent 33% 35%, #28221b 35% 37%, transparent 37% 41%, #28221b 41% 42%, transparent 42% 45%,
+    #28221b 45% 49%, transparent 49% 51%, #28221b 51% 54%, transparent 54% 57%, #28221b 57% 58%, transparent 58% 61%,
+    #28221b 61% 66%, transparent 66% 68%, #28221b 68% 70%, transparent 70% 74%, #28221b 74% 75%, transparent 75% 78%,
+    #28221b 78% 83%, transparent 83% 85%, #28221b 85% 88%, transparent 88% 91%, #28221b 91% 92%, transparent 92% 96%,
+    #28221b 96% 100%);
+  border-inline: 1px solid #28221b;
+  height: 1.28rem;
+  opacity: .9;
+  width: 4.1rem;
+}
+html[data-theme="night"] .my-ticket {
+  --ticket-paper: #29251f;
+  background:
+    repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
+    #29251f;
+  border-color: #897e6b;
+  color: #f2e8d3;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+}
+html[data-theme="night"] .my-ticket-race,
+html[data-theme="night"] .my-ticket-footer {
+  border-color: #d1c4aa;
+}
+html[data-theme="night"] .my-ticket-section + .my-ticket-section,
+html[data-theme="night"] .my-ticket-picks li,
+html[data-theme="night"] .my-ticket-survivor-state {
+  border-color: #756b5b;
+}
+html[data-theme="night"] .my-ticket-selection small,
+html[data-theme="night"] .my-ticket-survivor-pick small,
+html[data-theme="night"] .my-ticket-footer small,
+html[data-theme="night"] .my-ticket-open,
+html[data-theme="night"] .my-ticket-instructions {
+  color: #bdb19b;
+}
+html[data-theme="night"] .my-ticket-open {
+  color: #f1b38c;
+}
+html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
+html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
+html[data-theme="night"] .my-ticket-barcode {
+  background: linear-gradient(90deg,
+    #f2e8d3 0 2%, transparent 2% 4%, #f2e8d3 4% 5%, transparent 5% 8%,
+    #f2e8d3 8% 12%, transparent 12% 14%, #f2e8d3 14% 15%, transparent 15% 18%,
+    #f2e8d3 18% 21%, transparent 21% 23%, #f2e8d3 23% 24%, transparent 24% 28%,
+    #f2e8d3 28% 33%, transparent 33% 35%, #f2e8d3 35% 37%, transparent 37% 41%,
+    #f2e8d3 41% 42%, transparent 42% 45%, #f2e8d3 45% 49%, transparent 49% 51%,
+    #f2e8d3 51% 54%, transparent 54% 57%, #f2e8d3 57% 58%, transparent 58% 61%,
+    #f2e8d3 61% 66%, transparent 66% 68%, #f2e8d3 68% 70%, transparent 70% 74%,
+    #f2e8d3 74% 75%, transparent 75% 78%, #f2e8d3 78% 83%, transparent 83% 85%,
+    #f2e8d3 85% 88%, transparent 88% 91%, #f2e8d3 91% 92%, transparent 92% 96%,
+    #f2e8d3 96% 100%);
+  border-inline-color: #f2e8d3;
+}
+@media (max-width: 639px) {
+
+  .my-ticket {
+    padding: .8rem .8rem .7rem;
+  }
+
+  .my-ticket-survivor-chip {
+    right: -.45rem;
+    top: -.55rem;
+    transform: scale(.82);
+    transform-origin: top right;
+  }
+
+  .my-ticket-brand h1 { font-size: 1.43rem; }
+  .my-ticket-race { margin-top: .48rem; }
+  .my-ticket-race strong { font-size: 1.08rem; }
+  .my-ticket-race span { font-size: .88rem; }
+
+  /* Keep the established mobile reading order: each ticket side gets the
+     full card width instead of compressing the two sections together. */
+  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
+  .my-ticket-section { padding: .58rem 0; }
+
+  .my-ticket-columns.is-playoff .my-ticket-picks {
+    column-gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .my-ticket-section + .my-ticket-section {
+    border-left: 0;
+    border-top: 1px dashed #958a77;
+    padding-left: 0;
+  }
+
+  .my-ticket-section-heading { font-size: .62rem; }
+  .my-ticket-section-heading strong { font-size: .57rem; }
+  .my-ticket-picks li { min-height: 2.15rem; }
+  .my-ticket-selection strong,
+  .my-ticket-survivor-pick strong { font-size: .8rem; }
+  /* Keep the completion receipt and status stamp from visually merging on
+     narrow tickets, even when either label grows or wraps. */
+  .my-ticket-footer {
+    column-gap: .65rem;
+    grid-template-columns: minmax(0, 1fr) minmax(4.75rem, auto) 3.2rem;
+    row-gap: .35rem;
+  }
+  .my-ticket-footer > div { min-width: 4.75rem; }
+  .my-ticket-change-note { font-size: .53rem; }
+  .my-ticket-barcode { width: 3.2rem; }
 }
 
 @media (max-width: 379px) {
@@ -2865,32 +2944,6 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
     transform: translate(-50%, -50%) scale(1.007);
     width: 2.1rem;
   }
-}
-
-.my-ticket-team-result {
-  align-items: center;
-  display: flex;
-  gap: .18rem;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.my-ticket-team-result > span {
-  min-width: 0;
-}
-
-.my-ticket-selection > .my-ticket-team-result {
-  font-size: .82rem;
-  letter-spacing: -.01em;
-}
-
-.my-ticket-result {
-  display: inline-flex;
-  margin-left: 0;
-  position: relative;
-  top: -.1rem;
-  transform: none;
-  vertical-align: middle;
 }
 
 /* Bowl selections use the same chisel-pass motion as the Slate, but retain
@@ -3195,9 +3248,6 @@ html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 trans
 html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
 html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #9aaabd; background-clip: padding-box; }
 
-.my-ticket-result.is-w { color: #16834e; }
-.my-ticket-result.is-l { color: #bd3028; }
-
 /* Ticket results stay deliberately simple: solid upright letters, identical
    sizing for wins and losses, and no surrounding badge or stamp outline. */
 .ats-result-stamp--ticket {
@@ -3207,218 +3257,6 @@ html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover {
   height: 1.08rem;
   line-height: 1;
   min-width: 1.08rem;
-}
-
-.my-ticket-selection small {
-  color: #665e51;
-  font: 700 .55rem/1.2 Arial, sans-serif;
-  margin-top: .16rem;
-}
-
-.my-ticket-line {
-  color: #71695d;
-  font: 900 .8rem/1 "Courier New", monospace;
-  min-width: 2.5rem;
-  text-align: right;
-}
-
-.my-ticket-line.is-locked {
-  color: var(--official-line-color);
-  font-size: .9rem;
-}
-
-.my-ticket-open {
-  color: #923c24;
-  font: 900 .84rem/1 "Courier New", monospace;
-  letter-spacing: .12em;
-}
-
-.my-ticket-survivor-pick {
-  /* Matches the Pick'em list gap so both top receipt rules share one line. */
-  margin-top: .35rem;
-  border-block: 1px dotted #958a77;
-  padding: .7rem 0;
-}
-
-.my-ticket-survivor-pick div {
-  display: grid;
-  min-width: 0;
-}
-
-.my-ticket-survivor-pick small {
-  color: #665e51;
-  font: 800 .5rem/1.2 Arial, sans-serif;
-  letter-spacing: .1em;
-}
-
-.my-ticket-survivor-pick > div > strong {
-  font: 900 .84rem/1.15 "Courier New", monospace;
-  margin-top: .16rem;
-}
-
-.my-ticket-survivor-pick.is-open {
-  min-height: 2.45rem;
-  padding: .72rem 0;
-}
-
-.my-ticket-survivor-pick.is-open .my-ticket-open {
-  margin: 0;
-}
-
-.my-ticket-survivor-state {
-  border-block: 1px dotted #958a77;
-  font: 900 .75rem/1.2 "Courier New", monospace;
-  margin-top: .35rem;
-  padding: .8rem 0;
-}
-
-.my-ticket-instructions {
-  border-top: 1px dashed #958a77;
-  color: #665e51;
-  font: 700 .58rem/1.35 Arial, sans-serif;
-  margin-top: .7rem;
-  padding-top: .55rem;
-}
-
-.my-ticket-instructions p + p { margin-top: .28rem; }
-
-@media (min-width: 640px) {
-  /* These are short printed guidance lines, not flowing body copy. Keep each
-     instruction intact as the ticket narrows so its hierarchy stays crisp. */
-  .my-ticket-instructions p { white-space: nowrap; }
-}
-
-.my-ticket-footer {
-  align-items: end;
-  border-top: 2px solid #28221b;
-  display: grid;
-  gap: .5rem;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  padding-top: .48rem;
-}
-
-.my-ticket-footer > span {
-  font: 900 .68rem/1 "Courier New", monospace;
-}
-
-.my-ticket-completion {
-  align-self: stretch;
-  color: #665e51;
-  display: grid;
-  gap: .16rem;
-  grid-template-rows: auto 1fr;
-}
-
-.my-ticket-change-note {
-  align-self: start;
-  font: 700 .58rem/1.15 Arial, sans-serif;
-  letter-spacing: .02em;
-}
-
-.my-ticket-completion > span:last-child {
-  align-self: end;
-  font-weight: 900;
-}
-
-.my-ticket-completion.is-open > span:last-child { color: #a82820; }
-.my-ticket-completion.is-filled > span:last-child { color: #08764e; }
-
-.my-ticket-footer > div {
-  align-self: stretch;
-  grid-column: 2;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  justify-items: center;
-  line-height: 1;
-}
-
-.my-ticket-footer small {
-  align-self: start;
-  color: #665e51;
-  font-size: .46rem;
-  font-weight: 800;
-  letter-spacing: .09em;
-}
-
-.my-ticket-footer strong {
-  align-self: end;
-  color: inherit;
-  font: 900 .64rem/1.25 Arial, sans-serif;
-  letter-spacing: .08em;
-}
-
-.my-ticket-footer strong.is-open { color: #a82820; }
-
-.my-ticket-footer strong.is-filled { color: #08764e; }
-
-.my-ticket-barcode {
-  align-self: end;
-  display: block;
-  grid-column: 3;
-  justify-self: end;
-  background: linear-gradient(90deg,
-    #28221b 0 2%, transparent 2% 4%, #28221b 4% 5%, transparent 5% 8%, #28221b 8% 12%, transparent 12% 14%,
-    #28221b 14% 15%, transparent 15% 18%, #28221b 18% 21%, transparent 21% 23%, #28221b 23% 24%, transparent 24% 28%,
-    #28221b 28% 33%, transparent 33% 35%, #28221b 35% 37%, transparent 37% 41%, #28221b 41% 42%, transparent 42% 45%,
-    #28221b 45% 49%, transparent 49% 51%, #28221b 51% 54%, transparent 54% 57%, #28221b 57% 58%, transparent 58% 61%,
-    #28221b 61% 66%, transparent 66% 68%, #28221b 68% 70%, transparent 70% 74%, #28221b 74% 75%, transparent 75% 78%,
-    #28221b 78% 83%, transparent 83% 85%, #28221b 85% 88%, transparent 88% 91%, #28221b 91% 92%, transparent 92% 96%,
-    #28221b 96% 100%);
-  border-inline: 1px solid #28221b;
-  height: 1.28rem;
-  opacity: .9;
-  width: 4.1rem;
-}
-
-html[data-theme="night"] .my-ticket {
-  --ticket-paper: #29251f;
-  background:
-    repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
-    #29251f;
-  border-color: #897e6b;
-  color: #f2e8d3;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
-}
-
-html[data-theme="night"] .my-ticket-race,
-html[data-theme="night"] .my-ticket-footer {
-  border-color: #d1c4aa;
-}
-
-html[data-theme="night"] .my-ticket-section + .my-ticket-section,
-html[data-theme="night"] .my-ticket-picks li,
-html[data-theme="night"] .my-ticket-survivor-state {
-  border-color: #756b5b;
-}
-
-html[data-theme="night"] .my-ticket-selection small,
-html[data-theme="night"] .my-ticket-survivor-pick small,
-html[data-theme="night"] .my-ticket-footer small,
-html[data-theme="night"] .my-ticket-open,
-html[data-theme="night"] .my-ticket-instructions {
-  color: #bdb19b;
-}
-
-html[data-theme="night"] .my-ticket-open {
-  color: #f1b38c;
-}
-
-html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
-html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
-
-html[data-theme="night"] .my-ticket-barcode {
-  background: linear-gradient(90deg,
-    #f2e8d3 0 2%, transparent 2% 4%, #f2e8d3 4% 5%, transparent 5% 8%,
-    #f2e8d3 8% 12%, transparent 12% 14%, #f2e8d3 14% 15%, transparent 15% 18%,
-    #f2e8d3 18% 21%, transparent 21% 23%, #f2e8d3 23% 24%, transparent 24% 28%,
-    #f2e8d3 28% 33%, transparent 33% 35%, #f2e8d3 35% 37%, transparent 37% 41%,
-    #f2e8d3 41% 42%, transparent 42% 45%, #f2e8d3 45% 49%, transparent 49% 51%,
-    #f2e8d3 51% 54%, transparent 54% 57%, #f2e8d3 57% 58%, transparent 58% 61%,
-    #f2e8d3 61% 66%, transparent 66% 68%, #f2e8d3 68% 70%, transparent 70% 74%,
-    #f2e8d3 74% 75%, transparent 75% 78%, #f2e8d3 78% 83%, transparent 83% 85%,
-    #f2e8d3 85% 88%, transparent 88% 91%, #f2e8d3 91% 92%, transparent 92% 96%,
-    #f2e8d3 96% 100%);
-  border-inline-color: #f2e8d3;
 }
 
 html[data-theme="night"] .pool-chat {
@@ -3472,36 +3310,136 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
   max-width: 64rem !important;
   width: 100%;
 }
+/* ==== Survivor Table ==== */
 
-/* Standings is intentionally a tighter scorecard surface than the Slate.
-   Keep both the visible chat and its compact restore control on that same
-   rail instead of leaving a Slate-width gutter around the table. */
-body:has(.pickem-scoreboard-ledger) .pool-chat-dock .pool-chat,
-body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
-  max-width: var(--standings-module-width) !important;
+.survivor-sticky-status,
+.survivor-sticky-name {
+  align-items: center;
+  align-self: stretch;
+  background-color: var(--survivor-row-bg, #f5f0e6);
+  display: flex;
+  position: sticky;
+  z-index: 4;
 }
+.survivor-sticky-status {
+  justify-content: center;
+  left: 0;
+}
+.survivor-sticky-name {
+  border-right: 1px solid rgba(23, 23, 25, .09);
+  justify-content: flex-start;
+  left: 3rem;
+}
+.survivor-standings-header {
+  --survivor-row-bg: #ebe3d4;
+  background-color: var(--survivor-row-bg);
+}
+.survivor-standings-row {
+  --survivor-row-bg: #f5f0e6;
+  background-color: var(--survivor-row-bg);
+}
+.survivor-standings-row.is-alt {
+  --survivor-row-bg: #f0eadf;
+}
+.viewer-row {
+  --survivor-row-bg: #e6f2ee;
+  background-color: var(--survivor-row-bg) !important;
+  box-shadow: inset 0 0 0 1px rgba(22, 135, 127, 0.18);
+}
+.viewer-row .survivor-sticky-status {
+  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.viewer-row .survivor-sticky-name {
+  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.survivor-standings-row.viewer-row {
+  --survivor-row-bg: #dff0eb;
+  box-shadow: inset 0 0 0 2px rgba(22, 135, 127, .3);
+}
+/* ==== Pick'em Pad and playoff ledger ==== */
 
+/* Carry the same viewer marker across both standings ledgers: a quiet teal
+   field, a left-hand rail, and a complete row outline. */
+.pickem-standings-row.viewer-row > td {
+  background-color: #dff0eb;
+  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.pickem-standings-row.viewer-row > td:first-child {
+  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.pickem-standings-row.viewer-row > td:last-child {
+  box-shadow: inset -1px 0 0 rgba(22, 135, 127, .3), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+/* The Pick'em Pad stays impartial: its ruled paper should not color a
+   player's whole line. Survivor retains its stronger personal marker. */
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td {
+  background-color: #16333a;
+  box-shadow: inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
+  box-shadow: inset 4px 0 0 #8be9dc, inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
+  box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
+}
+.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
+.survivor-ledger-masthead h2 { margin: 0; }
+/* Keep the sticky player identity cells and the scrollable Survivor cells as
+   one continuous active row in night mode. */
+html[data-theme="night"] .survivor-standings-row.viewer-row > td {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
+}
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
+}
+/* Your own scorecard row gets a quiet teal ticket treatment in night mode,
+   instead of disappearing into the alternating table surfaces. */
+html[data-theme="night"] .viewer-row {
+  --survivor-row-bg: #16333a;
+  background-color: #16333a !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
+}
+html[data-theme="night"] .survivor-standings-header {
+  --survivor-row-bg: #17242c;
+}
+html[data-theme="night"] .survivor-standings-row {
+  --survivor-row-bg: #101c24;
+}
+html[data-theme="night"] .survivor-standings-row.is-alt {
+  --survivor-row-bg: #13232b;
+}
+html[data-theme="night"] .survivor-standings-row.viewer-row {
+  --survivor-row-bg: #16333a;
+}
+html[data-theme="night"] .viewer-row .survivor-sticky-status {
+  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
+}
+html[data-theme="night"] .viewer-row .survivor-sticky-name {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
+}
 /* Survivor expands to the same wide reading surface as the Bowl Card. Its
    collapsed state returns to the compact Pick'em rail so minimized modules
    remain visually consistent across the Standings page. */
 .survivor-ledger {
-  margin-left: auto;
-  margin-right: auto;
   /* Match the Bowl Card's available standings rail. The grid keeps a
      55.5rem minimum for narrow viewports, but expands instead of scrolling
      when the page has room. */
   max-width: 100%;
-  width: 100%;
 }
-
 .survivor-ledger.is-minimized {
   max-width: var(--standings-module-width);
 }
-
-.survivor-standings-grid {
-  width: 100%;
-}
-
 /* The standings matrix should never create a second, nearly-invisible
    vertical scrollbar. Its height is content-driven; only narrow viewports
    may need the intentional horizontal scroll. */
@@ -3509,7 +3447,6 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
-
 .survivor-standings-grid > .survivor-standings-header,
 .survivor-standings-grid > .survivor-standings-row {
   grid-template-columns: 3rem 7rem repeat(18, minmax(2.5rem, 1fr));
@@ -3746,71 +3683,6 @@ html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
 html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
 html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: #ffffff; }
 
-@media (max-width: 639px) {
-
-  .my-ticket {
-    padding: .8rem .8rem .7rem;
-  }
-
-  .my-ticket-survivor-chip {
-    right: -.45rem;
-    top: -.55rem;
-    transform: scale(.82);
-    transform-origin: top right;
-  }
-
-  .my-ticket-brand h1 { font-size: 1.43rem; }
-  .my-ticket-race { margin-top: .48rem; }
-  .my-ticket-race strong { font-size: 1.08rem; }
-  .my-ticket-race span { font-size: .88rem; }
-
-  /* Keep the established mobile reading order: each ticket side gets the
-     full card width instead of compressing the two sections together. */
-  .my-ticket-columns { grid-template-columns: minmax(0, 1fr); }
-  .my-ticket-section { padding: .58rem 0; }
-
-  .my-ticket-columns.is-playoff .my-ticket-picks {
-    grid-auto-flow: row;
-    column-gap: 0;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-  }
-
-  .my-ticket-section + .my-ticket-section {
-    border-left: 0;
-    border-top: 1px dashed #958a77;
-    padding-left: 0;
-  }
-
-  .my-ticket-section-heading { font-size: .62rem; }
-  .my-ticket-section-heading strong { font-size: .57rem; }
-  .my-ticket-picks li { min-height: 2.15rem; }
-  .my-ticket-selection strong,
-  .my-ticket-survivor-pick strong { font-size: .8rem; }
-  /* Keep the completion receipt and status stamp from visually merging on
-     narrow tickets, even when either label grows or wraps. */
-  .my-ticket-footer {
-    column-gap: .65rem;
-    grid-template-columns: minmax(0, 1fr) minmax(4.75rem, auto) 3.2rem;
-    row-gap: .35rem;
-  }
-  .my-ticket-footer > div { min-width: 4.75rem; }
-  .my-ticket-change-note { font-size: .53rem; }
-  .my-ticket-barcode { width: 3.2rem; }
-}
-
-/* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
-   texts without creating a separate source of truth from the regular board. */
-.playoff-scoreboard {
-  background:
-    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(75, 126, 183, .18) 2.1rem 2.16rem),
-    linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
-    #fbf8ef;
-  border-left: 1px solid rgba(167, 62, 55, .3);
-  padding-left: .5rem;
-  padding-right: .5rem;
-}
-
 /* Keep the Bowl Pool identity columns above the moving game matrix. The
    explicit stacking and edge shadow prevent later game cells from painting
    over names when the long standings sheet is scrolled horizontally. */
@@ -3935,51 +3807,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 }
 @media (prefers-reduced-motion: reduce) {
   .bowl-flip-counter.is-shuffling .bowl-flip-digit-face { animation: none; }
-}
-
-.playoff-scoreboard table { background: transparent; }
-.playoff-scoreboard tbody tr { background: transparent !important; }
-.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
-.playoff-scoreboard-pick {
-  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
-  font-size: .95rem;
-  letter-spacing: .025em;
-}
-
-/* Wild Card and Divisional rounds carry six and four picks per player. Keep
-   those handwritten columns close enough to scan as one ledger rather than
-   stretching them across the broad regular-season rhythm. */
-.playoff-scoreboard--dense .pickem-ledger-row td {
-  padding-left: .2rem;
-  padding-right: .2rem;
-}
-
-.playoff-scoreboard--dense .pickem-ledger-wins {
-  padding-right: .24rem !important;
-  width: 2.4rem;
-}
-
-.playoff-scoreboard--dense .pickem-ledger-player {
-  padding-left: .3rem;
-  padding-right: .18rem;
-  width: 5.5rem;
-}
-
-.playoff-scoreboard--dense .playoff-scoreboard-pick {
-  white-space: nowrap;
-}
-
-@media (max-width: 639px) {
-  .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
-  .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
-  .playoff-scoreboard-pick { font-size: .86rem; }
-}
-
-html[data-theme="night"] .playoff-scoreboard {
-  background:
-    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(96, 178, 198, .14) 2.1rem 2.16rem),
-    linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
-    #172027;
 }
 
 /* Commissioner desk: one visual language for the operational workspaces. */
