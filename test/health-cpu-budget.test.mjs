@@ -10,11 +10,11 @@ test("healthy uptime probes are CDN-cached within their own freshness windows; f
   const cache = read("src/lib/health-cache.ts");
   assert.match(cache, /return healthy \? `public, max-age=0, s-maxage=\$\{cdnSeconds\}` : "no-store, max-age=0";/);
   // Each cache window stays well under the probe's own grace window.
-  assert.match(cache, /automation: 600,/);
+  assert.match(cache, /automation: 1200,/);
   assert.match(cache, /criticalWorkers: 600,/);
-  assert.match(cache, /settlement: 900,/);
-  assert.match(cache, /bowlPool: 900,/);
-  assert.match(cache, /backup: 3600,/);
+  assert.match(cache, /settlement: 3600,/);
+  assert.match(cache, /bowlPool: 3600,/);
+  assert.match(cache, /backup: 21600,/);
   const probes = {
     "src/app/api/health/automation/route.ts": "HEALTH_CDN_SECONDS.automation",
     "src/app/api/health/settlement/route.ts": "HEALTH_CDN_SECONDS.settlement",

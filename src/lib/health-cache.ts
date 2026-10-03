@@ -5,11 +5,11 @@
  * never past its own grace period. Failures are never cached.
  */
 export const HEALTH_CDN_SECONDS = {
-  automation: 600, // heartbeat window is 35 minutes
+  automation: 1200, // heartbeat window is 35 minutes
   criticalWorkers: 600, // windows are 12-45 minutes plus a 10-minute debounce
-  settlement: 900, // grace is 6 hours after kickoff
-  bowlPool: 900, // schedule and grading readiness changes slowly
-  backup: 3600, // backup window is 8 days
+  settlement: 3600, // grace is 6 hours after kickoff
+  bowlPool: 3600, // schedule and grading readiness changes slowly
+  backup: 21600, // backup window is 8 days
 } as const;
 
 /** Cache-Control for an uptime probe: CDN-cached when healthy, never when failing. */
