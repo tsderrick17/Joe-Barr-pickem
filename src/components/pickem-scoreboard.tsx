@@ -95,7 +95,7 @@ export default function PickemScoreboard({
         {flipButton}
       </div>
       <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
-        <table className={`${isPlayoff ? (isDensePlayoffRound ? "min-w-[40rem]" : "min-w-[48rem]") : "w-full table-fixed"} border-collapse text-left tabular-nums`}>
+        <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`}>
           {!isPlayoff ? <colgroup>
             <col className="pickem-ledger-wins-column" />
             <col className="pickem-ledger-player-column" />
@@ -108,7 +108,7 @@ export default function PickemScoreboard({
             {displayedRows.map((row) => {
               return (
                 <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} key={row.id}>
-                  <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}{row.playoffEliminated ? <span className="mt-0.5 block -rotate-6 border border-red-700 px-0.5 py-px font-sans text-[8px] font-black tracking-[0.08em] text-red-800" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
+                  <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}{row.playoffEliminated ? <span className="pickem-ledger-out-mark" title="Mathematically eliminated from the playoff race">OUT</span> : null}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (
                     <td className="pickem-ledger-pick" colSpan={maxPicks}>
@@ -117,11 +117,11 @@ export default function PickemScoreboard({
                   ) : Array.from({ length: maxPicks }, (_, pickNumber) => {
                     const pick = row.picks[pickNumber];
                     return (
-                      <td className={`pickem-ledger-pick break-words ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
+                      <td className={`pickem-ledger-pick ${isPlayoff ? "playoff-scoreboard-pick" : ""}`} key={pickNumber}>
                         {pick?.label ? (
                           <span>
                             {isPlayoff ? compactPickLabel(pick.label, pick.abbreviation) : <><span className="scoreboard-team-name-full">{pick.label}</span><span aria-label={pick.label} className="scoreboard-team-name-short">{compactPickLabel(pick.label, pick.abbreviation)}</span></>}
-                            {pick.spread ? <strong className={`ml-1 font-mono text-[13px] ${pick.isLineLocked ? "official-line-color" : "text-slate-700"}`}>{pick.spread}</strong> : null}
+                            {pick.spread ? <strong className={`pickem-ledger-spread ${pick.isLineLocked ? "official-line-color" : "is-open"}`}>{pick.spread}</strong> : null}
                             <AtsResultStamp className="ml-1.5" result={pick.resultMark} />
                           </span>
                         ) : pick?.isHidden ? (
