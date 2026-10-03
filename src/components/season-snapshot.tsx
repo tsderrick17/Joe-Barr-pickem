@@ -197,6 +197,14 @@ export function SnapshotView({ standings, snapshot, isPlayoff, range = "all" }: 
   };
   const lastRegular = snapshot.regular.at(-1);
   const playoffBaseline = Object.fromEntries((lastRegular?.scores ?? []).map((score) => [score.playerId, score.wins]));
+  // The key shows what the chart shows: each player's total at the chart's last
+  // point, never the live standings. Standings move as games finish, the chart
+  // moves once when the week settles, and the two must change together.
+  const lastPoint = showPlayoffs ? (snapshot.playoffs.at(-1) ?? lastRegular) : lastRegular;
+  const chartTotals = new Map((lastPoint?.scores ?? []).map((score) => [score.playerId, score.wins]));
+  const keyRows = standings
+    .map((player, order) => ({ player, order, total: chartTotals.get(player.id) ?? 0 }))
+    .sort((a, b) => b.total - a.total || a.order - b.order);
 
   return <div className="season-snapshot-layout">
     <div className="season-snapshot-charts">
@@ -207,11 +215,11 @@ export function SnapshotView({ standings, snapshot, isPlayoff, range = "all" }: 
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
     <div aria-label="Players shown on the chart" className="season-snapshot-key">
-      {standings.map((player) => {
+      {keyRows.map(({ player, total }) => {
         const shown = !hidden.has(player.id);
-        return <button aria-label={`${player.firstName}, ${player.wins} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">
+        return <button aria-label={`${player.firstName}, ${total} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">
           <span aria-hidden="true" className="season-snapshot-swatch" style={{ backgroundColor: colors.get(player.id) }} />
-          <span className="season-snapshot-key-name">{player.firstName}</span><strong>{player.wins}</strong>
+          <span className="season-snapshot-key-name">{player.firstName}</span><strong>{total}</strong>
         </button>;
       })}
       <button className="season-snapshot-show-all" disabled={hidden.size === 0} onClick={() => chooseHidden(new Set())} type="button">Show all</button>

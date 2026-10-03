@@ -1127,3 +1127,16 @@ and backup six hours; worker probes stay at ten minutes to respect their
 **Reason:** Observability showed the Grading dashboard as the largest single
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
+
+## 2026-10-03 - A more convincing Pick'em Pad flip
+
+**Status:** Accepted
+
+The pad's turn is driven by one animated angle (`--pad-turn`), so the lift
+toward the reader, the slight tilt, and the shading across the paper all follow
+the card's real position. The card changes width in a single step at the
+halfway point, when it is edge-on, instead of stretching while it turns. The
+turn takes 0.9 seconds; the faces still swap exactly at the midpoint.
+
+**Reason:** Widening the card during the turn made the paper stretch and the
+text reflow while visible, so the text seemed to slide across the paper.

@@ -278,8 +278,8 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
     providerRunsSince(historyStart),
     supabaseAdmin
       .from("games")
-      .select("id, kickoff_at, finalized_at, status")
-      .gte("kickoff_at", monthStart)
+      .select("id, kickoff_at, line_lock_at, finalized_at, status")
+      .gte("kickoff_at", new Date(Date.parse(monthStart) - 15 * 86400000).toISOString())
       .lt("kickoff_at", monthEnd)
       .order("kickoff_at"),
     loadUptimeRobotCapacity(now),

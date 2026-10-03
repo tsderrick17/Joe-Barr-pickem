@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
+import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
 
 test("monthly credits include charged failures, zero days and only the current month through now", () => {
@@ -129,4 +129,52 @@ test("15-day credits per game averages by Eastern calendar date and weights game
   assert.equal(rollingCreditsPerGame15Days(history, 1), 10 / 3);
   assert.equal(rollingCreditsPerGame15Days(history, 2), 14 / 3);
   assert.equal(rollingCreditsPerGame15Days([...history, { ...point("2026-10-17T17:00:00Z", 0, 1), creditsPerGame: null }], 3), null);
+});
+
+test("score checks follow the retry ladder and the measured first-hour share", () => {
+  const ladder = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
+  const base = expectedScoreChecks(ladder, 0.9);
+  assert.deepEqual([base.firstHour, base.nextHour, base.cooldown], [6, 3, 1]);
+  // 90% finish by check 6; 5% use 6 + a 1-3 check mean of 2; 5% reach the cooldown check (6 + 3 + 1).
+  assert.ok(Math.abs(base.checks - (0.9 * 6 + 0.05 * 8 + 0.05 * 10)) < 1e-9);
+  assert.ok(expectedScoreChecks(ladder, 0.99).checks < base.checks);
+  assert.ok(expectedScoreChecks(ladder, 0.6).checks > base.checks);
+});
+
+test("the first-hour share is a 15-day average of settled slates, with a 90% prior until there is history", () => {
+  const now = new Date("2026-10-20T00:00:00Z");
+  const slate = (kickoff, minutesAfterPollingStart) => {
+    const pollingStart = Date.parse(kickoff) + 170 * 60000;
+    return [{ kickoff_at: kickoff, finalized_at: new Date(pollingStart + minutesAfterPollingStart * 60000).toISOString() }];
+  };
+  assert.deepEqual(firstHourSettleShare([], now), { share: 0.9, slates: 0, measured: false });
+  const games = [
+    ...slate("2026-10-06T17:00:00Z", 30), ...slate("2026-10-07T00:20:00Z", 45), ...slate("2026-10-13T17:00:00Z", 20), ...slate("2026-10-14T00:15:00Z", 130),
+    // Older than 15 days: ignored.
+    ...slate("2026-09-13T17:00:00Z", 500),
+  ];
+  const result = firstHourSettleShare(games, now);
+  assert.equal(result.measured, true);
+  assert.equal(result.slates, 4);
+  assert.equal(result.share, 0.75);
+});
+
+test("line requests: a 7 AM refresh each day plus one fetch per distinct lock time, including 6 PM early locks", () => {
+  const now = new Date("2026-10-01T12:00:00Z");
+  const games = [
+    // Sunday 9:30 AM ET international kickoff: locks Saturday 6 PM ET.
+    { kickoff_at: "2026-10-04T13:30:00Z" },
+    // Sunday 1 PM games share one 8 AM Sunday lock.
+    { kickoff_at: "2026-10-04T17:00:00Z" }, { kickoff_at: "2026-10-04T17:00:00Z" },
+    // Sunday night game: same Sunday 8 AM lock moment.
+    { kickoff_at: "2026-10-05T00:20:00Z" },
+  ];
+  const result = monthlyCreditSeries([], now, games);
+  const byDate = Object.fromEntries(result.calendarDays.map((day) => [day.date.slice(0, 10), day]));
+  assert.equal(byDate["2026-10-03"].forecastLockFetches, 1);
+  assert.equal(byDate["2026-10-04"].forecastLockFetches, 1);
+  assert.equal(byDate["2026-10-02"].forecastLockFetches, 0);
+  assert.equal(byDate["2026-10-02"].forecastRefreshes, 1);
+  assert.equal(byDate["2026-10-03"].forecastLines, 2);
+  assert.equal(byDate["2026-10-02"].forecastLines, 1);
 });

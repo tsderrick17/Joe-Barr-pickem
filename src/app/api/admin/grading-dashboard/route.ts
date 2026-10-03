@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     const seasonPeriodIds = (periods ?? []).map((item) => item.id);
     const [gamesResult, scheduleGamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult] = await Promise.all([
       supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status, away_score, home_score, finalized_at, away_team_id, home_team_id").eq("scoring_period_id", period.id).order("kickoff_at"),
-      seasonPeriodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, finalized_at, status").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
+      seasonPeriodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, line_lock_at, finalized_at, status").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
       supabaseAdmin.from("game_lines").select("game_id, locked_spread, locked_at, manual_override").in("game_id", (await supabaseAdmin.from("games").select("id").eq("scoring_period_id", period.id)).data?.map((game) => game.id) ?? []),
       supabaseAdmin.from("picks").select("game_id, result").eq("scoring_period_id", period.id),
       supabaseAdmin.from("survivor_picks").select("game_id, result").eq("scoring_period_id", period.id),
