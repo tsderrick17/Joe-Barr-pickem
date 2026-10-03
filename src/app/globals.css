@@ -2003,7 +2003,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   /* Final games need less room for a short date and spread than a pregame
      kickoff time. Give that recovered width to both team/result blocks. */
   .slate-game-row.no-survivor-layout.is-final {
-    grid-template-columns: 2rem minmax(0, 1fr) 2.4rem minmax(0, 1fr);
+    grid-template-columns: 2rem minmax(0, 1fr) 3rem minmax(0, 1fr) 2rem;
   }
   .slate-game-row.no-survivor-layout.is-final .slate-team-result-mark { font-size: .75rem; }
 
@@ -2038,7 +2038,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      wrapping long full names into the score lane. */
   .slate-game-row.is-final .slate-team-name-full { display: none; }
   .slate-game-row.is-final .slate-team-name-short { display: inline; }
-  .slate-game-row.no-survivor-layout.is-final .slate-spread-cell { transform: translateX(-1rem); }
+  .slate-game-row.no-survivor-layout.is-final .slate-spread-cell { transform: none; }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for

@@ -251,6 +251,6 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     </div>
     {survivorChip(right)}
     {teamCell(right, "right")}
-    {survivor?.enabled ? null : <div aria-hidden="true" className="hidden md:block" />}
+    {survivor?.enabled ? null : <div aria-hidden="true" className={isFinal ? "" : "hidden md:block"} />}
   </article>;
 }
