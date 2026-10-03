@@ -4,7 +4,12 @@ import test from "node:test";
 
 const migrationUrl = new URL("../supabase/migrations/20260818013000_rebuild_critical_automation.sql", import.meta.url);
 
-test("one idempotent migration recreates every game-critical schedule", async () => {
+// The isolated season drill strips the production schedules from this migration
+// before running the suite, so the schedule assertions only apply to the
+// committed file.
+const isolatedCopy = (await readFile(migrationUrl, "utf8")).includes("Isolated test databases never schedule requests to the live deployment.");
+
+test("one idempotent migration recreates every game-critical schedule", { skip: isolatedCopy && "migration was rewritten for the isolated database" }, async () => {
   const sql = await readFile(migrationUrl, "utf8");
   const expected = [
     ["lock-official-lines-every-minute", "* * * * *", "/api/cron/lock-lines"],

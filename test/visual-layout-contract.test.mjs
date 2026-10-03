@@ -14,6 +14,6 @@ test("mobile Survivor chip lanes and chip artwork scale together", async () => {
 
   assert.match(css, /\.slate-game-row\.has-survivor-layout\s*\{\s*grid-template-columns:\s*2\.3rem minmax\(0, 1fr\) 2\.7rem 2\.45rem 2\.7rem minmax\(0, 1fr\)/);
   assert.match(css, /@media \(max-width: 379px\)\s*\{[\s\S]*?grid-template-columns:\s*2rem minmax\(0, 1fr\) 2\.4rem 2\.2rem 2\.4rem minmax\(0, 1fr\)[\s\S]*?height:\s*2\.1rem/);
-  assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final\s*\{\s*grid-template-columns:\s*2rem minmax\(0, 1fr\) 2\.4rem minmax\(0, 1fr\)/);
+  assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final\s*\{\s*grid-template-columns:\s*2rem minmax\(0, 1fr\) 3rem minmax\(0, 1fr\) 2rem/);
   assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final \.slate-team-result-mark \{ font-size: \.75rem; \}/);
 });

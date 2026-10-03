@@ -53,7 +53,7 @@ test("notch and scallop bites are true half and quarter circles that shrink on p
   }
   assert.match(strip, /--receipt-bite-serrated-left: radial-gradient\(circle at 0 50%, transparent var\(--receipt-scallop\)/);
   assert.match(strip, /--receipt-bite-serrated-right: radial-gradient\(circle at 100% 50%, transparent var\(--receipt-scallop\)/);
-  assert.match(css, /@media \(max-width: 639px\) \{\n  \.slate-receipt-strip \{ --receipt-notch: \.34rem; --receipt-scallop: \.13rem; \}/);
+  assert.match(css, /@media \(max-width: 767px\) \{\n  \.slate-receipt-strip \{ --receipt-notch: \.34rem; --receipt-scallop: \.13rem; \}/);
 });
 
 test("the strip is transparent so the scrolling page shows through, and its shadow follows the outline", () => {

@@ -10,5 +10,5 @@ test("loading shells reserve the current compact card widths", () => {
   const slate = fs.readFileSync(path.join(root, "src/app/board/page.tsx"), "utf8");
   assert.match(standings, /standings-loading-ticket[^>]*max-w-\[30rem\]/);
   assert.match(standings, /<section className="mx-auto w-full max-w-\[30rem\]">/);
-  assert.match(slate, /slate-loading-receipt h-\[6\.75rem\][^>]*sm:h-\[5\.8rem\]/);
+  assert.match(slate, /slate-loading-receipt h-\[6\.75rem\][^>]*md:h-\[5\.8rem\]/);
 });

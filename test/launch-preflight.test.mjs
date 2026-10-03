@@ -49,7 +49,7 @@ test("scheduled isolated certification includes the live-week database rehearsal
   const rehearsal = await readFile(new URL("./integration/weekly-live-week-rehearsal.test.mjs", import.meta.url), "utf8");
   assert.match(workflow, /PICKEM_WEEKLY_REHEARSAL:\s*"true"/);
   assert.match(drill, /run\("test:all"\)/);
-  assert.match(packageSource, /node --test test\/\*\*\/\*\.test\.mjs/);
+  assert.match(packageSource, /node --test \\"test\/\*\*\/\*\.test\.mjs\\"/);
   assert.match(rehearsal, /PICKEM_WEEKLY_REHEARSAL === "true"/);
   assert.match(rehearsal, /PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"/);
 });
