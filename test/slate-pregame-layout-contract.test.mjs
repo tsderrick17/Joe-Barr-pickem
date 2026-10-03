@@ -28,6 +28,7 @@ test("the early-lock note is two short lines, day then time, centered under the 
   const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
   assert.match(component, /function easternLockParts\(value: string\)/);
   assert.match(component, /<p className="slate-lock-note [^"]*"><span>LOCKS \{easternLockParts\(game\.lineLockAt\)\.date\}<\/span><span>\{easternLockParts\(game\.lineLockAt\)\.time\}<\/span><\/p>/);
-  assert.match(component, /time: `\$\{time\.replace\(":00", ""\)\} ET`\.toUpperCase\(\)/);
+  // Slate times carry no "ET" suffix.
+  assert.match(component, /time: time\.replace\(":00", ""\)\.toUpperCase\(\)/);
   assert.match(css, /\.slate-lock-note \{ display: grid; justify-items: center; white-space: nowrap; \}/);
 });
