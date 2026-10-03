@@ -2760,6 +2760,12 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Out of Survivor: the Pick'em section takes the whole ticket and the notes sit
+   beneath it, so the ticket reads as one column. */
+.my-ticket-columns.is-single { grid-template-columns: minmax(0, 1fr); }
+.my-ticket-columns.is-single .my-ticket-section { padding-right: 0; }
+.my-ticket-columns.is-single .my-ticket-section + .my-ticket-section { border-left: 0; border-top: 0; padding-left: 0; padding-top: 0; }
+
 /* Once Survivor ends, the ticket becomes a full-round Pick'em receipt. Each
    playoff game remains visible at once; nothing collapses into a daily view. */
 .my-ticket-columns.is-playoff .my-ticket-playoff {

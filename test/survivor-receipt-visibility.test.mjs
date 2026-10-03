@@ -26,3 +26,14 @@ test("after a champion is crowned the section stays for that week, then leaves f
   // Unknown schedule never guesses.
   assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: null }), false);
 });
+
+test("the Standings ticket tears off its Survivor section for players who are out or after a champion", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const ticket = await readFile(new URL("../src/components/my-ticket.tsx", import.meta.url), "utf8");
+  // Out (from the week after their elimination week), a crowned pool, and the playoffs hide the section.
+  assert.match(ticket, /const showSurvivor = !isPlayoff && survivorStatus !== "complete" && survivorRequired !== false;/);
+  assert.match(ticket, /\{showSurvivor \? <div className="my-ticket-section my-ticket-survivor">/);
+  // The ticket reads as one column and keeps its notes.
+  assert.match(ticket, /!isPlayoff && !showSurvivor \? "is-single"/);
+  assert.match(ticket, /my-ticket-section my-ticket-notes/);
+});

@@ -1145,3 +1145,17 @@ columns of three on the narrower torn ticket. The board API reports this as
 
 **Reason:** An out player's ticket kept a dead Survivor column, and the
 single-column version stretched wider than the picks needed.
+
+## 2026-10-03 - The Standings ticket tears off Survivor too
+
+**Status:** Accepted
+
+The full ticket on Standings follows the same rule as the Slate receipt: its
+Survivor section stays while a player is in and through their elimination week,
+then is gone from the week after; it is also gone once the pool has a champion
+and in the playoffs. Without it the ticket is a single column with the notes
+beneath the picks. (Unlike the Slate receipt, the Standings ticket does not
+keep the crowning week.)
+
+**Reason:** An out player kept seeing "ENTRY CLOSED · OUT" on their ticket for
+the rest of the season.
