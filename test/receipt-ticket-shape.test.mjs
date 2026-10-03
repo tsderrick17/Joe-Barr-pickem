@@ -70,7 +70,8 @@ test("the strip is transparent so the scrolling page shows through, and its shad
 
 test("the perforation is a dashed line that runs between its two notches", () => {
   const perforation = rule(".slate-receipt-pool::after");
-  assert.match(perforation, /border-left: 1px dashed var\(--receipt-rule\);/);
+  assert.match(perforation, /repeating-linear-gradient\(to bottom, var\(--receipt-rule\) 0 \.32rem, transparent \.32rem \.64rem\);/);
+  assert.match(perforation, /width: 1px;/);
   assert.match(perforation, /top: var\(--receipt-notch\);/);
   assert.match(perforation, /bottom: var\(--receipt-notch\);/);
   assert.doesNotMatch(css, /\.slate-receipt-pool \{ border-left: 1px dashed/);
