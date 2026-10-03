@@ -1127,3 +1127,14 @@ and backup six hours; worker probes stay at ten minutes to respect their
 **Reason:** Observability showed the Grading dashboard as the largest single
 route and the health probes together about a third of background CPU, with the
 30-day Fluid Active CPU total at the 4-hour allowance.
+
+## 2026-10-03 - The Season Snapshot key shows the chart's own totals
+
+**Status:** Accepted
+
+The player key beside the Season Snapshot shows each player's total at the
+chart's last point, ordered by those totals, instead of the live standings.
+Totals and chart now change together when the week settles.
+
+**Reason:** The key read live standings while the chart waits for the week to
+settle, so the totals ran ahead of the lines until the snapshot refreshed.
