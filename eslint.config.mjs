@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     // Playwright's disposable Next.js build used by the isolated browser suite.
     ".next-e2e/**",
+    // The screenshot suite's disposable dev build.
+    ".next-visual/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
