@@ -1217,3 +1217,7 @@ Each open team button on the Slate now has an invisible margin (about 0.7rem abo
 ### Slate spread alignment and ticket outlines
 
 Pregame phone rows now mirror the kickoff lane with an empty right column, so the spread sits at the true center of the row, in line with the spread on finished rows. On finished rows the spread rides the team-name line instead of floating at the middle of the taller row. The ticket's notch rings are one pixel like the straight edges, and the perforation starts just below each ring over a strip of paper that hides the hairline where two sections meet.
+
+### A real 3D poker chip, and a test chip on the Operations desk
+
+The Survivor chip is now built as a true cylinder at a real chip's proportions (thickness about 8.5% of the diameter, like a 39 mm by 3.3 mm casino chip): two identical faces half a thickness either side of center, and 32 flat edge segments around the rim. Each quarter has one 16-degree segment carrying the face's colored insert over the edge, and the edge darkens as it faces away from the light, so it reads as round when the chip flips or spins. Head on it looks the same as before. A Raiders test chip sits to the right of Email center on the Operations desk heading: click to flip it, drag to turn it by hand. The "View chart data" tables on the grading dashboard are now plain ledgers instead of picking up the dashboard's pill-shaped row styling.

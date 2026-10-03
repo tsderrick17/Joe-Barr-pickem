@@ -928,6 +928,8 @@ body {
   perspective: 460px;
   position: relative;
   width: 3.2rem;
+  /* A real chip is about 3.3 mm thick and 39 mm across (8.5%). */
+  --chip-t: .27rem;
 }
 
 .survivor-poker-chip-ground-shadow {
@@ -958,7 +960,12 @@ body {
   background: transparent;
 }
 
-.survivor-poker-chip-rim {
+/* Each face is one flat, finished disc: the rim with its four colored inserts,
+   the dashed inlay ring, the bright outer ring, and the center with the team
+   mark. Both faces are identical and sit half a thickness in front of and
+   behind the center, so the chip has real depth when it turns. */
+.survivor-poker-chip-side {
+  backface-visibility: hidden;
   background: conic-gradient(from -8deg,
     var(--chip-secondary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-tertiary) 12deg 16deg, #ded9cf 16deg 90deg,
     var(--chip-secondary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-tertiary) 102deg 106deg, #ded9cf 106deg 180deg,
@@ -970,89 +977,83 @@ body {
   inset: 0;
   pointer-events: none;
   position: absolute;
-  backface-visibility: hidden;
 }
+.survivor-poker-chip-front { transform: translateZ(calc(var(--chip-t) / 2)); }
+.survivor-poker-chip-back { transform: rotateY(180deg) translateZ(calc(var(--chip-t) / 2)); }
 
-.survivor-poker-chip-rim-front { transform: translateZ(4px); }
-.survivor-poker-chip-rim-back { transform: rotateY(180deg) translateZ(4px); }
-
-.survivor-poker-chip-edge {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.58) 0 10%, rgba(255,255,255,0) 28%, rgba(23,23,25,.18) 72%, rgba(23,23,25,.38) 100%),
-    repeating-linear-gradient(90deg, var(--chip-primary) 0 12%, var(--chip-secondary) 12% 24%, var(--chip-tertiary) 24% 36%, #b8b2a8 36% 50%);
-  border: 1px solid color-mix(in srgb, var(--chip-primary) 54%, #45413c);
-  border-radius: .32rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 1px rgba(23,23,25,.42), 0 1px 2px rgba(23,23,25,.32);
-  height: calc(100% - .18rem);
-  left: 50%;
-  pointer-events: none;
-  position: absolute;
-  top: .09rem;
-  transform: translateX(-50%) rotateY(90deg);
-  transform-style: preserve-3d;
-  width: .58rem;
-}
-
-.survivor-poker-chip::before {
+/* Dashed inlay ring, under the center. */
+.survivor-poker-chip-side::before {
   border: 1px dashed color-mix(in srgb, var(--chip-primary) 54%, #fffdf8);
   border-radius: 50%;
   content: "";
-  inset: .24rem;
+  inset: calc(.24rem - 2px);
   opacity: .7;
-  pointer-events: none;
   position: absolute;
-  transform: translateZ(4.4px);
-  backface-visibility: hidden;
-  z-index: 2;
 }
-
-.survivor-poker-chip::after {
+/* Bright outer ring, over everything. */
+.survivor-poker-chip-side::after {
   border: 1px solid rgba(255,255,255,.72);
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(23,23,25,.16);
   content: "";
-  inset: .08rem;
-  pointer-events: none;
+  inset: calc(.08rem - 2px);
   position: absolute;
-  transform: translateZ(4.6px);
-  backface-visibility: hidden;
-}
-
-.survivor-poker-chip-core {
-  display: grid;
-  /* Leave the color inserts a touch more room at 12/3/6/9. */
-  height: calc(100% - .68rem);
-  transform-style: preserve-3d;
-  transition: filter 220ms ease;
-  width: calc(100% - .68rem);
-  z-index: 3;
+  z-index: 2;
 }
 
 .survivor-poker-chip-face {
   align-items: center;
-  backface-visibility: hidden;
   background: radial-gradient(circle at 35% 27%, #ffffff 0 12%, color-mix(in srgb, var(--chip-secondary) 8%, #fffdf8) 54%, color-mix(in srgb, var(--chip-primary) 7%, #f1eee7) 100%);
   border: 1px solid rgba(23,23,25,.34);
   border-radius: 50%;
   display: flex;
-  grid-area: 1 / 1;
+  /* Leave the color inserts a touch more room at 12/3/6/9. */
+  inset: calc(.34rem - 2px);
   justify-content: center;
   overflow: hidden;
+  position: absolute;
+  transition: filter 220ms ease;
+  z-index: 1;
 }
-
-.survivor-poker-chip-front img {
+.survivor-poker-chip-face img {
   height: 70%;
   transform: scale(var(--chip-logo-scale, 1));
   width: 70%;
 }
-
-.survivor-poker-chip-front { transform: translateZ(4.5px); }
-
-.survivor-poker-chip-back { transform: rotateY(180deg) translateZ(4.5px); }
-.survivor-poker-chip-back img {
-  height: 70%;
+/* The back mark is turned so it reads upright after a flip end over end. */
+.survivor-poker-chip-back .survivor-poker-chip-face img {
   transform: rotateZ(180deg) scale(var(--chip-logo-scale, 1));
-  width: 70%;
+}
+
+/* The edge: flat segments stood on end around the rim, each one the width of
+   the chord it covers, centered on the chip's middle plane. */
+.survivor-poker-chip-edge-seg {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: rotateZ(var(--seg-a));
+  transform-style: preserve-3d;
+}
+.survivor-poker-chip-edge-seg::before {
+  backface-visibility: hidden;
+  background:
+    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
+    #cdc7bb;
+  content: "";
+  height: var(--chip-t);
+  left: 50%;
+  position: absolute;
+  top: calc(var(--chip-t) / -2);
+  transform: translateX(-50%) rotateX(90deg);
+  /* A hair wider than the chord, so neighbors meet without a seam. */
+  width: calc(var(--seg-w) + .7%);
+}
+.survivor-poker-chip-edge-seg.is-insert::before {
+  background:
+    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
+    linear-gradient(90deg, var(--chip-secondary) 0 25%, var(--chip-primary) 25% 75%, var(--chip-tertiary) 75% 100%);
 }
 
 .survivor-poker-chip-star {
@@ -1092,7 +1093,7 @@ body {
 }
 
 .survivor-poker-chip[data-state="picked"] { box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
-.survivor-poker-chip[data-state="picked"] .survivor-poker-chip-rim { border-color: #d69a20; }
+.survivor-poker-chip[data-state="picked"] .survivor-poker-chip-side { border-color: #d69a20; }
 
 .survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
   animation: survivor-chip-toss 680ms cubic-bezier(.16,.76,.2,1) both;
@@ -1132,7 +1133,7 @@ body {
 }
 
 .survivor-poker-chip[data-state="official"] { box-shadow: 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
-.survivor-poker-chip[data-state="official"] .survivor-poker-chip-rim { border-color: #16877f; }
+.survivor-poker-chip[data-state="official"] .survivor-poker-chip-side { border-color: #16877f; }
 
 .survivor-poker-chip-seal {
   align-items: center;
@@ -1164,41 +1165,19 @@ body {
   100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
 }
 
-.survivor-poker-chip-wrap-summary { height: 2.65rem; width: 2.65rem; }
+.survivor-poker-chip-wrap-summary { height: 2.65rem; width: 2.65rem; --chip-t: .26rem; }
 .survivor-poker-chip-wrap-summary .survivor-poker-chip-ground-shadow { display: none; }
 .survivor-poker-chip-summary { height: 100%; width: 100%; }
 .survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
-.survivor-poker-chip-summary[data-state="picked"] .survivor-poker-chip-core { animation: none; transform: none; }
 .survivor-poker-chip-summary.is-idle-spinning {
   /* Keep the receipt chip readable long enough to enjoy the team mark before
      it turns through its narrow edge. */
   animation: survivor-receipt-chip-idle-spin 14s linear infinite;
 }
 
-/* The receipt chip rotates slowly, so its profile has to read as one molded
-   poker chip—not two faces separated by a cream centre.  Keep the actual
-   depth deliberately shallow here; the Slate chips retain their fuller toss
-   treatment. */
-.survivor-poker-chip-summary .survivor-poker-chip-rim-front { transform: translateZ(4.6px); }
-.survivor-poker-chip-summary .survivor-poker-chip-rim-back { transform: rotateY(180deg) translateZ(4.6px); }
-.survivor-poker-chip-summary .survivor-poker-chip-front { transform: translateZ(5px); }
-.survivor-poker-chip-summary .survivor-poker-chip-back { transform: rotateY(180deg) translateZ(5px); }
-.survivor-poker-chip-summary .survivor-poker-chip-edge {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.52) 0 9%, rgba(255,255,255,.08) 26%, rgba(16,14,12,.18) 72%, rgba(16,14,12,.55) 100%),
-    repeating-linear-gradient(90deg, #45413c 0 10%, var(--chip-primary) 10% 24%, var(--chip-secondary) 24% 34%, var(--chip-tertiary) 34% 45%, #45413c 45% 56%);
-  border: 1px solid color-mix(in srgb, var(--chip-primary) 62%, #302d29);
-  border-radius: .48rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.58), inset 0 -2px 1px rgba(12,10,8,.52), 0 1px 2px rgba(12,10,8,.4);
-  height: calc(100% - .08rem);
-  top: .04rem;
-  width: .62rem;
-}
-/* Those two front-only decorative rings leak through while rotating and make
-   the chip look split down the middle. The physical faces, rims, and barrel
-   provide the receipt chip's depth without them. */
-.survivor-poker-chip-summary::before,
-.survivor-poker-chip-summary::after { display: none; }
+/* The receipt chip is small: its face is the rim and center only. */
+.survivor-poker-chip-summary .survivor-poker-chip-side::before,
+.survivor-poker-chip-summary .survivor-poker-chip-side::after { display: none; }
 
 @keyframes survivor-receipt-chip-idle-spin {
   from { transform: rotateY(0deg); }
@@ -1213,9 +1192,10 @@ body {
   position: relative;
   width: 100%;
   z-index: 2;
+  --chip-t: .3rem;
 }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
-.survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; }
+.survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; --chip-t: .39rem; }
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
 
@@ -1253,8 +1233,7 @@ body {
   .survivor-poker-chip[data-state="picked"],
   .survivor-poker-chip[data-animate="toss"] { animation: none !important; transform: none; }
   .survivor-poker-chip-ground-shadow { animation: none !important; }
-  .survivor-poker-chip-core { animation: none !important; transition: none; }
-  .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-core { transform: none; }
+  .survivor-poker-chip-face { transition: none; }
   .survivor-poker-chip-wrap[data-state="picked"] .survivor-poker-chip-pick-mark { animation: none; opacity: 1; }
 }
 /* Pick'em is the pool's long-running scorebook: deliberately more like a
@@ -3915,6 +3894,11 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 .commissioner-command-links a:hover { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
 .commissioner-command-links span { color: #a7d4c6; font-size: .61rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .commissioner-command-links strong { font-size: .86rem; line-height: 1.15; overflow-wrap: anywhere; }
+/* The test chip: click to flip, drag to turn it by hand. */
+.chip-playground { align-items: center; background: transparent; border: 0; cursor: grab; display: grid; justify-items: center; padding: 0; touch-action: none; }
+.chip-playground:active { cursor: grabbing; }
+.chip-playground:focus-visible { outline: 2px solid #9bdbca; outline-offset: 2px; }
+.chip-playground .survivor-poker-chip:not([data-animate]) { transform: rotateX(var(--playground-x, 0deg)) rotateY(var(--playground-y, 0deg)); }
 
 .commissioner-panel-nav { border-bottom: 1px solid #c8c2b7; padding: .8rem 0 .6rem; }
 .commissioner-panel-tabs { display: flex; gap: .45rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
@@ -3951,25 +3935,45 @@ html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
 [aria-labelledby="grading-dashboard-title"] dd,
 [aria-labelledby="grading-dashboard-title"] td,
 [aria-labelledby="grading-dashboard-title"] li { overflow-wrap: anywhere; }
-[aria-labelledby="grading-dashboard-title"] table { border-collapse: separate; border-spacing: 0 .35rem; }
-[aria-labelledby="grading-dashboard-title"] table thead th { padding-bottom: .35rem; }
-[aria-labelledby="grading-dashboard-title"] table tbody tr { background: #fafafa; }
-[aria-labelledby="grading-dashboard-title"] table tbody td { border-top: 1px solid #f1f1f2; border-bottom: 1px solid #f1f1f2; padding-top: .7rem; padding-bottom: .7rem; }
-[aria-labelledby="grading-dashboard-title"] table tbody td:first-child { border-left: 1px solid #f1f1f2; border-radius: .55rem 0 0 .55rem; padding-left: .75rem; }
-[aria-labelledby="grading-dashboard-title"] table tbody td:last-child { border-right: 1px solid #f1f1f2; border-radius: 0 .55rem .55rem 0; padding-right: .75rem; }
-[aria-labelledby="grading-dashboard-title"] table tbody td:nth-child(2) { border-radius: 999px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
-[aria-labelledby="grading-dashboard-title"] table { table-layout: fixed; }
-[aria-labelledby="grading-dashboard-title"] table th,
-[aria-labelledby="grading-dashboard-title"] table td { white-space: nowrap; }
-[aria-labelledby="grading-dashboard-title"] table th:nth-child(1),
-[aria-labelledby="grading-dashboard-title"] table td:nth-child(1) { width: 18%; }
-[aria-labelledby="grading-dashboard-title"] table th:nth-child(2),
-[aria-labelledby="grading-dashboard-title"] table td:nth-child(2) { width: 16%; }
-[aria-labelledby="grading-dashboard-title"] table th:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] table td:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] table th:nth-child(4),
-[aria-labelledby="grading-dashboard-title"] table td:nth-child(4) { width: 33%; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) { border-collapse: separate; border-spacing: 0 .35rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) thead th { padding-bottom: .35rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody tr { background: #fafafa; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td { border-top: 1px solid #f1f1f2; border-bottom: 1px solid #f1f1f2; padding-top: .7rem; padding-bottom: .7rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:first-child { border-left: 1px solid #f1f1f2; border-radius: .55rem 0 0 .55rem; padding-left: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:last-child { border-right: 1px solid #f1f1f2; border-radius: 0 .55rem .55rem 0; padding-right: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 999px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) { table-layout: fixed; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th,
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td { white-space: nowrap; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(1) { width: 18%; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(2) { width: 16%; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
 .grading-worker-table { min-width: 0; table-layout: fixed; }
+/* "View chart data" is a plain ledger: one hairline per row, a header that stays
+   put while the list scrolls, and numbers right-aligned so digits line up. */
+.provider-chart-table { border-collapse: collapse; color: #3f3f46; }
+.provider-chart-table thead th {
+  background: #fff;
+  border-bottom: 1px solid #d4d4d8;
+  color: #52525b;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.provider-chart-table tbody tr { border-top: 1px solid #f1f1f2; }
+.provider-chart-table tbody tr:nth-child(even) { background: #fafafa; }
+.provider-chart-table th:not(:first-child),
+.provider-chart-table td:not(:first-child) { text-align: right; }
+html[data-theme="night"] .provider-chart-table { color: #d4d4d8; }
+html[data-theme="night"] .provider-chart-table thead th { background: #18181b; border-bottom-color: #3f3f46; color: #a1a1aa; }
+html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #27272a; }
+html[data-theme="night"] .provider-chart-table tbody tr:nth-child(even) { background: #1f1f23; }
 [aria-labelledby="grading-dashboard-title"] .grading-worker-table th,
 [aria-labelledby="grading-dashboard-title"] .grading-worker-table td { white-space: normal; overflow-wrap: anywhere; }
 [aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(1),

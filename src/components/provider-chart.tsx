@@ -136,8 +136,8 @@ export default function ProviderChart({ points, series, label, histogram = false
       </svg>
     </> : <p className="py-14 text-center text-sm text-zinc-500">Recorded activity will appear here as it arrives.</p>}
     <details className="provider-chart-data mt-3 text-xs text-zinc-500"><summary className="w-fit cursor-pointer py-1 font-medium">View chart data</summary>
-      <div className="mt-2 max-h-64 overflow-auto"><table className="w-full text-left text-xs"><thead><tr><th className="p-2">Interval</th>{series.map((item) => <th className="p-2" key={item.key}>{item.label}</th>)}</tr></thead><tbody>
-        {points.map((entry, i) => <tr className="border-t border-zinc-100" key={i}><td className="p-2">{entry.label}</td>{series.map((item) => <td className="p-2 tabular-nums" key={item.key}>{entry.values[item.key] == null ? "—" : number(entry.values[item.key]!)}{entry.values[item.key] == null ? "" : item.suffix}</td>)}</tr>)}
+      <div className="mt-2 max-h-64 overflow-auto"><table className="provider-chart-table w-full text-left text-xs"><thead><tr><th className="p-2">Interval</th>{series.map((item) => <th className="p-2" key={item.key}>{item.label}</th>)}</tr></thead><tbody>
+        {points.map((entry, i) => <tr key={i}><td className="p-2">{entry.label}</td>{series.map((item) => <td className="p-2 tabular-nums" key={item.key}>{entry.values[item.key] == null ? "—" : number(entry.values[item.key]!)}{entry.values[item.key] == null ? "" : item.suffix}</td>)}</tr>)}
       </tbody></table></div>
     </details>
   </div>;

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ChipPlayground from "@/components/chip-playground";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -256,6 +257,7 @@ export default function AdminPage() {
           <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
             <Link href="/admin/players"><span>Roster</span><strong>Players</strong></Link>
             <Link href="/admin/reminders"><span>Delivery</span><strong>Email center</strong></Link>
+            <ChipPlayground />
           </div>
         </header>
 
