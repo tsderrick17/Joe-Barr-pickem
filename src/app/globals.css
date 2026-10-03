@@ -1844,6 +1844,13 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    long first line and a stray last word. */
 .slate-team-label { text-wrap: balance; }
 .slate-team-name-full { display: inline; }
+/* A narrow team cell (a phone) shows the short team name instead of wrapping or
+   crowding the spread. The cell measures itself, so no breakpoint is guessed. */
+.slate-team-side { container-type: inline-size; }
+@container (max-width: 8.5rem) {
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-full { display: none; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-short { display: inline; }
+}
 .slate-team-name-short { display: none; }
 .scoreboard-team-name-full { display: none; }
 .scoreboard-team-name-short { display: inline; }
@@ -1884,14 +1891,12 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 /* The time rail sits before the matchup. Pull the line back by half that rail
    so it is visually centered between the two team lanes, not the whole grid's
    remaining area. */
-.slate-spread-cell { transform: translateX(-2.25rem); }
 .slate-lock-note { display: grid; justify-items: center; white-space: nowrap; }
 .slate-preview-spread { display: block; transform: translateX(-2.4rem); }
 /* Survivor rows already reserve symmetric chip lanes around the spread. Do
    not apply the no-chip centering adjustment here; it pulls the line into the
    chip artwork on narrow screens. */
 .slate-game-row.has-survivor-layout .slate-spread-cell {
-  transform: none;
   position: relative;
   z-index: 2;
 }
@@ -2018,7 +2023,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr) 4.5rem;
   }
 
-  .slate-game-row.no-survivor-layout .slate-spread-cell { transform: none; }
 
   .slate-game-row.no-survivor-layout > :first-child {
     position: static;
@@ -2057,12 +2061,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
     padding-right: .35rem;
     position: static;
     width: auto;
-  }
-  /* The kickoff time is a real lane here, so the desktop centering nudge on
-     the spread would push it into the favorite's name. Keep it centered in
-     its own column. */
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell {
-    transform: none;
   }
   /* The early-lock note wraps inside the spread column instead of running
      into the underdog's name. */
@@ -2136,7 +2134,6 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      wrapping long full names into the score lane. */
   .slate-game-row.is-final .slate-team-name-full { display: none; }
   .slate-game-row.is-final .slate-team-name-short { display: inline; }
-  .slate-game-row.no-survivor-layout.is-final .slate-spread-cell { transform: none; }
 }
 
 /* Keep full Slate team names at normal widths; compact labels are reserved for
