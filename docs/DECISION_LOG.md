@@ -1102,3 +1102,14 @@ contracts and supersede conflicting wording in earlier entries.
 **Reason:** A portfolio-quality operating record must distinguish current
 behavior from earlier design decisions without silently editing history or
 claiming that a documentation correction changed production.
+
+## 2026-10-03 - Slower chat and home polling after a 100% Fluid CPU warning
+
+**Status:** Accepted
+
+Pool chat refreshes every three minutes (was one) while the tab is visible and
+still refreshes on return. The home page background poll is five minutes (was
+three). Return-to-tab refreshes and the exact kickoff reveal timer are unchanged.
+
+**Reason:** Vercel reported 100% of the included Fluid Active CPU. Chat mounts on
+every player-facing page, so its one-minute poll was the largest steady source.
