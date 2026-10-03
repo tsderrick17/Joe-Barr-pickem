@@ -924,7 +924,7 @@ export default function BoardPage() {
             <div className="slate-receipt-pool slate-receipt-survivor">
               <span>SURVIVOR</span>
               <div className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`}>
-                {!receiptIsLoading && survivorPickDetails ? <><SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.abbreviation} /><strong aria-label={survivorPickDetails.name}><span className="receipt-team-name-full">{survivorPickDetails.name}</span><span className="receipt-team-name-short" aria-hidden="true">{survivorPickDetails.abbreviation}</span></strong></> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
+                {!receiptIsLoading && survivorPickDetails ? <SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.name} /> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
               </div>
               <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
             </div>

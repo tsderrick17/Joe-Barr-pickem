@@ -198,6 +198,9 @@ body {
    width. Once a player is out of Survivor, that section is torn off and its
    space stays empty for the rest of the season; the stub and Pick'em that
    remain sit centered in the same overall width. */
+.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem {
+  grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto);
+}
 .slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) {
   grid-template-columns: 26.5823% minmax(0, 1fr);
   margin-inline: auto;
@@ -316,7 +319,7 @@ body {
   align-items: flex-start;
   display: flex;
   flex-direction: column;
-  gap: .28rem;
+  gap: .2rem;
   justify-content: flex-start;
   padding-left: .68rem;
   position: relative;
@@ -346,7 +349,7 @@ body {
 .slate-receipt-ticket a {
   align-self: start;
   color: #1d3551;
-  display: inline-flex;
+  display: inline-block;
   font-size: .66rem;
   font-weight: 900;
   justify-self: start;
@@ -375,9 +378,9 @@ body {
   font-size: .68rem;
   font-weight: 900;
   letter-spacing: .07em;
-  margin-top: .08rem;
+  margin-top: 0;
   margin-inline: auto;
-  min-height: 1.82rem;
+  min-height: 1.5rem;
   overflow: hidden;
   padding: .2rem .32rem;
   position: relative;
@@ -424,8 +427,8 @@ body {
   font-weight: 700;
   gap: .22rem;
   letter-spacing: .09em;
-  line-height: .62rem;
-  min-height: .62rem;
+  line-height: .5rem;
+  min-height: .5rem;
   overflow: hidden;
   padding-left: 0;
   text-transform: uppercase;
@@ -454,7 +457,7 @@ body {
   font-weight: 900;
   letter-spacing: .08em;
   line-height: 1.15;
-  margin-top: .18rem;
+  margin-top: .08rem;
   text-align: center;
 }
 
@@ -631,6 +634,7 @@ body {
   align-items: center;
   display: flex;
   gap: .35rem;
+  justify-content: center;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -674,8 +678,8 @@ body {
      stacks as two columns of three instead of three narrow columns. */
   .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: .4rem;
   }
+  .slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); }
   .slate-receipt-strip > * { padding: .3rem .34rem; }
   .slate-receipt-ticket {
     gap: .22rem;
