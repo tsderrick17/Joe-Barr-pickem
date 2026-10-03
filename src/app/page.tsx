@@ -11,6 +11,7 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
+import { comparePickColumns } from "@/lib/pick-column-order.js";
 
 type ScoreboardPick = {
   label: string | null;
@@ -387,12 +388,10 @@ export default function HomePage() {
   }, [bowlGames, bowlPoolMinimized]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
+  // Same column order as the Pick'em Pad: kickoff, with the API's order (game id)
+  // keeping simultaneous kickoffs where they are.
   const ticketPicks: TicketPick[] = [...viewerPicks]
-    .sort((first, second) => {
-      const firstKickoff = first.kickoffAt ? new Date(first.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
-      const secondKickoff = second.kickoffAt ? new Date(second.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
-      return firstKickoff - secondKickoff || (first.label ?? "").localeCompare(second.label ?? "");
-    })
+    .sort((first, second) => comparePickColumns({ kickoffAt: first.kickoffAt }, { kickoffAt: second.kickoffAt }))
     .map((pick, index) => ({
     gameId: `viewer-pick-${index}`,
     team: pick.label ?? "Selection",
