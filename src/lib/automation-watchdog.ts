@@ -1,4 +1,5 @@
 import { checkAutomationHealth } from "@/lib/automation-health";
+export { getWatchdogStatus } from "@/lib/watchdog-status";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 import { getSeasonBootstrapStatus } from "@/lib/full-schedule-bootstrap";
 import { runExternalConfigurationChecks, type LaunchPreflightCheck } from "@/lib/launch-preflight";
@@ -122,17 +123,6 @@ async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof check
     }
   }
   return recoveries;
-}
-
-export async function getWatchdogStatus() {
-  const [{ data: alerts, error }, { data: lastRun, error: runError }] = await Promise.all([
-    supabaseAdmin.from("automation_alerts").select("id, signal_key, severity, title, detail, detected_at, last_seen_at, notified_at, resolved_at, notification_error")
-      .order("detected_at", { ascending: false }).limit(20),
-    supabaseAdmin.from("sync_runs").select("status, started_at, completed_at, error_message, details")
-      .eq("job_type", "watchdog").order("started_at", { ascending: false }).limit(1).maybeSingle(),
-  ]);
-  if (error || runError) throw new Error("Watchdog status could not be loaded.");
-  return { openAlerts: (alerts ?? []).filter((alert) => !alert.resolved_at), recentAlerts: alerts ?? [], lastRun };
 }
 
 export async function runAutomationWatchdog(now = new Date()) {
