@@ -246,10 +246,10 @@ body {
   /* A hairline ring hugs each round cut so the notches read as outlined, like
      the straight edges, instead of as plain gaps. */
   background:
-    radial-gradient(circle at 0 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
-    radial-gradient(circle at 0 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
-    radial-gradient(circle at 100% 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
-    radial-gradient(circle at 100% 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.6px), transparent calc(var(--receipt-notch) + 1.6px)),
+    radial-gradient(circle at 0 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 0 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 100% 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 100% 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
     var(--receipt-paper);
   background-origin: border-box;
   border-bottom: 1px solid var(--receipt-rule);
@@ -296,15 +296,19 @@ body {
 
 /* Perforation between two sections, running between its two notches. */
 .slate-receipt-pool::after {
-  /* Long dashes with wide gaps, the same rhythm as the punched edges. */
-  background: repeating-linear-gradient(to bottom, var(--receipt-rule) 0 .32rem, transparent .32rem .64rem);
-  width: 1px;
-  bottom: var(--receipt-notch);
+  /* Long dashes with wide gaps, the same rhythm as the punched edges. The dash
+     rides a strip of paper that covers the hairline where two sections meet
+     (their edges fall between pixels), and starts just below the notch ring. */
+  background:
+    repeating-linear-gradient(to bottom, var(--receipt-rule) 0 .32rem, transparent .32rem .64rem) 1px 0 / 1px 100% no-repeat,
+    var(--receipt-paper);
+  width: 3px;
+  bottom: calc(var(--receipt-notch) + 1.5px);
   content: "";
-  left: 0;
+  left: -1px;
   pointer-events: none;
   position: absolute;
-  top: var(--receipt-notch);
+  top: calc(var(--receipt-notch) + 1.5px);
 }
 
 .slate-receipt-ticket,
@@ -1995,6 +1999,10 @@ button.slate-team-side:not(:disabled)::after {
 /* Upcoming rows have no score/result columns. Give each team name a full,
    stable lane so right-side names share one starting edge instead of shifting
    based on their text width (especially noticeable without Survivor chips). */
+/* On a finished row the picker names hang below the team, so the spread rides
+   the team-name line instead of floating at the middle of the taller row. */
+.slate-game-row.is-final .slate-spread-cell { align-self: start; }
+
 .slate-game-row:not(.is-final) .slate-final-team-stack {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -2054,7 +2062,7 @@ button.slate-team-side:not(:disabled)::after {
     /* With Survivor removed, keep kickoff time as a real lane instead of
        overlaying it in the team area. That gives the favorite a little
        breathing room and keeps the row easy to scan at a glance. */
-    grid-template-columns: 3.15rem minmax(0, 1fr) 3.75rem minmax(0, 1fr);
+    grid-template-columns: 3.15rem minmax(0, 1fr) 3.75rem minmax(0, 1fr) 3.15rem;
     column-gap: .35rem;
     padding-left: .35rem;
   }

@@ -1213,3 +1213,7 @@ phone, and a six-pick ledger needed horizontal scrolling to be read.
 ### Larger tap target for Slate picks
 
 Each open team button on the Slate now has an invisible margin (about 0.7rem above and below, 0.35rem at the sides) that counts as a tap on that team, so a pick no longer needs an exact click. The margin sits behind other controls, so Survivor chips and links keep their own taps, and nothing changes visually.
+
+### Slate spread alignment and ticket outlines
+
+Pregame phone rows now mirror the kickoff lane with an empty right column, so the spread sits at the true center of the row, in line with the spread on finished rows. On finished rows the spread rides the team-name line instead of floating at the middle of the taller row. The ticket's notch rings are one pixel like the straight edges, and the perforation starts just below each ring over a strip of paper that hides the hairline where two sections meet.
