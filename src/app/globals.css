@@ -2034,15 +2034,8 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
      make team names and final scores collide on narrow phones. Scale both the
      lane and chip together so the matchup gets the reclaimed width. */
   .slate-game-row.has-survivor-layout {
-    grid-template-columns: 2.3rem minmax(0, 1fr) 2.7rem 2.45rem 2.7rem minmax(0, 1fr);
+    grid-template-columns: 2.3rem minmax(0, 1fr) 2.9rem 2.45rem 2.9rem minmax(0, 1fr);
   }
-  .slate-survivor-chip-button {
-    height: 2.45rem;
-    transform: translate(-50%, -50%) scale(1.026); /* 5% smaller so chips clear team names */
-    width: 2.45rem;
-  }
-  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.102); }
-  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.045); }
   .slate-team-result-line { gap: .2rem; }
   .slate-game-row .slate-final-team-stack {
     column-gap: .24rem;
@@ -2170,6 +2163,16 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.18); }
 .slate-survivor-chip-button:focus-visible { outline: 2px solid #16877f; outline-offset: 2px; }
 .slate-survivor-chip-button:disabled { cursor: not-allowed; }
+
+/* Phone chips are sized to fit their 2.9rem lane (2.76rem x 1.05 = 2.9rem
+   drawn), so they clear the team names beside them. This block sits after the
+   base chip rule so it actually applies; before it did not, and the chip drew
+   at 3.63rem inside a 2.7rem lane, over the first letters of the names. */
+@media (max-width: 767px) {
+  .slate-survivor-chip-button { height: 2.76rem; transform: translate(-50%, -50%) scale(1.05); width: 2.76rem; }
+  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.16); }
+  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.1); }
+}
 
 @media (min-width: 768px) {
   .slate-survivor-chip-slot { min-height: 4.7rem; }

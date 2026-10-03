@@ -19,8 +19,9 @@ test("on phones the receipt is shorter and the Survivor section narrower", () =>
   assert.match(css, /  \.slate-receipt-pool \{ grid-template-rows: \.58rem 2\.75rem minmax\(\.58rem, auto\); \}/);
 });
 
-test("phone Slate chips are 5% smaller than before", () => {
-  assert.match(css, /transform: translate\(-50%, -50%\) scale\(1\.026\);/);
+test("phone Slate chips are sized to fit their lanes", () => {
+  // 2.76rem button x 1.05 draws at the 2.9rem lane, after the base chip rule so it applies.
+  assert.match(css, /height: 2\.76rem; transform: translate\(-50%, -50%\) scale\(1\.05\); width: 2\.76rem;/);
   assert.match(css, /transform: translate\(-50%, -50%\) scale\(1\.007\);/);
   assert.doesNotMatch(css, /    transform: translate\(-50%, -50%\) scale\(1\.08\);/);
 });
