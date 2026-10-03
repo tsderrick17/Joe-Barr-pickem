@@ -426,3 +426,13 @@ test("the back of the pad loads only when shown and only when the standings chan
   assert.match(snapshot, /if \(id !== requestId\.current\) return;/);
   assert.doesNotMatch(snapshot, /setInterval/);
 });
+
+test("the player key shows the chart's own totals, so totals and chart update together", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  // Totals come from the chart's last point, ordered by those totals, never from live standings wins.
+  assert.match(snapshot, /const chartTotals = new Map\(/);
+  assert.match(snapshot, /keyRows\.map\(\(\{ player, total \}\)/);
+  assert.match(snapshot, /<strong>\{total\}<\/strong>/);
+  assert.doesNotMatch(snapshot, /<strong>\{player\.wins\}<\/strong>/);
+  assert.doesNotMatch(snapshot, /\$\{player\.wins\} wins/);
+});

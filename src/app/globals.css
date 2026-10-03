@@ -1790,6 +1790,9 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 }
 .slate-team-label--selected:not(.slate-team-label--chips) > span::before { z-index: -1; }
 
+/* Names that wrap break into even lines ("Philadelphia / Eagles") instead of a
+   long first line and a stray last word. */
+.slate-team-label { text-wrap: balance; }
 .slate-team-name-full { display: inline; }
 .slate-team-name-short { display: none; }
 .scoreboard-team-name-full { display: none; }
