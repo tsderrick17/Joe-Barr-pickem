@@ -34,9 +34,8 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /UPTIMEROBOT_READ_ONLY_API_KEY/);
   assert.match(capacity, /getAccountDetails/);
   assert.match(capacity, /cached for five minutes/);
-  assert.match(capacity, /GITHUB_USAGE_TOKEN/);
-  assert.match(capacity, /settings\/billing\/usage\/summary/);
-  assert.match(capacity, /GITHUB_FREE_ACTIONS_MINUTES/);
+  // GitHub Actions minutes are not tracked: this repository is public, so they are free.
+  assert.doesNotMatch(capacity, /GITHUB_USAGE_TOKEN|GitHub Actions/);
   assert.match(capacity, /SENTRY_USAGE_TOKEN/);
   assert.match(capacity, /stats_v2/);
   assert.match(capacity, /SENTRY_ERROR_EVENT_LIMIT/);

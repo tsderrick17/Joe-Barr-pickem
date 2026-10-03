@@ -61,9 +61,7 @@ export type StorageTableUsage = {
 const ODDS_API_FREE_MONTHLY_CREDITS = 500;
 const BREVO_FREE_DAILY_EMAILS = 300;
 const SUPABASE_FREE_DATABASE_MB = 500;
-const GITHUB_FREE_ACTIONS_MINUTES = 2_000;
 let uptimeRobotCache: { expiresAt: number; account: AccountCapacity } | null = null;
-let githubUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 let sentryUsageCache: { expiresAt: number; account: AccountCapacity } | null = null;
 
 async function providerRunsSince(since: string) {
@@ -159,51 +157,6 @@ async function loadUptimeRobotCapacity(now: Date): Promise<AccountCapacity> {
   }
 }
 
-async function loadGitHubCapacity(now: Date): Promise<AccountCapacity> {
-  const token = process.env.GITHUB_USAGE_TOKEN;
-  if (!token) {
-    return {
-      id: "github", service: "GitHub Actions", metric: "Actions minutes", used: null, limit: null,
-      unit: "minutes", period: "this month", observedAt: null,
-      detail: "Add a GitHub Plan-read token to show the account’s actual current usage.",
-      connection: "awaiting_connection",
-    };
-  }
-
-  if (githubUsageCache && githubUsageCache.expiresAt > now.getTime()) return githubUsageCache.account;
-
-  try {
-    const response = await fetch("https://api.github.com/users/tsderrick17/settings/billing/usage/summary?product=actions", {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2026-03-10",
-      },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) throw new Error(`GitHub returned ${response.status}.`);
-    const payload = await response.json() as { usageItems?: Array<{ product?: unknown; unitType?: unknown; grossQuantity?: unknown }> };
-    const used = (payload.usageItems ?? [])
-      .filter((item) => String(item.product).toLowerCase() === "actions" && String(item.unitType).toLowerCase() === "minutes")
-      .reduce((total, item) => total + (wholeNumber(item.grossQuantity) ?? 0), 0);
-    const result: AccountCapacity = {
-      id: "github", service: "GitHub Actions", metric: "Actions minutes", used, limit: GITHUB_FREE_ACTIONS_MINUTES,
-      unit: "minutes", period: "this month", observedAt: now.toISOString(),
-      detail: "GitHub Free includes 2,000 private-repository Actions minutes each month. Standard runners in public repositories are free.",
-      connection: "live",
-    };
-    githubUsageCache = { expiresAt: now.getTime() + 5 * 60 * 1000, account: result };
-    return result;
-  } catch {
-    return {
-      id: "github", service: "GitHub Actions", metric: "Actions minutes", used: null, limit: null,
-      unit: "minutes", period: "this month", observedAt: null,
-      detail: "GitHub did not return a usable Actions usage summary. Repository access remains unchanged.",
-      connection: "not_reported",
-    };
-  }
-}
-
 async function loadSentryCapacity(now: Date): Promise<AccountCapacity> {
   const token = process.env.SENTRY_USAGE_TOKEN;
   if (!token) {
@@ -267,7 +220,7 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const historyStart = new Date(Math.min(Date.parse(efficiencyStart), Date.parse(monthStart))).toISOString();
   const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-  const [databaseResult, emailResult, oddsResult, monthGamesResult, uptimeRobot, github, sentry] = await Promise.all([
+  const [databaseResult, emailResult, oddsResult, monthGamesResult, uptimeRobot, sentry] = await Promise.all([
     supabaseAdmin.rpc("project_database_usage_bytes"),
     supabaseAdmin
       .from("email_reminder_deliveries")
@@ -283,7 +236,6 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       .lt("kickoff_at", monthEnd)
       .order("kickoff_at"),
     loadUptimeRobotCapacity(now),
-    loadGitHubCapacity(now),
     loadSentryCapacity(now),
   ]);
 
@@ -372,7 +324,6 @@ export async function loadAccountCapacity(now = new Date()): Promise<AccountCapa
       detail: "Vercel does not provide Hobby-plan billing usage to this read-only app connection. Check Usage in the Vercel dashboard.",
       connection: "not_reported",
     },
-    github,
     sentry,
     uptimeRobot,
   ];

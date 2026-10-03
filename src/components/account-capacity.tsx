@@ -61,7 +61,6 @@ const serviceAccess: Record<string, { href: string; purpose: string; signIn: str
   brevo: { href: "https://app.brevo.com/", purpose: "Reminder email delivery", signIn: "Start with Google" },
   supabase: { href: "https://supabase.com/dashboard/project/qtuycmgjiizrahfchsxe", purpose: "Database, sign-in, and scheduled automation", signIn: "Start with GitHub" },
   vercel: { href: "https://vercel.com/tsderrick/pickem", purpose: "Live site and deployments", signIn: "Start with GitHub" },
-  github: { href: "https://github.com/tsderrick17/Joe-Barr-pickem/actions", purpose: "Migration deployment history", signIn: "Start with GitHub" },
   sentry: { href: "https://sentry.io/", purpose: "Application error reports", signIn: "Start with GitHub" },
   uptimerobot: { href: "https://dashboard.uptimerobot.com/", purpose: "External health alerts", signIn: "Start with Google" },
 };
