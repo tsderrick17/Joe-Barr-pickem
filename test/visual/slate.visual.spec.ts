@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { boardResponse, SCENARIOS } from "./slate-fixtures.mjs";
 
-const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
+const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-900": 900, "desktop-1280": 1280 } as const;
 
 /** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
 async function signIn(page: Page) {
