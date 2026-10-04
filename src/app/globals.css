@@ -2522,7 +2522,6 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-60
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4 !important; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
 html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: #edf7f5 !important; }
-html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-team-selection { color: #fff7d6 !important; }
 
 html[data-theme="night"] [class*="text-zinc-900"],
 html[data-theme="night"] [class*="text-[#171719]"],
@@ -3022,20 +3021,7 @@ html[data-theme="night"] .my-ticket-barcode {
   }
 }
 
-/* Bowl selections use the same chisel-pass motion as the Slate, but retain
-   the Pool's yellow marker so the two competition cards stay distinct. */
-.bowl-team-selection {
-  background: transparent !important;
-  color: #161616 !important;
-}
 
-.bowl-team-label {
-  display: block;
-  isolation: isolate;
-  margin: 0 -.13em;
-  padding: .04em .13em .08em;
-  position: relative;
-}
 .bowl-receipt-strip {
   align-items: stretch;
   grid-template-columns: minmax(7.5rem, 9rem) minmax(18rem, 1fr);
@@ -3055,35 +3041,8 @@ html[data-theme="night"] .my-ticket-barcode {
 .bowl-receipt-strip .slate-receipt-pool > span { align-self: center; }
 .bowl-receipt-strip .slate-receipt-pool > em { align-self: center; justify-self: start; margin-left: 0; }
 
-.bowl-team-label--selected {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: middle;
-  white-space: nowrap;
-  width: max-content;
-}
 
-.bowl-team-label--selected::before {
-  background: linear-gradient(90deg,
-    rgba(212, 167, 0, .66) 0%,
-    rgba(244, 204, 25, .58) 8%,
-    rgba(255, 226, 69, .5) 18%,
-    rgba(255, 236, 108, .42) 100%);
-  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
-  content: "";
-  inset: -.04em -.32em -.16em;
-  position: absolute;
-  transform: rotate(-1.1deg);
-  transform-origin: center;
-  z-index: -1;
-}
 
-.bowl-team-label--new::before {
-  will-change: clip-path;
-  animation: slate-selection-sweep 720ms cubic-bezier(.18,.72,.18,1) 35ms both;
-}
 
 .bowl-card-section {
   width: 100%;
@@ -3148,10 +3107,6 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
   background: #f7efd9 !important;
   border-color: #e0d2a8 !important;
   color: #6b4f0f !important;
-}
-.bowl-pool-page .bowl-team-label--selected::before {
-  background: linear-gradient(90deg, rgba(212, 167, 0, .72), rgba(247, 219, 102, .6) 18%, rgba(255, 239, 163, .5));
-  box-shadow: 0 1px 0 rgba(138, 106, 29, .3);
 }
 /* The Bowl Card's heading line matches the other standings headings (the
    ledger ink rule from .pickem-ledger-masthead), minimized or open. */
@@ -3852,13 +3807,13 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
   perspective: 14rem;
 }
 .bowl-flip-digit {
-  background: #5a3a22;
-  border: 1px solid #3b2414;
+  background: #0f1830;
+  border: 1px solid var(--bowl-gold, #b38b4d);
   border-radius: .2rem;
   box-shadow: inset 0 1px rgba(255,255,255,.14), 0 2px 2px rgba(29,29,31,.18);
-  color: #fffdf8;
+  color: var(--bowl-gold-soft, #e6d6b4);
   display: grid;
-  font: 900 2rem/.95 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 400 2rem/.95 var(--font-graduate), ui-monospace, SFMono-Regular, Menlo, monospace;
   height: 2.35rem;
   min-width: 1.35rem;
   overflow: hidden;
@@ -4178,3 +4133,258 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
   }
   .bowl-receipt-metric { overflow: hidden; }
 }
+
+/* ==== Bowl Pool ==== */
+/* The Bowl Pool is its own event: navy and old gold on cream, varsity
+   lettering for names and lines, and felt pennants in each school's colors.
+   Pick'em keeps its newsprint and Survivor its poker felt. */
+.bowl-pool-page,
+.bowl-card-section {
+  --bowl-navy: #16223a;
+  --bowl-navy-lift: #1f2f50;
+  --bowl-gold: #b38b4d;
+  --bowl-gold-soft: #e6d6b4;
+  --bowl-paper: #fbf8f1;
+  --bowl-paper-alt: #f4efe2;
+  --bowl-rule: #cbbf9f;
+  --bowl-muted: #6d6656;
+}
+
+.bowl-crest { text-align: center; }
+.bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
+.bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
+.bowl-crest-title { align-items: center; display: flex; gap: .6rem; justify-content: center; margin-top: .55rem; position: relative; }
+.bowl-crest-title h2 {
+  color: var(--bowl-navy);
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: clamp(1.7rem, 5.4vw, 2.3rem);
+  font-weight: 400;
+  letter-spacing: .06em;
+  line-height: 1.05;
+  margin: 0;
+}
+.bowl-crest-season {
+  color: var(--bowl-muted);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 500;
+  margin: .1rem 0 0;
+}
+/* Claim your seat: an admission ticket with a perforated stub. */
+.bowl-claim {
+  background: var(--bowl-paper);
+  border: 1px solid var(--bowl-rule);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10rem;
+  margin: 1rem auto 0;
+  max-width: 40rem;
+  position: relative;
+}
+.bowl-claim::before, .bowl-claim::after {
+  background: var(--page-bg, #f5f0e6);
+  border: 1px solid var(--bowl-rule);
+  border-radius: 50%;
+  content: "";
+  height: 1rem;
+  position: absolute;
+  right: calc(10rem - .5rem);
+  width: 1rem;
+}
+.bowl-claim::before { top: -.55rem; }
+.bowl-claim::after { bottom: -.55rem; }
+.bowl-claim-main { padding: 1.1rem 1.3rem; }
+.bowl-claim-kicker { color: var(--bowl-gold); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; letter-spacing: .3em; margin: 0; }
+.bowl-claim-main h3 { color: var(--bowl-navy); font-family: var(--font-cormorant), Georgia, serif; font-size: 1.65rem; font-weight: 700; line-height: 1.1; margin: .35rem 0 .3rem; }
+.bowl-claim-main p:not(.bowl-claim-kicker) { color: var(--bowl-muted); font-size: .85rem; line-height: 1.45; margin: 0; }
+.bowl-claim-stub { align-items: center; border-left: 1px dashed var(--bowl-rule); display: grid; justify-items: center; padding: .9rem; }
+.bowl-claim-stub button {
+  background: var(--bowl-navy);
+  border: 0;
+  color: #f4ecd9;
+  cursor: pointer;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: .78rem;
+  letter-spacing: .14em;
+  padding: .8rem .9rem;
+}
+.bowl-claim-stub button:hover:not(:disabled) { background: var(--bowl-navy-lift); }
+.bowl-claim-stub button:focus-visible { outline: 2px solid var(--bowl-gold); outline-offset: 2px; }
+@media (max-width: 639px) {
+  .bowl-claim { grid-template-columns: 1fr; }
+  .bowl-claim::before, .bowl-claim::after { display: none; }
+  .bowl-claim-stub { border-left: 0; border-top: 1px dashed var(--bowl-rule); }
+}
+
+/* A picked team rises on a pennant in the school's colors. Every pennant is
+   the same size; a long name wraps to a second line inside it. */
+.bowl-pennant { display: inline-flex; height: 2.3rem; position: relative; vertical-align: middle; width: 6.1rem; }
+.bowl-pennant-pole { background: #8a7a5a; border-radius: 1px; bottom: -.25rem; left: 0; position: absolute; top: -.2rem; width: 2px; }
+.bowl-pennant-flag {
+  align-items: center;
+  background: var(--pennant-primary);
+  border-left: 4px solid var(--pennant-secondary);
+  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
+  color: var(--pennant-ink);
+  display: flex;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: .62rem;
+  font-weight: 400;
+  height: 2.1rem;
+  letter-spacing: .05em;
+  line-height: 1.05;
+  margin-left: 2px;
+  padding: 0 .7rem 0 .4rem;
+  text-align: left;
+  text-transform: uppercase;
+  width: 100%;
+}
+.bowl-pennant-flag > span { display: block; overflow-wrap: anywhere; }
+.bowl-team-pick { display: inline-block; max-width: 100%; }
+.bowl-team-pick.is-new .bowl-pennant-flag { animation: bowl-pennant-raise 620ms cubic-bezier(.18, .8, .2, 1) both; transform-origin: left center; }
+@keyframes bowl-pennant-raise {
+  from { opacity: 0; transform: translateY(.6rem) scaleX(.55); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-pennant-flag { animation: none; } }
+
+/* ---- Picks page */
+.bowl-pool-page #bowl-selections {
+  background: var(--bowl-paper) !important;
+  border: 1px solid var(--bowl-rule) !important;
+  box-shadow: 0 10px 24px rgba(30, 24, 12, .08);
+  position: relative;
+}
+.bowl-pool-page #bowl-selections::before { border: 1px solid var(--bowl-gold-soft); content: ""; inset: 5px; pointer-events: none; position: absolute; }
+.bowl-pool-page #bowl-selections .bowl-title-row { border-bottom: 0; display: block; padding-bottom: 0; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: var(--bowl-muted); margin: .8rem auto 0; text-align: center; }
+.bowl-pool-page #bowl-selections > div.overflow-hidden { border-color: var(--bowl-rule); }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
+  background: var(--bowl-navy) !important;
+  border: 0 !important;
+  color: var(--bowl-gold-soft) !important;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+.bowl-pool-page #bowl-selections .bowl-selection-game-row { background-color: var(--bowl-paper) !important; border-color: #e7dfcb; }
+.bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) { background-color: var(--bowl-paper-alt) !important; }
+.bowl-pool-page .bowl-game-name { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .04em; }
+.bowl-pool-page .bowl-game-line { font-family: var(--font-graduate), Georgia, serif; font-size: 1rem; letter-spacing: .03em; }
+.bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: var(--bowl-navy); }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child ~ div:not(.bowl-selection-game-row) { border-color: #e7dfcb; }
+
+/* ---- Standings: the Bowl Card */
+.bowl-card-section { background: transparent; }
+.bowl-card-section .bowl-crest { margin-bottom: 1.1rem; }
+.bowl-card-section .survivor-title-toggle { background: transparent; border-color: var(--bowl-gold); color: var(--bowl-gold); }
+.bowl-card-section .bowl-standings-scroll { background: var(--bowl-paper); border-bottom: 2px solid var(--bowl-navy) !important; box-shadow: none; }
+/* Dates, games, and lines read like a scoreboard header. */
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
+  background: var(--bowl-navy) !important;
+  border-color: var(--bowl-navy-lift) !important;
+  color: var(--bowl-gold-soft) !important;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell,
+.bowl-card-section .bowl-standings-summary-cell {
+  background: var(--bowl-navy-lift) !important;
+  border-color: var(--bowl-navy) !important;
+  color: #f4ecd9 !important;
+}
+.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .06em; }
+.bowl-card-section .bowl-standings-team { color: #f4ecd9 !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
+.bowl-card-section .bowl-standings-game-cell .text-\[\#007e72\] { color: #8fd8cc !important; }
+.bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child { background: transparent !important; }
+.bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift) !important; border-color: var(--bowl-navy) !important; color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .12em; }
+.bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper) !important; border-color: #e7dfcb !important; }
+.bowl-card-section .bowl-standings-player-row.is-alt { background-color: var(--bowl-paper-alt) !important; }
+/* Day-to-day column dividers are hairlines of old gold, not heavy gray rules. */
+.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
+.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold-soft) !important; border-left-width: 1px !important; border-right-width: 1px !important; }
+.bowl-card-section .bowl-standings-player-row > span:nth-child(1) { font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell { background: var(--bowl-navy-lift) !important; }
+html[data-theme="night"] .bowl-crest-title h2 { color: #f4ecd9; }
+html[data-theme="night"] .bowl-crest-season { color: #b9b19c; }
+html[data-theme="night"] .bowl-claim,
+html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: #1b1f2b; --bowl-paper-alt: #20253a; --bowl-rule: #4d4a3e; --bowl-muted: #b9b19c; }
+html[data-theme="night"] .bowl-claim-main h3,
+html[data-theme="night"] .bowl-pool-page .bowl-game-name { color: #f4ecd9; }
+html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold); color: #16223a; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
+html[data-theme="night"] .bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: #f4ecd9 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child { background: var(--bowl-navy) !important; border-color: var(--bowl-navy-lift) !important; color: var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: var(--bowl-rule) !important; }
+html[data-theme="night"] .bowl-pool-page .bowl-game-line[class*="007e72"] { color: #8fd8cc !important; }
+html[data-theme="night"] .bowl-pennant { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
+@media (max-width: 639px) {
+}
+@media (max-width: 639px) {
+  .bowl-pool-page .bowl-game-name { font-size: .72rem; line-height: 1.15; overflow: visible; text-overflow: clip; white-space: normal; }
+}
+
+/* ---- Bowl Pool: opt out, instructions, names, and the player rows */
+.bowl-optout { margin: 1rem auto 0; max-width: 72rem; text-align: right; }
+.bowl-optout button { background: transparent; border: 0; color: var(--bowl-muted); cursor: pointer; font-size: .78rem; font-weight: 700; padding: 0 .1rem .2rem; text-decoration: underline; text-underline-offset: 3px; }
+.bowl-optout button:hover { color: var(--bowl-navy); }
+html[data-theme="night"] .bowl-optout button:hover { color: #f4ecd9; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: var(--bowl-muted); display: grid; font-size: .8rem; gap: .25rem; line-height: 1.45; list-style: none; margin: .9rem auto 0; max-width: 28rem; padding: 0; text-align: left; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact li { padding-left: 1.1rem; position: relative; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact li::before { background: var(--bowl-gold); content: ""; height: .32rem; left: .2rem; position: absolute; top: .55em; transform: rotate(45deg); width: .32rem; }
+/* School names, centered in the Fav and Dog columns. */
+.bowl-pool-page .bowl-team-label { font-size: .86rem; font-weight: 700; line-height: 1.15; overflow: visible; text-overflow: clip; white-space: normal; }
+@media (max-width: 639px) {
+  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
+  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.9rem minmax(0, 1fr) 6.5rem 2.1rem 6.5rem; }
+  .bowl-pool-page .bowl-team-label { font-size: .75rem; }
+  .bowl-pennant { width: 5.9rem; }
+  .bowl-pennant-flag { font-size: .58rem; }
+}
+
+/* Player rows: the same varsity-and-serif voice as the heading. */
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title],
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] * { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.15rem; font-weight: 700; }
+.bowl-card-section .bowl-standings-player-row > span:nth-child(1) { color: var(--bowl-navy) !important; font-size: 1rem; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky * { color: var(--bowl-navy) !important; }
+.bowl-card-section .bowl-standings-player-row > span.text-slate-400,
+.bowl-card-section .bowl-standings-player-row > span[class*="text-slate-4"] { color: var(--bowl-rule) !important; }
+.bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
+/* Your row: a soft gold wash and a gold edge, not a bright band. */
+.bowl-card-section .bowl-standings-player-row.is-viewer > span,
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  background: #f3ead4 !important;
+  box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important;
+  color: var(--bowl-navy) !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child { border-left: 3px solid var(--bowl-gold); }
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky * { color: var(--bowl-navy) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:nth-child(1),
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky *,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:last-child { color: #f4ecd9 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: #1b1f2b !important; border-color: #2e3346 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background-color: #20253a !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; color: #f4ecd9 !important; }
+@media (max-width: 639px) {
+  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
+  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.8rem minmax(0, 1fr) 5.3rem 1.9rem 5.3rem; }
+  .bowl-pennant { width: 5.1rem; }
+  .bowl-pennant-flag { font-size: .54rem; padding-right: .55rem; }
+  .bowl-pool-page .bowl-game-name { hyphens: auto; }
+}
+@media (max-width: 639px) {
+  .bowl-pennant { width: 4.6rem; }
+  .bowl-pennant-flag { font-size: .5rem; padding-right: .5rem; }
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+.bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-navy); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
+html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }

@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { bowlPoolLaunchAt, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
+import { bowlPoolLaunchAt, bowlTeamName } from "@/lib/bowl-pool.js";
+
+import { BowlClaimSeat, BowlCrest, BowlPennant } from "@/components/bowl-pool-marks";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
-
-/** Bowls span the turn of the year: the 2026 season is labeled "2026-27". */
-function bowlSeasonLabel(seasonYear: number) {
-  return `${seasonYear}-${String((seasonYear + 1) % 100).padStart(2, "0")}`;
-}
 
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
@@ -23,8 +20,8 @@ type BowlGame = {
   time_confirmed?: boolean;
   away_team_id?: string;
   home_team_id?: string;
-  awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null;
-  homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null;
+  awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null; primary_color?: string | null; secondary_color?: string | null } | null;
+  homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null; primary_color?: string | null; secondary_color?: string | null } | null;
   line?: { favorite_team_id?: string | null; locked_spread?: number | string; locked_at?: string | null } | null;
 };
 
@@ -172,7 +169,7 @@ export default function BowlPoolPage() {
       {isLoading ? <div aria-busy="true" className="bowl-pool-loading-shell mt-4" aria-label="Loading Bowl Pool"><div className="h-8 w-52 rounded bg-slate-200" /><div className="mt-6 h-14 rounded border border-slate-200 bg-white" /><div className="mt-4 h-24 rounded border border-slate-200 bg-white" /><div className="mt-4 h-72 rounded border border-slate-200 bg-white" /></div> : null}
       {!isLoading && canView ? (
         <>
-          {poolLocked ? optedIn === false ? <div className="mt-4 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-600">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-white p-3 text-center text-sm font-bold text-slate-500">Loading…</div> : <label className="bowl-opt-in-bar mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-white px-3 py-2.5 text-center sm:px-4 sm:py-3"><input className="h-4 w-4 shrink-0" type="checkbox" checked={optedIn} onChange={(event) => void changeOptIn(event.target.checked)} /><span className="text-xs font-bold text-slate-700 sm:text-sm">I would like to participate in the NCAA Bowl Pool (you can opt out prior to first kickoff)</span></label>}
+          {poolLocked ? optedIn === false ? <div className="mt-4 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-600">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-white p-3 text-center text-sm font-bold text-slate-500">Loading…</div> : optedIn === false ? <BowlClaimSeat onClaim={() => void changeOptIn(true)} /> : null}
           {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT</span>
@@ -192,10 +189,11 @@ export default function BowlPoolPage() {
             </div>
             {submissionError ? <p className="slate-receipt-warning" role="alert">{submissionError}</p> : null}
           </section> : null}
-          {optedIn === true ? <section className="mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
+          {optedIn === true && !poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
+          {optedIn === true ? <section className="bowl-pool-board mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
-            <h2 className="mt-1 shrink-0 font-serif text-2xl font-bold">{bowlSeasonLabel(currentSeasonYear())} Bowl Pool</h2>
-            <p aria-label="Bowl Pool instructions" className="bowl-rules-compact max-w-3xl text-xs leading-5 text-slate-600">Pick every game. Selections lock at kickoff; no pick is marked <strong>Loser</strong>. Enter the tiebreaker, then click <strong>Submit</strong> to save your latest selections or changes.</p>
+            <BowlCrest seasonYear={currentSeasonYear()} title="BOWL POOL" />
+            <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Pick every game.</li><li>Selections lock at kickoff, and a game with no pick counts as a loss.</li><li>Enter the tiebreaker, then press <strong>Submit</strong> to save.</li></ul>
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
             <div className="grid grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] bg-slate-100 px-1 py-2 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
@@ -204,10 +202,10 @@ export default function BowlPoolPage() {
             {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
               <div className={`bowl-selection-game-row grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 pb-1.5 pt-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
-                <span className="min-w-0"><strong className="flex min-h-8 items-center truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button aria-label={`Select favorite team${teamForSide(game, "favorite")?.full_name ? `: ${teamForSide(game, "favorite")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "favorite"} className={`min-w-0 overflow-hidden text-center text-[11px] text-slate-950 hover:underline disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} title={teamForSide(game, "favorite")?.full_name ?? "Team TBD"} type="button"><span className={`bowl-team-label block truncate ${selections[game.id] === "favorite" ? "bowl-team-label--selected" : ""} ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "bowl-team-label--new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}>{bowlTeamDisplayLabel(teamForSide(game, "favorite"))}</span></button>
-                <span className={`text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>
-                <button aria-label={`Select underdog team${teamForSide(game, "underdog")?.full_name ? `: ${teamForSide(game, "underdog")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "underdog"} className={`min-w-0 overflow-hidden text-center text-[11px] text-slate-950 hover:underline disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "underdog" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} title={teamForSide(game, "underdog")?.full_name ?? "Team TBD"} type="button"><span className={`bowl-team-label block truncate ${selections[game.id] === "underdog" ? "bowl-team-label--selected" : ""} ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? "bowl-team-label--new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? `${game.id}-${selectionFeedback.token}` : game.id}>{bowlTeamDisplayLabel(teamForSide(game, "underdog"))}</span></button>
+                <span className="min-w-0"><strong className="bowl-game-name flex min-h-8 items-center truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
+                <button aria-label={`Select favorite team${teamForSide(game, "favorite")?.full_name ? `: ${teamForSide(game, "favorite")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "favorite"} className={`min-w-0 overflow-hidden text-center text-[11px] text-slate-950 hover:underline disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} title={teamForSide(game, "favorite")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "favorite" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlPennant side="left" team={teamForSide(game, "favorite")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "favorite"))}</span>}</button>
+                <span className={`bowl-game-line text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>
+                <button aria-label={`Select underdog team${teamForSide(game, "underdog")?.full_name ? `: ${teamForSide(game, "underdog")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "underdog"} className={`min-w-0 overflow-hidden text-center text-[11px] text-slate-950 hover:underline disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "underdog" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} title={teamForSide(game, "underdog")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "underdog" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlPennant side="left" team={teamForSide(game, "underdog")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "underdog"))}</span>}</button>
               </div>
             ))}
           </div>

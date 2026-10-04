@@ -123,22 +123,26 @@ export function seasonSnapshotResponse() {
   };
 }
 
+// Sample school colors (primary, alternate) as the schedule import saves them.
 const BOWL_GAMES = [
-  ["Frisco Bowl", "Memphis", "MEM", "Toledo", "TOL"], ["Cure Bowl", "Troy", "TROY", "Buffalo", "BUFF"],
-  ["Gasparilla Bowl", "Georgia Southern", "GSU", "Marshall", "MRSH"], ["Rose Bowl (QF)", "Ohio State", "OSU", "Oregon", "ORE"],
-].map(([bowl_name, awayName, awayAbbr, homeName, homeAbbr], index) => ({
+  ["Frisco Bowl", ["Memphis", "MEM", "#003087", "#898d8d"], ["Toledo", "TOL", "#15397f", "#ffd200"], "-3.5"],
+  ["Cure Bowl", ["Troy", "TROY", "#8a2432", "#b1b3b3"], ["Buffalo", "BUFF", "#005bbb", "#ffffff"], "-1"],
+  ["Gasparilla Bowl", ["Georgia Southern", "GSU", "#011e41", "#87714d"], ["Marshall", "MRSH", "#00b140", "#ffffff"], "-6.5"],
+  ["Rose Bowl (QF)", ["Ohio State", "OSU", "#bb0000", "#666666"], ["Oregon", "ORE", "#154733", "#fee123"], "-3"],
+].map(([bowl_name, away, home, spread], index) => ({
   id: `bowl-${index}`, bowl_name, status: index === 0 ? "final" : "scheduled", kickoff_at: `2026-12-${19 + index}T18:00:00Z`,
+  venue_city: ["Frisco", "Orlando", "Tampa", "Pasadena"][index], venue_state: ["TX", "FL", "FL", "CA"][index], time_confirmed: true,
   away_team_id: `a${index}`, home_team_id: `h${index}`,
-  awayTeam: { id: `a${index}`, full_name: awayName, short_name: awayName, abbreviation: awayAbbr },
-  homeTeam: { id: `h${index}`, full_name: homeName, short_name: homeName, abbreviation: homeAbbr },
-  line: { favorite_team_id: `h${index}` },
+  awayTeam: { id: `a${index}`, full_name: away[0], short_name: away[0], abbreviation: away[1], primary_color: away[2], secondary_color: away[3] },
+  homeTeam: { id: `h${index}`, full_name: home[0], short_name: home[0], abbreviation: home[1], primary_color: home[2], secondary_color: home[3] },
+  line: { favorite_team_id: `h${index}`, locked_spread: spread, locked_at: "2026-12-01T00:00:00Z" },
 }));
 
 /** A small Bowl Card for the scenarios that open it. */
-export function bowlResponse() {
+export function bowlResponse({ optedIn = true, entryOpen = false, picks = {} } = {}) {
   return {
-    season: { season_year: 2026 }, games: BOWL_GAMES,
+    season: { season_year: 2026, championship_game_id: "bowl-3" }, optedIn, entryOpen, entry: optedIn ? { championship_total_guess: null } : null, games: BOWL_GAMES,
     standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: null, trophies: [] })),
-    championships: [], publicPicks: [], ownPicks: [], ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
+    championships: [], publicPicks: [], ownPicks: Object.entries(picks).map(([game_id, selected_team_id]) => ({ game_id, selected_team_id })), ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
   };
 }
