@@ -38,9 +38,7 @@
     ".next-e2e/types/**/*.ts",
     ".next-e2e/dev/types/**/*.ts",
     ".next-visual/types/**/*.ts",
-    ".next-visual/dev/types/**/*.ts",
-    ".next-fontcheck/types/**/*.ts",
-    ".next-fontcheck/dev/types/**/*.ts"
+    ".next-visual/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
