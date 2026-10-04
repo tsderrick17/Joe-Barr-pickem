@@ -89,7 +89,54 @@ export async function getFreshSession(): Promise<Session | null> {
   }
 }
 
+// Identical plain reads share one request while it is in flight, so two parts
+// of a page asking for the same data at once cost the server one request. The
+// player's profile, which the page chrome (navigation, chat dock) and the page
+// each ask for, is also kept for a few seconds; a successful save to the same
+// path clears it at once.
+const KEPT_READ_PATHS = new Set(["/api/profile"]);
+const KEPT_READ_TTL_MS = 15_000;
+const sharedReads = new Map<string, { startedAt: number; response: Promise<Response> }>();
+
+function sharedReadKey(input: RequestInfo | URL, init: RequestInit): string | null {
+  const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  if (typeof window === "undefined") return null;
+  const url = new URL(raw, window.location.origin);
+  // Only a plain read is shared: never a save, and never a cancellable one.
+  if (!isReadRequest(init) || init.signal || !url.pathname.startsWith("/api/")) return null;
+  return url.pathname + url.search;
+}
+
+function forgetSharedReads(input: RequestInfo | URL) {
+  if (typeof window === "undefined") return;
+  const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const path = new URL(raw, window.location.origin).pathname;
+  for (const key of sharedReads.keys()) if (key.startsWith(path)) sharedReads.delete(key);
+}
+
 export async function fetchWithSession(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+): Promise<Response> {
+  const sharedKey = sharedReadKey(input, init);
+  if (sharedKey) {
+    const existing = sharedReads.get(sharedKey);
+    if (existing) return (await existing.response).clone();
+    const path = sharedKey.split("?")[0];
+    const kept = KEPT_READ_PATHS.has(path) && init.cache !== "no-store";
+    const response = fetchWithSessionOnce(input, init);
+    sharedReads.set(sharedKey, { startedAt: Date.now(), response });
+    const forget = () => { if (sharedReads.get(sharedKey)?.response === response) sharedReads.delete(sharedKey); };
+    // Once settled, a read is forgotten at once, unless it is a kept path that succeeded.
+    void response.then((result) => { if (!result.ok || !kept) forget(); else window.setTimeout(forget, KEPT_READ_TTL_MS); }, forget);
+    return (await response).clone();
+  }
+  const result = await fetchWithSessionOnce(input, init);
+  if (!isReadRequest(init) && result.ok) forgetSharedReads(input);
+  return result;
+}
+
+async function fetchWithSessionOnce(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
@@ -146,3 +193,6 @@ export async function fetchWithSession(
 
   return retryResponse;
 }
+
+// Signing in or out must never leave one player's shared reads for the next.
+if (typeof window !== "undefined") supabase.auth.onAuthStateChange(() => sharedReads.clear());
