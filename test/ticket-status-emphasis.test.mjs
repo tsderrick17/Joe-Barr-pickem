@@ -19,7 +19,7 @@ test("the ticket uses upright result stamps and aligned open states", async () =
   assert.doesNotMatch(stamp, /<svg|<circle|ats-result-stamp__ring|ats-result-stamp__letter/);
   assert.match(styles, /\.ats-result-stamp--ticket \{[\s\S]*?font-family: Georgia,[\s\S]*?font-size: 1\.08rem;/);
   assert.match(styles, /\.my-ticket-team-result \{[\s\S]*?display: flex;[\s\S]*?white-space: nowrap;/);
-  assert.match(styles, /\.my-ticket-picks li \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 2\.25rem;/);
+  assert.match(styles, /\.my-ticket-picks li \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;/);
   assert.doesNotMatch(styles, /\.ats-result-stamp__ring|\.ats-result-stamp__letter\.is-[wl]/);
   assert.doesNotMatch(styles, /\.ats-result-stamp--ticket::(?:before|after)/);
   assert.match(styles, /\.my-ticket-open \{[\s\S]*?font: 900 \.84rem\/1 "Courier New", monospace;/);

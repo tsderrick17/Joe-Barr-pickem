@@ -1257,3 +1257,7 @@ The split-flap was still dropping frames on phones. Measured with the processor 
 ### Stylesheet trimmed of overridden declarations
 
 A scan found 88 declarations (in 58 rules) that a later rule with the identical selector sets again, so they could never take effect: mostly leftovers from earlier Bowl Card and receipt restyles that later rules replaced. They are removed, along with the rules for three classes no component uses. All 102 screenshots are pixel-identical. Rules were not moved between sections: gathering the Bowl rules into one block changed 6 to 22 screenshots, because several Bowl rules deliberately follow generic rules they override.
+
+### Standings spacing, sliding tables, and quicker score tiles
+
+Every section on Standings (header, ticket, Pick'em Pad, Survivor Table, Bowl Card) is now separated by one gap, 1.5 rem on a phone and 2 rem on larger screens, the same above the ticket and below the last section (`.standings-stack`). Before, sections carried their own padding, so the gaps were 20, 40, and 56 px. The ticket's spread column is as wide as its widest spread, so spreads end at the dotted rule above them (a fixed 2.25 rem column let a spread overhang it). The space between the season label and the Bowl Card matrix is smaller. The Survivor Table and Bowl Card slide open and shut (`collapse.tsx`, 340 ms, none for reduced motion): content is mounted collapsed and grows, and removed after it shrinks, so a hidden table still costs nothing. The Bowl score tiles wait 350 ms (was a full second) before landing, 45 ms apart.
