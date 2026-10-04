@@ -4,7 +4,7 @@ import test from "node:test";
 
 test("stacked Slate header removes its empty control lane and redundant separator space", async () => {
   const [page, styles] = await Promise.all([
-    readFile(new URL("../src/app/board/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/slate-header.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
   ]);
 
