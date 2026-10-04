@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Collapse from "@/components/collapse";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
@@ -37,7 +38,7 @@ export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay,
 <section className={`pickem-ledger survivor-ledger py-6 sm:py-7 ${data.showSurvivorStandings ? "" : "is-minimized"}`}>
     <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>{data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
-    {data.showSurvivorStandings && data.survivorAvailable ? (
+    <Collapse open={data.showSurvivorStandings}>{data.survivorAvailable ? (
       <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
           <div className="survivor-standings-grid min-w-[55.5rem]">
           <div className="survivor-standings-header grid border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
@@ -61,14 +62,14 @@ export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay,
           })}
         </div>
       </div>
-    ) : data.showSurvivorStandings ? (
+    ) : (
       <div className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
         <p className="font-bold">
           {data.survivorNotice ??
             "Survivor is temporarily unavailable. ATS standings remain current."}
         </p>
       </div>
-    ) : null}
+    )}</Collapse>
   </section>
   );
 }

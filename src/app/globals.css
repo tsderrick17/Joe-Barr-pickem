@@ -2721,7 +2721,9 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   border-top: 1px dotted #9b907e;
   display: grid;
   gap: .25rem;
-  grid-template-columns: minmax(0, 1fr) 2.25rem;
+  /* The spread column is as wide as its widest spread, so a spread such as
+     +11.5 stays inside the dotted rule above it instead of poking past it. */
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 2.45rem;
   padding: .28rem 0;
 }
@@ -4251,7 +4253,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 
 /* ---- Standings: the Bowl Card */
 .bowl-card-section { background: transparent; }
-.bowl-card-section .bowl-crest { margin-bottom: 1.1rem; }
+.bowl-card-section .bowl-crest { margin-bottom: .7rem; }
 .bowl-card-section .survivor-title-toggle { background: transparent; border-color: var(--bowl-gold); color: var(--bowl-gold); }
 .bowl-card-section .bowl-standings-scroll { background: var(--bowl-paper); border-bottom: 2px solid var(--bowl-navy) !important; box-shadow: none; }
 /* Dates, games, and lines read like a scoreboard header. */
@@ -4531,3 +4533,17 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 .bowl-flap-half.is-folding { transform: scaleY(0); visibility: visible; }
 .bowl-flap-half.is-dropping { transform: scaleY(1); visibility: visible; }
 .bowl-flap-half.is-folding { background-image: linear-gradient(rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .14)); }
+
+/* ---- Standings: one gap between every section (header, ticket, Pick'em Pad,
+   Survivor Table, Bowl Card), the same at the top and bottom of the page. */
+.standings-stack { --standings-gap: 1.5rem; padding-bottom: var(--standings-gap); padding-top: var(--standings-gap); }
+@media (min-width: 640px) { .standings-stack { --standings-gap: 2rem; } }
+.standings-stack > section { padding-block: 0; }
+.standings-stack > section + section { margin-top: var(--standings-gap); }
+
+/* ---- Sliding tables: a table opens and closes by growing and shrinking. */
+.collapse { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 340ms cubic-bezier(.4, 0, .2, 1), opacity 260ms ease; }
+.collapse[data-open="true"] { grid-template-rows: 1fr; opacity: 1; }
+.collapse > .collapse-inner { min-height: 0; overflow: hidden; }
+.collapse[data-settled="true"] > .collapse-inner { overflow: visible; }
+@media (prefers-reduced-motion: reduce) { .collapse { transition: none; } }
