@@ -1265,3 +1265,7 @@ Every section on Standings (header, ticket, Pick'em Pad, Survivor Table, Bowl Ca
 ## Sliding tables: a height animation only (fix for #386)
 
 The first sliding version wrapped the Survivor Table and Bowl Card in a class named `collapse`, which is also a Tailwind utility (`visibility: collapse`); my own stylesheet rule had been masking it, and the grid wrapper let wide tables stretch the page to 904 px on a phone, so both tables looked blank. The wrapper is now `.slide-section` with no styles of its own: content is always laid out and visible, and opening or closing runs a Web Animations height-and-fade on top (340 ms, none for reduced motion). If an animation never runs, the content is still in its correct state. `test/collapse-class-contract.test.mjs` keeps utility class names out of the wrapper. The Standings baseline now records the correct page width.
+
+## Standings spacing reset skips the ticket (fix for #386)
+
+`.standings-stack > section { padding-block: 0 }` also matched the ticket (a `<section class="my-ticket">`) and beat its own padding, so the footer touched the bottom edge. The reset now excludes `.my-ticket` and the loading ticket; the gap between sections is unchanged because it comes from margins.
