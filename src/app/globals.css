@@ -4536,11 +4536,11 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 .bowl-flap-half.is-top > span { top: 0; }
 .bowl-flap-half.is-bottom { border-radius: 0 0 .16rem .16rem; bottom: 0; transform-origin: 50% 0; }
 .bowl-flap-half.is-bottom > span { bottom: 0; }
-/* The top flap falls away, then the next card's bottom half drops into place. */
-.bowl-flap-half.is-folding { animation: bowl-flap-fold var(--flap-ms, 90ms) ease-in forwards; z-index: 2; }
-.bowl-flap-half.is-dropping { animation: bowl-flap-drop var(--flap-ms, 90ms) ease-out forwards; transform: rotateX(90deg); z-index: 3; }
-.bowl-flap-half.is-folding::after { background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .18)); content: ""; inset: 0; position: absolute; }
-@keyframes bowl-flap-fold { 0% { transform: rotateX(0deg); } 50%, 100% { transform: rotateX(-90deg); } }
-@keyframes bowl-flap-drop { 0%, 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0deg); } }
-@media (prefers-reduced-motion: reduce) { .bowl-flap-half.is-folding, .bowl-flap-half.is-dropping { animation: none; } }
+/* The moving flaps: hidden between flips, animated by the browser. The top
+   flap falls away and the next card's lower half lands over the old one. */
+.bowl-flap-half.is-folding { visibility: hidden; will-change: transform; z-index: 2; }
+.bowl-flap-half.is-dropping { transform: rotateX(90deg); visibility: hidden; will-change: transform; z-index: 3; }
+.bowl-flap-shade { background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .55)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.bowl-flap-half.is-dropping .bowl-flap-shade { background: linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, 0)); }
+.bowl-flap { box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink) !important; }
