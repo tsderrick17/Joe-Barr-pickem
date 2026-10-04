@@ -4487,7 +4487,7 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 .bowl-score-digit::after { background: rgba(22, 34, 58, .12); content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; }
 .bowl-score-tile.is-viewer .bowl-score-digit { background: #0f1830; border-color: var(--bowl-gold); box-shadow: inset 0 1px rgba(255, 255, 255, .14), 0 1px 1px rgba(29, 29, 31, .2); color: var(--bowl-gold-soft); }
 .bowl-score-tile.is-viewer .bowl-score-digit::after { background: rgba(255, 255, 255, .16); }
-.bowl-score-tile.is-spinning .bowl-flip-digit-face { animation: bowl-digit-flip .32s ease-in-out infinite; }
+.bowl-score-tile.is-spinning .bowl-flip-digit-face { animation: bowl-digit-flip var(--tile-flip, .32s) ease-in-out infinite; }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile.is-viewer .bowl-score-digit,
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile .bowl-score-digit { color: var(--bowl-gold-soft) !important; }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile:not(.is-viewer) .bowl-score-digit { color: var(--bowl-navy) !important; }
