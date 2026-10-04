@@ -100,8 +100,22 @@ export const SCENARIOS = {
   "playoff-wildcard": { ...base, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // Divisional round: four picks each.
   "playoff-divisional": { ...base, isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
+  // The Bowl Card in its other states (the Bowl data for each is BOWL_BY_SCENARIO).
+  "bowl-results": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  "bowl-champion": { ...base, showBowlCard: true, serverTime: "2027-01-12T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  "bowl-claim-open": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  "bowl-closed-not-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // A commissioner can turn the pad over to the Season Snapshot.
   "commissioner": { ...base, isCommissioner: true, seasonSnapshotReleased: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+};
+
+/** Bowl Pool data per Standings scenario; scenarios not listed use the default Bowl Card. */
+export const BOWL_BY_SCENARIO = {
+  "bowl-results": { graded: 3, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2" } },
+  "bowl-champion": { graded: 6, champion: true, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2", "bowl-3": "a3", "bowl-4": "h4", "bowl-5": "a5" } },
+  "bowl-claim-open": { optedIn: false, entryOpen: true },
+  "bowl-closed-not-joined": { optedIn: false, entryOpen: false },
 };
 
 export function homeResponse(name) {
@@ -141,10 +155,17 @@ const BOWL_GAMES = [
 }));
 
 /** A small Bowl Card for the scenarios that open it. */
-export function bowlResponse({ optedIn = true, entryOpen = false, picks = {} } = {}) {
+export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, graded = 0, champion = false, viewerPicks = {}, guess = null } = {}) {
+  // `graded` games are final: every player has a deterministic win or loss on each.
+  const games = BOWL_GAMES.map((game, index) => ({ ...game, status: index < graded ? "final" : game.status }));
+  const publicPicks = NAMES.flatMap((_, playerIndex) => games.slice(0, graded).map((game, gameIndex) => ({
+    playerId: `p${playerIndex}`, game_id: game.id, selected_team_id: game.line.favorite_team_id, result: (playerIndex + gameIndex * 2) % 3 === 0 ? "loss" : "win",
+  }))).filter((pick) => pick.playerId !== "p2");
+  const own = { ...picks, ...viewerPicks };
   return {
-    season: { season_year: 2026, championship_game_id: "bowl-3" }, optedIn, entryOpen, entry: optedIn ? { championship_total_guess: null } : null, games: BOWL_GAMES,
-    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: null, trophies: [] })),
-    championships: [], publicPicks: [], ownPicks: Object.entries(picks).map(([game_id, selected_team_id]) => ({ game_id, selected_team_id })), ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
+    season: { season_year: 2026, championship_game_id: "bowl-3" }, optedIn, entryOpen, entry: optedIn ? { championship_total_guess: guess ?? (graded ? 51 : null) } : null, games,
+    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: graded ? 40 + index : null, trophies: champion && index === 0 ? ["Bowl Pool Champion 2026"] : [] })),
+    championships: champion ? [{ playerId: "p0", seasonYear: 2026, playerName: NAMES[0] }] : [],
+    publicPicks, ownPicks: Object.entries(own).map(([game_id, selected_team_id]) => ({ game_id, selected_team_id })), ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
   };
 }

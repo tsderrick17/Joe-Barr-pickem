@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
+import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
-const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner"]);
+const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open"]);
 
 /** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
 async function signIn(page: Page, theme: string) {
@@ -24,7 +24,7 @@ async function serve(page: Page, scenario: string) {
   await page.route("**/api/home**", (route) => route.fulfill({ json: home }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: home.isCommissioner, showPoolChat: false } }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
-  await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse() }));
+  await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse(BOWL_BY_SCENARIO[scenario]) }));
   await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse() }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(home.serverTime) });
