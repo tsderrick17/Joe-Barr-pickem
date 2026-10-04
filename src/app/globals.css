@@ -4440,7 +4440,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 @media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }
 /* The footnote ("ALL PICKS SAVED") is pinned to the stub's bottom line, level
    with the status line in the next section. */
-.slate-receipt-ticket > .slate-receipt-footnote { margin-top: auto; }
+.slate-receipt-ticket > .slate-receipt-footnote { margin-bottom: .14rem; margin-top: auto; }
 /* The Bowl receipt is exactly the Pick'em receipt's height. */
 .bowl-receipt-metric { min-height: 1.9rem; padding-block: .2rem; }
 .bowl-receipt-strip { min-height: 5.394rem; }
