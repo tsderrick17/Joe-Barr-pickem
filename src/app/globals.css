@@ -4573,3 +4573,13 @@ section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .
 /* Row rules. */
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
 html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
+
+/* A live game keeps the date column's width: the LIVE badge fits inside it. */
+.slate-live-badge { max-width: 100%; white-space: nowrap; }
+/* The spread's middle sits level with the middle of the team names on a
+   finished or live row (the chip rows' names start lower than the cell top). */
+.slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .64rem; }
+.slate-game-row.is-final.no-survivor-layout .slate-spread-cell { margin-top: -.2rem; }
+@media (min-width: 768px) {
+  .slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .87rem; }
+}

@@ -1288,3 +1288,8 @@ The Sunday and featured-window reveal images now show the Survivor picks made on
 ## Bowl Card: one line style for the whole table
 
 Adjacent cells each drew their own border, so day breaks were doubled (2 px gold plus 2 px on the next cell, or gold against a navy edge at the tiebreaker), the header's lines were heavier than the rows', and the row rules were a different color. Every line in the Bowl Card table is now one single 1 px old-gold rule: day breaks are a left edge only, the frozen name column carries the edge where the games begin, the tiebreaker has one left rule, and each row has one bottom rule. The older overlapping border rules were removed rather than overridden. Spreads drop the minus sign, since the favorite is always listed on top.
+
+## Live Slate rows take their final layout at kickoff
+
+At kickoff a row used to keep the upcoming layout (centered names, a divider after a wider LIVE badge) and then jump to the final layout when the game ended. A live row now uses the final layout from kickoff: team names and picker lists sit where they will stay, the date column keeps its width, and the LIVE badge is sized to fit inside it.
+On a finished or live row the spread's middle is level with the middle of the team names at every width, with or without Survivor chips (it sat about 10 to 14 px high beside the chips).

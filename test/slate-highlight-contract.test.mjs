@@ -43,6 +43,6 @@ test("final Slate team text groups stay vertically centered as one unit", () => 
 
 test("live Slate rows use a compact status badge", () => {
   const component = fs.readFileSync(path.join(root, "src/components/slate-game-row.tsx"), "utf8");
-  assert.match(component, /isLive \? <p className=\"inline-block border border-red-800/);
+  assert.match(component, /isLive \? <p className=\"slate-live-badge inline-block border border-red-800/);
   assert.doesNotMatch(component, />UPDATING<\/p>/);
 });

@@ -17,3 +17,19 @@ test("Bowl Card spreads drop the minus sign, since the favorite is always on top
   assert.match(source, /\{bowlSpreadLabel\(game\.line\?\.locked_spread\)\}/);
   assert.ok(source.includes('return String(spread).replace(/^[-−]\\s*/, "");'));
 });
+
+test("a live Slate row takes the final layout and its badge fits the date column", async () => {
+  const [row, css] = await Promise.all([
+    readFile(new URL("../src/components/slate-game-row.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(row, /const settledLayout = isFinal \|\| isLive;/);
+  assert.match(row, /\$\{settledLayout \? "is-final" : ""\} \$\{isLive \? "is-live" : ""\}/);
+  assert.match(css, /\.slate-live-badge \{ max-width: 100%; white-space: nowrap; \}/);
+});
+
+test("a settled row's spread is level with the team names", async () => {
+  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.slate-game-row\.is-final\.has-survivor-layout \.slate-spread-cell \{ margin-top: \.64rem; \}/);
+  assert.match(css, /\.slate-game-row\.is-final\.no-survivor-layout \.slate-spread-cell \{ margin-top: -\.2rem; \}/);
+});
