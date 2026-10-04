@@ -1,45 +1,55 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-
-type Phase = "closed" | "opening" | "expanding" | "open" | "closing";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 const SLIDE_MS = 340;
+const EASING = "cubic-bezier(.4, 0, .2, 1)";
 
 /**
- * Slides its content open and shut. Closed content is not kept on the page, so
- * a hidden table costs nothing; opening mounts it collapsed and lets it grow to
- * its full height, and closing shrinks it away before removing it. Content that
- * starts open appears at once, with no slide.
+ * Slides its content open and shut. Content is always laid out at its natural
+ * size and fully visible; the slide is only a height animation layered on top,
+ * so if an animation never runs the content is still in its correct state.
+ * Closed content is not kept on the page. Content that starts open appears at
+ * once, with no slide.
  */
 export default function Collapse({ open, children }: { open: boolean; children: ReactNode }) {
-  const [phase, setPhase] = useState<Phase>(open ? "open" : "closed");
+  const [mounted, setMounted] = useState(open);
+  const element = useRef<HTMLDivElement>(null);
+  const previous = useRef(open);
+  const running = useRef<Animation | null>(null);
 
-  // Follow the `open` prop (adjusting state while rendering, as React allows).
-  if (open && (phase === "closed" || phase === "closing")) setPhase(phase === "closing" ? "expanding" : "opening");
-  if (!open && (phase === "open" || phase === "expanding" || phase === "opening")) setPhase("closing");
+  // Mount the content as soon as it should open (adjusting state while rendering, as React allows).
+  if (open && !mounted) setMounted(true);
 
   useEffect(() => {
-    if (phase === "opening") {
-      // Let the collapsed content paint once so the growth has somewhere to start.
-      let second = 0;
-      const first = window.requestAnimationFrame(() => { second = window.requestAnimationFrame(() => setPhase("expanding")); });
-      return () => { window.cancelAnimationFrame(first); window.cancelAnimationFrame(second); };
+    if (previous.current === open) return;
+    previous.current = open;
+    const node = element.current;
+    const current = node?.getBoundingClientRect().height ?? 0;
+    running.current?.cancel();
+    running.current = null;
+    const slide = !window.matchMedia("(prefers-reduced-motion: reduce)").matches && typeof node?.animate === "function";
+    if (!node || !slide) {
+      if (!open) window.setTimeout(() => setMounted(false), 0);
+      return;
     }
-    if (phase === "expanding") {
-      const timer = window.setTimeout(() => setPhase("open"), SLIDE_MS);
-      return () => window.clearTimeout(timer);
-    }
-    if (phase === "closing") {
-      const timer = window.setTimeout(() => setPhase("closed"), SLIDE_MS);
-      return () => window.clearTimeout(timer);
-    }
-  }, [phase]);
+    const target = open ? node.scrollHeight : 0;
+    node.style.overflow = "hidden";
+    const animation = node.animate(
+      [{ height: `${open ? current : node.scrollHeight}px`, opacity: open ? current / Math.max(node.scrollHeight, 1) : 1 }, { height: `${target}px`, opacity: open ? 1 : 0 }],
+      { duration: SLIDE_MS, easing: EASING },
+    );
+    running.current = animation;
+    const settle = () => {
+      if (running.current !== animation) return;
+      running.current = null;
+      node.style.overflow = "";
+      if (!open) window.setTimeout(() => setMounted(false), 0);
+    };
+    animation.onfinish = settle;
+    animation.oncancel = settle;
+  }, [open]);
 
-  if (phase === "closed") return null;
-  return (
-    <div className="collapse" data-open={phase === "expanding" || phase === "open" ? "true" : "false"} data-settled={phase === "open" ? "true" : undefined}>
-      <div className="collapse-inner">{children}</div>
-    </div>
-  );
+  if (!mounted) return null;
+  return <div className="slide-section" ref={element}>{children}</div>;
 }
