@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Collapse from "@/components/collapse";
+import { useRef } from "react";
+import Collapse, { useBlindRows } from "@/components/collapse";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
@@ -34,23 +35,25 @@ export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay,
   setSurvivorDisplay: (show: boolean) => void | Promise<void>;
   setEliminatedRowsHidden: (pool: "pickem" | "survivor", hidden: boolean) => void | Promise<void>;
 }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const eliminatedRowsHidden = useBlindRows(data.hideSurvivorEliminatedRows, gridRef);
   return (
 <section className={`pickem-ledger survivor-ledger py-6 sm:py-7 ${data.showSurvivorStandings ? "" : "is-minimized"}`}>
     <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>{data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
     <Collapse open={data.showSurvivorStandings}>{data.survivorAvailable ? (
       <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
-          <div className="survivor-standings-grid min-w-[55.5rem]">
+          <div className="survivor-standings-grid min-w-[55.5rem]" ref={gridRef}>
           <div className="survivor-standings-header grid border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
             <span aria-hidden="true" className="survivor-sticky-status py-2" />
             <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
             {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
           </div>
-          {data.survivorRows.filter((row) => !data.hideSurvivorEliminatedRows || row.status !== "eliminated").map((row, rowIndex) => {
+          {data.survivorRows.filter((row) => !eliminatedRowsHidden || row.status !== "eliminated").map((row, rowIndex) => {
             const isViewer = row.playerId === data.viewerPlayerId;
 
             return (
-            <div className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
+            <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
               <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
               <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
               {Array.from({ length: 18 }, (_, index) => {

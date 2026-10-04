@@ -1269,3 +1269,7 @@ The first sliding version wrapped the Survivor Table and Bowl Card in a class na
 ## Standings spacing reset skips the ticket (fix for #386)
 
 `.standings-stack > section { padding-block: 0 }` also matched the ticket (a `<section class="my-ticket">`) and beat its own padding, so the footer touched the bottom edge. The reset now excludes `.my-ticket` and the loading ticket; the gap between sections is unchanged because it comes from margins.
+
+## Sliding tables roll like window blinds
+
+Opening a table used to skip the slide: the content was measured after it had already painted at full height, so it popped open. The slide now runs in a layout effect from zero height before the first paint, with no fade, on an ease-in-out curve over 420 ms (`collapse.tsx`). Survivor's − OUT / + OUT button rolls the eliminated rows shut and open the same way (`useBlindRows`): hidden rows stay on the page until they have rolled away. Reduced motion skips both.
