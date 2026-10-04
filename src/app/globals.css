@@ -4197,7 +4197,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 .bowl-claim-main { padding: 1.1rem 1.3rem; }
 .bowl-claim-kicker { color: var(--bowl-gold); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; letter-spacing: .3em; margin: 0; }
 .bowl-claim-main h3 { color: var(--bowl-navy); font-family: var(--font-cormorant), Georgia, serif; font-size: 1.65rem; font-weight: 700; line-height: 1.1; margin: .35rem 0 .3rem; }
-.bowl-claim-main p:last-child { color: var(--bowl-muted); font-size: .85rem; line-height: 1.45; margin: 0; }
+.bowl-claim-main p:not(.bowl-claim-kicker) { color: var(--bowl-muted); font-size: .85rem; line-height: 1.45; margin: 0; }
 .bowl-claim-stub { align-items: center; border-left: 1px dashed var(--bowl-rule); display: grid; justify-items: center; padding: .9rem; }
 .bowl-claim-stub button {
   background: var(--bowl-navy);
@@ -4386,3 +4386,5 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+.bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-navy); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
+html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }

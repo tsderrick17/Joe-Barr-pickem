@@ -42,6 +42,7 @@ export function BowlClaimSeat({ busy, onClaim }: { busy?: boolean; onClaim: () =
         <p className="bowl-claim-kicker">ADMIT ONE · BOWL SEASON</p>
         <h3>Claim your seat in the Bowl Pool</h3>
         <p>Pick every bowl against the spread, from the first kickoff through the title game. Separate from Pick&apos;em and Survivor.</p>
+        <p className="bowl-claim-note">You may opt out at any time prior to first kickoff.</p>
       </div>
       <div className="bowl-claim-stub">
         <button disabled={busy} onClick={onClaim} type="button">CLAIM YOUR SEAT</button>

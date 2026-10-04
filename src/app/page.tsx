@@ -10,7 +10,7 @@ import {
   fetchWithSession,
   SessionUnavailableError,
 } from "@/lib/auth-session";
-import { bowlMatchupTeamNames, bowlTeamName } from "@/lib/bowl-pool.js";
+import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 import { BowlClaimSeat, BowlCrest } from "@/components/bowl-pool-marks";
 import { currentSeasonYear } from "@/lib/season";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
@@ -319,10 +319,10 @@ export default function HomePage() {
   };
   const bowlTeamLabel = (team: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined, otherTeam?: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null) => {
     if (otherTeam) {
-      const [teamLabel, otherLabel] = bowlMatchupTeamNames(team, otherTeam);
+      const [teamLabel, otherLabel] = bowlMatchupTeamLabels(team, otherTeam);
       return team?.id === otherTeam.id ? otherLabel : teamLabel;
     }
-    return bowlTeamName(team);
+    return bowlTeamDisplayLabel(team);
   };
   const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD";
   const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);
@@ -345,7 +345,7 @@ export default function HomePage() {
   const bowlGameTeamLabels = (game: (typeof bowlGames)[number]) => {
     const favorite = bowlTeam(game, "favorite");
     const underdog = bowlTeam(game, "underdog");
-    const [favoriteLabel, underdogLabel] = bowlMatchupTeamNames(favorite, underdog);
+    const [favoriteLabel, underdogLabel] = bowlMatchupTeamLabels(favorite, underdog);
     return { favorite, underdog, favoriteLabel, underdogLabel };
   };
   const bowlCell = (playerId: string, gameId: string) => {
