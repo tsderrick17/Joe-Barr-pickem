@@ -4413,3 +4413,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: #20253a !important; }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile { color: var(--bowl-gold-soft) !important; }
+/* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
+.bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
+@media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
