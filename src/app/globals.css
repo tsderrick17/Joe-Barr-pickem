@@ -4653,8 +4653,9 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 .bowl-pool-page #bowl-selections .bowl-pick-box:not(:disabled):hover { background: #fffaf0; border-color: var(--bowl-gold); }
 .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #fbf4e4; border: 2px solid var(--bowl-gold); padding: calc(.3rem - 1px) calc(.35rem - 1px); }
 .bowl-pool-page #bowl-selections .bowl-pick-box:disabled { cursor: not-allowed; }
-.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; width: 100%; }
-.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant { max-width: 100%; width: 100%; }
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; max-width: 100%; }
+/* Pennants keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant { max-width: 100%; }
 /* Names wrap between words only, never mid-word, inside the boxed pennant. */
 .bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag { font-size: .56rem; letter-spacing: .03em; padding: 0 .55rem 0 .35rem; }
 .bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag > span { overflow-wrap: normal; word-break: keep-all; }
