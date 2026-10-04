@@ -170,7 +170,6 @@ export default function HomePage() {
   // The score tiles spin once per visit: the first time the Bowl Card comes
   // into view, then land on the real totals about a second later.
   const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
-  const bowlScoresWatching = useRef(false);
   const serverClockOffset = useRef(0);
   // A background refresh can finish after a display preference save and carry
   // an older profile snapshot. Keep the user's just-saved choice in front of
@@ -397,8 +396,10 @@ export default function HomePage() {
     return () => window.cancelAnimationFrame(frame);
   }, [bowlGames, bowlPoolMinimized]);
   useEffect(() => {
+    // Runs only when the card itself changes: an ordinary re-render (a data
+    // refresh) must never cancel the landing timer.
     const container = bowlScrollRef.current;
-    if (!container || bowlScoresSettled || bowlScoresWatching.current) return;
+    if (!container || bowlScoresSettled) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const timer = window.setTimeout(() => setBowlScoresSettled(true), 0);
       return () => window.clearTimeout(timer);
@@ -407,12 +408,11 @@ export default function HomePage() {
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       observer.disconnect();
-      bowlScoresWatching.current = true;
       timer = window.setTimeout(() => setBowlScoresSettled(true), 1000);
     }, { threshold: 0.25 });
     observer.observe(container);
     return () => { observer.disconnect(); window.clearTimeout(timer); };
-  });
+  }, [bowlScoresSettled, bowlPoolMinimized, bowlStandings]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   // Same column order as the Pick'em Pad: kickoff, with the API's order (game id)
