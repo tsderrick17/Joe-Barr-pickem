@@ -6,9 +6,9 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("worker activity outranks the dashboard's table rules and stacks into cards on a phone", async () => {
   const css = await read("src/app/globals.css");
-  const prefix = String.raw`\[aria-labelledby="grading-dashboard-title"\] table\.grading-worker-table:not\(\.provider-chart-table\)`;
-  assert.match(css, new RegExp(`${prefix} tbody td:nth-child\(2\) \{ border-radius: 0;`));
-  assert.match(css, new RegExp(String.raw`@media \(max-width: 639px\) \{\s*${prefix},`));
+  const prefix = '[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table)';
+  assert.ok(css.includes(`${prefix} tbody td:nth-child(2) { border-radius: 0;`));
+  assert.match(css, /@media \(max-width: 639px\) \{\s+\[aria-labelledby="grading-dashboard-title"\] table\.grading-worker-table/);
   assert.match(css, /content: "Started  "/);
   assert.match(css, /content: "Finished  "/);
   assert.doesNotMatch(css, /^\[aria-labelledby="grading-dashboard-title"\] \.grading-worker-table /m);
@@ -27,7 +27,9 @@ test("chip edge segments shade smoothly into their neighbors", async () => {
   assert.equal((css.match(/linear-gradient\(90deg, rgba\(16,14,12,var\(--seg-dark-a\)\), rgba\(16,14,12,var\(--seg-dark-b\)\)\)/g) ?? []).length, 2);
 });
 
-test("the playoff ledger spans the pad from tablet width up", async () => {
+test("the playoff ledger hugs its picks from tablet width up instead of stretching", async () => {
   const css = await read("src/app/globals.css");
-  assert.match(css, /@media \(min-width: 640px\) \{\s*\.playoff-scoreboard \.pickem-ledger-grid \{ width: 100%; \}/);
+  assert.match(css, /\.playoff-scoreboard \{ margin-left: auto; margin-right: auto; max-width: 100%; width: fit-content; \}/);
+  assert.match(css, /\.playoff-scoreboard \.pickem-ledger-grid \{ min-width: 0; width: auto; \}/);
+  assert.match(css, /td\.playoff-scoreboard-pick \{ padding-left: 0; padding-right: clamp\(\.35rem, 2\.4vw - \.7rem, 1\.25rem\); white-space: nowrap; \}/);
 });

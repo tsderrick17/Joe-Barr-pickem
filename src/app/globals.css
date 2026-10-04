@@ -1552,11 +1552,17 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
 }
-/* Wherever the pad is wide enough (tablet and up), every pick of the round sits
-   on one line per player, and the ledger spans the whole pad so its ruled lines
-   and columns run edge to edge instead of bunching at the left. */
+/* Tablet and up: every pick of the round sits on one line per player. Each
+   column is only as wide as its longest entry (abbreviations and spreads vary)
+   plus one even gap, and the pad hugs the ledger instead of stretching across
+   the page, so six picks are spaced like the regular two. */
 @media (min-width: 640px) {
-  .playoff-scoreboard .pickem-ledger-grid { width: 100%; }
+  .playoff-scoreboard { margin-left: auto; margin-right: auto; max-width: 100%; width: fit-content; }
+  .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: auto; }
+  /* The gap narrows on a tablet so six picks still fit, and reaches 1.25rem on a desktop. */
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick { padding-left: 0; padding-right: clamp(.35rem, 2.4vw - .7rem, 1.25rem); white-space: nowrap; }
+  .playoff-scoreboard .pickem-ledger-row td.pickem-ledger-player + td { padding-left: .5rem; }
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick:last-child { padding-right: .5rem; }
 }
 html[data-theme="night"] .playoff-scoreboard {
   background:
