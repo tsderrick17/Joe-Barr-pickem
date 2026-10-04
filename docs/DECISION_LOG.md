@@ -1243,3 +1243,7 @@ Bowl names on the picks page wrap only between words, never hyphenated mid-word,
 The Bowl Pool fonts (Graduate and Cormorant Garamond, both SIL OFL) are bundled from the @fontsource packages instead of fetched from Google Fonts, so a build or test run never needs to reach Google. A failed fetch had broken one end-to-end run, and could just as easily have failed a deploy. The rendered fonts are identical.
 
 The test chip on the Operations desk is about twice its old size, turns more readily under a drag (1.9 degrees per pixel, up from 1.2), and a click runs the Survivor toss from whatever orientation it is in: three turns, landing flat and face up.
+
+### Bowl Card scores as flip tiles
+
+Each player's Bowl Pool win total is a two-digit flip tile in the style of the games-remaining counter: navy with gold digits for the signed-in player, cream with navy digits for everyone else. The first time the Bowl Card scrolls into view on a visit, each tile spins on its own (its own pace, each digit turning independently, slowing as it comes in) for about a second, then the tiles land down the line, one about a tenth of a second after the one above it (skipped for anyone who has reduced motion turned on). The score and name cells now share the row's paper color and its top and bottom hairlines, with a thin gold edge where the games begin, so the whole row reads as one.
