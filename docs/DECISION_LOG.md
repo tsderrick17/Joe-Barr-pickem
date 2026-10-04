@@ -1241,3 +1241,5 @@ On the picks page the Bowl receipt is the Slate receipt for a player without Sur
 Bowl names on the picks page wrap only between words, never hyphenated mid-word, and locations wrap instead of being cut off on a phone. The screenshot sample now includes long names (Salute to Veterans, Frisco Football Classic) to keep this covered.
 
 The Bowl Pool fonts (Graduate and Cormorant Garamond, both SIL OFL) are bundled from the @fontsource packages instead of fetched from Google Fonts, so a build or test run never needs to reach Google. A failed fetch had broken one end-to-end run, and could just as easily have failed a deploy. The rendered fonts are identical.
+
+The test chip on the Operations desk is about twice its old size, turns more readily under a drag (1.9 degrees per pixel, up from 1.2), and a click runs the Survivor toss from whatever orientation it is in: three turns, landing flat and face up.
