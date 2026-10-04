@@ -1300,3 +1300,4 @@ On a finished or live row the spread's middle is level with the middle of the te
 - Graduate draws its zero with a dot in the middle, so tiles and the games-remaining counter show its capital O, the same shape without the dot.
 - Coin toss: the old toss slowed its spin to a stop like a spinning top. The chip now spins at a steady rate while it rises toward you and falls (height and swell follow a real arc), with a slight wobble, then lands flat and rocks to rest; the ground shadow widens and fades with height. 900 ms (was 680). The Operations test coin uses exactly the same curve, which a test keeps identical.
 - The Bowl Card's season line reads "2026-27 Special".
+- "Games" and "remaining" stack on two lines above the centered games-remaining counter.

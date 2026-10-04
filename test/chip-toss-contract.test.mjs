@@ -36,3 +36,8 @@ test("split-flap tiles hinge in perspective and never show Graduate's dotted zer
   assert.match(card, /\{digit === "0" \? "O" : digit\}/);
   assert.match(card, /seasonSuffix="Special" title="BOWL CARD"/);
 });
+
+test("the Bowl Card stacks Games over remaining above the centered counter", async () => {
+  const card = await readFile(new URL("../src/components/bowl-card.tsx", import.meta.url), "utf8");
+  assert.match(card, /<span className="block">Games<\/span><span className="block">remaining<\/span>/);
+});
