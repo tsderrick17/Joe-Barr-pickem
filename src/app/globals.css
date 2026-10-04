@@ -4471,3 +4471,11 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 .slate-receipt-actions a { justify-self: center; }
 .bowl-receipt-strip .slate-receipt-print { width: 13.9rem; max-width: 100%; }
 @media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
+/* The gold day dividers run from the dates down through the bowl names, so the
+   game days read clearly. */
+.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
+.bowl-card-section .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
+.bowl-card-section .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
