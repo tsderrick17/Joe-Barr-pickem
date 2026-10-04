@@ -1254,6 +1254,6 @@ The split-flap tiles now run on the browser's animation engine instead of re-ren
 
 The split-flap was still dropping frames on phones. Measured with the processor slowed sixfold (to stand in for a phone), 78 of 175 frames ran late during the spin. Now the flaps fold flat (a vertical squash rather than a 3D turn, which reads the same at this size), every digit keeps a steady rhythm, the moving flaps no longer switch on and off or animate shading, each digit is sealed so a flip never relays out the table, and digits flip about eight times a second. Under the same test 20 of 203 frames run late, and the spin finishes sooner.
 
-### The Slate page is split into pieces and its rows redraw only when they change
+### The Standings page is split into pieces
 
-`board/page.tsx` shrank from about 1,000 to 875 lines: the receipt and the masthead are now their own components (`slate-receipt.tsx`, `slate-header.tsx`, the receipt owning its wording rules), and the two copies of the code that puts a board response into the page are one function. Game rows are memoized and receive stable handlers and one shared Survivor settings object, so picking a team redraws that game's row instead of all of them. Measured with the processor slowed sixfold over 16 pick clicks: script time fell from 1.5 s to 0.5 s (about 68%), and frames over 50 ms from 19 to 11 to 15. All 50 Slate screenshots are pixel-identical.
+`page.tsx` went from 714 to about 495 lines. The Bowl Card (`bowl-card.tsx`) now owns its data, its spin and scroll behavior, and its markup, and the Survivor Table (`survivor-table.tsx`) is its own component, so the Bowl Card's timers and data never redraw the rest of the page. All 40 Standings screenshots are pixel-identical.
