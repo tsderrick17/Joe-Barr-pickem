@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
@@ -91,7 +91,7 @@ function strokeJitter(seed: string): CSSProperties {
   } as CSSProperties;
 }
 
-export default function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
+function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
   const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
   const [pickerLaneHeight, setPickerLaneHeight] = useState(0);
   const rowRef = useRef<HTMLElement>(null);
@@ -268,3 +268,6 @@ export default function SlateGameRow({ game, alternate, hasStarted, selectedTeam
     {survivor?.enabled ? null : <div aria-hidden="true" />}
   </article>;
 }
+
+// A row redraws only when its own game, selection, or Survivor settings change.
+export default memo(SlateGameRow);
