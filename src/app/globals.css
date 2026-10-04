@@ -476,11 +476,8 @@ body {
 .slate-receipt-submit-hint {
   color: #5d6470;
   display: block;
-  font-size: .45rem;
   font-weight: 900;
   letter-spacing: .08em;
-  line-height: 1.15;
-  margin-top: .08rem;
   text-align: center;
 }
 
@@ -628,7 +625,6 @@ body {
   flex-direction: column;
   gap: .1rem;
   justify-content: center;
-  min-height: 2.65rem;
   padding: .3rem .45rem;
   text-align: center;
 }
@@ -663,7 +659,6 @@ body {
   min-width: 0;
 }
 .slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.receipt-team-name-short { display: none; }
 /* The Survivor chip grows into its receipt lane, then scales down only when
    that lane truly gets smaller. Keeping the same inset on every breakpoint
    avoids the abrupt desktop/mobile size jump. */
@@ -719,7 +714,7 @@ body {
   .slate-receipt-ticket a::after { display: none; }
   .slate-receipt-ticket > span small { display: none; }
   .receipt-printing-status { font-size: .36rem; gap: .16rem; letter-spacing: .07em; }
-  .slate-receipt-submit-hint { font-size: .4rem; }
+  
   .slate-receipt-print { font-size: .58rem; min-height: 1.62rem; padding: .15rem .22rem; width: calc(100% - .2rem); }
   .slate-receipt-selection-chips { gap: .16rem; }
   .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
@@ -742,8 +737,6 @@ body {
   .slate-receipt-pool.slate-receipt-survivor { grid-template-rows: .58rem 3.1rem minmax(.58rem, auto); }
   .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
-  .receipt-team-name-full { display: none; }
-  .receipt-team-name-short { display: inline; }
   .slate-receipt-survivor-pick { --receipt-chip-buffer: .1rem; }
   .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
     height: min(2.95rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
@@ -2027,7 +2020,6 @@ button.slate-team-side:not(:disabled)::after {
     grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr) 4.5rem;
   }
 
-
   .slate-game-row.no-survivor-layout > :first-child {
     position: static;
     width: auto;
@@ -2511,8 +2503,6 @@ html[data-theme="night"] .bowl-receipt-metric strong { color: #edf7f5; }
 html[data-theme="night"] .bowl-receipt-metric small { color: #a8c1c4; }
 html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  background: #132129 !important;
-  border-color: #52707a !important;
   color: #edf7f5;
 }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-white"] { background-color: #132129 !important; }
@@ -3023,7 +3013,6 @@ html[data-theme="night"] .my-ticket-barcode {
   }
 }
 
-
 /* The Bowl receipt is the Slate's two-section receipt, the same size: its frame
    is as wide as the Slate's content column, so the strip's 79% (75% on a phone)
    comes out identical. */
@@ -3037,9 +3026,6 @@ html[data-theme="night"] .my-ticket-barcode {
 .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
 .bowl-receipt-strip .slate-receipt-pool > span { align-self: center; }
 .bowl-receipt-strip .slate-receipt-pool > em { align-self: center; justify-self: start; margin-left: 0; }
-
-
-
 
 .bowl-card-section {
   width: 100%;
@@ -3055,7 +3041,6 @@ html[data-theme="night"] .my-ticket-barcode {
   border-top: 3px solid #b8892b !important;
   background-color: #fffdf8 !important;
   background-image: none;
-  box-shadow: 0 8px 24px rgba(37, 30, 18, .08), inset 0 1px 0 rgba(255, 255, 255, .9);
 }
 .bowl-pool-page #bowl-selections > div:first-of-type {
   border-bottom-color: #e6dbb8;
@@ -3110,13 +3095,7 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .pickem-ledger-masthead {
   border-bottom-color: #bdb3a3;
 }
-.bowl-card-section .bowl-standings-scroll {
-  background: #fffdf8;
-  box-shadow: 0 8px 24px rgba(37, 30, 18, .08), inset 0 1px 0 rgba(255, 255, 255, .8);
-}
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
-  background: #8a6a1d !important;
-}
+
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
   background: linear-gradient(180deg, #f8f0da, #fcf8ec) !important;
 }
@@ -3124,17 +3103,7 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .bowl-standings-tiebreaker-header {
   background: #f5f0e6 !important;
 }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line {
-  color: #7a4a22 !important;
-}
-.bowl-card-section .bowl-standings-player-row {
-  border-color: #c7c0b5 !important;
-  background-color: #fffdf8 !important;
-  background-image: none;
-}
-.bowl-card-section .bowl-standings-player-row.is-alt {
-  background-color: #f3f0e8 !important;
-}
+
 .bowl-card-section .bowl-standings-player-row.is-viewer {
   background-color: #f8edcf !important;
   background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
@@ -3155,10 +3124,7 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
   justify-content: center;
   min-height: 2.7rem;
 }
-.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky * {
-  color: #1f2937 !important;
-}
+
 .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] {
   justify-content: flex-start;
 }
@@ -3174,44 +3140,21 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
   background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
   box-shadow: inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
 }
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
-  box-shadow: inset 4px 0 0 #c89f00, inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
-  box-shadow: inset -1px 0 0 rgba(200, 159, 0, .45), inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
-}
+
 /* One quiet, continuous viewer rail: the row owns the highlight, not each
    individual result cell. This keeps the name, score and game columns aligned. */
-.bowl-card-section .bowl-standings-player-row.is-viewer > span,
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
-  background: #f8edcf !important;
-  color: #4a3a12 !important;
-  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
-}
+
 .bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
-  border-left: 4px solid #c89f00;
   box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
 }
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
-  box-shadow: inset -1px 0 0 #d8b84d, inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky * { color: #4a3a12 !important; }
+
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   border-color: #7a6a3a !important;
-  border-top-color: #d4a93a !important;
   background: #1b1a16 !important;
 }
-html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
-  background: #2c2717 !important;
-  border-color: #7a6a3a !important;
-  color: #f0dca0 !important;
-}
+
 html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
   border-bottom-color: #7a6a3a;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
-  background: #2a2618 !important;
 }
 
 .bowl-card-section.is-minimized {
@@ -3525,7 +3468,6 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   display: flex;
   gap: 1.5rem;
   justify-content: space-between;
-  padding: 1rem 1.15rem;
 }
 
 .commissioner-map-banner.is-attention {
@@ -3546,10 +3488,23 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   .commissioner-email-list { max-height: 28rem; }
 }
 
-.commissioner-map-metrics { display: grid; gap: var(--pool-space-2); grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.commissioner-map-metric { background: var(--pool-surface); border: 1px solid var(--pool-rule); display: grid; gap: var(--pool-space-1); min-width: 0; padding: var(--pool-space-3); }
+.commissioner-map-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.commissioner-map-metric {
+  background: var(--pool-surface);
+  border: 1px solid var(--pool-rule);
+  display: grid;
+  min-width: 0;
+}
 .commissioner-map-metric-label { color: var(--pool-muted); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
-.commissioner-map-metric strong { color: var(--pool-ink); font-family: Georgia, serif; font-size: 1.25rem; line-height: 1.1; overflow-wrap: anywhere; }
+.commissioner-map-metric strong {
+  color: var(--pool-ink);
+  font-family: Georgia, serif;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
 .commissioner-map-metric > span:last-child { color: var(--pool-muted); font-size: .78rem; }
 
 .commissioner-map-pulse {
@@ -3591,7 +3546,6 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   left: calc(50% + 1.35rem);
   position: absolute;
   right: calc(-50% + 1.35rem);
-  top: 1.35rem;
   z-index: 0;
 }
 
@@ -3601,7 +3555,6 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   align-items: center;
   display: flex;
   flex-direction: column;
-  min-height: 6.5rem;
   padding: 0 .35rem;
   position: relative;
   text-align: center;
@@ -3619,10 +3572,8 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
   font-family: Arial, sans-serif;
   font-size: .85rem;
   font-weight: 900;
-  height: 2.7rem;
   justify-content: center;
   transition: transform 150ms ease, box-shadow 150ms ease;
-  width: 2.7rem;
 }
 
 .commissioner-flow-button:hover .commissioner-flow-node,
@@ -3637,7 +3588,11 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 .commissioner-flow-step.is-attention .commissioner-flow-node { background: #a33c29; border-color: #a33c29; color: #fff; }
 .commissioner-flow-step.is-waiting .commissioner-flow-node { background: #eee8dc; color: #676057; }
 .commissioner-flow-copy { display: block; min-width: 0; }
-.commissioner-flow-label { display: block; font-family: Georgia, serif; font-size: .95rem; font-weight: 700; margin-top: .65rem; }
+.commissioner-flow-label {
+  display: block;
+  font-family: Georgia, serif;
+  font-weight: 700;
+}
 .commissioner-flow-state { color: #6b655d; display: block; font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
 .commissioner-flow-step.is-active .commissioner-flow-state { color: #075f58; }
 .commissioner-flow-step.is-attention .commissioner-flow-state { color: #9b2e1d; }
@@ -3645,9 +3600,7 @@ html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 .commissioner-map-detail {
   border-left: 5px solid #787169;
   display: grid;
-  gap: 1.25rem;
   grid-template-columns: minmax(0, 1.5fr) minmax(13rem, 1fr);
-  padding: .9rem 1rem;
 }
 
 .commissioner-map-detail.is-complete { border-left-color: #16806a; }
@@ -3688,11 +3641,20 @@ html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
     top: 2.65rem;
     width: 2px;
   }
-  .commissioner-flow-button { align-items: flex-start; flex-direction: row; gap: .85rem; min-height: 4.8rem; padding: 0; text-align: left; }
+  .commissioner-flow-button {
+  align-items: flex-start;
+  flex-direction: row;
+  gap: .85rem;
+  padding: 0;
+  text-align: left;
+}
   .commissioner-flow-node { flex-basis: 2.65rem; height: 2.65rem; width: 2.65rem; }
   .commissioner-flow-label { font-size: 1rem; margin-top: .2rem; }
-  .commissioner-map-detail { grid-template-columns: minmax(0, 1fr); }
-  .commissioner-map-next { border-left: 0; border-top: 1px solid #c7c0b5; padding-left: 0; padding-top: .8rem; }
+  
+  .commissioner-map-next {
+  padding-left: 0;
+  padding-top: .8rem;
+}
 }
 
 .pool-display-toggle {
@@ -3781,7 +3743,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-bowl-name {
 html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #e3bf91 !important; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row {
   background: #172731 !important;
-  border-color: #587584 !important;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f !important; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span {
@@ -3848,10 +3809,8 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
   box-shadow: 0 16px 38px rgba(35, 38, 34, .14);
   color: #fffdf7;
   display: grid;
-  gap: 1.1rem;
   grid-template-columns: minmax(0, 1fr) minmax(19rem, .72fr);
   overflow: hidden;
-  padding: clamp(1.05rem, 2.5vw, 1.8rem);
   position: relative;
 }
 .commissioner-command-title, .commissioner-command-links { position: relative; z-index: 1; }
@@ -3866,10 +3825,23 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 .chip-playground:focus-visible { outline: 2px solid #9bdbca; outline-offset: 2px; }
 .chip-playground .survivor-poker-chip:not([data-animate]) { transform: rotateX(var(--playground-x, 0deg)) rotateY(var(--playground-y, 0deg)); }
 
-.commissioner-panel-nav { border-bottom: 1px solid #c8c2b7; padding: .8rem 0 .6rem; }
+.commissioner-panel-nav {
+  border-bottom: 1px solid #c8c2b7;
+}
 .commissioner-panel-tabs { display: flex; gap: .45rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
 .commissioner-panel-tabs::-webkit-scrollbar { display: none; }
-.commissioner-panel-tab { align-items: center; background: transparent; border: 1px solid transparent; color: #736e66; display: inline-flex; flex: 0 0 auto; font-family: Georgia, serif; font-size: 1.05rem; font-weight: 700; gap: .45rem; padding: .6rem .75rem; transition: background .18s ease, border-color .18s ease, color .18s ease; }
+.commissioner-panel-tab {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #736e66;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: Georgia, serif;
+  font-weight: 700;
+  gap: .45rem;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
 .commissioner-panel-tab > span { color: #9a9389; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .61rem; font-weight: 800; letter-spacing: .08em; }
 .commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
 .commissioner-panel-tab.is-active { background: #173c35; border-color: #173c35; color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
@@ -4026,7 +3998,11 @@ html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.commissioner-tool-card { background: linear-gradient(135deg, #fffdfa, #f4f0e8); border: 1px solid #cdc5b9; border-left: 5px solid #08764e; margin-bottom: 1rem; padding: clamp(.9rem, 2vw, 1.4rem); }
+.commissioner-tool-card {
+  background: linear-gradient(135deg, #fffdfa, #f4f0e8);
+  border: 1px solid #cdc5b9;
+  border-left: 5px solid #08764e;
+}
 .commissioner-tool-card--write { border-left-color: #a76311; }
 .commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
 .commissioner-diagnostics { border-bottom: 1px solid #c8c2b7; margin-top: 1rem; padding: .8rem 0 1.2rem; }
@@ -4147,7 +4123,12 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
 .bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
 .bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
-.bowl-crest-title { align-items: center; display: flex; gap: .6rem; justify-content: center; margin-top: .55rem; position: relative; }
+.bowl-crest-title {
+  align-items: center;
+  justify-content: center;
+  margin-top: .55rem;
+  position: relative;
+}
 .bowl-crest-title h2 {
   color: var(--bowl-navy);
   font-family: var(--font-graduate), Georgia, serif;
@@ -4251,7 +4232,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 }
 .bowl-pool-page #bowl-selections::before { border: 1px solid var(--bowl-gold-soft); content: ""; inset: 5px; pointer-events: none; position: absolute; }
 .bowl-pool-page #bowl-selections .bowl-title-row { border-bottom: 0; display: block; padding-bottom: 0; }
-.bowl-pool-page #bowl-selections .bowl-rules-compact { color: var(--bowl-muted); margin: .8rem auto 0; text-align: center; }
+
 .bowl-pool-page #bowl-selections > div.overflow-hidden { border-color: var(--bowl-rule); }
 .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
   background: var(--bowl-navy) !important;
@@ -4276,7 +4257,6 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 /* Dates, games, and lines read like a scoreboard header. */
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
   background: var(--bowl-navy) !important;
-  border-color: var(--bowl-navy-lift) !important;
   color: var(--bowl-gold-soft) !important;
   font-family: var(--font-graduate), Georgia, serif;
   font-weight: 400;
@@ -4298,8 +4278,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 .bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper) !important; border-color: #e7dfcb !important; }
 .bowl-card-section .bowl-standings-player-row.is-alt { background-color: var(--bowl-paper-alt) !important; }
 /* Day-to-day column dividers are hairlines of old gold, not heavy gray rules. */
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold-soft) !important; border-left-width: 1px !important; border-right-width: 1px !important; }
+
 .bowl-card-section .bowl-standings-player-row > span:nth-child(1) { font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell { background: var(--bowl-navy-lift) !important; }
 html[data-theme="night"] .bowl-crest-title h2 { color: #f4ecd9; }
@@ -4316,9 +4295,12 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: va
 html[data-theme="night"] .bowl-pool-page .bowl-game-line[class*="007e72"] { color: #8fd8cc !important; }
 html[data-theme="night"] .bowl-pennant { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
 @media (max-width: 639px) {
+  .bowl-pool-page .bowl-game-name {
+  line-height: 1.15;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
-@media (max-width: 639px) {
-  .bowl-pool-page .bowl-game-name { font-size: .72rem; line-height: 1.15; overflow: visible; text-overflow: clip; white-space: normal; }
 }
 
 /* ---- Bowl Pool: opt out, instructions, names, and the player rows */
@@ -4332,11 +4314,10 @@ html[data-theme="night"] .bowl-optout button:hover { color: #f4ecd9; }
 /* School names, centered in the Fav and Dog columns. */
 .bowl-pool-page .bowl-team-label { font-size: .86rem; font-weight: 700; line-height: 1.15; overflow: visible; text-overflow: clip; white-space: normal; }
 @media (max-width: 639px) {
-  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
-  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.9rem minmax(0, 1fr) 6.5rem 2.1rem 6.5rem; }
+  
   .bowl-pool-page .bowl-team-label { font-size: .75rem; }
-  .bowl-pennant { width: 5.9rem; }
-  .bowl-pennant-flag { font-size: .58rem; }
+  
+  
 }
 
 /* Player rows: the same varsity-and-serif voice as the heading. */
@@ -4365,12 +4346,14 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:la
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: #1b1f2b !important; border-color: #2e3346 !important; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background-color: #20253a !important; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; color: #f4ecd9 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  color: #f4ecd9 !important;
+}
 @media (max-width: 639px) {
   .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
   .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.8rem minmax(0, 1fr) 5.3rem 1.9rem 5.3rem; }
-  .bowl-pennant { width: 5.1rem; }
-  .bowl-pennant-flag { font-size: .54rem; padding-right: .55rem; }
+  
+  
   .bowl-pool-page .bowl-game-name { hyphens: auto; }
 }
 @media (max-width: 639px) {
@@ -4386,12 +4369,7 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 .bowl-crest-title h2 { grid-column: 2; }
 .bowl-crest-title > button { grid-column: 3; justify-self: start; margin-left: .6rem; }
 /* Day dividers are old gold. */
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-l-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-l-2"]) { border-left-width: 0 !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-r-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-r-2"]) { border-right-width: 0 !important; }
+
 /* Your row: the name area stays quiet, and your score sits in a small navy tile. */
 .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
 .bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
@@ -4416,7 +4394,7 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 .bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-l-2"]) { border-left-width: 0 !important; }
 .bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-r-2"]),
 .bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-r-2"]) { border-right-width: 0 !important; }
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-navy) !important; }
+
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
 /* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
@@ -4439,11 +4417,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
    and both sit on the same bottom edge, so they read as one line. */
 .slate-receipt-submit-hint { font-size: .48rem; line-height: 1.25; margin-top: 0; }
 @media (max-width: 767px) { .slate-receipt-submit-hint { font-size: .5rem; letter-spacing: .04em; } }
-/* The footnote is centered across the whole stub, not just the padded area
-   inside it, so a long line like "1 PICK NEEDED" keeps equal room on both sides. */
-@media (max-width: 767px) {
-  .slate-receipt-ticket > .slate-receipt-footnote { margin-inline: -.5rem -.34rem; width: calc(100% + .84rem); }
-}
 /* Everything in the stub is centered horizontally in the stub, at every width. */
 .slate-receipt-ticket { align-items: center; text-align: center; }
 .slate-receipt-ticket > span { justify-content: center; }
@@ -4504,16 +4477,13 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 .bowl-flap {
   border: 1px solid var(--flap-edge);
   border-radius: .18rem;
-  box-shadow: 0 1px 1px rgba(29, 29, 31, .14);
   display: block;
   height: 1.6rem;
-  perspective: 6rem;
   position: relative;
   width: .98rem;
 }
 .bowl-flap::after { background: var(--flap-seam); content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; z-index: 4; }
 .bowl-flap-half {
-  backface-visibility: hidden;
   background: var(--flap-bg);
   color: var(--flap-ink) !important;
   height: 50%;
@@ -4538,16 +4508,20 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 .bowl-flap-half.is-bottom > span { bottom: 0; }
 /* The moving flaps: hidden between flips, animated by the browser. The top
    flap falls away and the next card's lower half lands over the old one. */
-.bowl-flap-half.is-folding { visibility: hidden; will-change: transform; z-index: 2; }
-.bowl-flap-half.is-dropping { transform: rotateX(90deg); visibility: hidden; will-change: transform; z-index: 3; }
-.bowl-flap-shade { background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .55)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
-.bowl-flap-half.is-dropping .bowl-flap-shade { background: linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, 0)); }
+.bowl-flap-half.is-folding {
+  will-change: transform;
+  z-index: 2;
+}
+.bowl-flap-half.is-dropping {
+  will-change: transform;
+  z-index: 3;
+}
 .bowl-flap { box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink) !important; }
 /* Flat flaps: no 3D, so no perspective or hidden back faces to draw. */
 .bowl-flap { perspective: none; }
 .bowl-flap-half { backface-visibility: visible; }
-.bowl-flap-half.is-dropping { transform: scaleY(0); }
+
 /* Each digit is sealed off: a flip redraws that digit only, never the table around it. */
 .bowl-flap { contain: strict; }
 .bowl-flap-half { contain: layout paint; }

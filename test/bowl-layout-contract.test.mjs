@@ -20,7 +20,9 @@ test("Bowl Card uses a gold theme and keeps the standard heading rule", () => {
   assert.doesNotMatch(bowl, /\.bowl-card-section \.pickem-ledger-masthead[^{]*\{[^}]*border-top-color/);
   // No teal or mint left in the Bowl Pool treatment.
   assert.doesNotMatch(bowl, /#0f766e|#155e59|#e8f3f0|#b9cfc8|#55b8aa/i);
-  assert.match(css, /\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child span:not\(\[aria-hidden\]\) \{\s*background: #8a6a1d !important;/);
+  // The scoreboard header (dates, games, lines) is navy; the old gold header fill is gone.
+  assert.doesNotMatch(css, /#8a6a1d/);
+  assert.match(css, /\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child span:not\(\[aria-hidden\]\) \{\s*background: var\(--bowl-navy\) !important;/);
 });
 
 test("Bowl countdown tiles and lines use the Bowl Pool's navy and old gold", () => {
