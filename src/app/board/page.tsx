@@ -885,6 +885,7 @@ export default function BoardPage() {
         >
           <div className="slate-receipt-ticket">
             <span>YOUR RECEIPT</span>
+            <div className="slate-receipt-actions">
             <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
             <button
               className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
@@ -894,6 +895,7 @@ export default function BoardPage() {
             >
               SUBMIT
             </button>
+            </div>
             <span className="slate-receipt-footnote">
               <span
                 aria-live="polite"

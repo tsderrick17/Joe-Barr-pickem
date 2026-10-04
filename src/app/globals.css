@@ -4464,3 +4464,10 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
   .slate-receipt-ticket { padding-inline: .45rem; }
   .slate-receipt-ticket > .slate-receipt-footnote { margin-inline: -.45rem; width: calc(100% + .9rem); }
 }
+/* The link and Submit share one column exactly as wide as "VIEW FULL TICKET":
+   the button never stretches wider than the link above it. */
+.slate-receipt-actions { display: grid; gap: inherit; justify-items: stretch; max-width: 100%; width: max-content; }
+.slate-receipt-actions .slate-receipt-print { margin-inline: 0; width: 100%; }
+.slate-receipt-actions a { justify-self: center; }
+.bowl-receipt-strip .slate-receipt-print { width: 13.9rem; max-width: 100%; }
+@media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
