@@ -4413,3 +4413,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: #20253a !important; }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile { color: var(--bowl-gold-soft) !important; }
+/* Bowl names wrap only between words, never mid-word. */
+.bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
+@media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
+@media (max-width: 639px) { .bowl-pool-page .bowl-selection-game-row small { overflow: visible; text-overflow: clip; white-space: normal; } }
