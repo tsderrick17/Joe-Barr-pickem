@@ -1241,3 +1241,5 @@ On the picks page the Bowl receipt is the Slate receipt for a player without Sur
 Bowl names on the picks page wrap only between words, never hyphenated mid-word, and locations wrap instead of being cut off on a phone. The screenshot sample now includes long names (Salute to Veterans, Frisco Football Classic) to keep this covered.
 
 The Bowl Pool fonts (Graduate and Cormorant Garamond, both SIL OFL) are bundled from the @fontsource packages instead of fetched from Google Fonts, so a build or test run never needs to reach Google. A failed fetch had broken one end-to-end run, and could just as easily have failed a deploy. The rendered fonts are identical.
+
+The gold day dividers on the Bowl Card run from the dates down through the bowl names, ending where the player rows begin, so game days read clearly.
