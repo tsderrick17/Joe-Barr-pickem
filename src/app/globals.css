@@ -4401,22 +4401,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
 .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: var(--bowl-paper-alt) !important; }
-.bowl-score-tile { font-weight: inherit; }
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-score-tile {
-  background: var(--bowl-navy);
-  border-radius: .2rem;
-  box-shadow: inset 0 0 0 1px var(--bowl-gold);
-  color: var(--bowl-gold-soft);
-  min-width: 1.7rem;
-  padding: .12rem .35rem;
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child { color: var(--bowl-gold-soft) !important; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child { background: #1b1f2b !important; box-shadow: none !important; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: #20253a !important; }
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile { color: var(--bowl-gold-soft) !important; }
 /* Bowl names wrap only between words, never mid-word. */
 .bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
 @media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
@@ -4483,3 +4467,59 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
+
+/* ---- Bowl Card: flip-tile scores and one consistent row style */
+.bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; }
+.bowl-score-digit {
+  background: var(--bowl-paper);
+  border: 1px solid var(--bowl-gold-soft);
+  border-radius: .18rem;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .7), 0 1px 1px rgba(29, 29, 31, .12);
+  color: var(--bowl-navy);
+  display: grid;
+  font: 400 1.15rem/1 var(--font-graduate), ui-monospace, monospace;
+  height: 1.6rem;
+  min-width: .95rem;
+  overflow: hidden;
+  place-items: center;
+  position: relative;
+}
+.bowl-score-digit::after { background: rgba(22, 34, 58, .12); content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; }
+.bowl-score-tile.is-viewer .bowl-score-digit { background: #0f1830; border-color: var(--bowl-gold); box-shadow: inset 0 1px rgba(255, 255, 255, .14), 0 1px 1px rgba(29, 29, 31, .2); color: var(--bowl-gold-soft); }
+.bowl-score-tile.is-viewer .bowl-score-digit::after { background: rgba(255, 255, 255, .16); }
+.bowl-score-tile.is-spinning .bowl-flip-digit-face { animation: bowl-digit-flip .32s ease-in-out infinite; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile.is-viewer .bowl-score-digit,
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky .bowl-score-tile .bowl-score-digit { color: var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile:not(.is-viewer) .bowl-score-digit { color: var(--bowl-navy) !important; }
+@media (prefers-reduced-motion: reduce) { .bowl-score-tile.is-spinning .bowl-flip-digit-face { animation: none; } }
+
+/* The score and name cells read as part of the row: the same paper, the same
+   hairlines top and bottom, and a quiet gold edge where the games begin. */
+.bowl-card-section .bowl-standings-player-row { box-shadow: none !important; background-image: none !important; }
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: var(--bowl-paper) !important; box-shadow: none !important; }
+.bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: var(--bowl-paper-alt) !important; }
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-player-row.is-viewer > span,
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
+  background: #f3ead4 !important;
+  border-left: 0;
+  box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft), inset -1px 0 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: #1b1f2b !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: #20253a !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+html[data-theme="night"] .bowl-score-digit { background: #232838; border-color: #4d4a3e; color: #f4ecd9; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile:not(.is-viewer) .bowl-score-digit { color: #f4ecd9 !important; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile.is-viewer .bowl-flip-digit-face { color: var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile:not(.is-viewer) .bowl-flip-digit-face { color: var(--bowl-navy) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile:not(.is-viewer) .bowl-flip-digit-face { color: #f4ecd9 !important; }
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:last-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: #f3ead4 !important; box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }

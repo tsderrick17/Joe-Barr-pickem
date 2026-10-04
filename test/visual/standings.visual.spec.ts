@@ -43,6 +43,8 @@ async function settle(page: Page) {
   });
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.waitForLoadState("networkidle");
+  // The Bowl Card's score tiles spin when the card first comes into view; wait for them to land.
+  await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 10_000 });
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }
 
