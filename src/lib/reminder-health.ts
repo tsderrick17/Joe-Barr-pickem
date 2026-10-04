@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type ReminderHealth = {
   overdueScheduled: number;
+  /** Titles of the overdue messages, so an alert can say which ones. */
+  overdueTitles?: string[];
   staleSending: number;
   recentEmailFailures: number;
   problems: string[];
@@ -17,7 +19,7 @@ export async function checkReminderHealth(now = new Date()): Promise<ReminderHea
   const staleAt = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
   const failureSince = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const [scheduledResult, sendingResult, failuresResult] = await Promise.all([
-    supabaseAdmin.from("push_reminders").select("id", { count: "exact", head: true }).eq("status", "scheduled").lte("scheduled_for", overdueAt),
+    supabaseAdmin.from("push_reminders").select("title", { count: "exact" }).eq("status", "scheduled").lte("scheduled_for", overdueAt).order("scheduled_for").limit(5),
     supabaseAdmin.from("push_reminders").select("id, processing_started_at").eq("status", "sending"),
     supabaseAdmin.from("email_reminder_deliveries").select("reminder_id").in("status", ["failed", "suppressed"]).gte("attempted_at", failureSince),
   ]);
@@ -32,11 +34,12 @@ export async function checkReminderHealth(now = new Date()): Promise<ReminderHea
   if (failedRemindersError) throw new Error("Reminder delivery health could not be checked.");
 
   const overdueScheduled = scheduledResult.count ?? 0;
+  const overdueTitles = (scheduledResult.data ?? []).map((reminder) => reminder.title).filter(Boolean);
   const staleSending = (sendingResult.data ?? []).filter((reminder) => !reminder.processing_started_at || new Date(reminder.processing_started_at) <= new Date(staleAt)).length;
   const failureCount = recentEmailFailures ?? 0;
   const problems: string[] = [];
   if (overdueScheduled) problems.push(`${overdueScheduled} reminder${overdueScheduled === 1 ? " has" : "s have"} been waiting more than 30 minutes for its pool update.`);
   if (staleSending) problems.push(`${staleSending} reminder${staleSending === 1 ? " is" : "s are"} stuck while sending.`);
   if (failureCount) problems.push(`${failureCount} email reminder ${failureCount === 1 ? "delivery failed" : "deliveries failed"} in the last 24 hours.`);
-  return { overdueScheduled, staleSending, recentEmailFailures: failureCount, problems };
+  return { overdueScheduled, overdueTitles, staleSending, recentEmailFailures: failureCount, problems };
 }
