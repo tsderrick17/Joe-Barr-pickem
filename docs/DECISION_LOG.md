@@ -1284,3 +1284,7 @@ Opening a table used to skip the slide: the content was measured after it had al
 ## Survivor picks in the pick reveal emails
 
 The Sunday and featured-window reveal images now show the Survivor picks made on that window's started games, as a short "Survivor · Straight-up" section under the Pick'em table in the same image: name and team chip, three to a line, green for W and red for L once graded. It is part of the same image rather than a second one, so the email makes no extra image request, and the snapshot adds one small read (that week's Survivor picks on just those games, then the names and teams). Only games that have kicked off are read, so a pick on a later game stays private. Receipts saved before this change have no Survivor field and render exactly as before. Playoff reveals are unchanged, since Survivor ends with the regular season.
+
+## Bowl Card: one line style for the whole table
+
+Adjacent cells each drew their own border, so day breaks were doubled (2 px gold plus 2 px on the next cell, or gold against a navy edge at the tiebreaker), the header's lines were heavier than the rows', and the row rules were a different color. Every line in the Bowl Card table is now one single 1 px old-gold rule: day breaks are a left edge only, the frozen name column carries the edge where the games begin, the tiebreaker has one left rule, and each row has one bottom rule. The older overlapping border rules were removed rather than overridden. Spreads drop the minus sign, since the favorite is always listed on top.
