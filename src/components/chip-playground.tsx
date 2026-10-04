@@ -46,7 +46,7 @@ export default function ChipPlayground() {
       title="Click to flip, drag to turn"
       type="button"
     >
-      <SurvivorPokerChip abbreviation="LV" animate={toss > 0} key={toss} teamName="Las Vegas Raiders" tooltip="Click to flip, drag to turn" />
+      <SurvivorPokerChip abbreviation="LV" animate={toss > 0} showEdge key={toss} teamName="Las Vegas Raiders" tooltip="Click to flip, drag to turn" />
     </button>
   );
 }

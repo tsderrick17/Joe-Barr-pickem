@@ -4417,3 +4417,17 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 .bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
 @media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
 @media (max-width: 639px) { .bowl-pool-page .bowl-selection-game-row small { overflow: visible; text-overflow: clip; white-space: normal; } }
+/* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
+.bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
+@media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
+/* Old-gold dividers belong between the dates on the top row; below it the
+   columns are separated by quiet hairlines. */
+.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
+.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold-soft) !important; border-left-width: 1px !important; border-right-width: 1px !important; }
+.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-l-2"]),
+.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-l-2"]) { border-left-width: 0 !important; }
+.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-r-2"]),
+.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-r-2"]) { border-right-width: 0 !important; }
+.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-navy) !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
