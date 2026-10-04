@@ -23,6 +23,8 @@
     "test:visual": "playwright test --config playwright.visual.config.ts"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/graduate": "5.3.0",
     "@sentry/nextjs": "^10.72.0",
     "@supabase/supabase-js": "^2.117.2",
     "@vercel/analytics": "^2.0.1",
