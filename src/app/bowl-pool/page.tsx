@@ -170,7 +170,7 @@ export default function BowlPoolPage() {
       {!isLoading && canView ? (
         <>
           {poolLocked ? optedIn === false ? <div className="mt-4 border border-slate-300 bg-white p-4 text-center text-sm font-bold text-slate-600">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-white p-3 text-center text-sm font-bold text-slate-500">Loading…</div> : optedIn === false ? <BowlClaimSeat onClaim={() => void changeOptIn(true)} /> : null}
-          {optedIn === true ? <section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
+          {optedIn === true ? <div className="bowl-receipt-frame"><div className="bowl-receipt-frame-inner"><section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT</span>
               <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">SUBMIT</button>
@@ -188,7 +188,7 @@ export default function BowlPoolPage() {
               <em aria-live="polite" className={bowlReceipt.state === "complete" ? "is-complete" : bowlReceipt.state === "unsaved" ? "is-unsaved" : ""}>{bowlReceipt.status}</em>
             </div>
             {submissionError ? <p className="slate-receipt-warning" role="alert">{submissionError}</p> : null}
-          </section> : null}
+          </section></div></div> : null}
           {optedIn === true && !poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
           {optedIn === true ? <section className="bowl-pool-board mt-4 border border-slate-300 bg-white p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">

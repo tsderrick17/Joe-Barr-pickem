@@ -201,7 +201,7 @@ body {
 .slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem {
   grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto);
 }
-.slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) {
+.slate-mini-nav.slate-receipt-strip.is-pickem-only {
   grid-template-columns: 26.5823% minmax(0, 1fr);
   margin-inline: auto;
   width: 79%;
@@ -698,7 +698,7 @@ body {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
   .slate-receipt-strip.has-survivor { grid-template-columns: 25% 50% 25%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
-  .slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
+  .slate-mini-nav.slate-receipt-strip.is-pickem-only { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
   /* The torn ticket is narrower on a phone, so a six-game Wild Card round
      stacks as two columns of three instead of three narrow columns. */
   .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
@@ -726,8 +726,6 @@ body {
   .slate-receipt-selection-chip button { font-size: .84rem; }
   .slate-receipt-lock-mark { font-size: .56rem; }
   .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
-  .bowl-receipt-strip,
-  .slate-receipt-strip.bowl-receipt-strip.is-pickem-only { grid-template-columns: 6.5rem minmax(0, 1fr); width: 100%; }
   .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
   .bowl-receipt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .bowl-receipt-metric { min-height: 2.45rem; padding-inline: .24rem; }
@@ -3022,19 +3020,14 @@ html[data-theme="night"] .my-ticket-barcode {
 }
 
 
-.bowl-receipt-strip {
-  align-items: stretch;
-  grid-template-columns: minmax(7.5rem, 9rem) minmax(18rem, 1fr);
-  margin-inline: auto;
-  max-width: 100%;
-  width: fit-content;
-}
-.slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
-  /* Size the desktop receipt to its actual stub and two metrics instead of
-     stretching the pool lane across the full content column. */
-  grid-template-columns: 9rem max-content;
-  width: max-content;
-}
+/* The Bowl receipt is the Slate's two-section receipt, the same size: its frame
+   is as wide as the Slate's content column, so the strip's 79% (75% on a phone)
+   comes out identical. */
+.bowl-receipt-frame { display: flex; justify-content: center; }
+.bowl-receipt-frame-inner { box-sizing: border-box; flex: 0 0 auto; padding-inline: 17px; width: min(64rem, calc(100% + 1rem)); }
+@media (min-width: 640px) { .bowl-receipt-frame-inner { padding-inline: 21px; width: min(64rem, calc(100% + 3rem)); } }
+@media (min-width: 768px) { .bowl-receipt-frame-inner { padding-inline: 41px; } }
+.bowl-receipt-strip { align-items: stretch; }
 .bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
 .bowl-receipt-strip .slate-receipt-print { margin-bottom: auto; margin-top: auto; }
 .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
@@ -4122,10 +4115,6 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 /* The Bowl receipt has a deliberately wide desktop layout, but its flexible
    pool lane must never retain the desktop minimum on a phone. */
 @media (max-width: 767px) {
-  .slate-receipt-strip.bowl-receipt-strip.is-pickem-only {
-    grid-template-columns: minmax(5.75rem, 6.5rem) minmax(0, 1fr);
-    width: 100%;
-  }
   .bowl-receipt-strip .slate-receipt-pool,
   .bowl-receipt-metrics,
   .bowl-receipt-metric {
