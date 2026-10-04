@@ -2041,11 +2041,11 @@ button.slate-team-side:not(:disabled)::after {
     width: min(100%, 25rem);
   }
 
-  /* Upcoming rows: both names hug the line, the favorite from its left and the
-     underdog from its right, so they sit the same distance from it. */
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left,
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-label { text-align: right; }
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-picker-list { justify-content: flex-end; text-align: right; }
+  /* Upcoming rows: each name is centered in its half of the row, so the two
+     sit the same distance from the line. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-label { text-align: center; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-picker-list { justify-content: center; text-align: center; }
 }
 
 @media (max-width: 767px) {
@@ -2064,10 +2064,10 @@ button.slate-team-side:not(:disabled)::after {
     position: static;
     width: auto;
   }
-  /* Short names hug the line from both sides: the favorite reads right-to-left
-     toward it, the underdog left-to-right away from it. */
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left { text-align: right; }
-  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane.is-left .slate-team-picker-list { justify-content: flex-end; text-align: right; }
+  /* Each name is centered in its half of the row, the same distance from the line. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-label { text-align: center; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-picker-list { justify-content: center; text-align: center; }
   /* The early-lock note wraps inside the spread column instead of running
      into the underdog's name. */
   .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell > p {
