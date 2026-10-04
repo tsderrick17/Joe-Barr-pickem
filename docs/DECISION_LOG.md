@@ -1301,3 +1301,7 @@ On a finished or live row the spread's middle is level with the middle of the te
 - Coin toss: the old toss slowed its spin to a stop like a spinning top. The chip now spins at a steady rate while it rises toward you and falls (height and swell follow a real arc), with a slight wobble, then lands flat and rocks to rest; the ground shadow widens and fades with height. 900 ms (was 680). The Operations test coin uses exactly the same curve, which a test keeps identical.
 - The Bowl Card's season line reads "2026-27 Special".
 - "Games" and "remaining" stack on two lines above the centered games-remaining counter.
+
+## Bowl Pool picks page: tighter top, boxed team targets
+
+The receipt now sits right under the menu (the page had a large blank band above it), and Opt out is a small link at the foot of the board instead of its own line between the receipt and the board. Each team is a large boxed button (at least 3.1 rem tall, with margin on every side) so a tap can never land on the wrong team; the chosen team's pennant fills its box, and names wrap only between words. On a phone the line has its own lane between the two boxes, wide enough for a spread like -10.5.

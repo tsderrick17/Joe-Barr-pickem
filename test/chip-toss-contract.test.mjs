@@ -41,3 +41,16 @@ test("the Bowl Card stacks Games over remaining above the centered counter", asy
   const card = await readFile(new URL("../src/components/bowl-card.tsx", import.meta.url), "utf8");
   assert.match(card, /<span className="block">Games<\/span><span className="block">remaining<\/span>/);
 });
+
+test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed team targets", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /className="bowl-pool-page mx-auto max-w-6xl px-2 pb-8 pt-0 sm:px-6 sm:pb-10"/);
+  assert.equal((page.match(/className=\{`bowl-pick-box /g) ?? []).length, 2);
+  // Opt out sits at the foot of the board, not on its own line above it.
+  assert.ok(page.indexOf('className="bowl-optout"') > page.indexOf("National Championship total points tiebreaker"));
+  assert.match(css, /\.bowl-pool-page #bowl-selections \.bowl-pick-box \{[\s\S]*?min-height: 3\.1rem;/);
+  assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.1rem 2\.6rem 5\.1rem;/);
+});
