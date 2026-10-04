@@ -30,7 +30,7 @@ export default function Collapse({ open, children }: { open: boolean; children: 
     running.current = null;
     const slide = !window.matchMedia("(prefers-reduced-motion: reduce)").matches && typeof node?.animate === "function";
     if (!node || !slide) {
-      if (!open) setMounted(false);
+      if (!open) window.setTimeout(() => setMounted(false), 0);
       return;
     }
     const target = open ? node.scrollHeight : 0;
@@ -44,7 +44,7 @@ export default function Collapse({ open, children }: { open: boolean; children: 
       if (running.current !== animation) return;
       running.current = null;
       node.style.overflow = "";
-      if (!open) setMounted(false);
+      if (!open) window.setTimeout(() => setMounted(false), 0);
     };
     animation.onfinish = settle;
     animation.oncancel = settle;
