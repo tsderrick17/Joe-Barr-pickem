@@ -1242,6 +1242,6 @@ Bowl names on the picks page wrap only between words, never hyphenated mid-word,
 
 The Bowl Pool fonts (Graduate and Cormorant Garamond, both SIL OFL) are bundled from the @fontsource packages instead of fetched from Google Fonts, so a build or test run never needs to reach Google. A failed fetch had broken one end-to-end run, and could just as easily have failed a deploy. The rendered fonts are identical.
 
-### A more compact receipt
+### One visual size for every team logo
 
-The phone receipt dropped from about 99 px to 72 px: the stub link reads "FULL TICKET" on one line (desktop keeps "VIEW FULL TICKET"), a leftover padding rule from the old three-link nav no longer pads the link, and the stub gaps are tighter. The footnote ("ALL PICKS SAVED") is pinned to the stub's bottom line. Rounds with 4 or 6 picks size up only as needed (about 88 px on a phone for six). The Bowl receipt is exactly the Pick'em receipt's height (72.1 px phone, 86.3 px desktop).
+The logo files are all 500 x 500, but marks fill very different shares of that canvas: the Colts' horseshoe runs edge to edge while wide marks like the Seahawks' sit in a thick transparent margin, so the Colts looked far larger than the Jaguars, 49ers, or Bills on the Pick'em Pad. `scripts/measure-team-logos.mjs` measures each logo's inked width and height and writes `src/lib/team-logo-scale.js`, a multiplier per team (0.72 to 1.20) pulling every mark toward the median size. The Pad logos and the Survivor chips both use it, replacing the hand-tuned chip table. Run the script again if a logo file changes; a test checks that every logo has a scale.
