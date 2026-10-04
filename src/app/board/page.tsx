@@ -577,7 +577,7 @@ export default function BoardPage() {
           ? `${duePickCount} PICK${duePickCount === 1 ? "" : "S"} NEEDED`
           : survivorControlsEnabled && !survivorPick
             ? "SURVIVOR PICK NEEDED"
-            : "ALL PICKS SAVED";
+            : "PICKS SAVED";
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -885,7 +885,8 @@ export default function BoardPage() {
         >
           <div className="slate-receipt-ticket">
             <span>YOUR RECEIPT</span>
-            <Link href="/#my-ticket">VIEW FULL TICKET</Link>
+            <div className="slate-receipt-actions">
+            <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
             <button
               className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
               disabled={receiptIsLoading || isSubmitting}
@@ -894,6 +895,7 @@ export default function BoardPage() {
             >
               SUBMIT
             </button>
+            </div>
             <span className="slate-receipt-footnote">
               <span
                 aria-live="polite"
