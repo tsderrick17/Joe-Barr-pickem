@@ -52,13 +52,13 @@ export default function ChipPlayground() {
     setTurnNow({ x: current.startX - dy * DRAG_DEGREES_PER_PIXEL, y: current.startY + dx * DRAG_DEGREES_PER_PIXEL });
   }
 
-  /** The Survivor toss from wherever the chip is now: three turns, landing flat and face up. */
+  /** The Survivor toss from wherever the chip is now: three turns, landing back in the same position. */
   function toss() {
     const chip = host.current?.querySelector<HTMLElement>(".survivor-poker-chip");
     if (!chip) return;
     const from = turnRef.current;
-    // Land on the nearest flat orientation, after three more full turns.
-    const to = { x: 360 * Math.round(from.x / 360) + 1080, y: 360 * Math.round(from.y / 360) };
+    // Three full turns end over end, landing exactly where it started.
+    const to = { x: from.x + 1080, y: from.y };
     const frames = TOSS.map((stop) => ({
       offset: stop.at,
       transform: `translateY(${stop.lift}px) rotateX(${from.x + (to.x - from.x) * stop.turn}deg) rotateY(${from.y + (to.y - from.y) * stop.turn}deg) scale(${stop.scale})`,

@@ -1044,7 +1044,7 @@ body {
 .survivor-poker-chip-edge-seg::before {
   backface-visibility: hidden;
   background:
-    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
     linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
     #cdc7bb;
   content: "";
@@ -1058,7 +1058,7 @@ body {
 }
 .survivor-poker-chip-edge-seg.is-insert::before {
   background:
-    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
     linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
     linear-gradient(90deg, var(--chip-secondary) 0 25%, var(--chip-primary) 25% 75%, var(--chip-tertiary) 75% 100%);
 }
@@ -1551,6 +1551,12 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-player { align-items: center; display: flex; grid-row: 1 / span 2; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
+}
+/* Wherever the pad is wide enough (tablet and up), every pick of the round sits
+   on one line per player, and the ledger spans the whole pad so its ruled lines
+   and columns run edge to edge instead of bunching at the left. */
+@media (min-width: 640px) {
+  .playoff-scoreboard .pickem-ledger-grid { width: 100%; }
 }
 html[data-theme="night"] .playoff-scoreboard {
   background:
@@ -3914,17 +3920,35 @@ html[data-theme="night"] .provider-chart-table { color: #d4d4d8; }
 html[data-theme="night"] .provider-chart-table thead th { background: #18181b; border-bottom-color: #3f3f46; color: #a1a1aa; }
 html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #27272a; }
 html[data-theme="night"] .provider-chart-table tbody tr:nth-child(even) { background: #1f1f23; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th,
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td { white-space: normal; overflow-wrap: anywhere; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(1),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(1) { width: 20%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(2),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(2) { width: 14%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(4),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(4) { width: 33%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+/* Worker activity. The prefix outranks the dashboard's generic table rules
+   (which force one-line cells and a pill on every second column). */
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td { white-space: normal; overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(1) { width: 20%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(2) { width: 14%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+/* On a phone, each run is a small card: the worker and its status on one line,
+   then when it started and finished, each on a labeled line of its own. */
+@media (max-width: 639px) {
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody { display: block; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) thead,
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) colgroup { display: none; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid #f1f1f2; border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(n) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) .grading-worker-status { white-space: nowrap; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4) { grid-column: 1 / -1; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3)::before { content: "Started  "; font-weight: 700; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4)::before { content: "Finished  "; font-weight: 700; }
+}
+html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { border-color: #27272a; }
 .grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
 [aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid #e4e4e7; margin-left: .25rem; padding-left: 1rem; }
 [aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }

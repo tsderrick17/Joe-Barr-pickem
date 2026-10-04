@@ -1273,3 +1273,10 @@ The first sliding version wrapped the Survivor Table and Bowl Card in a class na
 ## Sliding tables roll like window blinds
 
 Opening a table used to skip the slide: the content was measured after it had already painted at full height, so it popped open. The slide now runs in a layout effect from zero height before the first paint, with no fade, on an ease-in-out curve over 420 ms (`collapse.tsx`). Survivor's − OUT / + OUT button rolls the eliminated rows shut and open the same way (`useBlindRows`): hidden rows stay on the page until they have rolled away. Reduced motion skips both.
+
+## Worker activity on phones, test coin, chip edge shading, wider playoff ledger
+
+- Worker activity: its own rules lost to the dashboard's generic table rules (one-line cells and a pill on every second column), so on a phone the dates overlapped and the status became a circle. Its selector now outranks them, and on a phone each run is a card: worker and status on one line, then "Started" and "Finished" lines.
+- The Operations test coin flips three turns end over end and lands exactly where it started, instead of snapping to the nearest flat position.
+- Chip edge: each rim segment was one flat shade, which showed faint steps between segments up close. Each segment now shades from its neighbor's tone to the next, so the edge reads as one round band. Thickness was left as is: it already matches a real chip (about 8.5% of the diameter).
+- Playoff ledger: from tablet width up, every pick of the round was already on one line per player; the ledger now spans the whole pad so its columns and ruled lines run edge to edge.
