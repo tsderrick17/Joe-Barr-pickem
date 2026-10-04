@@ -4633,7 +4633,8 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
    a small link in the board's corner, and each team is a large boxed target. */
 .bowl-pool-page .bowl-receipt-frame { margin-top: 0; }
 .bowl-pool-page .bowl-pool-board { position: relative; }
-.bowl-pool-page .bowl-optout { margin: .2rem 0 0; text-align: right; }
+/* Opt out sits right under the instructions, lined up with their text. */
+.bowl-pool-page .bowl-optout { margin: .45rem auto 0; max-width: 28rem; padding-left: 1.1rem; text-align: left; }
 .bowl-pool-page .bowl-optout button { font-size: .68rem; padding: 0; }
 .bowl-pool-page #bowl-selections .bowl-pick-box {
   align-items: center;
@@ -4667,3 +4668,5 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 }
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { background: #1b1f2b; border-color: #4d4a3e; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
+/* Wide enough on a desktop that the first instruction stays on one line. */
+.bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }

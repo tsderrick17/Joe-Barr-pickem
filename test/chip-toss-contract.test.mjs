@@ -49,10 +49,11 @@ test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed tea
   ]);
   assert.match(page, /className="bowl-pool-page mx-auto max-w-6xl px-2 pb-8 pt-0 sm:px-6 sm:pb-10"/);
   assert.equal((page.match(/className=\{`bowl-pick-box /g) ?? []).length, 2);
-  // Opt out sits at the foot of the board, not on its own line above it.
-  assert.ok(page.indexOf('className="bowl-optout"') > page.indexOf("National Championship total points tiebreaker"));
+  // Opt out sits at the top of the board, right under the instructions.
+  assert.ok(page.indexOf('className="bowl-optout"') > page.indexOf("Tiebreaker is total points in Championship game."));
+  assert.ok(page.indexOf('className="bowl-optout"') < page.indexOf("National Championship total points tiebreaker"));
   assert.match(css, /\.bowl-pool-page #bowl-selections \.bowl-pick-box \{[\s\S]*?min-height: 3\.1rem;/);
   assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.1rem 2\.6rem 5\.1rem;/);
-  assert.ok(page.includes("<li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li>"));
+  assert.ok(page.includes("<li>Pick every bowl, including playoffs, against the spread. Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li>"));
   assert.ok(!css.includes(".bowl-pick-box .bowl-pennant { max-width: 100%; width: 100%; }"));
 });
