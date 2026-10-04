@@ -885,7 +885,7 @@ export default function BoardPage() {
         >
           <div className="slate-receipt-ticket">
             <span>YOUR RECEIPT</span>
-            <Link href="/#my-ticket">VIEW FULL TICKET</Link>
+            <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
             <button
               className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
               disabled={receiptIsLoading || isSubmitting}

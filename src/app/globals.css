@@ -707,12 +707,16 @@ body {
   .slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); }
   .slate-receipt-strip > * { padding: .3rem .34rem; }
   .slate-receipt-ticket {
-    gap: .22rem;
+    gap: .14rem;
     padding-left: .5rem;
   }
   .slate-receipt-ticket > span,
   .slate-receipt-pool > span { font-size: .46rem; }
-  .slate-receipt-ticket a { font-size: .54rem; }
+  /* On a phone the stub link is "FULL TICKET": one line instead of two, and
+     the receipt is that much shorter. */
+  .slate-receipt-ticket a { font-size: .54rem; padding-bottom: .1rem; white-space: nowrap; }
+  .receipt-link-lead { display: none; }
+  .slate-receipt-ticket a::after { display: none; }
   .slate-receipt-ticket > span small { display: none; }
   .receipt-printing-status { font-size: .36rem; gap: .16rem; letter-spacing: .07em; }
   .slate-receipt-submit-hint { font-size: .4rem; }
@@ -767,7 +771,7 @@ body {
     z-index: 40;
   }
 
-  .slate-mini-nav a { padding: .5rem .45rem; }
+  .slate-mini-nav:not(.slate-receipt-strip) a { padding: .5rem .45rem; }
   .slate-mini-nav > a > span { font-size: .53rem; }
   .slate-mini-nav strong { font-size: .64rem; }
   .slate-mini-nav em { font-size: .5rem; }
@@ -4431,3 +4435,15 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 .bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-navy) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
+/* "YOUR RECEIPT" stays on one line, even on the narrowest phones. */
+@media (max-width: 767px) { .slate-receipt-ticket > span { white-space: nowrap; } }
+@media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }
+/* The footnote ("ALL PICKS SAVED") is pinned to the stub's bottom line, level
+   with the status line in the next section. */
+.slate-receipt-ticket > .slate-receipt-footnote { margin-top: auto; }
+/* The Bowl receipt is exactly the Pick'em receipt's height. */
+.bowl-receipt-metric { min-height: 1.9rem; padding-block: .2rem; }
+.bowl-receipt-strip { min-height: 5.394rem; }
+@media (max-width: 767px) { .bowl-receipt-strip { min-height: 4.506rem; } }
+.bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto); }
+@media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); } }
