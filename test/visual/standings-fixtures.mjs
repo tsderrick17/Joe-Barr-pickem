@@ -129,9 +129,11 @@ const BOWL_GAMES = [
   ["Cure Bowl", ["Troy", "TROY", "#8a2432", "#b1b3b3"], ["Buffalo", "BUFF", "#005bbb", "#ffffff"], "-1"],
   ["Gasparilla Bowl", ["Georgia Southern", "GSU", "#011e41", "#87714d"], ["Marshall", "MRSH", "#00b140", "#ffffff"], "-6.5"],
   ["Rose Bowl (QF)", ["Ohio State", "OSU", "#bb0000", "#666666"], ["Oregon", "ORE", "#154733", "#fee123"], "-3"],
+  ["Salute to Veterans", ["Troy", "TROY", "#8a2432", "#b1b3b3"], ["Buffalo", "BUFF", "#005bbb", "#ffffff"], "-2"],
+  ["Frisco Football Classic", ["Memphis", "MEM", "#003087", "#898d8d"], ["Toledo", "TOL", "#15397f", "#ffd200"], "-4"],
 ].map(([bowl_name, away, home, spread], index) => ({
   id: `bowl-${index}`, bowl_name, status: index === 0 ? "final" : "scheduled", kickoff_at: `2026-12-${19 + index}T18:00:00Z`,
-  venue_city: ["Frisco", "Orlando", "Tampa", "Pasadena"][index], venue_state: ["TX", "FL", "FL", "CA"][index], time_confirmed: true,
+  venue_city: ["Frisco", "Orlando", "Tampa", "Pasadena", "Montgomery", "Frisco"][index], venue_state: ["TX", "FL", "FL", "CA", "AL", "TX"][index], time_confirmed: true,
   away_team_id: `a${index}`, home_team_id: `h${index}`,
   awayTeam: { id: `a${index}`, full_name: away[0], short_name: away[0], abbreviation: away[1], primary_color: away[2], secondary_color: away[3] },
   homeTeam: { id: `h${index}`, full_name: home[0], short_name: home[0], abbreviation: home[1], primary_color: home[2], secondary_color: home[3] },
