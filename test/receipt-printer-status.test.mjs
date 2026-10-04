@@ -4,7 +4,7 @@ import test from "node:test";
 
 test("Slate and Bowl receipts show printer feedback below the stable Submit button", async () => {
   const [board, bowl, css] = await Promise.all([
-    readFile(new URL("../src/app/board/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/slate-receipt.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
   ]);
