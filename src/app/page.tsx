@@ -1,20 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
-import PlayerTrophyName from "@/components/player-trophy-name";
+import SurvivorTable from "@/components/survivor-table";
 import {
   fetchWithSession,
   SessionUnavailableError,
 } from "@/lib/auth-session";
-import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
-import { BowlClaimSeat, BowlCrest } from "@/components/bowl-pool-marks";
-import BowlScoreTile from "@/components/bowl-score-tile";
-import { currentSeasonYear } from "@/lib/season";
-import { teamLogoScale } from "@/lib/team-logo-scale.js";
+import BowlCard from "@/components/bowl-card";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 
 type ScoreboardPick = {
@@ -27,9 +22,6 @@ type ScoreboardPick = {
   kickoffAt?: string;
 };
 
-function MiniLogo({ abbreviation, muted, resultMark }: { abbreviation: string; muted?: boolean; resultMark?: string }) {
-  return <span title={`${abbreviation}${resultMark ? ` ${resultMark}` : ""}`} className={`relative inline-flex h-7 w-7 items-center justify-center ${muted ? "grayscale opacity-60" : ""}`}><Image alt={abbreviation} className="h-full w-full object-contain" height={28} style={{ transform: `scale(${teamLogoScale(abbreviation)})` }} src={`/team-logos/${abbreviation}.png`} width={28} />{resultMark === "W" ? <span aria-label="Survivor win" className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-700 text-[10px] font-black leading-none text-white">✓</span> : null}{resultMark === "L" ? <span aria-label="Survivor loss" className="absolute inset-0 flex items-center justify-center text-4xl font-black leading-none text-red-700 drop-shadow-[0_0_1px_white]">×</span> : null}</span>;
-}
 
 type ScoreboardRow = {
   id: string;
@@ -78,40 +70,6 @@ type DisplayPreferenceKey =
   | "showBowlCard"
   | "hidePickemEliminatedRows"
   | "hideSurvivorEliminatedRows";
-type BowlStandingsData = {
-  season?: { season_year: number };
-  optedIn?: boolean;
-  entryOpen?: boolean;
-  games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; is_cfp?: boolean; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
-  standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
-  championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
-  publicPicks: Array<{ playerId: string | null; game_id: string; selected_team_id: string; result: string }>;
-  ownPicks?: Array<{ game_id: string; selected_team_id: string }>;
-  ownPreviewSelections?: Array<{ game_id: string; side: "favorite" | "underdog" }>;
-  automaticResults?: Array<{ playerId: string | null; game_id: string; result: string }>;
-  privatePickMarkers?: Array<{ playerId: string | null; game_id: string }>;
-};
-type BowlMatrixGame = BowlStandingsData["games"][number];
-
-function BowlFlipNumber({ value }: { value: number | null }) {
-  const [shuffleValue, setShuffleValue] = useState(() => Math.floor(Math.random() * 100));
-  useEffect(() => {
-    if (value !== null) return;
-    const timer = window.setInterval(() => setShuffleValue(Math.floor(Math.random() * 100)), 180);
-    return () => window.clearInterval(timer);
-  }, [value]);
-  const shown = value === null ? shuffleValue : Math.max(0, value);
-  return <span aria-label={value === null ? "Loading games remaining" : `${shown} games remaining`} className={`bowl-flip-counter ${value === null ? "is-shuffling" : ""}`}>
-    {String(shown).padStart(2, "0").split("").map((digit, index) => <span className="bowl-flip-digit" key={`${index}-${digit}`}><span className="bowl-flip-digit-face">{digit}</span></span>)}
-  </span>;
-}
-
-const BOWL_MATRIX_GAMES = [
-  "Frisco", "LA", "Salute to Veterans", "Cure", "68 Ventures", "Xbox", "Myrtle Beach", "Gasparilla",
-  "Playoff Game #1", "Playoff Game #2", "Playoff Game #3", "Playoff Game #4", "Potato", "Boca Raton", "New Orleans", "Frisco",
-  "Hawai'i", "GameAbove Sports", "Rate", "First Responder", "Military", "Pinstripe", "Fenway", "Pop-Tarts", "Arizona", "New Mexico", "Gator",
-  "Birmingham", "Independence", "Music City", "Alamo", "ReliaQuest", "Sun", "Citrus", "Las Vegas", "Armed Forces", "Liberty", "Duke's Mayo", "Holiday",
-];
 
 /* Keep the first paint shaped like the real Standings page while its signed-in
    data arrives. Reserve the ticket and one Pick'em surface up front, avoiding
@@ -165,11 +123,6 @@ export default function HomePage() {
   const [retryNonce, setRetryNonce] = useState(0);
   const [savingDisplay, setSavingDisplay] = useState(false);
   const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
-  const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
-  const bowlScrollRef = useRef<HTMLDivElement | null>(null);
-  // The score tiles spin once per visit: the first time the Bowl Card comes
-  // into view, then land on the real totals about a second later.
-  const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
   const serverClockOffset = useRef(0);
   // A background refresh can finish after a display preference save and carry
   // an older profile snapshot. Keep the user's just-saved choice in front of
@@ -293,126 +246,11 @@ export default function HomePage() {
     };
   }, [retryNonce]);
 
-  useEffect(() => {
-    const loadBowlStandings = () => void fetchWithSession("/api/bowl-pool", { cache: "no-store" }).then(async (response) => {
-      if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
-    }).catch(() => undefined);
-    loadBowlStandings();
-    const refreshFromHistory = (event: PageTransitionEvent) => { if (event.persisted) loadBowlStandings(); };
-    window.addEventListener("pageshow", refreshFromHistory);
-    return () => window.removeEventListener("pageshow", refreshFromHistory);
-  }, [data?.isCommissioner]);
-
   const viewerRow = useMemo(() => {
     return data?.rows.find((row) => row.id === data.viewerPlayerId) ?? null;
   }, [data]);
 
   const viewerPicks = viewerRow?.picks.filter((pick) => Boolean(pick.label)) ?? [];
-  const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
-  const bowlScheduleReady = Boolean(bowlStandings?.games);
-  const bowlRows = [...(bowlStandings?.standings ?? data?.rows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [] })) ?? [])].sort((first, second) => second.wins - first.wins || first.losses - second.losses || first.playerName.localeCompare(second.playerName));
-  const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
-  const bowlGradedGames = bowlStandings?.games ? bowlStandings.games.filter((game) => ["final", "cancelled", "no_contest"].includes(game.status ?? "")).length : 0;
-  const bowlName = (game: (typeof bowlGames)[number]) => {
-    const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
-    const cleanName = name.replace(/\s*\([^)]*\)$/, "");
-    const qfBowl = /^(fiesta|cotton|peach|rose)(?: bowl)?$/i.test(cleanName);
-    const sfBowl = /^(orange|sugar)(?: bowl)?$/i.test(cleanName);
-    if (/quarterfinal|quarter/i.test(name) || /quarterfinal/i.test(game.provider_game_id ?? "") || qfBowl) return `${cleanName} (QF)`;
-    if (/semifinal|semi/i.test(name) || /semifinal/i.test(game.provider_game_id ?? "") || sfBowl) return `${cleanName} (SF)`;
-    return name;
-  };
-  const bowlTeamLabel = (team: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined, otherTeam?: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null) => {
-    if (otherTeam) {
-      const [teamLabel, otherLabel] = bowlMatchupTeamLabels(team, otherTeam);
-      return team?.id === otherTeam.id ? otherLabel : teamLabel;
-    }
-    return bowlTeamDisplayLabel(team);
-  };
-  const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD";
-  const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);
-  // Keep the grid's containing block as wide as its generated tracks. Without
-  // this, CSS grid tracks overflow the 80rem shell while row borders stop at
-  // the shell's edge (which made the table appear to end mid-schedule).
-  const bowlTableMinWidth = `${14.5 + bowlGames.length * 7.5}rem`;
-  const bowlGameBoundaryClass = (index: number) => {
-    const key = bowlDateKey(bowlGames[index]);
-    const previousKey = index > 0 ? bowlDateKey(bowlGames[index - 1]) : null;
-    const nextKey = index < bowlGames.length - 1 ? bowlDateKey(bowlGames[index + 1]) : null;
-    return `${previousKey !== key ? "border-l-2" : ""} ${nextKey !== key ? "border-r-2" : ""} border-[#8d877d]`;
-  };
-  const bowlTeam = (game: (typeof bowlGames)[number], side: "favorite" | "underdog") => {
-    const away = game.awayTeam; const home = game.homeTeam; const favoriteId = game.line?.favorite_team_id;
-    const favorite = favoriteId && away?.id === favoriteId ? away : favoriteId && home?.id === favoriteId ? home : away;
-    const underdog = favorite?.id === away?.id ? home : away;
-    return side === "favorite" ? favorite : underdog;
-  };
-  const bowlGameTeamLabels = (game: (typeof bowlGames)[number]) => {
-    const favorite = bowlTeam(game, "favorite");
-    const underdog = bowlTeam(game, "underdog");
-    const [favoriteLabel, underdogLabel] = bowlMatchupTeamLabels(favorite, underdog);
-    return { favorite, underdog, favoriteLabel, underdogLabel };
-  };
-  const bowlCell = (playerId: string, gameId: string) => {
-    const result = bowlStandings?.publicPicks.find((pick) => pick.playerId === playerId && pick.game_id === gameId)?.result
-      ?? bowlStandings?.automaticResults?.find((result) => result.playerId === playerId && result.game_id === gameId)?.result;
-    return result === "win" ? "W" : result === "loss" ? "L" : "·";
-  };
-  const bowlOwnCell = (game: BowlMatrixGame) => {
-    const saved = bowlStandings?.ownPicks?.find((pick) => pick.game_id === game.id);
-    if (saved) {
-      const team = [game.awayTeam, game.homeTeam].find((candidate) => candidate?.id === saved.selected_team_id);
-      if (!team) return "·";
-      const labels = bowlGameTeamLabels(game);
-      return team.id === labels.favorite?.id ? labels.favoriteLabel : team.id === labels.underdog?.id ? labels.underdogLabel : bowlTeamLabel(team);
-    }
-    const preview = bowlStandings?.ownPreviewSelections?.find((pick) => pick.game_id === game.id);
-    return preview ? (preview.side === "favorite" ? "FAV" : "DOG") : "·";
-  };
-  const bowlCellClass = (result: string) => result === "W" ? "text-green-800" : result === "L" ? "text-red-700" : result === "🔒" ? "text-slate-500" : result === "·" ? "text-slate-400" : "text-slate-950";
-
-  // Before the Bowl Pool begins, leave the sheet at its natural left edge.
-  // Once a Bowl game day is underway, bring that day's first game directly
-  // beside the frozen player columns. This uses Eastern time, matching the
-  // pool's kickoff and lock rules.
-  useEffect(() => {
-    if (bowlPoolMinimized || !bowlGames.length) return;
-    const frame = window.requestAnimationFrame(() => {
-      const container = bowlScrollRef.current;
-      if (!container) return;
-      const todayKey = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date());
-      const currentDayIndex = bowlGames.findIndex((game) => game.kickoff_at && new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date(game.kickoff_at)) === todayKey);
-      if (currentDayIndex < 0) {
-        container.scrollLeft = 0;
-        return;
-      }
-      const target = container.querySelector<HTMLElement>(`[data-bowl-game-index="${currentDayIndex}"]`);
-      if (target) {
-        const targetLeft = target.getBoundingClientRect().left - container.getBoundingClientRect().left + container.scrollLeft;
-        const stickyColumns = Number.parseFloat(window.getComputedStyle(container).scrollPaddingLeft) || 0;
-        container.scrollLeft = Math.max(0, targetLeft - stickyColumns);
-      }
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [bowlGames, bowlPoolMinimized]);
-  useEffect(() => {
-    // Runs only when the card itself changes: an ordinary re-render (a data
-    // refresh) must never cancel the landing timer.
-    const container = bowlScrollRef.current;
-    if (!container || bowlScoresSettled) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const timer = window.setTimeout(() => setBowlScoresSettled(true), 0);
-      return () => window.clearTimeout(timer);
-    }
-    let timer = 0;
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect();
-      timer = window.setTimeout(() => setBowlScoresSettled(true), 1000);
-    }, { threshold: 0.25 });
-    observer.observe(container);
-    return () => { observer.disconnect(); window.clearTimeout(timer); };
-  }, [bowlScoresSettled, bowlPoolMinimized, bowlStandings]);
   const viewerSurvivor =
     data?.survivorRows.find((row) => row.playerId === data.viewerPlayerId) ?? null;
   // Same column order as the Pick'em Pad: kickoff, with the API's order (game id)
@@ -454,25 +292,6 @@ export default function HomePage() {
       setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
     } catch {
       setErrorMessage("That display choice could not be saved. Please try again.");
-    } finally {
-      setSavingDisplay(false);
-    }
-  }
-
-  async function claimBowlSeat() {
-    if (savingDisplay) return;
-    setSavingDisplay(true);
-    try {
-      const response = await fetchWithSession("/api/bowl-pool", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ optedIn: true, selections: [], championshipTotalGuess: null }),
-      });
-      if (!response.ok) throw new Error("Your seat in the Bowl Pool could not be saved.");
-      const refreshed = await fetchWithSession("/api/bowl-pool", { cache: "no-store" });
-      if (refreshed.ok) setBowlStandings(await refreshed.json() as BowlStandingsData);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Your seat in the Bowl Pool could not be saved.");
     } finally {
       setSavingDisplay(false);
     }
@@ -658,56 +477,16 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        {!data.isPlayoff ? <section className={`pickem-ledger survivor-ledger py-6 sm:py-7 ${data.showSurvivorStandings ? "" : "is-minimized"}`}>
-          <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>{data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
-
-          {data.showSurvivorStandings && data.survivorAvailable ? (
-            <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
-                <div className="survivor-standings-grid min-w-[55.5rem]">
-                <div className="survivor-standings-header grid border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
-                  <span aria-hidden="true" className="survivor-sticky-status py-2" />
-                  <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
-                  {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
-                </div>
-                {data.survivorRows.filter((row) => !data.hideSurvivorEliminatedRows || row.status !== "eliminated").map((row, rowIndex) => {
-                  const isViewer = row.playerId === data.viewerPlayerId;
-
-                  return (
-                  <div className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
-                    <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-                    <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
-                    {Array.from({ length: 18 }, (_, index) => {
-                      const pick = row.picks[index];
-                      return <span className="flex h-[2.3rem] items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="text-xs" title="Selection submitted — revealed at kickoff">🔒</span> : <span className="text-slate-400">·</span>}</span>;
-                    })}
-                  </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : data.showSurvivorStandings ? (
-            <div className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
-              <p className="font-bold">
-                {data.survivorNotice ??
-                  "Survivor is temporarily unavailable. ATS standings remain current."}
-              </p>
-            </div>
-          ) : null}
-        </section> : null}
-
-        {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${bowlPoolMinimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
-          <BowlCrest action={<button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setBowlCardDisplay(bowlPoolMinimized)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" />
-          {!bowlPoolMinimized ? <>
-            {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#f8f0d8] px-3 py-3 text-center font-bold text-[#5a430c]">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
-            <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>
-              <div style={{ minWidth: bowlTableMinWidth }}>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }}><span aria-hidden="true" className="bowl-standings-sticky sticky left-0 z-30 bg-[#f5f0e6]" style={{ gridColumn: "span 2" }} />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-[#334155] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-white" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}<span aria-hidden="true" className="border-l-2 border-[#8d877d] bg-transparent" /></div>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-summary-cell bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="text-[9px] font-black tracking-wide">Games remaining</span><BowlFlipNumber value={bowlScheduleReady ? Math.max(0, bowlGames.length - bowlGradedGames) : null} /></span>{bowlGames.map((game, index) => { const labels = bowlGameTeamLabels(game); return <span className={`bowl-standings-game-cell flex flex-col items-center bg-[#f7f3ea] px-2 py-1.5 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="bowl-standings-bowl-name flex min-h-8 w-full items-center justify-center text-xs uppercase leading-4 tracking-wide text-slate-900">{bowlName(game)}</b><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.favorite?.full_name}>{labels.favoriteLabel}</span><span className={`bowl-standings-line block font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{game.line?.locked_spread ?? "—"}</span><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.underdog?.full_name}>{labels.underdogLabel}</span></span>; })}<span className="bowl-standings-tiebreaker-header flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
-                {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "is-alt bg-[#f3f0e8]" : "bg-[#fffdf8]"; const isViewer = row.playerId === data?.viewerPlayerId; return <div className={`bowl-standings-player-row grid border-b border-[#91afd0] text-center text-xs ${isViewer ? "is-viewer" : ""} ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }} key={row.playerId}><span className={`bowl-standings-sticky bowl-standings-score-cell sticky left-0 z-30 px-1 py-2 text-center ${rowFill}`}><BowlScoreTile landDelay={rowIndex * 80} settled={bowlScoresSettled} value={row.wins} viewer={isViewer} /></span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif text-[13px] font-extrabold leading-tight tracking-[0.01em] sm:text-base ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = isViewer ? bowlOwnCell(game) : bowlCell(row.playerId, game.id); const locked = !isViewer && bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-2 py-2 font-mono text-[13px] font-extrabold tabular-nums text-slate-700 sm:text-base">{row.tiebreakerTotal ?? "—"}</span></div>; })}
-              </div>
-            </div>
-          </> : null}
-        </section> : null}
+        {!data.isPlayoff ? <SurvivorTable data={data} savingDisplay={savingDisplay} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
+        <BowlCard
+          fallbackRows={data.rows}
+          isCommissioner={data.isCommissioner}
+          minimized={bowlPoolMinimized}
+          onError={setErrorMessage}
+          onSetDisplay={setBowlCardDisplay}
+          savingDisplay={savingDisplay}
+          viewerPlayerId={data.viewerPlayerId}
+        />
       </div>
     </main>
   );

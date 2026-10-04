@@ -1253,3 +1253,7 @@ Survivor chips show each team mark 18% larger than the Pick'em Pad does (still f
 The split-flap tiles now run on the browser's animation engine instead of re-rendering the page on every flip, which made them slow and choppy on a phone. Each flip lets the top flap fall (accelerating and darkening as it turns away) and the next card's lower half land with a slight bounce; the last flip before stopping is a little slower, like the mechanism catching. The board paints at a steady 60 frames a second.
 
 The split-flap was still dropping frames on phones. Measured with the processor slowed sixfold (to stand in for a phone), 78 of 175 frames ran late during the spin. Now the flaps fold flat (a vertical squash rather than a 3D turn, which reads the same at this size), every digit keeps a steady rhythm, the moving flaps no longer switch on and off or animate shading, each digit is sealed so a flip never relays out the table, and digits flip about eight times a second. Under the same test 20 of 203 frames run late, and the spin finishes sooner.
+
+### The Standings page is split into pieces
+
+`page.tsx` went from 714 to about 495 lines. The Bowl Card (`bowl-card.tsx`) now owns its data, its spin and scroll behavior, and its markup, and the Survivor Table (`survivor-table.tsx`) is its own component, so the Bowl Card's timers and data never redraw the rest of the page. All 40 Standings screenshots are pixel-identical.
