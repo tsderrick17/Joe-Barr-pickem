@@ -68,10 +68,11 @@ export function buildEmailPlanSchedule(period, rawGames) {
 
   for (const [date, group] of dayGroups) {
     const { parts, games: dayGames } = group;
-    // Final-line mail starts watching when the first game-day line locks. The
-    // delivery worker then waits until every playable game that day has its
-    // official locked line, rather than sending at an arbitrary clock time.
-    const finalLineReadyAt = dayGames.map((game) => game.line_lock_at).sort()[0] ?? easternWallTime(parts.year, parts.month, parts.day, 6, 30);
+    // Final-line mail can only go once every playable game that day has its
+    // official line, so it is due when the day's last line locks. (Keying it to
+    // the first lock made a Sunday with an international game wait overnight
+    // from Saturday's 6 PM early lock, which reads as an overdue message.)
+    const finalLineReadyAt = dayGames.map((game) => game.line_lock_at).sort().at(-1) ?? easternWallTime(parts.year, parts.month, parts.day, 6, 30);
     result.push(candidate(period, "final_lines", "final_lines", "all_active", finalLineReadyAt, date, dayGames.map((game) => game.id)));
     if (parts.weekday === "Sunday") {
       result.push(candidate(period, "sunday_final_lines", "sunday_final_lines", "all_active", finalLineReadyAt, date, dayGames.map((game) => game.id)));

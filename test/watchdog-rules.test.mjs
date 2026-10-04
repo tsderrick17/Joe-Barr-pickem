@@ -112,3 +112,12 @@ test("watchdog quiets a resolved incident for six hours, then allows a meaningfu
   assert.equal(isWatchdogRepeatNotificationDue(null, new Date("2026-08-20T12:00:00Z")), true);
   assert.equal(isWatchdogRepeatNotificationDue("not-a-date", new Date("2026-08-20T12:00:00Z")), true);
 });
+
+test("a stuck-message alert names the messages that are waiting", () => {
+  const signal = evaluateWatchdogSignals({
+    health: healthy({ reminderHealth: { overdueScheduled: 2, overdueTitles: ["Final lines", "Sunday final lines"], staleSending: 0, recentEmailFailures: 0 } }),
+    bootstrap: completeBootstrap, preflightChecks: [{ label: "Cron", passed: true }],
+    now: new Date("2026-08-20T12:10:00Z"),
+  }).find((item) => item.key === "stalled-reminders");
+  assert.match(signal.detail, /Waiting: Final lines; Sunday final lines./);
+});

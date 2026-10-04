@@ -43,7 +43,7 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     signals.push({
       key: "stalled-reminders", severity: "warning",
       title: "A scheduled pool message is stuck",
-      detail: `${health.reminderHealth.overdueScheduled} overdue and ${health.reminderHealth.staleSending} stuck sending. Individual bad email addresses do not trigger this alert.`,
+      detail: `${health.reminderHealth.overdueScheduled} overdue and ${health.reminderHealth.staleSending} stuck sending.${health.reminderHealth.overdueTitles?.length ? ` Waiting: ${health.reminderHealth.overdueTitles.join("; ")}.` : ""} Individual bad email addresses do not trigger this alert.`,
     });
   }
   if (health.pendingScheduleReviews > 0) {

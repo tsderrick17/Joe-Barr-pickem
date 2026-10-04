@@ -1225,3 +1225,7 @@ The Survivor chip is now built as a true cylinder at a real chip's proportions (
 ### A pick keeps its column
 
 The Pick'em Pad and the ticket now place each player's picks by earliest kickoff, with the game id breaking a tie (src/lib/pick-column-order.js). Before, the Pad used submission order, so editing a pick, or two players entering the same picks in a different order, moved a pick between columns. The order uses only public facts about the game, so it does not change when a pick is revealed or settled. The ticket's instruction lines now wrap inside the Survivor column instead of running to the ticket edge.
+
+### Final-lines mail is due when the day's last line locks
+
+The game-day "final lines" and "Sunday final lines" emails were scheduled for the day's first line lock, then held by the sender until every game that day had its official line. On a Sunday with an international game, the first lock is Saturday at 6 PM Eastern, so both emails sat held overnight: the Watchdog reported them as two overdue messages, and the reminder worker was woken every five minutes all night for nothing. They are now scheduled for the day's last line lock, the first moment they can be ready, so they send at the same time as before without looking stuck. The email-schedule reconciler (every 15 minutes) moves any already-scheduled copies to the new time. The stuck-message alert now names the waiting messages.

@@ -30,6 +30,19 @@ test("regular email plans create one deterministic occurrence for each promised 
   assert.equal(new Set(schedule.map((item) => item.automationKey)).size, schedule.length);
 });
 
+test("a Sunday with an international game sends its final lines when the last Sunday line locks, not at the early lock", () => {
+  const schedule = buildEmailPlanSchedule(period, [
+    game("intl", "2026-10-04T13:30:00.000Z", { is_international: true, line_lock_at: "2026-10-03T22:00:00.000Z" }),
+    game("sun-early", "2026-10-04T17:00:00.000Z", { line_lock_at: "2026-10-04T12:00:00.000Z" }),
+    game("sun-late", "2026-10-04T20:25:00.000Z", { line_lock_at: "2026-10-04T12:00:00.000Z" }),
+  ]);
+  for (const templateId of ["final_lines", "sunday_final_lines"]) {
+    assert.equal(schedule.find((item) => item.templateId === templateId).scheduledFor, "2026-10-04T12:00:00.000Z");
+  }
+  // The early-lock notice itself still goes at the international lock.
+  assert.equal(schedule.find((item) => item.templateId === "early_lock").scheduledFor, "2026-10-03T22:00:00.000Z");
+});
+
 test("playoff plans use kickoff reveals and one recap per game day", () => {
   const schedule = buildEmailPlanSchedule({ id: "wild-card", period_type: "playoff" }, [
     game("sat-1", "2027-01-09T21:30:00.000Z"),
