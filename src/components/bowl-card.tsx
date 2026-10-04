@@ -33,7 +33,7 @@ function BowlFlipNumber({ value }: { value: number | null }) {
   }, [value]);
   const shown = value === null ? shuffleValue : Math.max(0, value);
   return <span aria-label={value === null ? "Loading games remaining" : `${shown} games remaining`} className={`bowl-flip-counter ${value === null ? "is-shuffling" : ""}`}>
-    {String(shown).padStart(2, "0").split("").map((digit, index) => <span className="bowl-flip-digit" key={`${index}-${digit}`}><span className="bowl-flip-digit-face">{digit}</span></span>)}
+    {String(shown).padStart(2, "0").split("").map((digit, index) => <span className="bowl-flip-digit" key={`${index}-${digit}`}><span className="bowl-flip-digit-face">{digit === "0" ? "O" : digit}</span></span>)}
   </span>;
 }
 
@@ -212,8 +212,8 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
 
   return (
     <>
-      {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay || claiming} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${minimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
-          <BowlCrest action={<button aria-expanded={!minimized} aria-label={minimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void onSetDisplay(minimized)} title={minimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{minimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" />
+      {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay || claiming} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${minimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
+          <BowlCrest action={<button aria-expanded={!minimized} aria-label={minimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void onSetDisplay(minimized)} title={minimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{minimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" />
           <Collapse open={!minimized}>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#f8f0d8] px-3 py-3 text-center font-bold text-[#5a430c]">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>

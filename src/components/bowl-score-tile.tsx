@@ -4,21 +4,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Feel = { pace: number; start: number; extra: number };
 
+/** Graduate draws its zero with a dot in the middle; its capital O is the same shape without one. */
+export const tileGlyph = (digit: number) => (digit === 0 ? "O" : String(digit));
+
+// A falling flap speeds up like something dropping; a landing flap hits its
+// stop, kicks back a little, and settles.
+const FALL_EASING = "cubic-bezier(.55, .06, .68, .19)";
+
 /**
- * One split-flap digit, like a mechanical stadium board. Each flip lets the
- * top flap fall (speeding up as it drops, darkening as it turns away) and the
- * next card's lower half land with a small bounce. The digit steps through
- * 0, 1, 2 ... 9 in order at its own pace; once told to land, it flips on
- * until it shows its target.
+ * One split-flap digit, like a mechanical stadium board. Each card is two
+ * halves on a hinge across the middle. On every flip the current card's top
+ * half swings down toward you on its hinge (in true perspective, so it
+ * foreshortens), uncovering the next card's top half; as it passes edge-on,
+ * the next card's lower half swings down after it, slaps onto its stop with a
+ * small rebound, and covers the old lower half. Shading sells the depth: the
+ * falling flap darkens as it turns away from the light, it casts a shadow
+ * over the lower half it is about to cover, and the newly uncovered top half
+ * starts in that shadow and brightens.
  *
- * The flips run on the browser's animation engine and write the numbers
- * straight into the page, so a whole board of them stays smooth on a phone:
- * React does not re-render on every flip. The flaps fold flat (a vertical
- * squash, not a 3D turn), which phones draw far more cheaply at this size
- * and which reads the same; each digit keeps a steady rhythm.
+ * The digit steps 0, 1, 2 ... 9 in order at its own pace; once told to land,
+ * it flips on until it shows its target, the last few flips slowing as the
+ * mechanism catches. The flips run on the browser's animation engine (only
+ * transforms and opacity, which the graphics chip draws) and write the
+ * numbers straight into the page, so React does not re-render on every flip.
  */
 function FlapDigit({ target, landing, onLanded }: { target: number; landing: boolean; onLanded: () => void }) {
-  const [feel] = useState<Feel>(() => ({ pace: 95 + Math.random() * 35, start: Math.floor(Math.random() * 10), extra: 1 + Math.floor(Math.random() * 3) }));
+  const [feel] = useState<Feel>(() => ({ pace: 120 + Math.random() * 40, start: Math.floor(Math.random() * 10), extra: 2 + Math.floor(Math.random() * 3) }));
   const top = useRef<HTMLSpanElement | null>(null);
   const bottom = useRef<HTMLSpanElement | null>(null);
   const fold = useRef<HTMLSpanElement | null>(null);
@@ -34,41 +45,49 @@ function FlapDigit({ target, landing, onLanded }: { target: number; landing: boo
     const parts = [top.current, bottom.current, fold.current, drop.current];
     if (parts.some((part) => !part)) return;
     const [topEl, bottomEl, foldEl, dropEl] = parts as HTMLSpanElement[];
-    const text = (el: HTMLSpanElement, value: number) => { (el.firstElementChild as HTMLElement).textContent = String(value); };
+    const text = (el: HTMLSpanElement, value: number) => { (el.firstElementChild as HTMLElement).textContent = tileGlyph(value); };
+    const shade = (el: HTMLSpanElement) => el.lastElementChild as HTMLElement;
     let current = feel.start;
     let sinceLanding = 0;
     let stopped = false;
     let pending = 0;
-    const running: Animation[] = [];
+    let running: Animation[] = [];
 
     const flip = () => {
       if (stopped) return;
       const next = (current + 1) % 10;
-      const nearEnd = landingRef.current && sinceLanding >= feel.extra && (targetRef.current - next + 10) % 10 <= 1;
-      // The last flip or two before stopping run a little slower, like the
-      // mechanism catching.
-      const duration = feel.pace * (nearEnd ? 1.6 : 1);
+      const remaining = (targetRef.current - current + 10) % 10;
+      const catching = landingRef.current && sinceLanding + 1 >= feel.extra && remaining <= 3;
+      // The last few flips slow down progressively, like the drum catching.
+      const duration = feel.pace * (catching ? 1 + (4 - remaining) * 0.35 : 1);
+      const fall = duration * 0.5;
+      const land = duration * 0.62;
       text(foldEl, current);
       text(topEl, next);
       text(dropEl, next);
-      const half = duration / 2;
-      running.length = 0;
-      running.push(foldEl.animate(
-        [{ transform: "scaleY(1)" }, { transform: "scaleY(0)" }],
-        { duration: half, easing: "cubic-bezier(.55,0,1,.45)", fill: "forwards" },
-      ));
-      const landingFlap = dropEl.animate(
-        [{ transform: "scaleY(0)" }, { transform: "scaleY(1.08)", offset: 0.8 }, { transform: "scaleY(1)" }],
-        { duration: half * 1.15, delay: half, easing: "cubic-bezier(.2,.6,.35,1)", fill: "both" },
-      );
-      running.push(landingFlap);
-      landingFlap.onfinish = () => {
+      running = [
+        foldEl.animate([{ transform: "rotateX(0deg)" }, { transform: "rotateX(-90deg)" }], { duration: fall, easing: FALL_EASING, fill: "forwards" }),
+        shade(foldEl).animate([{ opacity: 0 }, { opacity: 0.6 }], { duration: fall, easing: FALL_EASING, fill: "forwards" }),
+        shade(topEl).animate([{ opacity: 0.45 }, { opacity: 0 }], { duration: fall + land * 0.4, easing: "ease-out", fill: "both" }),
+        shade(bottomEl).animate([{ opacity: 0 }, { opacity: 0.35 }], { duration: fall + land * 0.6, easing: "ease-in", fill: "forwards" }),
+        dropEl.animate([
+          { transform: "rotateX(90deg)", easing: "cubic-bezier(.5, 0, .9, .6)" },
+          { transform: "rotateX(0deg)", offset: 0.66, easing: "cubic-bezier(.2, .7, .4, 1)" },
+          { transform: "rotateX(14deg)", offset: 0.82, easing: "ease-in" },
+          { transform: "rotateX(0deg)" },
+        ], { duration: land, delay: fall, fill: "both" }),
+        shade(dropEl).animate([{ opacity: 0.55 }, { opacity: 0, offset: 0.66 }, { opacity: 0.12, offset: 0.82 }, { opacity: 0 }], { duration: land, delay: fall, fill: "both" }),
+      ];
+      const landed = running[4];
+      landed.onfinish = () => {
         if (stopped) return;
         text(bottomEl, next);
         current = next;
         if (landingRef.current) sinceLanding += 1;
         if (landingRef.current && sinceLanding >= feel.extra && current === targetRef.current) {
           stopped = true;
+          // Leave the faces clean: no shadows or flaps left mid-turn.
+          running.forEach((animation) => animation.cancel());
           landedRef.current();
           return;
         }
@@ -84,19 +103,20 @@ function FlapDigit({ target, landing, onLanded }: { target: number; landing: boo
     };
   }, [feel]);
 
+  const half = (className: string, ref: typeof top) => <span className={`bowl-flap-half ${className}`} ref={ref}><span>{tileGlyph(feel.start)}</span><i className="bowl-flap-shade" /></span>;
   return (
-    <span aria-hidden="true" className="bowl-flap">
-      <span className="bowl-flap-half is-top" ref={top}><span>{feel.start}</span></span>
-      <span className="bowl-flap-half is-bottom" ref={bottom}><span>{feel.start}</span></span>
-      <span className="bowl-flap-half is-top is-folding" ref={fold}><span>{feel.start}</span></span>
-      <span className="bowl-flap-half is-bottom is-dropping" ref={drop}><span>{feel.start}</span></span>
+    <span aria-hidden="true" className="bowl-flap is-moving">
+      {half("is-top", top)}
+      {half("is-bottom", bottom)}
+      {half("is-top is-folding", fold)}
+      {half("is-bottom is-dropping", drop)}
     </span>
   );
 }
 
 /** A still digit, for anyone with reduced motion turned on. */
 function StillDigit({ digit }: { digit: number }) {
-  return <span aria-hidden="true" className="bowl-flap"><span className="bowl-flap-half is-top"><span>{digit}</span></span><span className="bowl-flap-half is-bottom"><span>{digit}</span></span></span>;
+  return <span aria-hidden="true" className="bowl-flap"><span className="bowl-flap-half is-top"><span>{tileGlyph(digit)}</span></span><span className="bowl-flap-half is-bottom"><span>{tileGlyph(digit)}</span></span></span>;
 }
 
 /**

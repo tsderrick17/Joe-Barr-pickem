@@ -1293,3 +1293,10 @@ Adjacent cells each drew their own border, so day breaks were doubled (2 px gold
 
 At kickoff a row used to keep the upcoming layout (centered names, a divider after a wider LIVE badge) and then jump to the final layout when the game ended. A live row now uses the final layout from kickoff: team names and picker lists sit where they will stay, the date column keeps its width, and the LIVE badge is sized to fit inside it.
 On a finished or live row the spread's middle is level with the middle of the team names at every width, with or without Survivor chips (it sat about 10 to 14 px high beside the chips).
+
+## Truer split-flap and coin-toss motion; Bowl Card "Special"; no dotted zeros
+
+- Split-flap tiles: the flat squash did not read as a mechanism. Each flip is now two hinged halves turning in real perspective: the top half swings down toward you (accelerating), the next card's lower half follows, hits its stop with a small rebound, and the shading moves with them (the falling flap darkens, it shadows the half it is about to cover, the uncovered half brightens out of that shadow). Only transforms and opacity animate, on the browser's animation engine, so it stays light. Digits still step in order and stop only on their target, the last few flips slowing as the drum catches; a tile now takes a little longer to settle.
+- Graduate draws its zero with a dot in the middle, so tiles and the games-remaining counter show its capital O, the same shape without the dot.
+- Coin toss: the old toss slowed its spin to a stop like a spinning top. The chip now spins at a steady rate while it rises toward you and falls (height and swell follow a real arc), with a slight wobble, then lands flat and rocks to rest; the ground shadow widens and fades with height. 900 ms (was 680). The Operations test coin uses exactly the same curve, which a test keeps identical.
+- The Bowl Card's season line reads "2026-27 Special".

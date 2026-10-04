@@ -1091,7 +1091,7 @@ body {
 }
 
 .survivor-poker-chip-wrap[data-state="picked"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-pick-mark {
-  animation: survivor-pick-mark-reveal 720ms cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-pick-mark-reveal 980ms cubic-bezier(.16,.76,.2,1) both;
 }
 
 @keyframes survivor-pick-mark-reveal {
@@ -1103,40 +1103,74 @@ body {
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-side { border-color: #d69a20; }
 
 .survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
-  animation: survivor-chip-toss 680ms cubic-bezier(.16,.76,.2,1) both;
+  /* A real toss: the chip spins at a steady rate while it rises and falls
+     (the curve lives in the keyframes, so the timing is linear), comes toward
+     you as it rises, then lands flat and rocks to rest. */
+  animation: survivor-chip-toss 900ms linear both;
 }
 
 .survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow {
-  animation: survivor-chip-shadow 680ms cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-chip-shadow 900ms linear both;
 }
 
 @keyframes survivor-chip-toss {
-  0% { filter: brightness(1); transform: translateY(-1px) rotateX(0deg) scale(1); }
-  8% { filter: brightness(1.05); transform: translateY(-4px) rotateX(132deg) scale(1.035); }
-  17% { filter: brightness(1.1); transform: translateY(-7px) rotateX(300deg) scale(1.065); }
-  28% { filter: brightness(1.14); transform: translateY(-8px) rotateX(510deg) scale(1.08); }
-  40% { filter: brightness(1.12); transform: translateY(-7px) rotateX(700deg) scale(1.075); }
-  52% { filter: brightness(1.1); transform: translateY(-5px) rotateX(858deg) scale(1.06); }
-  64% { filter: brightness(1.07); transform: translateY(-4px) rotateX(976deg) scale(1.045); }
-  76% { filter: brightness(1.04); transform: translateY(-3px) rotateX(1046deg) scale(1.028); }
-  88% { filter: brightness(1.01); transform: translateY(-2px) rotateX(1088deg) scale(1.012); }
-  100% { filter: brightness(1); transform: translateY(-1px) rotateX(1080deg) scale(1); }
+  0% { transform: translateY(-1px) rotateX(0deg) rotateY(0deg) scale(1.000); }
+  6% { transform: translateY(0.5px) rotateX(-6deg) rotateY(0deg) scale(0.975); }
+  10% { transform: translateY(-3.28px) rotateX(54deg) rotateY(1.55deg) scale(1.032); }
+  14% { transform: translateY(-5.32px) rotateX(108deg) rotateY(2.94deg) scale(1.061); }
+  18% { transform: translateY(-7.12px) rotateX(162deg) rotateY(4.05deg) scale(1.087); }
+  22% { transform: translateY(-8.68px) rotateX(216deg) rotateY(4.76deg) scale(1.109); }
+  26% { transform: translateY(-10px) rotateX(270deg) rotateY(5deg) scale(1.127); }
+  30% { transform: translateY(-11.08px) rotateX(324deg) rotateY(4.76deg) scale(1.143); }
+  34% { transform: translateY(-11.92px) rotateX(378deg) rotateY(4.05deg) scale(1.155); }
+  38% { transform: translateY(-12.52px) rotateX(432deg) rotateY(2.94deg) scale(1.163); }
+  42% { transform: translateY(-12.88px) rotateX(486deg) rotateY(1.55deg) scale(1.168); }
+  46% { transform: translateY(-13px) rotateX(540deg) rotateY(0deg) scale(1.170); }
+  50% { transform: translateY(-12.88px) rotateX(594deg) rotateY(-1.55deg) scale(1.168); }
+  54% { transform: translateY(-12.52px) rotateX(648deg) rotateY(-2.94deg) scale(1.163); }
+  58% { transform: translateY(-11.92px) rotateX(702deg) rotateY(-4.05deg) scale(1.155); }
+  62% { transform: translateY(-11.08px) rotateX(756deg) rotateY(-4.76deg) scale(1.143); }
+  66% { transform: translateY(-10px) rotateX(810deg) rotateY(-5deg) scale(1.127); }
+  70% { transform: translateY(-8.68px) rotateX(864deg) rotateY(-4.76deg) scale(1.109); }
+  74% { transform: translateY(-7.12px) rotateX(918deg) rotateY(-4.05deg) scale(1.087); }
+  78% { transform: translateY(-5.32px) rotateX(972deg) rotateY(-2.94deg) scale(1.061); }
+  82% { transform: translateY(-3.28px) rotateX(1026deg) rotateY(-1.55deg) scale(1.032); }
+  86% { transform: translateY(-1px) rotateX(1080deg) rotateY(-0deg) scale(1.000); }
+  89.5% { transform: translateY(-2.2px) rotateX(1090deg) rotateY(0deg) scale(1.000); }
+  93% { transform: translateY(-0.6px) rotateX(1075deg) rotateY(0deg) scale(1.000); }
+  96% { transform: translateY(-1.2px) rotateX(1083deg) rotateY(0deg) scale(1.000); }
+  98% { transform: translateY(-1px) rotateX(1079deg) rotateY(0deg) scale(1.000); }
+  100% { transform: translateY(-1px) rotateX(1080deg) rotateY(0deg) scale(1.000); }
 }
 
 @keyframes survivor-chip-shadow {
-  0% { filter: blur(.1rem); opacity: .42; transform: translateX(-50%) scaleX(.7) scaleY(.62); }
-  7% { filter: blur(.15rem); opacity: .31; transform: translateX(-50%) scaleX(.83) scaleY(.67); }
-  16% { filter: blur(.24rem); opacity: .15; transform: translateX(-50%) scaleX(1.12) scaleY(.82); }
-  25% { filter: blur(.26rem); opacity: .13; transform: translateX(-50%) scaleX(1.18) scaleY(.86); }
-  33% { filter: blur(.2rem); opacity: .2; transform: translateX(-50%) scaleX(1) scaleY(.74); }
-  41% { filter: blur(.22rem); opacity: .17; transform: translateX(-50%) scaleX(1.07) scaleY(.78); }
-  50% { filter: blur(.22rem); opacity: .17; transform: translateX(-50%) scaleX(1.08) scaleY(.8); }
-  58% { filter: blur(.2rem); opacity: .2; transform: translateX(-50%) scaleX(1) scaleY(.75); }
-  66% { filter: blur(.18rem); opacity: .25; transform: translateX(-50%) scaleX(.93) scaleY(.71); }
-  74% { filter: blur(.15rem); opacity: .3; transform: translateX(-50%) scaleX(.85) scaleY(.68); }
-  84% { filter: blur(.12rem); opacity: .36; transform: translateX(-50%) scaleX(.77) scaleY(.64); }
-  93% { filter: blur(.1rem); opacity: .4; transform: translateX(-50%) scaleX(.72) scaleY(.62); }
-  100% { filter: blur(.1rem); opacity: .42; transform: translateX(-50%) scaleX(.7) scaleY(.62); }
+  0% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  6% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  10% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
+  14% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
+  18% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
+  22% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
+  26% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  30% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
+  34% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
+  38% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
+  42% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  46% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  50% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  54% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
+  58% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
+  62% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
+  66% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  70% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
+  74% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
+  78% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
+  82% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
+  86% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  89.5% { filter: blur(0.12rem); opacity: 0.39; transform: translateX(-50%) scaleX(0.74) scaleY(0.64); }
+  93% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  96% { filter: blur(0.10rem); opacity: 0.41; transform: translateX(-50%) scaleX(0.71) scaleY(0.62); }
+  98% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  100% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
 }
 
 .survivor-poker-chip[data-state="official"] { box-shadow: 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
@@ -4583,3 +4617,11 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 @media (min-width: 768px) {
   .slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .87rem; }
 }
+
+/* Split-flap tiles: real hinged halves in perspective, with shading. */
+.bowl-flap.is-moving { perspective: 4.2rem; }
+.bowl-flap-half.is-folding,
+.bowl-flap-half.is-dropping { backface-visibility: hidden; transform: rotateX(90deg); }
+.bowl-flap-half.is-folding { transform: rotateX(-90deg); }
+.bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .55), rgba(10, 14, 24, .85)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.bowl-flap-half.is-bottom .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .85), rgba(10, 14, 24, .5)); }
