@@ -4544,3 +4544,16 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 .bowl-flap-half.is-dropping .bowl-flap-shade { background: linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, 0)); }
 .bowl-flap { box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink) !important; }
+/* Flat flaps: no 3D, so no perspective or hidden back faces to draw. */
+.bowl-flap { perspective: none; }
+.bowl-flap-half { backface-visibility: visible; }
+.bowl-flap-half.is-dropping { transform: scaleY(0); }
+/* Each digit is sealed off: a flip redraws that digit only, never the table around it. */
+.bowl-flap { contain: strict; }
+.bowl-flap-half { contain: layout paint; }
+/* The moving flaps stay put between flips: the falling flap rests folded flat
+   and the landed flap shows the same number as the card beneath it. The
+   falling flap carries a fixed shadow toward its hinge. */
+.bowl-flap-half.is-folding { transform: scaleY(0); visibility: visible; }
+.bowl-flap-half.is-dropping { transform: scaleY(1); visibility: visible; }
+.bowl-flap-half.is-folding { background-image: linear-gradient(rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .14)); }
