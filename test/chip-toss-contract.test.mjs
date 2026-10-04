@@ -53,4 +53,6 @@ test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed tea
   assert.ok(page.indexOf('className="bowl-optout"') > page.indexOf("National Championship total points tiebreaker"));
   assert.match(css, /\.bowl-pool-page #bowl-selections \.bowl-pick-box \{[\s\S]*?min-height: 3\.1rem;/);
   assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.1rem 2\.6rem 5\.1rem;/);
+  assert.ok(page.includes("<li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li>"));
+  assert.ok(!css.includes(".bowl-pick-box .bowl-pennant { max-width: 100%; width: 100%; }"));
 });
