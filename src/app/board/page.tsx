@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -18,7 +17,9 @@ import { buildSlateSubmission } from "@/lib/slate-submission";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
-import SurvivorPokerChip from "@/components/survivor-poker-chip";
+import { useStableCallback } from "@/lib/use-stable-callback";
+import SlateHeader from "@/components/slate-header";
+import SlateReceipt from "@/components/slate-receipt";
 
 type ScoringPeriod = {
   id: string;
@@ -163,6 +164,25 @@ export default function BoardPage() {
   const serverClockOffset = useRef(0);
   const kickoffVisibilityRefreshedGameIds = useRef(new Set<string>());
 
+  // One place that puts a board response into the page's state, used by the
+  // first load and by every week change. It also applies the player's durable
+  // display choice (All Games or Pool Action), which the bootstrap once forgot.
+  function applyBoard(data: BoardResponse) {
+    const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
+    setGames(data.games);
+    setShowActionOnly(Boolean(data.showPoolAction));
+    setPlayoffEliminated(data.pickem.playoffEliminated);
+    setSelectedPicks(data.myPicks);
+    setSavedPicks(data.myPicks);
+    setSurvivorPick(pick);
+    setSavedSurvivorPick(pick);
+    setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
+    setSurvivorAvailable(data.survivor.available);
+    setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
+    setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
+    setSurvivorStatus(data.survivor.status);
+  }
+
   async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
     boardRequestId.current = requestId;
@@ -211,18 +231,7 @@ export default function BoardPage() {
           .map((game) => game.id),
       );
 
-      setGames(data.games);
-      setShowActionOnly(Boolean(data.showPoolAction));
-      setPlayoffEliminated(data.pickem.playoffEliminated);
-      setSelectedPicks(data.myPicks);
-      setSavedPicks(data.myPicks);
-      setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
-      setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
-      setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
-      setSurvivorAvailable(data.survivor.available);
-      setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
-      setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
-      setSurvivorStatus(data.survivor.status);
+      applyBoard(data);
       setClockSynchronized(true);
     } catch (error) {
       if (requestId === boardRequestId.current) {
@@ -288,21 +297,7 @@ export default function BoardPage() {
         setWeeks(loadedWeeks);
         setNextWeekAvailableAt(manualAccessAt);
         setWeek(initialWeek);
-        setGames(data.games);
-        // Apply the player's durable display choice during the initial
-        // bootstrap too. The week-switch path already does this; omitting it
-        // here made every fresh load fall back to All Games.
-        setShowActionOnly(Boolean(data.showPoolAction));
-        setPlayoffEliminated(data.pickem.playoffEliminated);
-        setSelectedPicks(data.myPicks);
-        setSavedPicks(data.myPicks);
-        setSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
-        setSavedSurvivorPick(data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null);
-        setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
-        setSurvivorAvailable(data.survivor.available);
-        setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
-        setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
-        setSurvivorStatus(data.survivor.status);
+        applyBoard(data);
         setClockSynchronized(true);
       } catch (error) {
         if (error instanceof SessionUnavailableError) {
@@ -531,53 +526,6 @@ export default function BoardPage() {
     const game = games.find((item) => item.id === pick.gameId);
     return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
   };
-  const survivorReceipt = survivorTeamName(survivorPick) || (survivorStatus === "complete" ? "COMPLETE" : survivorStatus === "eliminated" ? "OUT" : "OPEN");
-  // Saved selections arrive asynchronously. Keep the receipt neutral until
-  // they do so, rather than briefly presenting an incorrect OPEN ticket.
-  const receiptIsLoading = isLoading;
-  // The receipt stays calm once it matches the saved record. Its sheen and
-  // tactile click are reserved for a new selection or a change to a saved one.
-  const receiptNeedsSaving = !receiptIsLoading && hasUnsavedChanges;
-  const pickemReceiptStatus = receiptIsLoading
-    ? "CHECKING"
-    : pickemHasUnsavedChanges
-      ? "CHANGED"
-      : selectedPicks.length === selectionLimit
-        ? "FILLED"
-        : "OPEN";
-  const survivorReceiptStatus = receiptIsLoading
-    ? "CHECKING"
-    : survivorHasUnsavedChanges
-      ? "CHANGED"
-      : survivorReceipt === "OPEN"
-        ? "OPEN"
-        : survivorReceipt === "OUT" || survivorReceipt === "COMPLETE"
-          ? survivorReceipt
-          : "FILLED";
-  const receiptStatusLabel = (status: string) => {
-    if (status === "FILLED") return "SUBMITTED";
-    if (status === "CHANGED") return "CHANGED - HIT SUBMIT";
-    return status;
-  };
-  const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
-  const openPickCount = selectedTeams.length - sealedPickCount;
-  const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
-  const pickemReceiptStateDetail = [
-    sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
-    openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} EDITABLE` : "",
-    duePickCount > 0 ? `${duePickCount} DUE` : "",
-  ].filter(Boolean).join(" · ");
-  const submitHint = receiptIsLoading
-    ? "CHECKING SAVED PICKS"
-    : isSubmitting
-      ? "SAVING PICKS"
-      : receiptNeedsSaving
-        ? "READY TO SAVE"
-        : duePickCount > 0
-          ? `${duePickCount} PICK${duePickCount === 1 ? "" : "S"} NEEDED`
-          : survivorControlsEnabled && !survivorPick
-            ? "SURVIVOR PICK NEEDED"
-            : "PICKS SAVED";
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
@@ -707,6 +655,18 @@ export default function BoardPage() {
     );
   }
 
+  // Flip between All Games and Pool Action, and remember the choice.
+  const toggleDisplay = useStableCallback(() => {
+    const next = !showActionOnly;
+    setShowActionOnly(next);
+    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) }).then(async (response) => {
+      if (!response.ok) throw new Error();
+    }).catch(() => {
+      setShowActionOnly(showActionOnly);
+      setSelectionWarning("Your Slate display preference could not be saved.");
+    });
+  });
+
   async function chooseWeek(event: React.ChangeEvent<HTMLSelectElement>) {
     const selectedWeek = weeks.find(
       (period) => period.id === event.target.value,
@@ -784,6 +744,20 @@ export default function BoardPage() {
     }
   }
 
+  // Stable handlers and one Survivor settings object let each game row skip a
+  // redraw unless its own game or picks changed.
+  const choose = useStableCallback(chooseTeam);
+  const chooseSurvivor = useStableCallback(chooseSurvivorTeam);
+  const survivorSettings = useMemo(() => (survivorChipsVisible && survivorStatus !== "eliminated" ? {
+    enabled: true,
+    interactive: survivorControlsEnabled,
+    selectedTeamId: survivorPick?.teamId ?? null,
+    savedTeamId: savedSurvivorPick?.teamId ?? null,
+    usedTeamIds: survivorUsedTeamIds,
+    onChoose: chooseSurvivor,
+  } : undefined), [chooseSurvivor, savedSurvivorPick?.teamId, survivorChipsVisible, survivorControlsEnabled, survivorPick?.teamId, survivorStatus, survivorUsedTeamIds]);
+  const selectedTeamByGame = useMemo(() => new Map(selectedPicks.map((pick) => [pick.gameId, pick.teamId])), [selectedPicks]);
+
   if (isLoading && !week) return <SlateLoadingShell />;
 
   if (errorMessage && !week) {
@@ -808,133 +782,37 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
-        <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
-          <div className="slate-header-grid grid gap-5 md:gap-0">
-            <div className="min-w-0 md:pr-7">
-              <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">
-                The Slate
-              </h1>
-              <label
-                className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
-                htmlFor="week-selector"
-              >
-                VIEW WEEK
-              </label>
+        <SlateHeader
+          actionOnlyActive={actionOnlyActive}
+          availableWeeks={availableWeeks}
+          hasEarlyGame={hasEarlyGame}
+          onChooseWeek={chooseWeek}
+          onToggleDisplay={toggleDisplay}
+          survivorControlsEnabled={survivorControlsEnabled}
+          week={week}
+        />
 
-              <select
-                className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]"
-                id="week-selector"
-                onChange={chooseWeek}
-                value={week.id}
-              >
-                {availableWeeks.map((period) => (
-                  <option key={period.id} value={period.id}>
-                    {period.display_name}
-                    {period.status === "complete" ? " — Final" : ""}
-                </option>
-              ))}
-              </select>
-
-              <div className="slate-view-switch-slot">
-                <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-                  <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
-                  <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={() => {
-                    const next = !actionOnlyActive;
-                    setShowActionOnly(next);
-                    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) }).then(async (response) => {
-                      if (!response.ok) throw new Error();
-                    }).catch(() => {
-                      setShowActionOnly(actionOnlyActive);
-                      setSelectionWarning("Your Slate display preference could not be saved.");
-                    });
-                  }} role="switch" type="button"><span /></button>
-                  <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
-                </div>
-              </div>
-            </div>
-
-            <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-              <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorControlsEnabled ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
-                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
-                {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
-                <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SUBMIT</strong>Review your choices, then click <span className="font-black">SUBMIT</span> to save the picks currently shown.</p>
-              </div>
-              <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 md:gap-0">
-                <div className="md:pl-4">
-                  <p>Lines lock at 8 AM on gameday, unless otherwise noted.</p>
-                  <p className="mt-1"><span className="official-line-color font-semibold">Teal lines</span> are official and will not change.</p>
-                </div>
-                <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
-                  <p>Favorites left; home team ALL CAPS.</p>
-                  <p className="mt-1">Changes allowed until kickoff time.</p>
-                </div>
-              </div>
-              {hasEarlyGame ? (
-                <p className="mt-3 border-t border-[#b7aea0] pt-3 font-semibold md:pl-4">
-                  EARLY GAME: spreads post at 6 PM the night before.
-                </p>
-              ) : null}
-            </aside>
-          </div>
-
-        </header>
-
-        <section
-          aria-label="Your weekly receipt"
-          className={`slate-mini-nav slate-receipt-strip ${showSurvivorReceipt ? "has-survivor" : "is-pickem-only"} ${week?.period_type === "playoff" ? "is-playoff" : ""} ${sealedPickCount > 0 && openPickCount > 0 ? "has-mixed-locks" : ""} ${receiptIsLoading ? "receipt-is-loading" : ""}`}
-        >
-          <div className="slate-receipt-ticket">
-            <span>YOUR RECEIPT</span>
-            <div className="slate-receipt-actions">
-            <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
-            <button
-              className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
-              disabled={receiptIsLoading || isSubmitting}
-              onClick={submitPicks}
-              type="button"
-            >
-              SUBMIT
-            </button>
-            </div>
-            <span className="slate-receipt-footnote">
-              <span
-                aria-live="polite"
-                className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`}
-                role="status"
-              >
-                <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
-                <span>{isSubmitting ? "PRINTING" : ""}</span>
-              </span>
-              <span aria-live="polite" className="slate-receipt-submit-hint">{submitHint}</span>
-            </span>
-          </div>
-          <div className="slate-receipt-pool slate-receipt-pickem">
-            <span>PICK&apos;EM</span>
-            <div className={`slate-receipt-selection-chips slate-receipt-selection-chips--${week?.period_type === "playoff" ? "playoff" : "regular"} slate-receipt-selection-chips--slots-${Math.min(selectionLimit, 6)}`} style={{ "--selection-slot-count": Math.min(selectionLimit, 6) } as CSSProperties}>
-              {receiptIsLoading ? <strong className="is-quiet">CHECKING</strong> : selectedTeams.length ? selectedTeams.map((team, index) => (
-                <span
-                  className={`selection-chip slate-receipt-selection-chip ${team.isSaved ? "is-saved" : "is-draft"} ${team.canRemove ? "is-editable" : "is-sealed"}`}
-                  key={team.gameId}
-                  title={team.abbreviation}
-                >
-                  <span>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
-                  {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => removeSelection(team.gameId)} type="button">×</button> : <span aria-label="Sealed at kickoff" className="slate-receipt-lock-mark" role="img">🔒</span>}
-                </span>
-              )) : <strong className="is-due">PICK DUE</strong>}
-            </div>
-            <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPicks.length}/{selectionLimit} · {receiptStatusLabel(pickemReceiptStatus)}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
-          </div>
-          {showSurvivorReceipt ? (
-            <div className="slate-receipt-pool slate-receipt-survivor">
-              <span>SURVIVOR</span>
-              <div aria-label={!receiptIsLoading && survivorPickDetails ? survivorPickDetails.name : undefined} className={`slate-receipt-survivor-pick ${survivorHasUnsavedChanges && survivorControlsEnabled ? "is-awaiting-lock" : ""}`} role={!receiptIsLoading && survivorPickDetails ? "img" : undefined}>
-                {!receiptIsLoading && survivorPickDetails ? <SurvivorPokerChip abbreviation={survivorPickDetails.abbreviation} size="summary" teamName={survivorPickDetails.name} tooltip={survivorPickDetails.name} /> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
-              </div>
-              <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
-            </div>
-          ) : null}
-          {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
-        </section>
+        <SlateReceipt
+          isLoading={isLoading}
+          isSubmitting={isSubmitting}
+          onRemove={removeSelection}
+          onSubmit={submitPicks}
+          periodType={week?.period_type}
+          pickemHasUnsavedChanges={pickemHasUnsavedChanges}
+          selectedPickCount={selectedPicks.length}
+          selectedTeams={selectedTeams}
+          selectionLimit={selectionLimit}
+          selectionWarning={selectionWarning}
+          survivor={{
+            controlsEnabled: survivorControlsEnabled,
+            details: survivorPickDetails,
+            hasPick: Boolean(survivorPick),
+            hasUnsavedChanges: Boolean(survivorHasUnsavedChanges),
+            show: Boolean(showSurvivorReceipt),
+            status: survivorStatus,
+            teamName: survivorTeamName(survivorPick),
+          }}
+        />
 
         {playoffEliminated ? (
           <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">
@@ -978,17 +856,10 @@ export default function BoardPage() {
                         game={game}
                         hasStarted={new Date(game.kickoffAt).getTime() <= currentTime}
                         key={game.id}
-                        onChoose={chooseTeam}
-                        selectedTeamId={selectedPicks.find((pick) => pick.gameId === game.id)?.teamId}
+                        onChoose={choose}
+                        selectedTeamId={selectedTeamByGame.get(game.id)}
                         selectionFeedback={selectionFeedback?.gameId === game.id ? selectionFeedback : null}
-                        survivor={survivorChipsVisible && survivorStatus !== "eliminated" ? {
-                          enabled: true,
-                          interactive: survivorControlsEnabled,
-                          selectedTeamId: survivorPick?.teamId ?? null,
-                          savedTeamId: savedSurvivorPick?.teamId ?? null,
-                          usedTeamIds: survivorUsedTeamIds,
-                          onChoose: chooseSurvivorTeam,
-                        } : undefined}
+                        survivor={survivorSettings}
                       />
                     ))}
                   </div>
