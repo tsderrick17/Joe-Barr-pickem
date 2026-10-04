@@ -430,6 +430,10 @@ may enrich spreads but cannot override canonical schedule assignments.
   combine only when their kickoff timestamps match. Each playoff receipt shows
   every player eligible for that matchup, including an explicit no-pick loss, but
   never repeats picks from an earlier kickoff or exposes a later one.
+- Regular-season Sunday and featured-window reveal images also carry a Survivor
+  section, in the same image under the Pick'em table: each Survivor pick on a
+  game in that window that has already kicked off, with W or L once graded.
+  Picks on later games stay private. Playoff reveals have no Survivor section.
 - Wednesday Slate and Tuesday recap subjects include the scoring-period name.
   Playoff reveal subjects include the round, matchup, and represented Eastern
   game date; playoff recap subjects include the completed round and game date.

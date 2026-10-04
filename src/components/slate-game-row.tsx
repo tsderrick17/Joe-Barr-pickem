@@ -110,6 +110,9 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
   const showSpecialLockNote = game.isInternational && !lockedSpread;
   const hasPublishedPick = left.pickers.length > 0 || right.pickers.length > 0;
   const compactFinal = isFinal && !hasPublishedPick;
+  // Once a game kicks off, its team names and picker lists move to the spots
+  // they keep when it ends (the final-row layout), so nothing shifts at the final.
+  const settledLayout = isFinal || isLive;
   const pickerSignature = `${left.pickers.join(",")}|${right.pickers.join(",")}`;
 
   /* A final matchup has one shared vertical rhythm. Reserve the height of the
@@ -118,7 +121,7 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
      whole matchup to its top edge. */
   useEffect(() => {
     const row = rowRef.current;
-    if (!row || !isFinal || !hasPublishedPick) {
+    if (!row || !settledLayout || !hasPublishedPick) {
       setPickerLaneHeight(0);
       return;
     }
@@ -142,7 +145,7 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
     const observer = new ResizeObserver(measurePickerLane);
     observer.observe(row);
     return () => observer.disconnect();
-  }, [hasPublishedPick, isFinal, pickerSignature]);
+  }, [hasPublishedPick, settledLayout, pickerSignature]);
 
   const rowStyle = pickerLaneHeight
     ? ({ "--slate-picker-lane-height": `${pickerLaneHeight}px` } as CSSProperties)
@@ -154,7 +157,7 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
     // Keep the familiar home/away casing on the compact mobile treatment too:
     // home abbreviations stay loud, while away abbreviations remain lowercase.
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
-    const compactLabel = isFinal ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
+    const compactLabel = settledLayout ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const inkStyle = selected ? strokeJitter(`${team.id}-${feedbackType ? selectionFeedback?.token : 0}`) : undefined;
     const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection && !hasStarted ? "hover:underline" : ""}`;
@@ -253,9 +256,9 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
           ? "FINAL"
           : null;
 
-  return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${isFinal ? "is-final" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 md:gap-3 md:py-2 md:pl-2 md:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
+  return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${settledLayout ? "is-final" : ""} ${isLive ? "is-live" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 md:gap-3 md:py-2 md:pl-2 md:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
     <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 md:text-xs">
-      {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <p className="inline-block border border-red-800 bg-red-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.12em] text-red-800">LIVE</p> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p></>}
+      {isFinal ? <><p className="font-mono font-bold text-slate-700">{easternShortDate(game.kickoffAt)}</p><p className="mt-1 text-[8px] font-black tracking-[0.1em] text-slate-500">FINAL</p></> : isLive ? <p className="slate-live-badge inline-block border border-red-800 bg-red-50 px-1 py-px text-[8px] font-black leading-3 tracking-[0.1em] text-red-800">LIVE</p> : game.status === "postponed" || game.status === "cancelled" ? <><p className="inline-block border border-amber-800 bg-amber-50 px-1.5 py-px text-[8px] font-black leading-3 tracking-[0.08em] text-amber-900">{game.status.toUpperCase()}</p><p className="mt-1 text-[8px] font-black tracking-[0.08em] text-slate-500">NO PICKS</p></> : <><p>{easternTime(game.kickoffAt).replace(" EDT", "").replace(" EST", "")}</p></>}
     </div>
     {teamCell(left, "left")}
     {survivorChip(left)}

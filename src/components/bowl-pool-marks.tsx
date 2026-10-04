@@ -24,12 +24,12 @@ export function BowlPennant({ team, side }: { team: PennantTeam; side: "left" | 
 }
 
 /** The Bowl Pool's heading: gold rules, three stars, the title in varsity lettering, and the season. */
-export function BowlCrest({ action, seasonYear, title }: { action?: ReactNode; seasonYear: number; title: string }) {
+export function BowlCrest({ action, seasonYear, title, seasonSuffix }: { action?: ReactNode; seasonYear: number; title: string; seasonSuffix?: string }) {
   return (
     <div className="bowl-crest">
       <div className="bowl-crest-ornament" aria-hidden="true"><span /><i>★ ★ ★</i><span /></div>
       <div className="bowl-crest-title"><h2>{title}</h2>{action}</div>
-      <p className="bowl-crest-season">{bowlSeasonLabel(seasonYear)}</p>
+      <p className="bowl-crest-season">{bowlSeasonLabel(seasonYear)}{seasonSuffix ? ` ${seasonSuffix}` : ""}</p>
     </div>
   );
 }

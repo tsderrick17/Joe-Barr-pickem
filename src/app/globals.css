@@ -1044,7 +1044,7 @@ body {
 .survivor-poker-chip-edge-seg::before {
   backface-visibility: hidden;
   background:
-    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
     linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
     #cdc7bb;
   content: "";
@@ -1058,7 +1058,7 @@ body {
 }
 .survivor-poker-chip-edge-seg.is-insert::before {
   background:
-    linear-gradient(rgba(16,14,12,var(--seg-dark)), rgba(16,14,12,var(--seg-dark))),
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
     linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
     linear-gradient(90deg, var(--chip-secondary) 0 25%, var(--chip-primary) 25% 75%, var(--chip-tertiary) 75% 100%);
 }
@@ -1091,7 +1091,7 @@ body {
 }
 
 .survivor-poker-chip-wrap[data-state="picked"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-pick-mark {
-  animation: survivor-pick-mark-reveal 720ms cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-pick-mark-reveal 980ms cubic-bezier(.16,.76,.2,1) both;
 }
 
 @keyframes survivor-pick-mark-reveal {
@@ -1103,40 +1103,74 @@ body {
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-side { border-color: #d69a20; }
 
 .survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
-  animation: survivor-chip-toss 680ms cubic-bezier(.16,.76,.2,1) both;
+  /* A real toss: the chip spins at a steady rate while it rises and falls
+     (the curve lives in the keyframes, so the timing is linear), comes toward
+     you as it rises, then lands flat and rocks to rest. */
+  animation: survivor-chip-toss 900ms linear both;
 }
 
 .survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow {
-  animation: survivor-chip-shadow 680ms cubic-bezier(.16,.76,.2,1) both;
+  animation: survivor-chip-shadow 900ms linear both;
 }
 
 @keyframes survivor-chip-toss {
-  0% { filter: brightness(1); transform: translateY(-1px) rotateX(0deg) scale(1); }
-  8% { filter: brightness(1.05); transform: translateY(-4px) rotateX(132deg) scale(1.035); }
-  17% { filter: brightness(1.1); transform: translateY(-7px) rotateX(300deg) scale(1.065); }
-  28% { filter: brightness(1.14); transform: translateY(-8px) rotateX(510deg) scale(1.08); }
-  40% { filter: brightness(1.12); transform: translateY(-7px) rotateX(700deg) scale(1.075); }
-  52% { filter: brightness(1.1); transform: translateY(-5px) rotateX(858deg) scale(1.06); }
-  64% { filter: brightness(1.07); transform: translateY(-4px) rotateX(976deg) scale(1.045); }
-  76% { filter: brightness(1.04); transform: translateY(-3px) rotateX(1046deg) scale(1.028); }
-  88% { filter: brightness(1.01); transform: translateY(-2px) rotateX(1088deg) scale(1.012); }
-  100% { filter: brightness(1); transform: translateY(-1px) rotateX(1080deg) scale(1); }
+  0% { transform: translateY(-1px) rotateX(0deg) rotateY(0deg) scale(1.000); }
+  6% { transform: translateY(0.5px) rotateX(-6deg) rotateY(0deg) scale(0.975); }
+  10% { transform: translateY(-3.28px) rotateX(54deg) rotateY(1.55deg) scale(1.032); }
+  14% { transform: translateY(-5.32px) rotateX(108deg) rotateY(2.94deg) scale(1.061); }
+  18% { transform: translateY(-7.12px) rotateX(162deg) rotateY(4.05deg) scale(1.087); }
+  22% { transform: translateY(-8.68px) rotateX(216deg) rotateY(4.76deg) scale(1.109); }
+  26% { transform: translateY(-10px) rotateX(270deg) rotateY(5deg) scale(1.127); }
+  30% { transform: translateY(-11.08px) rotateX(324deg) rotateY(4.76deg) scale(1.143); }
+  34% { transform: translateY(-11.92px) rotateX(378deg) rotateY(4.05deg) scale(1.155); }
+  38% { transform: translateY(-12.52px) rotateX(432deg) rotateY(2.94deg) scale(1.163); }
+  42% { transform: translateY(-12.88px) rotateX(486deg) rotateY(1.55deg) scale(1.168); }
+  46% { transform: translateY(-13px) rotateX(540deg) rotateY(0deg) scale(1.170); }
+  50% { transform: translateY(-12.88px) rotateX(594deg) rotateY(-1.55deg) scale(1.168); }
+  54% { transform: translateY(-12.52px) rotateX(648deg) rotateY(-2.94deg) scale(1.163); }
+  58% { transform: translateY(-11.92px) rotateX(702deg) rotateY(-4.05deg) scale(1.155); }
+  62% { transform: translateY(-11.08px) rotateX(756deg) rotateY(-4.76deg) scale(1.143); }
+  66% { transform: translateY(-10px) rotateX(810deg) rotateY(-5deg) scale(1.127); }
+  70% { transform: translateY(-8.68px) rotateX(864deg) rotateY(-4.76deg) scale(1.109); }
+  74% { transform: translateY(-7.12px) rotateX(918deg) rotateY(-4.05deg) scale(1.087); }
+  78% { transform: translateY(-5.32px) rotateX(972deg) rotateY(-2.94deg) scale(1.061); }
+  82% { transform: translateY(-3.28px) rotateX(1026deg) rotateY(-1.55deg) scale(1.032); }
+  86% { transform: translateY(-1px) rotateX(1080deg) rotateY(-0deg) scale(1.000); }
+  89.5% { transform: translateY(-2.2px) rotateX(1090deg) rotateY(0deg) scale(1.000); }
+  93% { transform: translateY(-0.6px) rotateX(1075deg) rotateY(0deg) scale(1.000); }
+  96% { transform: translateY(-1.2px) rotateX(1083deg) rotateY(0deg) scale(1.000); }
+  98% { transform: translateY(-1px) rotateX(1079deg) rotateY(0deg) scale(1.000); }
+  100% { transform: translateY(-1px) rotateX(1080deg) rotateY(0deg) scale(1.000); }
 }
 
 @keyframes survivor-chip-shadow {
-  0% { filter: blur(.1rem); opacity: .42; transform: translateX(-50%) scaleX(.7) scaleY(.62); }
-  7% { filter: blur(.15rem); opacity: .31; transform: translateX(-50%) scaleX(.83) scaleY(.67); }
-  16% { filter: blur(.24rem); opacity: .15; transform: translateX(-50%) scaleX(1.12) scaleY(.82); }
-  25% { filter: blur(.26rem); opacity: .13; transform: translateX(-50%) scaleX(1.18) scaleY(.86); }
-  33% { filter: blur(.2rem); opacity: .2; transform: translateX(-50%) scaleX(1) scaleY(.74); }
-  41% { filter: blur(.22rem); opacity: .17; transform: translateX(-50%) scaleX(1.07) scaleY(.78); }
-  50% { filter: blur(.22rem); opacity: .17; transform: translateX(-50%) scaleX(1.08) scaleY(.8); }
-  58% { filter: blur(.2rem); opacity: .2; transform: translateX(-50%) scaleX(1) scaleY(.75); }
-  66% { filter: blur(.18rem); opacity: .25; transform: translateX(-50%) scaleX(.93) scaleY(.71); }
-  74% { filter: blur(.15rem); opacity: .3; transform: translateX(-50%) scaleX(.85) scaleY(.68); }
-  84% { filter: blur(.12rem); opacity: .36; transform: translateX(-50%) scaleX(.77) scaleY(.64); }
-  93% { filter: blur(.1rem); opacity: .4; transform: translateX(-50%) scaleX(.72) scaleY(.62); }
-  100% { filter: blur(.1rem); opacity: .42; transform: translateX(-50%) scaleX(.7) scaleY(.62); }
+  0% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  6% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  10% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
+  14% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
+  18% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
+  22% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
+  26% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  30% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
+  34% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
+  38% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
+  42% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  46% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  50% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  54% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
+  58% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
+  62% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
+  66% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  70% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
+  74% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
+  78% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
+  82% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
+  86% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  89.5% { filter: blur(0.12rem); opacity: 0.39; transform: translateX(-50%) scaleX(0.74) scaleY(0.64); }
+  93% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  96% { filter: blur(0.10rem); opacity: 0.41; transform: translateX(-50%) scaleX(0.71) scaleY(0.62); }
+  98% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  100% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
 }
 
 .survivor-poker-chip[data-state="official"] { box-shadow: 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
@@ -1551,6 +1585,18 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-player { align-items: center; display: flex; grid-row: 1 / span 2; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
+}
+/* Tablet and up: every pick of the round sits on one line per player. Each
+   column is only as wide as its longest entry (abbreviations and spreads vary)
+   plus one even gap, and the pad hugs the ledger instead of stretching across
+   the page, so six picks are spaced like the regular two. */
+@media (min-width: 640px) {
+  .playoff-scoreboard { margin-left: auto; margin-right: auto; max-width: 100%; width: fit-content; }
+  .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: auto; }
+  /* The gap narrows on a tablet so six picks still fit, and reaches 1.25rem on a desktop. */
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick { padding-left: 0; padding-right: clamp(.35rem, 2.4vw - .7rem, 1.25rem); white-space: nowrap; }
+  .playoff-scoreboard .pickem-ledger-row td.pickem-ledger-player + td { padding-left: .5rem; }
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick:last-child { padding-right: .5rem; }
 }
 html[data-theme="night"] .playoff-scoreboard {
   background:
@@ -3914,17 +3960,35 @@ html[data-theme="night"] .provider-chart-table { color: #d4d4d8; }
 html[data-theme="night"] .provider-chart-table thead th { background: #18181b; border-bottom-color: #3f3f46; color: #a1a1aa; }
 html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #27272a; }
 html[data-theme="night"] .provider-chart-table tbody tr:nth-child(even) { background: #1f1f23; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th,
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td { white-space: normal; overflow-wrap: anywhere; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(1),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(1) { width: 20%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(2),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(2) { width: 14%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table th:nth-child(4),
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table td:nth-child(4) { width: 33%; }
-[aria-labelledby="grading-dashboard-title"] .grading-worker-table tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+/* Worker activity. The prefix outranks the dashboard's generic table rules
+   (which force one-line cells and a pill on every second column). */
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td { white-space: normal; overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(1) { width: 20%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(2) { width: 14%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+/* On a phone, each run is a small card: the worker and its status on one line,
+   then when it started and finished, each on a labeled line of its own. */
+@media (max-width: 639px) {
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody { display: block; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) thead,
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) colgroup { display: none; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid #f1f1f2; border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(n) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) .grading-worker-status { white-space: nowrap; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4) { grid-column: 1 / -1; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3)::before { content: "Started  "; font-weight: 700; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4)::before { content: "Finished  "; font-weight: 700; }
+}
+html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { border-color: #27272a; }
 .grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
 [aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid #e4e4e7; margin-left: .25rem; padding-left: 1rem; }
 [aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }
@@ -4388,17 +4452,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 /* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
 .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
 @media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
-/* Old-gold dividers belong between the dates on the top row; below it the
-   columns are separated by quiet hairlines. */
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold-soft) !important; border-left-width: 1px !important; border-right-width: 1px !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-l-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-l-2"]) { border-left-width: 0 !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-r-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-r-2"]) { border-right-width: 0 !important; }
-
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
 /* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
    whole so every proportion holds. */
 .chip-playground { height: 6.2rem; width: 6.2rem; }
@@ -4434,14 +4487,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 .slate-receipt-actions a { justify-self: center; }
 .bowl-receipt-strip .slate-receipt-print { width: 13.9rem; max-width: 100%; }
 @media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
-/* The gold day dividers run from the dates down through the bowl names, so the
-   game days read clearly. */
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
-.bowl-card-section .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
-.bowl-card-section .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
 
 /* ---- Bowl Card: flip-tile scores and one consistent row style */
 .bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; }
@@ -4540,3 +4585,88 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 @media (min-width: 640px) { .standings-stack { --standings-gap: 2rem; } }
 .standings-stack > section:not(.my-ticket):not(.standings-loading-ticket) { padding-block: 0; }
 .standings-stack > section + section { margin-top: var(--standings-gap); }
+
+/* ---- Bowl Card: one line style for the whole table. Every line (the day
+   breaks, the row rules, the edge where the games begin, and the tiebreaker
+   edge) is a single 1px old-gold rule. Adjacent cells no longer each draw a
+   border, so nothing doubles up. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll { border-bottom: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span { border-width: 0 !important; }
+/* Day breaks and the tiebreaker edge: a left rule only. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span[class*="border-l-2"],
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:not([aria-hidden]) { border-left: 1px solid var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { border-left-width: 0 !important; }
+/* The first game sits against the frozen columns, which carry that edge. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row > span:nth-child(3) { border-left-width: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:first-child,
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:first-child { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft), inset -1px 0 0 var(--bowl-gold) !important; }
+/* Row rules. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
+
+/* A live game keeps the date column's width: the LIVE badge fits inside it. */
+.slate-live-badge { max-width: 100%; white-space: nowrap; }
+/* The spread's middle sits level with the middle of the team names on a
+   finished or live row (the chip rows' names start lower than the cell top). */
+.slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .64rem; }
+.slate-game-row.is-final.no-survivor-layout .slate-spread-cell { margin-top: -.2rem; }
+@media (min-width: 768px) {
+  .slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .87rem; }
+}
+
+/* Split-flap tiles: real hinged halves in perspective, with shading. */
+.bowl-flap.is-moving { perspective: 4.2rem; }
+.bowl-flap-half.is-folding,
+.bowl-flap-half.is-dropping { backface-visibility: hidden; transform: rotateX(90deg); }
+.bowl-flap-half.is-folding { transform: rotateX(-90deg); }
+.bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .55), rgba(10, 14, 24, .85)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.bowl-flap-half.is-bottom .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .85), rgba(10, 14, 24, .5)); }
+
+/* "Games" and "remaining" stack over the counter, all centered. */
+.bowl-games-remaining-label { line-height: 1.25; text-align: center; }
+
+/* ---- Bowl Pool picks page: the receipt sits right under the menu, Opt out is
+   a small link in the board's corner, and each team is a large boxed target. */
+.bowl-pool-page .bowl-receipt-frame { margin-top: 0; }
+.bowl-pool-page .bowl-pool-board { position: relative; }
+/* Opt out sits right under the instructions, lined up with their text. */
+.bowl-pool-page .bowl-optout { margin: .45rem auto 0; max-width: 28rem; padding-left: 1.1rem; text-align: left; }
+.bowl-pool-page .bowl-optout button { font-size: .68rem; padding: 0; }
+.bowl-pool-page #bowl-selections .bowl-pick-box {
+  align-items: center;
+  align-self: stretch;
+  background: var(--bowl-paper);
+  border: 1px solid var(--bowl-gold-soft);
+  border-radius: .35rem;
+  box-shadow: 0 1px 0 rgba(22, 34, 58, .06);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  margin: .35rem .2rem;
+  min-height: 3.1rem;
+  padding: .3rem .35rem;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.bowl-pool-page #bowl-selections .bowl-pick-box:not(:disabled):hover { background: #fffaf0; border-color: var(--bowl-gold); }
+.bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #fbf4e4; border: 2px solid var(--bowl-gold); padding: calc(.3rem - 1px) calc(.35rem - 1px); }
+.bowl-pool-page #bowl-selections .bowl-pick-box:disabled { cursor: not-allowed; }
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; max-width: 100%; }
+/* Pennants keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant { max-width: 100%; }
+/* Names wrap between words only, never mid-word, inside the boxed pennant. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag { font-size: .56rem; letter-spacing: .03em; padding: 0 .55rem 0 .35rem; }
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag > span { overflow-wrap: normal; word-break: keep-all; }
+@media (max-width: 639px) {
+  /* The line gets its own lane between the two boxes, wide enough for -10.5. */
+  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
+  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.6rem minmax(0, 1fr) 5.1rem 2.6rem 5.1rem; }
+  .bowl-pool-page #bowl-selections .bowl-game-line { font-size: .78rem; white-space: nowrap; }
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { background: #1b1f2b; border-color: #4d4a3e; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
+/* Wide enough on a desktop that the first instruction stays on one line. */
+.bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }

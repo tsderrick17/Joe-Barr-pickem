@@ -53,7 +53,7 @@ test("grading cards, worker columns, and operations actions keep stable non-over
   assert.match(dashboard, /grading-worker-status/);
   assert.doesNotMatch(dashboard, /grading-worker-table[^\n]*min-w-\[48rem\]/);
   assert.ok(css.includes(".grading-worker-table { min-width: 0; table-layout: fixed; }"));
-  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] .grading-worker-table tbody td:nth-child(2) { border-radius: 0;'));
+  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0;'));
   assert.match(css, /\.grading-kpi > p \{[^}]*min-height: 2\.3em/);
   assert.match(css, /\.commissioner-inline-action \{[^}]*display: inline-flex/);
   assert.match(operations, /commissioner-map-next/);

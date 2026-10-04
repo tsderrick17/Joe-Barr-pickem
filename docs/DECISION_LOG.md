@@ -1273,3 +1273,37 @@ The first sliding version wrapped the Survivor Table and Bowl Card in a class na
 ## Sliding tables roll like window blinds
 
 Opening a table used to skip the slide: the content was measured after it had already painted at full height, so it popped open. The slide now runs in a layout effect from zero height before the first paint, with no fade, on an ease-in-out curve over 420 ms (`collapse.tsx`). Survivor's − OUT / + OUT button rolls the eliminated rows shut and open the same way (`useBlindRows`): hidden rows stay on the page until they have rolled away. Reduced motion skips both.
+
+## Worker activity on phones, test coin, chip edge shading, wider playoff ledger
+
+- Worker activity: its own rules lost to the dashboard's generic table rules (one-line cells and a pill on every second column), so on a phone the dates overlapped and the status became a circle. Its selector now outranks them, and on a phone each run is a card: worker and status on one line, then "Started" and "Finished" lines.
+- The Operations test coin flips three turns end over end and lands exactly where it started, instead of snapping to the nearest flat position.
+- Chip edge: each rim segment was one flat shade, which showed faint steps between segments up close. Each segment now shades from its neighbor's tone to the next, so the edge reads as one round band. Thickness was left as is: it already matches a real chip (about 8.5% of the diameter).
+- Playoff ledger: from tablet width up, every pick of the round sits on one line per player. Each column is only as wide as its longest entry (abbreviations and spreads vary) plus one even gap (1.25 rem on a desktop, narrowing on a tablet so six still fit), and the pad hugs the ledger, centered, instead of stretching across the page.
+
+## Survivor picks in the pick reveal emails
+
+The Sunday and featured-window reveal images now show the Survivor picks made on that window's started games, as a short "Survivor · Straight-up" section under the Pick'em table in the same image: name and team chip, three to a line, green for W and red for L once graded. It is part of the same image rather than a second one, so the email makes no extra image request, and the snapshot adds one small read (that week's Survivor picks on just those games, then the names and teams). Only games that have kicked off are read, so a pick on a later game stays private. Receipts saved before this change have no Survivor field and render exactly as before. Playoff reveals are unchanged, since Survivor ends with the regular season.
+
+## Bowl Card: one line style for the whole table
+
+Adjacent cells each drew their own border, so day breaks were doubled (2 px gold plus 2 px on the next cell, or gold against a navy edge at the tiebreaker), the header's lines were heavier than the rows', and the row rules were a different color. Every line in the Bowl Card table is now one single 1 px old-gold rule: day breaks are a left edge only, the frozen name column carries the edge where the games begin, the tiebreaker has one left rule, and each row has one bottom rule. The older overlapping border rules were removed rather than overridden. Spreads drop the minus sign, since the favorite is always listed on top.
+
+## Live Slate rows take their final layout at kickoff
+
+At kickoff a row used to keep the upcoming layout (centered names, a divider after a wider LIVE badge) and then jump to the final layout when the game ended. A live row now uses the final layout from kickoff: team names and picker lists sit where they will stay, the date column keeps its width, and the LIVE badge is sized to fit inside it.
+On a finished or live row the spread's middle is level with the middle of the team names at every width, with or without Survivor chips (it sat about 10 to 14 px high beside the chips).
+
+## Truer split-flap and coin-toss motion; Bowl Card "Special"; no dotted zeros
+
+- Split-flap tiles: the flat squash did not read as a mechanism. Each flip is now two hinged halves turning in real perspective: the top half swings down toward you (accelerating), the next card's lower half follows, hits its stop with a small rebound, and the shading moves with them (the falling flap darkens, it shadows the half it is about to cover, the uncovered half brightens out of that shadow). Only transforms and opacity animate, on the browser's animation engine, so it stays light. Digits still step in order and stop only on their target, the last few flips slowing as the drum catches; a tile now takes a little longer to settle.
+- Graduate draws its zero with a dot in the middle, so tiles and the games-remaining counter show its capital O, the same shape without the dot.
+- Coin toss: the old toss slowed its spin to a stop like a spinning top. The chip now spins at a steady rate while it rises toward you and falls (height and swell follow a real arc), with a slight wobble, then lands flat and rocks to rest; the ground shadow widens and fades with height. 900 ms (was 680). The Operations test coin uses exactly the same curve, which a test keeps identical.
+- The Bowl Card's season line reads "2026-27 Special".
+- "Games" and "remaining" stack on two lines above the centered games-remaining counter.
+
+## Bowl Pool picks page: tighter top, boxed team targets
+
+The receipt now sits right under the menu (the page had a large blank band above it), and Opt out is a small link at the foot of the board instead of its own line between the receipt and the board. Each team is a large boxed button (at least 3.1 rem tall, with margin on every side) so a tap can never land on the wrong team; the chosen team's pennant fills its box, and names wrap only between words. On a phone the line has its own lane between the two boxes, wide enough for a spread like -10.5.
+Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
+Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."

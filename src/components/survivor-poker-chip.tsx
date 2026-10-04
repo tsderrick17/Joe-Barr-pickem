@@ -21,9 +21,12 @@ type Props = {
 // a band of flat edge segments around the rim. Each quarter of the rim has one
 // 16-degree insert segment (the same colored spot printed on the face, carried
 // over the edge) and seven plain segments. Each segment is darkened a little
-// by how far it faces away from the light above, so the edge reads as round.
+// by how far it faces away from the light above, shaded smoothly from one end
+// to the other so neighbors meet at the same tone and the edge reads as one
+// continuous round band rather than flat steps.
 const EDGE_INSERT = 16;
 const EDGE_PLAIN = (90 - EDGE_INSERT) / 7;
+const edgeDark = (angle: number) => (0.22 * (1 - Math.cos((angle * Math.PI) / 180)) / 2).toFixed(3);
 const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
   { angle: quarter * 90, span: EDGE_INSERT, insert: true },
   ...Array.from({ length: 7 }, (_, step) => ({ angle: quarter * 90 + EDGE_INSERT / 2 + EDGE_PLAIN * (step + 0.5), span: EDGE_PLAIN, insert: false })),
@@ -33,7 +36,8 @@ const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
     "--seg-a": `${angle.toFixed(3)}deg`,
     // A chord of `span` degrees, as a share of the diameter.
     "--seg-w": `${(Math.sin((span * Math.PI) / 360) * 100).toFixed(3)}%`,
-    "--seg-dark": (0.22 * (1 - Math.cos((angle * Math.PI) / 180)) / 2).toFixed(3),
+    "--seg-dark-a": edgeDark(angle - span / 2),
+    "--seg-dark-b": edgeDark(angle + span / 2),
   } as CSSProperties,
 }));
 
