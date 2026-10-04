@@ -1248,6 +1248,4 @@ The test chip on the Operations desk is about twice its old size, turns more rea
 
 Each player's Bowl Pool win total is a two-digit flip tile in the style of the games-remaining counter: navy with gold digits for the signed-in player, cream with navy digits for everyone else. The first time the Bowl Card scrolls into view on a visit, each tile spins on its own (its own pace, each digit turning independently, slowing as it comes in) for about a second, then the tiles land down the line, one about a tenth of a second after the one above it (skipped for anyone who has reduced motion turned on). The score and name cells now share the row's paper color and its top and bottom hairlines, with a thin gold edge where the games begin, so the whole row reads as one.
 
-### Bowl score tiles are split-flap digits
-
-The score tiles now move like a mechanical stadium board: each digit is a split-flap whose top flap falls to reveal the next number in order (0 through 9), each at its own pace from its own starting card. When the tiles land, every digit keeps flipping until it reaches its total, so the rows stop down the line. Fixed a bug where any re-render during the one-second wait (for example a data refresh right after loading) cancelled the landing, leaving the tiles spinning forever.
+Survivor chips show each team mark 18% larger than the Pick'em Pad does (still from the same even-size table), so the logo fills the chip face as it did before the sizes were evened out.

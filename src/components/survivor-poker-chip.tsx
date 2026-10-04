@@ -37,6 +37,8 @@ const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
   } as CSSProperties,
 }));
 
+const CHIP_LOGO_BOOST = 1.18;
+
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip, showEdge = false }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
@@ -45,7 +47,8 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const logoAbbreviation = abbreviation.trim().toUpperCase();
   const accent = teamChipAccents(logoAbbreviation);
   // Every logo is scaled so its inked area reads at one size (src/lib/team-logo-scale.js).
-  const logoScale = teamLogoScale(logoAbbreviation);
+  // Chips show the mark 18% larger than the Pad does, so it fills the chip face.
+  const logoScale = teamLogoScale(logoAbbreviation) * CHIP_LOGO_BOOST;
   const state = official ? "official" : selected ? "picked" : "available";
   // The rim is only seen while the chip turns, so only a turning chip builds it.
   const renderEdge = showEdge || animate || idleSpin;
