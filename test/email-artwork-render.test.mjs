@@ -72,3 +72,15 @@ test("email images are palette PNGs, small enough to load quickly on a phone", a
     }
   }
 });
+
+test("Sunday and featured reveals add a Survivor section for started games in the same image", async () => {
+  const withSurvivor = emailArtworkSample("sunday_early_reveal");
+  const without = { ...withSurvivor, survivor: undefined };
+  const a = await render(withSurvivor, "reveal");
+  const b = await render(without, "reveal");
+  // Two lines of three Survivor picks plus the section heading.
+  assert.ok(a.height - b.height > 80, `Survivor section adds only ${a.height - b.height}px`);
+  // Older saved receipts have no Survivor field and render as before.
+  assert.equal((await render(emailArtworkSample("sunday_early_reveal", true), "reveal")).height, b.height);
+  await render(emailArtworkSample("featured_window_reveal"), "reveal");
+});

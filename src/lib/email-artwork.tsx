@@ -89,6 +89,30 @@ function PickemTable({ standings, selections, recap, minHeight, tone }: { standi
   </div>;
 }
 
+/** Survivor picks on the started games, as a short section under the Pick'em
+ *  table in the same card: name and team side by side, three to a line. */
+function SurvivorReveal({ picks }: { picks: Array<{ name: string; pick: string }> }) {
+  const perRow = 3;
+  const lines = Array.from({ length: Math.ceil(picks.length / perRow) }, (_, index) => picks.slice(index * perRow, (index + 1) * perRow));
+  return <div style={{ ...column, marginTop: 18 }}>
+    <div style={{ ...row, color: MUTED, fontSize: 16, fontWeight: 700, padding: "12px 0 8px", borderBottom: `1px solid ${INK}` }}>
+      <span style={{ flex: 1 }}>SURVIVOR · STRAIGHT-UP</span>
+    </div>
+    {lines.map((line, lineIndex) => <div key={lineIndex} style={{ ...row, borderBottom: `1px solid ${RULE}`, background: lineIndex % 2 ? "#f5f2e9" : PAPER, padding: "8px 0" }}>
+      {Array.from({ length: perRow }, (_, columnIndex) => {
+        const item = line[columnIndex];
+        if (!item) return <span key={columnIndex} style={{ display: "flex", flex: "1 1 0%" }} />;
+        const won = / W$/.test(item.pick);
+        const lost = / L$/.test(item.pick);
+        return <span key={columnIndex} style={{ ...row, flex: "1 1 0%", minWidth: 0, paddingRight: 8 }}>
+          <span style={{ display: "flex", fontWeight: 700, fontSize: 22, marginRight: 8 }}>{item.name}</span>
+          <span style={{ display: "flex", background: won ? "#e2f1e8" : lost ? "#f8e8e4" : "#eef0f3", color: won ? "#076449" : lost ? "#9d302a" : INK, borderRadius: 4, padding: "5px 8px", fontSize: 20 }}>{item.pick}</span>
+        </span>;
+      })}
+    </div>)}
+  </div>;
+}
+
 function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: EmailArtworkOptions) {
   // Keep the two presets visibly distinct after email clients scale the PNG:
   // compact is a tight ledger, while comfortable gives each record room to
@@ -105,6 +129,7 @@ function artworkTree(snapshot: EmailArtworkSnapshot, kind: string, options: Emai
     const rows = onlyPublicPickRows(safePublicRows(snapshot.rows));
     return <Card title="Pick'em Pad" subtitle={`${snapshot.kind === "playoff_public_reveal" ? snapshot.round : snapshot.week} · ${snapshot.window} picks`} note="TOTAL = season wins · Only started games are shown. Later picks remain private.">
       <PickemTable standings={rows} selections={rows} recap={false} minHeight={minHeight} />
+      {snapshot.kind !== "playoff_public_reveal" && snapshot.survivor?.length ? <SurvivorReveal picks={snapshot.survivor} /> : null}
     </Card>;
   }
   if (kind === "survivor" && snapshot.kind === "weekly_recap") {

@@ -31,12 +31,17 @@ export type PlayoffDayRecapSnapshot = {
   survivor: WeeklyRecapSnapshot["survivor"];
 };
 
+/** A Survivor pick whose game has kicked off: the player's name and the team, with W or L once graded. */
+export type RevealSurvivorPick = { name: string; pick: string };
+
 export type SundayRevealSnapshot = {
   kind: "sunday_reveal";
   window: "early" | "late";
   week: string;
   generatedAt: string;
   rows: Array<{ name: string; wins: number; picks: string[] }>;
+  /** Survivor picks on the window's started games. Absent on receipts saved before Survivor was added. */
+  survivor?: RevealSurvivorPick[];
 };
 
 export type PlayoffPublicRevealSnapshot = {
@@ -54,6 +59,7 @@ export type FeaturedWindowRevealSnapshot = {
   window: string;
   generatedAt: string;
   rows: Array<{ name: string; wins: number; picks: string[] }>;
+  survivor?: RevealSurvivorPick[];
 };
 
 type PublicPickRow = SundayRevealSnapshot["rows"][number];
@@ -512,17 +518,45 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
     if (pick.scoring_period_id !== period.id || !revealGameIds.has(pick.game_id) || !contenderIds.has(pick.player_id)) continue;
     picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
   }
+  const survivor = await revealSurvivorPicks(period.id, revealGames.map((game) => game.id), players ?? []);
   const snapshot: SundayRevealSnapshot = {
     kind: "sunday_reveal",
     window,
     week: period.display_name,
     generatedAt: now.toISOString(),
     rows: onlyRowsWithPublicPicks((players ?? []).filter((player) => contenderIds.has(player.id)).map((player) => ({ playerId: player.id, name: player.first_name, wins: playerWins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    ...(survivor.length ? { survivor } : {}),
   };
   if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
   if (error) throw new Error("The Sunday reveal receipt could not be saved.");
   return snapshot;
+}
+
+/**
+ * Survivor picks on games that have already kicked off in this reveal window.
+ * Only the games passed in are read, so a pick on a later game stays private.
+ * One small read for the week's picks on those games, then names and teams.
+ */
+async function revealSurvivorPicks(periodId: string, startedGameIds: string[], players: Array<{ id: string; first_name: string }>): Promise<RevealSurvivorPick[]> {
+  if (!startedGameIds.length) return [];
+  const { data: survivorPicks, error } = await supabaseAdmin.from("survivor_picks").select("survivor_entry_id, selected_team_id, result").eq("scoring_period_id", periodId).in("game_id", startedGameIds).neq("result", "void");
+  if (error) throw new Error("Public Survivor selections could not be prepared.");
+  if (!survivorPicks?.length) return [];
+  const [{ data: entries, error: entriesError }, { data: teams, error: teamsError }] = await Promise.all([
+    supabaseAdmin.from("survivor_entries").select("id, player_id").in("id", [...new Set(survivorPicks.map((pick) => pick.survivor_entry_id))]),
+    supabaseAdmin.from("teams").select("id, abbreviation").in("id", [...new Set(survivorPicks.map((pick) => pick.selected_team_id))]),
+  ]);
+  if (entriesError || teamsError) throw new Error("Public Survivor selections could not be prepared.");
+  const playerByEntry = new Map((entries ?? []).map((entry) => [entry.id, entry.player_id]));
+  const nameByPlayer = new Map(players.map((player) => [player.id, player.first_name]));
+  const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
+  return survivorPicks.flatMap((pick) => {
+    const name = nameByPlayer.get(playerByEntry.get(pick.survivor_entry_id) ?? "");
+    const team = abbreviationById.get(pick.selected_team_id);
+    if (!name || !team) return [];
+    return [{ name, pick: `${team}${pick.result === "win" ? " W" : pick.result === "loss" ? " L" : ""}` }];
+  }).sort((first, second) => first.name.localeCompare(second.name));
 }
 
 function isFeaturedGame(game: { is_international: boolean; kickoff_at: string }) {
@@ -591,12 +625,14 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   }
 
   const latestFeatured = selectedFeaturedGames[selectedFeaturedGames.length - 1];
+  const survivor = await revealSurvivorPicks(period.id, featuredGames.map((game) => game.id), players ?? []);
   const snapshot: FeaturedWindowRevealSnapshot = {
     kind: "featured_window_reveal",
     week: period.display_name,
     window: `${easternDayLabel(new Date(latestFeatured.kickoff_at))} featured window`,
     generatedAt: now.toISOString(),
     rows: onlyRowsWithPublicPicks((players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    ...(survivor.length ? { survivor } : {}),
   };
   if (!persist) return snapshot;
   const { error } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: now.toISOString() }).eq("id", reminderId);
