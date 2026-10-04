@@ -10,7 +10,9 @@ import {
   fetchWithSession,
   SessionUnavailableError,
 } from "@/lib/auth-session";
-import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
+import { bowlMatchupTeamNames, bowlTeamName } from "@/lib/bowl-pool.js";
+import { BowlClaimSeat, BowlCrest } from "@/components/bowl-pool-marks";
+import { currentSeasonYear } from "@/lib/season";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 
 type ScoreboardPick = {
@@ -76,6 +78,8 @@ type DisplayPreferenceKey =
   | "hideSurvivorEliminatedRows";
 type BowlStandingsData = {
   season?: { season_year: number };
+  optedIn?: boolean;
+  entryOpen?: boolean;
   games: Array<{ id: string; bowl_name: string; status?: string; provider_game_id?: string; is_cfp?: boolean; kickoff_at?: string; away_team_id?: string | null; home_team_id?: string | null; awayTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; homeTeam?: { id: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null; line?: { favorite_team_id?: string | null; locked_spread?: number | string | null; locked_at?: string | null } | null }>;
   standings: Array<{ playerId: string; playerName: string; wins: number; losses: number; tiebreakerTotal: number | null; trophies?: string[] }>;
   championships?: Array<{ playerId: string; seasonYear: number; playerName: string }>;
@@ -315,10 +319,10 @@ export default function HomePage() {
   };
   const bowlTeamLabel = (team: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined, otherTeam?: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null) => {
     if (otherTeam) {
-      const [teamLabel, otherLabel] = bowlMatchupTeamLabels(team, otherTeam);
+      const [teamLabel, otherLabel] = bowlMatchupTeamNames(team, otherTeam);
       return team?.id === otherTeam.id ? otherLabel : teamLabel;
     }
-    return bowlTeamDisplayLabel(team);
+    return bowlTeamName(team);
   };
   const bowlDateKey = (game: (typeof bowlGames)[number]) => game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD";
   const bowlDateGroups = bowlGames.reduce<Array<{ key: string; count: number }>>((groups, game) => { const key = bowlDateKey(game); const last = groups[groups.length - 1]; if (last?.key === key) last.count += 1; else groups.push({ key, count: 1 }); return groups; }, []);
@@ -341,7 +345,7 @@ export default function HomePage() {
   const bowlGameTeamLabels = (game: (typeof bowlGames)[number]) => {
     const favorite = bowlTeam(game, "favorite");
     const underdog = bowlTeam(game, "underdog");
-    const [favoriteLabel, underdogLabel] = bowlMatchupTeamLabels(favorite, underdog);
+    const [favoriteLabel, underdogLabel] = bowlMatchupTeamNames(favorite, underdog);
     return { favorite, underdog, favoriteLabel, underdogLabel };
   };
   const bowlCell = (playerId: string, gameId: string) => {
@@ -427,6 +431,25 @@ export default function HomePage() {
       setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
     } catch {
       setErrorMessage("That display choice could not be saved. Please try again.");
+    } finally {
+      setSavingDisplay(false);
+    }
+  }
+
+  async function claimBowlSeat() {
+    if (savingDisplay) return;
+    setSavingDisplay(true);
+    try {
+      const response = await fetchWithSession("/api/bowl-pool", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optedIn: true, selections: [], championshipTotalGuess: null }),
+      });
+      if (!response.ok) throw new Error("Your seat in the Bowl Pool could not be saved.");
+      const refreshed = await fetchWithSession("/api/bowl-pool", { cache: "no-store" });
+      if (refreshed.ok) setBowlStandings(await refreshed.json() as BowlStandingsData);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Your seat in the Bowl Pool could not be saved.");
     } finally {
       setSavingDisplay(false);
     }
@@ -649,10 +672,8 @@ export default function HomePage() {
           ) : null}
         </section> : null}
 
-        {bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${bowlPoolMinimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
-          <div className="pickem-ledger-masthead survivor-ledger-masthead">
-            <div className="flex items-center gap-2"><h2>Bowl Card</h2><button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setBowlCardDisplay(bowlPoolMinimized)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button></div>
-          </div>
+        {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${bowlPoolMinimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
+          <BowlCrest action={<button aria-expanded={!bowlPoolMinimized} aria-label={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setBowlCardDisplay(bowlPoolMinimized)} title={bowlPoolMinimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{bowlPoolMinimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} title="BOWL CARD" />
           {!bowlPoolMinimized ? <>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#f8f0d8] px-3 py-3 text-center font-bold text-[#5a430c]">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>

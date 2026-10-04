@@ -38,11 +38,11 @@ test("no season year is hardcoded in the Bowl Pool", async () => {
   const page = await read("src/app/bowl-pool/page.tsx");
   const schedule = await read("src/app/api/admin/bowl-pool/schedule/route.ts");
   assert.doesNotMatch(page, />2026-27 Bowl Pool</);
-  assert.match(page, /\{bowlSeasonLabel\(currentSeasonYear\(\)\)\} Bowl Pool/);
+  assert.match(page, /seasonYear=\{currentSeasonYear\(\)\} title="BOWL POOL"/);
   assert.match(schedule, /searchParams\.get\("seasonYear"\) \|\| currentSeasonYear\(\)/);
   // The label is computed: 2026 -> "2026-27", 2099 -> "2099-00".
   const label = (year) => `${year}-${String((year + 1) % 100).padStart(2, "0")}`;
   assert.equal(label(2026), "2026-27");
   assert.equal(label(2099), "2099-00");
-  assert.match(page, /return `\$\{seasonYear\}-\$\{String\(\(seasonYear \+ 1\) % 100\)\.padStart\(2, "0"\)\}`;/);
+  assert.match(await read("src/lib/bowl-pennant.js"), /return `\$\{seasonYear\}-\$\{String\(\(seasonYear \+ 1\) % 100\)\.padStart\(2, "0"\)\}`;/);
 });

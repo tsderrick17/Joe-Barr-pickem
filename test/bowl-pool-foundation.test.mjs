@@ -31,9 +31,10 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
   assert.match(migration, /revoke all on table public\.bowl_pool_seasons/i);
 });
 
-test("Bowl Pool opt-in controls the whole selection card", async () => {
+test("Claiming a seat controls the whole selection card", async () => {
   const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /I would like to participate in the NCAA Bowl Pool \(you can opt out prior to first kickoff\)/);
+  assert.match(page, /<BowlClaimSeat onClaim=\{\(\) => void changeOptIn\(true\)\} \/>/);
+  assert.match(page, />Opt out</);
   assert.match(page, /bowlReceiptSummary/);
   assert.match(page, /BOWL RECEIPT/);
   assert.match(page, /optedIn === true \? <section/);
@@ -42,7 +43,8 @@ test("Bowl Pool opt-in controls the whole selection card", async () => {
   assert.match(page, /Select favorite team/);
   assert.match(page, /aria-label="Spread"/);
   assert.match(page, /Select underdog team/);
-  assert.match(page, /bowl-team-label--new/);
+  assert.match(page, /bowl-team-pick/);
+  assert.match(page, /<BowlPennant side="left"/);
   assert.match(page, /!gameLocked\(game\)/);
   assert.match(page, /type="button">SUBMIT<\/button>/);
   assert.doesNotMatch(page, /SUBMITTING…/);

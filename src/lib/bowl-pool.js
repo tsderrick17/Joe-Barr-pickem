@@ -68,3 +68,26 @@ export function compareBowlPoolStandings(first, second, finalCombinedPoints = nu
   }
   return (first.losses ?? 0) - (second.losses ?? 0) || String(first.playerId).localeCompare(String(second.playerId));
 }
+
+/**
+ * The school's name as a player knows it ("Ohio State", "Georgia Southern"):
+ * the saved short name, then the full name. Abbreviations are only a last
+ * resort, because many schools share look-alike abbreviations.
+ */
+export function bowlTeamName(team) {
+  if (!team) return "TBD";
+  for (const candidate of [team.short_name, team.full_name]) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+  }
+  return bowlTeamDisplayLabel(team);
+}
+
+/** Both names for one matchup; the full names if the short ones collide. */
+export function bowlMatchupTeamNames(first, second) {
+  const firstName = bowlTeamName(first);
+  const secondName = bowlTeamName(second);
+  if (firstName.toLowerCase() !== secondName.toLowerCase()) return [firstName, secondName];
+  const firstFull = typeof first?.full_name === "string" && first.full_name.trim() ? first.full_name.trim() : firstName;
+  const secondFull = typeof second?.full_name === "string" && second.full_name.trim() ? second.full_name.trim() : secondName;
+  return firstFull.toLowerCase() !== secondFull.toLowerCase() ? [firstFull, secondFull] : [`${firstName} (1)`, `${secondName} (2)`];
+}

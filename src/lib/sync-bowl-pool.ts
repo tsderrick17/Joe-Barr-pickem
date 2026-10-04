@@ -1,8 +1,9 @@
 import { seasonYearAt } from "@/lib/season";
+import { normalizeHexColor } from "@/lib/bowl-pennant.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
-type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: { id?: string; displayName?: string; abbreviation?: string }; homeAway?: "home" | "away" }> }> };
+type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: { id?: string; displayName?: string; abbreviation?: string; color?: string; alternateColor?: string; shortDisplayName?: string; location?: string }; homeAway?: "home" | "away" }> }> };
 
 async function providerEvents(path: string, query: Record<string, string>) {
   // The Odds API's free plan does not include college-football markets. Keep
@@ -20,11 +21,27 @@ async function providerEvents(path: string, query: Record<string, string>) {
 function normalizedTeamName(value: string) { return value.toLowerCase().replace(/[^a-z0-9]/g, ""); }
 function joinedTeamName(value: { display_name?: string } | Array<{ display_name?: string }> | null | undefined) { return Array.isArray(value) ? value[0]?.display_name ?? "" : value?.display_name ?? ""; }
 
-async function teamIdFor(name: string, providerId: string, abbreviation?: string | null) {
-  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_teams").select("id").eq("display_name", name).maybeSingle();
+async function teamIdFor(name: string, providerId: string, abbreviation?: string | null, colors?: { color?: string; alternateColor?: string; shortName?: string | null }) {
+  const primaryColor = normalizeHexColor(colors?.color);
+  const secondaryColor = normalizeHexColor(colors?.alternateColor);
+  const { data: existing, error: existingError } = await supabaseAdmin.from("bowl_pool_teams").select("id, short_name, primary_color, secondary_color").eq("display_name", name).maybeSingle();
   if (existingError) throw new Error("Bowl Pool teams could not be loaded.");
-  if (existing?.id) return existing.id;
-  const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: providerId, display_name: name, short_name: name, abbreviation: abbreviation ?? null }, { onConflict: "provider_team_id" }).select("id").single();
+  if (existing?.id) {
+    // Teams saved before school colors existed pick them up on the next import.
+    if ((primaryColor && primaryColor !== existing.primary_color) || (secondaryColor && secondaryColor !== existing.secondary_color)) {
+      const { error: colorError } = await supabaseAdmin.from("bowl_pool_teams").update({ primary_color: primaryColor ?? existing.primary_color, secondary_color: secondaryColor ?? existing.secondary_color }).eq("id", existing.id);
+      if (colorError) console.error("Bowl Pool school colors could not be saved.", { teamId: existing.id });
+    }
+    // A team still carrying its long provider name gets the school's short name;
+    // a name anyone has already edited is left alone.
+    const schoolName = colors?.shortName?.trim();
+    if (schoolName && existing.short_name === name && schoolName !== name) {
+      const { error: nameError } = await supabaseAdmin.from("bowl_pool_teams").update({ short_name: schoolName }).eq("id", existing.id);
+      if (nameError) console.error("Bowl Pool school name could not be saved.", { teamId: existing.id });
+    }
+    return existing.id;
+  }
+  const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: providerId, display_name: name, short_name: colors?.shortName?.trim() || name, abbreviation: abbreviation ?? null, primary_color: primaryColor, secondary_color: secondaryColor }, { onConflict: "provider_team_id" }).select("id").single();
   return error || !data ? null : data.id;
 }
 
@@ -72,7 +89,7 @@ async function syncAnnualSchedule(now: Date) {
     const teamIds = await Promise.all([away, home].map(async (competitor) => {
       const name = competitor.team?.displayName ?? "Team TBD";
       const id = competitor.team?.id ?? name;
-      return teamIdFor(name, `espn:${id}`, competitor.team?.abbreviation);
+      return teamIdFor(name, `espn:${id}`, competitor.team?.abbreviation, { color: competitor.team?.color, alternateColor: competitor.team?.alternateColor, shortName: competitor.team?.shortDisplayName ?? competitor.team?.location });
     }));
     if (!teamIds[0] || !teamIds[1]) continue;
     // A provider refresh may correct a kickoff or matchup, but it must never
