@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { teamChipAccents } from "@/lib/nfl-helmet-colors";
+import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
 type Props = {
   abbreviation: string;
@@ -14,24 +15,6 @@ type Props = {
   tooltip?: string;
   /** Build the 3D rim even when the chip is still. Off by default: a chip seen head on has no visible edge, and a Slate shows dozens of them. */
   showEdge?: boolean;
-};
-
-// The source marks have different amounts of transparent canvas around them.
-// A small, bounded boost for the airier marks keeps their visible ink weight
-// consistent without changing the chip or face dimensions.
-const chipLogoScales: Record<string, number> = {
-  BAL: 1.18,
-  BUF: 1.08,
-  CAR: 1.16,
-  DEN: 1.13,
-  GB: 1.09,
-  KC: 1.09,
-  LAC: 1.2,
-  NE: 1.18,
-  PHI: 1.07,
-  SEA: 1.2,
-  SF: 1.12,
-  WAS: 1.18,
 };
 
 // The chip is a real cylinder: two identical faces a chip's thickness apart and
@@ -61,7 +44,8 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   // chip image.
   const logoAbbreviation = abbreviation.trim().toUpperCase();
   const accent = teamChipAccents(logoAbbreviation);
-  const logoScale = chipLogoScales[logoAbbreviation] ?? 1;
+  // Every logo is scaled so its inked area reads at one size (src/lib/team-logo-scale.js).
+  const logoScale = teamLogoScale(logoAbbreviation);
   const state = official ? "official" : selected ? "picked" : "available";
   // The rim is only seen while the chip turns, so only a turning chip builds it.
   const renderEdge = showEdge || animate || idleSpin;
