@@ -13,10 +13,12 @@ type Feel = { pace: number; start: number; extra: number };
  *
  * The flips run on the browser's animation engine and write the numbers
  * straight into the page, so a whole board of them stays smooth on a phone:
- * React does not re-render on every flip.
+ * React does not re-render on every flip. The flaps fold flat (a vertical
+ * squash, not a 3D turn), which phones draw far more cheaply at this size
+ * and which reads the same; each digit keeps a steady rhythm.
  */
 function FlapDigit({ target, landing, onLanded }: { target: number; landing: boolean; onLanded: () => void }) {
-  const [feel] = useState<Feel>(() => ({ pace: 70 + Math.random() * 40, start: Math.floor(Math.random() * 10), extra: 1 + Math.floor(Math.random() * 3) }));
+  const [feel] = useState<Feel>(() => ({ pace: 95 + Math.random() * 35, start: Math.floor(Math.random() * 10), extra: 1 + Math.floor(Math.random() * 3) }));
   const top = useRef<HTMLSpanElement | null>(null);
   const bottom = useRef<HTMLSpanElement | null>(null);
   const fold = useRef<HTMLSpanElement | null>(null);
@@ -45,30 +47,24 @@ function FlapDigit({ target, landing, onLanded }: { target: number; landing: boo
       const nearEnd = landingRef.current && sinceLanding >= feel.extra && (targetRef.current - next + 10) % 10 <= 1;
       // The last flip or two before stopping run a little slower, like the
       // mechanism catching.
-      const duration = feel.pace * (nearEnd ? 1.7 : 0.9 + Math.random() * 0.2);
+      const duration = feel.pace * (nearEnd ? 1.6 : 1);
       text(foldEl, current);
       text(topEl, next);
       text(dropEl, next);
-      foldEl.style.visibility = "visible";
-      dropEl.style.visibility = "visible";
       const half = duration / 2;
       running.length = 0;
       running.push(foldEl.animate(
-        [{ transform: "rotateX(0deg)" }, { transform: "rotateX(-90deg)" }],
+        [{ transform: "scaleY(1)" }, { transform: "scaleY(0)" }],
         { duration: half, easing: "cubic-bezier(.55,0,1,.45)", fill: "forwards" },
       ));
-      running.push((foldEl.lastElementChild as HTMLElement).animate([{ opacity: 0 }, { opacity: 0.55 }], { duration: half, easing: "ease-in", fill: "forwards" }));
       const landingFlap = dropEl.animate(
-        [{ transform: "rotateX(90deg)" }, { transform: "rotateX(-8deg)", offset: 0.82 }, { transform: "rotateX(0deg)" }],
-        { duration: half * 1.15, delay: half, easing: "cubic-bezier(.2,.6,.35,1)", fill: "forwards" },
+        [{ transform: "scaleY(0)" }, { transform: "scaleY(1.08)", offset: 0.8 }, { transform: "scaleY(1)" }],
+        { duration: half * 1.15, delay: half, easing: "cubic-bezier(.2,.6,.35,1)", fill: "both" },
       );
       running.push(landingFlap);
-      running.push((dropEl.lastElementChild as HTMLElement).animate([{ opacity: 0.45 }, { opacity: 0 }], { duration: half, delay: half, easing: "ease-out", fill: "forwards" }));
       landingFlap.onfinish = () => {
         if (stopped) return;
         text(bottomEl, next);
-        dropEl.style.visibility = "hidden";
-        foldEl.style.visibility = "hidden";
         current = next;
         if (landingRef.current) sinceLanding += 1;
         if (landingRef.current && sinceLanding >= feel.extra && current === targetRef.current) {
@@ -76,7 +72,7 @@ function FlapDigit({ target, landing, onLanded }: { target: number; landing: boo
           landedRef.current();
           return;
         }
-        pending = window.setTimeout(flip, Math.random() * 18);
+        flip();
       };
     };
 
@@ -92,8 +88,8 @@ function FlapDigit({ target, landing, onLanded }: { target: number; landing: boo
     <span aria-hidden="true" className="bowl-flap">
       <span className="bowl-flap-half is-top" ref={top}><span>{feel.start}</span></span>
       <span className="bowl-flap-half is-bottom" ref={bottom}><span>{feel.start}</span></span>
-      <span className="bowl-flap-half is-top is-folding" ref={fold}><span>{feel.start}</span><i className="bowl-flap-shade" /></span>
-      <span className="bowl-flap-half is-bottom is-dropping" ref={drop}><span>{feel.start}</span><i className="bowl-flap-shade" /></span>
+      <span className="bowl-flap-half is-top is-folding" ref={fold}><span>{feel.start}</span></span>
+      <span className="bowl-flap-half is-bottom is-dropping" ref={drop}><span>{feel.start}</span></span>
     </span>
   );
 }
