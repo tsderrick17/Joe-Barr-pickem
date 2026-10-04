@@ -4456,3 +4456,11 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 @media (max-width: 767px) {
   .slate-receipt-ticket > .slate-receipt-footnote { margin-inline: -.5rem -.34rem; width: calc(100% + .84rem); }
 }
+/* Everything in the stub is centered horizontally in the stub, at every width. */
+.slate-receipt-ticket { align-items: center; text-align: center; }
+.slate-receipt-ticket > span { justify-content: center; }
+.slate-receipt-ticket a, .slate-receipt-print { align-self: center; justify-self: center; }
+@media (max-width: 767px) {
+  .slate-receipt-ticket { padding-inline: .45rem; }
+  .slate-receipt-ticket > .slate-receipt-footnote { margin-inline: -.45rem; width: calc(100% + .9rem); }
+}
