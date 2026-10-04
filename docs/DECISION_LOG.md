@@ -1242,6 +1242,4 @@ Bowl names on the picks page wrap only between words, never hyphenated mid-word,
 
 The Bowl Pool fonts (Graduate and Cormorant Garamond, both SIL OFL) are bundled from the @fontsource packages instead of fetched from Google Fonts, so a build or test run never needs to reach Google. A failed fetch had broken one end-to-end run, and could just as easily have failed a deploy. The rendered fonts are identical.
 
-### One visual size for every team logo
-
-The logo files are all 500 x 500, but marks fill very different shares of that canvas: the Colts' horseshoe runs edge to edge while wide marks like the Seahawks' sit in a thick transparent margin, so the Colts looked far larger than the Jaguars, 49ers, or Bills on the Pick'em Pad. `scripts/measure-team-logos.mjs` measures each logo's inked width and height and writes `src/lib/team-logo-scale.js`, a multiplier per team (0.72 to 1.20) pulling every mark toward the median size. The Pad logos and the Survivor chips both use it, replacing the hand-tuned chip table. Run the script again if a logo file changes; a test checks that every logo has a scale.
+The test chip on the Operations desk is about twice its old size, turns more readily under a drag (1.9 degrees per pixel, up from 1.2), and a click runs the Survivor toss from whatever orientation it is in: three turns, landing flat and face up.

@@ -4435,6 +4435,10 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 .bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-navy) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
+/* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
+   whole so every proportion holds. */
+.chip-playground { height: 6.2rem; width: 6.2rem; }
+.chip-playground .survivor-poker-chip-wrap { transform: scale(1.9); }
 /* "YOUR RECEIPT" stays on one line, even on the narrowest phones. */
 @media (max-width: 767px) { .slate-receipt-ticket > span { white-space: nowrap; } }
 @media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }
