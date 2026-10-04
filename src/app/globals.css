@@ -4440,10 +4440,14 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 @media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }
 /* The footnote ("ALL PICKS SAVED") is pinned to the stub's bottom line, level
    with the status line in the next section. */
-.slate-receipt-ticket > .slate-receipt-footnote { margin-bottom: .14rem; margin-top: auto; }
+.slate-receipt-ticket > .slate-receipt-footnote { margin-top: auto; }
 /* The Bowl receipt is exactly the Pick'em receipt's height. */
 .bowl-receipt-metric { min-height: 1.9rem; padding-block: .2rem; }
 .bowl-receipt-strip { min-height: 5.394rem; }
-@media (max-width: 767px) { .bowl-receipt-strip { min-height: 4.506rem; } }
+@media (max-width: 767px) { .bowl-receipt-strip { min-height: 4.594rem; } }
 .bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto); }
 @media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); } }
+/* The stub's footnote matches the status line beside it in size and line box,
+   and both sit on the same bottom edge, so they read as one line. */
+.slate-receipt-submit-hint { font-size: .48rem; line-height: 1.25; margin-top: 0; }
+@media (max-width: 767px) { .slate-receipt-submit-hint { font-size: .5rem; letter-spacing: .04em; } }

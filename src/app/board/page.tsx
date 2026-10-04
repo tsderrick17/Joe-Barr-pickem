@@ -577,7 +577,7 @@ export default function BoardPage() {
           ? `${duePickCount} PICK${duePickCount === 1 ? "" : "S"} NEEDED`
           : survivorControlsEnabled && !survivorPick
             ? "SURVIVOR PICK NEEDED"
-            : "ALL PICKS SAVED";
+            : "PICKS SAVED";
   const survivorPickDetails = (() => {
     if (!survivorPick) return null;
     const game = games.find((item) => item.id === survivorPick.gameId);
