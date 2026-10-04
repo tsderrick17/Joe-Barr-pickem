@@ -4418,17 +4418,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 /* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
 .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
 @media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
-/* Old-gold dividers belong between the dates on the top row; below it the
-   columns are separated by quiet hairlines. */
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"],
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold-soft) !important; border-left-width: 1px !important; border-right-width: 1px !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-l-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-l-2"]) { border-left-width: 0 !important; }
-.bowl-card-section .bowl-standings-player-row > span[class*="border-"]:not([class*="border-r-2"]),
-.bowl-card-section .bowl-standings-game-cell[class*="border-"]:not([class*="border-r-2"]) { border-right-width: 0 !important; }
-
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-color: var(--bowl-gold) !important; border-left-width: 2px !important; border-right-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) { border-top-width: 0 !important; }
 /* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
    whole so every proportion holds. */
 .chip-playground { height: 6.2rem; width: 6.2rem; }
@@ -4464,14 +4453,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 .slate-receipt-actions a { justify-self: center; }
 .bowl-receipt-strip .slate-receipt-print { width: 13.9rem; max-width: 100%; }
 @media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
-/* The gold day dividers run from the dates down through the bowl names, so the
-   game days read clearly. */
-.bowl-card-section .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
-.bowl-card-section .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
-.bowl-card-section .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-"] { border-color: var(--bowl-gold) !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-l-2"] { border-left-width: 2px !important; }
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell[class*="border-r-2"] { border-right-width: 2px !important; }
 
 /* ---- Bowl Card: flip-tile scores and one consistent row style */
 .bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; }
@@ -4570,3 +4551,25 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
 @media (min-width: 640px) { .standings-stack { --standings-gap: 2rem; } }
 .standings-stack > section:not(.my-ticket):not(.standings-loading-ticket) { padding-block: 0; }
 .standings-stack > section + section { margin-top: var(--standings-gap); }
+
+/* ---- Bowl Card: one line style for the whole table. Every line (the day
+   breaks, the row rules, the edge where the games begin, and the tiebreaker
+   edge) is a single 1px old-gold rule. Adjacent cells no longer each draw a
+   border, so nothing doubles up. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll { border-bottom: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span { border-width: 0 !important; }
+/* Day breaks and the tiebreaker edge: a left rule only. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span[class*="border-l-2"],
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:not([aria-hidden]) { border-left: 1px solid var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { border-left-width: 0 !important; }
+/* The first game sits against the frozen columns, which carry that edge. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row > span:nth-child(3) { border-left-width: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:first-child,
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:first-child { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft), inset -1px 0 0 var(--bowl-gold) !important; }
+/* Row rules. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
