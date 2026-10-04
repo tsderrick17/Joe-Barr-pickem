@@ -1236,4 +1236,4 @@ Navy and old gold on cream, with varsity lettering (Graduate) and an old-style i
 
 The Claim your seat ticket states, "You may opt out at any time prior to first kickoff." Standings keeps abbreviations in the Bowl Card matrix so more games fit; school names are used on the picks page, where they matter most.
 
-On the Bowl Card, the dividers between days are old gold, and the signed-in player's score and name area is quiet: the score sits in a small navy tile with a gold edge instead of a highlighted box. The soft gold wash stays only across that player's game cells.
+On the picks page the Bowl receipt is the Slate receipt for a player without Survivor: the same two-section ticket at the same width (79% of the Slate content column on desktop, 75% on a phone). Upcoming Slate games center each team name in its half of the row, so the two names sit the same distance from the line.
