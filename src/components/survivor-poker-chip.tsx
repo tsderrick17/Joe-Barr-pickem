@@ -12,6 +12,8 @@ type Props = {
   unavailable?: boolean;
   size?: "wire" | "summary" | "ticket" | "slate";
   tooltip?: string;
+  /** Build the 3D rim even when the chip is still. Off by default: a chip seen head on has no visible edge, and a Slate shows dozens of them. */
+  showEdge?: boolean;
 };
 
 // The source marks have different amounts of transparent canvas around them.
@@ -52,7 +54,7 @@ const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
   } as CSSProperties,
 }));
 
-export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip }: Props) {
+export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip, showEdge = false }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
   // Normalize at the asset boundary so presentation casing can never break a
@@ -61,6 +63,8 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const accent = teamChipAccents(logoAbbreviation);
   const logoScale = chipLogoScales[logoAbbreviation] ?? 1;
   const state = official ? "official" : selected ? "picked" : "available";
+  // The rim is only seen while the chip turns, so only a turning chip builds it.
+  const renderEdge = showEdge || animate || idleSpin;
   const face = (
     <span className="survivor-poker-chip-face" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
       <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
@@ -71,7 +75,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
     <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={tooltip ?? teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${idleSpin ? " is-idle-spinning" : ""}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
-        {edgeSegments.map((segment, index) => <span className={`survivor-poker-chip-edge-seg${segment.insert ? " is-insert" : ""}`} key={index} style={segment.style} />)}
+        {renderEdge ? edgeSegments.map((segment, index) => <span className={`survivor-poker-chip-edge-seg${segment.insert ? " is-insert" : ""}`} key={index} style={segment.style} />) : null}
         <span className="survivor-poker-chip-side survivor-poker-chip-front">{face}</span>
         <span className="survivor-poker-chip-side survivor-poker-chip-back">{face}</span>
       </span>

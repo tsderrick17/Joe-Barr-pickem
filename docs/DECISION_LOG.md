@@ -1237,3 +1237,7 @@ Navy and old gold on cream, with varsity lettering (Graduate) and an old-style i
 The Claim your seat ticket states, "You may opt out at any time prior to first kickoff." Standings keeps abbreviations in the Bowl Card matrix so more games fit; school names are used on the picks page, where they matter most.
 
 On the picks page the Bowl receipt is the Slate receipt for a player without Survivor: the same two-section ticket at the same width (79% of the Slate content column on desktop, 75% on a phone). Upcoming Slate games center each team name in its half of the row, so the two names sit the same distance from the line.
+
+### Chips build their rim only while turning
+
+The 3D chip rebuild (PR 362) gave every chip 32 extra rim elements. A Slate with Survivor shows about 30 chips, so a player's phone was carrying roughly 1,000 extra elements in 3D contexts, which made scrolling choppy, and the rims of the ticket chip stuck out past the right edge of the phone Standings page and let it slide sideways by about 7 pixels. A chip now builds its rim only while it is tossed or idly spinning (or when asked to, for the test chip on the Operations desk). Head on the chip looks the same; a phone Slate with Survivor drops from about 1,800 elements to about 800, and phone Standings is back to exactly the screen width.
