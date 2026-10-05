@@ -1307,3 +1307,7 @@ On a finished or live row the spread's middle is level with the middle of the te
 The receipt now sits right under the menu (the page had a large blank band above it), and Opt out is a small link at the foot of the board instead of its own line between the receipt and the board. Each team is a large boxed button (at least 3.1 rem tall, with margin on every side) so a tap can never land on the wrong team; the chosen team's pennant fills its box, and names wrap only between words. On a phone the line has its own lane between the two boxes, wide enough for a spread like -10.5.
 Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
 Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
+
+## Final scores line up in a column
+
+On finished rows the score and its W/L mark followed the team name, so a longer name pushed its score further right and the scores never lined up (and a wide W nudged the digits left of a row with an L). They now sit in fixed slots at the end of each team's lane (score right-aligned, then a fixed-width mark), so every score on a side shares one edge on phones and desktop alike.

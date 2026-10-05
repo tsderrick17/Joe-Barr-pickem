@@ -1965,9 +1965,9 @@ button.slate-team-side:not(:disabled)::after {
   /* Keep the final score and result mark attached to the team label instead
      of stretching the score across the unused side of the row. The label can
      still wrap inside its lane, while the score gets a stable, bold slot. */
-  grid-template-columns: minmax(0, max-content) 2.3ch max-content;
+  grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em;
   column-gap: .34rem;
-  justify-content: start;
+  justify-content: stretch;
   min-width: 0;
   width: 100%;
 }
@@ -2014,8 +2014,8 @@ button.slate-team-side:not(:disabled)::after {
      above them runs the full team width on every row, instead of the width of
      whichever name happens to be on that row. */
   .slate-game-row.is-final .slate-team-label-lane { display: contents; }
-  .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
-  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, max-content) 2.3ch max-content minmax(0, 1fr); }
+  .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
@@ -4670,3 +4670,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { backg
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
 /* Wide enough on a desktop that the first instruction stays on one line. */
 .bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }
+
+/* Final scores and W/L marks sit in fixed slots at the end of each team's lane, so every
+   score lines up in a column whatever the length of the team name before it. */
+.slate-game-row.is-final .slate-team-score { text-align: right; }
+.slate-game-row.is-final .slate-team-result-mark { text-align: left; }
