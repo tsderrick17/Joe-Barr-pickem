@@ -77,6 +77,8 @@ modules with no database access, each covered by tests with fictional rows:
 - `src/lib/reveal-rows.ts` builds the rows of the pick-reveal email images (only
   picks on the revealed games, in the current period, from allowed players).
 
+- `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
+
 A change to who can see what belongs in one of these modules, with its test.
 
 ## Player identity and privacy
