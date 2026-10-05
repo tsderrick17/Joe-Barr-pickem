@@ -682,7 +682,6 @@ body {
    sits under that column only, and the strip's outline follows its edges. */
 .slate-receipt-warning{
   background: transparent;
-  border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
   font-weight: 700;
   grid-column: 2;
@@ -691,8 +690,8 @@ body {
   padding: .28rem .7rem;
   position: relative;
 }
-/* Same die-cut corners as the sections above it; the dashed rule stays the divider. */
-.slate-receipt-warning::before { border-top-color: transparent; }
+/* Same die-cut corners as the sections above it. The paper layer's own rule is the
+   only line where it meets the Pick'em section, so there is no second dashed edge. */
 .slate-receipt-warning { color: #a82820; }
 
 @media (max-width: 767px) {

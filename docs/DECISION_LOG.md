@@ -1309,3 +1309,4 @@ Pennants keep their normal size inside the boxes rather than stretching to the b
 Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
 
 The receipt's warning tab ("You already have 2 selections…") is drawn like the sections above it: its paper is a masked layer with the same corner cutouts and hairline ring, and the dashed rule stays the divider. A screenshot test raises the warning on the Slate to cover it.
+The warning tab no longer draws its own dashed top edge: that doubled the receipt's bottom rule and ran past the notches. The paper layer's single rule is the only edge where it meets the Pick'em section.

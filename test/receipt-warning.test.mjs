@@ -1,3 +1,6 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
 
 test("the receipt's warning tab has the same die-cut corners as the sections above it", async () => {
   const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
