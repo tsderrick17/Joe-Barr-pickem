@@ -4,12 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
-import { countPickemWins } from "@/lib/standings";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
-import { comparePickColumns } from "@/lib/pick-column-order.js";
+import { shapePadRows } from "@/lib/home-shape";
 
 export const dynamic = "force-dynamic";
 
@@ -45,18 +44,6 @@ type ChampionshipRow = {
   pool: "pickem" | "survivor" | "bowl";
   season_year: number;
 };
-
-function signedSpread(
-  selectedTeamId: string,
-  favoriteTeamId: string | null,
-  spread: number | string,
-) {
-  const value = Number(spread);
-  if (!Number.isFinite(value)) return null;
-  if (value === 0) return "PK";
-  const displayValue = Number.isInteger(value) ? value.toString() : value.toFixed(1);
-  return selectedTeamId === favoriteTeamId ? `-${displayValue}` : `+${displayValue}`;
-}
 
 type ScoringPeriodRow = {
   id: string;
@@ -331,79 +318,19 @@ export async function GET(request: NextRequest) {
     if (!preliminaryLineByGameId.has(line.game_id)) preliminaryLineByGameId.set(line.game_id, line);
   }
 
-  const rows = players
-    .map((player) => {
-      const wins = countPickemWins(
-        allPicks.filter((pick) => pick.player_id === player.id),
-      );
-
-      // A pick keeps its column: kickoff order, not submission order.
-      const weeklyPicks = currentWeekPicks
-        .filter((pick) => pick.player_id === player.id)
-        .sort((first, second) => comparePickColumns(
-          { gameId: first.game_id, kickoffAt: gameById.get(first.game_id)?.kickoff_at },
-          { gameId: second.game_id, kickoffAt: gameById.get(second.game_id)?.kickoff_at },
-        ))
-        .map((pick) => {
-          const game = gameById.get(pick.game_id);
-
-          const visible = shouldRevealPick(
-            {
-              viewerPlayerId: viewer.id,
-              pickPlayerId: player.id,
-              kickoffAt: game?.kickoff_at,
-            },
-            currentTime,
-          );
-
-          let resultMark = "";
-
-          if (pick.result === "win") {
-            resultMark = "W";
-          }
-
-          if (pick.result === "loss") {
-            resultMark = "L";
-          }
-
-          const lockedLine = lockedLineByGameId.get(pick.game_id);
-          const preliminaryLine = preliminaryLineByGameId.get(pick.game_id);
-          const line = lockedLine ?? preliminaryLine;
-
-          const team = teamById.get(pick.selected_team_id);
-          return {
-            label: visible
-    ? team?.name ?? "Unknown team"
-    : null,
-  abbreviation: visible ? team?.abbreviation ?? null : null,
-  kickoffAt: game?.kickoff_at,
-  isHidden: !visible,
-  resultMark: visible ? resultMark : "",
-  spread: visible && line
-    ? signedSpread(
-        pick.selected_team_id,
-        line.favorite_team_id,
-        lockedLine ? lockedLine.locked_spread : preliminaryLine!.spread,
-      )
-    : null,
-  isLineLocked: Boolean(lockedLine),
-};
-        });
-
-      return {
-        id: player.id,
-        firstName: player.first_name,
-        trophies: trophiesByPlayerId.get(player.id) ?? [],
-        wins,
-        playoffEliminated: playoffEliminatedPlayerIds.has(player.id),
-        picks: weeklyPicks,
-      };
-    })
-    .sort(
-      (first, second) =>
-        second.wins - first.wins ||
-        first.firstName.localeCompare(second.firstName),
-    );
+  const rows = shapePadRows({
+    players,
+    allPicks,
+    currentWeekPicks,
+    gameById,
+    teamById,
+    lockedLineByGameId,
+    preliminaryLineByGameId,
+    trophiesByPlayerId,
+    playoffEliminatedPlayerIds,
+    viewerPlayerId: viewer.id,
+    now: currentTime,
+  });
 
   let survivorAvailable = true;
   let survivorNotice: string | null = null;
