@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "node --test \"test/**/*.test.mjs\"",
     "test:integration": "node --test --test-concurrency=1 test/integration/**/*.test.mjs",
     "test:e2e": "playwright test",

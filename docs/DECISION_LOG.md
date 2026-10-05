@@ -1385,3 +1385,13 @@ fallback changes display only, never a championship record.
 ## Sections now open to their exact height
 
 When the Survivor table finished opening on desktop, the Bowl Card below moved down about 0.4 px and came back. The blind measured its target with `scrollHeight`, which rounds to a whole pixel, so it stopped up to half a pixel off and corrected itself when it let go. It now measures the content's height to a fraction of a pixel, and an opening blind also follows the content if its height changes while opening (the table wraps differently as it glides wider). Measured at 1280 px: the last steps are now 1305.11, 1305.75, 1305.78, 1305.78 with no overshoot.
+
+## 2026-10-05 — Share viewer-safe Slate and Standings response contracts
+
+The two player pages and their routes now compile against the same response
+types. Database rows remain distinct from viewer-safe JSON, so this does not
+weaken kickoff privacy. The application explicitly recognizes the three
+Survivor entry states allowed by the current database CHECK constraint and
+fails visibly if a future schema adds a state without a display rule. A local
+`typecheck` command supplies fast contract feedback; the production build
+continues to enforce TypeScript in CI.

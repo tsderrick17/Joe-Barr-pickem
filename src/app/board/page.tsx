@@ -20,68 +20,11 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
-
-type ScoringPeriod = {
-  id: string;
-  display_name: string;
-  display_order: number;
-  status: "upcoming" | "active" | "complete";
-  period_type: "regular" | "playoff";
-  max_picks: number;
-};
-
-type BoardGame = {
-  id: string;
-  kickoffAt: string;
-  lineLockAt: string;
-  isInternational: boolean;
-  awayTeam: string;
-  homeTeam: string;
-  awayTeamAbbreviation: string;
-  homeTeamAbbreviation: string;
-  favoriteTeamId: string | null;
-  awayTeamId: string;
-  homeTeamId: string;
-  officialSpread: number | null;
-  preliminarySpread: number | null;
-  spreadSource: string | null;
-  spreadLockedAt: string | null;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
-  awayScore: number | null;
-  homeScore: number | null;
-  awayResult: "win" | "loss" | null;
-  homeResult: "win" | "loss" | null;
-  awayPickers: string[];
-  homePickers: string[];
-};
+import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 
 type SelectedPick = {
   gameId: string;
   teamId: string;
-};
-
-type BoardResponse = {
-  serverTime: string;
-  games: BoardGame[];
-  myPicks: SelectedPick[];
-  pickem: {
-    playoffEliminated: boolean;
-  };
-  survivor: {
-    available: boolean;
-    chipsVisible: boolean;
-    notice: string | null;
-    status: "active" | "eliminated" | "complete";
-    showOnReceipt?: boolean;
-    pick: { game_id: string; selected_team_id: string } | null;
-    usedTeamIds: string[];
-  };
-  showPoolAction: boolean;
-  bootstrap?: {
-    weeks: ScoringPeriod[];
-    nextWeekAvailableAt: string | null;
-  } | null;
-  error?: string;
 };
 
 // A pick save can briefly wait behind database work that is already in
