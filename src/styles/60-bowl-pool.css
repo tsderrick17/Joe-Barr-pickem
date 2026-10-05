@@ -1,0 +1,505 @@
+/* ==== Bowl Pool ==== */
+/* The Bowl Pool is its own event: navy and old gold on cream, varsity
+   lettering for names and lines, and felt pennants in each school's colors.
+   Pick'em keeps its newsprint and Survivor its poker felt. */
+.bowl-pool-page,
+.bowl-card-section {
+  --bowl-navy: #16223a;
+  --bowl-navy-lift: #1f2f50;
+  --bowl-gold: #b38b4d;
+  --bowl-gold-soft: #e6d6b4;
+  --bowl-paper: #fbf8f1;
+  --bowl-paper-alt: #f4efe2;
+  --bowl-rule: #cbbf9f;
+  --bowl-muted: #6d6656;
+}
+
+.bowl-crest { text-align: center; }
+.bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
+.bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
+.bowl-crest-title {
+  align-items: center;
+  justify-content: center;
+  margin-top: .55rem;
+  position: relative;
+}
+.bowl-crest-title h2 {
+  color: var(--bowl-navy);
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: clamp(1.7rem, 5.4vw, 2.3rem);
+  font-weight: 400;
+  letter-spacing: .06em;
+  line-height: 1.05;
+  margin: 0;
+}
+.bowl-crest-season {
+  color: var(--bowl-muted);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 500;
+  margin: .1rem 0 0;
+}
+/* Claim your seat: an admission ticket with a perforated stub. */
+.bowl-claim {
+  background: var(--bowl-paper);
+  border: 1px solid var(--bowl-rule);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10rem;
+  margin: 1rem auto 0;
+  max-width: 40rem;
+  position: relative;
+}
+.bowl-claim::before, .bowl-claim::after {
+  background: var(--page-bg, #f5f0e6);
+  border: 1px solid var(--bowl-rule);
+  border-radius: 50%;
+  content: "";
+  height: 1rem;
+  position: absolute;
+  right: calc(10rem - .5rem);
+  width: 1rem;
+}
+.bowl-claim::before { top: -.55rem; }
+.bowl-claim::after { bottom: -.55rem; }
+.bowl-claim-main { padding: 1.1rem 1.3rem; }
+.bowl-claim-kicker { color: var(--bowl-gold); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; letter-spacing: .3em; margin: 0; }
+.bowl-claim-main h3 { color: var(--bowl-navy); font-family: var(--font-cormorant), Georgia, serif; font-size: 1.65rem; font-weight: 700; line-height: 1.1; margin: .35rem 0 .3rem; }
+.bowl-claim-main p:not(.bowl-claim-kicker) { color: var(--bowl-muted); font-size: .85rem; line-height: 1.45; margin: 0; }
+.bowl-claim-stub { align-items: center; border-left: 1px dashed var(--bowl-rule); display: grid; justify-items: center; padding: .9rem; }
+.bowl-claim-stub button {
+  background: var(--bowl-navy);
+  border: 0;
+  color: #f4ecd9;
+  cursor: pointer;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: .78rem;
+  letter-spacing: .14em;
+  padding: .8rem .9rem;
+}
+.bowl-claim-stub button:hover:not(:disabled) { background: var(--bowl-navy-lift); }
+.bowl-claim-stub button:focus-visible { outline: 2px solid var(--bowl-gold); outline-offset: 2px; }
+@media (max-width: 639px) {
+  .bowl-claim { grid-template-columns: 1fr; }
+  .bowl-claim::before, .bowl-claim::after { display: none; }
+  .bowl-claim-stub { border-left: 0; border-top: 1px dashed var(--bowl-rule); }
+}
+
+/* A picked team rises on a pennant in the school's colors. Every pennant is
+   the same size; a long name wraps to a second line inside it. */
+.bowl-pennant { display: inline-flex; height: 2.3rem; position: relative; vertical-align: middle; width: 6.1rem; }
+.bowl-pennant-pole { background: #8a7a5a; border-radius: 1px; bottom: -.25rem; left: 0; position: absolute; top: -.2rem; width: 2px; }
+.bowl-pennant-flag {
+  align-items: center;
+  background: var(--pennant-primary);
+  border-left: 4px solid var(--pennant-secondary);
+  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
+  color: var(--pennant-ink);
+  display: flex;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-size: .62rem;
+  font-weight: 400;
+  height: 2.1rem;
+  letter-spacing: .05em;
+  line-height: 1.05;
+  margin-left: 2px;
+  padding: 0 .7rem 0 .4rem;
+  text-align: left;
+  text-transform: uppercase;
+  width: 100%;
+}
+.bowl-pennant-flag > span { display: block; overflow-wrap: anywhere; }
+.bowl-team-pick { display: inline-block; max-width: 100%; }
+.bowl-team-pick.is-new .bowl-pennant-flag { animation: bowl-pennant-raise 620ms cubic-bezier(.18, .8, .2, 1) both; transform-origin: left center; }
+@keyframes bowl-pennant-raise {
+  from { opacity: 0; transform: translateY(.6rem) scaleX(.55); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-pennant-flag { animation: none; } }
+
+/* ---- Picks page */
+.bowl-pool-page #bowl-selections {
+  background: var(--bowl-paper) !important;
+  border: 1px solid var(--bowl-rule) !important;
+  box-shadow: 0 10px 24px rgba(30, 24, 12, .08);
+  position: relative;
+}
+.bowl-pool-page #bowl-selections::before { border: 1px solid var(--bowl-gold-soft); content: ""; inset: 5px; pointer-events: none; position: absolute; }
+.bowl-pool-page #bowl-selections .bowl-title-row { border-bottom: 0; display: block; padding-bottom: 0; }
+
+.bowl-pool-page #bowl-selections > div.overflow-hidden { border-color: var(--bowl-rule); }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
+  background: var(--bowl-navy) !important;
+  border: 0 !important;
+  color: var(--bowl-gold-soft) !important;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+.bowl-pool-page #bowl-selections .bowl-selection-game-row { background-color: var(--bowl-paper) !important; border-color: #e7dfcb; }
+.bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) { background-color: var(--bowl-paper-alt) !important; }
+.bowl-pool-page .bowl-game-name { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .04em; }
+.bowl-pool-page .bowl-game-line { font-family: var(--font-graduate), Georgia, serif; font-size: 1rem; letter-spacing: .03em; }
+.bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: var(--bowl-navy); }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child ~ div:not(.bowl-selection-game-row) { border-color: #e7dfcb; }
+
+/* ---- Standings: the Bowl Card */
+.bowl-card-section { background: transparent; }
+.bowl-card-section .bowl-crest { margin-bottom: .7rem; }
+.bowl-card-section .survivor-title-toggle { background: transparent; border-color: var(--bowl-gold); color: var(--bowl-gold); }
+.bowl-card-section .bowl-standings-scroll { background: var(--bowl-paper); border-bottom: 2px solid var(--bowl-navy) !important; box-shadow: none; }
+/* Dates, games, and lines read like a scoreboard header. */
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
+  background: var(--bowl-navy) !important;
+  color: var(--bowl-gold-soft) !important;
+  font-family: var(--font-graduate), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell,
+.bowl-card-section .bowl-standings-summary-cell {
+  background: var(--bowl-navy-lift) !important;
+  border-color: var(--bowl-navy) !important;
+  color: #f4ecd9 !important;
+}
+.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .06em; }
+.bowl-card-section .bowl-standings-team { color: #f4ecd9 !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
+.bowl-card-section .bowl-standings-game-cell .text-\[\#007e72\] { color: #8fd8cc !important; }
+.bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child { background: transparent !important; }
+.bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift) !important; border-color: var(--bowl-navy) !important; color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .12em; }
+.bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper) !important; border-color: #e7dfcb !important; }
+.bowl-card-section .bowl-standings-player-row.is-alt { background-color: var(--bowl-paper-alt) !important; }
+/* Day-to-day column dividers are hairlines of old gold, not heavy gray rules. */
+
+.bowl-card-section .bowl-standings-player-row > span:nth-child(1) { font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell { background: var(--bowl-navy-lift) !important; }
+html[data-theme="night"] .bowl-crest-title h2 { color: #f4ecd9; }
+html[data-theme="night"] .bowl-crest-season { color: #b9b19c; }
+html[data-theme="night"] .bowl-claim,
+html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: #1b1f2b; --bowl-paper-alt: #20253a; --bowl-rule: #4d4a3e; --bowl-muted: #b9b19c; }
+html[data-theme="night"] .bowl-claim-main h3,
+html[data-theme="night"] .bowl-pool-page .bowl-game-name { color: #f4ecd9; }
+html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold); color: #16223a; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
+html[data-theme="night"] .bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: #f4ecd9 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child { background: var(--bowl-navy) !important; border-color: var(--bowl-navy-lift) !important; color: var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: var(--bowl-rule) !important; }
+html[data-theme="night"] .bowl-pool-page .bowl-game-line[class*="007e72"] { color: #8fd8cc !important; }
+html[data-theme="night"] .bowl-pennant { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
+@media (max-width: 639px) {
+  .bowl-pool-page .bowl-game-name {
+  line-height: 1.15;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+}
+
+/* ---- Bowl Pool: opt out, instructions, names, and the player rows */
+.bowl-optout { margin: 1rem auto 0; max-width: 72rem; text-align: right; }
+.bowl-optout button { background: transparent; border: 0; color: var(--bowl-muted); cursor: pointer; font-size: .78rem; font-weight: 700; padding: 0 .1rem .2rem; text-decoration: underline; text-underline-offset: 3px; }
+.bowl-optout button:hover { color: var(--bowl-navy); }
+html[data-theme="night"] .bowl-optout button:hover { color: #f4ecd9; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: var(--bowl-muted); display: grid; font-size: .8rem; gap: .25rem; line-height: 1.45; list-style: none; margin: .9rem auto 0; max-width: 28rem; padding: 0; text-align: left; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact li { padding-left: 1.1rem; position: relative; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact li::before { background: var(--bowl-gold); content: ""; height: .32rem; left: .2rem; position: absolute; top: .55em; transform: rotate(45deg); width: .32rem; }
+/* School names, centered in the Fav and Dog columns. */
+.bowl-pool-page .bowl-team-label { font-size: .86rem; font-weight: 700; line-height: 1.15; overflow: visible; text-overflow: clip; white-space: normal; }
+@media (max-width: 639px) {
+  
+  .bowl-pool-page .bowl-team-label { font-size: .75rem; }
+  
+  
+}
+
+/* Player rows: the same varsity-and-serif voice as the heading. */
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title],
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] * { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.15rem; font-weight: 700; }
+.bowl-card-section .bowl-standings-player-row > span:nth-child(1) { color: var(--bowl-navy) !important; font-size: 1rem; }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky * { color: var(--bowl-navy) !important; }
+.bowl-card-section .bowl-standings-player-row > span.text-slate-400,
+.bowl-card-section .bowl-standings-player-row > span[class*="text-slate-4"] { color: var(--bowl-rule) !important; }
+.bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
+/* Your row: a soft gold wash and a gold edge, not a bright band. */
+.bowl-card-section .bowl-standings-player-row.is-viewer > span,
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  background: #f3ead4 !important;
+  box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important;
+  color: var(--bowl-navy) !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child { border-left: 3px solid var(--bowl-gold); }
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky * { color: var(--bowl-navy) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:nth-child(1),
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky *,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:last-child { color: #f4ecd9 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: #1b1f2b !important; border-color: #2e3346 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background-color: #20253a !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  color: #f4ecd9 !important;
+}
+@media (max-width: 639px) {
+  
+  
+  .bowl-pool-page .bowl-game-name { hyphens: auto; }
+}
+@media (max-width: 639px) {
+  .bowl-pennant { width: 4.6rem; }
+  .bowl-pennant-flag { font-size: .5rem; padding-right: .5rem; }
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+.bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-navy); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
+html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
+/* The title stays centered; the show/hide control sits just beside it. */
+.bowl-crest-title { display: grid; gap: 0; grid-template-columns: 1fr auto 1fr; }
+.bowl-crest-title h2 { grid-column: 2; }
+.bowl-crest-title > button { grid-column: 3; justify-self: start; margin-left: .6rem; }
+/* Day dividers are old gold. */
+
+/* Your row: the name area stays quiet, and your score sits in a small navy tile. */
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
+  background: var(--bowl-paper) !important;
+  border-left: 0;
+  box-shadow: none !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: var(--bowl-paper-alt) !important; }
+/* Bowl names wrap only between words, never mid-word. */
+.bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
+@media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
+@media (max-width: 639px) { .bowl-pool-page .bowl-selection-game-row small { overflow: visible; text-overflow: clip; white-space: normal; } }
+/* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
+.bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
+@media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
+/* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
+   whole so every proportion holds. */
+.chip-playground { touch-action: none; height: 6.2rem; width: 6.2rem; }
+.chip-playground .survivor-poker-chip-wrap { transform: scale(1.9); }
+/* "YOUR RECEIPT" stays on one line, even on the narrowest phones. */
+@media (max-width: 767px) { .slate-receipt-ticket > span { white-space: nowrap; } }
+@media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }
+/* The footnote ("ALL PICKS SAVED") is pinned to the stub's bottom line, level
+   with the status line in the next section. */
+.slate-receipt-ticket > .slate-receipt-footnote { margin-top: auto; }
+/* The Bowl receipt is exactly the Pick'em receipt's height. */
+.bowl-receipt-metric { min-height: 1.9rem; padding-block: .2rem; }
+.bowl-receipt-strip { min-height: 5.394rem; }
+@media (max-width: 767px) { .bowl-receipt-strip { min-height: 4.594rem; } }
+.bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto); }
+@media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-pool { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); } }
+/* The stub's footnote matches the status line beside it in size and line box,
+   and both sit on the same bottom edge, so they read as one line. */
+.slate-receipt-submit-hint { font-size: .48rem; line-height: 1.25; margin-top: 0; }
+@media (max-width: 767px) { .slate-receipt-submit-hint { font-size: .5rem; letter-spacing: .04em; } }
+/* Everything in the stub is centered horizontally in the stub, at every width. */
+.slate-receipt-ticket { align-items: center; text-align: center; }
+.slate-receipt-ticket > span { justify-content: center; }
+.slate-receipt-ticket a, .slate-receipt-print { align-self: center; justify-self: center; }
+@media (max-width: 767px) {
+  .slate-receipt-ticket { padding-inline: .45rem; }
+  .slate-receipt-ticket > .slate-receipt-footnote { margin-inline: -.45rem; width: calc(100% + .9rem); }
+}
+/* The link and Submit share one column exactly as wide as "VIEW FULL TICKET":
+   the button never stretches wider than the link above it. */
+.slate-receipt-actions { display: grid; gap: inherit; justify-items: stretch; max-width: 100%; width: max-content; }
+.slate-receipt-actions .slate-receipt-print { margin-inline: 0; width: 100%; }
+.slate-receipt-actions a { justify-self: center; }
+.bowl-receipt-strip .slate-receipt-print { width: 13.9rem; max-width: 100%; }
+@media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
+
+/* ---- Bowl Card: flip-tile scores and one consistent row style */
+
+/* The score and name cells read as part of the row: the same paper, the same
+   hairlines top and bottom, and a quiet gold edge where the games begin. */
+.bowl-card-section .bowl-standings-player-row { box-shadow: none !important; background-image: none !important; }
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: var(--bowl-paper) !important; box-shadow: none !important; }
+.bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: var(--bowl-paper-alt) !important; }
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold-soft) !important; }
+.bowl-card-section .bowl-standings-player-row.is-viewer > span,
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
+  background: #f3ead4 !important;
+  border-left: 0;
+  box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft), inset -1px 0 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: #1b1f2b !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: #20253a !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:last-child,
+.bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: #f3ead4 !important; box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft) !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
+
+/* ---- Bowl Card score tiles as split-flap digits, like a stadium board */
+.bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; --flap-bg: var(--bowl-paper); --flap-ink: var(--bowl-navy); --flap-edge: var(--bowl-gold-soft); --flap-seam: rgba(22, 34, 58, .14); }
+.bowl-score-tile.is-viewer { --flap-bg: #0f1830; --flap-ink: var(--bowl-gold-soft); --flap-edge: var(--bowl-gold); --flap-seam: rgba(255, 255, 255, .18); }
+html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; --flap-ink: #f4ecd9; --flap-edge: #4d4a3e; --flap-seam: rgba(255, 255, 255, .12); }
+.bowl-flap {
+  border: 1px solid var(--flap-edge);
+  border-radius: .18rem;
+  display: block;
+  height: 1.6rem;
+  position: relative;
+}
+.bowl-flap::after { background: var(--flap-seam); content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; z-index: 4; }
+.bowl-flap-half {
+  color: var(--flap-ink) !important;
+  height: 50%;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+.bowl-flap-half > span {
+  color: var(--flap-ink) !important;
+  display: grid;
+  font: 400 1.15rem/1 var(--font-graduate), ui-monospace, monospace;
+  height: 200%;
+  left: 0;
+  place-items: center;
+  position: absolute;
+  right: 0;
+}
+.bowl-flap-half.is-top { border-radius: .16rem .16rem 0 0; top: 0; transform-origin: 50% 100%; }
+.bowl-flap-half.is-top > span { top: 0; }
+.bowl-flap-half.is-bottom { border-radius: 0 0 .16rem .16rem; bottom: 0; transform-origin: 50% 0; }
+.bowl-flap-half.is-bottom > span { bottom: 0; }
+/* The moving flaps: hidden between flips, animated by the browser. The top
+   flap falls away and the next card's lower half lands over the old one. */
+.bowl-flap-half.is-folding {
+  will-change: transform;
+  z-index: 2;
+}
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink) !important; }
+/* Flat flaps: no 3D, so no perspective or hidden back faces to draw. */
+
+/* Each digit is sealed off: a flip redraws that digit only, never the table around it. */
+.bowl-flap { width: .98rem; box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); perspective: none; contain: strict; }
+.bowl-flap-half { background: var(--flap-bg); overflow: hidden; backface-visibility: visible; contain: layout paint; }
+/* The moving flaps stay put between flips: the falling flap rests folded flat
+   and the landed flap shows the same number as the card beneath it. The
+   falling flap carries a fixed shadow toward its hinge. */
+.bowl-flap-half.is-folding { transform: scaleY(0); visibility: visible; }
+.bowl-flap-half.is-dropping { will-change: transform; z-index: 3; transform: scaleY(1); visibility: visible; }
+
+/* ---- Standings: one gap between every section (header, ticket, Pick'em Pad,
+   Survivor Table, Bowl Card), the same at the top and bottom of the page. */
+.standings-stack { --standings-gap: 1.5rem; padding-bottom: var(--standings-gap); padding-top: var(--standings-gap); }
+@media (min-width: 640px) { .standings-stack { --standings-gap: 2rem; } }
+.standings-stack > section:not(.my-ticket):not(.standings-loading-ticket) { padding-block: 0; }
+.standings-stack > section + section { margin-top: var(--standings-gap); }
+
+/* ---- Bowl Card: one line style for the whole table. Every line (the day
+   breaks, the row rules, the edge where the games begin, and the tiebreaker
+   edge) is a single 1px old-gold rule. Adjacent cells no longer each draw a
+   border, so nothing doubles up. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll { border-bottom: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span { border-width: 0 !important; }
+/* Day breaks and the tiebreaker edge: a left rule only. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid > span[class*="border-l-2"],
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:not([aria-hidden]) { border-left: 1px solid var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { border-left-width: 0 !important; }
+/* The first game sits against the frozen columns, which carry that edge. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:nth-child(2),
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row > span:nth-child(3) { border-left-width: 0 !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:first-child,
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:first-child { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold) !important; }
+section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft), inset -1px 0 0 var(--bowl-gold) !important; }
+/* Row rules. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
+
+/* A live game keeps the date column's width: the LIVE badge fits inside it. */
+.slate-live-badge { max-width: 100%; white-space: nowrap; }
+/* The spread's middle sits level with the middle of the team names on a
+   finished or live row (the chip rows' names start lower than the cell top). */
+.slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .64rem; }
+.slate-game-row.is-final.no-survivor-layout .slate-spread-cell { margin-top: -.2rem; }
+@media (min-width: 768px) {
+  .slate-game-row.is-final.has-survivor-layout .slate-spread-cell { margin-top: .87rem; }
+}
+
+/* Split-flap tiles: real hinged halves in perspective, with shading. */
+.bowl-flap.is-moving { perspective: 4.2rem; }
+.bowl-flap-half.is-folding,
+.bowl-flap-half.is-dropping { backface-visibility: hidden; transform: rotateX(90deg); }
+.bowl-flap-half.is-folding { background-image: linear-gradient(rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .14)); transform: rotateX(-90deg); }
+.bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .55), rgba(10, 14, 24, .85)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.bowl-flap-half.is-bottom .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .85), rgba(10, 14, 24, .5)); }
+
+/* "Games" and "remaining" stack over the counter, all centered. */
+.bowl-games-remaining-label { line-height: 1.25; text-align: center; }
+
+/* ---- Bowl Pool picks page: the receipt sits right under the menu, Opt out is
+   a small link in the board's corner, and each team is a large boxed target. */
+.bowl-pool-page .bowl-receipt-frame { margin-top: 0; }
+.bowl-pool-page .bowl-pool-board { position: relative; }
+/* Opt out sits right under the instructions, lined up with their text. */
+.bowl-pool-page .bowl-optout { margin: .45rem auto 0; max-width: 28rem; padding-left: 1.1rem; text-align: left; }
+.bowl-pool-page .bowl-optout button { font-size: .68rem; padding: 0; }
+.bowl-pool-page #bowl-selections .bowl-pick-box {
+  align-items: center;
+  align-self: stretch;
+  background: var(--bowl-paper);
+  border: 1px solid var(--bowl-gold-soft);
+  border-radius: .35rem;
+  box-shadow: 0 1px 0 rgba(22, 34, 58, .06);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  margin: .35rem .2rem;
+  min-height: 3.1rem;
+  padding: .3rem .35rem;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.bowl-pool-page #bowl-selections .bowl-pick-box:not(:disabled):hover { background: #fffaf0; border-color: var(--bowl-gold); }
+.bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #fbf4e4; border: 2px solid var(--bowl-gold); padding: calc(.3rem - 1px) calc(.35rem - 1px); }
+.bowl-pool-page #bowl-selections .bowl-pick-box:disabled { cursor: not-allowed; }
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; max-width: 100%; }
+/* Pennants keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant { max-width: 100%; }
+/* Names wrap between words only, never mid-word, inside the boxed pennant. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag { font-size: .56rem; letter-spacing: .03em; padding: 0 .55rem 0 .35rem; }
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag > span { overflow-wrap: normal; word-break: keep-all; }
+@media (max-width: 639px) {
+  /* The line gets its own lane between the two boxes, wide enough for -10.5. */
+  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
+  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.6rem minmax(0, 1fr) 5.45rem 1.9rem 5.45rem; }
+  .bowl-pool-page #bowl-selections .bowl-game-line { font-size: .78rem; white-space: nowrap; }
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { background: #1b1f2b; border-color: #4d4a3e; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
+/* Wide enough on a desktop that the first instruction stays on one line. */
+.bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }
+
+/* Final scores and W/L marks sit in fixed slots at the end of each team's lane, so every
+   score lines up in a column whatever the length of the team name before it. */
+.slate-game-row.is-final .slate-team-score { text-align: right; }
+.slate-game-row.is-final .slate-team-result-mark { text-align: left; }
+/* The Bowl receipt stays in view while the schedule scrolls. It is the frame, not the
+   strip inside it, that sticks, because a sticky element only travels within its parent. */
+.bowl-pool-page .bowl-receipt-frame { position: sticky; top: 0; z-index: 40; }
+@media (max-width: 767px) { .bowl-pool-page .bowl-receipt-frame { top: var(--site-nav-height, 0px); } }
+.bowl-pool-page .bowl-receipt-frame .slate-mini-nav { position: relative; top: auto; }
+/* Fav, Line and Dog sit at the vertical middle of the legend bar, beside the two-line labels. */
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child { align-items: center; }
+/* The games-remaining counter is the same split-flap tile, drawn larger, and lands first. */
+.bowl-score-tile.is-large { margin-top: .35rem; }
+.bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
+.bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
+/* The empty corner over Tiebreaker looks just like the one over Games remaining: the page itself. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: #f5f0e6 !important; }

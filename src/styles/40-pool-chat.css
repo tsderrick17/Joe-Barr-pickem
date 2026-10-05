@@ -1,0 +1,51 @@
+html[data-theme="night"] .pool-chat {
+  background: #22231f;
+  border-color: #918d81;
+  color: #f2ede2;
+}
+
+html[data-theme="night"] .pool-chat > div,
+html[data-theme="night"] .pool-chat form {
+  border-color: #817d72;
+}
+
+html[data-theme="night"] .pool-chat .text-slate-500,
+html[data-theme="night"] .pool-chat .text-slate-600,
+html[data-theme="night"] .pool-chat .text-slate-700 {
+  color: #cfd4ca !important;
+}
+
+html[data-theme="night"] .pool-chat article {
+  border-color: #716d64;
+}
+
+html[data-theme="night"] .pool-chat input {
+  background: #2d2f2a;
+  border-color: #96978d;
+  color: #f2ede2;
+}
+
+html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
+
+.pool-chat-dock {
+  background: #f5f0e6;
+  padding: 0 1rem 2rem;
+}
+
+/* The open chat begins immediately after the page content. Give the compact
+   restore control its own modest breathing room only when chat is hidden. */
+.pool-chat-dock--collapsed { padding-top: .85rem; }
+
+.pool-chat-dock .pool-chat {
+  margin: 0 auto;
+  /* The Slate uses the broad reading rail by default. Standings overrides
+     this below so the shared chat follows the page it is attached to. */
+  max-width: 64rem;
+  width: 100%;
+}
+
+/* The compact restore control follows the same edge when chat is hidden. */
+.pool-chat-dock > div:not(.pool-chat) {
+  max-width: 64rem !important;
+  width: 100%;
+}

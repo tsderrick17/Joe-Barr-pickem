@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
-const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+const css = await readStylesheet();
 
 test("the Survivor receipt pick is constrained by its grid track", () => {
   assert.match(

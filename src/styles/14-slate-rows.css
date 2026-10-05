@@ -1,0 +1,827 @@
+/* A selected ATS team reads like a marked betting ticket, not an inverted
+   black block that fights the newspaper slate. */
+.slate-team-selection {
+  background: transparent !important;
+  color: #47102e !important;
+}
+
+.slate-team-label--selected {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background: transparent;
+  /* Keep the marker attached to the words themselves.  The surrounding
+     label lane is intentionally full-width for score alignment, but the
+     selected label must remain content-sized so the highlight never becomes
+     a ribbon across the entire lane. */
+  display: inline-block;
+  max-width: 100%;
+  width: fit-content;
+  margin: 0 -.13em;
+  padding: .04em .13em .08em;
+  position: relative;
+  isolation: isolate;
+}
+
+.slate-team-label--selected > span { position: relative; z-index: 1; }
+
+.slate-team-label--selected::before,
+.slate-team-label--selected:not(.slate-team-label--chips) > span::before {
+  /* A single translucent, textbook-pink highlighter pass: a touch of
+     denser pink at the nib melts immediately into the familiar marker
+     body, with no second block or visible seam between them. */
+  background: linear-gradient(90deg,
+    rgba(191, 20, 104, .58) 0%,
+    rgba(220, 45, 133, .54) 1.5%,
+    rgba(241, 78, 158, .48) 4%,
+    rgba(250, 113, 182, .43) 8%,
+    rgba(255, 151, 204, .39) 14%,
+    rgba(255, 174, 216, .37) 100%);
+  /* One broad chisel pass: matching angled entry and exit, with enough
+     overscan to read as a marker stroke rather than a text background. */
+  clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
+  content: "";
+  inset: -.04em -.32em -.16em;
+  position: absolute;
+  /* --ink-* is a tiny per-stroke wobble (set in slate-game-row.tsx), so no two
+     marks land in exactly the same place. */
+  transform: translate(var(--ink-x, 0), var(--ink-y, 0)) rotate(calc(-1.1deg + var(--ink-turn, 0deg)));
+  transform-origin: center;
+  z-index: 0;
+}
+
+.slate-team-label--selected::after {
+  display: none;
+}
+
+/* Wrapped names: the marker belongs to the words, not to the label box. A
+   label box is as wide as its lane once a name wraps ("Green Bay / Packers"),
+   so the ink ran far past the text. Drawing it on the name itself makes it
+   follow the longest line. Survivor rows keep their centered label marker. */
+.slate-team-label--selected:not(.slate-team-label--chips) {
+  display: block;
+  isolation: auto;
+  margin: 0;
+  padding: 0;
+  position: static;
+  width: auto;
+}
+.slate-team-label--selected:not(.slate-team-label--chips)::before { content: none; }
+.slate-team-label--selected:not(.slate-team-label--chips) > span {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  isolation: isolate;
+  margin: 0 -.13em;
+  padding: .04em .13em .08em;
+}
+.slate-team-label--selected:not(.slate-team-label--chips) > span::before { z-index: -1; }
+
+/* Names that wrap break into even lines ("Philadelphia / Eagles") instead of a
+   long first line and a stray last word. */
+.slate-team-label { text-wrap: balance; }
+.slate-team-name-full { display: inline; }
+/* A narrow team cell (a phone) shows the short team name instead of wrapping or
+   crowding the spread. The cell measures itself, so no breakpoint is guessed. */
+.slate-team-side { container-type: inline-size; }
+/* A pick is easy to hit without being exact: an invisible margin around each
+   open team button counts as a click on it. It sits behind everything else, so
+   the Survivor chips and other controls keep their own taps. */
+button.slate-team-side:not(:disabled) { position: relative; }
+button.slate-team-side:not(:disabled)::after {
+  content: "";
+  inset: -.7rem -.35rem;
+  position: absolute;
+  z-index: -1;
+}
+@container (max-width: 8.5rem) {
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-full { display: none; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-name-short { display: inline; }
+}
+.slate-team-name-short { display: none; }
+.scoreboard-team-name-full { display: none; }
+.scoreboard-team-name-short { display: inline; }
+
+/* Final rows have three separate pieces of information on each side: the
+   team, its score/result, and the players who selected it. Keep the first two
+   in one stable baseline and give the names their own wrapping lane so a
+   narrow phone never makes scores or picker names collide. */
+.slate-team-result-line {
+  align-items: baseline;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: .28rem;
+  min-width: 0;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+.slate-team-result-line.is-right { justify-content: flex-end; }
+.slate-team-result-line.is-left { justify-content: flex-start; }
+.slate-game-row.is-final > .slate-team-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.slate-game-row.is-final > .slate-team-side > .slate-final-team-stack {
+  /* Center the complete team/score/picker block as one unit. A longer picker
+     list may change where the team label sits inside the block, but never
+     pulls the block itself toward the top of the matchup row. */
+  align-self: center;
+}
+.slate-team-result-line .slate-team-label { min-width: 0; }
+.slate-team-label-lane { display: flex; flex-direction: column; min-width: 0; width: max-content; max-width: 100%; }
+.slate-team-label-lane.is-left { margin-right: auto; text-align: left; }
+.slate-team-label-lane.is-right { margin-left: auto; text-align: left; }
+.slate-team-score,
+.slate-team-result-mark { flex: 0 0 auto; white-space: nowrap; }
+
+/* The time rail sits before the matchup. Pull the line back by half that rail
+   so it is visually centered between the two team lanes, not the whole grid's
+   remaining area. */
+.slate-lock-note { display: grid; justify-items: center; white-space: nowrap; }
+.slate-preview-spread { display: block; transform: translateX(-2.4rem); }
+/* Survivor rows already reserve symmetric chip lanes around the spread. Do
+   not apply the no-chip centering adjustment here; it pulls the line into the
+   chip artwork on narrow screens. */
+.slate-game-row.has-survivor-layout .slate-spread-cell {
+  position: relative;
+  z-index: 2;
+}
+
+/* Scores are part of the team label, not a separate visual hierarchy. Keep
+   their type size identical to the team name while giving every row the same
+   compact numeric anchor. */
+.slate-team-score {
+  align-self: start;
+  display: inline-block;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 2.3ch;
+  text-align: right;
+}
+.slate-team-result-mark { align-self: start; }
+
+/* Finished matchups keep the team, final score, and result mark together as a
+   content-sized group. This prevents a short score from drifting to the far
+   edge of a wide team lane while still anchoring the two sides symmetrically. */
+.slate-game-row .slate-final-team-stack {
+  display: grid;
+  /* Keep the final score and result mark attached to the team label instead
+     of stretching the score across the unused side of the row. The label can
+     still wrap inside its lane, while the score gets a stable, bold slot. */
+  grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em;
+  column-gap: .34rem;
+  justify-content: stretch;
+  min-width: 0;
+  width: 100%;
+}
+.slate-game-row .slate-team-result-line {
+  display: contents;
+}
+.slate-game-row .slate-team-result-line .slate-team-label {
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  /* Desktop final rows have enough room for the full team label. Keep the
+     name and its W/L mark on one baseline instead of letting a long Week 1
+     label spill onto a second line; picker names may still wrap below it. */
+  .slate-game-row.is-final .slate-team-label { white-space: nowrap; }
+}
+@media (min-width: 768px) and (max-width: 999px) {
+  /* Below the full desktop width a finished team's cell is narrower than the
+     longest full name plus its score, and the name cannot wrap, so the score
+     was drawn over it. Use the compact team mark, as phones do. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
+}
+.slate-game-row .slate-final-team-stack.is-left {
+  justify-items: start;
+  text-align: left;
+}
+.slate-game-row .slate-final-team-stack.is-right {
+  justify-items: start;
+  text-align: left;
+}
+.slate-game-row .slate-team-result-line.is-right .slate-team-label {
+  text-align: left;
+}
+.slate-game-row .slate-team-picker-list {
+  margin-top: .15rem;
+  width: auto;
+}
+
+@media (min-width: 768px) {
+  /* Picker names are supporting detail and must not determine the primary
+     team/score column width. Cap their measure so a popular team (such as
+     Buffalo) wraps beneath its label while the score stays close to the W/L. */
+  /* Finished rows: picker names sit under the whole team block and the rule
+     above them runs the full team width on every row, instead of the width of
+     whichever name happens to be on that row. */
+  .slate-game-row.is-final .slate-team-label-lane { display: contents; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-label { grid-column: 1; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-score { grid-column: 2; }
+  .slate-game-row.is-final .slate-final-team-stack.is-right .slate-team-result-mark { grid-column: 3; }
+  .slate-game-row.is-final .slate-team-label,
+  .slate-game-row.is-final .slate-team-score,
+  .slate-game-row.is-final .slate-team-result-mark { grid-row: 1; }
+  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; max-width: none; }
+}
+
+/* Upcoming rows have no score/result columns. Give each team name a full,
+   stable lane so right-side names share one starting edge instead of shifting
+   based on their text width (especially noticeable without Survivor chips). */
+/* On a finished row the picker names hang below the team, so the spread rides
+   the team-name line instead of floating at the middle of the taller row. */
+.slate-game-row.is-final .slate-spread-cell { align-self: start; }
+
+.slate-game-row:not(.is-final) .slate-final-team-stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+.slate-game-row:not(.is-final) .slate-team-label-lane {
+  width: 100%;
+}
+.slate-game-row:not(.is-final) .slate-team-label-lane.is-right {
+  text-align: left;
+}
+
+.pool-action:focus-visible{
+  box-shadow: var(--pool-focus-ring);
+}
+
+.commissioner-map-release {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem !important;
+  letter-spacing: .04em;
+}
+
+/* When Survivor is no longer in play, reclaim both chip lanes. Keep a compact
+   time rail and bring the two team blocks inward, so finals and upcoming games
+   share the same balanced desktop matchup geometry. Active Survivor rows keep
+   both chip lanes around the spread. */
+@media (min-width: 768px) {
+  .slate-game-row.no-survivor-layout {
+    /* The empty last column mirrors the time rail, so the line sits at the
+       true center of the row and of the gap between the two team lanes. */
+    grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem minmax(0, 1fr) 4.5rem;
+  }
+
+  .slate-game-row.no-survivor-layout > :first-child {
+    position: static;
+    width: auto;
+  }
+
+  .slate-game-row.no-survivor-layout > :nth-child(2) {
+    justify-self: end;
+    width: min(100%, 25rem);
+  }
+
+  .slate-game-row.no-survivor-layout > :nth-child(4) {
+    justify-self: start;
+    width: min(100%, 25rem);
+  }
+
+  /* Upcoming rows: each name is centered in its half of the row, so the two
+     sit the same distance from the line. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-label { text-align: center; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-picker-list { justify-content: center; text-align: center; }
+}
+
+@media (max-width: 767px) {
+  .slate-game-row.no-survivor-layout:not(.is-final) {
+    /* With Survivor removed, keep kickoff time as a real lane instead of
+       overlaying it in the team area. That gives the favorite a little
+       breathing room and keeps the row easy to scan at a glance. */
+    grid-template-columns: 3.15rem minmax(0, 1fr) 3.75rem minmax(0, 1fr) 3.15rem;
+    column-gap: .35rem;
+    padding-left: .35rem;
+  }
+
+  .slate-game-row.no-survivor-layout:not(.is-final) > :first-child {
+    border-right: 1px solid rgba(145, 175, 208, .58);
+    padding-right: .35rem;
+    position: static;
+    width: auto;
+  }
+  /* Each name is centered in its half of the row, the same distance from the line. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane,
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-label { text-align: center; }
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-team-label-lane .slate-team-picker-list { justify-content: center; text-align: center; }
+  /* The early-lock note wraps inside the spread column instead of running
+     into the underdog's name. */
+  .slate-game-row.no-survivor-layout:not(.is-final) .slate-spread-cell > p {
+    white-space: normal;
+  }
+}
+
+.slate-team-picker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 .28rem;
+  border-top: 1px solid rgba(145, 175, 208, .72);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+  line-height: 1.15rem;
+  margin-top: .22rem;
+  max-width: 100%;
+  /* Keep picker names readable: wrap at word boundaries before breaking a
+     long unbroken token when it truly cannot fit. */
+  overflow-wrap: break-word;
+  padding-top: .16rem;
+}
+.slate-game-row.is-final .slate-team-picker-list {
+  min-height: var(--slate-picker-lane-height, 0px);
+}
+.slate-team-picker-list.is-empty {
+  border-color: transparent;
+  visibility: hidden;
+}
+.slate-team-picker-name { white-space: nowrap; }
+
+@media (max-width: 767px) {
+  /* Final games need less room for a short date and spread than a pregame
+     kickoff time. Give that recovered width to both team/result blocks. */
+  .slate-game-row.no-survivor-layout.is-final {
+    grid-template-columns: 2rem minmax(0, 1fr) 3rem minmax(0, 1fr) 2rem;
+  }
+  .slate-game-row.no-survivor-layout.is-final .slate-team-result-mark { font-size: .75rem; }
+
+  /* Survivor chips remain easy to tap, but their desktop-sized reserved lanes
+     make team names and final scores collide on narrow phones. Scale both the
+     lane and chip together so the matchup gets the reclaimed width. */
+  .slate-game-row.has-survivor-layout {
+    grid-template-columns: 2.3rem minmax(0, 1fr) 2.9rem 2.8rem 2.9rem minmax(0, 1fr);
+  }
+  .slate-team-result-line { gap: .2rem; }
+  .slate-game-row .slate-final-team-stack {
+    column-gap: .24rem;
+    grid-template-columns: minmax(0, 1fr) max-content max-content;
+  }
+  .slate-game-row .slate-team-label-lane { width: 100%; }
+  /* Finished rows: the picker names sit under the whole team block (name and
+     score), not under the name alone, so "Tyler, Chris" stays on one line
+     and the rule above them runs the full width of the team. */
+  .slate-game-row.is-final .slate-team-label-lane { display: contents; }
+  .slate-game-row.is-final .slate-team-label { grid-column: 1; grid-row: 1; justify-self: start; }
+  .slate-game-row.is-final .slate-team-score { grid-column: 2; grid-row: 1; }
+  .slate-game-row.is-final .slate-team-result-mark { grid-column: 3; grid-row: 1; }
+  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
+  .slate-team-picker-list {
+    font-size: .7rem;
+    line-height: .95rem;
+    text-align: left;
+  }
+  .slate-team-score { font-size: 1em; }
+  /* Final score rows are a two-sided scoreboard. Use the compact team mark
+     at phone widths so both score columns keep one stable baseline instead of
+     wrapping long full names into the score lane. */
+  .slate-game-row.is-final .slate-team-name-full { display: none; }
+  .slate-game-row.is-final .slate-team-name-short { display: inline; }
+}
+
+/* Keep full Slate team names at normal widths; compact labels are reserved for
+   the narrow fallback where the row cannot fit the full record. */
+@media (max-width: 320px) {
+  .slate-team-name-full { display: none; }
+  .slate-team-name-short { display: inline; }
+}
+
+/* Active Survivor chips consume the center of a Slate row. On a phone, use
+   the three-letter team mark only for that chip-enabled presentation. */
+@media (max-width: 767px) {
+  .slate-team-label--chips { display: block; text-align: center; width: 100%; }
+  .slate-team-label--chips.slate-team-label--selected {
+    margin-inline: auto;
+    width: fit-content;
+  }
+  .slate-team-name-full--chips { display: none; }
+  .slate-team-name-short--chips { display: block; text-align: center; }
+  .scoreboard-team-name-full { display: none; }
+  .scoreboard-team-name-short { display: inline; }
+}
+
+.slate-team-label--new::before,
+.slate-team-label--new:not(.slate-team-label--chips) > span::before {
+  will-change: clip-path;
+  /* Reveal fresh ink from the left. Unlike scaleX, already-painted ink never
+     stretches or shifts while the marker continues across the word. */
+  animation: slate-selection-sweep 720ms cubic-bezier(.18,.72,.18,1) 35ms both;
+}
+
+@keyframes slate-selection-sweep {
+  0% { clip-path: polygon(3% 0, 3% 0, 0 100%, 0 100%); }
+  12% { clip-path: polygon(3% 0, 8% 0, 5% 100%, 0 100%); }
+  100% { clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); }
+}
+
+@media (max-width: 767px) {
+  .slate-team-label--new::before,
+  .slate-team-label--new:not(.slate-team-label--chips) > span::before {
+    animation-duration: 780ms;
+  }
+}
+
+.slate-team-selection .text-slate-200 {
+  color: #3f6867 !important;
+}
+
+/* Survivor chips sit inside the matchup, on either side of the spread. Their
+   lanes are fixed so the team-name columns retain their normal geometry. */
+
+/* The chip is intentionally larger than its grid lane. Give every chip lane
+   a real minimum footprint so a tall picker list in an adjacent team cell
+   cannot let the next row rise into the chip's visual bounds. The wider Slate
+   rows now give the chip room for a 20% size increase at every breakpoint. */
+.slate-survivor-chip-slot { align-self: stretch; align-items: center; display: flex; height: auto; justify-content: center; min-width: 0; overflow: visible; position: relative; z-index: 1; min-height: 3.85rem; }
+
+.slate-survivor-chip-slot:has(.slate-survivor-chip-button:hover),
+.slate-survivor-chip-slot:has(.slate-survivor-chip-button:focus-visible) { z-index: 12; }
+
+/* A selected chip's plaque is a persistent foreground element. A different
+   chip can briefly take that layer only while the player is engaging it. */
+.slate-game-row.has-survivor-selection { z-index: 3; }
+.slate-game-row:has(.slate-survivor-chip-button:hover),
+.slate-game-row:has(.slate-survivor-chip-button:focus-visible) { z-index: 8; }
+
+.slate-survivor-chip-button {
+  align-items: center;
+  align-self: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  height: 3.24rem;
+  justify-content: center;
+  left: 50%;
+  min-width: 0;
+  padding: .04rem;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1.12);
+  transform-origin: center;
+  transition: filter 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
+  width: 3.24rem;
+  z-index: 1;
+}
+
+.slate-survivor-chip-button:not(:disabled):hover {
+  filter: brightness(1.08) saturate(1.14);
+  transform: translate(-50%, calc(-50% - 2px)) scale(1.28);
+  z-index: 12;
+}
+
+.slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.18); }
+.slate-survivor-chip-button:focus-visible { outline: 2px solid #16877f; outline-offset: 2px; }
+.slate-survivor-chip-button:disabled { cursor: not-allowed; }
+
+/* Phone chips are sized to fit their 2.9rem lane (2.76rem x 1.05 = 2.9rem
+   drawn), so they clear the team names beside them. This block sits after the
+   base chip rule so it actually applies; before it did not, and the chip drew
+   at 3.63rem inside a 2.7rem lane, over the first letters of the names. */
+@media (max-width: 767px) {
+  .slate-survivor-chip-button { height: 2.76rem; transform: translate(-50%, -50%) scale(1.05); width: 2.76rem; }
+  .slate-survivor-chip-button:not(:disabled):hover { transform: translate(-50%, calc(-50% - 1px)) scale(1.16); }
+  .slate-survivor-chip-button:not(:disabled):active { transform: translate(-50%, calc(-50% - 1px)) scale(1.1); }
+}
+
+@media (min-width: 768px) {
+  .slate-survivor-chip-slot { min-height: 4.7rem; }
+  .slate-survivor-chip-button { height: 3.79rem; min-width: 0; transform: translate(-50%, -50%) scale(1.16); width: 3.79rem; }
+  .survivor-poker-chip-wrap-slate { height: 100%; width: 100%; }
+}
+
+.selection-chip {
+  border-color: #d979ae !important;
+  border-left-color: #ad235f !important;
+  background: #f8d8e7 !important;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(95, 20, 61, 0.12);
+}
+
+.selection-chip button {
+  color: #181116 !important;
+}
+
+.selection-chip small { color: #111; }
+.selection-chip small.is-official { color: var(--official-line-color); }
+
+/* A restrained late-night sportsbook palette. Page components retain their
+   newspaper proportions; the theme only swaps paper, ink, and line colors. */
+html[data-theme="night"] {
+  --background: #0b1117;
+  --foreground: #e8ece7;
+  color-scheme: dark;
+}
+
+html[data-theme="night"] body {
+  background: #0b1117;
+  color: #e8ece7;
+}
+
+html[data-theme="night"] main,
+html[data-theme="night"] [class*="bg-[#f7f3e8]"] {
+  background-color: #0b1117 !important;
+}
+
+html[data-theme="night"] [class*="bg-[#fffaf0]"],
+html[data-theme="night"] [class*="bg-[#fffdf8]"],
+html[data-theme="night"] [class*="bg-[#fbfaf7]"],
+html[data-theme="night"] [class*="bg-[#f5f0e6]"] {
+  background-color: #121b22 !important;
+}
+
+html[data-theme="night"] [class*="bg-[#e9e0cd]"],
+html[data-theme="night"] [class*="bg-[#e9e2d3]"],
+html[data-theme="night"] [class*="bg-[#e8e0d0]"],
+html[data-theme="night"] [class*="bg-[#e7e1d5]"],
+html[data-theme="night"] [class*="bg-[#eee4d1]"],
+html[data-theme="night"] [class*="bg-[#f4ede1]"],
+html[data-theme="night"] [class*="bg-[#f0eadc]"],
+html[data-theme="night"] [class*="bg-[#f2eee6]"] {
+  background-color: #18252d !important;
+}
+
+html[data-theme="night"] [class*="bg-[#edf7ef]"] {
+  background-color: #102a27 !important;
+}
+
+/* Commissioner cards and form controls should not retain their light-mode
+   browser surfaces once the desk is viewed at night. */
+html[data-theme="night"] [class*="bg-white"],
+html[data-theme="night"] [class*="bg-green-50"],
+html[data-theme="night"] [class*="bg-amber-50"] {
+  background-color: #172731 !important;
+}
+
+html[data-theme="night"] [class*="bg-red-50"] {
+  background-color: #3b2029 !important;
+}
+
+html[data-theme="night"] input,
+html[data-theme="night"] textarea {
+  border-color: #52707a !important;
+  background-color: #101c24 !important;
+  color: #f0f5f1 !important;
+  color-scheme: dark;
+}
+
+html[data-theme="night"] input::placeholder,
+html[data-theme="night"] textarea::placeholder {
+  color: #90a6ad;
+}
+
+html[data-theme="night"] input:focus,
+html[data-theme="night"] textarea:focus {
+  border-color: #7ee1d2 !important;
+  outline: 2px solid rgba(126, 225, 210, 0.35);
+  outline-offset: 2px;
+}
+
+html[data-theme="night"] [class*="bg-zinc-900"] {
+  background-color: #1c4146 !important;
+}
+
+html[data-theme="night"] .slate-receipt-strip {
+  --receipt-paper: #132129;
+  --receipt-ink: #eaf0ed;
+  --receipt-rule: #4f7478;
+  --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
+}
+
+html[data-theme="night"] .slate-receipt-strip > * {
+  background-color: transparent;
+}
+
+html[data-theme="night"] .slate-receipt-ticket > span,
+html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
+html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
+html[data-theme="night"] .slate-receipt-selection-chip {
+  background: #f8d8e7 !important;
+  border-color: #ec81ba !important;
+  border-left-color: #ad235f !important;
+  color: #111;
+}
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
+  background: linear-gradient(135deg, #17383a, #142e32) !important;
+  border-color: #66b9b1 !important;
+  border-left-color: #72ddd1 !important;
+  box-shadow: inset 0 0 0 1px rgba(114, 221, 209, .14) !important;
+}
+html[data-theme="night"] .slate-receipt-selection-chip small { color: #111; }
+html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small { color: #edf7f5; }
+html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small.is-official { color: #66d8cc; }
+html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
+html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: #edf7f5; }
+
+html[data-theme="night"] .selection-chip {
+  border-color: #ec81ba !important;
+  border-left-color: #ad235f !important;
+  background: #f8d8e7 !important;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .28);
+}
+
+html[data-theme="night"] .selection-chip button {
+  color: #181116 !important;
+}
+
+html[data-theme="night"] .selection-chip button:hover {
+  background-color: #472d35 !important;
+  color: #ffb4bd !important;
+}
+html[data-theme="night"] .selection-chip small { color: #111; }
+html[data-theme="night"] .selection-chip small.is-official { color: #0f766e; }
+
+html[data-theme="night"] .slate-team-selection {
+  background: transparent !important;
+  color: #fff3fb !important;
+  box-shadow: none;
+}
+
+html[data-theme="night"] .slate-team-label--selected {
+  background: transparent;
+}
+
+html[data-theme="night"] .slate-team-label--selected::before,
+html[data-theme="night"] .slate-team-label--selected:not(.slate-team-label--chips) > span::before {
+  background: linear-gradient(90deg,
+    rgba(232, 31, 139, .70) 0%,
+    rgba(244, 59, 160, .64) 1.5%,
+    rgba(251, 91, 181, .58) 4%,
+    rgba(255, 124, 197, .52) 8%,
+    rgba(255, 156, 214, .48) 14%,
+    rgba(255, 178, 224, .44) 100%);
+}
+
+html[data-theme="night"] .slate-team-label--selected::after {
+  display: none;
+}
+
+/* The instructional action cards use a deliberately dark paper surface in
+   night mode; restate their hard-coded light-mode ink so the instructions do
+   not disappear into the background. */
+html[data-theme="night"] .slate-header-grid > aside {
+  color: #cbd9df !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside > div {
+  border-color: #5f7d82 !important;
+  background-color: #1b2a31 !important;
+  color: #d9e7e8 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside strong {
+  color: #63e1d3 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid {
+  border-color: #536f75 !important;
+}
+
+html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
+  border-color: #536f75 !important;
+}
+
+html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
+@media (max-width: 767px) {
+  html[data-theme="night"] .slate-mini-nav { background: #1b2527; }
+}
+html[data-theme="night"] .slate-mini-nav a { color: #d6e2df; }
+html[data-theme="night"] .slate-mini-nav a + a { border-color: #6d746c; }
+html[data-theme="night"] .slate-mini-nav a:hover,
+html[data-theme="night"] .slate-mini-nav a:focus-visible { background: #29343a; color: #ffffff; }
+html[data-theme="night"] .slate-mini-nav strong.is-complete { color: #7ee1b0; }
+html[data-theme="night"] .slate-mini-nav strong.is-due { color: #ffaaa1; }
+html[data-theme="night"] .slate-mini-nav strong.is-out { color: #ffaaa1; }
+html[data-theme="night"] .slate-mini-nav strong.is-quiet { color: #b8c5ca; }
+html[data-theme="night"] .slate-mini-nav strong.is-unsaved { color: #ffd28b; }
+html[data-theme="night"] .slate-mini-nav em { color: #b8c5ca; }
+html[data-theme="night"] .slate-view-switch { border-color: #8a9089; }
+html[data-theme="night"] .slate-view-switch > span { color: #aebbb9; }
+html[data-theme="night"] .slate-view-switch > span.is-active { color: #ffffff; }
+html[data-theme="night"] .slate-view-switch button { background: linear-gradient(180deg, #667174, #414a4d); border-color: #30383b; }
+html[data-theme="night"] .slate-view-switch button > span { background: linear-gradient(180deg, #f1f2eb, #bdc3be); border-color: #30383b; }
+html[data-theme="night"] .slate-view-switch.is-action-only button { background: linear-gradient(180deg, #536164, #303a3d); }
+html[data-theme="night"] .slate-action-empty { border-color: #6d746c; color: #c3d1ce; }
+
+@media (max-width: 767px) {
+  .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
+}
+
+html[data-theme="night"] select {
+  border-color: #6ed7ca !important;
+  background-color: #172731 !important;
+  color: #f0f5f1 !important;
+  color-scheme: dark;
+}
+
+html[data-theme="night"] select:focus {
+  outline: 2px solid #7ee1d2;
+  outline-offset: 2px;
+}
+
+html[data-theme="night"] select option {
+  background-color: #172731;
+  color: #f0f5f1;
+}
+
+/* Bowl Pool surfaces use explicit light Tailwind utilities in the markup;
+   restate them here so the entire competition remains legible in night mode. */
+html[data-theme="night"] .bowl-receipt-metrics { border-color: #52707a; }
+html[data-theme="night"] .bowl-receipt-metric { background: #1b3038; color: #edf7f5; }
+html[data-theme="night"] .bowl-receipt-metric + .bowl-receipt-metric { border-left-color: #52707a; }
+html[data-theme="night"] .bowl-receipt-metric strong { color: #edf7f5; }
+html[data-theme="night"] .bowl-receipt-metric small { color: #a8c1c4; }
+html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections {
+  color: #edf7f5;
+}
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-white"] { background-color: #132129 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-slate-100"] { background-color: #1b3038 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-200"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-300"] { border-color: #52707a !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-400"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-600"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: #edf7f5 !important; }
+
+html[data-theme="night"] [class*="text-zinc-900"],
+html[data-theme="night"] [class*="text-[#171719]"],
+html[data-theme="night"] [class*="text-[#171717]"],
+html[data-theme="night"] [class*="text-[#29251d]"] {
+  color: #edf1eb !important;
+}
+
+html[data-theme="night"] [class*="text-slate-"],
+html[data-theme="night"] [class*="text-zinc-"],
+html[data-theme="night"] [class*="text-[#324564]"],
+html[data-theme="night"] [class*="text-[#425574]"] {
+  color: #b7c3cb !important;
+}
+
+html[data-theme="night"] [class*="text-teal-"] {
+  color: #78d8cb !important;
+}
+
+html[data-theme="night"] [class*="text-green-950"],
+html[data-theme="night"] [class*="text-green-800"],
+html[data-theme="night"] [class*="text-green-700"] {
+  color: #a7edc9 !important;
+}
+
+html[data-theme="night"] [class*="text-red-950"],
+html[data-theme="night"] [class*="text-red-900"],
+html[data-theme="night"] [class*="text-red-800"],
+html[data-theme="night"] [class*="text-red-700"] {
+  color: #ffbdc4 !important;
+}
+
+html[data-theme="night"] [class*="text-amber-950"],
+html[data-theme="night"] [class*="text-amber-900"],
+html[data-theme="night"] [class*="text-amber-800"] {
+  color: #ffd28a !important;
+}
+
+html[data-theme="night"] [class*="border-green-800"] {
+  border-color: #61c998 !important;
+}
+
+html[data-theme="night"] [class*="border-zinc-"],
+html[data-theme="night"] [class*="border-slate-"] {
+  border-color: #52707a !important;
+}
+
+html[data-theme="night"] [class*="border-green-"] {
+  border-color: #61c998 !important;
+}
+
+html[data-theme="night"] [class*="border-red-"] {
+  border-color: #d87b89 !important;
+}
+
+html[data-theme="night"] [class*="border-amber-"] {
+  border-color: #d2a35a !important;
+}
+
+html[data-theme="night"] [class*="border-[#1d1d1f]"],
+html[data-theme="night"] [class*="border-[#171719]"],
+html[data-theme="night"] [class*="border-black"] {
+  border-color: #6ed7ca !important;
+}
+
+html[data-theme="night"] [class*="border-[#b7aea0]"],
+html[data-theme="night"] [class*="border-[#b9b09d]"],
+html[data-theme="night"] [class*="border-[#c8c1b5]"],
+html[data-theme="night"] [class*="border-[#d1c9ba]"],
+html[data-theme="night"] [class*="border-[#91afd0]"] {
+  border-color: #314651 !important;
+}

@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("Slate and Bowl receipts show printer feedback below the stable Submit button", async () => {
   const [board, bowl, css] = await Promise.all([
     readFile(new URL("../src/components/slate-receipt.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
   ]);
 
   assert.match(board, /receipt-printing-status \$\{isSubmitting \? "is-printing"/);

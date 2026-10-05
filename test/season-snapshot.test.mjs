@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -176,7 +177,7 @@ test("Season Snapshot shows only its title, with no explanatory prose", () => {
   for (const prose of ["Commissioner-only", "cumulative Pick’em wins by week", "Weekly totals appear", "Season totals continue", "CURRENT STANDINGS"]) {
     assert.ok(!snapshot.includes(prose), `prose must be gone: ${prose}`);
   }
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   assert.doesNotMatch(css, /season-snapshot-chart-note|season-snapshot-key-title|season-snapshot-heading p/);
   // One chart at a time: the playoff chart replaces the regular season.
   assert.doesNotMatch(snapshot, /showTitles/);
@@ -223,7 +224,7 @@ test("colors never shift when someone is hidden, inactive, or new", () => {
 
 test("the flip card turns flat, widens to the Survivor rail, and the arrows stay slim", () => {
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   assert.doesNotMatch(scoreboard, /pad-edge/, "no slab edges");
   assert.doesNotMatch(css, /--pad-depth|\.pad-(front|back) \{[^}]*translateZ/, "no 3D thickness");
   assert.match(scoreboard, /markerEnd=/, "two arrowed half circles");
@@ -247,7 +248,7 @@ test("the flip card turns flat, widens to the Survivor rail, and the arrows stay
 });
 
 test("motion respects reduced-motion and the key gives hidden players a visible state", () => {
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.season-snapshot-lines \{ animation: none; \}/);
   assert.match(css, /\.season-snapshot-key-row\.is-hidden/);
   assert.match(css, /\.season-snapshot-ribbon\.is-dim/);
@@ -256,7 +257,7 @@ test("motion respects reduced-motion and the key gives hidden players a visible 
 test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round button", () => {
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   assert.match(scoreboard, /className="pad-flip-button"/);
   assert.match(scoreboard, /aria-pressed=\{flipped\}/);
   // Only the visible face is reachable by keyboard and screen readers.
@@ -299,7 +300,7 @@ test("each week is one straight band, so lines bend only at week boundaries", ()
 
 test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by week", () => {
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   assert.match(snapshot, /export const WINDOW_WEEKS = 6;/);
   assert.match(snapshot, /<h2>Season Snapshot<\/h2>\s*\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
   assert.match(snapshot, />All<\/button>/);
