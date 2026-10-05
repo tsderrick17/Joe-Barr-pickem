@@ -1369,3 +1369,13 @@ Found by measuring the position of the Bowl Card under the Survivor table frame 
 The Standings page showed itself as soon as its own data arrived, and the Bowl Card filled in a moment later, so it appeared out of nowhere. The page now keeps the loading shell up (with the real page laid out but hidden beneath it) until the Bowl Card reports its first load finished, whether it worked or not, or 2.5 seconds have passed.
 
 The "− OUT" roll jumped 3 px at its last frame. Measured frame by frame: browsers draw a border under one pixel as a whole pixel, so each hidden row kept its 1 px bottom border until it left the page, and the last visible row also loses its border when it becomes the last row. The roll now takes the borders back with a negative bottom margin, which animates smoothly, and releases the held animations in the same render that removes the rows. The last step went from 3 px to 0.
+
+## 2026-10-05 — Share viewer-safe Slate and Standings response contracts
+
+The two player pages and their routes now compile against the same response
+types. Database rows remain distinct from viewer-safe JSON, so this does not
+weaken kickoff privacy. The application explicitly recognizes the three
+Survivor entry states allowed by the current database CHECK constraint and
+fails visibly if a future schema adds a state without a display rule. A local
+`typecheck` command supplies fast contract feedback; the production build
+continues to enforce TypeScript in CI.

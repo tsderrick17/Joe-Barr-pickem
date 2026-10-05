@@ -37,7 +37,7 @@ export type SlateSurvivor = {
   usedTeamIds: string[];
 };
 
-export function atsResultForTeam(game: GameRow, lockedLine: LockedLineRow | undefined, teamId: string) {
+export function atsResultForTeam(game: GameRow, lockedLine: LockedLineRow | undefined, teamId: string): "win" | "loss" | null {
   if (game.status !== "final" || !lockedLine) return null;
 
   const result = gradeAtsPick({
@@ -50,7 +50,9 @@ export function atsResultForTeam(game: GameRow, lockedLine: LockedLineRow | unde
     homeScore: game.home_score,
   });
 
-  return result === "pending" ? null : result;
+  if (result === "pending") return null;
+  if (result === "win" || result === "loss") return result;
+  throw new Error("ATS grading returned an unsupported result.");
 }
 
 /**

@@ -2,6 +2,11 @@
 
 ## Control-center overview
 
+If Standings reports an unsupported Survivor entry status, treat it as a
+database/application contract mismatch. Check the current migration and entry
+record in a safe read; do not relabel the state in the browser or edit a
+player's history to make the page render.
+
 The Season Snapshot is the reverse of the Pick'em Pad on Standings, opened by
 its flip button. Commissioners can inspect it before Week 6; players receive
 the same button and data from Week 6 onward. The regular-season chart starts

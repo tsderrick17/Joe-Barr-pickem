@@ -12,60 +12,7 @@ import {
 import BowlCard from "@/components/bowl-card";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
-
-type ScoreboardPick = {
-  label: string | null;
-  abbreviation?: string | null;
-  isHidden: boolean;
-  resultMark: string;
-  spread?: string | null;
-  isLineLocked?: boolean;
-  kickoffAt?: string;
-};
-
-
-type ScoreboardRow = {
-  id: string;
-  firstName: string;
-  wins: number;
-  playoffEliminated?: boolean;
-  trophies?: string[];
-  picks: ScoreboardPick[];
-};
-
-type HomeData = {
-  serverTime: string;
-  viewerPlayerId: string;
-  isCommissioner: boolean;
-  seasonSnapshotReleased?: boolean;
-  showSurvivorStandings: boolean;
-  showBowlCard: boolean;
-  showPoolChat: boolean;
-  hidePickemEliminatedRows: boolean;
-  hideSurvivorEliminatedRows: boolean;
-  isPlayoff: boolean;
-  week: string;
-  weekStatus: "upcoming" | "active" | "complete";
-  maxPicks: number;
-  nextRevealAt: string | null;
-  rows: ScoreboardRow[];
-  survivorAvailable: boolean;
-  survivorNotice: string | null;
-  survivorChampionPlayerId: string | null;
-  survivorComplete: boolean;
-  survivorChampionName: string | null;
-  survivorRows: {
-    id: string;
-    playerId: string;
-    firstName: string;
-    trophies?: string[];
-    status: "active" | "eliminated" | "complete";
-    requiredThisPeriod: boolean;
-    pick: (ScoreboardPick & { abbreviation?: string | null }) | null;
-    picks: Array<(ScoreboardPick & { abbreviation: string | null }) | null>;
-  }[];
-  error?: string;
-};
+import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
 type DisplayPreferenceKey =
   | "showSurvivorStandings"
   | "showBowlCard"
@@ -99,7 +46,7 @@ function StandingsLoadingShell() {
   );
 }
 
-function ticketKickoff(value: string | undefined) {
+function ticketKickoff(value: string | null | undefined) {
   if (!value) return "Kickoff to be announced";
   const date = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",

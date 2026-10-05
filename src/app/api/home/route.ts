@@ -9,6 +9,7 @@ import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { shapePadRows } from "@/lib/home-shape";
+import { survivorEntryStatus, type StandingsResponse } from "@/lib/api-contracts";
 
 export const dynamic = "force-dynamic";
 
@@ -338,7 +339,7 @@ export async function GET(request: NextRequest) {
     id: string;
     playerId: string;
     firstName: string;
-    status: string;
+    status: "active" | "eliminated" | "complete";
     eliminatedAt: string | null;
     requiredThisPeriod: boolean;
     pick: {
@@ -447,7 +448,7 @@ export async function GET(request: NextRequest) {
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
               trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
-              status: entry.status,
+              status: survivorEntryStatus(entry.status),
               eliminatedAt: entry.eliminated_at,
               // An elimination applies after the current scoring period. If
               // it was recorded in this period, keep Survivor on this week's
@@ -523,5 +524,5 @@ export async function GET(request: NextRequest) {
     survivorChampionPlayerId,
     survivorComplete,
     survivorChampionName,
-  });
+  } satisfies StandingsResponse);
 }
