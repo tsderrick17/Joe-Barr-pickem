@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
 import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
-const root = path.resolve(import.meta.dirname, "..");
 
 test("desktop Slate picker names cannot push final scores away", () => {
   const css = readStylesheetSync();

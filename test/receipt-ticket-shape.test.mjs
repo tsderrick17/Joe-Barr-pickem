@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const css = readStylesheetSync().replace(/\r\n/g, "\n");
 const rule = (selector, tail = " {") => {
   const start = css.indexOf(`\n${selector}${tail}`) + 1;
