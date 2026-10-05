@@ -70,14 +70,24 @@ export function useBlindRows(hidden: boolean, container: RefObject<HTMLElement |
   const [rowsHidden, setRowsHidden] = useState(hidden);
   const previous = useRef(hidden);
   const running = useRef<Animation[]>([]);
+  // Animations that hold their end state until the rolled rows have left the page.
+  const holding = useRef<Animation[]>([]);
 
   if (!hidden && rowsHidden) setRowsHidden(false);
+
+  // Once the rows are gone the page itself is in the end state, so let go of the held animations.
+  useLayoutEffect(() => {
+    if (!rowsHidden) return;
+    for (const animation of holding.current) animation.cancel();
+    holding.current = [];
+  }, [rowsHidden]);
 
   useLayoutEffect(() => {
     if (previous.current === hidden) return;
     previous.current = hidden;
-    for (const animation of running.current) animation.cancel();
+    for (const animation of [...running.current, ...holding.current]) animation.cancel();
     running.current = [];
+    holding.current = [];
     const rows = [...(container.current?.querySelectorAll<HTMLElement>("[data-blind-row]") ?? [])];
     if (!rows.length || !canSlide(rows[0])) {
       if (hidden) window.setTimeout(() => setRowsHidden(true), 0);
@@ -86,15 +96,30 @@ export function useBlindRows(hidden: boolean, container: RefObject<HTMLElement |
     const animations = rows.map((row) => {
       const height = row.getBoundingClientRect().height;
       row.style.overflow = "hidden";
-      const frames = [{ height: `${height}px` }, { height: "0px", borderBottomWidth: "0px" }];
+      // A row cannot be shorter than its border, and browsers keep a border of under a pixel at a full
+      // pixel, so a negative margin takes the border back smoothly instead of it vanishing at the end.
+      const border = parseFloat(getComputedStyle(row).borderBottomWidth) || 0;
+      const frames = [{ height: `${height}px`, marginBottom: "0px" }, { height: "0px", marginBottom: `${-border}px` }];
       return row.animate(hidden ? frames : [...frames].reverse(), { duration: BLIND_MS, easing: BLIND_EASING, fill: hidden ? "forwards" : "none" });
     });
+    // When the rolled rows are the last ones, the row above them is about to become the last row and lose
+    // its bottom border (`last:border-b-0`). Fade that border with the roll so nothing below jumps at the end.
+    const container_ = container.current;
+    let before = container_?.lastElementChild ?? null;
+    while (before instanceof HTMLElement && before.hasAttribute("data-blind-row")) before = before.previousElementSibling;
+    if (before instanceof HTMLElement && before !== container_?.lastElementChild && before.matches(".border-b")) {
+      const border = parseFloat(getComputedStyle(before).borderBottomWidth) || 0;
+      const frames = [{ marginBottom: "0px" }, { marginBottom: `${-border}px` }];
+      animations.push(before.animate(hidden ? frames : [...frames].reverse(), { duration: BLIND_MS, easing: BLIND_EASING, fill: hidden ? "forwards" : "none" }));
+    }
     running.current = animations;
     animations[0].onfinish = () => {
       if (running.current !== animations) return;
       running.current = [];
-      if (hidden) window.setTimeout(() => setRowsHidden(true), 0);
-      else for (const row of rows) row.style.overflow = "";
+      if (hidden) {
+        holding.current = animations;
+        window.setTimeout(() => setRowsHidden(true), 0);
+      } else for (const row of rows) row.style.overflow = "";
     };
   }, [hidden, container]);
 

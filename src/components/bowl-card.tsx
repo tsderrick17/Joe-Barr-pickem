@@ -52,6 +52,8 @@ type Props = {
   savingDisplay: boolean;
   onSetDisplay: (show: boolean) => Promise<void>;
   onError: (message: string) => void;
+  /** Called once the card's first load has finished (even if it failed), so the page can reveal everything together. */
+  onReady?: () => void;
 };
 
 /**
@@ -65,7 +67,7 @@ export function bowlSpreadLabel(spread: number | string | null | undefined) {
   return String(spread).replace(/^[-−]\s*/, "");
 }
 
-export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, savingDisplay, onSetDisplay, onError }: Props) {
+export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, savingDisplay, onSetDisplay, onError, onReady }: Props) {
   const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
   const [claiming, setClaiming] = useState(false);
   const bowlScrollRef = useRef<HTMLDivElement | null>(null);
@@ -79,12 +81,12 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   useEffect(() => {
     const loadBowlStandings = () => void fetchWithSession("/api/bowl-pool", { cache: "no-store" }).then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
-    }).catch(() => undefined);
+    }).catch(() => undefined).finally(() => onReady?.());
     loadBowlStandings();
     const refreshFromHistory = (event: PageTransitionEvent) => { if (event.persisted) loadBowlStandings(); };
     window.addEventListener("pageshow", refreshFromHistory);
     return () => window.removeEventListener("pageshow", refreshFromHistory);
-  }, [isCommissioner]);
+  }, [isCommissioner, onReady]);
 
 
   const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));

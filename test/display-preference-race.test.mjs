@@ -33,3 +33,25 @@ test("the gap under the Survivor heading rolls with the table, so nothing below 
   assert.match(css, /\.survivor-ledger \.slide-section > \* \{ margin-top: \.55rem; \}/);
   assert.match(css, /@media \(min-width: 640px\) \{\s*\.survivor-ledger \.slide-section > \* \{ margin-top: \.7rem; \}/);
 });
+
+test("the Standings page waits for the Bowl Card's first load, so the card never pops in late", async () => {
+  const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+  const card = await readFile(new URL("../src/components/bowl-card.tsx", import.meta.url), "utf8");
+  // The card reports when its first load ends, whether it worked or not.
+  assert.match(card, /\.catch\(\(\) => undefined\)\.finally\(\(\) => onReady\?\.\(\)\)/);
+  // The page keeps the loading shell up, with the page laid out but hidden beneath it, until then, with a short time limit.
+  assert.match(page, /\{bowlReady \? null : <StandingsLoadingShell \/>\}/);
+  assert.match(page, /onReady=\{markBowlReady\}/);
+  assert.match(page, /window\.setTimeout\(\(\) => setBowlReady\(true\), 2500\)/);
+});
+
+test("rolling rows away takes their borders back smoothly, so nothing below jumps when the roll ends", async () => {
+  const source = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
+  // A border under a pixel is drawn as a whole pixel, so the roll uses a negative margin instead.
+  assert.match(source, /marginBottom: `\$\{-border\}px`/);
+  assert.doesNotMatch(source, /borderBottomWidth: "0px"/);
+  // The row above the rolled rows, which loses its border when it becomes the last row, is handled the same way
+  // and released once the rows have left the page.
+  assert.match(source, /holding\.current = animations;/);
+  assert.match(source, /for \(const animation of holding\.current\) animation\.cancel\(\);/);
+});
