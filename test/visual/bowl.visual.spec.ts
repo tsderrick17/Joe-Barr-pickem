@@ -54,6 +54,7 @@ for (const [scenario, { build, now, click }] of Object.entries(SCENARIOS)) {
         // Lazy images below the fold load only when scrolled near; make them all load now.
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (click) {

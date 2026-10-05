@@ -73,6 +73,7 @@ for (const { name, path, ready, auth, profile, periods, after } of CASES) {
         await page.waitForTimeout(600);
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (after) await after(page);
