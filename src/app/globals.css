@@ -2729,7 +2729,7 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
 }
 .my-ticket-section {
   min-width: 0;
-  padding: .68rem .75rem .58rem 0;
+  padding: .68rem .75rem .25rem 0;
 }
 .my-ticket-section + .my-ticket-section {
   border-left: 1px dashed #958a77;
@@ -2854,8 +2854,8 @@ html[data-theme="night"] [class*="border-[#91afd0]"] {
   border-top: 1px dashed #958a77;
   color: #665e51;
   font: 700 .58rem/1.35 Arial, sans-serif;
-  margin-top: .7rem;
-  padding-top: .55rem;
+  margin-top: .3rem;
+  padding-top: .45rem;
 }
 .my-ticket-instructions p + p { margin-top: .28rem; }
 @media (min-width: 640px) {
