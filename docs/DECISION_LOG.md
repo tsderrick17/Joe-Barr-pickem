@@ -1308,6 +1308,8 @@ The receipt now sits right under the menu (the page had a large blank band above
 Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
 Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
 
+The receipt's warning tab ("You already have 2 selections…") is drawn like the sections above it: its paper is a masked layer with the same corner cutouts and hairline ring, and the dashed rule stays the divider. A screenshot test raises the warning on the Slate to cover it.
+The warning tab no longer draws its own dashed top edge: that doubled the receipt's bottom rule and ran past the notches. The paper layer's single rule is the only edge where it meets the Pick'em section.
 ## Bowl picks page: stacked legend, A/P times, pinned receipt
 
 The legend over the schedule stacks "Date / Time" and "Bowl / Location" on two lines like the rows below (no slashes). Kickoff times use A or P instead of AM or PM ("7:30P"), so the narrow date column stays on one line and no longer crowds the bowl names. The receipt scrolled away because it was sticky inside a wrapper exactly its own height, and a sticky element only travels within its parent; the wrapper itself now sticks, below the site menu, and a test scrolls to the bottom to prove it stays visible.
