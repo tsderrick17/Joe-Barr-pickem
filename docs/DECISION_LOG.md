@@ -1311,3 +1311,4 @@ Opt out returns to the top of the board, as a small link right under the instruc
 ## Bowl picks page: stacked legend, A/P times, pinned receipt
 
 The legend over the schedule stacks "Date / Time" and "Bowl / Location" on two lines like the rows below (no slashes). Kickoff times use A or P instead of AM or PM ("7:30P"), so the narrow date column stays on one line and no longer crowds the bowl names. The receipt scrolled away because it was sticky inside a wrapper exactly its own height, and a sticky element only travels within its parent; the wrapper itself now sticks, below the site menu, and a test scrolls to the bottom to prove it stays visible.
+The Fav, Line and Dog labels are vertically centered in the legend bar next to the two-line labels.

@@ -4675,3 +4675,5 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
    strip inside it, that sticks, because a sticky element only travels within its parent. */
 .bowl-pool-page .bowl-receipt-frame { position: sticky; top: var(--site-nav-height, 0px); z-index: 40; }
 .bowl-pool-page .bowl-receipt-frame .slate-mini-nav { position: relative; top: auto; }
+/* Fav, Line and Dog sit at the vertical middle of the legend bar, beside the two-line labels. */
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child { align-items: center; }
