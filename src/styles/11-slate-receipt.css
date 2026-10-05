@@ -92,7 +92,6 @@
      action together at the top instead of spreading them across the taller
      adjacent pool cells. The invisible print placeholder still reserves its
      exact footprint, so this section never jumps when a change is made. */
-  align-items: flex-start;
   display: flex;
   flex-direction: column;
   gap: .2rem;
@@ -437,19 +436,9 @@
 
 /* The warning hangs off the Pick'em section like a tab of the same paper: it
    sits under that column only, and the strip's outline follows its edges. */
-.slate-receipt-warning{
-  background: transparent;
-  font-size: .62rem;
-  font-weight: 700;
-  grid-column: 2;
-  isolation: isolate;
-  margin: 0;
-  padding: .28rem .7rem;
-  position: relative;
-}
 /* Same die-cut corners as the sections above it. The paper layer's own rule is the
    only line where it meets the Pick'em section, so there is no second dashed edge. */
-.slate-receipt-warning { color: #a82820; }
+.slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: #a82820; }
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
@@ -497,9 +486,8 @@
      their own tracks, so the larger chip cannot cover either one. */
   .slate-receipt-pool { grid-template-rows: .58rem 2.75rem minmax(.58rem, auto); }
   .slate-receipt-pool.slate-receipt-survivor { grid-template-rows: .58rem 3.1rem minmax(.58rem, auto); }
-  .slate-receipt-survivor-pick { gap: .16rem; }
   .slate-receipt-survivor-pick > strong { font-size: .54rem; }
-  .slate-receipt-survivor-pick { --receipt-chip-buffer: .1rem; }
+  .slate-receipt-survivor-pick { gap: .16rem; --receipt-chip-buffer: .1rem; }
   .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
     height: min(2.95rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
     width: auto;

@@ -69,7 +69,6 @@
 .commissioner-flow {
   display: grid;
   grid-template-columns: repeat(var(--commissioner-step-count, 5), minmax(0, 1fr));
-  list-style: none;
   margin-left: 0;
   padding-left: 0;
 }
@@ -321,7 +320,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 .commissioner-command-links span { color: #a7d4c6; font-size: .61rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .commissioner-command-links strong { font-size: .86rem; line-height: 1.15; overflow-wrap: anywhere; }
 /* The test chip: click to flip, drag to turn it by hand. */
-.chip-playground { align-items: center; background: transparent; border: 0; cursor: grab; display: grid; justify-items: center; padding: 0; touch-action: none; }
+.chip-playground { align-items: center; background: transparent; border: 0; cursor: grab; display: grid; justify-items: center; padding: 0; }
 .chip-playground:active { cursor: grabbing; }
 .chip-playground:focus-visible { outline: 2px solid #9bdbca; outline-offset: 2px; }
 .chip-playground .survivor-poker-chip:not([data-animate]) { transform: rotateX(var(--playground-x, 0deg)) rotateY(var(--playground-y, 0deg)); }
@@ -590,7 +589,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 .commissioner-map-metrics { gap: .45rem; margin-top: .7rem !important; }
 .commissioner-map-metric { gap: .2rem; padding: .55rem .65rem; }
 .commissioner-map-metric strong { font-size: 1.08rem; }
-.commissioner-flow { margin-top: 1.25rem !important; }
+.commissioner-flow { list-style: none; margin-top: 1.25rem !important; }
 .commissioner-flow-button { min-height: 5.25rem; }
 .commissioner-flow-node { flex-basis: 2.35rem; height: 2.35rem; width: 2.35rem; }
 .commissioner-flow-step:not(:last-child)::after { top: 1.17rem; }

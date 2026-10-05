@@ -63,18 +63,9 @@
    stays stable while the internal columns adapt to the pools that are actually
    in play: stub / Pick'em / Survivor in season, stub / Pick'em otherwise. */
 .slate-receipt-strip {
-  --receipt-paper: #fffdf8;
-  --receipt-ink: #25334a;
-  --receipt-rule: #b7aea0;
-  --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
-  filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
-  color: var(--receipt-ink);
-  display: grid;
   grid-template-columns: 21% 58% 21%;
   margin: 0;
-  overflow: visible;
   position: relative;
-  isolation: isolate;
   z-index: 7;
 }
 
@@ -110,6 +101,15 @@
    where the ticket really ends, so when Survivor is torn off the Pick'em
    section takes over the same serrated right end. */
 .slate-receipt-strip {
+  --receipt-paper: #fffdf8;
+  --receipt-ink: #25334a;
+  --receipt-rule: #b7aea0;
+  --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
+  filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
+  color: var(--receipt-ink);
+  display: grid;
+  overflow: visible;
+  isolation: isolate;
   --receipt-notch: .42rem;
   --receipt-scallop: .17rem;
   --receipt-bite-serrated-left: radial-gradient(circle at 0 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));

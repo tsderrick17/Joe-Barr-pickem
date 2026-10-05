@@ -245,8 +245,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
   color: #f4ecd9 !important;
 }
 @media (max-width: 639px) {
-  .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
-  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.8rem minmax(0, 1fr) 5.3rem 1.9rem 5.3rem; }
   
   
   .bowl-pool-page .bowl-game-name { hyphens: auto; }
@@ -283,7 +281,7 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 @media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
 /* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
    whole so every proportion holds. */
-.chip-playground { height: 6.2rem; width: 6.2rem; }
+.chip-playground { touch-action: none; height: 6.2rem; width: 6.2rem; }
 .chip-playground .survivor-poker-chip-wrap { transform: scale(1.9); }
 /* "YOUR RECEIPT" stays on one line, even on the narrowest phones. */
 @media (max-width: 767px) { .slate-receipt-ticket > span { white-space: nowrap; } }
@@ -318,7 +316,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: #f4ecd9; }
 @media (max-width: 767px) { .bowl-receipt-strip .slate-receipt-print { width: 4.4rem; } }
 
 /* ---- Bowl Card: flip-tile scores and one consistent row style */
-.bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; }
 
 /* The score and name cells read as part of the row: the same paper, the same
    hairlines top and bottom, and a quiet gold edge where the games begin. */
@@ -347,7 +344,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: #2d2a1e !important; box-shadow: inset 0 1px 0 #6b5a30, inset 0 -1px 0 #6b5a30 !important; }
 
 /* ---- Bowl Card score tiles as split-flap digits, like a stadium board */
-.bowl-score-tile { --flap-bg: var(--bowl-paper); --flap-ink: var(--bowl-navy); --flap-edge: var(--bowl-gold-soft); --flap-seam: rgba(22, 34, 58, .14); }
+.bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; --flap-bg: var(--bowl-paper); --flap-ink: var(--bowl-navy); --flap-edge: var(--bowl-gold-soft); --flap-seam: rgba(22, 34, 58, .14); }
 .bowl-score-tile.is-viewer { --flap-bg: #0f1830; --flap-ink: var(--bowl-gold-soft); --flap-edge: var(--bowl-gold); --flap-seam: rgba(255, 255, 255, .18); }
 html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; --flap-ink: #f4ecd9; --flap-edge: #4d4a3e; --flap-seam: rgba(255, 255, 255, .12); }
 .bowl-flap {
@@ -356,15 +353,12 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
   display: block;
   height: 1.6rem;
   position: relative;
-  width: .98rem;
 }
 .bowl-flap::after { background: var(--flap-seam); content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; z-index: 4; }
 .bowl-flap-half {
-  background: var(--flap-bg);
   color: var(--flap-ink) !important;
   height: 50%;
   left: 0;
-  overflow: hidden;
   position: absolute;
   right: 0;
 }
@@ -388,25 +382,17 @@ html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; 
   will-change: transform;
   z-index: 2;
 }
-.bowl-flap-half.is-dropping {
-  will-change: transform;
-  z-index: 3;
-}
-.bowl-flap { box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink) !important; }
 /* Flat flaps: no 3D, so no perspective or hidden back faces to draw. */
-.bowl-flap { perspective: none; }
-.bowl-flap-half { backface-visibility: visible; }
 
 /* Each digit is sealed off: a flip redraws that digit only, never the table around it. */
-.bowl-flap { contain: strict; }
-.bowl-flap-half { contain: layout paint; }
+.bowl-flap { width: .98rem; box-shadow: 0 1px 1px rgba(29, 29, 31, .14), inset 0 0 0 1px rgba(255, 255, 255, .06); perspective: none; contain: strict; }
+.bowl-flap-half { background: var(--flap-bg); overflow: hidden; backface-visibility: visible; contain: layout paint; }
 /* The moving flaps stay put between flips: the falling flap rests folded flat
    and the landed flap shows the same number as the card beneath it. The
    falling flap carries a fixed shadow toward its hinge. */
 .bowl-flap-half.is-folding { transform: scaleY(0); visibility: visible; }
-.bowl-flap-half.is-dropping { transform: scaleY(1); visibility: visible; }
-.bowl-flap-half.is-folding { background-image: linear-gradient(rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .14)); }
+.bowl-flap-half.is-dropping { will-change: transform; z-index: 3; transform: scaleY(1); visibility: visible; }
 
 /* ---- Standings: one gap between every section (header, ticket, Pick'em Pad,
    Survivor Table, Bowl Card), the same at the top and bottom of the page. */
@@ -451,7 +437,7 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 .bowl-flap.is-moving { perspective: 4.2rem; }
 .bowl-flap-half.is-folding,
 .bowl-flap-half.is-dropping { backface-visibility: hidden; transform: rotateX(90deg); }
-.bowl-flap-half.is-folding { transform: rotateX(-90deg); }
+.bowl-flap-half.is-folding { background-image: linear-gradient(rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .14)); transform: rotateX(-90deg); }
 .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .55), rgba(10, 14, 24, .85)); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
 .bowl-flap-half.is-bottom .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .85), rgba(10, 14, 24, .5)); }
 

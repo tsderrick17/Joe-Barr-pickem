@@ -62,11 +62,11 @@
   position: absolute;
 }
 .survivor-poker-chip-front { transform: translateZ(calc(var(--chip-t) / 2)); }
-.survivor-poker-chip-back { transform: rotateY(180deg) translateZ(calc(var(--chip-t) / 2)); }
 /* The inserts are colored through the chip, so seen from behind their stripes
    run in the opposite order. That keeps each insert lined up with its stripe
    on the edge from either side. */
 .survivor-poker-chip-back {
+  transform: rotateY(180deg) translateZ(calc(var(--chip-t) / 2));
   background-image: conic-gradient(from -8deg,
     var(--chip-tertiary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-secondary) 12deg 16deg, #ded9cf 16deg 90deg,
     var(--chip-tertiary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-secondary) 102deg 106deg, #ded9cf 106deg 180deg,

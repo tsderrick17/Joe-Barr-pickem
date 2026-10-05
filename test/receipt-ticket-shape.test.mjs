@@ -50,7 +50,7 @@ test("whichever section ends the ticket takes the serrated end, so tearing Survi
 });
 
 test("notch and scallop bites are true half and quarter circles that shrink on phones", () => {
-  const strip = rule(".slate-receipt-strip {\n  --receipt-notch", "");
+  const strip = css; // the bite variables live on the strip rule, wherever it sits in the stylesheet
   for (const [name, at] of [["top-left", "0 0"], ["bottom-left", "0 100%"], ["top-right", "100% 0"], ["bottom-right", "100% 100%"]]) {
     assert.ok(strip.includes(`--receipt-bite-${name}: radial-gradient(circle at ${at}, transparent var(--receipt-notch)`), `notch ${name}`);
   }
