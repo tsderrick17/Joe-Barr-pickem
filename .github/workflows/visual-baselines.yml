@@ -26,7 +26,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run test:visual -- -u
+      - run: npm run test:visual -- -g "Slate upcoming-unpicked at phone-390"
       - run: npm test -- --test-name-pattern="email artwork baseline"
         env:
           EMAIL_BASELINE_UPDATE: "1"

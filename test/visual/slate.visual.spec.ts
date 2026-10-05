@@ -48,7 +48,10 @@ for (const scenario of Object.keys(SCENARIOS)) {
         for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((resolve) => setTimeout(resolve, 30)); }
         window.scrollTo(0, 0);
       });
-      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete), undefined, { timeout: 20_000 }).catch(async (error) => {
+        console.log("INCOMPLETE", JSON.stringify(await page.evaluate(() => [...document.images].filter((image) => !image.complete).map((image) => ({ src: image.currentSrc || image.src, loading: image.loading })))));
+        throw error;
+      });
       await page.waitForLoadState("networkidle");
       // The Next.js development badge is not part of the product.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
