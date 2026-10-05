@@ -8,6 +8,9 @@ provider failures, NFL schedule changes, weekly progression, playoffs, and
 annual rollover. `AGENTS.md` loads the short mandatory rules; this file holds
 the detailed context behind them.
 
+For a code-owner and request-boundary overview, see the
+[architecture and measurement map](ARCHITECTURE_MAP.md).
+
 ## Product in one paragraph
 
 The application runs a private, season-long NFL pool with two related games.
