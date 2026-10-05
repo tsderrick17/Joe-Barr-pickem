@@ -48,6 +48,8 @@ for (const scenario of Object.keys(SCENARIOS)) {
         for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((resolve) => setTimeout(resolve, 30)); }
         window.scrollTo(0, 0);
       });
+      // Lazy images below the fold load only when scrolled near; make them all load now.
+      await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await page.waitForLoadState("networkidle");
       // The Next.js development badge is not part of the product.

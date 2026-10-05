@@ -124,12 +124,12 @@ function StillDigit({ digit }: { digit: number }) {
  * run on their own until `settled`; then, `landDelay` milliseconds later, they
  * flip on until they reach the real total, so the rows stop down the line.
  */
-export default function BowlScoreTile({ value, viewer, settled, landDelay = 0, large = false }: { value: number; viewer: boolean; settled: boolean; landDelay?: number; large?: boolean }) {
+export default function BowlScoreTile({ value, viewer, settled, landDelay = 0, large = false, animate = true }: { value: number; viewer: boolean; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
   const [landedDigits, setLandedDigits] = useState(0);
-  const [still] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [still] = useState(() => !animate || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
   const markLanded = useCallback(() => setLandedDigits((count) => count + 1), []);
 
   useEffect(() => {

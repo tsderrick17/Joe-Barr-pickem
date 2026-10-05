@@ -11,7 +11,7 @@ test("desktop Bowl Card viewport fits eight complete game columns", () => {
   assert.match(css, /\.bowl-standings-scroll\s*\{[\s\S]*width: min\(100%, 74\.5rem\)/);
   assert.match(css, /\.bowl-card-section \{[^}]*width: min\(74\.5rem, calc\(100vw - 2rem\)\);/);
   assert.match(css, /\.bowl-card-section\.is-minimized \{ max-width: none; width: var\(--pad-width\); \}/);
-  assert.match(page, /bowlGames\.length \* 7\.5/);
+  assert.match(page, /bowlGames\.length\} \* var\(--bowl-game-width, 7\.5rem\)/);
 });
 
 test("Bowl Card uses a gold theme and keeps the standard heading rule", () => {
