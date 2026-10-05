@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import Collapse, { useBlindRows } from "@/components/collapse";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
@@ -28,6 +28,22 @@ function MiniLogo({ abbreviation, muted, resultMark }: { abbreviation: string; m
   return <span title={`${abbreviation}${resultMark ? ` ${resultMark}` : ""}`} className={`relative inline-flex h-7 w-7 items-center justify-center ${muted ? "grayscale opacity-60" : ""}`}><Image alt={abbreviation} className="h-full w-full object-contain" height={28} style={{ transform: `scale(${teamLogoScale(abbreviation)})` }} src={`/team-logos/${abbreviation}.png`} width={28} />{resultMark === "W" ? <span aria-label="Survivor win" className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-700 text-[10px] font-black leading-none text-white">✓</span> : null}{resultMark === "L" ? <span aria-label="Survivor loss" className="absolute inset-0 flex items-center justify-center text-4xl font-black leading-none text-red-700 drop-shadow-[0_0_1px_white]">×</span> : null}</span>;
 }
 
+type SurvivorTableRow = SurvivorTableData["survivorRows"][number];
+
+/** One player's row. It redraws only when its own data changes, so toggling the table does not rebuild every logo. */
+const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer }: { row: SurvivorTableRow; rowIndex: number; isViewer: boolean }) {
+  return (
+      <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`}>
+        <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
+        <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
+        {Array.from({ length: 18 }, (_, index) => {
+          const pick = row.picks[index];
+          return <span className="flex h-[2.3rem] items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="text-xs" title="Selection submitted — revealed at kickoff">🔒</span> : <span className="text-slate-400">·</span>}</span>;
+        })}
+      </div>
+  );
+});
+
 /** The Survivor Table: a row per player, one logo per week, with an IN/OUT status column. */
 export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay, setEliminatedRowsHidden }: {
   data: SurvivorTableData;
@@ -53,14 +69,7 @@ export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay,
             const isViewer = row.playerId === data.viewerPlayerId;
 
             return (
-            <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`} key={row.id}>
-              <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-              <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
-              {Array.from({ length: 18 }, (_, index) => {
-                const pick = row.picks[index];
-                return <span className="flex h-[2.3rem] items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="text-xs" title="Selection submitted — revealed at kickoff">🔒</span> : <span className="text-slate-400">·</span>}</span>;
-              })}
-            </div>
+            <SurvivorRow isViewer={isViewer} key={row.id} row={row} rowIndex={rowIndex} />
             );
           })}
         </div>
