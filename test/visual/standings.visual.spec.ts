@@ -24,7 +24,7 @@ async function serve(page: Page, scenario: string) {
   await page.route("**/api/home**", (route) => route.fulfill({ json: home }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: home.isCommissioner, showPoolChat: false } }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
-  await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse(BOWL_BY_SCENARIO[scenario]) }));
+  await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse((BOWL_BY_SCENARIO as Record<string, Parameters<typeof bowlResponse>[0]>)[scenario]) }));
   await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse() }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(home.serverTime) });
@@ -43,8 +43,15 @@ async function settle(page: Page) {
   });
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.waitForLoadState("networkidle");
-  // The Bowl Card's score tiles spin when the card first comes into view; wait for them to land.
+  // The Bowl Card's score tiles spin when the card first comes into view. Bring it
+  // into view on purpose (a quick scroll can pass it before it has rendered), wait
+  // for the tiles to land, then return to the top for the capture.
+  if (await page.locator(".bowl-standings-scroll").count()) {
+    await page.locator(".bowl-standings-scroll").first().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+  }
   await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 10_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }
 

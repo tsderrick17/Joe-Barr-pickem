@@ -155,7 +155,7 @@ const BOWL_GAMES = [
 }));
 
 /** A small Bowl Card for the scenarios that open it. */
-export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, graded = 0, champion = false, viewerPicks = {}, guess = null } = {}) {
+export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, graded = 0, champion = false, viewerPicks = {}, guess = /** @type {number | null} */ (null) } = {}) {
   // `graded` games are final: every player has a deterministic win or loss on each.
   const games = BOWL_GAMES.map((game, index) => ({ ...game, status: index < graded ? "final" : game.status }));
   const publicPicks = NAMES.flatMap((_, playerIndex) => games.slice(0, graded).map((game, gameIndex) => ({

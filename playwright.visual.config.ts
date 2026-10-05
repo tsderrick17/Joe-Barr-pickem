@@ -14,15 +14,19 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./test/visual",
   timeout: 60_000,
-  workers: 2,
+  // CI runners are slower and shared; they serve a production build, which is
+  // far faster and steadier than compiling pages on demand in development.
+  workers: process.env.CI ? 4 : 2,
   reporter: [["list"]],
   expect: { toHaveScreenshot: { maxDiffPixels: 0, animations: "disabled", caret: "hide" } },
   use: { baseURL: "http://127.0.0.1:3130" },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1 --port 3130",
+    command: process.env.CI
+      ? "npm run build && npm run start -- --hostname 127.0.0.1 --port 3130"
+      : "npm run dev -- --hostname 127.0.0.1 --port 3130",
     url: "http://127.0.0.1:3130/login",
     reuseExistingServer: true,
-    timeout: 180_000,
+    timeout: 420_000,
     env: {
       ...process.env,
       NEXT_DIST_DIR: ".next-visual",
