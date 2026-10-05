@@ -1,0 +1,233 @@
+/* The Bowl receipt is the Slate's two-section receipt, the same size: its frame
+   is as wide as the Slate's content column, so the strip's 79% (75% on a phone)
+   comes out identical. */
+.bowl-receipt-frame { display: flex; justify-content: center; }
+.bowl-receipt-frame-inner { box-sizing: border-box; flex: 0 0 auto; padding-inline: 17px; width: min(64rem, calc(100% + 1rem)); }
+@media (min-width: 640px) { .bowl-receipt-frame-inner { padding-inline: 21px; width: min(64rem, calc(100% + 3rem)); } }
+@media (min-width: 768px) { .bowl-receipt-frame-inner { padding-inline: 41px; } }
+.bowl-receipt-strip { align-items: stretch; }
+.bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
+.bowl-receipt-strip .slate-receipt-print { margin-bottom: auto; margin-top: auto; }
+.bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
+.bowl-receipt-strip .slate-receipt-pool > span { align-self: center; }
+.bowl-receipt-strip .slate-receipt-pool > em { align-self: center; justify-self: start; margin-left: 0; }
+
+.bowl-card-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Bowl Pool identity: a restrained gold postseason treatment keeps the same
+   ledger mechanics as NFL Pick'em while making the competition immediately
+   legible as its own event. Heading rules match the rest of the page. */
+.bowl-pool-page #bowl-selections {
+  border-color: #e0d2a8 !important;
+  border-top: 3px solid #b8892b !important;
+  background-color: #fffdf8 !important;
+  background-image: none;
+}
+.bowl-pool-page #bowl-selections > div:first-of-type {
+  border-bottom-color: #e6dbb8;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
+  background: #f7efd9 !important;
+  color: #6b4f0f !important;
+  border-bottom: 1px solid #e0d2a8;
+}
+.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
+  border-color: #ece3c8;
+}
+/* Keep the Commissioner Bowl workspace on the same quiet gold paper system as
+   the player card;
+section[aria-labelledby="bowl-readiness-title"],
+#bowl-pool-exceptions {
+  border-bottom-color: #e0d2a8 !important;
+}
+section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
+#bowl-pool-exceptions > div:not([class*="amber"]),
+#bowl-pool-exceptions li.border {
+  border-color: #e3d6ad !important;
+  background: linear-gradient(135deg, #fffdf8, #f9f2de) !important;
+}
+section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 {
+  border-color: #8cc9ad !important;
+  background: #e4f6eb !important;
+}
+#bowl-pool-exceptions select { border-color: #d9c88f; background: #fffdf8; }
+#bowl-pool-exceptions button.border-amber-800 { border-color: #d9c88f; color: #6b4f0f; background: #f9f2de; }
+html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
+html[data-theme="night"] #bowl-pool-exceptions > div:not([class*="amber"]),
+html[data-theme="night"] #bowl-pool-exceptions li.border { border-color: #7a6a3a !important; background: #2a2618 !important; }
+html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 { border-color: #3e937a !important; background: #1b4d48 !important; }
+.bowl-pool-page #bowl-selections .bowl-selection-game-row {
+  border-color: #d8d0c4;
+  background-color: #fffdf8 !important;
+  background-image: none;
+}
+.bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) {
+  background-color: #f3f0e8 !important;
+}
+.bowl-pool-page #bowl-selections .bowl-title-row { border-bottom-color: #e0d2a8; }
+.bowl-pool-page #bowl-selections .bowl-rules-compact { color: #6b6350; }
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
+  background: #f7efd9 !important;
+  border-color: #e0d2a8 !important;
+  color: #6b4f0f !important;
+}
+/* The Bowl Card's heading line matches the other standings headings (the
+   ledger ink rule from .pickem-ledger-masthead), minimized or open. */
+.bowl-card-section .pickem-ledger-masthead {
+  border-bottom-color: #bdb3a3;
+}
+
+.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+  background: linear-gradient(180deg, #f8f0da, #fcf8ec) !important;
+}
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child,
+.bowl-card-section .bowl-standings-tiebreaker-header {
+  background: #f5f0e6 !important;
+}
+
+.bowl-card-section .bowl-standings-player-row.is-viewer {
+  background-color: #f8edcf !important;
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
+  box-shadow: inset 0 2px 0 #c89f00, inset 0 -2px 0 #e2c66a;
+  color: #4a3a12;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky {
+  background-color: #f8edcf !important;
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-game-cell,
+.bowl-card-section .bowl-standings-player-row.is-viewer > span {
+  color: #5a4614;
+}
+.bowl-card-section .bowl-standings-player-row > span {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 2.7rem;
+}
+
+.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] {
+  justify-content: flex-start;
+}
+.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
+  background-color: #f8edcf !important;
+}
+
+/* Keep the selected Bowl player treatment continuous across the fixed
+   identity columns, game results, and tiebreaker. The first cell carries the
+   compact solid gold rail used by the other standings ledgers. */
+.bowl-card-section .bowl-standings-player-row.is-viewer > span {
+  background-color: #f8edcf !important;
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
+  box-shadow: inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
+}
+
+/* One quiet, continuous viewer rail: the row owns the highlight, not each
+   individual result cell. This keeps the name, score and game columns aligned. */
+
+.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
+  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
+}
+
+html[data-theme="night"] .bowl-pool-page #bowl-selections {
+  border-color: #7a6a3a !important;
+  background: #1b1a16 !important;
+}
+
+html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
+  border-bottom-color: #7a6a3a;
+}
+
+/* Survivor Table and Bowl Card share one width contract with the Pick'em Pad above them.
+   Collapsed, each is exactly as wide as the pad and centered on it; expanded, it grows to
+   the page rail (and the Bowl Card further, on a wide screen). The width glides between the
+   two over the same time and curve as the blind that rolls the table up or down. */
+:root { --pad-width: 30rem; --rail-width: 59rem; --section-glide: 420ms cubic-bezier(.65, 0, .35, 1); }
+.bowl-card-section,
+.survivor-ledger {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--rail-width);
+  transition: max-width var(--section-glide);
+  width: 100%;
+}
+.bowl-card-section.is-minimized,
+.survivor-ledger.is-minimized { max-width: var(--pad-width); }
+@media (prefers-reduced-motion: reduce) {
+  .bowl-card-section, .survivor-ledger { transition: none; }
+}
+
+.bowl-standings-scroll {
+  /* Keep the initial desktop view compact: frozen player columns plus six
+     complete game columns. The schedule itself remains horizontally scrollable. */
+  max-width: 100%;
+  width: min(100%, 53rem);
+  scroll-padding-left: 8rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: #a69f93 transparent;
+  scrollbar-width: thin;
+  --bowl-game-width: 7.5rem;
+}
+
+@media (max-width: 639px) {
+  .bowl-standings-scroll { --bowl-game-width: 7.25rem; }
+}
+
+/* Give the desktop viewport eight full game columns after the frozen 8rem
+   player rail. The tiebreaker sits at the far end of the full schedule, so it
+   must not be counted as space beside the first games. */
+@media (min-width: 768px) {
+  .bowl-standings-scroll {
+    width: min(100%, 74.5rem);
+  }
+}
+
+@media (min-width: 1216px) {
+  .bowl-standings-scroll { --bowl-game-width: 8.3125rem; }
+}
+
+/* The page's ordinary standings rail is intentionally compact. On a true
+   desktop viewport, let the expanded Bowl Card use the available window so
+   its eight-game viewport is not clipped by the rail's max-width. Minimized
+   cards keep the compact Pick'em rail above. */
+@media (min-width: 1100px) {
+  /* Both states use the same centering, so only the width changes when it opens or closes. */
+  .bowl-card-section {
+    margin-left: 50%;
+    margin-right: 0;
+    max-width: none;
+    transform: translateX(-50%);
+    transition: width var(--section-glide);
+    width: min(74.5rem, calc(100vw - 2rem));
+  }
+  .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
+}
+
+.bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
+.bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
+.bowl-standings-scroll::-webkit-scrollbar-thumb {
+  background: #a69f93;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #716b61; background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 transparent; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #9aaabd; background-clip: padding-box; }
+
+/* Ticket results stay deliberately simple: solid upright letters, identical
+   sizing for wins and losses, and no surrounding badge or stamp outline. */
+.ats-result-stamp--ticket {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  font-weight: 900;
+  height: 1.08rem;
+  line-height: 1;
+  min-width: 1.08rem;
+}
+

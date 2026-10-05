@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8").replace(/\r\n/g, "\n");
+const css = readStylesheetSync().replace(/\r\n/g, "\n");
 const rule = (selector, tail = " {") => {
   const start = css.indexOf(`\n${selector}${tail}`) + 1;
   assert.ok(start >= 1, `missing rule: ${selector}`);
@@ -49,7 +46,7 @@ test("whichever section ends the ticket takes the serrated end, so tearing Survi
 });
 
 test("notch and scallop bites are true half and quarter circles that shrink on phones", () => {
-  const strip = rule(".slate-receipt-strip {\n  --receipt-notch", "");
+  const strip = css; // the bite variables live on the strip rule, wherever it sits in the stylesheet
   for (const [name, at] of [["top-left", "0 0"], ["bottom-left", "0 100%"], ["top-right", "100% 0"], ["bottom-right", "100% 100%"]]) {
     assert.ok(strip.includes(`--receipt-bite-${name}: radial-gradient(circle at ${at}, transparent var(--receipt-notch)`), `notch ${name}`);
   }

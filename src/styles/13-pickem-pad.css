@@ -1,0 +1,399 @@
+.pickem-ledger-masthead {
+  align-items: end;
+  border-top: 3px solid var(--ledger-ink);
+  border-bottom: 1px solid #bdb3a3;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .55rem;
+  padding: .6rem .15rem .52rem;
+}
+.pickem-ledger-period {
+  color: var(--ledger-muted);
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+  line-height: 1.1;
+  padding-bottom: .08rem;
+  text-align: right;
+}
+.pickem-ledger-masthead h2 {
+  color: var(--ledger-ink);
+  font-family: Georgia, serif;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1;
+  margin: .18rem 0 0;
+}
+/* The table itself, and the small marks inside it. */
+.pickem-ledger-grid { border-collapse: collapse; text-align: left; font-variant-numeric: tabular-nums; }
+.pickem-ledger-grid.is-regular { table-layout: fixed; width: 100%; }
+.pickem-ledger-grid.is-playoff { min-width: 48rem; }
+.pickem-ledger-grid.is-playoff-dense { min-width: 40rem; }
+.pickem-ledger-pick { overflow-wrap: break-word; }
+.pickem-ledger-spread { margin-left: .25rem; }
+.pickem-ledger-spread.is-open { color: var(--color-slate-700); }
+.pickem-ledger-table {
+  background: var(--ledger-paper);
+  border-top: 0;
+  border-bottom: 0;
+  font-family: var(--ledger-hand-font);
+  overflow: hidden;
+}
+.pickem-ledger-row {
+  border-bottom: 1px solid var(--scorepad-blue);
+}
+.pickem-ledger-row:last-child { border-bottom: 0; }
+.pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
+.pickem-ledger-week-row th {
+  /* The week is written directly on the same blue ruled line as the pad. */
+  background: linear-gradient(to bottom, transparent calc(100% - 1px), var(--scorepad-blue) calc(100% - 1px));
+  border-bottom: 0;
+  padding: .7rem .5rem .08rem;
+  text-align: center;
+}
+.pickem-ledger-week-row span {
+  border-bottom: 2px solid currentColor;
+  color: var(--ledger-ink);
+  display: inline-block;
+  font-size: clamp(1rem, 2.3vw, 1.28rem);
+  letter-spacing: .12em;
+  line-height: 1;
+  position: relative;
+  top: .08em;
+  text-transform: uppercase;
+}
+.pickem-ledger-row td {
+  /* Keep the writing close to its blue rule, like ink on a narrow-ruled pad. */
+  padding: .24rem .28rem;
+}
+.pickem-ledger-wins {
+  border-right: 2px solid var(--scorepad-red);
+  /* A narrow score margin, like the hand-written totals beside a ruled pad. */
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding-right: .38rem !important;
+  text-align: right;
+}
+/* Dad's paper scorecards kept the running total and name in a tight left
+   gutter; picks earned the broad writing space.  Make that geometry explicit
+   instead of letting the table split all remaining columns evenly. */
+.pickem-ledger-wins-column { width: clamp(2.7rem, 4vw, 3.25rem); }
+.pickem-ledger-player-column { width: clamp(6.8rem, 11vw, 8rem); }
+.pickem-ledger-player {
+  border-right: 0;
+  font-size: clamp(.95rem, 2.5vw, 1.12rem);
+  font-weight: 800;
+  line-height: 1.06;
+}
+.pickem-ledger-pick {
+  color: #273349;
+  /* Match the handwritten names more closely without changing the ruled-row
+     rhythm; the player cell already establishes each row's minimum height. */
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.pickem-ledger-pick .pickem-ledger-spread {
+  font-family: var(--ledger-hand-font);
+  font-size: .88rem;
+}
+/* Give the first pick a quiet visual gutter after the player-name lane. */
+.pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
+@media (min-width: 640px) {
+  .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
+  .pickem-ledger-row td { padding: .32rem .38rem; }
+  .pickem-ledger-wins { font-size: 1.25rem; }
+  .pickem-ledger-pick { font-size: 1.05rem; }
+  .pickem-ledger-pick .pickem-ledger-spread { font-size: .96rem; }
+  .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
+}
+html[data-theme="night"] .pickem-ledger {
+  --ledger-ink: #ede6d9;
+  --ledger-muted: #b7c4d3;
+  --ledger-paper: #252722;
+  --scorepad-blue: #55769a;
+  --scorepad-red: #b86d68;
+}
+html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
+html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
+html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
+.pickem-eliminated-stamp {
+  border: 3px solid #b42318;
+  box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
+  color: #b42318;
+  display: inline-block;
+  font-size: clamp(.9rem, 2.5vw, 1.35rem);
+  font-weight: 950;
+  letter-spacing: .12em;
+  opacity: .88;
+  padding: .18rem .45rem .14rem;
+  transform: rotate(-5deg);
+}
+/* Standings is intentionally a tighter scorecard surface than the Slate.
+   Keep both the visible chat and its compact restore control on that same
+   rail instead of leaving a Slate-width gutter around the table. */
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock .pool-chat,
+body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
+  max-width: var(--standings-module-width) !important;
+}
+/* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
+   texts without creating a separate source of truth from the regular board. */
+.playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(75, 126, 183, .18) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
+    #fbf8ef;
+  border-left: 1px solid rgba(167, 62, 55, .3);
+  padding-left: .5rem;
+  padding-right: .5rem;
+}
+.playoff-scoreboard tbody tr { background: transparent !important; }
+.playoff-scoreboard-pick {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: .95rem;
+  letter-spacing: .025em;
+}
+/* Wild Card and Divisional rounds carry six and four picks per player. Keep
+   those handwritten columns close enough to scan as one ledger rather than
+   stretching them across the broad regular-season rhythm. */
+.playoff-scoreboard--dense .pickem-ledger-row td {
+  padding-left: .2rem;
+  padding-right: .2rem;
+}
+.playoff-scoreboard--dense .pickem-ledger-wins {
+  padding-right: .24rem !important;
+  width: 2.4rem;
+}
+.playoff-scoreboard--dense .pickem-ledger-player {
+  width: 5.5rem;
+}
+.playoff-scoreboard--dense .playoff-scoreboard-pick {
+  white-space: nowrap;
+}
+@media (max-width: 639px) {
+  .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
+  .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .playoff-scoreboard-pick { font-size: .86rem; }
+  /* The round name drops to its own line under the title instead of squeezing
+     "Playoff Ledger" and its OUT toggle onto two lines each. */
+  .playoff-scoreboard .pickem-ledger-masthead { flex-wrap: wrap; }
+  .playoff-scoreboard .pickem-ledger-masthead h2 { white-space: nowrap; }
+  .playoff-scoreboard .pickem-ledger-period { flex-basis: 100%; order: 3; text-align: left; }
+  /* Four, five, or six picks do not fit across a phone, so each player's picks
+     wrap into two short lines beside the score and name instead of scrolling
+     sideways: 2 x 2 for four picks, 3 x 2 for five or six. */
+  .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: 100%; }
+  .playoff-scoreboard .pickem-ledger-grid tbody { display: block; }
+  .playoff-scoreboard .pickem-ledger-grid tr {
+    display: grid;
+    grid-template-columns: 2.4rem 4.4rem repeat(3, minmax(0, 1fr));
+  }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="4"] tr { grid-template-columns: 2.4rem 4.4rem repeat(2, minmax(0, 1fr)); }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-player { align-items: center; display: flex; grid-row: 1 / span 2; }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
+  .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
+}
+/* Tablet and up: every pick of the round sits on one line per player. Each
+   column is only as wide as its longest entry (abbreviations and spreads vary)
+   plus one even gap, and the pad hugs the ledger instead of stretching across
+   the page, so six picks are spaced like the regular two. */
+@media (min-width: 640px) {
+  .playoff-scoreboard { margin-left: auto; margin-right: auto; max-width: 100%; width: fit-content; }
+  .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: auto; }
+  /* The gap narrows on a tablet so six picks still fit, and reaches 1.25rem on a desktop. */
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick { padding-left: 0; padding-right: clamp(.35rem, 2.4vw - .7rem, 1.25rem); white-space: nowrap; }
+  .playoff-scoreboard .pickem-ledger-row td.pickem-ledger-player + td { padding-left: .5rem; }
+  .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick:last-child { padding-right: .5rem; }
+}
+html[data-theme="night"] .playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(96, 178, 198, .14) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
+    #172027;
+}
+
+/* The four pieces of the Standings page are one reading surface: ticket,
+   Pick'em Pad, Survivor Table, and pool chat. Keep their outer edges aligned
+   instead of letting each component choose a different card width. */
+:root {
+  --standings-module-width: 39.6rem;
+}
+
+/* The Pick'em Pad is a two-sided card for commissioners: the scorepad on the
+   front, the Season Snapshot on the back. Both faces share one grid cell, so
+   the card keeps the front's size and the chart fills the back's full height. */
+/* The turn is one animated angle, --pad-turn, so the lift, tilt, and shading
+   below all follow the paper's real position instead of running on their own
+   clocks. sin() is 0 at rest and 1 when the card is edge-on. */
+@property --pad-turn { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+@keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.season-snapshot {
+  --snapshot-paper: #fbf7ec;
+  color: #25334a;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.season-snapshot-body { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; padding-top: .5rem; }
+.season-snapshot-layout { display: flex; flex: 1 1 auto; flex-direction: column; gap: .5rem; min-height: 0; }
+.season-snapshot-axis-label { fill: #536077; font: 800 10px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+
+/* The y-axis stays put while the plot scrolls beside it in the 6-week view. */
+.season-snapshot-row { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.season-snapshot-yaxis { display: block; flex: 0 0 auto; }
+.season-snapshot-plot-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  scrollbar-color: #9bb9de transparent;
+  scrollbar-width: thin;
+}
+.season-snapshot-plot-scroll.is-windowed {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 6px; /* keeps the scrollbar off the week numbers */
+  scroll-snap-type: x mandatory;
+}
+.season-snapshot-plot-scroll:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+.season-snapshot-plot-track { position: relative; }
+.season-snapshot-plot-track svg { display: block; max-width: none; }
+/* One notch per week: the view always lands on an exact six-week window. */
+.season-snapshot-snap { height: 1px; pointer-events: none; position: absolute; scroll-snap-align: start; top: 0; width: 1px; }
+.season-snapshot-week-label { color: #536077; font: 800 10px/1 Arial, sans-serif; letter-spacing: .12em; margin: .15rem 0 0; padding-left: 30px; text-align: center; text-transform: uppercase; }
+
+/* All / 6 Wk sits between the title and the flip button. */
+/* Two equal columns: both halves take the wider label's width. */
+.season-snapshot-range {
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 0 0 auto;
+  margin-left: auto;
+  overflow: hidden;
+}
+.season-snapshot-range button {
+  background: #fffdf8;
+  color: #40516a;
+  font: 800 .66rem/1 Arial, sans-serif;
+  min-height: 1.9rem;
+  padding: 0 .5rem;
+  transition: background .15s ease, color .15s ease;
+}
+.season-snapshot-range button + button { border-left: 1px solid #a59b8d; }
+.season-snapshot-range button[aria-pressed="true"] { background: #25334a; color: #fbf7ec; }
+.season-snapshot-range button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
+.season-snapshot-range + .pad-flip-button { margin-left: .5rem; }
+
+.season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
+.season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem; min-width: 0; }
+.season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
+
+/* Lines draw in from the left once, then fade rather than jump when someone is
+   hovered, hidden, or shown. */
+.season-snapshot-lines { animation: season-snapshot-reveal .9s cubic-bezier(.22, .7, .2, 1) both; }
+.season-snapshot-ribbon { transition: opacity .2s ease; }
+.season-snapshot-ribbon.is-dim { opacity: .14; }
+@keyframes season-snapshot-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season-snapshot-lines { animation: none; }
+  .season-snapshot-ribbon,
+  .season-snapshot-key-row { transition: none; }
+}
+
+.season-snapshot-key {
+  display: grid;
+  gap: .3rem .35rem;
+  grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr));
+  min-width: 0;
+}
+.season-snapshot-key .season-snapshot-key-row { margin-bottom: 0; }
+
+.season-snapshot-key-row {
+  align-items: center;
+  background: rgb(255 255 255 / .55);
+  border: 1px solid #e2dacb;
+  border-radius: .7rem;
+  display: grid;
+  font: 700 .72rem/1.2 Arial, sans-serif;
+  gap: .4rem;
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+  margin-bottom: .3rem;
+  min-height: 1.7rem;
+  padding: .2rem .5rem;
+  text-align: left;
+  transition: background .15s ease, box-shadow .15s ease, opacity .2s ease, transform .15s ease;
+  width: 100%;
+}
+
+.season-snapshot-key-row:hover,
+.season-snapshot-key-row:focus-visible {
+  background: #fff;
+  box-shadow: 0 .2rem .6rem -.3rem rgb(37 51 74 / .5);
+  transform: translateX(-2px);
+}
+.season-snapshot-key-row:focus-visible { outline: 2px solid #2a78d6; outline-offset: 1px; }
+.season-snapshot-key-row.is-hidden { background: transparent; border-style: dashed; opacity: .5; }
+.season-snapshot-key-row.is-hidden .season-snapshot-key-name { text-decoration: line-through; }
+.season-snapshot-key-row.is-hidden .season-snapshot-swatch { filter: grayscale(1); opacity: .6; }
+.season-snapshot-key-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.season-snapshot-swatch { border-radius: 999px; box-shadow: inset 0 1px rgb(255 255 255 / .32), inset 0 -1px rgb(16 32 48 / .3); height: .32rem; width: 1.1rem; }
+.season-snapshot-show-all {
+  color: #25334a;
+}
+.season-snapshot-show-all:not(:disabled):hover,
+.season-snapshot-show-all:not(:disabled):focus-visible { background: #25334a; color: #fbf7ec; }
+.season-snapshot-show-all { border: 1px solid #25334a; border-radius: 999px; font: 800 .66rem/1.2 Arial, sans-serif; margin-top: .15rem; padding: .28rem .8rem; transition: background .15s ease, color .15s ease; width: 100%; grid-column: 1 / -1; }
+.season-snapshot-show-all:disabled { border-color: #c9c2b5; color: #a39c90; cursor: default; }
+.season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; margin: 0; padding: 1rem .3rem; }
+
+@media (max-width: 700px) {
+  .season-snapshot-key { gap: .2rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .season-snapshot-key-row { grid-template-columns: .7rem minmax(0, 1fr) auto; padding: .08rem .3rem; }
+  .season-snapshot-swatch { width: .7rem; }
+  .season-snapshot-show-all { grid-column: auto; padding: .08rem .3rem; }
+  .season-snapshot-key-row { border-radius: .45rem; gap: .25rem; min-height: 1.35rem; font-size: .66rem; }
+}
+
+.survivor-title-toggle {
+  align-items: center;
+  background: #fffdf8;
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  color: #40516a;
+  display: inline-flex;
+  font-weight: 900;
+  height: 1.35rem;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  width: 1.35rem;
+}
+
+.survivor-title-toggle:hover:not(:disabled),
+.survivor-title-toggle:focus-visible {
+  background: #e4eee9;
+  color: #0b625b;
+  transform: translateY(-1px);
+}
+
+.survivor-title-toggle:disabled { opacity: .55; }
+
+.survivor-elimination-toggle {
+  border-radius: .22rem;
+  font-size: .56rem;
+  letter-spacing: .06em;
+  min-width: 2.35rem;
+  padding: 0 .28rem;
+  width: auto;
+}
+

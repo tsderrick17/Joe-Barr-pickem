@@ -1,0 +1,665 @@
+.slate-receipt-ticket::before,
+.slate-receipt-pool::before,
+.slate-receipt-warning::before {
+  /* A hairline ring hugs each round cut so the notches read as outlined, like
+     the straight edges, instead of as plain gaps. */
+  background:
+    radial-gradient(circle at 0 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 0 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 100% 0, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    radial-gradient(circle at 100% 100%, transparent calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + .5px), var(--receipt-rule) calc(var(--receipt-notch) + 1.5px), transparent calc(var(--receipt-notch) + 1.5px)),
+    var(--receipt-paper);
+  background-origin: border-box;
+  border-bottom: 1px solid var(--receipt-rule);
+  border-top: 1px solid var(--receipt-rule);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Stub: serrated left end, round notches at the first perforation. */
+.slate-receipt-ticket::before {
+  -webkit-mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  mask-image: var(--receipt-bite-serrated-left), var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  -webkit-mask-repeat: repeat-y, no-repeat, no-repeat, no-repeat, no-repeat;
+  mask-repeat: repeat-y, no-repeat, no-repeat, no-repeat, no-repeat;
+  -webkit-mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-size: 100% var(--receipt-serration-pitch), 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* Middle section with Survivor beside it: notches on both perforations. */
+.slate-receipt-pool::before,
+.slate-receipt-warning::before {
+  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
+  -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  -webkit-mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* The last section on the ticket ends with the serrated edge. */
+.slate-receipt-strip.is-pickem-only .slate-receipt-pool::before,
+.slate-receipt-pool.slate-receipt-survivor::before {
+  -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right), var(--receipt-bite-serrated-right);
+  mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right), var(--receipt-bite-serrated-right);
+  -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y;
+  mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y;
+  -webkit-mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+  mask-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% var(--receipt-serration-pitch);
+}
+
+/* Perforation between two sections, running between its two notches. */
+.slate-receipt-pool::after {
+  /* Long dashes with wide gaps, the same rhythm as the punched edges. The dash
+     rides a strip of paper that covers the hairline where two sections meet
+     (their edges fall between pixels), and starts just below the notch ring. */
+  background:
+    repeating-linear-gradient(to bottom, var(--receipt-rule) 0 .32rem, transparent .32rem .64rem) 1px 0 / 1px 100% no-repeat,
+    var(--receipt-paper);
+  width: 3px;
+  bottom: calc(var(--receipt-notch) + 1.5px);
+  content: "";
+  left: -1px;
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--receipt-notch) + 1.5px);
+}
+
+.slate-receipt-ticket,
+.slate-receipt-pool {
+  align-content: stretch;
+  display: grid;
+  gap: .18rem;
+  z-index: 3;
+}
+
+/* Both pools share fixed label, selection, and status tracks. That keeps the
+   printed receipt aligned even when the Survivor chip is larger than an ATS
+   selection chip. */
+.slate-receipt-pool {
+  grid-template-rows: .72rem 3.48rem minmax(.68rem, auto);
+}
+.slate-receipt-pool.slate-receipt-survivor {
+  grid-template-rows: .72rem 3.9rem minmax(.68rem, auto);
+}
+.slate-receipt-ticket {
+  /* This is a compact tear-off stub. Keep the receipt title, link, and print
+     action together at the top instead of spreading them across the taller
+     adjacent pool cells. The invisible print placeholder still reserves its
+     exact footprint, so this section never jumps when a change is made. */
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  justify-content: flex-start;
+  padding-left: .68rem;
+  position: relative;
+}
+
+.slate-receipt-pool > span { align-self: start; }
+.slate-receipt-pool > em { align-self: end; margin-left: .46rem; }
+.slate-receipt-selection-chips,
+.slate-receipt-survivor-pick { align-self: center; }
+
+.slate-receipt-ticket > span,
+.slate-receipt-pool > span {
+  color: #42516a;
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+.slate-receipt-ticket > span { align-items: baseline; display: flex; gap: .32rem; }
+.slate-receipt-ticket > span small {
+  color: #857c6d;
+  font-family: "Courier New", monospace;
+  font-size: .38rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.slate-receipt-ticket a {
+  align-self: start;
+  color: #1d3551;
+  display: inline-block;
+  font-size: .66rem;
+  font-weight: 900;
+  justify-self: start;
+  letter-spacing: .06em;
+  line-height: 1;
+  padding: 0 0 .18rem;
+  text-decoration: none;
+  z-index: 5;
+}
+.slate-receipt-ticket a::after { content: "›"; font-size: .88rem; line-height: 0; margin-left: .22rem; }
+.slate-receipt-ticket a:hover,
+.slate-receipt-ticket a:focus-visible {
+  background: transparent;
+  color: #1d3551;
+}
+
+.slate-receipt-print {
+  align-self: flex-start;
+  appearance: none;
+  background: linear-gradient(180deg, #f7f7f6 0%, #e8e9e7 42%, #c8cbc9 100%);
+  border: 2px outset #f9f9f9;
+  box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+  color: #15191b;
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  margin-top: 0;
+  margin-inline: auto;
+  min-height: 1.5rem;
+  overflow: hidden;
+  padding: .2rem .32rem;
+  position: relative;
+  isolation: isolate;
+  text-transform: uppercase;
+  width: calc(100% - .4rem);
+}
+
+.slate-receipt-print::before {
+  /* One unhurried inspection beam, like a light catching across a silver blade.
+     Closely spaced translucent stops blend the white reflection into the grey
+     button face so it never reads as a separate stripe or second outline. */
+  background: linear-gradient(105deg,
+    transparent 15%,
+    rgba(190, 198, 204, .02) 23%,
+    rgba(216, 222, 226, .12) 31%,
+    rgba(238, 241, 243, .34) 39%,
+    rgba(255, 255, 255, .72) 48%,
+    rgba(245, 247, 248, .52) 55%,
+    rgba(211, 217, 221, .22) 64%,
+    rgba(180, 188, 194, .05) 74%,
+    transparent 84%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-165%);
+  z-index: 1;
+}
+.slate-receipt-print:hover { filter: brightness(1.04); }
+.slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
+.slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention 15s ease-in-out infinite; }
+.slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 15s ease-in-out infinite; }
+
+/* The printer line has a fixed footprint beneath Submit, so saving feedback
+   reads like a receipt being pulled through a mechanism without moving the
+   surrounding ticket or widening the button. */
+.receipt-printing-status {
+  align-items: center;
+  color: #657080;
+  display: flex;
+  font-family: "Courier New", monospace;
+  font-size: .4rem;
+  font-weight: 700;
+  gap: .22rem;
+  letter-spacing: .09em;
+  line-height: .5rem;
+  min-height: .5rem;
+  overflow: hidden;
+  padding-left: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  width: 100%;
+}
+.receipt-printing-marks { display: inline-flex; gap: .1rem; height: .32rem; visibility: hidden; }
+.receipt-printing-marks i {
+  background: #007e72;
+  border-radius: 50%;
+  display: block;
+  height: .26rem;
+  opacity: .4;
+  transform: translateY(.08rem);
+  width: .26rem;
+}
+.receipt-printing-status.is-printing { color: #17675f; }
+.receipt-printing-status.is-printing .receipt-printing-marks { visibility: visible; }
+.receipt-printing-status.is-printing .receipt-printing-marks i { animation: receipt-printer-feed 1.05s steps(2, end) infinite; }
+.receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(2) { animation-delay: .15s; }
+.receipt-printing-status.is-printing .receipt-printing-marks i:nth-child(3) { animation-delay: .3s; }
+/* The printer line and the hint share one row, so there is no empty reserved
+   line under Submit: "PRINTING" takes the hint's place while a save runs. */
+.slate-receipt-ticket > .slate-receipt-footnote { align-items: center; align-self: stretch; display: grid; gap: 0; grid-template-columns: minmax(0, 1fr); letter-spacing: 0; width: 100%; }
+.slate-receipt-footnote > * { grid-area: 1 / 1; margin-top: 0; }
+.slate-receipt-footnote .receipt-printing-status { justify-content: center; min-height: 0; }
+.slate-receipt-footnote .receipt-printing-status.is-printing ~ .slate-receipt-submit-hint { visibility: hidden; }
+.slate-receipt-submit-hint {
+  color: #5d6470;
+  display: block;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-align: center;
+}
+
+@keyframes receipt-printer-feed {
+  0%, 100% { opacity: .24; transform: translateY(.08rem) scale(.78); }
+  45% { opacity: 1; transform: translateY(-.04rem) scale(1); }
+}
+
+@keyframes receipt-print-attention {
+  /* The sheen clears at 20%; the press follows roughly .2 seconds later,
+     while the 15-second cycle still governs click-to-click timing. */
+  0%, 20.35%, 23%, 100% {
+    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+    filter: none;
+    transform: translate(0, 0);
+  }
+  21.25% {
+    box-shadow: inset 1px 1px 1px #686d6d, 0 0 5px rgba(255, 79, 171, .18);
+    filter: brightness(.96);
+    transform: translate(1px, 1px);
+  }
+  22.1% {
+    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
+    filter: brightness(1.04);
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes receipt-print-inspection-beam {
+  0%, .8% { opacity: 0; transform: translateX(-165%); }
+  1.2% { opacity: 1; }
+  19.6% { opacity: 1; transform: translateX(165%); }
+  20%, 100% { opacity: 0; transform: translateX(165%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slate-receipt-print.needs-attention:not(:disabled),
+  .slate-receipt-print.needs-attention:not(:disabled)::before,
+  .receipt-printing-status.is-printing .receipt-printing-marks i,
+  .slate-receipt-survivor-pick.is-awaiting-lock .survivor-poker-chip-summary,
+  .survivor-poker-chip-summary.is-idle-spinning { animation: none; }
+}
+
+.slate-receipt-selection-chips {
+  display: grid;
+  gap: .25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.slate-receipt-selection-chips--playoff { grid-auto-rows: minmax(0, 1fr); }
+.slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-3, .slate-receipt-selection-chips--slots-4) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* A regular two-pick receipt should not inflate simply because Survivor is no
+   longer present. Playoff rounds deliberately use the entire register so all
+   games—including six-game Wild Card weekends—remain visible together. */
+.slate-receipt-strip.is-pickem-only:not(.is-playoff) .slate-receipt-selection-chips {
+  max-width: 42rem;
+}
+
+.slate-receipt-strip.is-playoff .slate-receipt-selection-chips {
+  width: 100%;
+}
+
+.slate-receipt-selection-chip {
+  align-items: center;
+  background: #fffaf3;
+  border: 1px solid #c8b8a0;
+  border-left: 3px solid #cf2879;
+  color: #18364d;
+  display: flex;
+  font-size: .68rem;
+  font-weight: 800;
+  gap: .22rem;
+  min-width: 0;
+  padding: .25rem .28rem .25rem .39rem;
+}
+
+.slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
+.slate-receipt-selection-chip.is-sealed {
+  background: #eef4f1;
+  border-color: #8aa7a1;
+  border-left-color: #0f766e;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, .08);
+}
+.slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slate-receipt-selection-chip small {
+  color: #243248;
+  font-size: inherit;
+  font-weight: 900;
+}
+.slate-receipt-selection-chip small.is-official { color: var(--official-line-color); }
+.slate-receipt-selection-chip button {
+  background: transparent;
+  border: 0;
+  color: #5d6470;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: .75;
+  margin-left: auto;
+  padding: 0 .03rem;
+}
+.slate-receipt-selection-chip button:hover { color: #9d1e1e; }
+.slate-receipt-lock-mark {
+  color: #0f766e;
+  flex: 0 0 auto;
+  font-size: .7rem;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.slate-receipt-pool > em {
+  color: #5d6470;
+  font-size: .48rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .1em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.slate-receipt-pool > em small { font-size: inherit; font-weight: inherit; }
+.slate-receipt-pool > em.is-complete { color: #08764e; }
+.slate-receipt-pool > em.is-unsaved { color: #a86008; }
+
+/* The Bowl Pool is a season card, not a short weekly slip. Keep its receipt
+   in the same register as Pick'em, but show durable progress instead of a
+   forty-game chip wall. */
+.bowl-receipt-metrics {
+  align-self: center;
+  border: 1px solid #c8b8a0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(6rem, 8rem));
+  width: fit-content;
+}
+.bowl-receipt-metric {
+  align-items: center;
+  background: #fffaf3;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  justify-content: center;
+  padding: .3rem .45rem;
+  text-align: center;
+}
+.bowl-receipt-metric + .bowl-receipt-metric { border-left: 1px dashed var(--receipt-rule); }
+.bowl-receipt-metric strong {
+  color: #18364d;
+  font-family: "Courier New", monospace;
+  font-size: .92rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.bowl-receipt-metric small {
+  color: #596579;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: .43rem;
+  font-weight: 900;
+  letter-spacing: .11em;
+  line-height: 1.1;
+}
+.bowl-receipt-metric.is-due strong { color: #a82820; }
+
+.bowl-receipt-strip button:disabled { cursor: default; }
+
+.slate-receipt-survivor-pick {
+  --receipt-chip-buffer: .15rem;
+  align-items: center;
+  display: flex;
+  gap: .35rem;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+.slate-receipt-survivor-pick > strong { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The Survivor chip grows into its receipt lane, then scales down only when
+   that lane truly gets smaller. Keeping the same inset on every breakpoint
+   avoids the abrupt desktop/mobile size jump. */
+.slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  height: min(3.7rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+  max-height: 3.7rem;
+  max-width: 3.7rem;
+  min-height: 0;
+  min-width: 0;
+  width: min(3.7rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+}
+.slate-receipt-survivor .is-due { color: #a82820; }
+.slate-receipt-survivor .is-out { color: #b42318; }
+.slate-receipt-survivor .is-quiet { color: #5d6470; }
+
+/* The warning hangs off the Pick'em section like a tab of the same paper: it
+   sits under that column only, and the strip's outline follows its edges. */
+/* Same die-cut corners as the sections above it. The paper layer's own rule is the
+   only line where it meets the Pick'em section, so there is no second dashed edge. */
+.slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: #a82820; }
+
+@media (max-width: 767px) {
+  .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
+  .slate-receipt-strip.has-survivor { grid-template-columns: 25% 50% 25%; }
+  .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
+  .slate-mini-nav.slate-receipt-strip.is-pickem-only { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
+  /* The torn ticket is narrower on a phone, so a six-game Wild Card round
+     stacks as two columns of three instead of three narrow columns. */
+  .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem { grid-template-rows: .58rem minmax(0, 1fr) minmax(.58rem, auto); }
+  .slate-receipt-strip > * { padding: .3rem .34rem; }
+  .slate-receipt-ticket {
+    gap: .14rem;
+    padding-left: .5rem;
+  }
+  .slate-receipt-ticket > span,
+  .slate-receipt-pool > span { font-size: .46rem; }
+  /* On a phone the stub link is "FULL TICKET": one line instead of two, and
+     the receipt is that much shorter. */
+  .slate-receipt-ticket a { font-size: .54rem; padding-bottom: .1rem; white-space: nowrap; }
+  .receipt-link-lead { display: none; }
+  .slate-receipt-ticket a::after { display: none; }
+  .slate-receipt-ticket > span small { display: none; }
+  .receipt-printing-status { font-size: .36rem; gap: .16rem; letter-spacing: .07em; }
+  
+  .slate-receipt-print { font-size: .58rem; min-height: 1.62rem; padding: .15rem .22rem; width: calc(100% - .2rem); }
+  .slate-receipt-selection-chips { gap: .16rem; }
+  .slate-receipt-selection-chip { font-size: .56rem; padding: .21rem .16rem .21rem .26rem; }
+  .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) .slate-receipt-selection-chip {
+    font-size: .48rem;
+    padding-block: .08rem;
+  }
+  .slate-receipt-selection-chip button { font-size: .84rem; }
+  .slate-receipt-lock-mark { font-size: .56rem; }
+  .slate-receipt-pool > em { font-size: .4rem; margin-left: .34rem; }
+  .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
+  .bowl-receipt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .bowl-receipt-metric { min-height: 2.45rem; padding-inline: .24rem; }
+  .bowl-receipt-metric strong { font-size: .72rem; }
+  .bowl-receipt-metric small { font-size: .36rem; letter-spacing: .08em; }
+  /* Give the Survivor chip the unused middle of the receipt instead of
+     leaving that space in the flexible status row. The label and status keep
+     their own tracks, so the larger chip cannot cover either one. */
+  .slate-receipt-pool { grid-template-rows: .58rem 2.75rem minmax(.58rem, auto); }
+  .slate-receipt-pool.slate-receipt-survivor { grid-template-rows: .58rem 3.1rem minmax(.58rem, auto); }
+  .slate-receipt-survivor-pick > strong { font-size: .54rem; }
+  .slate-receipt-survivor-pick { gap: .16rem; --receipt-chip-buffer: .1rem; }
+  .slate-receipt-survivor-pick .survivor-poker-chip-wrap-summary {
+    height: min(2.95rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
+    width: auto;
+  }
+}
+
+@media (max-width: 767px) {
+
+  .mobile-primary-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  /* This lives outside the Slate header so it can remain in view while a
+     player works through a long mobile slate. */
+  .slate-mini-nav {
+    background: #fffdf8;
+    box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    position: sticky;
+    top: var(--site-nav-height, 7rem);
+    z-index: 40;
+  }
+
+  .slate-mini-nav:not(.slate-receipt-strip) a { padding: .5rem .45rem; }
+  .slate-mini-nav > a > span { font-size: .53rem; }
+  .slate-mini-nav strong { font-size: .64rem; }
+  .slate-mini-nav em { font-size: .5rem; }
+}
+
+@media (min-width: 768px) {
+
+  .slate-how-to-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  /* Once the title rail stacks above the instructions, avoid reserving a
+     second separator lane between the week selector and the instruction card. */
+  .slate-header-grid { gap: .55rem; }
+  .slate-header-grid > aside {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Keep the saved/draft receipt available while a player works through a
+     long Slate. Desktop navigation scrolls away, so this owns the top edge
+     once it reaches it—matching the mobile experience. */
+  .slate-mini-nav {
+    background: var(--receipt-paper, #fffdf8);
+    box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  /* The week controls stay in their own rail; the instructions use the open
+     space to the right rather than falling below the title. */
+  .slate-header-grid {
+    /* Give the title/week rail only what it needs and return the reclaimed
+       width to the instruction surface. */
+    grid-template-columns: minmax(11rem, .66fr) minmax(0, 1.17fr) minmax(0, 1.17fr);
+  }
+
+  .slate-action-instructions {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) !important;
+  }
+
+  .slate-action-instructions.has-survivor {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .slate-how-to-grid p { white-space: nowrap; }
+}
+
+.slate-view-switch {
+  align-items: center;
+  display: inline-grid;
+  gap: .38rem;
+  grid-template-columns: 2.82rem 1.62rem 2.82rem;
+  position: relative;
+  user-select: none;
+  width: fit-content;
+}
+
+.slate-view-switch-slot {
+  align-items: center;
+  display: flex;
+  min-height: 2rem;
+  padding-top: .45rem;
+}
+
+.slate-view-switch--header {
+  display: inline-grid;
+  gap: .38rem;
+  margin-top: 0;
+  width: fit-content;
+}
+
+.slate-view-switch > span {
+  color: #687179;
+  display: inline-block;
+  font-size: .57rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: .09em;
+  text-align: center;
+  transition: color 180ms ease;
+  width: 2.82rem;
+}
+
+.slate-view-switch > span.is-active { color: #25334a; }
+
+.slate-view-switch button {
+  background: linear-gradient(180deg, #7f888a 0%, #626a6c 52%, #4d5658 100%);
+  border: 1px solid #3a4244;
+  border-radius: .12rem;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, .25), inset 0 -1px 1px rgba(12, 17, 18, .5), 0 1px 0 #30383a, 0 3px 5px rgba(30, 36, 37, .2);
+  cursor: pointer;
+  height: .44rem;
+  padding: 0;
+  position: relative;
+  transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
+  width: 1.62rem;
+}
+
+.slate-view-switch button::before {
+  background: linear-gradient(180deg, rgba(19, 26, 28, .30), rgba(255, 255, 255, .12));
+  border-radius: .04rem;
+  content: "";
+  inset: .14rem .2rem;
+  position: absolute;
+}
+
+.slate-view-switch button > span {
+  background: linear-gradient(180deg, #ffffff 0%, #e7e6de 42%, #bcc0ba 100%);
+  border: 1px solid #3e4749;
+  border-radius: .1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .92), inset 0 -1px 1px rgba(55, 62, 63, .24), 0 2px 0 #252d2f, 0 4px 6px rgba(14, 19, 20, .46);
+  height: .64rem;
+  left: .05rem;
+  position: absolute;
+  top: -.12rem;
+  transform: translateX(0);
+  transition: transform 220ms cubic-bezier(.2, 1.15, .35, 1);
+  width: .62rem;
+  z-index: 1;
+}
+
+.slate-view-switch.is-action-only button { background: linear-gradient(180deg, #596365, #444d50 55%, #303a3d); }
+.slate-view-switch.is-action-only button > span { transform: translateX(.9rem); }
+
+.slate-view-switch button:hover { background: linear-gradient(180deg, #929c9e, #626b6d 55%, #454e50); }
+.slate-view-switch button:active { box-shadow: inset 0 1px 2px rgba(12, 17, 18, .48), 0 1px 0 #30383a; transform: translateY(1px); }
+.slate-view-switch button:focus-visible { outline: 2px solid #1b7771; outline-offset: 2px; }
+
+.slate-action-empty {
+  border-block: 1px solid #c8c1b5;
+  color: #5d6470;
+  font-size: .8rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0;
+  padding: 1.1rem 1rem;
+  text-align: center;
+}
+#slate-matchups,
+#my-ticket { scroll-margin-top: calc(var(--site-nav-height, 7rem) + 5rem); }
+

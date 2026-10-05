@@ -92,6 +92,8 @@ rule, preserve user data, and update stale documentation in the same change.
 
 ## Reference map
 
+- [View states](docs/VIEW_STATES.md): every view and state with its screenshot
+  test; a new state or view must add its fixture, screenshots, and a row here.
 - [Project reference](docs/PROJECT_REFERENCE.md): authoritative product rules,
   lifecycle, architecture, and safety invariants.
 - [SOP index](docs/SOP_INDEX.md): which procedure to use for routine work and

@@ -1,0 +1,477 @@
+.survivor-poker-chip-wrap {
+  --chip-primary: #1d1d1f;
+  --chip-secondary: #f5f0e6;
+  --chip-tertiary: #c99b3f;
+  display: inline-grid;
+  flex: 0 0 auto;
+  height: 3.2rem;
+  place-items: center;
+  isolation: isolate;
+  perspective: 460px;
+  position: relative;
+  width: 3.2rem;
+  /* A real chip is about 3.3 mm thick and 39 mm across (8.5%). */
+  --chip-t: .27rem;
+}
+
+.survivor-poker-chip-ground-shadow {
+  background: radial-gradient(ellipse, rgba(23, 23, 25, .36) 0%, rgba(23, 23, 25, .2) 42%, transparent 76%);
+  border-radius: 50%;
+  bottom: -.18rem;
+  filter: blur(.1rem);
+  height: .5rem;
+  left: 50%;
+  opacity: .42;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%) scaleX(.7) scaleY(.62);
+  transform-origin: center;
+  width: 82%;
+  z-index: 0;
+}
+
+.survivor-poker-chip {
+  --chip-rest: 0px;
+  display: inline-grid;
+  height: 100%;
+  place-items: center;
+  position: relative;
+  transform-style: preserve-3d;
+  width: 100%;
+  z-index: 1;
+  border-radius: 50%;
+  background: transparent;
+}
+
+/* Each face is one flat, finished disc: the rim with its four colored inserts,
+   the dashed inlay ring, the bright outer ring, and the center with the team
+   mark. Both faces are identical and sit half a thickness in front of and
+   behind the center, so the chip has real depth when it turns. */
+.survivor-poker-chip-side {
+  backface-visibility: hidden;
+  background: conic-gradient(from -8deg,
+    var(--chip-secondary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-tertiary) 12deg 16deg, #ded9cf 16deg 90deg,
+    var(--chip-secondary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-tertiary) 102deg 106deg, #ded9cf 106deg 180deg,
+    var(--chip-secondary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-tertiary) 192deg 196deg, #ded9cf 196deg 270deg,
+    var(--chip-secondary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-tertiary) 282deg 286deg, #ded9cf 286deg 360deg);
+  border: 2px solid color-mix(in srgb, var(--chip-primary) 34%, #77726a);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 1px rgba(255,255,255,.82), inset 0 -2px 2px rgba(23,23,25,.2), 0 2px 4px rgba(23,23,25,.28);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+.survivor-poker-chip-front { transform: translateZ(calc(var(--chip-t) / 2)); }
+/* The inserts are colored through the chip, so seen from behind their stripes
+   run in the opposite order. That keeps each insert lined up with its stripe
+   on the edge from either side. */
+.survivor-poker-chip-back {
+  transform: rotateY(180deg) translateZ(calc(var(--chip-t) / 2));
+  background-image: conic-gradient(from -8deg,
+    var(--chip-tertiary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-secondary) 12deg 16deg, #ded9cf 16deg 90deg,
+    var(--chip-tertiary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-secondary) 102deg 106deg, #ded9cf 106deg 180deg,
+    var(--chip-tertiary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-secondary) 192deg 196deg, #ded9cf 196deg 270deg,
+    var(--chip-tertiary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-secondary) 282deg 286deg, #ded9cf 286deg 360deg);
+}
+
+/* Dashed inlay ring, under the center. */
+.survivor-poker-chip-side::before {
+  border: 1px dashed color-mix(in srgb, var(--chip-primary) 54%, #fffdf8);
+  border-radius: 50%;
+  content: "";
+  inset: calc(.24rem - 2px);
+  opacity: .7;
+  position: absolute;
+}
+/* Bright outer ring, over everything. */
+.survivor-poker-chip-side::after {
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(23,23,25,.16);
+  content: "";
+  inset: calc(.08rem - 2px);
+  position: absolute;
+  z-index: 2;
+}
+
+.survivor-poker-chip-face {
+  align-items: center;
+  background: radial-gradient(circle at 35% 27%, #ffffff 0 12%, color-mix(in srgb, var(--chip-secondary) 8%, #fffdf8) 54%, color-mix(in srgb, var(--chip-primary) 7%, #f1eee7) 100%);
+  border: 1px solid rgba(23,23,25,.34);
+  border-radius: 50%;
+  display: flex;
+  /* Leave the color inserts a touch more room at 12/3/6/9. */
+  inset: calc(.34rem - 2px);
+  justify-content: center;
+  overflow: hidden;
+  position: absolute;
+  transition: filter 220ms ease;
+  z-index: 1;
+}
+.survivor-poker-chip-face img {
+  height: 70%;
+  transform: scale(var(--chip-logo-scale, 1));
+  width: 70%;
+}
+/* The back mark is turned so it reads upright after a flip end over end. */
+.survivor-poker-chip-back .survivor-poker-chip-face img {
+  transform: rotateZ(180deg) scale(var(--chip-logo-scale, 1));
+}
+
+/* The edge: flat segments stood on end around the rim, each one the width of
+   the chord it covers, centered on the chip's middle plane. */
+.survivor-poker-chip-edge-seg {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: rotateZ(var(--seg-a));
+  transform-style: preserve-3d;
+}
+.survivor-poker-chip-edge-seg::before {
+  backface-visibility: hidden;
+  background:
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
+    linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
+    #cdc7bb;
+  content: "";
+  height: var(--chip-t);
+  left: 50%;
+  position: absolute;
+  top: calc(var(--chip-t) / -2);
+  transform: translateX(-50%) rotateX(90deg);
+  /* A hair wider than the chord, so neighbors meet without a seam. */
+  width: calc(var(--seg-w) + .7%);
+}
+.survivor-poker-chip-edge-seg.is-insert::before {
+  background:
+    linear-gradient(90deg, rgba(16,14,12,var(--seg-dark-a)), rgba(16,14,12,var(--seg-dark-b))),
+    linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 30%, rgba(16,14,12,0) 70%, rgba(16,14,12,.28) 100%),
+    linear-gradient(90deg, var(--chip-secondary) 0 25%, var(--chip-primary) 25% 75%, var(--chip-tertiary) 75% 100%);
+}
+
+.survivor-poker-chip-star {
+  color: var(--chip-primary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.35rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--chip-secondary) 75%, #fffdf8), 0 2px 2px rgba(23, 23, 25, .22);
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--chip-secondary) 64%, #171719);
+}
+
+.survivor-poker-chip-pick-mark {
+  background: color-mix(in srgb, var(--chip-primary) 86%, #171719);
+  border: 1px solid color-mix(in srgb, var(--chip-secondary) 72%, #fffdf8);
+  border-radius: 999px;
+  bottom: -.32rem;
+  box-shadow: 0 1px 2px rgba(23, 23, 25, .22);
+  color: #fffdf8;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: .28rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+  padding: .13rem .2rem;
+  position: absolute;
+  z-index: 4;
+}
+
+.survivor-poker-chip-wrap[data-state="picked"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-pick-mark {
+  animation: survivor-pick-mark-reveal 980ms cubic-bezier(.16,.76,.2,1) both;
+}
+
+@keyframes survivor-pick-mark-reveal {
+  0%, 78% { opacity: 0; transform: translateY(.35rem) scale(.72); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.survivor-poker-chip[data-state="picked"] { --chip-rest: -1px; box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
+.survivor-poker-chip[data-state="picked"] .survivor-poker-chip-side { border-color: #d69a20; }
+
+.survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
+  /* A real toss: the chip spins at a steady rate while it rises and falls
+     (the curve lives in the keyframes, so the timing is linear), comes toward
+     you as it rises, then lands flat and rocks to rest. */
+  animation: survivor-chip-toss var(--toss-ms, 900ms) linear both;
+}
+
+.survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow {
+  animation: survivor-chip-shadow var(--toss-ms, 900ms) linear both;
+}
+
+@keyframes survivor-chip-toss {
+  0% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(0deg) rotateY(0deg) scale(1.000); }
+  6% { transform: translateY(calc(var(--chip-rest, 0px) + 1.5px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(-6deg) rotateY(0deg) scale(0.975); }
+  9.92% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.131)) rotateX(45deg) rotateY(1.29deg) scale(1.027); }
+  13.83% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.259)) rotateX(90deg) rotateY(2.5deg) scale(1.052); }
+  17.75% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.383)) rotateX(135deg) rotateY(3.54deg) scale(1.074); }
+  21.67% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.5)) rotateX(180deg) rotateY(4.33deg) scale(1.094); }
+  25.58% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.609)) rotateX(225deg) rotateY(4.83deg) scale(1.112); }
+  29.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.707)) rotateX(270deg) rotateY(5deg) scale(1.127); }
+  33.42% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.793)) rotateX(315deg) rotateY(4.83deg) scale(1.140); }
+  37.33% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.866)) rotateX(360deg) rotateY(4.33deg) scale(1.151); }
+  41.25% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.924)) rotateX(405deg) rotateY(3.54deg) scale(1.159); }
+  45.17% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.966)) rotateX(450deg) rotateY(2.5deg) scale(1.165); }
+  49.08% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.991)) rotateX(495deg) rotateY(1.29deg) scale(1.169); }
+  53% { transform: translateY(calc(var(--chip-rest, 0px) + -12px)) rotateZ(calc(var(--toss-axis, 0deg) * 1.0)) rotateX(540deg) rotateY(0deg) scale(1.170); }
+  56.92% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.991)) rotateX(585deg) rotateY(-1.29deg) scale(1.169); }
+  60.83% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.966)) rotateX(630deg) rotateY(-2.5deg) scale(1.165); }
+  64.75% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.924)) rotateX(675deg) rotateY(-3.54deg) scale(1.159); }
+  68.67% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.866)) rotateX(720deg) rotateY(-4.33deg) scale(1.151); }
+  72.58% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.793)) rotateX(765deg) rotateY(-4.83deg) scale(1.140); }
+  76.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.707)) rotateX(810deg) rotateY(-5deg) scale(1.127); }
+  80.42% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.609)) rotateX(855deg) rotateY(-4.83deg) scale(1.112); }
+  84.33% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.5)) rotateX(900deg) rotateY(-4.33deg) scale(1.094); }
+  88.25% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.383)) rotateX(945deg) rotateY(-3.54deg) scale(1.074); }
+  92.17% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.259)) rotateX(990deg) rotateY(-2.5deg) scale(1.052); }
+  96.08% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.131)) rotateX(1035deg) rotateY(-1.29deg) scale(1.027); }
+  100% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(1080deg) rotateY(0deg) scale(1.000); }
+}
+
+@keyframes survivor-chip-shadow {
+  0% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  6% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  9.92% { filter: blur(0.13rem); opacity: 0.37; transform: translateX(-50%) scaleX(0.77) scaleY(0.66); }
+  13.83% { filter: blur(0.15rem); opacity: 0.33; transform: translateX(-50%) scaleX(0.84) scaleY(0.69); }
+  17.75% { filter: blur(0.17rem); opacity: 0.29; transform: translateX(-50%) scaleX(0.90) scaleY(0.72); }
+  21.67% { filter: blur(0.19rem); opacity: 0.25; transform: translateX(-50%) scaleX(0.95) scaleY(0.74); }
+  25.58% { filter: blur(0.21rem); opacity: 0.22; transform: translateX(-50%) scaleX(1.00) scaleY(0.77); }
+  29.5% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  33.42% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.07) scaleY(0.80); }
+  37.33% { filter: blur(0.24rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.10) scaleY(0.82); }
+  41.25% { filter: blur(0.25rem); opacity: 0.14; transform: translateX(-50%) scaleX(1.12) scaleY(0.83); }
+  45.17% { filter: blur(0.26rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.14) scaleY(0.83); }
+  49.08% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  53% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  56.92% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  60.83% { filter: blur(0.26rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.14) scaleY(0.83); }
+  64.75% { filter: blur(0.25rem); opacity: 0.14; transform: translateX(-50%) scaleX(1.12) scaleY(0.83); }
+  68.67% { filter: blur(0.24rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.10) scaleY(0.82); }
+  72.58% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.07) scaleY(0.80); }
+  76.5% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  80.42% { filter: blur(0.21rem); opacity: 0.22; transform: translateX(-50%) scaleX(1.00) scaleY(0.77); }
+  84.33% { filter: blur(0.19rem); opacity: 0.25; transform: translateX(-50%) scaleX(0.95) scaleY(0.74); }
+  88.25% { filter: blur(0.17rem); opacity: 0.29; transform: translateX(-50%) scaleX(0.90) scaleY(0.72); }
+  92.17% { filter: blur(0.15rem); opacity: 0.33; transform: translateX(-50%) scaleX(0.84) scaleY(0.69); }
+  96.08% { filter: blur(0.13rem); opacity: 0.37; transform: translateX(-50%) scaleX(0.77) scaleY(0.66); }
+  100% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+}
+
+.survivor-poker-chip[data-state="official"] { box-shadow: 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
+.survivor-poker-chip[data-state="official"] .survivor-poker-chip-side { border-color: #16877f; }
+
+.survivor-poker-chip-seal {
+  align-items: center;
+  background: #e5f5f1;
+  border: 2px solid #0f766e;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, .28), inset 0 1px 0 rgba(255,255,255,.86);
+  color: #08645f;
+  display: flex;
+  font-size: .68rem;
+  font-weight: 900;
+  height: 1.14rem;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: -.24rem;
+  top: -.24rem;
+  width: 1.14rem;
+  z-index: 4;
+}
+
+.survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-seal {
+  animation: survivor-official-seal-reveal 720ms cubic-bezier(.16,.76,.2,1) both;
+}
+
+@keyframes survivor-official-seal-reveal {
+  0%, 76% { opacity: 0; transform: translate(28%, -34%) rotate(-20deg) scale(.5); }
+  90% { opacity: 1; transform: translate(-6%, 8%) rotate(4deg) scale(1.08); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+}
+
+.survivor-poker-chip-wrap-summary { height: 2.65rem; width: 2.65rem; --chip-t: .26rem; }
+.survivor-poker-chip-wrap-summary .survivor-poker-chip-ground-shadow { display: none; }
+.survivor-poker-chip-summary { height: 100%; width: 100%; }
+.survivor-poker-chip-summary[data-state="picked"] { animation: none; transform: none; }
+.survivor-poker-chip-summary.is-idle-spinning {
+  /* Keep the receipt chip readable long enough to enjoy the team mark before
+     it turns through its narrow edge. */
+  animation: survivor-receipt-chip-idle-spin 14s linear infinite;
+}
+
+/* The receipt chip is small: its face is the rim and center only. */
+.survivor-poker-chip-summary .survivor-poker-chip-side::before,
+.survivor-poker-chip-summary .survivor-poker-chip-side::after { display: none; }
+
+@keyframes survivor-receipt-chip-idle-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.survivor-poker-chip-wrap-slate {
+  /* The Slate's lanes are rectangular, so the chip gets an explicit square
+     frame. That prevents grid sizing from ever turning the rim into an oval. */
+  aspect-ratio: 1;
+  filter: drop-shadow(0 .14rem .16rem rgba(23, 23, 25, .26));
+  height: 100%;
+  position: relative;
+  width: 100%;
+  z-index: 2;
+  --chip-t: .3rem;
+}
+.survivor-poker-chip-slate { height: 100%; width: 100%; }
+.survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; --chip-t: .39rem; }
+.survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
+.survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
+
+.survivor-chip-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: .2rem;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.survivor-chip-button:not(:disabled):hover {
+  filter: brightness(1.06) saturate(1.08);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.survivor-chip-button:not(:disabled):active {
+  transform: translateY(0) scale(.96);
+}
+
+.survivor-chip-button:focus-visible {
+  outline: 2px solid #16877f;
+  outline-offset: 2px;
+}
+
+.survivor-chip-button:disabled {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .survivor-poker-chip[data-state="picked"],
+  .survivor-poker-chip[data-animate="toss"] { animation: none !important; transform: none; }
+  .survivor-poker-chip-ground-shadow { animation: none !important; }
+  .survivor-poker-chip-face { transition: none; }
+  .survivor-poker-chip-wrap[data-state="picked"] .survivor-poker-chip-pick-mark { animation: none; opacity: 1; }
+}
+/* Pick'em is the pool's long-running scorebook: deliberately more like a
+   compact ballpark ledger than the Survivor grid beside it. */
+.pickem-ledger {
+  --ledger-ink: #1d1d1f;
+  --ledger-muted: #516076;
+  /* A quiet scorepad parchment: warm enough to feel tactile, still light
+     enough that the blue ruling and red margin remain crisp. */
+  --ledger-paper: #fbf7ec;
+  --ledger-hand-font: var(--font-architects-daughter), "Segoe Print", "Bradley Hand", cursive;
+  --scorepad-blue: #9bb9de;
+  --scorepad-red: #c76862;
+}
+/* A hand-kept weekly pad should feel compact in a broad browser, while still
+   using every available pixel on a phone. */
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) {
+  /* Keep the weekly card compact enough that Pick 1 and Pick 2 read as
+     handwritten columns rather than a stretched dashboard. */
+  /* A scorepad puts the two handwritten entries immediately after the
+     names.  Keep this deliberately narrower on wide screens; phones still
+     use their full available width. */
+  max-width: 100%;
+}
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-ledger-masthead,
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) > .pickem-standings-table {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 30rem;
+}
+/* The pad is a two-sided card. Both faces share one grid cell, so the card keeps
+   the front's size and the chart fills the back's full height. One animated
+   angle, --pad-turn, drives the turn, the lift and tilt, and the shading, so
+   they all follow the paper's real position. sin() is 0 at rest and 1 when the
+   card is edge-on. */
+.pickem-scoreboard-ledger.has-pad-flip {
+  perspective: 1600px;
+  transition: --pad-turn .9s cubic-bezier(.45, .05, .55, .95);
+}
+.has-pad-flip.is-flipped { --pad-turn: 180deg; }
+.has-pad-flip .pickem-ledger-masthead { align-items: center; }
+.has-pad-flip .pad-front { background: var(--ledger-paper); }
+
+/* The card lifts toward the reader and tips slightly as it turns, like a sheet
+   picked up by an edge. The easing is symmetric, so it is exactly edge-on at the
+   halfway mark, which is when the faces swap and the width changes. The width
+   changes in one step then (card edge-on and invisible), so the paper never
+   stretches, and the text on it never reflows, while it is in view. */
+.pad-flip-inner {
+  display: grid;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 30rem;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(sin(var(--pad-turn)) * 2.75rem)) rotateX(calc(sin(var(--pad-turn)) * -5deg)) rotateY(var(--pad-turn));
+  transition: max-width 0s linear .45s;
+  /* Keep the card on its own layer before, during and after the turn. Without this the
+     browser drops the layer when the turn ends and redraws the text a hair differently,
+     which shows as a small stutter in the W and L marks once everything has stopped. */
+  will-change: transform;
+}
+.playoff-scoreboard .pad-flip-inner { max-width: none; }
+.has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
+
+/* Each face switches off exactly at the halfway point of the turn, so the
+   mirrored side can never show through (belt and braces for browsers that
+   ignore backface-visibility on complex faces). */
+.pad-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  grid-area: 1 / 1;
+  min-width: 0;
+  position: relative;
+  transition: visibility 0s linear .45s;
+}
+.has-pad-flip.is-flipped .pad-front,
+.has-pad-flip:not(.is-flipped) .pad-back { visibility: hidden; }
+/* Light falls off across the paper as it turns away, strongest when edge-on. */
+.pad-face::after {
+  background: linear-gradient(90deg, rgba(45, 32, 14, 0), rgba(45, 32, 14, .55));
+  content: "";
+  inset: 0;
+  opacity: calc(sin(var(--pad-turn)) * .85);
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+}
+.pad-back { background: var(--ledger-paper); display: flex; flex-direction: column; transform: rotateY(180deg); }
+
+.pad-flip-button {
+  align-items: center;
+  background: #fffdf8;
+  border: 1px solid #a59b8d;
+  border-radius: 999px;
+  color: #40516a;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 1.9rem;
+  justify-content: center;
+  margin-left: auto;
+  transition: background .15s ease, transform .35s ease;
+  width: 1.9rem;
+}
+.pad-flip-button:hover,
+.pad-flip-button:focus-visible { background: #fff; }
+.pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+.pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
+/* The arrows spin once, in step with the page turning. */
+.pad-flip-icon.is-spinning { animation: pad-flip-spin .9s cubic-bezier(.2, .75, .2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .pad-face,
+  .pad-flip-inner,
+  .pad-flip-button,
+  .pickem-scoreboard-ledger.has-pad-flip { transition: none; }
+  .pad-flip-icon.is-spinning { animation: none; }
+}

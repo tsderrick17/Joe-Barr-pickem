@@ -65,6 +65,20 @@ be replayed.
 - **GitHub Actions** runs application quality, database migration workflows,
   isolated lifecycle checks, encrypted backups, and monthly upgrade rehearsals.
 
+### Where a response is shaped
+
+The routes read rows and answer; deciding what a viewer may see lives in small
+modules with no database access, each covered by tests with fictional rows:
+
+- `src/lib/slate-shape.ts` shapes The Slate's games (lines, scores, results, and
+  pickers, named only for games that have kicked off) and the player's Survivor state.
+- `src/lib/home-shape.ts` shapes the Pick'em Pad's rows (a player's own pick is
+  always visible to them, everyone else's only at kickoff).
+- `src/lib/reveal-rows.ts` builds the rows of the pick-reveal email images (only
+  picks on the revealed games, in the current period, from allowed players).
+
+A change to who can see what belongs in one of these modules, with its test.
+
 ## Player identity and privacy
 
 - Players authenticate with their assigned pool identity and PIN/session flow.
