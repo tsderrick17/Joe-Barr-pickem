@@ -2,11 +2,11 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { createSharedReadCache, isReadRequest } from "@/lib/shared-read-cache";
+import { executeAuthenticatedRequest } from "@/lib/authenticated-request";
+import { createSharedReadCache } from "@/lib/shared-read-cache";
 
 const SESSION_REFRESH_WINDOW_MS = 60_000;
 const TRANSIENT_READ_RETRY_DELAY_MS = 650;
-const TRANSIENT_READ_STATUS_CODES = new Set([502, 503, 504]);
 let inFlightSessionRead: Promise<Session | null> | null = null;
 
 export class SessionUnavailableError extends Error {
@@ -104,58 +104,21 @@ async function fetchWithSessionOnce(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
-  const session = await getFreshSession();
-  if (!session) throw new SessionUnavailableError();
-
-  const request = (accessToken: string) => {
-    const headers = new Headers(init.headers);
-    headers.set("Authorization", `Bearer ${accessToken}`);
-    return fetch(input, { ...init, headers });
-  };
-
-  const retrySafeRead = isReadRequest(init);
-  let response: Response;
-
-  try {
-    response = await request(session.access_token);
-  } catch (error) {
-    // This is intentionally limited to safe reads. A short retry makes a
-    // temporary browser/network handoff recover without ever replaying a
-    // selection, save, or commissioner action.
-    if (!retrySafeRead || (error instanceof DOMException && error.name === "AbortError")) {
-      throw error;
-    }
-
-    await waitForTransientReadRetry(init.signal ?? undefined);
-    response = await request(session.access_token);
-  }
-
-  if (retrySafeRead && TRANSIENT_READ_STATUS_CODES.has(response.status)) {
-    await waitForTransientReadRetry(init.signal ?? undefined);
-    response = await request(session.access_token);
-  }
-
-  if (response.status !== 401) return response;
-
-  const {
-    data: { session: refreshedSession },
-    error,
-  } = await supabase.auth.refreshSession();
-
-  if (error || !refreshedSession) {
-    throw new SessionUnavailableError(
-      "Your sign-in expired. Please enter your PIN again.",
-    );
-  }
-
-  const retryResponse = await request(refreshedSession.access_token);
-  if (retryResponse.status === 401) {
-    throw new SessionUnavailableError(
-      "Your sign-in could not be verified. Please enter your PIN again.",
-    );
-  }
-
-  return retryResponse;
+  return executeAuthenticatedRequest({
+    init,
+    getSession: getFreshSession,
+    refreshSession: async () => {
+      const { data: { session }, error } = await supabase.auth.refreshSession();
+      return { session, error };
+    },
+    send: (accessToken) => {
+      const headers = new Headers(init.headers);
+      headers.set("Authorization", `Bearer ${accessToken}`);
+      return fetch(input, { ...init, headers });
+    },
+    wait: () => waitForTransientReadRetry(init.signal ?? undefined),
+    unavailable: (message) => new SessionUnavailableError(message),
+  });
 }
 
 // Signing in or out must never leave one player's shared reads for the next.
