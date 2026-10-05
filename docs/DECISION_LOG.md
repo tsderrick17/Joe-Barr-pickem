@@ -1350,3 +1350,7 @@ The Slate page's decisions now live in `src/lib/slate-view.ts` with no React in 
 
 One Linux screenshot (Standings, regular-in, tablet width) failed once on main after a merge, in a 528-pixel band of the Survivor logos, and passed on the very same code in the pull request run and on every rerun. A loaded image counts as complete before it is necessarily decoded, so a capture could catch a logo mid-draw. Every spec now also waits for each image to decode before it captures.
 Dependabot now skips ESLint major versions: ESLint 10 breaks the React lint plugin bundled in `eslint-config-next` (`getFilename is not a function`), which fails the lint step on every run, so its pull request is closed rather than left failing. Revisit when Next's lint config supports ESLint 10.
+
+## Survivor logos masked in the Standings screenshots
+
+The Standings screenshot failed again on Linux CI in a different case (night, phone), and on two more pull requests: the same band of about 550 pixels in the Survivor logo row, every time, in a few percent of runs. Zoomed in, the logos are the same but drawn with a very slightly different downscale (they are large originals scaled to about 28 px). Waiting for images to decode did not remove it. The Standings pictures now mask the Survivor logos: each logo's box (so its position and size) is still compared, only the artwork inside it is not. The masked screenshots were re-recorded for both platforms.
