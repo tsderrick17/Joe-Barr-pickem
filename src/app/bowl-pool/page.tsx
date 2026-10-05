@@ -25,6 +25,11 @@ type BowlGame = {
   line?: { favorite_team_id?: string | null; locked_spread?: number | string; locked_at?: string | null } | null;
 };
 
+/** Kickoff time in Eastern as "7:30P" or "12:00A": A or P instead of AM or PM keeps the narrow date column on one line. */
+function shortKickoffTime(kickoffAt: string) {
+  return new Date(kickoffAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).replace(/\s?AM$/i, "A").replace(/\s?PM$/i, "P");
+}
+
 export default function BowlPoolPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -197,11 +202,11 @@ export default function BowlPoolPage() {
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">
             <div className="grid grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] bg-slate-100 px-1 py-2 text-[10px] font-black uppercase tracking-[0.06em] text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:text-xs sm:tracking-[0.12em]">
-              <span>Date / time</span><span>Bowl / location</span><span className="text-center">Fav</span><span className="text-center">Line</span><span className="text-center">Dog</span>
+              <span>Date<br />Time</span><span>Bowl<br />Location</span><span className="text-center">Fav</span><span className="text-center">Line</span><span className="text-center">Dog</span>
             </div>
             {!optedIn ? <div className="border-t border-slate-200 px-4 py-6 text-center text-sm text-slate-600">Check the box above to view the bowl schedule and participate.</div> : (games.length ? games : [{ id: "frisco-placeholder", bowl_name: "Frisco", kickoff_at: "", venue_city: "Frisco", venue_state: "TX", time_confirmed: true }]).map((game, index) => (
               <div className={`bowl-selection-game-row grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 pb-1.5 pt-2 text-slate-400 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-slate-100" : "bg-white"}`} key={game.id}>
-                <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? new Date(game.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }) : ""}</span>
+                <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? shortKickoffTime(game.kickoff_at) : ""}</span>
                 <span className="min-w-0"><strong className="bowl-game-name flex min-h-8 items-center truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
                 <button aria-label={`Select favorite team${teamForSide(game, "favorite")?.full_name ? `: ${teamForSide(game, "favorite")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "favorite"} className={`bowl-pick-box min-w-0 overflow-hidden text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} title={teamForSide(game, "favorite")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "favorite" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlPennant side="left" team={teamForSide(game, "favorite")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "favorite"))}</span>}</button>
                 <span className={`bowl-game-line text-center text-xs sm:text-sm ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`} aria-label="Spread">{game.line?.locked_spread ?? "—"}</span>

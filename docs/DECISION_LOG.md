@@ -1308,6 +1308,10 @@ The receipt now sits right under the menu (the page had a large blank band above
 Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
 Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
 
+## Bowl picks page: stacked legend, A/P times, pinned receipt
+
+The legend over the schedule stacks "Date / Time" and "Bowl / Location" on two lines like the rows below (no slashes). Kickoff times use A or P instead of AM or PM ("7:30P"), so the narrow date column stays on one line and no longer crowds the bowl names. The receipt scrolled away because it was sticky inside a wrapper exactly its own height, and a sticky element only travels within its parent; the wrapper itself now sticks, below the site menu, and a test scrolls to the bottom to prove it stays visible.
+The Fav, Line and Dog labels are vertically centered in the legend bar next to the two-line labels.
 ## Coin toss lands cleanly; games remaining is a split-flap tile
 
 - The toss used to land, then rise about a pixel and rock before resting (extra settle stops after the arc, and an end height one pixel off the chip's resting height, which differs between the picked and unpicked states). It is now one continuous arc that ends exactly at rest, lifts measured from the chip's own resting height (`--chip-rest`), so nothing moves after it stops. The Operations test coin uses the same curve, and a test keeps them identical and checks that after the peak the chip only comes down.
