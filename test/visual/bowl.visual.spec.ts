@@ -48,3 +48,27 @@ for (const [scenario, build] of Object.entries(SCENARIOS)) {
     }
   }
 }
+
+// The receipt must stay in view while the schedule scrolls, at phone and desktop widths.
+for (const width of [390, 1280]) {
+  test(`Bowl receipt stays pinned while scrolling at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await signIn(page, "day");
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1" } }) }));
+    await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+    await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(NOW) });
+    await page.goto("/bowl-pool");
+    const receipt = page.locator(".bowl-receipt-frame");
+    await expect(receipt).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(300);
+    const box = await receipt.boundingBox();
+    expect(box).not.toBeNull();
+    // Visible, just under the site menu, rather than scrolled off the top.
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y).toBeLessThan(200);
+  });
+}
