@@ -51,6 +51,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
       // Lazy images below the fold load only when scrolled near; make them all load now.
       await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
       await page.waitForLoadState("networkidle");
       // The Next.js development badge is not part of the product.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });

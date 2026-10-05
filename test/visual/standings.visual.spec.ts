@@ -44,6 +44,7 @@ async function settle(page: Page) {
   // Lazy images below the fold load only when scrolled near; make them all load now.
   await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+  await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
   await page.waitForLoadState("networkidle");
   // The Bowl Card's score tiles spin when the card first comes into view. Bring it
   // into view on purpose (a quick scroll can pass it before it has rendered), wait
