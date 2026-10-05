@@ -55,3 +55,12 @@ test("rolling rows away takes their borders back smoothly, so nothing below jump
   assert.match(source, /holding\.current = animations;/);
   assert.match(source, /for \(const animation of holding\.current\) animation\.cancel\(\);/);
 });
+
+test("an opening blind ends at the content's exact height, not a rounded one", async () => {
+  const source = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
+  assert.match(source, /function naturalHeight\(node: HTMLElement\)/);
+  assert.match(source, /const full = naturalHeight\(node\);/);
+  // scrollHeight rounds to whole pixels, which left the open ending up to half a pixel off and then settling.
+  assert.doesNotMatch(source, /= node\.scrollHeight;/);
+  assert.match(source, /new ResizeObserver/);
+});
