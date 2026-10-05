@@ -4,9 +4,6 @@ name: Record Linux visual baselines
 # artifact, and commit the files it contains. It never pushes anything itself.
 on:
   workflow_dispatch:
-  # TEMPORARY (removed before merge): lets the first run happen from this branch.
-  push:
-    branches: [refactor-safety-net]
 
 permissions:
   contents: read
