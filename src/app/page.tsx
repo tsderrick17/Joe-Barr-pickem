@@ -10,6 +10,7 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import BowlCard from "@/components/bowl-card";
+import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 
 type ScoreboardPick = {
@@ -124,6 +125,16 @@ export default function HomePage() {
   // A display choice is being saved (a second tap meanwhile is ignored). A ref, not state: changing it
   // must not redraw the page in the middle of a table rolling open or shut.
   const displaySaveInFlight = useRef(false);
+  // The Standings page is revealed once both its own data and the Bowl Card's first load are in (or a
+  // short wait has passed), so the Bowl Card never pops in after the rest of the page is already showing.
+  const [bowlReady, setBowlReady] = useState(false);
+  const markBowlReady = useStableCallback(() => setBowlReady(true));
+  const hasData = data !== null;
+  useEffect(() => {
+    if (!hasData) return;
+    const timer = window.setTimeout(() => setBowlReady(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [hasData]);
   const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
   const serverClockOffset = useRef(0);
   // A background refresh can finish after a display preference save and carry
@@ -351,6 +362,9 @@ export default function HomePage() {
   }
 
   return (
+    <>
+    {bowlReady ? null : <StandingsLoadingShell />}
+    <div className={bowlReady ? undefined : "h-0 overflow-hidden"} inert={!bowlReady} style={bowlReady ? undefined : { visibility: "hidden" }}>
     <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
       <div className="standings-stack mx-auto max-w-5xl px-4 sm:px-5 md:px-10">
         {errorMessage ? (
@@ -477,11 +491,14 @@ export default function HomePage() {
           isCommissioner={data.isCommissioner}
           minimized={bowlPoolMinimized}
           onError={setErrorMessage}
+          onReady={markBowlReady}
           onSetDisplay={setBowlCardDisplay}
           savingDisplay={false}
           viewerPlayerId={data.viewerPlayerId}
         />
       </div>
     </main>
+    </div>
+    </>
   );
 }
