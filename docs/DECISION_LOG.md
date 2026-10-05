@@ -1369,3 +1369,7 @@ Found by measuring the position of the Bowl Card under the Survivor table frame 
 The Standings page showed itself as soon as its own data arrived, and the Bowl Card filled in a moment later, so it appeared out of nowhere. The page now keeps the loading shell up (with the real page laid out but hidden beneath it) until the Bowl Card reports its first load finished, whether it worked or not, or 2.5 seconds have passed.
 
 The "− OUT" roll jumped 3 px at its last frame. Measured frame by frame: browsers draw a border under one pixel as a whole pixel, so each hidden row kept its 1 px bottom border until it left the page, and the last visible row also loses its border when it becomes the last row. The roll now takes the borders back with a negative bottom margin, which animates smoothly, and releases the held animations in the same render that removes the rows. The last step went from 3 px to 0.
+
+## Sections now open to their exact height
+
+When the Survivor table finished opening on desktop, the Bowl Card below moved down about 0.4 px and came back. The blind measured its target with `scrollHeight`, which rounds to a whole pixel, so it stopped up to half a pixel off and corrected itself when it let go. It now measures the content's height to a fraction of a pixel, and an opening blind also follows the content if its height changes while opening (the table wraps differently as it glides wider). Measured at 1280 px: the last steps are now 1305.11, 1305.75, 1305.78, 1305.78 with no overshoot.
