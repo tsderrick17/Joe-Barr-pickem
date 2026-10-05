@@ -1,5 +1,9 @@
 # Standard operating procedure index
 
+Changing how something looks? Start with [View states](VIEW_STATES.md): every
+view and state has an exact-match screenshot test, and the file explains how to
+refresh the baselines after an intended change.
+
 This page routes a commissioner or future coding session to the correct
 procedure. Scheduled automation is the normal operator. Manual actions are
 guarded recovery tools for a specific observed condition.

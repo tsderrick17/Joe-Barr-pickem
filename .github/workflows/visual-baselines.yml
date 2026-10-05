@@ -1,0 +1,35 @@
+name: Record Linux visual baselines
+
+# Manual only. Run on a branch after an intended visual change, download the
+# artifact, and commit the files it contains. It never pushes anything itself.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container: mcr.microsoft.com/playwright:v1.63.0-noble
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:visual -- -u
+      - run: npm test -- --test-name-pattern="email artwork baseline"
+        env:
+          EMAIL_BASELINE_UPDATE: "1"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: linux-baselines
+          path: |
+            test/visual/**/*-linux.png
+            test/email-artwork-baselines/linux/
+          retention-days: 7
