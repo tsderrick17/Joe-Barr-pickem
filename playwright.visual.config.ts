@@ -31,6 +31,7 @@ export default defineConfig({
     env: {
       ...process.env,
       NEXT_DIST_DIR: ".next-visual",
+      NEXT_IMAGE_UNOPTIMIZED: "1",
       NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.invalid",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "visual-baseline",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "visual-baseline",
