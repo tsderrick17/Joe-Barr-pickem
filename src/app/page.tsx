@@ -121,7 +121,9 @@ export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
-  const [savingDisplay, setSavingDisplay] = useState(false);
+  // A display choice is being saved (a second tap meanwhile is ignored). A ref, not state: changing it
+  // must not redraw the page in the middle of a table rolling open or shut.
+  const displaySaveInFlight = useRef(false);
   const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
   const serverClockOffset = useRef(0);
   // A background refresh can finish after a display preference save and carry
@@ -279,62 +281,54 @@ export default function HomePage() {
       }
     : null;
 
-  async function setSurvivorDisplay(show: boolean) {
-    setSavingDisplay(true);
+  /**
+   * Saves a display choice (show or hide a table, hide eliminated rows). The page changes at once
+   * and the save follows in the background: waiting for the server before changing anything made
+   * the roll start late, and the page then redrew twice more (saving flag on, then off) in the
+   * middle of the animation. If the save fails, the choice is put back and the error shown.
+   */
+  async function saveDisplayChoice(field: DisplayPreferenceKey, value: boolean, apply: (value: boolean) => void, previous: boolean) {
+    if (displaySaveInFlight.current) return;
+    displaySaveInFlight.current = true;
+    // A refresh that lands before the save finishes must not bring the old choice back.
+    displayPreferenceOverrides.current[field] = value;
+    apply(value);
     try {
       const response = await fetchWithSession("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ showSurvivorStandings: show }),
+        body: JSON.stringify({ [field]: value }),
       });
-      if (!response.ok) throw new Error("Unable to save that display choice.");
-      displayPreferenceOverrides.current.showSurvivorStandings = show;
-      setData((current) => current ? { ...current, showSurvivorStandings: show } : current);
-    } catch {
-      setErrorMessage("That display choice could not be saved. Please try again.");
+      if (!response.ok) {
+        const result = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(result.error ?? "Unable to save that display choice.");
+      }
+    } catch (error) {
+      displayPreferenceOverrides.current[field] = previous;
+      apply(previous);
+      setErrorMessage(error instanceof Error && error.message !== "Unable to save that display choice." ? error.message : "That display choice could not be saved. Please try again.");
     } finally {
-      setSavingDisplay(false);
+      displaySaveInFlight.current = false;
     }
+  }
+
+  async function setSurvivorDisplay(show: boolean) {
+    const apply = (value: boolean) => setData((current) => current ? { ...current, showSurvivorStandings: value } : current);
+    await saveDisplayChoice("showSurvivorStandings", show, apply, !show);
   }
 
   async function setBowlCardDisplay(show: boolean) {
-    if (savingDisplay) return;
-    setSavingDisplay(true);
-    try {
-      const response = await fetchWithSession("/api/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ showBowlCard: show }),
-      });
-      const result = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? "Bowl Card display preference could not be saved.");
-      displayPreferenceOverrides.current.showBowlCard = show;
-      setBowlPoolMinimized(!show);
-      setData((current) => current ? { ...current, showBowlCard: show } : current);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Bowl Card display preference could not be saved.");
-    } finally {
-      setSavingDisplay(false);
-    }
+    const apply = (value: boolean) => {
+      setBowlPoolMinimized(!value);
+      setData((current) => current ? { ...current, showBowlCard: value } : current);
+    };
+    await saveDisplayChoice("showBowlCard", show, apply, !show);
   }
 
   async function setEliminatedRowsHidden(pool: "pickem" | "survivor", hidden: boolean) {
-    setSavingDisplay(true);
     const field = pool === "pickem" ? "hidePickemEliminatedRows" : "hideSurvivorEliminatedRows";
-    try {
-      const response = await fetchWithSession("/api/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: hidden }),
-      });
-      if (!response.ok) throw new Error("Unable to save that display choice.");
-      displayPreferenceOverrides.current[pool === "pickem" ? "hidePickemEliminatedRows" : "hideSurvivorEliminatedRows"] = hidden;
-      setData((current) => current ? { ...current, [field]: hidden } : current);
-    } catch {
-      setErrorMessage("That display choice could not be saved. Please try again.");
-    } finally {
-      setSavingDisplay(false);
-    }
+    const apply = (value: boolean) => setData((current) => current ? { ...current, [field]: value } : current);
+    await saveDisplayChoice(field, hidden, apply, !hidden);
   }
 
   if (errorMessage && !data) {
@@ -477,14 +471,14 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        {!data.isPlayoff ? <SurvivorTable data={data} savingDisplay={savingDisplay} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
+        {!data.isPlayoff ? <SurvivorTable data={data} savingDisplay={false} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
         <BowlCard
           fallbackRows={data.rows}
           isCommissioner={data.isCommissioner}
           minimized={bowlPoolMinimized}
           onError={setErrorMessage}
           onSetDisplay={setBowlCardDisplay}
-          savingDisplay={savingDisplay}
+          savingDisplay={false}
           viewerPlayerId={data.viewerPlayerId}
         />
       </div>
