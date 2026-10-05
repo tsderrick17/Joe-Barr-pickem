@@ -8,14 +8,14 @@ test("the Operations test coin flips exactly like a Survivor chip", async () => 
     readFile(new URL("../src/components/chip-playground.tsx", import.meta.url), "utf8"),
   ]);
   const keyframes = css.match(/@keyframes survivor-chip-toss \{([\s\S]*?)\n\}/)[1];
-  const fromCss = [...keyframes.matchAll(/([\d.]+)% \{ transform: translateY\(calc\(var\(--chip-rest, 0px\) \+ ([-\d.]+)px\)\) rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\) scale\(([\d.]+)\); \}/g)]
+  const fromCss = [...keyframes.matchAll(/([\d.]+)% \{ transform: translateY\(calc\(var\(--chip-rest, 0px\) \+ ([-\d.]+)px\)\) rotateZ\(calc\(var\(--toss-axis, 0deg\) \* [\d.]+\)\) rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\) scale\(([\d.]+)\); \}/g)]
     .map(([, at, lift, turn, wobble, scale]) => [Math.round(Number(at) * 100) / 10000, Number(turn) / 1080, Number(wobble), Number(lift), Number(scale)]);
   const fromPlayground = [...playground.matchAll(/\{ at: ([\d.]+), turn: ([-\d.]+) \/ 1080, wobble: ([-\d.]+), lift: ([-\d.]+), scale: ([\d.]+) \}/g)]
     .map(([, at, turn, wobble, lift, scale]) => [Number(at), Number(turn) / 1080, Number(wobble), Number(lift), Number(scale)]);
   assert.ok(fromCss.length > 20);
   assert.deepEqual(fromPlayground, fromCss);
   // Same length and linear timing (the physics is in the keyframes).
-  assert.match(css, /animation: survivor-chip-toss 900ms linear both;/);
+  assert.match(css, /animation: survivor-chip-toss var\(--toss-ms, 900ms\) linear both;/);
   assert.match(playground, /chip\.animate\(frames, \{ duration: 900, easing: "linear" \}\)/);
   // Steady spin through the flight: equal turns between equally spaced stops.
   const flight = fromCss.filter(([at]) => at > 0.09);
@@ -62,4 +62,23 @@ test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed tea
   assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.1rem 2\.6rem 5\.1rem;/);
   assert.ok(page.includes("<li>Pick every bowl, including playoffs, against the spread. Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li>"));
   assert.ok(!css.includes(".bowl-pick-box .bowl-pennant { max-width: 100%; width: 100%; }"));
+});
+
+test("each Survivor chip toss varies its spin axis and speed; the test coin does not", async () => {
+  const [chip, css, playground] = await Promise.all([
+    readFile(new URL("../src/components/survivor-poker-chip.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/chip-playground.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(chip, /"--toss-axis": `\$\{lean\.toFixed\(1\)\}deg`, "--toss-ms": `\$\{Math\.round\(between\(780, 1060\)\)\}ms`/);
+  assert.match(chip, /useState\(\(\) => \(animate \? randomToss\(\) : undefined\)\)/);
+  // The tilt always returns to zero by the end, so the chip lands exactly upright.
+  const keyframes = css.match(/@keyframes survivor-chip-toss \{([\s\S]*?)\n\}/)[1];
+  assert.match(keyframes.split("\n").filter(Boolean).at(-1), /^\s*100% \{.*rotateZ\(calc\(var\(--toss-axis, 0deg\) \* 0\.0\)\)/);
+  assert.ok(!playground.includes("--toss-axis") && !playground.includes("Math.random"));
+});
+
+test("the Pick'em Pad keeps its own layer through the turn so the marks don't redraw at the end", async () => {
+  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.pad-flip-inner \{[^}]*will-change: transform;/);
 });

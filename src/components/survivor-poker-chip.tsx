@@ -1,5 +1,7 @@
+"use client";
+
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { teamChipAccents } from "@/lib/nfl-helmet-colors";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
@@ -43,6 +45,13 @@ const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
 
 const CHIP_LOGO_BOOST = 1.18;
 
+/** Each toss is a little different, like a real one: the spin axis leans a few degrees either way and the flip runs a bit faster or slower. */
+function randomToss() {
+  const between = (low: number, high: number) => low + Math.random() * (high - low);
+  const lean = between(5, 13) * (Math.random() < 0.5 ? -1 : 1);
+  return { "--toss-axis": `${lean.toFixed(1)}deg`, "--toss-ms": `${Math.round(between(780, 1060))}ms` } as CSSProperties;
+}
+
 export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip, showEdge = false }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
@@ -56,6 +65,8 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const state = official ? "official" : selected ? "picked" : "available";
   // The rim is only seen while the chip turns, so only a turning chip builds it.
   const renderEdge = showEdge || animate || idleSpin;
+  // Chosen once per toss (a new toss remounts the chip), and only when there is one.
+  const [toss] = useState(() => (animate ? randomToss() : undefined));
   const face = (
     <span className="survivor-poker-chip-face" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
       <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
@@ -63,7 +74,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   );
 
   return (
-    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary } as CSSProperties} title={tooltip ?? teamName}>
+    <span aria-hidden="true" className={`survivor-poker-chip-wrap survivor-poker-chip-wrap-${size}`} data-animate={animate ? "toss" : undefined} data-state={state} style={{ "--chip-primary": accent.primary, "--chip-secondary": accent.secondary, ...toss } as CSSProperties} title={tooltip ?? teamName}>
       <span className="survivor-poker-chip-ground-shadow" />
       <span className={`survivor-poker-chip survivor-poker-chip-${size}${idleSpin ? " is-idle-spinning" : ""}${unavailable ? " is-unavailable" : ""}`} data-animate={animate ? "toss" : undefined} data-state={state}>
         {renderEdge ? edgeSegments.map((segment, index) => <span className={`survivor-poker-chip-edge-seg${segment.insert ? " is-insert" : ""}`} key={index} style={segment.style} />) : null}

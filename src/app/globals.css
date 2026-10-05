@@ -1112,40 +1112,40 @@ body {
   /* A real toss: the chip spins at a steady rate while it rises and falls
      (the curve lives in the keyframes, so the timing is linear), comes toward
      you as it rises, then lands flat and rocks to rest. */
-  animation: survivor-chip-toss 900ms linear both;
+  animation: survivor-chip-toss var(--toss-ms, 900ms) linear both;
 }
 
 .survivor-poker-chip-wrap[data-animate="toss"]:not(.survivor-poker-chip-wrap-summary) .survivor-poker-chip-ground-shadow {
-  animation: survivor-chip-shadow 900ms linear both;
+  animation: survivor-chip-shadow var(--toss-ms, 900ms) linear both;
 }
 
 @keyframes survivor-chip-toss {
-  0% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateX(0deg) rotateY(0deg) scale(1.000); }
-  6% { transform: translateY(calc(var(--chip-rest, 0px) + 1.5px)) rotateX(-6deg) rotateY(0deg) scale(0.975); }
-  9.92% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateX(45deg) rotateY(1.29deg) scale(1.027); }
-  13.83% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateX(90deg) rotateY(2.5deg) scale(1.052); }
-  17.75% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateX(135deg) rotateY(3.54deg) scale(1.074); }
-  21.67% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateX(180deg) rotateY(4.33deg) scale(1.094); }
-  25.58% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateX(225deg) rotateY(4.83deg) scale(1.112); }
-  29.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateX(270deg) rotateY(5deg) scale(1.127); }
-  33.42% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateX(315deg) rotateY(4.83deg) scale(1.140); }
-  37.33% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateX(360deg) rotateY(4.33deg) scale(1.151); }
-  41.25% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateX(405deg) rotateY(3.54deg) scale(1.159); }
-  45.17% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateX(450deg) rotateY(2.5deg) scale(1.165); }
-  49.08% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateX(495deg) rotateY(1.29deg) scale(1.169); }
-  53% { transform: translateY(calc(var(--chip-rest, 0px) + -12px)) rotateX(540deg) rotateY(0deg) scale(1.170); }
-  56.92% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateX(585deg) rotateY(-1.29deg) scale(1.169); }
-  60.83% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateX(630deg) rotateY(-2.5deg) scale(1.165); }
-  64.75% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateX(675deg) rotateY(-3.54deg) scale(1.159); }
-  68.67% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateX(720deg) rotateY(-4.33deg) scale(1.151); }
-  72.58% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateX(765deg) rotateY(-4.83deg) scale(1.140); }
-  76.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateX(810deg) rotateY(-5deg) scale(1.127); }
-  80.42% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateX(855deg) rotateY(-4.83deg) scale(1.112); }
-  84.33% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateX(900deg) rotateY(-4.33deg) scale(1.094); }
-  88.25% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateX(945deg) rotateY(-3.54deg) scale(1.074); }
-  92.17% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateX(990deg) rotateY(-2.5deg) scale(1.052); }
-  96.08% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateX(1035deg) rotateY(-1.29deg) scale(1.027); }
-  100% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateX(1080deg) rotateY(0deg) scale(1.000); }
+  0% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(0deg) rotateY(0deg) scale(1.000); }
+  6% { transform: translateY(calc(var(--chip-rest, 0px) + 1.5px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(-6deg) rotateY(0deg) scale(0.975); }
+  9.92% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.131)) rotateX(45deg) rotateY(1.29deg) scale(1.027); }
+  13.83% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.259)) rotateX(90deg) rotateY(2.5deg) scale(1.052); }
+  17.75% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.383)) rotateX(135deg) rotateY(3.54deg) scale(1.074); }
+  21.67% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.5)) rotateX(180deg) rotateY(4.33deg) scale(1.094); }
+  25.58% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.609)) rotateX(225deg) rotateY(4.83deg) scale(1.112); }
+  29.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.707)) rotateX(270deg) rotateY(5deg) scale(1.127); }
+  33.42% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.793)) rotateX(315deg) rotateY(4.83deg) scale(1.140); }
+  37.33% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.866)) rotateX(360deg) rotateY(4.33deg) scale(1.151); }
+  41.25% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.924)) rotateX(405deg) rotateY(3.54deg) scale(1.159); }
+  45.17% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.966)) rotateX(450deg) rotateY(2.5deg) scale(1.165); }
+  49.08% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.991)) rotateX(495deg) rotateY(1.29deg) scale(1.169); }
+  53% { transform: translateY(calc(var(--chip-rest, 0px) + -12px)) rotateZ(calc(var(--toss-axis, 0deg) * 1.0)) rotateX(540deg) rotateY(0deg) scale(1.170); }
+  56.92% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.991)) rotateX(585deg) rotateY(-1.29deg) scale(1.169); }
+  60.83% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.966)) rotateX(630deg) rotateY(-2.5deg) scale(1.165); }
+  64.75% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.924)) rotateX(675deg) rotateY(-3.54deg) scale(1.159); }
+  68.67% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.866)) rotateX(720deg) rotateY(-4.33deg) scale(1.151); }
+  72.58% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.793)) rotateX(765deg) rotateY(-4.83deg) scale(1.140); }
+  76.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.707)) rotateX(810deg) rotateY(-5deg) scale(1.127); }
+  80.42% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.609)) rotateX(855deg) rotateY(-4.83deg) scale(1.112); }
+  84.33% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.5)) rotateX(900deg) rotateY(-4.33deg) scale(1.094); }
+  88.25% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.383)) rotateX(945deg) rotateY(-3.54deg) scale(1.074); }
+  92.17% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.259)) rotateX(990deg) rotateY(-2.5deg) scale(1.052); }
+  96.08% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.131)) rotateX(1035deg) rotateY(-1.29deg) scale(1.027); }
+  100% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateZ(calc(var(--toss-axis, 0deg) * 0.0)) rotateX(1080deg) rotateY(0deg) scale(1.000); }
 }
 
 @keyframes survivor-chip-shadow {
@@ -1335,6 +1335,10 @@ body {
   transform-style: preserve-3d;
   transform: translateZ(calc(sin(var(--pad-turn)) * 2.75rem)) rotateX(calc(sin(var(--pad-turn)) * -5deg)) rotateY(var(--pad-turn));
   transition: max-width 0s linear .45s;
+  /* Keep the card on its own layer before, during and after the turn. Without this the
+     browser drops the layer when the turn ends and redraws the text a hair differently,
+     which shows as a small stutter in the W and L marks once everything has stopped. */
+  will-change: transform;
 }
 .playoff-scoreboard .pad-flip-inner { max-width: none; }
 .has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
@@ -3209,10 +3213,23 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
   border-bottom-color: #7a6a3a;
 }
 
-.bowl-card-section.is-minimized {
+/* Survivor Table and Bowl Card share one width contract with the Pick'em Pad above them.
+   Collapsed, each is exactly as wide as the pad and centered on it; expanded, it grows to
+   the page rail (and the Bowl Card further, on a wide screen). The width glides between the
+   two over the same time and curve as the blind that rolls the table up or down. */
+:root { --pad-width: 30rem; --rail-width: 59rem; --section-glide: 420ms cubic-bezier(.65, 0, .35, 1); }
+.bowl-card-section,
+.survivor-ledger {
   margin-left: auto;
   margin-right: auto;
-  max-width: var(--standings-module-width);
+  max-width: var(--rail-width);
+  transition: max-width var(--section-glide);
+  width: 100%;
+}
+.bowl-card-section.is-minimized,
+.survivor-ledger.is-minimized { max-width: var(--pad-width); }
+@media (prefers-reduced-motion: reduce) {
+  .bowl-card-section, .survivor-ledger { transition: none; }
 }
 
 .bowl-standings-scroll {
@@ -3249,13 +3266,16 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
    its eight-game viewport is not clipped by the rail's max-width. Minimized
    cards keep the compact Pick'em rail above. */
 @media (min-width: 1100px) {
-  .bowl-card-section:not(.is-minimized) {
-    width: min(74.5rem, calc(100vw - 2rem));
-    max-width: none;
+  /* Both states use the same centering, so only the width changes when it opens or closes. */
+  .bowl-card-section {
     margin-left: 50%;
     margin-right: 0;
+    max-width: none;
     transform: translateX(-50%);
+    transition: width var(--section-glide);
+    width: min(74.5rem, calc(100vw - 2rem));
   }
+  .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
 }
 
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
@@ -3454,15 +3474,6 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
 /* Survivor expands to the same wide reading surface as the Bowl Card. Its
    collapsed state returns to the compact Pick'em rail so minimized modules
    remain visually consistent across the Standings page. */
-.survivor-ledger {
-  /* Match the Bowl Card's available standings rail. The grid keeps a
-     55.5rem minimum for narrow viewports, but expands instead of scrolling
-     when the page has room. */
-  max-width: 100%;
-}
-.survivor-ledger.is-minimized {
-  max-width: var(--standings-module-width);
-}
 /* The standings matrix should never create a second, nearly-invisible
    vertical scrollbar. Its height is content-driven; only narrow viewports
    may need the intentional horizontal scroll. */
