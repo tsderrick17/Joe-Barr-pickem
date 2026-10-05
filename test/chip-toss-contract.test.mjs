@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("the Operations test coin flips exactly like a Survivor chip", async () => {
   const [css, playground] = await Promise.all([
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
     readFile(new URL("../src/components/chip-playground.tsx", import.meta.url), "utf8"),
   ]);
   const keyframes = css.match(/@keyframes survivor-chip-toss \{([\s\S]*?)\n\}/)[1];
@@ -32,7 +33,7 @@ test("split-flap tiles hinge in perspective and never show Graduate's dotted zer
   const [tile, card, css] = await Promise.all([
     readFile(new URL("../src/components/bowl-score-tile.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/bowl-card.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
   ]);
   assert.match(tile, /export const tileGlyph = \(digit: number\) => \(digit === 0 \? "O" : String\(digit\)\);/);
   assert.match(tile, /rotateX\(-90deg\)/);
@@ -51,7 +52,7 @@ test("the Bowl Card stacks Games over remaining above the centered counter", asy
 test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed team targets", async () => {
   const [page, css] = await Promise.all([
     readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
   ]);
   assert.match(page, /className="bowl-pool-page mx-auto max-w-6xl px-2 pb-8 pt-0 sm:px-6 sm:pb-10"/);
   assert.equal((page.match(/className=\{`bowl-pick-box /g) ?? []).length, 2);
@@ -67,7 +68,7 @@ test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed tea
 test("each Survivor chip toss varies its spin axis and speed; the test coin does not", async () => {
   const [chip, css, playground] = await Promise.all([
     readFile(new URL("../src/components/survivor-poker-chip.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
     readFile(new URL("../src/components/chip-playground.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(chip, /"--toss-axis": `\$\{lean\.toFixed\(1\)\}deg`, "--toss-ms": `\$\{Math\.round\(between\(780, 1060\)\)\}ms`/);
@@ -79,6 +80,6 @@ test("each Survivor chip toss varies its spin axis and speed; the test coin does
 });
 
 test("the Pick'em Pad keeps its own layer through the turn so the marks don't redraw at the end", async () => {
-  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const css = await readStylesheet();
   assert.match(css, /\.pad-flip-inner \{[^}]*will-change: transform;/);
 });

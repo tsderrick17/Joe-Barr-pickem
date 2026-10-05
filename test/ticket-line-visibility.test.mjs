@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("the ticket shows preliminary lines and distinguishes official lines", async () => {
   const [home, ticket, styles, recapImage] = await Promise.all([
     readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/my-ticket.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
     readFile(new URL("../src/lib/email-artwork.tsx", import.meta.url), "utf8"),
   ]);
 

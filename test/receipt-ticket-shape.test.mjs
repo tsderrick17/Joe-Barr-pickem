@@ -3,9 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8").replace(/\r\n/g, "\n");
+const css = readStylesheetSync().replace(/\r\n/g, "\n");
 const rule = (selector, tail = " {") => {
   const start = css.indexOf(`\n${selector}${tail}`) + 1;
   assert.ok(start >= 1, `missing rule: ${selector}`);

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("the sliding wrapper never uses a Tailwind utility class name", async () => {
   const source = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
@@ -11,7 +12,7 @@ test("the sliding wrapper never uses a Tailwind utility class name", async () =>
 });
 
 test("the Standings spacing reset never strips the ticket's own padding", async () => {
-  const styles = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const styles = await readStylesheet();
   assert.match(styles, /\.standings-stack > section:not\(\.my-ticket\):not\(\.standings-loading-ticket\) \{ padding-block: 0; \}/);
 });
 

@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("stacked Slate header removes its empty control lane and redundant separator space", async () => {
   const [page, styles] = await Promise.all([
     readFile(new URL("../src/components/slate-header.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
   ]);
 
   assert.match(page, /<div className="slate-view-switch-slot">/);

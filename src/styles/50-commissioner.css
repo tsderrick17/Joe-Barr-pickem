@@ -1,0 +1,624 @@
+/* Commissioner operations map: one live path replaces a wall of independent
+   status cards. The same path turns vertical on phones so its order remains
+   obvious without horizontal scrolling. */
+.commissioner-map-banner {
+  align-items: center;
+  background: #e7f2ee;
+  border-left: 5px solid #08764e;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.commissioner-map-banner.is-attention {
+  background: #fff2dd;
+  border-left-color: #a65d08;
+}
+
+/* Keep the Commissioner email center usable as delivery history grows. Each
+   list gets its own bounded scroll region so the page controls stay reachable. */
+.commissioner-email-list {
+  max-height: 34rem;
+  overflow-y: auto;
+  padding-right: .35rem;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 639px) {
+  .commissioner-email-list { max-height: 28rem; }
+}
+
+.commissioner-map-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.commissioner-map-metric {
+  background: var(--pool-surface);
+  border: 1px solid var(--pool-rule);
+  display: grid;
+  min-width: 0;
+}
+.commissioner-map-metric-label { color: var(--pool-muted); font-size: .66rem; font-weight: 900; letter-spacing: .14em; }
+.commissioner-map-metric strong {
+  color: var(--pool-ink);
+  font-family: Georgia, serif;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.commissioner-map-metric > span:last-child { color: var(--pool-muted); font-size: .78rem; }
+
+.commissioner-map-pulse {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  display: flex;
+  flex: 0 0 2.75rem;
+  height: 2.75rem;
+  justify-content: center;
+}
+
+.commissioner-map-pulse span {
+  background: #08764e;
+  border-radius: 999px;
+  height: .7rem;
+  width: .7rem;
+}
+
+.commissioner-map-banner.is-attention .commissioner-map-pulse span { background: #a65d08; }
+
+.commissioner-flow {
+  display: grid;
+  grid-template-columns: repeat(var(--commissioner-step-count, 5), minmax(0, 1fr));
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.commissioner-flow-step {
+  min-width: 0;
+  position: relative;
+}
+
+.commissioner-flow-step:not(:last-child)::after {
+  background: #aaa398;
+  content: "";
+  height: 2px;
+  left: calc(50% + 1.35rem);
+  position: absolute;
+  right: calc(-50% + 1.35rem);
+  z-index: 0;
+}
+
+.commissioner-flow-step.is-complete:not(:last-child)::after { background: #16806a; }
+
+.commissioner-flow-button {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 0 .35rem;
+  position: relative;
+  text-align: center;
+  width: 100%;
+  z-index: 1;
+}
+
+.commissioner-flow-node {
+  align-items: center;
+  background: #f7f3e8;
+  border: 2px solid #89837a;
+  border-radius: 999px;
+  display: flex;
+  flex: 0 0 2.7rem;
+  font-family: Arial, sans-serif;
+  font-size: .85rem;
+  font-weight: 900;
+  justify-content: center;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.commissioner-flow-button:hover .commissioner-flow-node,
+.commissioner-flow-button:focus-visible .commissioner-flow-node,
+.commissioner-flow-button[aria-pressed="true"] .commissioner-flow-node {
+  box-shadow: 0 0 0 4px rgba(22, 128, 106, .16);
+  transform: translateY(-2px);
+}
+
+.commissioner-flow-step.is-complete .commissioner-flow-node { background: #16806a; border-color: #16806a; color: #fff; }
+.commissioner-flow-step.is-active .commissioner-flow-node { background: #dceee9; border-color: #08764e; color: #075f58; }
+.commissioner-flow-step.is-attention .commissioner-flow-node { background: #a33c29; border-color: #a33c29; color: #fff; }
+.commissioner-flow-step.is-waiting .commissioner-flow-node { background: #eee8dc; color: #676057; }
+.commissioner-flow-copy { display: block; min-width: 0; }
+.commissioner-flow-label {
+  display: block;
+  font-family: Georgia, serif;
+  font-weight: 700;
+}
+.commissioner-flow-state { color: #6b655d; display: block; font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
+.commissioner-flow-step.is-active .commissioner-flow-state { color: #075f58; }
+.commissioner-flow-step.is-attention .commissioner-flow-state { color: #9b2e1d; }
+
+.commissioner-map-detail {
+  border-left: 5px solid #787169;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(13rem, 1fr);
+}
+
+.commissioner-map-detail.is-complete { border-left-color: #16806a; }
+.commissioner-map-detail.is-active { background: #edf7f4; border-left-color: #08764e; }
+.commissioner-map-detail.is-attention { background: #fff0ea; border-left-color: #a33c29; }
+.commissioner-map-next { border-left: 1px solid #c7c0b5; min-width: 0; padding-left: 1.25rem; }
+
+html[data-theme="night"] .commissioner-map-banner,
+html[data-theme="night"] .commissioner-map-detail.is-active {
+  background: #213b38;
+}
+
+html[data-theme="night"] .commissioner-map-banner.is-attention,
+html[data-theme="night"] .commissioner-map-detail.is-attention {
+  background: #432c25;
+}
+
+html[data-theme="night"] .commissioner-flow-node { background: #202725; border-color: #87918d; }
+html[data-theme="night"] .commissioner-flow-step.is-complete .commissioner-flow-node { background: #16806a; border-color: #67c9b6; }
+html[data-theme="night"] .commissioner-flow-step.is-active .commissioner-flow-node { background: #274a45; border-color: #80d4ca; color: #dffbf5; }
+html[data-theme="night"] .commissioner-flow-step.is-attention .commissioner-flow-node { background: #9f4737; border-color: #ef9b89; }
+html[data-theme="night"] .commissioner-flow-state { color: #b7c1bd; }
+html[data-theme="night"] .commissioner-flow-step.is-active .commissioner-flow-state { color: #80d4ca; }
+html[data-theme="night"] .commissioner-flow-step.is-attention .commissioner-flow-state { color: #ef9b89; }
+html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
+
+@media (max-width: 639px) {
+  .commissioner-map-metrics { grid-template-columns: minmax(0, 1fr); }
+  .commissioner-map-banner { align-items: flex-start; }
+  .commissioner-map-pulse { flex-basis: 2.25rem; height: 2.25rem; width: 2.25rem; }
+  .commissioner-flow { gap: 0; grid-template-columns: minmax(0, 1fr); }
+  .commissioner-flow-step { min-height: 4.8rem; }
+  .commissioner-flow-step:not(:last-child)::after {
+    bottom: -.2rem;
+    height: auto;
+    left: 1.3rem;
+    right: auto;
+    top: 2.65rem;
+    width: 2px;
+  }
+  .commissioner-flow-button {
+  align-items: flex-start;
+  flex-direction: row;
+  gap: .85rem;
+  padding: 0;
+  text-align: left;
+}
+  .commissioner-flow-node { flex-basis: 2.65rem; height: 2.65rem; width: 2.65rem; }
+  .commissioner-flow-label { font-size: 1rem; margin-top: .2rem; }
+  
+  .commissioner-map-next {
+  padding-left: 0;
+  padding-top: .8rem;
+}
+}
+
+.pool-display-toggle {
+  border: 1px solid #77746e;
+  background: #fffdf8;
+  color: #34415a;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  padding: .36rem .52rem;
+  text-transform: uppercase;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: #e7f2ee; border-color: #167d75; color: #075f58; }
+.pool-display-toggle:disabled { cursor: wait; opacity: .6; }
+html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
+html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: #ffffff; }
+
+/* Keep the Bowl Pool identity columns above the moving game matrix. The
+   explicit stacking and edge shadow prevent later game cells from painting
+   over names when the long standings sheet is scrolled horizontally. */
+.bowl-standings-scroll .bowl-standings-sticky {
+  position: sticky;
+  isolation: isolate;
+  box-shadow: 3px 0 0 rgba(29, 29, 31, .12);
+}
+.bowl-standings-game-cell {
+  align-items: stretch;
+  display: grid !important;
+  grid-template-rows: 3rem 1.6rem 1.6rem 1.6rem;
+  min-height: 7.8rem;
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
+  scroll-snap-align: start;
+}
+.bowl-standings-game-cell > .bowl-standings-bowl-name,
+.bowl-standings-game-cell > .bowl-standings-team,
+.bowl-standings-game-cell > .bowl-standings-line {
+  align-items: center;
+  display: flex !important;
+  height: 100%;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  min-height: 0;
+  width: 100%;
+}
+.bowl-standings-game-cell > .bowl-standings-team {
+  /* Team labels are the actionable data on this ledger. Keep them fully
+     opaque and ink-dark even when the surrounding cell uses muted slate ink. */
+  color: #111827 !important;
+  opacity: 1 !important;
+}
+.bowl-standings-game-cell > .bowl-standings-bowl-name {
+  border-bottom: 1px solid #b8c0ca;
+  box-sizing: border-box;
+  padding: 0 .1rem;
+}
+
+html[data-theme="night"] .bowl-standings-game-cell > .bowl-standings-team {
+  color: #f8fafc !important;
+}
+
+/* The Bowl Card uses a bespoke grid with intentionally light paper colors in
+   its markup.  Restyle every surface explicitly for night mode so muted text
+   never lands on parchment-colored cells. */
+html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
+  background: #111c24;
+  border-color: #6b8790 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
+html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
+  background: #172731 !important;
+  border-color: #6b8790 !important;
+  color: #dcebed !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-game-cell {
+  background: #1c2c36 !important;
+  border-color: #6b8790 !important;
+  color: #dcebed !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-bowl-name {
+  border-color: #637b84 !important;
+  color: #f6f7f2 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #e3bf91 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row {
+  background: #172731 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span {
+  color: #e9f1f3 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky {
+  background: #172731 !important;
+  color: #f4f7f6 !important;
+}
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-green-"] { color: #80e4ac !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca !important; }
+
+
+/* Commissioner desk: one visual language for the operational workspaces. */
+.commissioner-desk {
+  background-image: radial-gradient(circle at 12% 0%, rgba(15, 118, 110, .09), transparent 24rem);
+}
+
+.commissioner-command-bar {
+  align-items: start;
+  background: linear-gradient(125deg, #10221f 0%, #172c28 55%, #123832 100%);
+  box-shadow: 0 16px 38px rgba(35, 38, 34, .14);
+  color: #fffdf7;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, .72fr);
+  overflow: hidden;
+  position: relative;
+}
+.commissioner-command-title, .commissioner-command-links { position: relative; z-index: 1; }
+.commissioner-command-links { align-self: stretch; display: grid; gap: .55rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.commissioner-command-links a { background: rgba(255, 255, 255, .08); border: 1px solid rgba(218, 242, 232, .2); display: grid; gap: .15rem; min-width: 0; padding: .85rem .8rem; transition: background .18s ease, transform .18s ease; }
+.commissioner-command-links a:hover { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
+.commissioner-command-links span { color: #a7d4c6; font-size: .61rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.commissioner-command-links strong { font-size: .86rem; line-height: 1.15; overflow-wrap: anywhere; }
+/* The test chip: click to flip, drag to turn it by hand. */
+.chip-playground { align-items: center; background: transparent; border: 0; cursor: grab; display: grid; justify-items: center; padding: 0; touch-action: none; }
+.chip-playground:active { cursor: grabbing; }
+.chip-playground:focus-visible { outline: 2px solid #9bdbca; outline-offset: 2px; }
+.chip-playground .survivor-poker-chip:not([data-animate]) { transform: rotateX(var(--playground-x, 0deg)) rotateY(var(--playground-y, 0deg)); }
+
+.commissioner-panel-nav {
+  border-bottom: 1px solid #c8c2b7;
+}
+.commissioner-panel-tabs { display: flex; gap: .45rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
+.commissioner-panel-tabs::-webkit-scrollbar { display: none; }
+.commissioner-panel-tab {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #736e66;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: Georgia, serif;
+  font-weight: 700;
+  gap: .45rem;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.commissioner-panel-tab > span { color: #9a9389; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .61rem; font-weight: 800; letter-spacing: .08em; }
+.commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
+.commissioner-panel-tab.is-active { background: #173c35; border-color: #173c35; color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
+.commissioner-panel-tab.is-active > span { color: #9bdbca; }
+/* Every desk tool shares one light card rhythm instead of heavy black rules. */
+.commissioner-tool { border-bottom: 1px solid #c8c2b7; padding: 1.25rem 0; }
+.commissioner-tool:first-child { padding-top: .75rem; }
+html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
+@media (max-width: 639px) { .commissioner-tool { padding: 1rem 0; } }
+ .commissioner-tool-eyebrow { color: #08764e; font-size: .67rem; font-weight: 900; letter-spacing: .16em; }
+.commissioner-inline-action { align-items: center; background: #173c35; color: #fff; display: inline-flex; font-size: .76rem; font-weight: 800; gap: .45rem; letter-spacing: .04em; max-width: 100%; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; white-space: normal; }
+.commissioner-inline-action:hover { background: #08764e; transform: translateY(-1px); }
+.provider-chart-axis-label { align-items: center; background: #e4e4e7; border-radius: .25rem; color: #71717a; display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
+.provider-efficiency-summary { border-bottom: 1px solid #e4e4e7; border-top: 1px solid #e4e4e7; display: grid; gap: .65rem; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
+.provider-performance-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.provider-efficiency-summary > div { display: grid; gap: .15rem; min-width: 0; }
+.provider-efficiency-summary span { color: #71717a; font-size: .62rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+.provider-efficiency-summary strong { color: #18181b; font-size: 1.2rem; line-height: 1.1; overflow-wrap: anywhere; }
+.provider-efficiency-summary small { color: #71717a; font-size: .68rem; line-height: 1.25; }
+.provider-efficiency-summary .is-good strong { color: #047857; }
+.provider-efficiency-summary .is-warning strong { color: #a16207; }
+
+/* Grading dashboard cards should behave like dashboard tiles, not rigid text
+   columns. Keep long labels inside their lanes and give the lower operational
+   panels a clear visual rhythm on both desktop and mobile. */
+[aria-labelledby="grading-dashboard-title"] .grid > * { min-width: 0; }
+[aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 > * { min-width: 0; }
+[aria-labelledby="grading-dashboard-title"] .grid p,
+[aria-labelledby="grading-dashboard-title"] dd,
+[aria-labelledby="grading-dashboard-title"] td,
+[aria-labelledby="grading-dashboard-title"] li { overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) { border-collapse: separate; border-spacing: 0 .35rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) thead th { padding-bottom: .35rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody tr { background: #fafafa; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td { border-top: 1px solid #f1f1f2; border-bottom: 1px solid #f1f1f2; padding-top: .7rem; padding-bottom: .7rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:first-child { border-left: 1px solid #f1f1f2; border-radius: .55rem 0 0 .55rem; padding-left: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:last-child { border-right: 1px solid #f1f1f2; border-radius: 0 .55rem .55rem 0; padding-right: .75rem; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 999px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) { table-layout: fixed; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th,
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td { white-space: nowrap; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(1) { width: 18%; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(2) { width: 16%; }
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
+.grading-worker-table { min-width: 0; table-layout: fixed; }
+/* "View chart data" is a plain ledger: one hairline per row, a header that stays
+   put while the list scrolls, and numbers right-aligned so digits line up. */
+.provider-chart-table { border-collapse: collapse; color: #3f3f46; }
+.provider-chart-table thead th {
+  background: #fff;
+  border-bottom: 1px solid #d4d4d8;
+  color: #52525b;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.provider-chart-table tbody tr { border-top: 1px solid #f1f1f2; }
+.provider-chart-table tbody tr:nth-child(even) { background: #fafafa; }
+.provider-chart-table th:not(:first-child),
+.provider-chart-table td:not(:first-child) { text-align: right; }
+html[data-theme="night"] .provider-chart-table { color: #d4d4d8; }
+html[data-theme="night"] .provider-chart-table thead th { background: #18181b; border-bottom-color: #3f3f46; color: #a1a1aa; }
+html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #27272a; }
+html[data-theme="night"] .provider-chart-table tbody tr:nth-child(even) { background: #1f1f23; }
+/* Worker activity. The prefix outranks the dashboard's generic table rules
+   (which force one-line cells and a pill on every second column). */
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td { white-space: normal; overflow-wrap: anywhere; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(1),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(1) { width: 20%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(2),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(2) { width: 14%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(3),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(4),
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+/* On a phone, each run is a small card: the worker and its status on one line,
+   then when it started and finished, each on a labeled line of its own. */
+@media (max-width: 639px) {
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody { display: block; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) thead,
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) colgroup { display: none; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid #f1f1f2; border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(n) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) .grading-worker-status { white-space: nowrap; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3),
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4) { grid-column: 1 / -1; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3)::before { content: "Started  "; font-weight: 700; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4)::before { content: "Finished  "; font-weight: 700; }
+}
+html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { border-color: #27272a; }
+.grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
+[aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid #e4e4e7; margin-left: .25rem; padding-left: 1rem; }
+[aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }
+[aria-labelledby="grading-dashboard-title"] ol li::before { background: #4f46e5; border: 3px solid #fff; border-radius: 999px; content: ""; height: .65rem; left: -1.4rem; position: absolute; top: 1rem; width: .65rem; }
+[aria-labelledby="grading-dashboard-title"] h3 { text-wrap: balance; }
+
+/* The period picker is a utility rail, not a second hero. Keep it to one
+   compact row so it remains useful while sticky without covering the work. */
+[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem !important; top: .25rem; }
+[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.15rem !important; line-height: 1.05; margin: 0 !important; white-space: nowrap; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; flex-wrap: nowrap; gap: .5rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:last-child { flex-wrap: nowrap; gap: .35rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky select,
+[aria-labelledby="grading-dashboard-title"] > .sticky button { font-size: .72rem !important; line-height: 1.1; padding: .38rem .55rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky select { max-width: 15rem; }
+
+/* Grading desk: one status row, a scannable game list, and short fact lists.
+   Built to read on a phone first; font sizes match the existing tiles. */
+.grading-status { align-items: center; border: 1px solid; border-radius: .75rem; display: grid; gap: .9rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin-top: 1rem; padding: .9rem 1rem; }
+.grading-status.is-clear { background: #ecfdf5; border-color: #a7f3d0; }
+.grading-status.is-attention { background: #fef2f2; border-color: #fecaca; }
+.grading-status-headline { display: grid; gap: .15rem; min-width: 0; }
+.grading-status-headline > span { font-size: .75rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.grading-status.is-clear .grading-status-headline > span { color: #065f46; }
+.grading-status.is-attention .grading-status-headline > span { color: #991b1b; }
+.grading-status-headline > strong { font-family: Georgia, serif; font-size: 1.5rem; line-height: 1.15; }
+.grading-status-headline > small { color: #3f3f46; font-size: .875rem; }
+.grading-kpis { display: grid; gap: .5rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grading-kpi { background: #fff; border: 1px solid #e4e4e7; border-radius: .6rem; min-width: 0; padding: .55rem .65rem; }
+.grading-kpi.is-alert { border-color: #fca5a5; }
+.grading-kpi > p { color: #71717a; font-size: 11px; font-weight: 900; letter-spacing: .12em; line-height: 1.15; min-height: 2.3em; text-transform: uppercase; }
+.grading-kpi > strong { display: block; font-family: Georgia, serif; font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.grading-kpi > small { color: #52525b; font-size: .75rem; }
+.grading-kpi-bar { background: #f4f4f5; border-radius: 999px; height: .35rem; margin-top: .3rem; overflow: hidden; }
+.grading-kpi-bar > div { border-radius: 999px; height: 100%; }
+.grading-issues { display: grid; gap: .5rem; margin-top: .75rem; }
+.grading-issues > div { background: #fef2f2; border-left: 4px solid #b91c1c; padding: .6rem .8rem; }
+.grading-facts { display: grid; gap: .35rem; }
+.grading-facts > div { border-bottom: 1px solid #f4f4f5; display: flex; font-size: .875rem; gap: .75rem; justify-content: space-between; padding-bottom: .35rem; }
+.grading-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.grading-facts dt { color: #52525b; flex: 0 0 auto; }
+.grading-facts dd { font-weight: 600; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.grading-log { background: #fff; border: 1px solid #e4e4e7; border-radius: .75rem; margin-top: 1rem; padding: .8rem 1rem; }
+.grading-log > summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 700; }
+.grading-log > summary > span { color: #71717a; display: block; font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700; }
+@media (max-width: 767px) {
+  /* The phone nav is sticky too; park the grading rail just below it. */
+  .grading-desk > .sticky { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }
+}
+html[data-theme="night"] .grading-kpi, html[data-theme="night"] .grading-log { background: #172522; border-color: #3b514c; }
+html[data-theme="night"] .grading-status.is-clear { background: #12302a; border-color: #2b685d; }
+html[data-theme="night"] .grading-status.is-attention { background: #3a1616; border-color: #7f1d1d; }
+html[data-theme="night"] .grading-status-headline > small, html[data-theme="night"] .grading-facts dt { color: #b9c1bd; }
+html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
+@media (max-width: 900px) {
+  .grading-status { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639px) {
+  .grading-desk { border-radius: .75rem; padding: .6rem !important; }
+  .grading-status { padding: .75rem; }
+  .grading-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grading-facts > div { flex-direction: column; gap: .1rem; }
+  .grading-facts dd { text-align: left; }
+}
+@media (max-width: 900px) {
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) and (min-width: 640px) {
+  /* Give the two operational panels a full reading rail before their inner
+     metric tiles become too narrow for labels and values. */
+  [aria-labelledby="grading-dashboard-title"] .grid.md\:grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.commissioner-tool-card {
+  background: linear-gradient(135deg, #fffdfa, #f4f0e8);
+  border: 1px solid #cdc5b9;
+  border-left: 5px solid #08764e;
+}
+.commissioner-tool-card--write { border-left-color: #a76311; }
+.commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
+.commissioner-diagnostics { border-bottom: 1px solid #c8c2b7; margin-top: 1rem; padding: .8rem 0 1.2rem; }
+.commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
+.commissioner-diagnostics summary span { color: #716c63; display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
+.commissioner-diagnostics > details + details { border-top: 1px solid #c8c2b7; margin-top: 1rem; padding-top: 1rem; }
+.commissioner-diagnostics details[open] summary { color: #9b2e1d; }
+
+/* Compact the commissioner subpages while preserving comfortable form targets. */
+.commissioner-subpage > div > header { padding-bottom: 1.2rem; }
+.commissioner-subpage > div > header h1 { margin-top: .35rem; }
+.commissioner-subpage .commissioner-email-list > article { padding: .7rem .8rem; }
+.commissioner-subpage .commissioner-email-list > article > div { min-width: 0; }
+.commissioner-subpage > div > section.grid { padding-top: 1.15rem; padding-bottom: 1.15rem; }
+.commissioner-subpage > div > section.grid > div.border { padding: .75rem; }
+
+html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }
+html[data-theme="night"] .commissioner-panel-nav, html[data-theme="night"] .commissioner-diagnostics { border-color: #48514e; }
+html[data-theme="night"] .commissioner-panel-tab { color: #b9c1bd; }
+html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d; border-color: #2b685d; }
+ html[data-theme="night"] .commissioner-tool-card { background: #172522; border-color: #44534e; }
+ html[data-theme="night"] .commissioner-diagnostics summary span { color: #c0c9c5; }
+
+@media (max-width: 639px) {
+  [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  [aria-labelledby="grading-dashboard-title"] > .sticky { padding: .3rem .45rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky > div { gap: .35rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: .92rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky label,
+  [aria-labelledby="grading-dashboard-title"] > .sticky span.text-xs.text-zinc-400,
+  [aria-labelledby="grading-dashboard-title"] > .sticky button:first-of-type { display: none; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky select { min-width: 0; max-width: 9rem; padding: .34rem .4rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky button { padding: .34rem .45rem !important; }
+  .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
+  .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: .9rem; }
+  .commissioner-command-bar h1 { font-size: 1.9rem; margin-top: .3rem; }
+  .commissioner-command-links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .commissioner-command-links a { padding: .68rem .55rem; }
+  .commissioner-command-links strong { font-size: .73rem; }
+  .commissioner-panel-tab { font-size: .95rem; padding: .55rem .62rem; }
+
+  /* Charts are a primary mobile surface: keep the legend compact, give the
+     selected observation a clean reading order, and preserve plot height. */
+  .provider-chart-legend { gap: .15rem .4rem; margin-bottom: .7rem; }
+  .provider-chart-legend-item { font-size: .72rem; gap: .4rem; padding: .28rem .2rem; }
+  .provider-chart-legend-item > span:first-child { height: .42rem; width: 1.1rem; }
+  .provider-chart-tooltip { border-radius: .7rem; padding: .7rem .8rem; }
+  .provider-chart-tooltip > p:first-child { font-size: .68rem; line-height: 1.25; }
+  .provider-chart-tooltip strong { font-size: 1.1rem; }
+  .provider-chart-tooltip > div { column-gap: .8rem; }
+  .provider-chart-tooltip > p:last-child { font-size: .68rem; line-height: 1.35; }
+  .provider-chart-data { margin-top: .5rem; }
+  .provider-efficiency-summary { gap: .55rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .85rem 0 1rem; padding: .7rem 0; }
+  .provider-efficiency-summary strong { font-size: 1.05rem; }
+  .provider-efficiency-summary span { font-size: .57rem; }
+  .provider-efficiency-summary small { font-size: .62rem; }
+}
+
+/* Tighten the commissioner overview as a whole; inputs keep their full target
+   size, while repeated decoration and vertical gaps give space back. */
+.commissioner-command-bar { gap: .75rem; padding: clamp(.8rem, 1.6vw, 1.25rem); }
+.commissioner-panel-nav { padding: .5rem 0 .35rem; }
+.commissioner-panel-tab { font-size: .96rem; padding: .42rem .58rem; }
+.commissioner-map { padding-block: 1rem !important; }
+.commissioner-map-banner { margin-top: 1rem !important; padding: .75rem .9rem; }
+.commissioner-map-metrics { gap: .45rem; margin-top: .7rem !important; }
+.commissioner-map-metric { gap: .2rem; padding: .55rem .65rem; }
+.commissioner-map-metric strong { font-size: 1.08rem; }
+.commissioner-flow { margin-top: 1.25rem !important; }
+.commissioner-flow-button { min-height: 5.25rem; }
+.commissioner-flow-node { flex-basis: 2.35rem; height: 2.35rem; width: 2.35rem; }
+.commissioner-flow-step:not(:last-child)::after { top: 1.17rem; }
+.commissioner-flow-label { font-size: .88rem; margin-top: .45rem; }
+.commissioner-map-detail { gap: .8rem; margin-top: 1rem !important; padding: .7rem .8rem; }
+.commissioner-tool-card { margin-bottom: .65rem; padding: clamp(.7rem, 1.5vw, 1rem); }
+
+@media (max-width: 900px) {
+  .commissioner-map-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+  .commissioner-map-banner { gap: .75rem; }
+  .commissioner-map-banner .font-serif { font-size: 1.25rem; }
+  .commissioner-flow { margin-top: .9rem !important; }
+  .commissioner-flow-button { min-height: 4.5rem; }
+  .commissioner-map-detail { grid-template-columns: minmax(0, 1fr); }
+  .commissioner-map-next { border-left: 0; border-top: 1px solid #c7c0b5; padding: .6rem 0 0; }
+}
+
+/* The Bowl receipt has a deliberately wide desktop layout, but its flexible
+   pool lane must never retain the desktop minimum on a phone. */
+@media (max-width: 767px) {
+  .bowl-receipt-strip .slate-receipt-pool,
+  .bowl-receipt-metrics,
+  .bowl-receipt-metric {
+    min-width: 0;
+  }
+  .bowl-receipt-metric { overflow: hidden; }
+}
+

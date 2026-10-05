@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 
 test("selected Slate highlight stays sized to the team label", () => {
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   const selectedBlock = css.match(/\.slate-team-label--selected\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
   const markerBlock = css.match(/\.slate-team-label--selected::before\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
 
@@ -18,7 +19,7 @@ test("selected Slate highlight stays sized to the team label", () => {
 });
 
 test("final Slate scores use the team-name size and a stable numeric anchor", () => {
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   const scoreBlock = css.match(/\.slate-team-score\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
   assert.match(scoreBlock, /font-size:\s*1em/);
   assert.match(scoreBlock, /font-weight:\s*800/);
@@ -30,7 +31,7 @@ test("final Slate scores use the team-name size and a stable numeric anchor", ()
 });
 
 test("final Slate team text groups stay vertically centered as one unit", () => {
-  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  const css = readStylesheetSync();
   const component = fs.readFileSync(path.join(root, "src/components/slate-game-row.tsx"), "utf8");
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.slate-game-row\.is-final > \.slate-team-side > \.slate-final-team-stack\s*\{[\s\S]*align-self:\s*center/);

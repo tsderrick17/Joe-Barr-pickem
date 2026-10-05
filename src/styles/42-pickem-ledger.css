@@ -1,0 +1,122 @@
+/* ==== Pick'em Pad and playoff ledger ==== */
+
+/* Carry the same viewer marker across both standings ledgers: a quiet teal
+   field, a left-hand rail, and a complete row outline. */
+.pickem-standings-row.viewer-row > td {
+  background-color: #dff0eb;
+  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.pickem-standings-row.viewer-row > td:first-child {
+  box-shadow: inset 4px 0 0 #16877f, inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+.pickem-standings-row.viewer-row > td:last-child {
+  box-shadow: inset -1px 0 0 rgba(22, 135, 127, .3), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+}
+/* The Pick'em Pad stays impartial: its ruled paper should not color a
+   player's whole line. Survivor retains its stronger personal marker. */
+.pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td {
+  background-color: #16333a;
+  box-shadow: inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
+  box-shadow: inset 4px 0 0 #8be9dc, inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
+  box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
+}
+html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
+  background-color: transparent;
+  box-shadow: none;
+}
+.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
+.survivor-ledger-masthead h2 { margin: 0; }
+/* Keep the sticky player identity cells and the scrollable Survivor cells as
+   one continuous active row in night mode. */
+html[data-theme="night"] .survivor-standings-row.viewer-row > td {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
+}
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
+html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
+  background-color: #16333a !important;
+  color: #e8f5f1 !important;
+}
+/* Your own scorecard row gets a quiet teal ticket treatment in night mode,
+   instead of disappearing into the alternating table surfaces. */
+html[data-theme="night"] .viewer-row {
+  --survivor-row-bg: #16333a;
+  background-color: #16333a !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
+}
+html[data-theme="night"] .survivor-standings-header {
+  --survivor-row-bg: #17242c;
+}
+html[data-theme="night"] .survivor-standings-row {
+  --survivor-row-bg: #101c24;
+}
+html[data-theme="night"] .survivor-standings-row.is-alt {
+  --survivor-row-bg: #13232b;
+}
+html[data-theme="night"] .survivor-standings-row.viewer-row {
+  --survivor-row-bg: #16333a;
+}
+html[data-theme="night"] .viewer-row .survivor-sticky-status {
+  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
+}
+html[data-theme="night"] .viewer-row .survivor-sticky-name {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
+}
+/* Survivor expands to the same wide reading surface as the Bowl Card. Its
+   collapsed state returns to the compact Pick'em rail so minimized modules
+   remain visually consistent across the Standings page. */
+/* The standings matrix should never create a second, nearly-invisible
+   vertical scrollbar. Its height is content-driven; only narrow viewports
+   may need the intentional horizontal scroll. */
+.survivor-standings-scroll {
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+.survivor-standings-grid > .survivor-standings-header,
+.survivor-standings-grid > .survivor-standings-row {
+  grid-template-columns: 3rem 7rem repeat(18, minmax(2.5rem, 1fr));
+}
+
+.pool-chat-message {
+  border-bottom: 1px solid #ddd5c7;
+  padding: .46rem 0 .42rem;
+}
+
+.pool-chat-message:last-child { border-bottom: 0; }
+.pool-chat-message.is-deleted { color: #7b7368; font-style: italic; }
+.pool-chat-message.is-moderator { border-left: 3px solid #b88a19; padding-left: .55rem; }
+
+.pool-chat-message-meta {
+  align-items: baseline;
+  color: #69707a;
+  display: flex;
+  font-size: .62rem;
+  gap: .45rem;
+  letter-spacing: .045em;
+  margin-top: .14rem;
+}
+
+.pool-chat-message-meta strong { color: #34415a; font-size: .76rem; letter-spacing: 0; }
+.pool-chat-message-meta span { color: #8c6612; font-size: .5rem; font-weight: 900; letter-spacing: .11em; }
+.pool-chat-message-meta button { color: #7f858d; font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
+.pool-chat-message-meta button:hover { color: #a82820; text-decoration: underline; }
+
+.pool-chat-hide {
+  color: #7f858d;
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.pool-chat-hide:hover, .pool-chat-hide:focus-visible { color: #075f58; text-decoration: underline; }
+
+html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
+

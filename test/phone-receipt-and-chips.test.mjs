@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
-const css = (await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
+const css = (await readStylesheet()).replace(/\r\n/g, "\n");
 const nav = (await readFile(new URL("../src/components/site-nav.tsx", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
 
 test("the sticky receipt offset measures the visible nav and re-measures after navigation", () => {

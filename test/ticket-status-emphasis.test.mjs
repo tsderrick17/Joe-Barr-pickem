@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("the ticket uses upright result stamps and aligned open states", async () => {
   const [ticket, styles] = await Promise.all([
     readFile(new URL("../src/components/my-ticket.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+    readStylesheet(),
   ]);
 
   assert.equal((ticket.match(/className="my-ticket-result"/g) ?? []).length, 2);

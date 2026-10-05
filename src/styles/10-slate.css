@@ -1,0 +1,131 @@
+.slate-mini-nav {
+  /* The receipt draws its own broken rules. A shared border here would run
+     through every perforation and make the punches look painted on. */
+  border-block: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.slate-mini-nav a {
+  color: #25334a;
+  display: grid;
+  gap: .16rem;
+  min-width: 0;
+  padding: .58rem .7rem;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.slate-mini-nav a + a { border-left: 1px solid #b7aea0; }
+
+.slate-mini-nav a:hover,
+.slate-mini-nav a:focus-visible {
+  background: #ede6d8;
+  color: #171719;
+}
+
+.slate-mini-nav > a > span {
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.slate-mini-nav strong {
+  font-size: .66rem;
+  letter-spacing: .045em;
+}
+
+.slate-mini-nav em {
+  color: #5d6470;
+  font-size: .5rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .1em;
+  line-height: 1.2;
+}
+
+/* Never flash an empty or OPEN receipt before the signed-in selections load. */
+.slate-mini-nav.receipt-is-loading a:not(:first-child) em {
+  font-size: 0;
+}
+.slate-mini-nav.receipt-is-loading a:not(:first-child) em::after {
+  content: "CHECKING SAVED SELECTIONS";
+  font-size: .5rem;
+}
+
+.slate-mini-nav strong.is-complete { color: #08764e; }
+.slate-mini-nav strong.is-due { color: #a82820; }
+.slate-mini-nav strong.is-out { color: #b42318; }
+.slate-mini-nav strong.is-quiet { color: #5d6470; }
+.slate-mini-nav strong.is-unsaved { color: #a86008; }
+
+/* The Slate receipt is one fixed-height register. Its information hierarchy
+   stays stable while the internal columns adapt to the pools that are actually
+   in play: stub / Pick'em / Survivor in season, stub / Pick'em otherwise. */
+.slate-receipt-strip {
+  --receipt-paper: #fffdf8;
+  --receipt-ink: #25334a;
+  --receipt-rule: #b7aea0;
+  --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
+  filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
+  color: var(--receipt-ink);
+  display: grid;
+  grid-template-columns: 21% 58% 21%;
+  margin: 0;
+  overflow: visible;
+  position: relative;
+  isolation: isolate;
+  z-index: 7;
+}
+
+.slate-receipt-strip.is-pickem-only {
+  grid-template-columns: 21% minmax(0, 79%);
+}
+
+/* The ticket is symmetric: the stub and the Survivor section are the same
+   width. Once a player is out of Survivor, that section is torn off and its
+   space stays empty for the rest of the season; the stub and Pick'em that
+   remain sit centered in the same overall width. */
+.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) .slate-receipt-pickem {
+  grid-template-rows: .72rem minmax(0, 1fr) minmax(.68rem, auto);
+}
+.slate-mini-nav.slate-receipt-strip.is-pickem-only {
+  grid-template-columns: 26.5823% minmax(0, 1fr);
+  margin-inline: auto;
+  width: 79%;
+}
+
+.slate-receipt-strip > * {
+  background: transparent;
+  min-width: 0;
+  padding: .46rem .68rem .42rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* The receipt is a die-cut ticket. Each section paints its own paper on a masked
+   layer behind its content, so the corner notches and serrated ends are true
+   cutouts (the page shows through as you scroll) and nothing inside is clipped.
+   Round notches sit on the two perforation lines; serrated ends appear only
+   where the ticket really ends, so when Survivor is torn off the Pick'em
+   section takes over the same serrated right end. */
+.slate-receipt-strip {
+  --receipt-notch: .42rem;
+  --receipt-scallop: .17rem;
+  --receipt-bite-serrated-left: radial-gradient(circle at 0 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-serrated-right: radial-gradient(circle at 100% 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-top-left: radial-gradient(circle at 0 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-left: radial-gradient(circle at 0 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-top-right: radial-gradient(circle at 100% 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-right: radial-gradient(circle at 100% 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-serration-pitch: calc(var(--receipt-scallop) * 2.6);
+}
+
+/* The shared sticky receipt bar paints a white background and rectangular
+   shadow. Both would show through the notches, so the strip is transparent and
+   the drop shadow follows the ticket's real outline. */
+.slate-mini-nav.slate-receipt-strip {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
