@@ -40,6 +40,8 @@ async function settle(page: Page, ready: string) {
   await page.reload();
   await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+  await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.waitForLoadState("networkidle");
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }
@@ -70,6 +72,8 @@ for (const panel of PANELS) {
             if (await target.count()) await target.click();
           }
           await page.waitForTimeout(600);
+          await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+          await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.waitForLoadState("networkidle");
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
@@ -94,6 +98,8 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
         await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(600);
+        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         await expect(page).toHaveScreenshot(`commissioner-${name}-${theme}-${label}.png`, { fullPage: true });

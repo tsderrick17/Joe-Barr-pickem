@@ -51,6 +51,8 @@ for (const [scenario, { build, now, click }] of Object.entries(SCENARIOS)) {
         await page.reload();
         await expect(page.locator(".bowl-pool-page h2, .bowl-claim h3, :text('Bowl Pool entry is closed')").first()).toBeVisible({ timeout: 30_000 });
         await page.evaluate(() => document.fonts.ready);
+        // Lazy images below the fold load only when scrolled near; make them all load now.
+        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });

@@ -71,6 +71,8 @@ for (const { name, path, ready, auth, profile, periods, after } of CASES) {
         await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(600);
+        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (after) await after(page);
