@@ -13,6 +13,17 @@ use **Show all** to restore the full field. Touching shaded ribbons make tied
 paths distinguishable without moving anyone off their actual win total. The
 chart loads only while visible and follows the normal standings refresh.
 
+If the Season Snapshot alone fails to load, inspect its API status before
+asking a player to sign in again. A 401 means the request token is absent or
+invalid; 403 means a verified pool identity is missing, inactive, or lacks
+the needed role. A 503 with
+`auth_unavailable` or `profile_unavailable` means a temporary dependency
+failure, so retry the read after service recovers. A 500 with
+`auth_not_configured` requires checking the deployment's Supabase variables.
+This is a pilot contract for this read route, not yet a guarantee for every
+player route. Do not change player records or issue a new PIN to work around
+an outage.
+
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and
 week/round handoff. Its at-a-glance cards show the current stage, watchdog

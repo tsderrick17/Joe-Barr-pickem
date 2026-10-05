@@ -4,6 +4,17 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-05 - AUTH-001 - Distinguish invalid sessions from dependency failure
+
+**Status:** Accepted for the Season Snapshot read-route pilot only
+
+An unavailable authentication service or failed player lookup must not be
+reported as an invalid session. Use a request-scoped result with explicit
+401/403/503 outcomes and a stable code; keep missing server configuration an
+intentional 500. Start with a read route so the contract can be exercised
+without changing save retry behavior. Migrate other routes only with their own
+failure tests and isolated player-flow evidence. Do not cache authorization.
+
 ## 2026-08-09 — REF-001 — Layer project guidance
 
 **Status:** Accepted
