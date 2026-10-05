@@ -2,6 +2,13 @@
 
 ## Control-center overview
 
+A malformed Pick'em or Bowl Pool save is rejected with a client error before
+the save path reaches game lookups or writes. For a reported failed save,
+refresh the player's saved card before retrying: a lost response does not prove
+the original save failed. An omitted Survivor field leaves that pick unchanged;
+an explicit clear is a separate request. Do not change a player's selection
+directly in production to work around a rejected request.
+
 The Season Snapshot is the reverse of the Pick'em Pad on Standings, opened by
 its flip button. Commissioners can inspect it before Week 6; players receive
 the same button and data from Week 6 onward. The regular-season chart starts

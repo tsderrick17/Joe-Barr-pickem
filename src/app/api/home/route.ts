@@ -9,6 +9,7 @@ import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { shapePadRows } from "@/lib/home-shape";
+import { survivorChampionDisplayId } from "@/lib/inaugural-survivor-holder";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle(),
     supabaseAdmin
       .from("seasons")
-      .select("id")
+      .select("id, year")
       .eq("year", currentSeasonYear())
       .maybeSingle(),
     supabaseAdmin
@@ -278,14 +279,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // The 2026 launch predates the first historical-season record. Keep John as
-  // the inaugural displayed holder until this season crowns its own winner.
-  const survivorChampionPlayerId =
-    championSeason?.survivor_champion_player_id ??
-    players.find(
-      (player) => player.first_name.trim().toLocaleLowerCase() === "john",
-    )?.id ??
-    null;
+  const survivorChampionPlayerId = survivorChampionDisplayId({
+    seasonYear: season.year,
+    recordedChampionId: championSeason?.survivor_champion_player_id ?? null,
+    activePlayers: players,
+  });
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
   // Co-champions (a same-week finish or several survivors) are all named.
   const survivorChampionIds = ((championshipRows ?? []) as ChampionshipRow[])

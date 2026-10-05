@@ -1369,3 +1369,15 @@ Found by measuring the position of the Bowl Card under the Survivor table frame 
 The Standings page showed itself as soon as its own data arrived, and the Bowl Card filled in a moment later, so it appeared out of nowhere. The page now keeps the loading shell up (with the real page laid out but hidden beneath it) until the Bowl Card reports its first load finished, whether it worked or not, or 2.5 seconds have passed.
 
 The "− OUT" roll jumped 3 px at its last frame. Measured frame by frame: browsers draw a border under one pixel as a whole pixel, so each hidden row kept its 1 px bottom border until it left the page, and the last visible row also loses its border when it becomes the last row. The roll now takes the borders back with a negative bottom margin, which animates smoothly, and releases the held animations in the same render that removes the rows. The last step went from 3 px to 0.
+
+## 2026-10-05 — Validate save payloads at the boundary and limit launch-holder fallback
+
+Pick'em and Bowl Pool save requests are parsed as unknown input before slate
+lookups or writes. Invalid array entries, IDs, duplicate games, oversized
+selection sets, and invalid Bowl total guesses receive a deliberate client
+error. The Pick'em parser preserves the distinction between no Survivor field
+and an explicit clear; database functions still enforce the competitive rules
+and atomicity. The known inaugural Survivor holder display fallback applies
+only to the uncrowned 2026 launch season. A later season without a recorded
+champion displays no holder instead of silently reusing a name match. This
+fallback changes display only, never a championship record.

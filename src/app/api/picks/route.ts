@@ -5,8 +5,8 @@ import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import { retrySafeRead } from "@/lib/retry-safe-read";
+import { parsePickSubmission } from "@/lib/selection-submission";
 
-type Selection = { gameId: string; teamId: string };
 type GameRow = { id: string; scoring_period_id: string; away_team_id: string; home_team_id: string; kickoff_at: string; status: string };
 
 function pickSaveMessage(selectionCount: number) {
@@ -21,25 +21,21 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
-  let body: {
-    scoringPeriodId?: string;
-    selections?: Selection[];
-    survivorSelection?: Selection | null;
-  };
-
+  let input: unknown;
   try {
-    body = (await request.json()) as typeof body;
+    input = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Your pick submission was incomplete." },
       { status: 400 },
     );
   }
+  const parsed = parsePickSubmission(input);
+  if (!parsed.value) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const body = parsed.value;
   const scoringPeriodId = body.scoringPeriodId;
   const selections = body.selections;
   const includesSurvivor = Object.hasOwn(body, "survivorSelection");
-  if (!scoringPeriodId || !Array.isArray(selections)) return NextResponse.json({ error: "Your pick submission was incomplete." }, { status: 400 });
-  if (new Set(selections.map((selection) => selection.gameId)).size !== selections.length) return NextResponse.json({ error: "You may only select one team from each game." }, { status: 400 });
 
   const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
   const { data: { user } } = await retrySafeRead(() => authClient.auth.getUser(

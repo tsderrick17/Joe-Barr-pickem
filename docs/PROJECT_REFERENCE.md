@@ -113,6 +113,11 @@ A change to who can see what belongs in one of these modules, with its test.
   remain changeable.
 - A Pick'em save never resubmits or validates an unchanged Survivor selection.
   A sealed Survivor pick therefore cannot block a later legal Pick'em save.
+- Pick'em and Bowl Pool save routes reject malformed bodies, duplicate game
+  selections, and oversized arrays before reading a slate or writing picks.
+  Omitting `survivorSelection` leaves it unchanged; explicit `null` requests a
+  clear. The database remains the final authority for game membership, kickoff,
+  ownership, and atomic saves.
 - The selected team must belong to the selected game. A kicked-off pick cannot
   be added, removed, or replaced.
 - Picks use the saved official line. A cover is a win; an ATS push or tied
