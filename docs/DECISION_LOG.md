@@ -1354,3 +1354,7 @@ Dependabot now skips ESLint major versions: ESLint 10 breaks the React lint plug
 ## Survivor logos masked in the Standings screenshots
 
 The Standings screenshot failed again on Linux CI in a different case (night, phone), and on two more pull requests: the same band of about 550 pixels in the Survivor logo row, every time, in a few percent of runs. Zoomed in, the logos are the same but drawn with a very slightly different downscale (they are large originals scaled to about 28 px). Waiting for images to decode did not remove it. The Standings pictures now mask the Survivor logos: each logo's box (so its position and size) is still compared, only the artwork inside it is not. The masked screenshots were re-recorded for both platforms.
+
+## Sentry 11
+
+The Sentry 10 to 11 upgrade needed two changes. `withSentryConfig` moved to `@sentry/nextjs/config`, so `next.config.ts` imports it from there (the old import failed the build with "withSentryConfig is not a function"). And `sendDefaultPii` was removed: its replacement is the `dataCollection` group of options, whose defaults collect cookies, request headers, user details and local variables. The old line no longer type-checks, and simply deleting it would have quietly started sending that data, so all three setups (browser, server, edge) now use one shared `PRIVATE_DATA_COLLECTION` that turns every category off, with a test that fails if any setup stops using it.

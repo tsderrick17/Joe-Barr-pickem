@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { prepareBrowserSentryEvent } from "@/lib/sentry-event-filter";
+import { PRIVATE_DATA_COLLECTION } from "@/lib/sentry-data-collection";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -15,7 +16,7 @@ Sentry.init({
   tracesSampleRate: 0.05,
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1,
-  sendDefaultPii: false,
+  dataCollection: PRIVATE_DATA_COLLECTION,
   beforeSend: prepareBrowserSentryEvent,
 });
 

@@ -30,4 +30,4 @@ Route tags are pathname-only (`app.route`) and never include query strings. Netw
 
 ## Replay and privacy
 
-Browser replay is sampled only when an error is captured. All text is masked and media is blocked. `sendDefaultPii` remains disabled, and the event filter removes user identity fields. Do not add request bodies, access tokens, PINs, or email addresses to Sentry contexts.
+Browser replay is sampled only when an error is captured. All text is masked and media is blocked. Every category of data collection (user details, cookies, headers, bodies, query strings, local variables) remains off through `PRIVATE_DATA_COLLECTION` in `src/lib/sentry-data-collection.ts` (Sentry 11 replaced `sendDefaultPii` with these options), and the event filter removes user identity fields. Do not add request bodies, access tokens, PINs, or email addresses to Sentry contexts.

@@ -25,7 +25,7 @@
   "dependencies": {
     "@fontsource/cormorant-garamond": "5.3.0",
     "@fontsource/graduate": "5.3.0",
-    "@sentry/nextjs": "^10.72.0",
+    "@sentry/nextjs": "^11.4.0",
     "@supabase/supabase-js": "^2.117.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
