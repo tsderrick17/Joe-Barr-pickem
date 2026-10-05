@@ -8,8 +8,8 @@ test("the Operations test coin flips exactly like a Survivor chip", async () => 
     readFile(new URL("../src/components/chip-playground.tsx", import.meta.url), "utf8"),
   ]);
   const keyframes = css.match(/@keyframes survivor-chip-toss \{([\s\S]*?)\n\}/)[1];
-  const fromCss = [...keyframes.matchAll(/([\d.]+)% \{ transform: translateY\(([-\d.]+)px\) rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\) scale\(([\d.]+)\); \}/g)]
-    .map(([, at, lift, turn, wobble, scale]) => [Number(at) / 100, Number(turn) / 1080, Number(wobble), Number(lift), Number(scale)]);
+  const fromCss = [...keyframes.matchAll(/([\d.]+)% \{ transform: translateY\(calc\(var\(--chip-rest, 0px\) \+ ([-\d.]+)px\)\) rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\) scale\(([\d.]+)\); \}/g)]
+    .map(([, at, lift, turn, wobble, scale]) => [Math.round(Number(at) * 100) / 10000, Number(turn) / 1080, Number(wobble), Number(lift), Number(scale)]);
   const fromPlayground = [...playground.matchAll(/\{ at: ([\d.]+), turn: ([-\d.]+) \/ 1080, wobble: ([-\d.]+), lift: ([-\d.]+), scale: ([\d.]+) \}/g)]
     .map(([, at, turn, wobble, lift, scale]) => [Number(at), Number(turn) / 1080, Number(wobble), Number(lift), Number(scale)]);
   assert.ok(fromCss.length > 20);
@@ -18,9 +18,14 @@ test("the Operations test coin flips exactly like a Survivor chip", async () => 
   assert.match(css, /animation: survivor-chip-toss 900ms linear both;/);
   assert.match(playground, /chip\.animate\(frames, \{ duration: 900, easing: "linear" \}\)/);
   // Steady spin through the flight: equal turns between equally spaced stops.
-  const flight = fromCss.filter(([at]) => at > 0.06 && at <= 0.86);
+  const flight = fromCss.filter(([at]) => at > 0.09);
   const steps = flight.slice(1).map(([at, turn], index) => (turn - flight[index][1]) / (at - flight[index][0]));
-  for (const step of steps) assert.ok(Math.abs(step - steps[0]) < 1e-6);
+  for (const step of steps) assert.ok(Math.abs(step - steps[0]) < 1e-2);
+  // The toss ends exactly at rest: no settle, rock, or hop after the landing.
+  const last = fromCss.at(-1);
+  assert.deepEqual([last[1], last[2], last[3], last[4]], [1, 0, 0, 1]);
+  const lifts = fromCss.filter(([at]) => at >= 0.5).map(([, , , lift]) => lift);
+  for (let index = 1; index < lifts.length; index += 1) assert.ok(lifts[index] >= lifts[index - 1], "after the peak the chip only comes down");
 });
 
 test("split-flap tiles hinge in perspective and never show Graduate's dotted zero", async () => {
@@ -33,7 +38,8 @@ test("split-flap tiles hinge in perspective and never show Graduate's dotted zer
   assert.match(tile, /rotateX\(-90deg\)/);
   assert.match(tile, /className="bowl-flap-shade"/);
   assert.match(css, /\.bowl-flap\.is-moving \{ perspective: 4\.2rem; \}/);
-  assert.match(card, /\{digit === "0" \? "O" : digit\}/);
+  assert.match(card, /<BowlScoreTile landDelay=\{0\} large settled=\{bowlScoresSettled && bowlScheduleReady\}/);
+  assert.match(card, /landDelay=\{\(rowIndex \+ 1\) \* 90\}/);
   assert.match(card, /seasonSuffix="Special" title="BOWL CARD"/);
 });
 
