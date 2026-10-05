@@ -38,8 +38,8 @@ test("split-flap tiles hinge in perspective and never show Graduate's dotted zer
   assert.match(tile, /rotateX\(-90deg\)/);
   assert.match(tile, /className="bowl-flap-shade"/);
   assert.match(css, /\.bowl-flap\.is-moving \{ perspective: 4\.2rem; \}/);
-  assert.match(card, /<BowlScoreTile landDelay=\{0\} large settled=\{bowlScoresSettled && bowlScheduleReady\}/);
-  assert.match(card, /landDelay=\{\(rowIndex \+ 1\) \* 90\}/);
+  assert.match(card, /<BowlScoreTile animate=\{animateScores\} landDelay=\{0\} large settled=\{bowlScoresSettled && bowlScheduleReady\}/);
+  assert.match(card, /animate=\{animateScores\} landDelay=\{\(rowIndex \+ 1\) \* 90\}/);
   assert.match(card, /seasonSuffix="Special" title="BOWL CARD"/);
 });
 
@@ -59,7 +59,7 @@ test("the Bowl Pool picks page: receipt under the menu, small Opt out, boxed tea
   assert.ok(page.indexOf('className="bowl-optout"') > page.indexOf("Tiebreaker is total points in Championship game."));
   assert.ok(page.indexOf('className="bowl-optout"') < page.indexOf("National Championship total points tiebreaker"));
   assert.match(css, /\.bowl-pool-page #bowl-selections \.bowl-pick-box \{[\s\S]*?min-height: 3\.1rem;/);
-  assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.1rem 2\.6rem 5\.1rem;/);
+  assert.match(css, /grid-template-columns: 2\.6rem minmax\(0, 1fr\) 5\.45rem 1\.9rem 5\.45rem;/);
   assert.ok(page.includes("<li>Pick every bowl, including playoffs, against the spread. Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li>"));
   assert.ok(!css.includes(".bowl-pick-box .bowl-pennant { max-width: 100%; width: 100%; }"));
 });
