@@ -81,6 +81,10 @@ modules with no database access, each covered by tests with fictional rows:
 
 A change to who can see what belongs in one of these modules, with its test.
 
+For a fictional-data CPU and JSON-size baseline of the two player response
+shapers, see [response cost baseline](RESPONSE_COST_BASELINE.md). It does not
+measure database requests or end-to-end route time.
+
 ## Player identity and privacy
 
 - Players authenticate with their assigned pool identity and PIN/session flow.
