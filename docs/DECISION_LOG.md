@@ -1310,3 +1310,12 @@ Opt out returns to the top of the board, as a small link right under the instruc
 
 The receipt's warning tab ("You already have 2 selections…") is drawn like the sections above it: its paper is a masked layer with the same corner cutouts and hairline ring, and the dashed rule stays the divider. A screenshot test raises the warning on the Slate to cover it.
 The warning tab no longer draws its own dashed top edge: that doubled the receipt's bottom rule and ran past the notches. The paper layer's single rule is the only edge where it meets the Pick'em section.
+## Bowl picks page: stacked legend, A/P times, pinned receipt
+
+The legend over the schedule stacks "Date / Time" and "Bowl / Location" on two lines like the rows below (no slashes). Kickoff times use A or P instead of AM or PM ("7:30P"), so the narrow date column stays on one line and no longer crowds the bowl names. The receipt scrolled away because it was sticky inside a wrapper exactly its own height, and a sticky element only travels within its parent; the wrapper itself now sticks, below the site menu, and a test scrolls to the bottom to prove it stays visible.
+The Fav, Line and Dog labels are vertically centered in the legend bar next to the two-line labels.
+## Coin toss lands cleanly; games remaining is a split-flap tile
+
+- The toss used to land, then rise about a pixel and rock before resting (extra settle stops after the arc, and an end height one pixel off the chip's resting height, which differs between the picked and unpicked states). It is now one continuous arc that ends exactly at rest, lifts measured from the chip's own resting height (`--chip-rest`), so nothing moves after it stops. The Operations test coin uses the same curve, and a test keeps them identical and checks that after the peak the chip only comes down.
+- The Bowl Card's games-remaining number is the same split-flap tile as the player totals (drawn larger), so it spins and lands the same way, first. Player rows now land 90 ms apart instead of 45 (starting 90 ms after the counter). The old dotted-zero counter and its CSS are gone.
+- The empty corner above Tiebreaker on the date row is the page color, like the corner above Games remaining.

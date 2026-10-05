@@ -951,6 +951,7 @@ body {
 }
 
 .survivor-poker-chip {
+  --chip-rest: 0px;
   display: inline-grid;
   height: 100%;
   place-items: center;
@@ -1104,7 +1105,7 @@ body {
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.survivor-poker-chip[data-state="picked"] { box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
+.survivor-poker-chip[data-state="picked"] { --chip-rest: -1px; box-shadow: 0 0 0 3px rgba(238,183,65,.35), 0 0 14px rgba(222,158,30,.5); transform: translateY(-1px); }
 .survivor-poker-chip[data-state="picked"] .survivor-poker-chip-side { border-color: #d69a20; }
 
 .survivor-poker-chip[data-animate="toss"]:not(.survivor-poker-chip-summary) {
@@ -1119,62 +1120,60 @@ body {
 }
 
 @keyframes survivor-chip-toss {
-  0% { transform: translateY(-1px) rotateX(0deg) rotateY(0deg) scale(1.000); }
-  6% { transform: translateY(0.5px) rotateX(-6deg) rotateY(0deg) scale(0.975); }
-  10% { transform: translateY(-3.28px) rotateX(54deg) rotateY(1.55deg) scale(1.032); }
-  14% { transform: translateY(-5.32px) rotateX(108deg) rotateY(2.94deg) scale(1.061); }
-  18% { transform: translateY(-7.12px) rotateX(162deg) rotateY(4.05deg) scale(1.087); }
-  22% { transform: translateY(-8.68px) rotateX(216deg) rotateY(4.76deg) scale(1.109); }
-  26% { transform: translateY(-10px) rotateX(270deg) rotateY(5deg) scale(1.127); }
-  30% { transform: translateY(-11.08px) rotateX(324deg) rotateY(4.76deg) scale(1.143); }
-  34% { transform: translateY(-11.92px) rotateX(378deg) rotateY(4.05deg) scale(1.155); }
-  38% { transform: translateY(-12.52px) rotateX(432deg) rotateY(2.94deg) scale(1.163); }
-  42% { transform: translateY(-12.88px) rotateX(486deg) rotateY(1.55deg) scale(1.168); }
-  46% { transform: translateY(-13px) rotateX(540deg) rotateY(0deg) scale(1.170); }
-  50% { transform: translateY(-12.88px) rotateX(594deg) rotateY(-1.55deg) scale(1.168); }
-  54% { transform: translateY(-12.52px) rotateX(648deg) rotateY(-2.94deg) scale(1.163); }
-  58% { transform: translateY(-11.92px) rotateX(702deg) rotateY(-4.05deg) scale(1.155); }
-  62% { transform: translateY(-11.08px) rotateX(756deg) rotateY(-4.76deg) scale(1.143); }
-  66% { transform: translateY(-10px) rotateX(810deg) rotateY(-5deg) scale(1.127); }
-  70% { transform: translateY(-8.68px) rotateX(864deg) rotateY(-4.76deg) scale(1.109); }
-  74% { transform: translateY(-7.12px) rotateX(918deg) rotateY(-4.05deg) scale(1.087); }
-  78% { transform: translateY(-5.32px) rotateX(972deg) rotateY(-2.94deg) scale(1.061); }
-  82% { transform: translateY(-3.28px) rotateX(1026deg) rotateY(-1.55deg) scale(1.032); }
-  86% { transform: translateY(-1px) rotateX(1080deg) rotateY(-0deg) scale(1.000); }
-  89.5% { transform: translateY(-2.2px) rotateX(1090deg) rotateY(0deg) scale(1.000); }
-  93% { transform: translateY(-0.6px) rotateX(1075deg) rotateY(0deg) scale(1.000); }
-  96% { transform: translateY(-1.2px) rotateX(1083deg) rotateY(0deg) scale(1.000); }
-  98% { transform: translateY(-1px) rotateX(1079deg) rotateY(0deg) scale(1.000); }
-  100% { transform: translateY(-1px) rotateX(1080deg) rotateY(0deg) scale(1.000); }
+  0% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateX(0deg) rotateY(0deg) scale(1.000); }
+  6% { transform: translateY(calc(var(--chip-rest, 0px) + 1.5px)) rotateX(-6deg) rotateY(0deg) scale(0.975); }
+  9.92% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateX(45deg) rotateY(1.29deg) scale(1.027); }
+  13.83% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateX(90deg) rotateY(2.5deg) scale(1.052); }
+  17.75% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateX(135deg) rotateY(3.54deg) scale(1.074); }
+  21.67% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateX(180deg) rotateY(4.33deg) scale(1.094); }
+  25.58% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateX(225deg) rotateY(4.83deg) scale(1.112); }
+  29.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateX(270deg) rotateY(5deg) scale(1.127); }
+  33.42% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateX(315deg) rotateY(4.83deg) scale(1.140); }
+  37.33% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateX(360deg) rotateY(4.33deg) scale(1.151); }
+  41.25% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateX(405deg) rotateY(3.54deg) scale(1.159); }
+  45.17% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateX(450deg) rotateY(2.5deg) scale(1.165); }
+  49.08% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateX(495deg) rotateY(1.29deg) scale(1.169); }
+  53% { transform: translateY(calc(var(--chip-rest, 0px) + -12px)) rotateX(540deg) rotateY(0deg) scale(1.170); }
+  56.92% { transform: translateY(calc(var(--chip-rest, 0px) + -11.92px)) rotateX(585deg) rotateY(-1.29deg) scale(1.169); }
+  60.83% { transform: translateY(calc(var(--chip-rest, 0px) + -11.67px)) rotateX(630deg) rotateY(-2.5deg) scale(1.165); }
+  64.75% { transform: translateY(calc(var(--chip-rest, 0px) + -11.25px)) rotateX(675deg) rotateY(-3.54deg) scale(1.159); }
+  68.67% { transform: translateY(calc(var(--chip-rest, 0px) + -10.67px)) rotateX(720deg) rotateY(-4.33deg) scale(1.151); }
+  72.58% { transform: translateY(calc(var(--chip-rest, 0px) + -9.92px)) rotateX(765deg) rotateY(-4.83deg) scale(1.140); }
+  76.5% { transform: translateY(calc(var(--chip-rest, 0px) + -9px)) rotateX(810deg) rotateY(-5deg) scale(1.127); }
+  80.42% { transform: translateY(calc(var(--chip-rest, 0px) + -7.92px)) rotateX(855deg) rotateY(-4.83deg) scale(1.112); }
+  84.33% { transform: translateY(calc(var(--chip-rest, 0px) + -6.67px)) rotateX(900deg) rotateY(-4.33deg) scale(1.094); }
+  88.25% { transform: translateY(calc(var(--chip-rest, 0px) + -5.25px)) rotateX(945deg) rotateY(-3.54deg) scale(1.074); }
+  92.17% { transform: translateY(calc(var(--chip-rest, 0px) + -3.67px)) rotateX(990deg) rotateY(-2.5deg) scale(1.052); }
+  96.08% { transform: translateY(calc(var(--chip-rest, 0px) + -1.92px)) rotateX(1035deg) rotateY(-1.29deg) scale(1.027); }
+  100% { transform: translateY(calc(var(--chip-rest, 0px) + 0px)) rotateX(1080deg) rotateY(0deg) scale(1.000); }
 }
 
 @keyframes survivor-chip-shadow {
   0% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
   6% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
-  10% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
-  14% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
-  18% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
-  22% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
-  26% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
-  30% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
-  34% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
-  38% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
-  42% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
-  46% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
-  50% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
-  54% { filter: blur(0.25rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.13) scaleY(0.83); }
-  58% { filter: blur(0.25rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.11) scaleY(0.82); }
-  62% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.08) scaleY(0.80); }
-  66% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
-  70% { filter: blur(0.20rem); opacity: 0.23; transform: translateX(-50%) scaleX(0.99) scaleY(0.76); }
-  74% { filter: blur(0.18rem); opacity: 0.27; transform: translateX(-50%) scaleX(0.93) scaleY(0.73); }
-  78% { filter: blur(0.16rem); opacity: 0.31; transform: translateX(-50%) scaleX(0.86) scaleY(0.70); }
-  82% { filter: blur(0.13rem); opacity: 0.36; transform: translateX(-50%) scaleX(0.79) scaleY(0.66); }
-  86% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
-  89.5% { filter: blur(0.12rem); opacity: 0.39; transform: translateX(-50%) scaleX(0.74) scaleY(0.64); }
-  93% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
-  96% { filter: blur(0.10rem); opacity: 0.41; transform: translateX(-50%) scaleX(0.71) scaleY(0.62); }
-  98% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
+  9.92% { filter: blur(0.13rem); opacity: 0.37; transform: translateX(-50%) scaleX(0.77) scaleY(0.66); }
+  13.83% { filter: blur(0.15rem); opacity: 0.33; transform: translateX(-50%) scaleX(0.84) scaleY(0.69); }
+  17.75% { filter: blur(0.17rem); opacity: 0.29; transform: translateX(-50%) scaleX(0.90) scaleY(0.72); }
+  21.67% { filter: blur(0.19rem); opacity: 0.25; transform: translateX(-50%) scaleX(0.95) scaleY(0.74); }
+  25.58% { filter: blur(0.21rem); opacity: 0.22; transform: translateX(-50%) scaleX(1.00) scaleY(0.77); }
+  29.5% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  33.42% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.07) scaleY(0.80); }
+  37.33% { filter: blur(0.24rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.10) scaleY(0.82); }
+  41.25% { filter: blur(0.25rem); opacity: 0.14; transform: translateX(-50%) scaleX(1.12) scaleY(0.83); }
+  45.17% { filter: blur(0.26rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.14) scaleY(0.83); }
+  49.08% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  53% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  56.92% { filter: blur(0.26rem); opacity: 0.12; transform: translateX(-50%) scaleX(1.15) scaleY(0.84); }
+  60.83% { filter: blur(0.26rem); opacity: 0.13; transform: translateX(-50%) scaleX(1.14) scaleY(0.83); }
+  64.75% { filter: blur(0.25rem); opacity: 0.14; transform: translateX(-50%) scaleX(1.12) scaleY(0.83); }
+  68.67% { filter: blur(0.24rem); opacity: 0.15; transform: translateX(-50%) scaleX(1.10) scaleY(0.82); }
+  72.58% { filter: blur(0.23rem); opacity: 0.17; transform: translateX(-50%) scaleX(1.07) scaleY(0.80); }
+  76.5% { filter: blur(0.22rem); opacity: 0.20; transform: translateX(-50%) scaleX(1.04) scaleY(0.79); }
+  80.42% { filter: blur(0.21rem); opacity: 0.22; transform: translateX(-50%) scaleX(1.00) scaleY(0.77); }
+  84.33% { filter: blur(0.19rem); opacity: 0.25; transform: translateX(-50%) scaleX(0.95) scaleY(0.74); }
+  88.25% { filter: blur(0.17rem); opacity: 0.29; transform: translateX(-50%) scaleX(0.90) scaleY(0.72); }
+  92.17% { filter: blur(0.15rem); opacity: 0.33; transform: translateX(-50%) scaleX(0.84) scaleY(0.69); }
+  96.08% { filter: blur(0.13rem); opacity: 0.37; transform: translateX(-50%) scaleX(0.77) scaleY(0.66); }
   100% { filter: blur(0.10rem); opacity: 0.42; transform: translateX(-50%) scaleX(0.70) scaleY(0.62); }
 }
 
@@ -3811,45 +3810,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca !important; }
 
-.bowl-flip-counter {
-  display: inline-flex;
-  gap: .18rem;
-  margin-top: .35rem;
-  perspective: 14rem;
-}
-.bowl-flip-digit {
-  background: #0f1830;
-  border: 1px solid var(--bowl-gold, #b38b4d);
-  border-radius: .2rem;
-  box-shadow: inset 0 1px rgba(255,255,255,.14), 0 2px 2px rgba(29,29,31,.18);
-  color: var(--bowl-gold-soft, #e6d6b4);
-  display: grid;
-  font: 400 2rem/.95 var(--font-graduate), ui-monospace, SFMono-Regular, Menlo, monospace;
-  height: 2.35rem;
-  min-width: 1.35rem;
-  overflow: hidden;
-  place-items: center;
-  position: relative;
-}
-.bowl-flip-digit::after {
-  background: rgba(255,255,255,.16);
-  content: "";
-  height: 1px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 50%;
-}
-.bowl-flip-digit-face { display: block; transform-origin: center; }
-.bowl-flip-counter.is-shuffling .bowl-flip-digit-face { animation: bowl-digit-flip .72s ease-in-out infinite; }
-@keyframes bowl-digit-flip {
-  0%, 100% { transform: rotateX(0deg); }
-  45% { transform: rotateX(-88deg); }
-  55% { transform: rotateX(88deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bowl-flip-counter.is-shuffling .bowl-flip-digit-face { animation: none; }
-}
 
 /* Commissioner desk: one visual language for the operational workspaces. */
 .commissioner-desk {
@@ -4675,3 +4635,16 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { backg
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
 /* Wide enough on a desktop that the first instruction stays on one line. */
 .bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }
+
+/* The Bowl receipt stays in view while the schedule scrolls. It is the frame, not the
+   strip inside it, that sticks, because a sticky element only travels within its parent. */
+.bowl-pool-page .bowl-receipt-frame { position: sticky; top: var(--site-nav-height, 0px); z-index: 40; }
+.bowl-pool-page .bowl-receipt-frame .slate-mini-nav { position: relative; top: auto; }
+/* Fav, Line and Dog sit at the vertical middle of the legend bar, beside the two-line labels. */
+.bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child { align-items: center; }
+/* The games-remaining counter is the same split-flap tile, drawn larger, and lands first. */
+.bowl-score-tile.is-large { margin-top: .35rem; }
+.bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
+.bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
+/* The empty corner over Tiebreaker looks just like the one over Games remaining: the page itself. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: #f5f0e6 !important; }
