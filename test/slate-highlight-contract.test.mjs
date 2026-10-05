@@ -26,7 +26,7 @@ test("final Slate scores use the team-name size and a stable numeric anchor", ()
   assert.match(scoreBlock, /text-align:\s*right/);
   assert.match(scoreBlock, /align-self:\s*start/);
   assert.match(css, /\.slate-team-result-mark\s*\{\s*align-self:\s*start/);
-  assert.match(css, /grid-template-columns:\s*minmax\(0, max-content\) 2\.3ch max-content/);
+  assert.match(css, /grid-template-columns:\s*minmax\(0, 1fr\) 2\.3ch 1\.3em/);
 });
 
 test("final Slate team text groups stay vertically centered as one unit", () => {

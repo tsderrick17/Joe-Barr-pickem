@@ -1308,6 +1308,9 @@ The receipt now sits right under the menu (the page had a large blank band above
 Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
 Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
 
+## Final scores line up in a column
+
+On finished rows the score and its W/L mark followed the team name, so a longer name pushed its score further right and the scores never lined up (and a wide W nudged the digits left of a row with an L). They now sit in fixed slots at the end of each team's lane (score right-aligned, then a fixed-width mark), so every score on a side shares one edge on phones and desktop alike.
 The receipt's warning tab ("You already have 2 selections…") is drawn like the sections above it: its paper is a masked layer with the same corner cutouts and hairline ring, and the dashed rule stays the divider. A screenshot test raises the warning on the Slate to cover it.
 The warning tab no longer draws its own dashed top edge: that doubled the receipt's bottom rule and ran past the notches. The paper layer's single rule is the only edge where it meets the Pick'em section.
 ## Bowl picks page: stacked legend, A/P times, pinned receipt
