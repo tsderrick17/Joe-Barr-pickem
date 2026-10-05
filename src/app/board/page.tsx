@@ -14,10 +14,10 @@ import {
   reconcileSurvivorDraftAtKickoff,
 } from "@/lib/slate-draft-locks";
 import { buildSlateSubmission } from "@/lib/slate-submission";
-import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
+import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
 
@@ -120,15 +120,6 @@ function SlateLoadingShell() {
       </div>
     </main>
   );
-}
-
-function easternDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(value));
 }
 
 function isEarlyGame(game: BoardGame) {
@@ -389,98 +380,21 @@ export default function BoardPage() {
     }) as ScoringPeriod[];
   }, [currentTime, nextWeekAvailableAt, weeks]);
 
-  const gamesByDay = useMemo(() => {
-    const grouped = new Map<string, BoardGame[]>();
-
-    for (const game of games) {
-      const day = easternDate(game.kickoffAt);
-
-      if (!grouped.has(day)) {
-        grouped.set(day, []);
-      }
-
-      grouped.get(day)?.push(game);
-    }
-
-    return Array.from(grouped.entries());
-  }, [games]);
+  const gamesByDay = useMemo(() => groupGamesByDay(games), [games]);
 
   const actionOnlyActive = showActionOnly;
 
   const visibleGamesByDay = useMemo(() => {
     if (!actionOnlyActive) return gamesByDay;
+    return filterPoolActionDays(gamesByDay, currentTime);
+  }, [actionOnlyActive, currentTime, gamesByDay]);
 
-    return gamesByDay
-      .map(([day, dayGames]) => [
-        day,
-        dayGames.filter((game) => shouldShowPoolActionMatchup({
-          kickoffAt: game.kickoffAt,
-          now: currentTime,
-          hasSelections: game.awayPickers.length > 0 || game.homePickers.length > 0,
-        })),
-      ] as const)
-      .filter(([, dayGames]) => dayGames.length > 0);
-}, [actionOnlyActive, currentTime, gamesByDay]);
+  const selectedTeams = useMemo(
+    () => describeSelectedTeams({ picks: selectedPicks, savedPicks, games, now: currentTime }),
+    [currentTime, games, savedPicks, selectedPicks],
+  );
 
-  const selectedTeams = useMemo(() => {
-    const gameOrder = new Map(games.map((game, index) => [game.id, index]));
-
-    return [...selectedPicks]
-      .sort((left, right) => (gameOrder.get(left.gameId) ?? Number.MAX_SAFE_INTEGER) - (gameOrder.get(right.gameId) ?? Number.MAX_SAFE_INTEGER))
-      .map((pick) => {
-        const game = games.find((item) => item.id === pick.gameId);
-
-        if (!game) return null;
-        const isHome = pick.teamId === game.homeTeamId;
-        const isAway = pick.teamId === game.awayTeamId;
-        const name = isHome
-          ? game.homeTeam.toUpperCase()
-          : isAway
-            ? game.awayTeam
-            : null;
-
-        if (!name) return null;
-
-        const canonicalAbbreviation = (isHome ? game.homeTeamAbbreviation : game.awayTeamAbbreviation).toUpperCase();
-        // Keep the compact receipt convention everywhere: home abbreviations
-        // are uppercase while away abbreviations remain lowercase.
-        const abbreviation = isHome ? canonicalAbbreviation : canonicalAbbreviation.toLowerCase();
-        const hasFinalLine = game.spreadLockedAt !== null && game.officialSpread !== null;
-        const selectedTeamIsFavorite = pick.teamId === game.favoriteTeamId;
-        const displayedSpread = hasFinalLine ? game.officialSpread : game.preliminarySpread;
-        const lineValue = displayedSpread === null
-          ? null
-          : displayedSpread === 0
-            ? "PK"
-            : `${selectedTeamIsFavorite ? "-" : "+"}${Number.isInteger(displayedSpread) ? displayedSpread : displayedSpread.toFixed(1)}`;
-
-        const isSaved = savedPicks.some(
-          (savedPick) => savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
-        );
-
-        return {
-          gameId: pick.gameId,
-          name,
-          abbreviation,
-          lineValue,
-          isLineLocked: hasFinalLine,
-          canRemove: new Date(game.kickoffAt).getTime() > currentTime,
-          isSaved,
-        };
-      })
-      .filter(Boolean) as { gameId: string; name: string; abbreviation: string; lineValue: string | null; isLineLocked: boolean; canRemove: boolean; isSaved: boolean }[];
-  }, [currentTime, games, savedPicks, selectedPicks]);
-
-  const pickemHasUnsavedChanges = useMemo(() => {
-    if (selectedPicks.length !== savedPicks.length) return true;
-    return selectedPicks.some(
-      (pick) =>
-        !savedPicks.some(
-          (savedPick) =>
-            savedPick.gameId === pick.gameId && savedPick.teamId === pick.teamId,
-        ),
-    );
-  }, [savedPicks, selectedPicks]);
+  const pickemHasUnsavedChanges = useMemo(() => picksDiffer(selectedPicks, savedPicks), [savedPicks, selectedPicks]);
 
   const survivorHasUnsavedChanges = survivorAvailable &&
     (survivorPick?.gameId !== savedSurvivorPick?.gameId || survivorPick?.teamId !== savedSurvivorPick?.teamId);
@@ -582,60 +496,31 @@ export default function BoardPage() {
 
     setSelectionWarning("");
 
-    const game = games.find((item) => item.id === gameId);
-    if (!game || new Date(game.kickoffAt).getTime() <= currentTime) {
-      setSelectionWarning("That game has kicked off. Its submitted pick is sealed.");
-      return;
+    const choice = decidePickChoice({ picks: selectedPicks, games, gameId, teamId, now: currentTime, limit: selectionLimit });
+    switch (choice.kind) {
+      case "sealed":
+      case "limit":
+        setSelectionWarning(choice.warning);
+        return;
+      case "remove":
+        setSelectedPicks((current) => withoutGame(current, gameId));
+        setSelectionFeedback(null);
+        return;
+      case "swap":
+      case "add":
+        setSelectedPicks((current) => withPick(current, gameId, teamId));
+        showSelectionFeedback(gameId, teamId, "sweep");
+        return;
     }
-
-    const existingPick = selectedPicks.find((pick) => pick.gameId === gameId);
-
-    if (existingPick?.teamId === teamId) {
-      setSelectedPicks((current) => current.filter((pick) => pick.gameId !== gameId));
-      setSelectionFeedback(null);
-      return;
-    }
-
-    if (existingPick) {
-      setSelectedPicks((current) =>
-        [
-          ...current.filter((pick) => pick.gameId !== gameId),
-          { gameId, teamId },
-        ],
-      );
-      showSelectionFeedback(gameId, teamId, "sweep");
-      return;
-    }
-
-    if (selectedPicks.length >= selectionLimit) {
-      setSelectionWarning(
-        `You already have ${selectionLimit} selections. Click one again to remove it first.`,
-      );
-      return;
-    }
-
-    setSelectedPicks((current) => [...current, { gameId, teamId }]);
-    showSelectionFeedback(gameId, teamId, "sweep");
   }
 
   function chooseSurvivorTeam(gameId: string, teamId: string) {
     if (!survivorControlsEnabled) return;
 
-    const game = games.find((item) => item.id === gameId);
-    if (!game || new Date(game.kickoffAt).getTime() <= currentTime) return;
-
-    const isCurrentSelection = survivorPick?.teamId === teamId;
-    // During an unsaved replacement, the originally saved team must remain
-    // selectable too. The client can still hold an older used-team snapshot
-    // until the next board refresh, so explicitly preserve the active week's
-    // saved team here as well as on the server.
-    const isThisWeeksSavedPick = savedSurvivorPick?.teamId === teamId;
-    if (
-      survivorUsedTeamIds.includes(teamId) &&
-      !isCurrentSelection &&
-      !isThisWeeksSavedPick
-    ) {
-      setSelectionWarning("That team has already been used in Survivor.");
+    const choice = decideSurvivorChoice({ games, gameId, teamId, now: currentTime, current: survivorPick, saved: savedSurvivorPick, usedTeamIds: survivorUsedTeamIds });
+    if (choice.kind === "ignore") return;
+    if (choice.kind === "warn") {
+      setSelectionWarning(choice.warning);
       return;
     }
 
@@ -645,14 +530,12 @@ export default function BoardPage() {
 
   function removeSelection(gameId: string) {
     setSelectionWarning("");
-    const game = games.find((item) => item.id === gameId);
-    if (!game || new Date(game.kickoffAt).getTime() <= currentTime) {
-      setSelectionWarning("That game has kicked off. Its submitted pick is sealed.");
+    const removal = decideRemoval({ games, gameId, now: currentTime });
+    if (!removal.allowed) {
+      setSelectionWarning(removal.warning);
       return;
     }
-    setSelectedPicks((current) =>
-      current.filter((pick) => pick.gameId !== gameId),
-    );
+    setSelectedPicks((current) => withoutGame(current, gameId));
   }
 
   // Flip between All Games and Pool Action, and remember the choice.
