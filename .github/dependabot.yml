@@ -6,6 +6,11 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 3
+    ignore:
+      # ESLint 10 breaks the React lint plugin bundled with eslint-config-next
+      # (it calls an API ESLint 10 removed). Revisit when Next's config supports it.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
