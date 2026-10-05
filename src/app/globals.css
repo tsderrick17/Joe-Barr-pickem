@@ -242,7 +242,8 @@ body {
 }
 
 .slate-receipt-ticket::before,
-.slate-receipt-pool::before {
+.slate-receipt-pool::before,
+.slate-receipt-warning::before {
   /* A hairline ring hugs each round cut so the notches read as outlined, like
      the straight edges, instead of as plain gaps. */
   background:
@@ -274,7 +275,8 @@ body {
 }
 
 /* Middle section with Survivor beside it: notches on both perforations. */
-.slate-receipt-pool::before {
+.slate-receipt-pool::before,
+.slate-receipt-warning::before {
   -webkit-mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
   mask-image: var(--receipt-bite-top-left), var(--receipt-bite-bottom-left), var(--receipt-bite-top-right), var(--receipt-bite-bottom-right);
   -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
@@ -679,14 +681,18 @@ body {
 /* The warning hangs off the Pick'em section like a tab of the same paper: it
    sits under that column only, and the strip's outline follows its edges. */
 .slate-receipt-warning{
-  background: var(--receipt-paper);
+  background: transparent;
   border-top: 1px dashed var(--receipt-rule);
   font-size: .62rem;
   font-weight: 700;
   grid-column: 2;
+  isolation: isolate;
   margin: 0;
   padding: .28rem .7rem;
+  position: relative;
 }
+/* Same die-cut corners as the sections above it; the dashed rule stays the divider. */
+.slate-receipt-warning::before { border-top-color: transparent; }
 .slate-receipt-warning { color: #a82820; }
 
 @media (max-width: 767px) {

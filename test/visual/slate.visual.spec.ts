@@ -56,3 +56,21 @@ for (const scenario of Object.keys(SCENARIOS)) {
     });
   }
 }
+
+// Choosing a third pick when two are saved raises the receipt's warning tab, which has the same die-cut corners.
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Slate receipt warning at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await serve(page, "upcoming-picked");
+    await page.goto("/board");
+    await expect(page.locator(".slate-game-row").first()).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await page.locator(".slate-game-row button.slate-team-side:not([disabled])").nth(8).click();
+    await expect(page.locator(".slate-receipt-warning")).toBeVisible();
+    await page.waitForTimeout(600);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    const box = (await page.locator(".slate-receipt-strip").boundingBox())!;
+    await expect(page).toHaveScreenshot(`receipt-warning-${label}.png`, { clip: { x: Math.max(0, box.x - 8), y: box.y - 8, width: Math.min(width, box.width + 16), height: box.height + 70 } });
+  });
+}
