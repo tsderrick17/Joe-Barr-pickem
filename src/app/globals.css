@@ -4670,3 +4670,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { backg
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #2d2a1e; border-color: var(--bowl-gold); }
 /* Wide enough on a desktop that the first instruction stays on one line. */
 .bowl-pool-page #bowl-selections .bowl-rules-compact, .bowl-pool-page .bowl-optout { max-width: 34rem; }
+
+/* The Bowl receipt stays in view while the schedule scrolls. It is the frame, not the
+   strip inside it, that sticks, because a sticky element only travels within its parent. */
+.bowl-pool-page .bowl-receipt-frame { position: sticky; top: var(--site-nav-height, 0px); z-index: 40; }
+.bowl-pool-page .bowl-receipt-frame .slate-mini-nav { position: relative; top: auto; }
