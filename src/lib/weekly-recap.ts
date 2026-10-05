@@ -5,6 +5,7 @@ import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { championNames } from "@/lib/champion-names.js";
 import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 import { readAllPages } from "@/lib/read-all-pages";
+import { onlyRowsWithPublicPicks, publicPickLabel, revealPickLabels, type LockedGameLine } from "@/lib/reveal-rows";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -61,38 +62,6 @@ export type FeaturedWindowRevealSnapshot = {
   rows: Array<{ name: string; wins: number; picks: string[] }>;
   survivor?: RevealSurvivorPick[];
 };
-
-type PublicPickRow = SundayRevealSnapshot["rows"][number];
-
-type LockedGameLine = {
-  game_id: string;
-  favorite_team_id: string | null;
-  locked_spread: number | string | null;
-};
-
-function publicPickLabel({
-  gameId,
-  selectedTeamId,
-  abbreviationById,
-  lineByGame,
-}: {
-  gameId: string;
-  selectedTeamId: string;
-  abbreviationById: Map<string, string>;
-  lineByGame: Map<string, LockedGameLine>;
-}) {
-  const team = abbreviationById.get(selectedTeamId) ?? "NFL";
-  const line = lineByGame.get(gameId);
-  const spread = Number(line?.locked_spread);
-  if (!line || !Number.isFinite(spread)) return `${team} · —`;
-  if (spread === 0) return `${team} PK`;
-  const signedSpread = line.favorite_team_id === selectedTeamId ? -Math.abs(spread) : Math.abs(spread);
-  return `${team} ${signedSpread > 0 ? "+" : "−"}${Math.abs(signedSpread)}`;
-}
-
-function onlyRowsWithPublicPicks(rows: PublicPickRow[]) {
-  return rows.filter((row) => row.picks.length > 0);
-}
 
 export type GameDaySlateSnapshot = {
   kind: "game_day";
@@ -513,11 +482,7 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   if (!revealGameIds.size) throw new Error("No selected Sunday matchup is ready for a public receipt.");
   const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
   const lineByGame = new Map((lines ?? []).map((line) => [line.game_id, line as LockedGameLine]));
-  const picksByPlayer = new Map<string, string[]>();
-  for (const pick of picks ?? []) {
-    if (pick.scoring_period_id !== period.id || !revealGameIds.has(pick.game_id) || !contenderIds.has(pick.player_id)) continue;
-    picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
-  }
+  const picksByPlayer = revealPickLabels({ picks: picks ?? [], periodId: period.id, revealedGameIds: revealGameIds, allowedPlayerIds: contenderIds, abbreviationById, lineByGame });
   const survivor = await revealSurvivorPicks(period.id, revealGames.map((game) => game.id), players ?? []);
   const snapshot: SundayRevealSnapshot = {
     kind: "sunday_reveal",
@@ -616,13 +581,8 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const abbreviationById = new Map((teams ?? []).map((team) => [team.id, team.abbreviation]));
   const lineByGame = new Map((lines ?? []).map((line) => [line.game_id, line as LockedGameLine]));
   const wins = new Map<string, number>();
-  const picksByPlayer = new Map<string, string[]>();
-  for (const pick of picks ?? []) {
-    if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
-    if (pick.scoring_period_id === period.id && selectedFeaturedGameIds.has(pick.game_id)) {
-      picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), publicPickLabel({ gameId: pick.game_id, selectedTeamId: pick.selected_team_id, abbreviationById, lineByGame })]);
-    }
-  }
+  for (const pick of picks ?? []) if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
+  const picksByPlayer = revealPickLabels({ picks: picks ?? [], periodId: period.id, revealedGameIds: selectedFeaturedGameIds, abbreviationById, lineByGame });
 
   const latestFeatured = selectedFeaturedGames[selectedFeaturedGames.length - 1];
   const survivor = await revealSurvivorPicks(period.id, featuredGames.map((game) => game.id), players ?? []);

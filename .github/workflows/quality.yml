@@ -35,3 +35,27 @@ jobs:
       # keep blocking critical advisories without blocking previews on it.
       - run: npm audit --omit=dev --audit-level=critical
       - run: npm run build
+
+  # Exact-match screenshots of every view, state, width and theme, in the same
+  # pinned browser image the Linux baselines were recorded in.
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    container: mcr.microsoft.com/playwright:v1.63.0-noble
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:visual
+      - run: npm test -- --test-name-pattern="email artwork baseline"
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: visual-diffs
+          path: test-results/
+          retention-days: 7

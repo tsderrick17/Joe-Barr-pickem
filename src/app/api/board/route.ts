@@ -1,9 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { after, NextRequest, NextResponse } from "next/server";
-import { gradeAtsPick } from "@/lib/ats-grading";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
-import { shouldShowSurvivorOnReceipt } from "@/lib/survivor-receipt-visibility";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import {
@@ -13,42 +11,19 @@ import {
 import { currentSeasonYear } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
-
-type TeamRow = {
-  id: string;
-  full_name: string;
-  abbreviation: string;
-};
-
-type PreliminaryLineRow = {
-  game_id: string;
-  favorite_team_id: string | null;
-  spread: number | string;
-  captured_at: string;
-};
-
-type LockedLineRow = {
-  game_id: string;
-  favorite_team_id: string | null;
-  locked_spread: number | string;
-  source: string;
-  locked_at: string;
-};
-
-type GameRow = {
-  id: string;
-  away_team_id: string;
-  home_team_id: string;
-  kickoff_at: string;
-  line_lock_at: string;
-  is_international: boolean;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
-  away_score: number | null;
-  home_score: number | null;
-};
-
-type SurvivorPickRow = { game_id: string; selected_team_id: string };
-type PublicPickRow = { player_id: string; game_id: string; selected_team_id: string };
+import {
+  activeSurvivor,
+  concludedSurvivor,
+  shapeSlateGames,
+  unavailableSurvivor,
+  type GameRow,
+  type LockedLineRow,
+  type PreliminaryLineRow,
+  type PublicPickRow,
+  type SlateSurvivor,
+  type SurvivorPickRow,
+  type TeamRow,
+} from "@/lib/slate-shape";
 
 type ScoringPeriodRow = {
   id: string;
@@ -59,25 +34,6 @@ type ScoringPeriodRow = {
   max_picks: number;
 };
 
-function atsResultForTeam(
-  game: GameRow,
-  lockedLine: LockedLineRow | undefined,
-  teamId: string,
-) {
-  if (game.status !== "final" || !lockedLine) return null;
-
-  const result = gradeAtsPick({
-    selectedTeamId: teamId,
-    favoriteTeamId: lockedLine.favorite_team_id,
-    lockedSpread: Number(lockedLine.locked_spread),
-    awayTeamId: game.away_team_id,
-    homeTeamId: game.home_team_id,
-    awayScore: game.away_score,
-    homeScore: game.home_score,
-  });
-
-  return result === "pending" ? null : result;
-}
 
 export async function GET(request: NextRequest) {
   // Disruption voiding and Survivor no-pick settlement run in the protected
@@ -392,26 +348,7 @@ export async function GET(request: NextRequest) {
       : Promise.resolve({ data: [], error: null }),
   ]);
 
-  let survivor: {
-    available: boolean;
-    chipsVisible: boolean;
-    notice: string | null;
-    status: "active" | "eliminated" | "complete";
-    requiredThisPeriod: boolean;
-    showOnReceipt: boolean;
-    pick: SurvivorPickRow | null;
-    usedTeamIds: string[];
-  } = {
-    available: false,
-    chipsVisible: survivorChipsVisible,
-    notice:
-      "Survivor is temporarily unavailable. ATS picks remain available.",
-    status: "active",
-    requiredThisPeriod: false,
-    showOnReceipt: false,
-    pick: null,
-    usedTeamIds: [],
-  };
+  let survivor: SlateSurvivor = unavailableSurvivor(survivorChipsVisible);
 
   if (period.period_type !== "playoff") {
     let { data: survivorEntry, error: survivorEntryError } =
@@ -476,24 +413,16 @@ export async function GET(request: NextRequest) {
           usedCode: usedSurvivorPicksError?.code,
         });
       } else {
-        survivor = {
-          available: true,
-          chipsVisible: survivorChipsVisible,
-          notice: null,
-          requiredThisPeriod: survivorEntry.status === "active" || survivorEntry.eliminated_scoring_period_id === scoringPeriodId,
-          showOnReceipt: shouldShowSurvivorOnReceipt({
-            periodType: period.period_type,
-            available: true,
-            requiredThisPeriod: survivorEntry.status === "active" || survivorEntry.eliminated_scoring_period_id === scoringPeriodId,
-            championCrownedAt: season.survivor_champion_player_id ? season.survivor_champion_crowned_at : null,
-            periodFirstKickoffAt: gamesResult.data?.[0]?.kickoff_at ?? null,
-          }),
-          status: season.survivor_champion_player_id ? "complete" : survivorEntry.status,
+        survivor = activeSurvivor({
+          entry: survivorEntry as { status: "active" | "eliminated"; eliminated_scoring_period_id: string | null },
           pick: survivorPick as SurvivorPickRow | null,
-          usedTeamIds: (usedSurvivorPicks ?? []).map(
-            (pick) => pick.selected_team_id,
-          ),
-        };
+          usedPicks: usedSurvivorPicks,
+          season,
+          scoringPeriodId,
+          periodType: period.period_type,
+          periodFirstKickoffAt: gamesResult.data?.[0]?.kickoff_at ?? null,
+          chipsVisible: survivorChipsVisible,
+        });
       }
     }
   }
@@ -525,98 +454,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const teamNameById = new Map(
-    (teams as TeamRow[]).map((team) => [
-      team.id,
-      team.full_name,
-    ]),
-  );
-  const teamAbbreviationById = new Map(
-    (teams as TeamRow[]).map((team) => [team.id, team.abbreviation]),
-  );
-
-  const preliminaryLineByGameId = new Map<string, PreliminaryLineRow>();
-
-  for (const line of (history ?? []) as PreliminaryLineRow[]) {
-    if (!preliminaryLineByGameId.has(line.game_id)) {
-      preliminaryLineByGameId.set(line.game_id, line);
-    }
-  }
-
-  const lockedLineByGameId = new Map(
-    ((lockedLines ?? []) as LockedLineRow[]).map((line) => [
-      line.game_id,
-      line,
-    ]),
-  );
-  const playerNameById = new Map(players.map((item) => [item.id, item.first_name]));
-  const pickersByGameAndTeam = new Map<string, string[]>();
-  for (const pick of (publicPicks ?? []) as PublicPickRow[]) {
-    const key = `${pick.game_id}:${pick.selected_team_id}`;
-    const names = pickersByGameAndTeam.get(key) ?? [];
-    const name = playerNameById.get(pick.player_id);
-    if (name) names.push(name);
-    pickersByGameAndTeam.set(key, names);
-  }
   // Survivor is a regular-season competition. The playoff ticket uses this
   // reclaimed space for every Pick'em game in the active round instead.
-  if (period.period_type === "playoff") {
-    survivor = {
-      available: false,
-      chipsVisible: false,
-      notice: "Survivor has concluded for the season.",
-      status: "complete",
-      requiredThisPeriod: false,
-      showOnReceipt: false,
-      pick: null,
-      usedTeamIds: [],
-    };
-  }
+  if (period.period_type === "playoff") survivor = concludedSurvivor();
 
   return NextResponse.json({
     serverTime: currentTime.toISOString(),
-    games: (games as GameRow[]).map((game) => {
-      const lockedLine = lockedLineByGameId.get(game.id);
-
-      return {
-        id: game.id,
-        kickoffAt: game.kickoff_at,
-        lineLockAt: game.line_lock_at,
-        isInternational: game.is_international,
-        awayTeam:
-          teamNameById.get(game.away_team_id) ?? "Unknown team",
-        homeTeam:
-          teamNameById.get(game.home_team_id) ?? "Unknown team",
-        awayTeamAbbreviation: teamAbbreviationById.get(game.away_team_id) ?? "NFL",
-        homeTeamAbbreviation: teamAbbreviationById.get(game.home_team_id) ?? "NFL",
-        favoriteTeamId:
-          lockedLine?.favorite_team_id ??
-          preliminaryLineByGameId.get(game.id)?.favorite_team_id ??
-          null,
-        awayTeamId: game.away_team_id,
-        homeTeamId: game.home_team_id,
-        officialSpread: lockedLine
-          ? Number(lockedLine.locked_spread)
-          : null,
-        preliminarySpread: lockedLine
-          ? null
-          : preliminaryLineByGameId.has(game.id)
-            ? Number(preliminaryLineByGameId.get(game.id)?.spread)
-            : null,
-        spreadSource: lockedLine?.source ?? null,
-        spreadLockedAt: lockedLine?.locked_at ?? null,
-        status: game.status,
-        awayScore: game.away_score,
-        homeScore: game.home_score,
-        awayResult: atsResultForTeam(game, lockedLine, game.away_team_id),
-        homeResult: atsResultForTeam(game, lockedLine, game.home_team_id),
-        awayPickers: new Date(game.kickoff_at) <= currentTime
-          ? pickersByGameAndTeam.get(`${game.id}:${game.away_team_id}`) ?? []
-          : [],
-        homePickers: new Date(game.kickoff_at) <= currentTime
-          ? pickersByGameAndTeam.get(`${game.id}:${game.home_team_id}`) ?? []
-          : [],
-      };
+    games: shapeSlateGames({
+      games: games as GameRow[],
+      teams: teams as TeamRow[],
+      history: history as PreliminaryLineRow[] | null,
+      lockedLines: lockedLines as LockedLineRow[] | null,
+      publicPicks: publicPicks as PublicPickRow[] | null,
+      players,
+      now: currentTime,
     }),
     myPicks: (myPicks ?? []).map((pick) => ({
       gameId: pick.game_id,

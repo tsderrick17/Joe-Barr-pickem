@@ -1,0 +1,81 @@
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.official-line-color { color: var(--official-line-color); }
+
+.theme-toggle {
+  border: 1px solid #87cfc5;
+  background: linear-gradient(145deg, #36565d, #20343d);
+  color: #effdf9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 0 #0e161a;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* Keep the theme control at the true right edge, separate from account links. */
+.site-nav-account .theme-toggle { order: 2; }
+
+.theme-toggle:hover {
+  border-color: #b1f1e6;
+  background: linear-gradient(145deg, #4b747a, #28434c);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:active {
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  transform: translateY(1px) scale(0.95);
+}
+
+.theme-toggle[data-active="true"] {
+  border-color: #a6f0e5;
+  background: linear-gradient(145deg, #5fcfc0, #2c847e);
+  color: #071418;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 2px 0 #0e161a, 0 0 12px rgba(104, 229, 211, 0.35);
+}
+
+.theme-toggle-icon {
+  display: block;
+  line-height: 1;
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.theme-toggle[data-active="true"] .theme-toggle-icon {
+  transform: rotate(120deg) scale(0.9);
+}
+
+.site-nav-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 1.25rem;
+  row-gap: 0.75rem;
+}
+
+/* The account details arrive after the session check. Reserve their desktop
+   footprint so they do not nudge the centered primary navigation sideways. */
+@media (min-width: 768px) {
+  .site-nav-account { min-width: 12.75rem; }
+}
+
+/* Reserve the signed-in account strip before the async player lookup settles. */
+.mobile-account-nav > div { min-height: 3.375rem; }
+
+.slate-loading-receipt {
+  background: linear-gradient(90deg, #fffdf8 0 33%, #f4ede1 33% 66%, #fffdf8 66% 100%);
+}
+
+.standings-loading-ticket { min-height: 19rem; }
+.standings-loading-rows {
+  min-height: 28rem;
+  background: repeating-linear-gradient(to bottom, #fffdf8 0 3.5rem, #a9c5e7 3.5rem calc(3.5rem + 1px));
+}
+
+/* Reserve the first Bowl Pool viewport while the authenticated profile and
+   schedule arrive, so the real card replaces a stable shape instead of
+   pushing the page down after first paint. */
+.bowl-pool-loading-shell {
+  min-height: 42rem;
+}
+

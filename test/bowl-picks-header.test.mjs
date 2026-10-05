@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 test("Bowl picks legend stacks its labels and kickoff times use A or P", async () => {
   const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
@@ -10,11 +11,12 @@ test("Bowl picks legend stacks its labels and kickoff times use A or P", async (
 });
 
 test("the Bowl receipt frame is what sticks, so it stays in view for the whole schedule", async () => {
-  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.bowl-pool-page \.bowl-receipt-frame \{ position: sticky; top: var\(--site-nav-height, 0px\); z-index: 40; \}/);
+  const css = await readStylesheet();
+  assert.match(css, /\.bowl-pool-page \.bowl-receipt-frame \{ position: sticky; top: 0; z-index: 40; \}/);
+  assert.match(css, /@media \(max-width: 767px\) \{ \.bowl-pool-page \.bowl-receipt-frame \{ top: var\(--site-nav-height, 0px\); \} \}/);
 });
 
 test("Fav, Line and Dog are vertically centered in the legend bar", async () => {
-  const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const css = await readStylesheet();
   assert.match(css, /#bowl-selections > div\.overflow-hidden > div:first-child \{ align-items: center; \}/);
 });

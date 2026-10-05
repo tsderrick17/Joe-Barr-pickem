@@ -1,0 +1,23 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --official-line-color: #008c82;
+  /* Shared visual system primitives used by pool surfaces and email artwork. */
+  --pool-paper: #f7f3e8;
+  --pool-surface: #fffdf8;
+  --pool-ink: #171717;
+  --pool-muted: #6b655d;
+  --pool-teal: #16806a;
+  --pool-alert: #a33c29;
+  --pool-rule: #c7c0b5;
+  --pool-display-font: Georgia, "Times New Roman", serif;
+  --pool-body-font: Arial, Helvetica, sans-serif;
+  --pool-radius-sm: .125rem;
+  --pool-focus-ring: 0 0 0 3px rgba(22, 128, 106, .24);
+  --pool-control-height: 2.75rem;
+  --pool-space-1: .35rem;
+  --pool-space-2: .7rem;
+  --pool-space-3: 1.05rem;
+}
+
+

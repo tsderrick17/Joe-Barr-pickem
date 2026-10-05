@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   // Browser rehearsals run beside a normal local server. Give that temporary
   // server its own build directory so Next never contends for .next/dev.
   ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
+  // The screenshot suite serves images as they are: the on-demand resizer builds each
+  // logo the first time it is asked for and can stall pages under load. Never set in production.
+  ...(process.env.NEXT_IMAGE_UNOPTIMIZED === "1" ? { images: { unoptimized: true } } : {}),
   async headers() {
     return [
       {

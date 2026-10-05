@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
-const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+const css = await readStylesheet();
 
 test("Bowl standings game columns share fixed row tracks and centered baselines", () => {
   assert.match(

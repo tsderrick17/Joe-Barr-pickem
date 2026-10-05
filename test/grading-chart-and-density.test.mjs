@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 const chart = await readFile(new URL("../src/components/provider-chart.tsx", import.meta.url), "utf8");
 const dashboard = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
 const efficiency = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
 const slate = await readFile(new URL("../src/components/slate-performance-panel.tsx", import.meta.url), "utf8");
-const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+const css = await readStylesheet();
 
 test("settlement latency uses a rounded, data-relative y-axis and names its units", () => {
   assert.match(chart, /yScale\?: "zero" \| "tight"/);
