@@ -1322,3 +1322,10 @@ The Fav, Line and Dog labels are vertically centered in the legend bar next to t
 - The toss used to land, then rise about a pixel and rock before resting (extra settle stops after the arc, and an end height one pixel off the chip's resting height, which differs between the picked and unpicked states). It is now one continuous arc that ends exactly at rest, lifts measured from the chip's own resting height (`--chip-rest`), so nothing moves after it stops. The Operations test coin uses the same curve, and a test keeps them identical and checks that after the peak the chip only comes down.
 - The Bowl Card's games-remaining number is the same split-flap tile as the player totals (drawn larger), so it spins and lands the same way, first. Player rows now land 90 ms apart instead of 45 (starting 90 ms after the counter). The old dotted-zero counter and its CSS are gone.
 - The empty corner above Tiebreaker on the date row is the page color, like the corner above Games remaining.
+
+## Bowl Pool: pinned receipt without a gap, no minus signs, one spin a day, full-width rows
+
+- The picks-page receipt sticks at the very top of the screen on desktop (where the site menu does not follow the page) and just under the menu on phones.
+- The picks page drops the minus sign from every line, like the Bowl Card, and the freed space on a phone goes to the Fav and Dog boxes.
+- The Bowl Card's scores spin only the first time a player looks at the card each Eastern day (remembered in this browser, per player); for the rest of the day the numbers are simply there.
+- At the end of the Bowl Card table the row shading and rules stopped where the visible part ended, because the table's minimum width used a fixed game width while the columns used the wider desktop width. The minimum width now uses the same width variable, so every row spans the whole table.

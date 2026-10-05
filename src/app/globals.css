@@ -4628,7 +4628,7 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 @media (max-width: 639px) {
   /* The line gets its own lane between the two boxes, wide enough for -10.5. */
   .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child,
-  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.6rem minmax(0, 1fr) 5.1rem 2.6rem 5.1rem; }
+  .bowl-pool-page #bowl-selections .bowl-selection-game-row { grid-template-columns: 2.6rem minmax(0, 1fr) 5.45rem 1.9rem 5.45rem; }
   .bowl-pool-page #bowl-selections .bowl-game-line { font-size: .78rem; white-space: nowrap; }
 }
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box { background: #1b1f2b; border-color: #4d4a3e; }
@@ -4642,7 +4642,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 .slate-game-row.is-final .slate-team-result-mark { text-align: left; }
 /* The Bowl receipt stays in view while the schedule scrolls. It is the frame, not the
    strip inside it, that sticks, because a sticky element only travels within its parent. */
-.bowl-pool-page .bowl-receipt-frame { position: sticky; top: var(--site-nav-height, 0px); z-index: 40; }
+.bowl-pool-page .bowl-receipt-frame { position: sticky; top: 0; z-index: 40; }
+@media (max-width: 767px) { .bowl-pool-page .bowl-receipt-frame { top: var(--site-nav-height, 0px); } }
 .bowl-pool-page .bowl-receipt-frame .slate-mini-nav { position: relative; top: auto; }
 /* Fav, Line and Dog sit at the vertical middle of the legend bar, beside the two-line labels. */
 .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child { align-items: center; }

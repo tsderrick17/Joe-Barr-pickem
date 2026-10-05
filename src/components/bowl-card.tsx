@@ -24,6 +24,18 @@ type BowlStandingsData = {
 };
 type BowlMatrixGame = BowlStandingsData["games"][number];
 
+/** One spin per player per Eastern day: remembered in this browser. */
+function scoreSpinKey(playerId: string | undefined) {
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+  return `bowl-scores-spun:${playerId ?? "anon"}:${day}`;
+}
+function scoresSpunToday(playerId: string | undefined) {
+  try { return typeof window !== "undefined" && window.localStorage.getItem(scoreSpinKey(playerId)) === "1"; } catch { return false; }
+}
+function markScoresSpun(playerId: string | undefined) {
+  try { window.localStorage.setItem(scoreSpinKey(playerId), "1"); } catch { /* private browsing: it just spins again next time */ }
+}
+
 const BOWL_MATRIX_GAMES = [
   "Frisco", "LA", "Salute to Veterans", "Cure", "68 Ventures", "Xbox", "Myrtle Beach", "Gasparilla",
   "Playoff Game #1", "Playoff Game #2", "Playoff Game #3", "Playoff Game #4", "Potato", "Boca Raton", "New Orleans", "Frisco",
@@ -59,6 +71,9 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   const bowlScrollRef = useRef<HTMLDivElement | null>(null);
   // The score tiles spin once per visit: the first time the Bowl Card comes
   // into view, then land on the real totals about a second later.
+  // The scores spin the first time a player looks at the card each day (Eastern), then stay
+  // still for the rest of that day.
+  const [animateScores] = useState(() => !scoresSpunToday(viewerPlayerId));
   const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
 
   useEffect(() => {
@@ -98,7 +113,8 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   // Keep the grid's containing block as wide as its generated tracks. Without
   // this, CSS grid tracks overflow the 80rem shell while row borders stop at
   // the shell's edge (which made the table appear to end mid-schedule).
-  const bowlTableMinWidth = `${14.5 + bowlGames.length * 7.5}rem`;
+  // The same game width the columns use, so the rows always fill the table behind them.
+  const bowlTableMinWidth = `calc(14.5rem + ${bowlGames.length} * var(--bowl-game-width, 7.5rem))`;
   const bowlGameBoundaryClass = (index: number) => {
     const key = bowlDateKey(bowlGames[index]);
     const previousKey = index > 0 ? bowlDateKey(bowlGames[index - 1]) : null;
@@ -160,6 +176,9 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
     return () => window.cancelAnimationFrame(frame);
   }, [bowlGames, minimized]);
   useEffect(() => {
+    if (bowlScoresSettled && animateScores) markScoresSpun(viewerPlayerId);
+  }, [bowlScoresSettled, animateScores, viewerPlayerId]);
+  useEffect(() => {
     // Runs only when the card itself changes: an ordinary re-render (a data
     // refresh) must never cancel the landing timer.
     const container = bowlScrollRef.current;
@@ -206,8 +225,8 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>
               <div style={{ minWidth: bowlTableMinWidth }}>
                 <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }}><span aria-hidden="true" className="bowl-standings-sticky sticky left-0 z-30 bg-[#f5f0e6]" style={{ gridColumn: "span 2" }} />{bowlDateGroups.map((group) => <span className="border-x-2 border-t-2 border-[#8d877d] bg-[#334155] px-2 py-2 text-center text-[10px] font-black uppercase tracking-wide text-white" key={group.key} style={{ gridColumn: `span ${group.count} / span ${group.count}` }}>{group.key}</span>)}<span aria-hidden="true" className="border-l-2 border-[#8d877d] bg-transparent" /></div>
-                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-summary-cell bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="bowl-games-remaining-label text-[9px] font-black tracking-wide"><span className="block">Games</span><span className="block">remaining</span></span><BowlScoreTile landDelay={0} large settled={bowlScoresSettled && bowlScheduleReady} value={Math.max(0, bowlGames.length - bowlGradedGames)} viewer /></span>{bowlGames.map((game, index) => { const labels = bowlGameTeamLabels(game); return <span className={`bowl-standings-game-cell flex flex-col items-center bg-[#f7f3ea] px-2 py-1.5 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="bowl-standings-bowl-name flex min-h-8 w-full items-center justify-center text-xs uppercase leading-4 tracking-wide text-slate-900">{bowlName(game)}</b><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.favorite?.full_name}>{labels.favoriteLabel}</span><span className={`bowl-standings-line block font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{bowlSpreadLabel(game.line?.locked_spread)}</span><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.underdog?.full_name}>{labels.underdogLabel}</span></span>; })}<span className="bowl-standings-tiebreaker-header flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
-                {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "is-alt bg-[#f3f0e8]" : "bg-[#fffdf8]"; const isViewer = row.playerId === viewerPlayerId; return <div className={`bowl-standings-player-row grid border-b border-[#91afd0] text-center text-xs ${isViewer ? "is-viewer" : ""} ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }} key={row.playerId}><span className={`bowl-standings-sticky bowl-standings-score-cell sticky left-0 z-30 px-1 py-2 text-center ${rowFill}`}><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled={bowlScoresSettled} value={row.wins} viewer={isViewer} /></span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif text-[13px] font-extrabold leading-tight tracking-[0.01em] sm:text-base ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = isViewer ? bowlOwnCell(game) : bowlCell(row.playerId, game.id); const locked = !isViewer && bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-2 py-2 font-mono text-[13px] font-extrabold tabular-nums text-slate-700 sm:text-base">{row.tiebreakerTotal ?? "—"}</span></div>; })}
+                <div className="grid" style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }}><span className="bowl-standings-summary-cell bowl-standings-sticky sticky left-0 z-30 flex min-h-28 flex-col items-center justify-center bg-[#f5f0e6] px-1 text-center uppercase text-slate-700" style={{ gridColumn: "span 2" }}><span className="bowl-games-remaining-label text-[9px] font-black tracking-wide"><span className="block">Games</span><span className="block">remaining</span></span><BowlScoreTile animate={animateScores} landDelay={0} large settled={bowlScoresSettled && bowlScheduleReady} value={Math.max(0, bowlGames.length - bowlGradedGames)} viewer /></span>{bowlGames.map((game, index) => { const labels = bowlGameTeamLabels(game); return <span className={`bowl-standings-game-cell flex flex-col items-center bg-[#f7f3ea] px-2 py-1.5 text-center text-[10px] leading-4 text-slate-700 ${bowlGameBoundaryClass(index)}`} data-bowl-game-index={index} key={`${game.id}-${index}`}><b className="bowl-standings-bowl-name flex min-h-8 w-full items-center justify-center text-xs uppercase leading-4 tracking-wide text-slate-900">{bowlName(game)}</b><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.favorite?.full_name}>{labels.favoriteLabel}</span><span className={`bowl-standings-line block font-mono font-black ${game.line?.locked_at ? "text-[#007e72]" : "text-slate-950"}`}>{bowlSpreadLabel(game.line?.locked_spread)}</span><span className="bowl-standings-team block w-full truncate font-bold text-slate-950" title={labels.underdog?.full_name}>{labels.underdogLabel}</span></span>; })}<span className="bowl-standings-tiebreaker-header flex items-center justify-center border-l-2 border-[#8d877d] bg-[#f5f0e6] px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-wide text-slate-700">Tiebreaker</span></div>
+                {bowlRows.map((row, rowIndex) => { const rowFill = rowIndex % 2 ? "is-alt bg-[#f3f0e8]" : "bg-[#fffdf8]"; const isViewer = row.playerId === viewerPlayerId; return <div className={`bowl-standings-player-row grid border-b border-[#91afd0] text-center text-xs ${isViewer ? "is-viewer" : ""} ${rowIndex === 0 ? "border-t-2 border-t-[#1d1d1f]" : ""} ${rowFill}`} style={{ gridTemplateColumns: `3rem 5rem repeat(${bowlGames.length}, minmax(var(--bowl-game-width, 7.5rem), 1fr)) minmax(6.5rem, .72fr)` }} key={row.playerId}><span className={`bowl-standings-sticky bowl-standings-score-cell sticky left-0 z-30 px-1 py-2 text-center ${rowFill}`}><BowlScoreTile animate={animateScores} landDelay={(rowIndex + 1) * 90} settled={bowlScoresSettled} value={row.wins} viewer={isViewer} /></span><span className={`bowl-standings-sticky sticky left-[3rem] z-30 truncate px-1 py-2 text-left font-serif text-[13px] font-extrabold leading-tight tracking-[0.01em] sm:text-base ${rowFill}`} title={row.playerName}><PlayerTrophyName name={row.playerName} showTrophy={row.trophies?.some((title) => title.includes("Bowl Pool Champion"))} titles={row.trophies} /></span>{bowlGames.map((game, index) => { const result = isViewer ? bowlOwnCell(game) : bowlCell(row.playerId, game.id); const locked = !isViewer && bowlStandings?.privatePickMarkers?.some((pick) => pick.playerId === row.playerId && pick.game_id === game.id); const display = result === "·" && locked ? "🔒" : result; return <span className={`px-1 py-2 font-black ${bowlCellClass(display)} ${bowlGameBoundaryClass(index)}`} key={`${row.playerId}-${game.id}-${index}`}>{display}</span>; })}<span className="flex items-center justify-center border-l-2 border-[#8d877d] px-2 py-2 font-mono text-[13px] font-extrabold tabular-nums text-slate-700 sm:text-base">{row.tiebreakerTotal ?? "—"}</span></div>; })}
               </div>
             </div>
           </Collapse>
