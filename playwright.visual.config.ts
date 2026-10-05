@@ -14,9 +14,10 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./test/visual",
   timeout: 60_000,
-  // CI runners are slower and shared; they serve a production build, which is
-  // far faster and steadier than compiling pages on demand in development.
-  workers: process.env.CI ? 4 : 2,
+  // CI serves a production build, which is far faster and steadier than compiling
+  // pages on demand in development. Two workers: more makes the first image
+  // optimizations pile up and pages time out.
+  workers: 2,
   reporter: [["list"]],
   expect: { toHaveScreenshot: { maxDiffPixels: 0, animations: "disabled", caret: "hide" } },
   use: { baseURL: "http://127.0.0.1:3130" },

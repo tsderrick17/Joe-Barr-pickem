@@ -50,11 +50,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
       });
       // Lazy images below the fold load only when scrolled near; make them all load now.
       await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
-      await page.waitForFunction(() => [...document.images].every((image) => image.complete), undefined, { timeout: 15_000 }).catch(async (error) => {
-        console.log("INCOMPLETE", JSON.stringify(await page.evaluate(() => [...document.images].filter((image) => !image.complete).slice(0, 4).map((image) => ({ src: image.currentSrc || image.src, loading: image.loading, complete: image.complete, w: image.naturalWidth })))));
-        console.log("PROBE", JSON.stringify(await page.evaluate(async () => { const out: string[] = []; for (const url of ["/_next/image?url=%2Fteam-logos%2FJAX.png&w=96&q=75", "/team-logos/JAX.png"]) { const started = Date.now(); try { const response = await fetch(url, { cache: "no-store" }); out.push(`${url} ${response.status} ${response.headers.get("content-type")} ${Date.now() - started}ms`); } catch (reason) { out.push(`${url} ERR ${String(reason)}`); } } return out; })));
-        throw error;
-      });
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await page.waitForLoadState("networkidle");
       // The Next.js development badge is not part of the product.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
