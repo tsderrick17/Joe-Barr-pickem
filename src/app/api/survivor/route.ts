@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -16,83 +16,24 @@ type Period = {
   status: "upcoming" | "active" | "complete";
 };
 
-type PlayerAuthentication =
-  | { ok: true; player: { id: string; active: boolean } }
-  | { ok: false; error: string; status: 401 | 500 | 503 };
-
-async function authenticatedPlayer(
-  request: NextRequest,
-): Promise<PlayerAuthentication> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-
-  if (!url || !key) {
-    return {
-      ok: false,
-      error: "The server is missing required configuration.",
-      status: 500 as const,
-    };
-  }
-  if (!authorization?.startsWith("Bearer ")) {
-    return {
-      ok: false,
-      error: "You must be signed in as an active player.",
-      status: 401 as const,
-    };
-  }
-
-  const authClient = createClient(url, key, {
-    global: { headers: { Authorization: authorization } },
-  });
-  const { data: { user }, error: userError } = await retrySafeRead(() => authClient.auth.getUser(
-    authorization.slice("Bearer ".length),
-  ));
-  if (userError || !user) {
-    const serviceUnavailable =
-      userError ? (userError.status ?? 500) >= 500 : false;
-    return {
-      ok: false,
-      error: serviceUnavailable
-        ? "The sign-in service could not be reached."
-        : "You must be signed in as an active player.",
-      status: serviceUnavailable ? (503 as const) : (401 as const),
-    };
-  }
-
-  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin
-    .from("players")
-    .select("id, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle());
-
-  if (playerError) {
-    return {
-      ok: false,
-      error: "Your player profile could not be loaded.",
-      status: 503 as const,
-    };
-  }
-  if (!player?.active) {
-    return {
-      ok: false,
-      error: "You must be signed in as an active player.",
-      status: 401 as const,
-    };
-  }
-  await recordPlayerActivity(player.id);
-  return { ok: true, player };
-}
-
 async function survivorContext(request: NextRequest) {
-  const authentication = await authenticatedPlayer(request);
-  if (!authentication.ok) {
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) {
+    const error = access.status === 503
+      ? access.code === "auth_unavailable"
+        ? "The sign-in service could not be reached."
+        : "Your player profile could not be loaded."
+      : access.status === 500
+        ? "The server is missing required configuration."
+        : "You must be signed in as an active player.";
     return {
-      error: authentication.error,
-      status: authentication.status,
+      error,
+      status: access.status,
+      code: access.code,
     };
   }
-  const { player } = authentication;
+  const { player } = access;
+  await recordPlayerActivity(player.id);
 
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin
     .from("seasons")
@@ -130,7 +71,7 @@ async function survivorContext(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const context = await survivorContext(request);
-  if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
+  if ("error" in context) return NextResponse.json({ error: context.error, ...(context.code ? { code: context.code } : {}) }, { status: context.status });
 
   const [gamesResult, picksResult, teamsResult, entriesResult, usedPicksResult] = await Promise.all([
     supabaseAdmin
@@ -230,7 +171,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const context = await survivorContext(request);
-  if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
+  if ("error" in context) return NextResponse.json({ error: context.error, ...(context.code ? { code: context.code } : {}) }, { status: context.status });
   if (context.season.survivor_champion_player_id) {
     return NextResponse.json({ error: "Survivor is complete for the season." }, { status: 409 });
   }
