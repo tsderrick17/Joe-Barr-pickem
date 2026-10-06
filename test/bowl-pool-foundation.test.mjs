@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
+import { activeBowlStandingsEntries } from "../src/lib/bowl-pool-standings-entries.js";
 
 test("bowl-pool standings use the closest CFP-final total after wins", () => {
   const rows = [
@@ -90,10 +91,14 @@ test("Bowl line capture promotes a provisional spread when live odds are unavail
   assert.match(source, /typeof espnSpread === "number" && Number\.isFinite\(espnSpread\)/);
 });
 
-test("Bowl standings list only active entries", async () => {
-  const source = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
-  assert.match(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active"\)/);
-  assert.doesNotMatch(source, /const standings = \(allEntries \?\? \[\]\)\.filter\(\(entry\) => entry\.status === "active" \|\| entry\.status === "complete"\)/);
+test("Bowl standings list only active entries", () => {
+  const entries = [
+    { id: "active", status: "active" },
+    { id: "completed", status: "complete" },
+    { id: "withdrawn", status: "withdrawn" },
+  ];
+  assert.deepEqual(activeBowlStandingsEntries(entries), [entries[0]]);
+  assert.deepEqual(activeBowlStandingsEntries(null), []);
 });
 
 test("bowl selections compare by game/value, not insertion order", () => {
