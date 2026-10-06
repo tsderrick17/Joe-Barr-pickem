@@ -1,6 +1,8 @@
 /**
  * The submitting player can always see their own pick. Everyone else sees it
  * exactly at the recorded kickoff time, never before.
+ * @param {{ viewerPlayerId: string, pickPlayerId: string, kickoffAt?: string | null }} pick
+ * @param {Date} [now]
  */
 export function shouldRevealPick({ viewerPlayerId, pickPlayerId, kickoffAt }, now = new Date()) {
   if (viewerPlayerId === pickPlayerId) return true;
@@ -9,6 +11,10 @@ export function shouldRevealPick({ viewerPlayerId, pickPlayerId, kickoffAt }, no
   return new Date(kickoffAt).getTime() <= now.getTime();
 }
 
+/**
+ * @param {string[]} kickoffTimes
+ * @param {Date} [now]
+ */
 export function nextPickRevealAt(kickoffTimes, now = new Date()) {
   const nextKickoff = kickoffTimes
     .map((kickoffAt) => new Date(kickoffAt))

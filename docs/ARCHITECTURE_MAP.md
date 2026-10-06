@@ -59,6 +59,10 @@ privacy and rule tests should become a regression budget.
   manually enabled full-season/weekly rehearsals are expected to skip locally;
   a green local run is not equivalent to a passed isolated lifecycle workflow.
 - `npm run lint` and `npm run build` cover the application and TypeScript build.
+  `npm run typecheck` additionally checks the five small JavaScript policy
+  modules listed in `tsconfig.policy.json` with JSDoc types. This is a focused
+  boundary, not a claim that every JavaScript module is checked; expand it as
+  modules gain accurate input contracts. CI runs this check before tests.
   The isolated browser/database, visual, and production-smoke checks are
   separate release gates described in the [Commissioner runbook](commissioner-runbook.md).
 - For privacy edits, test the shaping module and the authenticated route; a

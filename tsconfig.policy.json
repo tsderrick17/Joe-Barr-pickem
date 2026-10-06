@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "checkJs": true,
+    "incremental": false
+  },
+  "include": [
+    "src/lib/game-status-policy.js",
+    "src/lib/line-fallback-policy.js",
+    "src/lib/pick-visibility.js",
+    "src/lib/score-window.js",
+    "src/lib/scoring-period.js"
+  ],
+  "exclude": ["node_modules"]
+}
