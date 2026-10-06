@@ -4,6 +4,17 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
+
+**Status:** Accepted for the selected-period grading dashboard read
+
+The dashboard already loads the selected period's game IDs with its full game
+rows. Reuse that result to select locked lines instead of issuing an ID-only
+`games` request. Normalize the read to one promise so other dashboard queries
+can remain concurrent, and keep the same failure handling. The observed
+request-count reduction is one per loaded period; no latency or Vercel CPU
+claim is made without isolated and production measurements.
+
 ## 2026-08-09 — REF-001 — Layer project guidance
 
 **Status:** Accepted
