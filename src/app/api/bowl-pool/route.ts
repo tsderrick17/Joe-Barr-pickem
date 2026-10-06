@@ -4,8 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { bowlPoolLaunchAt, compareBowlPoolStandings } from "@/lib/bowl-pool.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
-
-type Selection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
+import { parseBowlSubmission } from "@/lib/selection-submission";
 
 type CurrentPlayer = { id: string; first_name: string; active: boolean; is_commissioner: boolean };
 type PlayerLookup =
@@ -127,9 +126,11 @@ export async function POST(request: NextRequest) {
   const playerLookup = await currentPlayer(request);
   if (!playerLookup.player) return NextResponse.json({ error: playerLookup.error === "unavailable" ? "The Bowl Pool service is temporarily unavailable. Please try again." : "You must be signed in to save Bowl Pool selections." }, { status: playerLookup.error === "unavailable" ? 503 : 401 });
   const player = playerLookup.player;
-  let body: { optedIn?: unknown; selections?: Selection[]; championshipTotalGuess?: unknown };
-  try { body = await request.json() as typeof body; } catch { return NextResponse.json({ error: "Your Bowl Pool submission was incomplete." }, { status: 400 }); }
-  if (typeof body.optedIn !== "boolean" || !Array.isArray(body.selections)) return NextResponse.json({ error: "Opt-in status and selections are required." }, { status: 400 });
+  let input: unknown;
+  try { input = await request.json(); } catch { return NextResponse.json({ error: "Your Bowl Pool submission was incomplete." }, { status: 400 }); }
+  const parsed = parseBowlSubmission(input);
+  if (!parsed.value) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const body = parsed.value;
   const context = await seasonAndGames();
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ optedIn: false });
   }
   if (entryClosed && (!existing || existing.status !== "active")) return NextResponse.json({ error: "Bowl Pool entry closed at the first kickoff." }, { status: 409 });
-  const unique = new Map<string, Selection>();
+  const unique = new Map<string, (typeof body.selections)[number]>();
   for (const selection of body.selections) unique.set(selection.gameId, selection);
   const gameById = new Map(context.games.map((game) => [game.id, game]));
   const previewSelections: Array<{ game_id: string; side: "favorite" | "underdog" }> = [];
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
     target_season_id: context.season.id,
     target_opted_in: true,
     target_selections: databaseSelections,
-    target_tiebreaker: typeof body.championshipTotalGuess === "number" ? body.championshipTotalGuess : null,
+    target_tiebreaker: body.championshipTotalGuess,
     evaluated_at: now.toISOString(),
   });
   if (saveError || !entryId) return NextResponse.json({ error: saveError?.message ?? "Your Bowl Pool selections could not be saved." }, { status: 400 });

@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "node --test \"test/**/*.test.mjs\"",
     "test:integration": "node --test --test-concurrency=1 test/integration/**/*.test.mjs",
     "test:e2e": "playwright test",
@@ -20,7 +21,8 @@
     "season:certification:render": "node scripts/render-season-certification.mjs",
     "test:all": "npm run test:migrations && npm test",
     "test:migrations": "node scripts/check-migration-versions.mjs",
-    "test:visual": "playwright test --config playwright.visual.config.ts"
+    "test:visual": "playwright test --config playwright.visual.config.ts",
+    "measure:shaping": "node scripts/measure-response-shaping.mjs"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "5.3.0",

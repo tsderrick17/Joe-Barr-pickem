@@ -8,6 +8,9 @@ provider failures, NFL schedule changes, weekly progression, playoffs, and
 annual rollover. `AGENTS.md` loads the short mandatory rules; this file holds
 the detailed context behind them.
 
+For a code-owner and request-boundary overview, see the
+[architecture and measurement map](ARCHITECTURE_MAP.md).
+
 ## Product in one paragraph
 
 The application runs a private, season-long NFL pool with two related games.
@@ -76,10 +79,19 @@ modules with no database access, each covered by tests with fictional rows:
   always visible to them, everyone else's only at kickoff).
 - `src/lib/reveal-rows.ts` builds the rows of the pick-reveal email images (only
   picks on the revealed games, in the current period, from allowed players).
+- `src/lib/api-contracts.ts` defines the viewer-safe Slate and Standings JSON
+  shapes shared by each route and its page. Route responses must satisfy these
+  types at build time; database rows are not exposed as API contracts. A new
+  Survivor entry state must receive an explicit viewer rule before it can be
+  serialized as a familiar state.
 
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
 
 A change to who can see what belongs in one of these modules, with its test.
+
+For a fictional-data CPU and JSON-size baseline of the two player response
+shapers, see [response cost baseline](RESPONSE_COST_BASELINE.md). It does not
+measure database requests or end-to-end route time.
 
 ## Player identity and privacy
 
@@ -90,6 +102,12 @@ A change to who can see what belongs in one of these modules, with its test.
   route as the rest of the app. A temporary profile-read failure does not erase
   an already verified identity; an invalid session returns the player to PIN
   sign-in instead of leaving a half-signed-in page.
+- The Season Snapshot read route pilots a request-scoped access result. A bad
+  session is 401; a verified but missing or inactive player is 403;
+  unavailable auth or player storage is 503; missing server configuration is
+  500. The response includes a stable error code. Temporary failures must not
+  be presented as a lost sign-in. Other player routes retain their prior
+  authentication handling until separately migrated and tested.
 - PIN sign-in is routed through the application. Five recent failures from one
   privacy-safe source fingerprint start a one-minute cooldown; ten start a
   15-minute cooldown and open a Commissioner incident and email alert.
@@ -113,6 +131,11 @@ A change to who can see what belongs in one of these modules, with its test.
   remain changeable.
 - A Pick'em save never resubmits or validates an unchanged Survivor selection.
   A sealed Survivor pick therefore cannot block a later legal Pick'em save.
+- Pick'em and Bowl Pool save routes reject malformed bodies, duplicate game
+  selections, and oversized arrays before reading a slate or writing picks.
+  Omitting `survivorSelection` leaves it unchanged; explicit `null` requests a
+  clear. The database remains the final authority for game membership, kickoff,
+  ownership, and atomic saves.
 - The selected team must belong to the selected game. A kicked-off pick cannot
   be added, removed, or replaced.
 - Picks use the saved official line. A cover is a win; an ATS push or tied
@@ -378,6 +401,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   the current and prior 14 Eastern calendar dates. Incomplete slates and
   ambiguous or missing polling attribution are excluded from that cost trend;
   separate game- and period-level latency charts are not shown in this card.
+  Its selected-period game rows also supply the IDs for the locked-line read;
+  see the [request-count note](GRADING_READ_OPTIMIZATION.md). This does not
+  change grading, provider polling, or player-visible data.
 - Commissioner Connected Systems also reports calendar-month quota usage,
   scheduled month-end forecast, source breakdown, and average tracked credits
   per elapsed regular-season Sunday. This is the planning view for the

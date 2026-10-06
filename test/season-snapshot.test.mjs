@@ -120,8 +120,8 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
   // Sign-in is verified before anything is read.
-  assert.ok(route.indexOf("authenticatedProfilePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
-  assert.match(route, /status: 401/);
+  assert.ok(route.indexOf("authenticateActivePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
+  assert.match(route, /status: access\.status/);
   // Players are refused until Week 6; commissioners always get it.
   assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };"));
   assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens in Week 6\." \}, \{ status: 403 \}\);/);

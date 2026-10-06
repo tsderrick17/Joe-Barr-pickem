@@ -2,6 +2,18 @@
 
 ## Control-center overview
 
+A malformed Pick'em or Bowl Pool save is rejected with a client error before
+the save path reaches game lookups or writes. For a reported failed save,
+refresh the player's saved card before retrying: a lost response does not prove
+the original save failed. An omitted Survivor field leaves that pick unchanged;
+an explicit clear is a separate request. Do not change a player's selection
+directly in production to work around a rejected request.
+
+If Standings reports an unsupported Survivor entry status, treat it as a
+database/application contract mismatch. Check the current migration and entry
+record in a safe read; do not relabel the state in the browser or edit a
+player's history to make the page render.
+
 The Season Snapshot is the reverse of the Pick'em Pad on Standings, opened by
 its flip button. Commissioners can inspect it before Week 6; players receive
 the same button and data from Week 6 onward. The regular-season chart starts
@@ -12,6 +24,17 @@ key follows current standings; select a player to hide or show a ribbon, or
 use **Show all** to restore the full field. Touching shaded ribbons make tied
 paths distinguishable without moving anyone off their actual win total. The
 chart loads only while visible and follows the normal standings refresh.
+
+If the Season Snapshot alone fails to load, inspect its API status before
+asking a player to sign in again. A 401 means the request token is absent or
+invalid; 403 means a verified pool identity is missing, inactive, or lacks
+the needed role. A 503 with
+`auth_unavailable` or `profile_unavailable` means a temporary dependency
+failure, so retry the read after service recovers. A 500 with
+`auth_not_configured` requires checking the deployment's Supabase variables.
+This is a pilot contract for this read route, not yet a guarantee for every
+player route. Do not change player records or issue a new PIN to work around
+an outage.
 
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and
@@ -190,6 +213,11 @@ not replace the guarded recovery controls on Game day. For a game in
 `Needs review`, verify the provider result and use Final Score Check or Final
 Score Reconciliation according to the normal runbook. Do not type an estimated
 score or repeatedly poll a failing provider.
+
+Its selected-period game/line reads reuse one game result rather than making
+an extra ID-only lookup. This is a request-count optimization, not a reason to
+change the refresh cadence or an assurance of lower Vercel CPU. See the
+[measurement note](GRADING_READ_OPTIMIZATION.md) before comparing costs.
 
 The **Recent operational history** list is the durable audit trail for the
 current view. It is useful for answering whether a final score was accepted,

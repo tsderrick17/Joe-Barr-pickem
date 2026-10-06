@@ -11,6 +11,7 @@ import {
 import { currentSeasonYear } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
+import type { SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
 import {
   activeSurvivor,
   concludedSurvivor,
@@ -24,16 +25,6 @@ import {
   type SurvivorPickRow,
   type TeamRow,
 } from "@/lib/slate-shape";
-
-type ScoringPeriodRow = {
-  id: string;
-  display_name: string;
-  display_order: number;
-  status: "upcoming" | "active" | "complete";
-  period_type: "regular" | "playoff";
-  max_picks: number;
-};
-
 
 export async function GET(request: NextRequest) {
   // Disruption voiding and Survivor no-pick settlement run in the protected
@@ -479,5 +470,5 @@ export async function GET(request: NextRequest) {
     survivor,
     bootstrap,
     showPoolAction: Boolean((players ?? []).find((item) => item.id === player.id)?.show_pool_action),
-  });
+  } satisfies SlateResponse);
 }

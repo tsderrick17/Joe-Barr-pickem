@@ -4,6 +4,28 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-05 - AUTH-001 - Distinguish invalid sessions from dependency failure
+
+**Status:** Accepted for the Season Snapshot read-route pilot only
+
+An unavailable authentication service or failed player lookup must not be
+reported as an invalid session. Use a request-scoped result with explicit
+401/403/503 outcomes and a stable code; keep missing server configuration an
+intentional 500. Start with a read route so the contract can be exercised
+without changing save retry behavior. Migrate other routes only with their own
+failure tests and isolated player-flow evidence. Do not cache authorization.
+
+## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
+
+**Status:** Accepted for the selected-period grading dashboard read
+
+The dashboard already loads the selected period's game IDs with its full game
+rows. Reuse that result to select locked lines instead of issuing an ID-only
+`games` request. Normalize the read to one promise so other dashboard queries
+can remain concurrent, and keep the same failure handling. The observed
+request-count reduction is one per loaded period; no latency or Vercel CPU
+claim is made without isolated and production measurements.
+
 ## 2026-08-09 — REF-001 — Layer project guidance
 
 **Status:** Accepted
@@ -1370,6 +1392,28 @@ The Standings page showed itself as soon as its own data arrived, and the Bowl C
 
 The "− OUT" roll jumped 3 px at its last frame. Measured frame by frame: browsers draw a border under one pixel as a whole pixel, so each hidden row kept its 1 px bottom border until it left the page, and the last visible row also loses its border when it becomes the last row. The roll now takes the borders back with a negative bottom margin, which animates smoothly, and releases the held animations in the same render that removes the rows. The last step went from 3 px to 0.
 
+## 2026-10-05 — Validate save payloads at the boundary and limit launch-holder fallback
+
+Pick'em and Bowl Pool save requests are parsed as unknown input before slate
+lookups or writes. Invalid array entries, IDs, duplicate games, oversized
+selection sets, and invalid Bowl total guesses receive a deliberate client
+error. The Pick'em parser preserves the distinction between no Survivor field
+and an explicit clear; database functions still enforce the competitive rules
+and atomicity. The known inaugural Survivor holder display fallback applies
+only to the uncrowned 2026 launch season. A later season without a recorded
+champion displays no holder instead of silently reusing a name match. This
+fallback changes display only, never a championship record.
+
 ## Sections now open to their exact height
 
 When the Survivor table finished opening on desktop, the Bowl Card below moved down about 0.4 px and came back. The blind measured its target with `scrollHeight`, which rounds to a whole pixel, so it stopped up to half a pixel off and corrected itself when it let go. It now measures the content's height to a fraction of a pixel, and an opening blind also follows the content if its height changes while opening (the table wraps differently as it glides wider). Measured at 1280 px: the last steps are now 1305.11, 1305.75, 1305.78, 1305.78 with no overshoot.
+
+## 2026-10-05 — Share viewer-safe Slate and Standings response contracts
+
+The two player pages and their routes now compile against the same response
+types. Database rows remain distinct from viewer-safe JSON, so this does not
+weaken kickoff privacy. The application explicitly recognizes the three
+Survivor entry states allowed by the current database CHECK constraint and
+fails visibly if a future schema adds a state without a display rule. A local
+`typecheck` command supplies fast contract feedback; the production build
+continues to enforce TypeScript in CI.
