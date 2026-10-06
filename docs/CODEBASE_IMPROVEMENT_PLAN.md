@@ -2,13 +2,16 @@
 
 Prepared: October 5, 2026. Review baseline: `34e12ac` on `main`.
 
-Status: in execution. The first boundary-hardening package validates Pick'em
-and Bowl Pool submissions and scopes the launch-holder display fallback to
-2026. Local parser and route rejection tests, the repository suite, lint,
-type-check, and build are its initial gates. Isolated browser/database evidence
-and the Phase 0 route-cost measurements remain to be recorded. This document
-does not change pool rules, authorize a production data correction, or
-supersede the project reference.
+Status: in execution. The first combined release (`145c8f7`) delivered save
+validation, the 2026 holder-display scope, shared Slate/Standings contracts,
+the Season Snapshot auth pilot, session cache/retry tests, the architecture
+map, and one grading-dashboard read reduction. Its application, visual,
+isolated player-flow, and production smoke gates passed. Full route/database
+cost measurements, generated database types, and the remaining phases are
+still open. The next package extends request-scoped auth to Pick'em saves;
+its isolated player-flow gate remains required. This document does not change
+pool rules, authorize a production data correction, or supersede the project
+reference.
 Recheck the current branch before starting each work package: development with
 Claude and the stylesheet work may have advanced the baseline.
 

@@ -4,9 +4,22 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-06 - AUTH-002 - Extend request-scoped access to Pick'em saves
+
+**Status:** Accepted for the Pick'em save route
+
+Pick'em save validation still rejects malformed bodies before token or pool
+reads. A valid submission then uses the shared active-player result, keeping
+invalid sessions at 401, inactive or missing players at 403, temporary auth or
+profile failures at 503, and missing configuration at 500. Safe token and
+profile reads retain their bounded retry; the selection mutation is never
+replayed on an uncertain outcome. Failure codes are additive to the existing
+human-readable error field. Isolated player-flow evidence is required before
+release.
+
 ## 2026-10-05 - AUTH-001 - Distinguish invalid sessions from dependency failure
 
-**Status:** Accepted for the Season Snapshot read-route pilot only
+**Status:** Accepted for the Season Snapshot pilot; extended by AUTH-002
 
 An unavailable authentication service or failed player lookup must not be
 reported as an invalid session. Use a request-scoped result with explicit
