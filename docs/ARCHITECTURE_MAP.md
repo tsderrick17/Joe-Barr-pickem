@@ -21,9 +21,9 @@ performance or security decision.
 | Scheduled email | [`/api/cron/maintain-reminders`](../src/app/api/cron/maintain-reminders/route.ts) reconciles future messages; [`/api/cron/send-reminders`](../src/app/api/cron/send-reminders/route.ts) claims and delivers due messages. Both are leased. | [`reminder-readiness.ts`](../src/lib/reminder-readiness.ts) can defer/suppress; [`email-reminders.ts`](../src/lib/email-reminders.ts) selects recipients and preserves delivery receipts. | `push_reminders` and delivery records. The table/RPC names are historical; the transport is email. |
 
 Player authentication uses a bearer session checked against Supabase Auth and
-an active `players` row. Home, Season Snapshot, Slate, Pick'em save, Survivor,
-Pool Chat, and Bowl Pool routes share the request-scoped server access resolver; other
-player routes remain to be migrated. Browser reads and refreshes share the session path in
+an active `players` row. Home, Profile, Season Snapshot, Slate, Pick'em save,
+Survivor, Pool Chat, and Bowl Pool routes share the request-scoped server
+access resolver; other player routes remain to be migrated. Browser reads and refreshes share the session path in
 [`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
 authorization cache. Continue migrating routes individually with failure tests.
 Commissioner routes use the shared gate. Automation uses a separate secret,

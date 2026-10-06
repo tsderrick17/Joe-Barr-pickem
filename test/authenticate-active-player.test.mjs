@@ -65,3 +65,15 @@ test("other routes retain the minimal player profile read", async () => {
   assert.equal(access.ok, true);
   assert.equal(globalThis.activePlayerSelectedColumns[1], "id, active, is_commissioner");
 });
+
+test("the shared verifier can load the complete Profile settings in one player read", async () => {
+  const access = await authenticateActivePlayer(new Request("http://localhost", {
+    headers: { authorization: "Bearer fixture-token" },
+  }), { includeProfilePreferences: true });
+
+  assert.equal(access.ok, true);
+  assert.match(globalThis.activePlayerSelectedColumns[2], /notification_email/);
+  assert.match(globalThis.activePlayerSelectedColumns[2], /email_pick_due_primetime_enabled/);
+  assert.match(globalThis.activePlayerSelectedColumns[2], /show_pool_action/);
+  assert.match(globalThis.activePlayerSelectedColumns[2], /hide_survivor_eliminated_rows/);
+});

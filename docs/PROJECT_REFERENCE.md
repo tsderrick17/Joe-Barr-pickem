@@ -105,9 +105,10 @@ measure database requests or end-to-end route time.
   route as the rest of the app. A temporary profile-read failure does not erase
   an already verified identity; an invalid session returns the player to PIN
   sign-in instead of leaving a half-signed-in page.
-- The Home, Season Snapshot, Slate read, Pick'em save, Survivor read/save, and
-  Bowl Pool read/save routes use a shared, request-scoped player-access result.
-  Home loads its viewer preferences in the same profile read as authorization.
+- The Home, Profile, Season Snapshot, Slate read, Pick'em save, Survivor
+  read/save, Pool Chat, and Bowl Pool read/save routes use a shared,
+  request-scoped player-access result. Home and Profile load their preferences
+  in the same profile read as authorization.
   A bad session is 401; a verified but missing or inactive player is 403;
   unavailable auth or player storage is 503; missing server configuration is
   500. These responses include stable error codes, and temporary failures must

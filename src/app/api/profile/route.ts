@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
+function accessFailure(access: { status: 401 | 403 | 500 | 503; code: string }) {
+  const error = access.status === 401
+    ? "Your sign-in session could not be verified."
+    : access.status === 403
+      ? "Your player profile is not active in this Pick'em."
+      : access.status === 500
+        ? "The server is missing required configuration."
+        : "The player service could not be reached. Please try again.";
+  return NextResponse.json({ error, code: access.code }, { status: access.status });
+}
+
 export async function GET(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request, true);
-  if (!player) {
-    return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
-  }
+  const access = await authenticateActivePlayer(request, { includeProfilePreferences: true });
+  if (!access.ok) return accessFailure(access);
+  const player = access.player;
 
   return NextResponse.json({
     firstName: player.first_name,
@@ -45,10 +55,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request, true);
-  if (!player) {
-    return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
-  }
+  const access = await authenticateActivePlayer(request, { includeProfilePreferences: true });
+  if (!access.ok) return accessFailure(access);
+  const player = access.player;
 
   let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showBowlCard?: unknown; showPoolAction?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
   try {
