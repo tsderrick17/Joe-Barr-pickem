@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * The submitting player can always see their own pick. Everyone else sees it
  * exactly at the recorded kickoff time, never before.

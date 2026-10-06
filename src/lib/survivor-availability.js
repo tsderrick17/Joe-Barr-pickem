@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * A team this entry already used in an earlier week. The selection being made
  * and the pick saved for this week are never "used": they stay choosable until

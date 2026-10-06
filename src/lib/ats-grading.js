@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * Grades one ATS pick. A zero adjusted margin is a push, and Pick'em rules
  * intentionally record pushes as losses.
