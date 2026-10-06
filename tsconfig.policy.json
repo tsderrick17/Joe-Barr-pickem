@@ -20,7 +20,8 @@
     "src/lib/schedule-provider-backoff.js",
     "src/lib/ats-grading.js",
     "src/lib/survivor-grading.js",
-    "src/lib/playoff-math.js"
+    "src/lib/playoff-math.js",
+    "src/lib/championship-policy.js"
   ],
   "exclude": ["node_modules"]
 }
