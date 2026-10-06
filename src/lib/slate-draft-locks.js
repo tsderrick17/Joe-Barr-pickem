@@ -1,7 +1,18 @@
+/** @typedef {{ gameId: string, teamId: string }} DraftPick */
+/** @typedef {{ id: string, kickoffAt: string }} DraftGame */
+
+/**
+ * @param {DraftPick | null | undefined} left
+ * @param {DraftPick | null | undefined} right
+ */
 function samePick(left, right) {
   return left?.gameId === right?.gameId && left?.teamId === right?.teamId;
 }
 
+/**
+ * @param {DraftPick[]} left
+ * @param {DraftPick[]} right
+ */
 function samePickSet(left, right) {
   if (left.length !== right.length) return false;
 
@@ -12,6 +23,8 @@ function samePickSet(left, right) {
  * Reconcile the browser's ATS draft when time advances across one or more
  * kickoffs. Submitted picks become the authority for kicked games; unsaved
  * choices for later games remain intact.
+ *
+ * @param {{ games: DraftGame[], selections: DraftPick[], savedPicks: DraftPick[], now: Date }} input
  */
 export function reconcileAtsDraftAtKickoff({ games, selections, savedPicks, now }) {
   const nowTime = now.getTime();
@@ -42,6 +55,8 @@ export function reconcileAtsDraftAtKickoff({ games, selections, savedPicks, now 
  * Survivor remains one weekly choice rather than one choice per game. Once
  * either the submitted game or an unsaved replacement reaches kickoff, the
  * submitted receipt wins and the browser draft is restored to it.
+ *
+ * @param {{ games: DraftGame[], selection: DraftPick | null, savedPick: DraftPick | null, now: Date }} input
  */
 export function reconcileSurvivorDraftAtKickoff({ games, selection, savedPick, now }) {
   if (samePick(selection, savedPick)) {

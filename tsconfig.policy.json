@@ -22,7 +22,8 @@
     "src/lib/survivor-grading.js",
     "src/lib/playoff-math.js",
     "src/lib/championship-policy.js",
-    "src/lib/final-score-reconciliation.js"
+    "src/lib/final-score-reconciliation.js",
+    "src/lib/slate-draft-locks.js"
   ],
   "exclude": ["node_modules"]
 }
