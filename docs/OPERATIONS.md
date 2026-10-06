@@ -266,6 +266,13 @@ reminder worker only when reminders are due, so idle skips never raise alerts.
 Score sync is deliberately not gated because each run also performs season
 rollover, week advancement, and Survivor no-pick eliminations.
 
+The score worker's 270-second execution timeout aborts its provider request
+and stops it before starting later database stages. Its execution lease remains
+held until the 300-second expiry after a timeout. A database call already in
+flight may still complete; use the saved run and grades to assess the result,
+then allow the normal atomic recovery on the next leased run. Do not infer that
+the timed-out call rolled back.
+
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing
 result proves the full cron definitions and Vault authorization, the deployed

@@ -16,19 +16,24 @@ cancellation, server clock, and kickoff visibility refresh now live in a
 dedicated data hook; its kickoff refresh intentionally never hydrates player
 drafts. Browser-width and isolated player-flow evidence for this extraction
 remain outstanding. Phase 0 route-cost measurements, generated database types
-and drift checks, further score-worker stage extraction/cancellation, and
+and drift checks, further worker-stage extraction and isolated cancellation
+proof, and
 measured query optimizations also remain open. The first worker slice now
 isolates completed-event selection and provider-team score matching in a pure
 module. Due-game cooldown eligibility and the regular/playoff polling-mode
 decision now live in a second pure module. Provider HTTP/JSON intake is isolated
 behind a tested transport boundary that preserves quota headers on failure;
 the repeated-delay/provider-reserve conjunction is now an explicit tested
-backoff policy. The polling cadence, quota thresholds, persistent retry
-backoff, and atomic database grading path are unchanged.
+backoff policy. The score worker now receives the lease abort signal in its
+scheduled, manual, and watchdog paths, cancels the provider request, and checks
+the signal between database stages. The lease still outlives a timed-out call;
+other workers have not adopted cooperative cancellation. The polling cadence,
+quota thresholds, persistent retry backoff, and atomic database grading path
+are unchanged.
 Environment-dependent isolated database,
 full-season/weekly rehearsal, and isolated-copy checks are not implied by a
-passing local application suite. The current application suite passes (581
-tests: 561 pass, 20 environment-gated skips, none failing); lint and both
+passing local application suite. The current application suite passes (588
+tests: 568 pass, 20 environment-gated skips, none failing); lint and both
 TypeScript checks pass. The production compile succeeds, but Next's final route
 collection cannot finish in this environment because server-side Supabase
 configuration is absent. A repeat of the fictional response-shaping benchmark

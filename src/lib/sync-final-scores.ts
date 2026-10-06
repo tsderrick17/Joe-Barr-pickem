@@ -131,9 +131,12 @@ async function snapshotActivePlayoffEligibility() {
 
 export async function syncFinalScores({
   bypassProviderCooldown = false,
+  signal,
 }: {
   bypassProviderCooldown?: boolean;
+  signal?: AbortSignal;
 } = {}): Promise<ScoreSyncResult> {
+  signal?.throwIfAborted();
   const oddsApiKey = process.env.ODDS_API_KEY;
 
   if (!oddsApiKey) {
@@ -144,17 +147,24 @@ export async function syncFinalScores({
   const now = new Date(checkedAt);
   const warnings: string[] = [];
   await ensureAnnualSeasonRollover(checkedAt);
+  signal?.throwIfAborted();
   await voidDisruptedPicks();
+  signal?.throwIfAborted();
   const { error: noContestError } = await supabaseAdmin.rpc("settle_no_contest_picks", {
     evaluated_at: checkedAt,
   });
+  signal?.throwIfAborted();
   if (noContestError) {
     throw new Error("Declared no-contest picks could not be settled safely.");
   }
   const noPickResult = await eliminateSurvivorNoPicks(checkedAt);
+  signal?.throwIfAborted();
   const recoveredGrades = await recoverPendingFinalPickGrades();
+  signal?.throwIfAborted();
   const weekRollover = await advanceScoringPeriods(now);
+  signal?.throwIfAborted();
   await snapshotActivePlayoffEligibility();
+  signal?.throwIfAborted();
   const providerLookbackStart = new Date(
     now.getTime() - 3 * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -167,6 +177,7 @@ export async function syncFinalScores({
       .in("status", ["scheduled", "live"])
       .lte("kickoff_at", checkedAt)
       .gte("kickoff_at", providerLookbackStart);
+  signal?.throwIfAborted();
 
   if (unfinishedGamesError || !unfinishedGames) {
     throw new Error("Games awaiting final scores could not be loaded.");
@@ -182,6 +193,7 @@ export async function syncFinalScores({
         .select("id, period_type")
         .in("id", scorePeriodIds)
     : { data: [], error: null };
+  signal?.throwIfAborted();
   if (scorePeriodsError) {
     throw new Error("Score polling cadence could not be determined safely.");
   }
@@ -197,6 +209,7 @@ export async function syncFinalScores({
           .select("game_id, attempts, next_check_at")
           .in("game_id", scoreDueGames.map((game) => game.id))
       : { data: [], error: null };
+  signal?.throwIfAborted();
   if (scoreCheckBackoffsError) {
     throw new Error("Delayed score checks could not be loaded safely.");
   }
@@ -246,6 +259,7 @@ export async function syncFinalScores({
       .in("status", ["success", "failed"])
       .order("started_at", { ascending: false })
       .limit(25);
+  signal?.throwIfAborted();
   if (recentProviderRunsError) {
     throw new Error("Recent score-provider usage could not be loaded.");
   }
@@ -281,6 +295,7 @@ export async function syncFinalScores({
     .insert({ provider: "The Odds API", job_type: "scores", status: "started" })
     .select("id")
     .single();
+  signal?.throwIfAborted();
 
   if (run.error || !run.data) {
     throw new Error("The score sync run could not be recorded.");
@@ -301,8 +316,10 @@ export async function syncFinalScores({
   let failedRequestsUsed: string | null = null;
   let failedRequestsLast: string | null = null;
   try {
+    signal?.throwIfAborted();
     providerRequestAttempted = true;
-    const providerResponse = await fetchScoreProviderEvents(oddsApiKey);
+    const providerResponse = await fetchScoreProviderEvents(oddsApiKey, fetch, signal);
+    signal?.throwIfAborted();
     const { requestsRemaining, requestsUsed, requestsLast } = providerResponse;
     failedRequestsRemaining = requestsRemaining;
     failedRequestsUsed = requestsUsed;
@@ -318,7 +335,9 @@ export async function syncFinalScores({
     );
 
     if (completedEvents.length === 0) {
+      signal?.throwIfAborted();
       await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
+      signal?.throwIfAborted();
       const result = buildResult({
         eligibleGames: eligibleGames.length,
         providerChecked: true,
@@ -338,6 +357,7 @@ export async function syncFinalScores({
     const { data: teams, error: teamsError } = teamIds.length
       ? await supabaseAdmin.from("teams").select("id, full_name").in("id", teamIds)
       : { data: [], error: null };
+    signal?.throwIfAborted();
 
     if (teamsError || !teams) throw new Error("The NFL team list could not be loaded.");
 
@@ -350,6 +370,7 @@ export async function syncFinalScores({
     const unmatchedCompletedGames = matchedScores.unmatchedCompletedGames;
 
     if (finalizedGames.length > 0) {
+      signal?.throwIfAborted();
       const { data: atomicRows, error: atomicError } = await supabaseAdmin.rpc(
         "finalize_games_atomically",
         {
@@ -361,6 +382,7 @@ export async function syncFinalScores({
           accepted_at: checkedAt,
         },
       );
+      signal?.throwIfAborted();
 
       if (atomicError || !atomicRows?.[0]) {
         throw new Error("Final scores could not be finalized safely.");
@@ -369,6 +391,7 @@ export async function syncFinalScores({
         .from("score_check_backoff")
         .delete()
         .in("game_id", finalizedGames.map((game) => game.id));
+      signal?.throwIfAborted();
       if (clearBackoffError) {
         throw new Error("Final-score polling state could not be cleared safely.");
       }
@@ -376,6 +399,7 @@ export async function syncFinalScores({
         (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
       );
       await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, playoffPeriodIds);
+      signal?.throwIfAborted();
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;
@@ -388,13 +412,16 @@ export async function syncFinalScores({
           .select("id", { count: "exact", head: true })
           .in("game_id", finalizedGames.map((game) => game.id))
           .eq("result", "pending");
+      signal?.throwIfAborted();
 
       if (pendingError) {
         throw new Error("Final pick grades could not be verified.");
       }
 
       const completedWeekRollover = await advanceScoringPeriods(now);
+      signal?.throwIfAborted();
       await snapshotActivePlayoffEligibility();
+      signal?.throwIfAborted();
       if (unmatchedCompletedGames > 0) {
         throw new Error(
           `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,
@@ -430,6 +457,7 @@ export async function syncFinalScores({
       `The score provider marked ${unmatchedCompletedGames} game${unmatchedCompletedGames === 1 ? "" : "s"} complete, but valid team scores could not be matched safely.`,
     );
   } catch (error) {
+    signal?.throwIfAborted();
     const message = error instanceof Error ? error.message : "The score sync failed.";
     if (error instanceof ScoreProviderClientError) {
       failedRequestsRemaining = error.requestsRemaining;
@@ -442,7 +470,9 @@ export async function syncFinalScores({
         // the same persistent per-game exponential backoff as a delayed final.
         // The five-minute cron can then exit without spending another credit.
         await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
+        signal?.throwIfAborted();
       } catch {
+        signal?.throwIfAborted();
         await finishSyncRun(run.data.id, {
           status: "failed",
           completed_at: new Date().toISOString(),

@@ -77,3 +77,31 @@ test("normalizes invalid JSON to the established invalid-response error", async 
     /The NFL score feed returned an invalid response\./,
   );
 });
+
+test("the lease signal aborts a pending provider request", async () => {
+  const controller = new AbortController();
+  const request = fetchScoreProviderEvents(
+    "test-key",
+    async (_url, { signal }) => new Promise((_resolve, reject) => {
+      signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+    }),
+    controller.signal,
+  );
+  controller.abort(new Error("lease expired"));
+  await assert.rejects(request, /lease expired/);
+});
+
+test("an expired lease prevents even starting the provider request", async () => {
+  const controller = new AbortController();
+  controller.abort(new Error("lease expired"));
+  let fetchCalled = false;
+
+  await assert.rejects(
+    fetchScoreProviderEvents("test-key", async () => {
+      fetchCalled = true;
+      return new Response("[]", { status: 200 });
+    }, controller.signal),
+    /lease expired/,
+  );
+  assert.equal(fetchCalled, false);
+});

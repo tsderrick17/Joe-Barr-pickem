@@ -420,6 +420,13 @@ may enrich spreads but cannot override canonical schedule assignments.
 
 - Scheduled and commissioner-triggered mutation paths claim the same
   token-owned execution lease. A duplicate run exits instead of overlapping.
+- The score worker receives its lease deadline as an abort signal. At its
+  270-second safety timeout, the caller fails and the signal cancels a pending
+  provider request; the worker checks the signal between database stages so it
+  starts no further score work. The lease stays held until its 300-second
+  expiry. A database call already in flight may have committed, so the next
+  run relies on atomic finalization and recovery rather than treating timeout
+  as proof of rollback. Other workers still use the existing caller timeout.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.

@@ -1,5 +1,12 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
+import {
+  AutomationExecutionTimeoutError,
+  withExecutionTimeout,
+  type AutomationExecutionContext,
+} from "@/lib/automation-execution-timeout";
+
+export { AutomationExecutionTimeoutError } from "@/lib/automation-execution-timeout";
 
 export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "reminder_schedule" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
@@ -50,31 +57,9 @@ export class AutomationAlreadyRunningError extends Error {
   }
 }
 
-export class AutomationExecutionTimeoutError extends Error {
-  constructor(job: AutomationJob) {
-    super(`${job} exceeded its execution safety timeout.`);
-    this.name = "AutomationExecutionTimeoutError";
-  }
-}
-
-async function withExecutionTimeout<T>(job: AutomationJob, task: () => Promise<T>) {
-  const timeoutMs = jobSettings[job].timeoutSeconds * 1000;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      task(),
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new AutomationExecutionTimeoutError(job)), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-export async function runWithAutomationLease<T>(
+async function runWithLease<T>(
   job: AutomationJob,
-  task: () => Promise<T>,
+  task: (context: AutomationExecutionContext) => Promise<T>,
 ): Promise<T> {
   await recordAutomationWorkerHeartbeat(job, "started");
   const { token, error } = await claimAutomationLease(job);
@@ -91,7 +76,7 @@ export async function runWithAutomationLease<T>(
 
   let timedOut = false;
   try {
-    const result = await withExecutionTimeout(job, task);
+    const result = await withExecutionTimeout(job, jobSettings[job].timeoutSeconds * 1000, task);
     await recordAutomationWorkerHeartbeat(job, "success");
     return result;
   } catch (error) {
@@ -120,4 +105,17 @@ export async function runWithAutomationLease<T>(
       }
     }
   }
+}
+
+/** Existing workers that do not consume cancellation keep their zero-argument call. */
+export function runWithAutomationLease<T>(job: AutomationJob, task: () => Promise<T>): Promise<T> {
+  return runWithLease(job, () => task());
+}
+
+/** A worker that cooperates with the lease deadline receives its signal. */
+export function runWithAutomationLeaseContext<T>(
+  job: AutomationJob,
+  task: (context: AutomationExecutionContext) => Promise<T>,
+): Promise<T> {
+  return runWithLease(job, task);
 }

@@ -29,17 +29,23 @@ export class ScoreProviderClientError extends Error {
 export async function fetchScoreProviderEvents(
   apiKey: string,
   fetcher: ScoreProviderFetcher = fetch,
+  executionSignal?: AbortSignal,
 ): Promise<{
   events: ProviderScoreEvent[];
   requestsRemaining: string | null;
   requestsUsed: string | null;
   requestsLast: string | null;
 }> {
+  executionSignal?.throwIfAborted();
   const query = new URLSearchParams({ apiKey, daysFrom: "3" });
+  const timeoutSignal = AbortSignal.timeout(SCORE_PROVIDER_TIMEOUT_MS);
   const response = await fetcher(`${SCORE_PROVIDER_URL}?${query}`, {
     cache: "no-store",
-    signal: AbortSignal.timeout(SCORE_PROVIDER_TIMEOUT_MS),
+    signal: executionSignal
+      ? AbortSignal.any([executionSignal, timeoutSignal])
+      : timeoutSignal,
   });
+  executionSignal?.throwIfAborted();
   const requestsRemaining = response.headers.get("x-requests-remaining");
   const requestsUsed = response.headers.get("x-requests-used");
   const requestsLast = response.headers.get("x-requests-last");
@@ -57,6 +63,7 @@ export async function fetchScoreProviderEvents(
   try {
     payload = await response.json();
   } catch {
+    executionSignal?.throwIfAborted();
     throw new ScoreProviderClientError(
       "The NFL score feed returned an invalid response.",
       requestsRemaining,
@@ -64,6 +71,7 @@ export async function fetchScoreProviderEvents(
       requestsLast,
     );
   }
+  executionSignal?.throwIfAborted();
   if (!Array.isArray(payload)) {
     throw new ScoreProviderClientError(
       "The NFL score feed returned an invalid response.",

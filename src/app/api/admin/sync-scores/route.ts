@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await runWithAutomationLease("scores", () =>
-      syncFinalScores({ bypassProviderCooldown: true }),
+    const result = await runWithAutomationLeaseContext("scores", ({ signal }) =>
+      syncFinalScores({ bypassProviderCooldown: true, signal }),
     );
     return NextResponse.json({
       message:

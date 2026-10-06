@@ -7,7 +7,7 @@ test("watchdog recovers only critical work already proven due, then rechecks it"
   assert.match(source, /function recoverCriticalWorkerWork/);
   assert.match(source, /health\.criticalWorkers\.problems/);
   assert.match(source, /runWithAutomationLease\("line_locks", lockDueLines\)/);
-  assert.match(source, /runWithAutomationLease\("scores", syncFinalScores\)/);
+  assert.match(source, /runWithAutomationLeaseContext\("scores", \(\{ signal \}\) => syncFinalScores\(\{ signal \}\)\)/);
   assert.match(source, /runWithAutomationLease\("reminders", sendDueReminders\)/);
   assert.match(source, /error instanceof AutomationAlreadyRunningError/);
   assert.match(source, /await checkAutomationHealth\(new Date\(\)\)/);

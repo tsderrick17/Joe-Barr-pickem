@@ -1459,3 +1459,15 @@ be reachable from a Client Component. Mark its single privileged entry module
 with Next.js `server-only`, which makes the framework fail the build if a
 client import is added directly or through another module. Keep browser reads
 on the publishable-key client and viewer-safe API routes instead.
+
+## 2026-10-05 — Stop score-worker stages after the lease timeout
+
+The shared lease timeout previously rejected its caller while the score task
+could continue running. The score worker now receives an abort signal from its
+lease. Scheduled, Commissioner, and watchdog score paths all pass it through;
+the provider request accepts the signal and the worker checks it between
+database stages. A timeout still retains the lease until expiry because a
+database operation already in flight may have committed. Atomic finalization
+and pending-grade recovery remain the source of truth for the next run. Other
+workers retain their existing zero-argument callbacks until their own stage
+boundaries and retry behavior are covered.

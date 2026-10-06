@@ -1,6 +1,6 @@
 import { checkAutomationHealth } from "@/lib/automation-health";
 export { getWatchdogStatus } from "@/lib/watchdog-status";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLease, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { getSeasonBootstrapStatus } from "@/lib/full-schedule-bootstrap";
 import { runExternalConfigurationChecks, type LaunchPreflightCheck } from "@/lib/launch-preflight";
 import { lockDueLines } from "@/lib/lock-due-lines";
@@ -105,7 +105,7 @@ async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof check
   const recoveryTasks: Array<readonly [CriticalWorkerRecovery["job"], () => Promise<unknown>]> = [];
 
   if (jobs.has("line_locks")) recoveryTasks.push(["line_locks", () => runWithAutomationLease("line_locks", lockDueLines)]);
-  if (jobs.has("scores")) recoveryTasks.push(["scores", () => runWithAutomationLease("scores", syncFinalScores)]);
+  if (jobs.has("scores")) recoveryTasks.push(["scores", () => runWithAutomationLeaseContext("scores", ({ signal }) => syncFinalScores({ signal }))]);
   if (jobs.has("reminders")) recoveryTasks.push(["reminders", () => runWithAutomationLease("reminders", sendDueReminders)]);
 
   const recoveries: CriticalWorkerRecovery[] = [];
