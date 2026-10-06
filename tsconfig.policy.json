@@ -23,7 +23,8 @@
     "src/lib/playoff-math.js",
     "src/lib/championship-policy.js",
     "src/lib/final-score-reconciliation.js",
-    "src/lib/slate-draft-locks.js"
+    "src/lib/slate-draft-locks.js",
+    "src/lib/slate-submission.js"
   ],
   "exclude": ["node_modules"]
 }

@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
     );
   }
   const preparedPicks = prepareAtsReplacements({ selections, existingPicks: existingPicks ?? [], games: games as GameRow[] });
-  if (preparedPicks.error) return NextResponse.json({ error: preparedPicks.error }, { status: 400 });
-  const picksToInsert = preparedPicks.replacements ?? [];
+  if ("error" in preparedPicks) return NextResponse.json({ error: preparedPicks.error }, { status: 400 });
+  const picksToInsert = preparedPicks.replacements;
 
   if (!includesSurvivor) {
     const { error } = await supabaseAdmin.rpc("replace_unlocked_picks", { target_player_id: player.id, target_scoring_period_id: scoringPeriodId, replacement_picks: picksToInsert });
