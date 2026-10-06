@@ -15,6 +15,17 @@ intentional 500. Start with a read route so the contract can be exercised
 without changing save retry behavior. Migrate other routes only with their own
 failure tests and isolated player-flow evidence. Do not cache authorization.
 
+## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
+
+**Status:** Accepted for the selected-period grading dashboard read
+
+The dashboard already loads the selected period's game IDs with its full game
+rows. Reuse that result to select locked lines instead of issuing an ID-only
+`games` request. Normalize the read to one promise so other dashboard queries
+can remain concurrent, and keep the same failure handling. The observed
+request-count reduction is one per loaded period; no latency or Vercel CPU
+claim is made without isolated and production measurements.
+
 ## 2026-08-09 — REF-001 — Layer project guidance
 
 **Status:** Accepted

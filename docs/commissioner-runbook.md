@@ -214,6 +214,11 @@ not replace the guarded recovery controls on Game day. For a game in
 Score Reconciliation according to the normal runbook. Do not type an estimated
 score or repeatedly poll a failing provider.
 
+Its selected-period game/line reads reuse one game result rather than making
+an extra ID-only lookup. This is a request-count optimization, not a reason to
+change the refresh cadence or an assurance of lower Vercel CPU. See the
+[measurement note](GRADING_READ_OPTIMIZATION.md) before comparing costs.
+
 The **Recent operational history** list is the durable audit trail for the
 current view. It is useful for answering whether a final score was accepted,
 whether grading ran, and when the underlying record changed; it is not a
