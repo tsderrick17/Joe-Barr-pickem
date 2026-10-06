@@ -1430,3 +1430,11 @@ Survivor entry states allowed by the current database CHECK constraint and
 fails visibly if a future schema adds a state without a display rule. A local
 `typecheck` command supplies fast contract feedback; the production build
 continues to enforce TypeScript in CI.
+
+## 2026-10-05 — Mark the privileged Supabase client server-only
+
+The application Supabase client uses a service-role credential and must never
+be reachable from a Client Component. Mark its single privileged entry module
+with Next.js `server-only`, which makes the framework fail the build if a
+client import is added directly or through another module. Keep browser reads
+on the publishable-key client and viewer-safe API routes instead.

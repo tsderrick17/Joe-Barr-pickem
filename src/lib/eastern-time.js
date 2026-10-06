@@ -20,9 +20,11 @@ const partsFormatter = new Intl.DateTimeFormat("en-US", {
 /**
  * Eastern wall-clock parts for an instant (a Date or anything Date accepts).
  * `weekday` is the full name ("Monday"); `weekdayShort` is "Mon".
+ * @param {Date | string | number} value
  */
 export function easternParts(value) {
   const parts = partsFormatter.formatToParts(value instanceof Date ? value : new Date(value));
+  /** @param {string} type */
   const read = (type) => parts.find((part) => part.type === type)?.value ?? "";
   const weekday = read("weekday");
   return {
@@ -36,23 +38,30 @@ export function easternParts(value) {
   };
 }
 
-/** The Eastern calendar date as "YYYY-MM-DD". */
+/** The Eastern calendar date as "YYYY-MM-DD". @param {Date | string | number} value */
 export function easternDateKey(value) {
   const { year, month, day } = easternParts(value);
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-/** The Eastern hour, 0-23. */
+/** The Eastern hour, 0-23. @param {Date | string | number} value */
 export function easternHour(value) {
   return easternParts(value).hour;
 }
 
-/** The Eastern weekday's full name, such as "Sunday". */
+/** The Eastern weekday's full name, such as "Sunday". @param {Date | string | number} value */
 export function easternWeekday(value) {
   return easternParts(value).weekday;
 }
 
-/** The UTC instant for an Eastern wall-clock time (daylight saving included). */
+/**
+ * The UTC instant for an Eastern wall-clock time (daylight saving included).
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @param {number} hour
+ * @param {number} [minute]
+ */
 export function easternDateTimeToUtc(year, month, day, hour, minute = 0) {
   const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
   const eastern = easternParts(utcGuess);

@@ -1,3 +1,12 @@
+/** @typedef {{ externalGameId: string, awayScore: number | null, homeScore: number | null }} StoredFinal */
+/** @typedef {{ id: string, completed?: boolean, awayScore: number | null, homeScore: number | null }} ProviderFinal */
+/** @typedef {{ storedFinals: StoredFinal[], providerEvents: ProviderFinal[] }} ReconciliationInput */
+
+/**
+ * Compare saved finals with provider finals without changing the saved result.
+ *
+ * @param {ReconciliationInput} input
+ */
 export function reconcileFinalScores({ storedFinals, providerEvents }) {
   const providerByExternalId = new Map(providerEvents.map((event) => [event.id, event]));
 

@@ -3,10 +3,17 @@
  * scored Pick'em period is complete, every player tied for the top season
  * total receives the championship. We never manufacture a tiebreaker.
  */
+/** @typedef {{ playerId: string, periodStatus: string, result: string }} ChampionshipResult */
+
+/**
+ * @param {ChampionshipResult[]} results
+ * @returns {string[]}
+ */
 export function resolvePickemChampions(results) {
   const completed = results.filter((row) => row.periodStatus === "complete");
   if (completed.length !== results.length || !results.length) return [];
 
+  /** @type {Map<string, number>} */
   const winsByPlayer = new Map();
   for (const row of results) {
     if (row.result === "void") continue;

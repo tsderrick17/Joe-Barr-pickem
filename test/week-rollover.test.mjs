@@ -20,6 +20,13 @@ test("makes the next week manually available on the next Eastern day", () => {
   );
 });
 
+test("uses the next Eastern midnight across the fall daylight-saving change", () => {
+  assert.equal(
+    nextWeekManualAccessAt("2026-11-01T05:30:00.000Z"),
+    "2026-11-02T05:00:00.000Z",
+  );
+});
+
 test("keeps the completed week visible through Wednesday and for at least one full day", () => {
   assert.equal(
     weekRolloverAt({
@@ -47,5 +54,15 @@ test("rolls over at conclusion when the next week starts within a day", () => {
       nextKickoffAt: "2026-09-09T02:00:00.000Z",
     }),
     "2026-09-08T06:00:00.000Z",
+  );
+});
+
+test("does not treat kickoff at exactly 24 hours as the early-handoff exception", () => {
+  assert.equal(
+    weekRolloverAt({
+      lastFinalizedAt: "2026-09-08T06:00:00.000Z",
+      nextKickoffAt: "2026-09-09T06:00:00.000Z",
+    }),
+    "2026-09-09T07:00:00.000Z",
   );
 });

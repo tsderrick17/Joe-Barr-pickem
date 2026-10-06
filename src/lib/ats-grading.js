@@ -1,6 +1,16 @@
 /**
  * Grades one ATS pick. A zero adjusted margin is a push, and Pick'em rules
  * intentionally record pushes as losses.
+ * @param {{
+ *   selectedTeamId: string | null,
+ *   favoriteTeamId: string | null,
+ *   lockedSpread: number | null,
+ *   awayTeamId: string,
+ *   homeTeamId: string,
+ *   awayScore: number | null,
+ *   homeScore: number | null,
+ * }} pick
+ * @returns {"win" | "loss" | "pending"}
  */
 export function gradeAtsPick({
   selectedTeamId,
@@ -13,8 +23,11 @@ export function gradeAtsPick({
 }) {
   if (
     !favoriteTeamId ||
+    typeof lockedSpread !== "number" ||
     !Number.isFinite(lockedSpread) ||
+    typeof awayScore !== "number" ||
     !Number.isInteger(awayScore) ||
+    typeof homeScore !== "number" ||
     !Number.isInteger(homeScore)
   ) {
     return "pending";

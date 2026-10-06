@@ -1,3 +1,13 @@
+/** @typedef {{ gameId: string, teamId: string }} SubmissionSelection */
+/** @typedef {{ game_id: string, selected_team_id: string }} ExistingPick */
+/** @typedef {{ id: string, away_team_id: string, home_team_id: string, kickoff_at: string }} SubmissionGame */
+
+/**
+ * Validate editable ATS replacements against the games and already locked picks.
+ *
+ * @param {{ selections: SubmissionSelection[], existingPicks: ExistingPick[], games: SubmissionGame[], now?: Date }} input
+ * @returns {{ error: string } | { replacements: Array<{ game_id: string, selected_team_id: string }> }}
+ */
 export function prepareAtsReplacements({ selections, existingPicks, games, now = new Date() }) {
   const gameById = new Map(games.map((game) => [game.id, game]));
   const lockedExisting = existingPicks.filter((pick) => {
@@ -42,6 +52,9 @@ export function prepareAtsReplacements({ selections, existingPicks, games, now =
  * Pick'em and Survivor use one receipt, but they remain independently
  * editable. Omit Survivor entirely unless it changed so a sealed Survivor
  * selection can never block a valid later ATS submission.
+ *
+ * @param {{ scoringPeriodId: string, selections: SubmissionSelection[], survivorAvailable: boolean, survivorHasUnsavedChanges: boolean, survivorPick: SubmissionSelection | null }} input
+ * @returns {{ scoringPeriodId: string, selections: SubmissionSelection[], survivorSelection?: SubmissionSelection | null }}
  */
 export function buildSlateSubmission({
   scoringPeriodId,

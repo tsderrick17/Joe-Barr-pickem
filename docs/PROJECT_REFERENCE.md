@@ -57,6 +57,9 @@ be replayed.
   health endpoint, and manual recovery controls.
 - **Supabase/Postgres** owns durable state, row-level security, integrity
   triggers, atomic mutations, audit logs, execution leases, and scheduled jobs.
+  The privileged application client in `src/lib/supabase-admin.ts` is marked
+  `server-only`, so an accidental import into a Client Component fails at
+  build time rather than weakening the service-role boundary.
 - **nflverse** supplies the canonical NFL regular-season structure and ongoing
   kickoff corrections. The importer validates the feed's season length instead
   of assuming a fixed game count.

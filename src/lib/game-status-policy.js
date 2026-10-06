@@ -11,6 +11,7 @@ export const DISRUPTED_GAME_STATUSES = new Set([
   "no_contest",
 ]);
 
+/** @param {string} status */
 export function isSettledGameStatus(status) {
   return SETTLED_GAME_STATUSES.has(status);
 }

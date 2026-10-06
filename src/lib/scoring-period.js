@@ -1,6 +1,9 @@
 /**
  * Selects the period players should land on: active first, then the next
  * upcoming period, then the most recently completed one after the season.
+ * @template {{ id: string, status: string, display_order?: number }} T
+ * @param {T[]} periods
+ * @returns {T | null}
  */
 export function selectDefaultScoringPeriod(periods) {
   const activePeriod = periods.find((period) => period.status === "active");
@@ -18,6 +21,12 @@ export function selectDefaultScoringPeriod(periods) {
   return completedPeriods.at(-1) ?? periods[0] ?? null;
 }
 
+/**
+ * @template {{ id: string, status: string, display_order: number }} T
+ * @param {T[]} periods
+ * @param {{ now: number, nextWeekAvailableAt: number | null }} availability
+ * @returns {T[]}
+ */
 export function selectAvailableScoringPeriods(
   periods,
   { now, nextWeekAvailableAt },

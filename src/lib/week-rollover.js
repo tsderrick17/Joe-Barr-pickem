@@ -2,6 +2,7 @@ import { easternDateTimeToUtc, easternParts as getEasternParts } from "./eastern
 
 const oneDayMilliseconds = 24 * 60 * 60 * 1000;
 
+/** @param {string | Date} lastFinalizedAt */
 export function normalWednesdayChangeoverAt(lastFinalizedAt) {
   const finalizedAt = new Date(lastFinalizedAt);
   const eastern = getEasternParts(finalizedAt);
@@ -25,6 +26,7 @@ export function normalWednesdayChangeoverAt(lastFinalizedAt) {
 
 // The next Slate may be opened manually on the next Eastern calendar day,
 // without changing which week players see by default.
+/** @param {string} lastFinalizedAt */
 export function nextWeekManualAccessAt(lastFinalizedAt) {
   const finalizedAt = new Date(lastFinalizedAt);
   const eastern = getEasternParts(finalizedAt);
@@ -40,6 +42,7 @@ export function nextWeekManualAccessAt(lastFinalizedAt) {
   ).toISOString();
 }
 
+/** @param {{ lastFinalizedAt: string, nextKickoffAt: string | null }} rollover */
 export function weekRolloverAt({ lastFinalizedAt, nextKickoffAt }) {
   const finalizedAt = new Date(lastFinalizedAt);
 
