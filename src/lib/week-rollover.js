@@ -1,3 +1,4 @@
+// @ts-check
 import { easternDateTimeToUtc, easternParts as getEasternParts } from "./eastern-time.js";
 
 const oneDayMilliseconds = 24 * 60 * 60 * 1000;

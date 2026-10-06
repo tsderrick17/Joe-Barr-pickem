@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {{ externalGameId: string, awayScore: number | null, homeScore: number | null }} StoredFinal */
 /** @typedef {{ id: string, completed?: boolean, awayScore: number | null, homeScore: number | null }} ProviderFinal */
 /** @typedef {{ storedFinals: StoredFinal[], providerEvents: ProviderFinal[] }} ReconciliationInput */

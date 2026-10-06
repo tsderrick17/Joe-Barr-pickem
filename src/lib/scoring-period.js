@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * Selects the period players should land on: active first, then the next
  * upcoming period, then the most recently completed one after the season.
