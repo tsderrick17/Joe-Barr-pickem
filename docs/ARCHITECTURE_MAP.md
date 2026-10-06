@@ -59,7 +59,7 @@ privacy and rule tests should become a regression budget.
   manually enabled full-season/weekly rehearsals are expected to skip locally;
   a green local run is not equivalent to a passed isolated lifecycle workflow.
 - `npm run lint` and `npm run build` cover the application and TypeScript build.
-  `npm run typecheck` additionally checks thirteen small JavaScript policy
+  `npm run typecheck` additionally checks fifteen JavaScript policy
   modules listed in `tsconfig.policy.json` with JSDoc types. This is a focused
   boundary, not a claim that every JavaScript module is checked; expand it as
   modules gain accurate input contracts. CI runs this check before tests.

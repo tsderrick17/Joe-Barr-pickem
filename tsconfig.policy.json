@@ -17,7 +17,9 @@
     "src/lib/eastern-time.js",
     "src/lib/weekly-recap-timing.js",
     "src/lib/week-rollover.js",
-    "src/lib/schedule-provider-backoff.js"
+    "src/lib/schedule-provider-backoff.js",
+    "src/lib/ats-grading.js",
+    "src/lib/survivor-grading.js"
   ],
   "exclude": ["node_modules"]
 }
