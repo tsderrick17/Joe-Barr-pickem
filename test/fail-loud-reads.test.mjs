@@ -12,8 +12,9 @@ test("Pick'em saves use shared access failures and board reads fail loudly on da
   assert.match(picks, /access\.status === 403/);
   assert.match(picks, /if \(periodError\) return NextResponse\.json\([^\n]*status: 503/);
   assert.ok(picks.indexOf("if (periodError)") < picks.indexOf("if (!period)"));
-  assert.match(board, /if \(playerError\) \{\s*return NextResponse\.json\([^\n]*status: 503/);
-  assert.ok(board.indexOf("if (playerError)") < board.indexOf("if (!player || !player.active)"));
+  assert.match(board, /authenticateActivePlayer\(request\)/);
+  assert.match(board, /access\.status === 503/);
+  assert.match(board, /access\.status === 403/);
 });
 
 test("a successful sign-in still reports a failure to clear old PIN attempts", async () => {
