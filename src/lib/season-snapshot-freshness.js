@@ -1,3 +1,4 @@
+// @ts-check
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
 
 /**
@@ -19,6 +20,7 @@ export const WAITING_FOR_GRADES_MS = 2 * 60 * 1000;
 export const CLOSED_CHART_MS = 5 * 60 * 1000;
 const FINAL_DELAY_MS = FIRST_SCORE_CHECK_DELAY_MINUTES * 60 * 1000;
 
+/** @param {number} value @param {number} low @param {number} high */
 const clamp = (value, low, high) => Math.min(Math.max(value, low), high);
 
 /**
@@ -33,10 +35,14 @@ export function activeWeekState({ now, maxPicks, games, picks, playerIds }) {
   const finishedPicking = playerIds.every((playerId) => {
     if (allKickedOff) return true;
     const count = live.filter((pick) => pick.player_id === playerId).length;
-    return Number.isFinite(maxPicks) && maxPicks > 0 && count >= maxPicks;
+    return typeof maxPicks === "number" && Number.isFinite(maxPicks) && maxPicks > 0 && count >= maxPicks;
   });
   const settled = games.length > 0 && pending.length === 0 && finishedPicking;
-  const pendingKickoffs = pending.map((pick) => kickoffs.get(pick.game_id)).filter((value) => Number.isFinite(value));
+  const pendingKickoffs = pending
+    .flatMap((pick) => {
+      const kickoff = kickoffs.get(pick.game_id);
+      return typeof kickoff === "number" && Number.isFinite(kickoff) ? [kickoff] : [];
+    });
   return {
     settled,
     lastKickoff: Number.isFinite(lastKickoff) ? lastKickoff : null,
