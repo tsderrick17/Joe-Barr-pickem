@@ -1,3 +1,4 @@
+/** @param {string | Date} value */
 function easternDay(value) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -9,10 +10,20 @@ function easternDay(value) {
   return `${values.get("year")}-${values.get("month")}-${values.get("day")}`;
 }
 
+/** @typedef {{ id: string }} Player */
+/** @typedef {{ id: string, display_order: number, period_type: string, status: string, max_picks: number }} ScoringPeriod */
+/** @typedef {{ id: string, scoring_period_id: string, kickoff_at: string, status: string }} Game */
+/** @typedef {{ player_id: string, game_id: string, result: string }} Pick */
+/** @typedef {{ applies: boolean, leaderWinsAtDayStart: number, remainingPossibleWins: number, eliminatedPlayerIds: Set<string> }} PlayoffEligibility */
+/** @typedef {{ players: Player[], periods: ScoringPeriod[], games: Game[], picks: Pick[], targetPeriodId: string, now?: Date }} EligibilityInput */
+
 /**
  * Playoff eligibility is deliberately measured from the start of the current
  * Eastern game day. That prevents a player from being locked out midway
  * through a slate that was still capable of tying the lead that morning.
+ *
+ * @param {EligibilityInput} input
+ * @returns {PlayoffEligibility}
  */
 export function calculatePlayoffEligibility({ players, periods, games, picks, targetPeriodId, now = new Date() }) {
   const target = periods.find((period) => period.id === targetPeriodId);
