@@ -5,6 +5,7 @@
  */
 /** @typedef {{ playerId: string, periodStatus: string, result: string }} ChampionshipResult */
 
+// @ts-check
 /**
  * @param {ChampionshipResult[]} results
  * @returns {string[]}

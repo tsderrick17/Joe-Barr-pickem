@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * Survivor is straight up: the selected team must win the game outright.
  * A tie is intentionally a loss because each player must pick a winner.
