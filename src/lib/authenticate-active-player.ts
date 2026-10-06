@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { resolvePlayerAccess } from "@/lib/player-access-result";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 
 /** A request-scoped authentication result; no authorization state is cached. */
 export async function authenticateActivePlayer(request: NextRequest, requireCommissioner = false) {
@@ -17,17 +18,17 @@ export async function authenticateActivePlayer(request: NextRequest, requireComm
       const client = createClient(url!, publishableKey!, {
         global: { headers: { Authorization: authorization! } },
       });
-      return client.auth.getUser(token);
+      return retrySafeRead(() => client.auth.getUser(token));
     },
     loadPlayer: async (userId) => {
       // Import only after configuration is checked so a missing server key
       // produces the explicit configuration result, not a module-load crash.
       const { supabaseAdmin } = await import("@/lib/supabase-admin");
-      return supabaseAdmin
+      return retrySafeRead(() => supabaseAdmin
         .from("players")
         .select("id, active, is_commissioner")
         .eq("auth_user_id", userId)
-        .maybeSingle();
+        .maybeSingle());
     },
   });
 }
