@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import type { ProfileResponse, ProfileUpdateResponse } from "@/lib/api-contracts";
 
 function accessFailure(access: { status: 401 | 403 | 500 | 503; code: string }) {
   const error = access.status === 401
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (!access.ok) return accessFailure(access);
   const player = access.player;
 
-  return NextResponse.json({
+  const profile = {
     firstName: player.first_name,
     isCommissioner: player.is_commissioner,
     notificationEmail: player.notification_email ?? "",
@@ -51,7 +52,8 @@ export async function GET(request: NextRequest) {
     showPoolChat: player.show_pool_chat,
     hidePickemEliminatedRows: player.hide_pickem_eliminated_rows,
     hideSurvivorEliminatedRows: player.hide_survivor_eliminated_rows,
-  });
+  } satisfies ProfileResponse;
+  return NextResponse.json(profile);
 }
 
 export async function PUT(request: NextRequest) {
@@ -59,9 +61,13 @@ export async function PUT(request: NextRequest) {
   if (!access.ok) return accessFailure(access);
   const player = access.player;
 
-  let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showBowlCard?: unknown; showPoolAction?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
+  let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    const parsed: unknown = await request.json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
+    }
+    body = parsed as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
   }
@@ -123,5 +129,6 @@ export async function PUT(request: NextRequest) {
   }
 
   await recordPlayerActivity(player.id);
-  return NextResponse.json({ message: "Notification settings saved." });
+  const result = { message: "Notification settings saved." } satisfies ProfileUpdateResponse;
+  return NextResponse.json(result);
 }

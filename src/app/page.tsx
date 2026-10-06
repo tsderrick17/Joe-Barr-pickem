@@ -12,7 +12,7 @@ import {
 import BowlCard from "@/components/bowl-card";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
-import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
+import type { ProfileUpdateRequest, StandingsResponse as HomeData } from "@/lib/api-contracts";
 type DisplayPreferenceKey =
   | "showSurvivorStandings"
   | "showBowlCard"
@@ -252,10 +252,11 @@ export default function HomePage() {
     displayPreferenceOverrides.current[field] = value;
     apply(value);
     try {
+      const update: ProfileUpdateRequest = { [field]: value };
       const response = await fetchWithSession("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify(update),
       });
       if (!response.ok) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };

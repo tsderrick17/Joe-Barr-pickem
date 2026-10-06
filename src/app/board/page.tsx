@@ -20,7 +20,7 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
-import type { PickSaveRequest, PickSaveResponse, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
+import type { PickSaveRequest, PickSaveResponse, ProfileUpdateRequest, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 
 type SelectedPick = {
   gameId: string;
@@ -485,7 +485,8 @@ export default function BoardPage() {
   const toggleDisplay = useStableCallback(() => {
     const next = !showActionOnly;
     setShowActionOnly(next);
-    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) }).then(async (response) => {
+    const update: ProfileUpdateRequest = { showPoolAction: next };
+    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(update) }).then(async (response) => {
       if (!response.ok) throw new Error();
     }).catch(() => {
       setShowActionOnly(showActionOnly);

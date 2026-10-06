@@ -83,9 +83,11 @@ modules with no database access, each covered by tests with fictional rows:
 - `src/lib/reveal-rows.ts` builds the rows of the pick-reveal email images (only
   picks on the revealed games, in the current period, from allowed players).
 - `src/lib/api-contracts.ts` defines viewer-safe Slate and Standings payloads,
-  the Pick'em save request, and the grading dashboard response. Routes and
-  consumers share these contracts; grading's populated and no-period responses
-  are modeled separately. Database rows are not exposed as API contracts. A
+  the Pick'em save request, Profile response/update payloads, and the grading
+  dashboard response. Routes and consumers share these contracts; grading's
+  populated and no-period responses are modeled separately, and Profile updates
+  remain partial so each display toggle can be saved independently. Database
+  rows are not exposed as API contracts. A
   new Survivor entry state needs an explicit viewer rule before serialization.
   Pick saves preserve omitted versus explicit-null Survivor choices.
 

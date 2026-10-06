@@ -7,6 +7,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
+import type { ProfileResponse } from "@/lib/api-contracts";
 
 const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
 
@@ -41,7 +42,7 @@ export default function SiteNav() {
         const response = await fetchWithSession("/api/profile");
         if (response.status === 401) throw new SessionUnavailableError();
         if (!response.ok) throw new Error("Account navigation could not be loaded.");
-        const player = await response.json() as { firstName?: string; isCommissioner?: boolean };
+        const player = await response.json() as Pick<ProfileResponse, "firstName" | "isCommissioner">;
 
         if (active) {
           setPlayerName(player.firstName ?? "");

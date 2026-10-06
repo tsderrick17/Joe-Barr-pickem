@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import type { ProfileResponse, ProfileUpdateRequest, ProfileUpdateResponse } from "@/lib/api-contracts";
 
 type NotificationChoices = {
   weekly: boolean;
@@ -19,24 +20,7 @@ type NotificationChoices = {
   playoffPublicReveal: boolean;
 };
 
-type Profile = {
-  notificationEmail: string;
-  senderEmail: string;
-  emailNotificationsEnabled: boolean;
-  emailWeeklyEnabled: boolean;
-  emailFinalLinesEnabled: boolean;
-  emailSundayFinalLinesEnabled: boolean;
-  emailEarlyLockEnabled: boolean;
-  emailPickDueSundayEarlyEnabled: boolean;
-  emailPickDueSundayAfternoonEnabled: boolean;
-  emailPickDuePrimetimeEnabled: boolean;
-  emailSundayEarlyRevealEnabled: boolean;
-  emailSundayLateRevealEnabled: boolean;
-  emailFeaturedWindowRevealEnabled: boolean;
-  emailWeeklyRecapEnabled: boolean;
-  emailPlayoffDayRecapEnabled: boolean;
-  emailPlayoffPublicRevealEnabled: boolean;
-};
+type Profile = ProfileResponse;
 
 type NotificationPace = "essentials" | "regular" | "full" | "custom";
 type FinalLineChoice = "all" | "sunday" | "none";
@@ -86,7 +70,7 @@ export default function ProfilePage() {
     void (async () => {
       try {
         const response = await fetchWithSession("/api/profile");
-        const data = await response.json() as Profile & { error?: string };
+        const data = await response.json() as Profile & ProfileUpdateResponse;
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data);
@@ -119,28 +103,29 @@ export default function ProfilePage() {
     event.preventDefault();
     setSaving(true); setError(""); setMessage("");
     try {
+      const update: ProfileUpdateRequest = {
+        notificationEmail: email,
+        emailNotificationsEnabled: enabled,
+        emailWeeklyEnabled: preferences.weekly,
+        emailFinalLinesEnabled: preferences.finalLines,
+        emailSundayFinalLinesEnabled: preferences.sundayFinalLines,
+        emailEarlyLockEnabled: preferences.earlyLock,
+        emailPickDueSundayEarlyEnabled: preferences.pickDueSundayEarly,
+        emailPickDueSundayAfternoonEnabled: preferences.pickDueSundayAfternoon,
+        emailPickDuePrimetimeEnabled: preferences.pickDuePrimetime,
+        emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal,
+        emailSundayLateRevealEnabled: preferences.sundayLateReveal,
+        emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal,
+        emailWeeklyRecapEnabled: preferences.weeklyRecap,
+        emailPlayoffDayRecapEnabled: preferences.playoffDayRecap,
+        emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal,
+      };
       const response = await fetchWithSession("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notificationEmail: email,
-          emailNotificationsEnabled: enabled,
-          emailWeeklyEnabled: preferences.weekly,
-          emailFinalLinesEnabled: preferences.finalLines,
-          emailSundayFinalLinesEnabled: preferences.sundayFinalLines,
-          emailEarlyLockEnabled: preferences.earlyLock,
-          emailPickDueSundayEarlyEnabled: preferences.pickDueSundayEarly,
-          emailPickDueSundayAfternoonEnabled: preferences.pickDueSundayAfternoon,
-          emailPickDuePrimetimeEnabled: preferences.pickDuePrimetime,
-          emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal,
-          emailSundayLateRevealEnabled: preferences.sundayLateReveal,
-          emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal,
-          emailWeeklyRecapEnabled: preferences.weeklyRecap,
-          emailPlayoffDayRecapEnabled: preferences.playoffDayRecap,
-          emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal,
-        }),
+        body: JSON.stringify(update),
       });
-      const data = await response.json() as { error?: string; message?: string };
+      const data = await response.json() as ProfileUpdateResponse;
       if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
       setProfile((current) => current ? { ...current, notificationEmail: email.trim(), emailNotificationsEnabled: enabled } : current);
       setMessage(data.message ?? "Notification settings saved.");

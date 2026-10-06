@@ -8,8 +8,9 @@ import { bowlSpreadLabel } from "@/components/bowl-card";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
+import type { ProfileResponse } from "@/lib/api-contracts";
 
-type Profile = { isCommissioner?: boolean };
+type Profile = Pick<ProfileResponse, "isCommissioner">;
 type BowlGame = {
   id: string;
   provider_game_id?: string;

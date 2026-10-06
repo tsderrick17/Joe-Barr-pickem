@@ -53,3 +53,19 @@ test("Profile reads and updates preserve shared access failures", async () => {
   assert.ok(globalThis.profileRouteAccessOptions.every((options) => options.includeProfilePreferences === true));
   assert.equal(globalThis.profileRouteDatabaseCalls, 0);
 });
+
+test("Profile updates reject valid JSON that is not a settings object", async () => {
+  globalThis.profileRouteAccess = { ok: true, player: { id: "player-1" } };
+
+  for (const body of ["null", "[]", '"settings"']) {
+    const response = await PUT(new Request("http://localhost/api/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body,
+    }));
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).error, "Your notification settings were incomplete.");
+  }
+
+  assert.equal(globalThis.profileRouteDatabaseCalls, 0);
+});

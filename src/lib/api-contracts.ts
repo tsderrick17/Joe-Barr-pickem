@@ -221,6 +221,74 @@ export type GradingDashboardUnavailable = {
 
 export type GradingDashboardResponse = GradingDashboardReady | GradingDashboardUnavailable;
 
+/** Viewer-facing profile data used by settings, navigation, and display controls. */
+export type ProfileResponse = {
+  firstName: string;
+  isCommissioner: boolean;
+  notificationEmail: string;
+  senderEmail: string;
+  emailNotificationsEnabled: boolean;
+  emailWeeklyEnabled: boolean;
+  emailFinalLinesEnabled: boolean;
+  emailSundayFinalLinesEnabled: boolean;
+  emailEarlyLockEnabled: boolean;
+  emailPickDueEnabled: boolean;
+  emailPickDueSundayEarlyEnabled: boolean;
+  emailPickDueSundayAfternoonEnabled: boolean;
+  emailPickDuePrimetimeEnabled: boolean;
+  emailWeeklyRecapEnabled: boolean;
+  emailPlayoffDayRecapEnabled: boolean;
+  emailPlayoffPublicRevealEnabled: boolean;
+  emailAtsDueEnabled: boolean;
+  emailSurvivorDueEnabled: boolean;
+  emailSundayEarlyRevealEnabled: boolean;
+  emailSundayLateRevealEnabled: boolean;
+  emailFeaturedWindowRevealEnabled: boolean;
+  emailCustomEnabled: boolean;
+  showSurvivorStandings: boolean;
+  showBowlCard: boolean;
+  showPoolAction: boolean;
+  showPoolChat: boolean;
+  hidePickemEliminatedRows: boolean;
+  hideSurvivorEliminatedRows: boolean;
+};
+
+/** Partial updates are intentional: the profile API also saves one display toggle at a time. */
+export type ProfileUpdateRequest = {
+  notificationEmail?: string;
+  emailNotificationsEnabled?: boolean;
+  emailWeeklyEnabled?: boolean;
+  emailFinalLinesEnabled?: boolean;
+  emailSundayFinalLinesEnabled?: boolean;
+  emailEarlyLockEnabled?: boolean;
+  /** Legacy all-reminder switch retained for already-open clients during rollout. */
+  emailPickDueEnabled?: boolean;
+  emailPickDueSundayEarlyEnabled?: boolean;
+  emailPickDueSundayAfternoonEnabled?: boolean;
+  emailPickDuePrimetimeEnabled?: boolean;
+  emailWeeklyRecapEnabled?: boolean;
+  emailPlayoffDayRecapEnabled?: boolean;
+  emailPlayoffPublicRevealEnabled?: boolean;
+  emailAtsDueEnabled?: boolean;
+  emailSurvivorDueEnabled?: boolean;
+  emailSundayEarlyRevealEnabled?: boolean;
+  emailSundayLateRevealEnabled?: boolean;
+  emailFeaturedWindowRevealEnabled?: boolean;
+  emailCustomEnabled?: boolean;
+  showSurvivorStandings?: boolean;
+  showBowlCard?: boolean;
+  showPoolAction?: boolean;
+  showPoolChat?: boolean;
+  hidePickemEliminatedRows?: boolean;
+  hideSurvivorEliminatedRows?: boolean;
+};
+
+export type ProfileUpdateResponse = {
+  message?: string;
+  error?: string;
+  code?: string;
+};
+
 /** Mirrors the survivor_entries status CHECK; a future state needs a UI rule. */
 export function survivorEntryStatus(value: string): "active" | "eliminated" | "complete" {
   if (value === "active" || value === "eliminated" || value === "complete") return value;

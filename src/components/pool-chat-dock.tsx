@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import PoolChat from "@/components/pool-chat";
 import { fetchWithSession } from "@/lib/auth-session";
+import type { ProfileResponse, ProfileUpdateRequest } from "@/lib/api-contracts";
 
 // The chat is shared across player-facing pool pages. Login, rehearsal, and
 // commissioner controls stay focused on their respective jobs.
@@ -16,7 +17,7 @@ export default function PoolChatDock() {
     void (async () => {
       try {
         const response = await fetchWithSession("/api/profile");
-        const data = await response.json() as { showPoolChat?: boolean };
+        const data = await response.json() as Pick<ProfileResponse, "showPoolChat">;
         if (current && response.ok) setShowChat(data.showPoolChat !== false);
       } catch {
         if (current) setShowChat(true);
@@ -35,19 +36,21 @@ export default function PoolChatDock() {
   }, []);
 
   async function restoreChat() {
+    const update: ProfileUpdateRequest = { showPoolChat: true };
     const response = await fetchWithSession("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ showPoolChat: true }),
+      body: JSON.stringify(update),
     });
     if (response.ok) setShowChat(true);
   }
 
   async function hideChat() {
+    const update: ProfileUpdateRequest = { showPoolChat: false };
     const response = await fetchWithSession("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ showPoolChat: false }),
+      body: JSON.stringify(update),
     });
     if (response.ok) setShowChat(false);
   }
