@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -17,15 +17,11 @@ import { buildSlateSubmission } from "@/lib/slate-submission";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
-import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
+import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
 import type { PickSaveRequest, PickSaveResponse, ProfileUpdateRequest, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
-
-type SelectedPick = {
-  gameId: string;
-  teamId: string;
-};
+import { initialSlateSelectionState, slateSelectionReducer, type SlatePick } from "@/lib/slate-selection-state";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
@@ -77,10 +73,8 @@ export default function BoardPage() {
   const [showActionOnly, setShowActionOnly] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [clockSynchronized, setClockSynchronized] = useState(false);
-  const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
-  const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
-  const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
-  const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
+  const [selectionState, dispatchSelections] = useReducer(slateSelectionReducer, initialSlateSelectionState);
+  const { selectedPicks, savedPicks, survivorPick, savedSurvivorPick } = selectionState;
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
   const [survivorAvailable, setSurvivorAvailable] = useState(true);
   const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
@@ -106,10 +100,7 @@ export default function BoardPage() {
     setGames(data.games);
     setShowActionOnly(Boolean(data.showPoolAction));
     setPlayoffEliminated(data.pickem.playoffEliminated);
-    setSelectedPicks(data.myPicks);
-    setSavedPicks(data.myPicks);
-    setSurvivorPick(pick);
-    setSavedSurvivorPick(pick);
+    dispatchSelections({ type: "hydrate", picks: data.myPicks, survivorPick: pick });
     setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
     setSurvivorAvailable(data.survivor.available);
     setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
@@ -378,7 +369,7 @@ export default function BoardPage() {
   // after a champion is crowned) and returns with the next season.
   const showSurvivorReceipt = week?.period_type === "regular" &&
     survivorAvailable && survivorOnReceipt;
-  const survivorTeamName = (pick: SelectedPick | null) => {
+  const survivorTeamName = (pick: SlatePick | null) => {
     if (!pick) return "";
     const game = games.find((item) => item.id === pick.gameId);
     return pick.teamId === game?.awayTeamId ? game.awayTeam : pick.teamId === game?.homeTeamId ? game.homeTeam : "";
@@ -417,8 +408,8 @@ export default function BoardPage() {
     if (!atsDraft.changed && !survivorDraft.changed) return;
 
     const reconcileTimer = window.setTimeout(() => {
-      if (atsDraft.changed) setSelectedPicks(atsDraft.selections);
-      if (survivorDraft.changed) setSurvivorPick(survivorDraft.selection);
+      if (atsDraft.changed) dispatchSelections({ type: "reconcile-picks", picks: atsDraft.selections });
+      if (survivorDraft.changed) dispatchSelections({ type: "reconcile-survivor", pick: survivorDraft.selection });
       if (atsDraft.discardedAtKickoff || survivorDraft.discardedAtKickoff) {
         setSelectionWarning(
           "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed.",
@@ -446,12 +437,12 @@ export default function BoardPage() {
         setSelectionWarning(choice.warning);
         return;
       case "remove":
-        setSelectedPicks((current) => withoutGame(current, gameId));
+        dispatchSelections({ type: "remove-pick", gameId });
         setSelectionFeedback(null);
         return;
       case "swap":
       case "add":
-        setSelectedPicks((current) => withPick(current, gameId, teamId));
+        dispatchSelections({ type: "choose-pick", gameId, teamId });
         showSelectionFeedback(gameId, teamId, "sweep");
         return;
     }
@@ -468,7 +459,7 @@ export default function BoardPage() {
     }
 
     setSelectionWarning("");
-    setSurvivorPick({ gameId, teamId });
+    dispatchSelections({ type: "choose-survivor", pick: { gameId, teamId } });
   }
 
   function removeSelection(gameId: string) {
@@ -478,7 +469,7 @@ export default function BoardPage() {
       setSelectionWarning(removal.warning);
       return;
     }
-    setSelectedPicks((current) => withoutGame(current, gameId));
+    dispatchSelections({ type: "remove-pick", gameId });
   }
 
   // Flip between All Games and Pool Action, and remember the choice.
@@ -519,16 +510,18 @@ export default function BoardPage() {
     }
 
     setIsSubmitting(true);
+    const submittedPicks = selectedPicks;
+    const submittedSurvivorPick = survivorPick;
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
 
     try {
       const submission: PickSaveRequest = buildSlateSubmission({
         scoringPeriodId: week.id,
-        selections: selectedPicks,
+        selections: submittedPicks,
         survivorAvailable,
         survivorHasUnsavedChanges,
-        survivorPick,
+        survivorPick: submittedSurvivorPick,
       });
       const response = await fetchWithSession("/api/picks", {
         method: "POST",
@@ -548,10 +541,11 @@ export default function BoardPage() {
         return;
       }
 
-      setSavedPicks(selectedPicks);
-      if (survivorAvailable) {
-        setSavedSurvivorPick(survivorPick);
-      }
+      dispatchSelections({
+        type: "save-succeeded",
+        submittedPicks,
+        ...(survivorAvailable ? { submittedSurvivorPick } : {}),
+      });
     } catch (error) {
       if (error instanceof SessionUnavailableError) {
         window.location.replace("/login");
