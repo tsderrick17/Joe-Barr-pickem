@@ -23,8 +23,12 @@ passing local application suite. The current application suite passes (571
 tests: 551 pass, 20 environment-gated skips, none failing); lint and both
 TypeScript checks pass. The production compile succeeds, but Next's final route
 collection cannot finish in this environment because server-side Supabase
-configuration is absent. This document does not change pool rules, authorize a
-production data correction, or supersede the project reference.
+configuration is absent. A repeat of the fictional response-shaping benchmark
+matched the recorded payload sizes and remained below 0.17 ms median per call;
+it does not substitute for the isolated database-backed route measurements.
+This worktree has no isolated-test credentials, so no route request or external
+Supabase connection was attempted. This document does not change pool rules,
+authorize a production data correction, or supersede the project reference.
 Recheck the current branch before starting each work package: development with
 Claude and the stylesheet work may have advanced the baseline.
 

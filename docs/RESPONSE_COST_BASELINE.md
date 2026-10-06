@@ -20,9 +20,10 @@ checks scenario and output shape but intentionally has no wall-clock limit.
 | Late regular | 11 players, 16 games, 374 season picks, 8 started games | 4,406 B | 8,688 B |
 | Playoff round | 11 players, 6 games, 462 season picks, 3 started games | 10,781 B | 3,563 B |
 
-One Windows/Node 22 run measured median per-call times of 0.056/0.018 ms
-(Standings/Slate) early, 0.059/0.027 ms late, and 0.165/0.018 ms in the playoff
-scenario. These are local shaping costs, not promises about another machine.
+The October 5, 2026 repeat on Windows/Node 22.23.1 measured median per-call
+times of 0.053/0.018 ms (Standings/Slate) early, 0.056/0.028 ms late, and
+0.167/0.018 ms in the playoff scenario. Fragment sizes matched the table
+exactly. These are local shaping costs, not promises about another machine.
 The playoff Standings fragment grows because every player has six current-round
 picks. Input/output row counts and byte sizes are the reproducible comparison;
 time should be compared across repeated runs on the same machine.
@@ -37,7 +38,10 @@ started-game disclosure, playoff eligibility, and Survivor branches.
 represented by this script. Counting `.from()` calls in source would not be a
 true request count: branches, pagination, retries, and RPCs vary by state.
 
-The next measurement must run against the confirmed `isolated-test` project
+No isolated route measurement was attempted during the October 5 repeat: this
+worktree has neither `.env.test.local` nor the `PICKEM_TEST_*` environment
+settings. No Supabase connection was made. The next measurement must run
+against the confirmed `isolated-test` project
 with disposable, non-personal fixtures. For each of early season, late regular
 season, playoffs, and multiple historical seasons, capture five warm and five
 cold route reads of `/api/home`, `/api/board`, and the grading dashboard:
