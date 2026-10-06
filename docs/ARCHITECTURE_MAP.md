@@ -10,7 +10,7 @@ performance or security decision.
 
 | Flow | Entry and orchestration | Decision / privacy boundary | Durable authority |
 | --- | --- | --- | --- |
-| Standings and Pick'em Pad | [`/api/home`](../src/app/api/home/route.ts) authenticates, reads the current season, periods, players, picks, games, lines, championships, and conditional Survivor data. | [`home-shape.ts`](../src/lib/home-shape.ts) counts wins and reveals the viewer's own picks, but another player's pick only after that game's kickoff. | Games, picks, lines, periods, and championships in current database migrations. |
+| Standings and Pick'em Pad | [`/api/home`](../src/app/api/home/route.ts) uses the request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts) result (including the viewer's preferences in that same profile read), then reads the current season, periods, players, picks, games, lines, championships, and conditional Survivor data. | [`home-shape.ts`](../src/lib/home-shape.ts) counts wins and reveals the viewer's own picks, but another player's pick only after that game's kickoff. | Games, picks, lines, periods, and championships in current database migrations. |
 | The Slate | [`/api/board`](../src/app/api/board/route.ts) authenticates through request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts), then resolves the requested/default week and reads games, the viewer's saved picks, players, lines, and conditional Survivor state. | [`slate-shape.ts`](../src/lib/slate-shape.ts) exposes named public pickers only for started games. [`slate-view.ts`](../src/lib/slate-view.ts) owns page-side selection decisions. | Period/game pins and saved selections in the database. |
 | Pick save | [`/api/picks`](../src/app/api/picks/route.ts) validates the request, then uses request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts) before checking week, eligibility, existing picks, and selected games. | [`slate-submission.js`](../src/lib/slate-submission.js) prepares ATS replacements; the route distinguishes omitted Survivor input from a requested Survivor change and preserves access failure codes. | Atomic `replace_unlocked_picks` or `save_slate_selections` RPCs, plus database kickoff and integrity guards. |
 | Survivor | [`/api/survivor`](../src/app/api/survivor/route.ts) uses request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts) for both reads and saves and records player activity only after access succeeds. | The selected period and entry status are loaded after authorization; auth errors keep stable status codes and distinguish service outages from sign-in failures. | Survivor entries and picks, with `replace_unlocked_survivor_pick` enforcing kickoff and team-reuse rules. |
@@ -21,9 +21,9 @@ performance or security decision.
 | Scheduled email | [`/api/cron/maintain-reminders`](../src/app/api/cron/maintain-reminders/route.ts) reconciles future messages; [`/api/cron/send-reminders`](../src/app/api/cron/send-reminders/route.ts) claims and delivers due messages. Both are leased. | [`reminder-readiness.ts`](../src/lib/reminder-readiness.ts) can defer/suppress; [`email-reminders.ts`](../src/lib/email-reminders.ts) selects recipients and preserves delivery receipts. | `push_reminders` and delivery records. The table/RPC names are historical; the transport is email. |
 
 Player authentication uses a bearer session checked against Supabase Auth and
-an active `players` row. The Season Snapshot, Slate, Pick'em save, Survivor, and
-Bowl Pool routes share the request-scoped server access resolver; other player
-routes remain to be migrated. Browser reads and refreshes share the session path in
+an active `players` row. Home, Season Snapshot, Slate, Pick'em save, Survivor,
+and Bowl Pool routes share the request-scoped server access resolver; other
+player routes remain to be migrated. Browser reads and refreshes share the session path in
 [`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
 authorization cache. Continue migrating routes individually with failure tests.
 Commissioner routes use the shared gate. Automation uses a separate secret,
