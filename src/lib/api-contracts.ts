@@ -1,6 +1,22 @@
 // Viewer-safe JSON returned by player routes. Keep database rows and private
 // pre-kickoff picks out of these contracts; route shaping owns disclosure.
 
+export type PickSelection = { gameId: string; teamId: string };
+
+/** JSON accepted by the authenticated Pick'em save route. */
+export type PickSaveRequest = {
+  scoringPeriodId: string;
+  selections: PickSelection[];
+  /** Omitted when Survivor was not changed; null explicitly clears the pick. */
+  survivorSelection?: PickSelection | null;
+};
+
+export type PickSaveResponse = {
+  message?: string;
+  error?: string;
+  code?: string;
+};
+
 export type SlateScoringPeriod = {
   id: string;
   display_name: string;

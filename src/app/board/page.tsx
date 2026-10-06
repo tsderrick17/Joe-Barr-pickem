@@ -20,7 +20,7 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
-import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
+import type { PickSaveRequest, PickSaveResponse, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 
 type SelectedPick = {
   gameId: string;
@@ -522,27 +522,23 @@ export default function BoardPage() {
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
 
     try {
+      const submission: PickSaveRequest = buildSlateSubmission({
+        scoringPeriodId: week.id,
+        selections: selectedPicks,
+        survivorAvailable,
+        survivorHasUnsavedChanges,
+        survivorPick,
+      });
       const response = await fetchWithSession("/api/picks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...buildSlateSubmission({
-            scoringPeriodId: week.id,
-            selections: selectedPicks,
-            survivorAvailable,
-            survivorHasUnsavedChanges,
-            survivorPick,
-          }),
-        }),
+        body: JSON.stringify(submission),
         signal: request.signal,
       });
 
-      const data = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-      };
+      const data = (await response.json().catch(() => ({}))) as PickSaveResponse;
 
       if (!response.ok) {
         setSelectionWarning(

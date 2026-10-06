@@ -1,4 +1,5 @@
 /** @typedef {{ gameId: string, teamId: string }} SubmissionSelection */
+/** @typedef {import("./api-contracts").PickSaveRequest} PickSaveRequest */
 /** @typedef {{ game_id: string, selected_team_id: string }} ExistingPick */
 /** @typedef {{ id: string, away_team_id: string, home_team_id: string, kickoff_at: string }} SubmissionGame */
 
@@ -54,7 +55,7 @@ export function prepareAtsReplacements({ selections, existingPicks, games, now =
  * selection can never block a valid later ATS submission.
  *
  * @param {{ scoringPeriodId: string, selections: SubmissionSelection[], survivorAvailable: boolean, survivorHasUnsavedChanges: boolean, survivorPick: SubmissionSelection | null }} input
- * @returns {{ scoringPeriodId: string, selections: SubmissionSelection[], survivorSelection?: SubmissionSelection | null }}
+ * @returns {PickSaveRequest}
  */
 export function buildSlateSubmission({
   scoringPeriodId,

@@ -86,7 +86,9 @@ modules with no database access, each covered by tests with fictional rows:
   shapes shared by each route and its page. Route responses must satisfy these
   types at build time; database rows are not exposed as API contracts. A new
   Survivor entry state must receive an explicit viewer rule before it can be
-  serialized as a familiar state.
+  serialized as a familiar state. It also defines `PickSaveRequest`, shared by
+  the Pad's submission builder and the server's validated save parser; omitted
+  versus explicit-null Survivor choices remain distinct.
 
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
 
@@ -112,8 +114,8 @@ measure database requests or end-to-end route time.
   A bad session is 401; a verified but missing or inactive player is 403;
   unavailable auth or player storage is 503; missing server configuration is
   500. These responses include stable error codes, and temporary failures must
-  not be presented as a lost sign-in. Other player routes retain their prior
-  authentication handling until separately migrated and tested.
+  not be presented as a lost sign-in. PIN sign-in remains a separate credential
+  exchange; signed-in player data routes use the shared resolver.
 - PIN sign-in is routed through the application. Five recent failures from one
   privacy-safe source fingerprint start a one-minute cooldown; ten start a
   15-minute cooldown and open a Commissioner incident and email alert.

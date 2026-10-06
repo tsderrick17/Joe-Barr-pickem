@@ -1,11 +1,9 @@
-export type Selection = { gameId: string; teamId: string };
+import type { PickSaveRequest, PickSelection } from "@/lib/api-contracts";
+
+export type Selection = PickSelection;
 export type BowlSelection = { gameId: string; teamId?: string; side?: "favorite" | "underdog" };
 
-export type PickSubmission = {
-  scoringPeriodId: string;
-  selections: Selection[];
-  survivorSelection?: Selection | null;
-};
+export type PickSubmission = PickSaveRequest;
 
 export type BowlSubmission = {
   optedIn: boolean;
