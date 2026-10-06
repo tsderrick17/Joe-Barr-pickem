@@ -22,7 +22,7 @@ performance or security decision.
 
 Player authentication uses a bearer session checked against Supabase Auth and
 an active `players` row. Home, Season Snapshot, Slate, Pick'em save, Survivor,
-and Bowl Pool routes share the request-scoped server access resolver; other
+Pool Chat, and Bowl Pool routes share the request-scoped server access resolver; other
 player routes remain to be migrated. Browser reads and refreshes share the session path in
 [`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
 authorization cache. Continue migrating routes individually with failure tests.

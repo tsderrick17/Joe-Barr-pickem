@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
@@ -12,6 +12,17 @@ type ChatMessageRow = {
   deleted_at: string | null;
   is_moderator: boolean;
 };
+
+function accessFailure(access: { status: 401 | 403 | 500 | 503; code: string }) {
+  const error = access.status === 401
+    ? "Your sign-in session could not be verified."
+    : access.status === 403
+      ? "Your player profile is not active in this Pick'em."
+      : access.status === 500
+        ? "The server is missing required configuration."
+        : "The player service could not be reached. Please try again.";
+  return NextResponse.json({ error, code: access.code }, { status: access.status });
+}
 
 async function currentSeason() {
   const { data, error } = await supabaseAdmin
@@ -60,8 +71,9 @@ async function loadMessages(seasonId: string, viewer: { id: string; is_commissio
 }
 
 export async function GET(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return accessFailure(access);
+  const player = access.player;
 
   const season = await currentSeason();
   if (!season) return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
@@ -72,8 +84,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return accessFailure(access);
+  const player = access.player;
 
   let body: { message?: unknown };
   try {
@@ -117,8 +130,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return accessFailure(access);
+  const player = access.player;
 
   let body: { messageId?: unknown };
   try {
