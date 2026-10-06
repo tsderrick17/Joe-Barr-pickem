@@ -12,6 +12,17 @@ function canSlide(node: HTMLElement | null | undefined): node is HTMLElement {
 }
 
 /**
+ * The content's full height, to a fraction of a pixel. `scrollHeight` rounds to a whole pixel, and a blind that
+ * ends half a pixel off visibly settles when it lets go.
+ */
+function naturalHeight(node: HTMLElement) {
+  const last = node.lastElementChild;
+  if (!last) return node.scrollHeight;
+  const margin = parseFloat(getComputedStyle(last).marginBottom) || 0;
+  return Math.max(0, last.getBoundingClientRect().bottom + margin - node.getBoundingClientRect().top);
+}
+
+/**
  * Slides its content open and shut like a window blind. Content is always laid
  * out at its natural size and fully visible; the slide is only a height
  * animation layered on top, so if an animation never runs the content is still
@@ -23,6 +34,7 @@ export default function Collapse({ open, children }: { open: boolean; children: 
   const element = useRef<HTMLDivElement>(null);
   const previous = useRef(open);
   const running = useRef<Animation | null>(null);
+  const observerOf = useRef<ResizeObserver | null>(null);
 
   // Mount the content as soon as it should open (adjusting state while rendering, as React allows).
   if (open && !mounted) setMounted(true);
@@ -42,13 +54,29 @@ export default function Collapse({ open, children }: { open: boolean; children: 
     const current = node.getBoundingClientRect().height;
     running.current = null;
     midway?.cancel();
-    const full = node.scrollHeight;
+    observerOf.current?.disconnect();
+    const full = naturalHeight(node);
     const from = open ? (midway ? current : 0) : current;
-    const to = open ? full : 0;
+    let to = open ? full : 0;
     node.style.overflow = "hidden";
     const animation = node.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: BLIND_MS * (Math.abs(to - from) / Math.max(full, 1)) ** 0.5, easing: BLIND_EASING, fill: open ? "none" : "forwards" });
     running.current = animation;
+    // The content can change height while it opens (a table gliding to its wider layout wraps differently),
+    // so an opening blind follows the content's current height rather than the one it had when it started.
+    let observer: ResizeObserver | null = null;
+    if (open && typeof ResizeObserver === "function") {
+      observer = new ResizeObserver(() => {
+        if (running.current !== animation) return;
+        const latest = naturalHeight(node);
+        if (Math.abs(latest - to) < 0.01) return;
+        to = latest;
+        (animation.effect as KeyframeEffect | null)?.setKeyframes([{ height: `${from}px` }, { height: `${to}px` }]);
+      });
+      for (const child of node.children) observer.observe(child);
+      observerOf.current = observer;
+    }
     animation.onfinish = () => {
+      observer?.disconnect();
       if (running.current !== animation) return;
       running.current = null;
       if (open) node.style.overflow = "";

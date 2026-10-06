@@ -1381,3 +1381,7 @@ and atomicity. The known inaugural Survivor holder display fallback applies
 only to the uncrowned 2026 launch season. A later season without a recorded
 champion displays no holder instead of silently reusing a name match. This
 fallback changes display only, never a championship record.
+
+## Sections now open to their exact height
+
+When the Survivor table finished opening on desktop, the Bowl Card below moved down about 0.4 px and came back. The blind measured its target with `scrollHeight`, which rounds to a whole pixel, so it stopped up to half a pixel off and corrected itself when it let go. It now measures the content's height to a fraction of a pixel, and an opening blind also follows the content if its height changes while opening (the table wraps differently as it glides wider). Measured at 1280 px: the last steps are now 1305.11, 1305.75, 1305.78, 1305.78 with no overshoot.
