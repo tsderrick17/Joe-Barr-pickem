@@ -72,6 +72,8 @@ export default function BoardPage() {
   const [nextWeekAvailableAt, setNextWeekAvailableAt] = useState<number | null>(null);
   const [games, setGames] = useState<BoardGame[]>([]);
   const [showActionOnly, setShowActionOnly] = useState(false);
+  const showActionOnlyOverride = useRef<boolean | null>(null);
+  const [isSavingDisplayPreference, setIsSavingDisplayPreference] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [clockSynchronized, setClockSynchronized] = useState(false);
   const [selectionState, dispatchSelections] = useReducer(slateSelectionReducer, initialSlateSelectionState);
@@ -99,7 +101,7 @@ export default function BoardPage() {
   function applyBoard(data: BoardResponse) {
     const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
     setGames(data.games);
-    setShowActionOnly(Boolean(data.showPoolAction));
+    setShowActionOnly(showActionOnlyOverride.current ?? Boolean(data.showPoolAction));
     setPlayoffEliminated(data.pickem.playoffEliminated);
     dispatchSelections({ type: "hydrate", picks: data.myPicks, survivorPick: pick });
     setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
@@ -481,14 +483,22 @@ export default function BoardPage() {
 
   // Flip between All Games and Pool Action, and remember the choice.
   const toggleDisplay = useStableCallback(() => {
+    if (isSavingDisplayPreference) return;
+
+    const previous = showActionOnly;
     const next = !showActionOnly;
+    showActionOnlyOverride.current = next;
+    setIsSavingDisplayPreference(true);
     setShowActionOnly(next);
     const update: ProfileUpdateRequest = { showPoolAction: next };
     void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(update) }).then(async (response) => {
       if (!response.ok) throw new Error();
     }).catch(() => {
-      setShowActionOnly(showActionOnly);
+      showActionOnlyOverride.current = previous;
+      setShowActionOnly(previous);
       setSelectionWarning("Your Slate display preference could not be saved.");
+    }).finally(() => {
+      setIsSavingDisplayPreference(false);
     });
   });
 
@@ -610,6 +620,7 @@ export default function BoardPage() {
           actionOnlyActive={actionOnlyActive}
           availableWeeks={availableWeeks}
           hasEarlyGame={hasEarlyGame}
+          isSavingDisplayPreference={isSavingDisplayPreference}
           isSubmitting={isSubmitting}
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}

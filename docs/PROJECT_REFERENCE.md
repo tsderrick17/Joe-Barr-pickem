@@ -96,7 +96,10 @@ modules with no database access, each covered by tests with fictional rows:
 The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
 is cancelled when the page unmounts. A late session failure after navigation
 must not redirect the player from the page they navigated to. Week changes
-retain their own latest-request cancellation and stale-response guard.
+retain their own latest-request cancellation and stale-response guard. An
+optimistic Pool Action display choice remains visible across a week refresh
+while its profile save is in flight; the switch is disabled during that save,
+and a failed save restores the prior choice.
 
 A change to who can see what belongs in one of these modules, with its test.
 

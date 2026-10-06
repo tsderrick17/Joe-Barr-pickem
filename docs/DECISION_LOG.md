@@ -26,6 +26,16 @@ navigation. This preserves the existing authentication and retry policy while
 making the page lifecycle explicit; week-change requests retain their separate
 latest-request guard.
 
+## 2026-10-05 — STATE-002 — Keep an optimistic Slate preference over stale reads
+
+**Status:** Accepted for the Slate's Pool Action display choice
+
+Changing weeks can return a profile snapshot captured before an optimistic
+Pool Action preference save. Keep the pending choice in a local override so
+the stale response cannot flip the view back. Restore the previous value if
+the save fails, and allow only one preference save at a time to avoid
+out-of-order writes.
+
 ## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
 
 **Status:** Accepted for the selected-period grading dashboard read

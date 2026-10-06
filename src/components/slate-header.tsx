@@ -10,13 +10,14 @@ type Props = {
   isSubmitting: boolean;
   onChooseWeek: (event: ChangeEvent<HTMLSelectElement>) => void;
   actionOnlyActive: boolean;
+  isSavingDisplayPreference: boolean;
   onToggleDisplay: () => void;
   survivorControlsEnabled: boolean;
   hasEarlyGame: boolean;
 };
 
 /** The Slate's masthead: title, week picker, the All Games / Pool Action switch, and the how-to panel. */
-function SlateHeader({ week, availableWeeks, isSubmitting, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame }: Props) {
+function SlateHeader({ week, availableWeeks, isSubmitting, onChooseWeek, actionOnlyActive, isSavingDisplayPreference, onToggleDisplay, survivorControlsEnabled, hasEarlyGame }: Props) {
   return (
   <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
     <div className="slate-header-grid grid gap-5 md:gap-0">
@@ -49,7 +50,7 @@ function SlateHeader({ week, availableWeeks, isSubmitting, onChooseWeek, actionO
         <div className="slate-view-switch-slot">
           <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
             <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
-            <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={onToggleDisplay} role="switch" type="button"><span /></button>
+            <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} disabled={isSavingDisplayPreference} onClick={onToggleDisplay} role="switch" type="button"><span /></button>
             <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
           </div>
         </div>
