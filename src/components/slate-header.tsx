@@ -7,6 +7,7 @@ export type SlateWeek = { id: string; display_name: string; status: "upcoming" |
 type Props = {
   week: SlateWeek;
   availableWeeks: SlateWeek[];
+  isSubmitting: boolean;
   onChooseWeek: (event: ChangeEvent<HTMLSelectElement>) => void;
   actionOnlyActive: boolean;
   onToggleDisplay: () => void;
@@ -15,7 +16,7 @@ type Props = {
 };
 
 /** The Slate's masthead: title, week picker, the All Games / Pool Action switch, and the how-to panel. */
-function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame }: Props) {
+function SlateHeader({ week, availableWeeks, isSubmitting, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame }: Props) {
   return (
   <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
     <div className="slate-header-grid grid gap-5 md:gap-0">
@@ -32,6 +33,7 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
 
         <select
           className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]"
+          disabled={isSubmitting}
           id="week-selector"
           onChange={onChooseWeek}
           value={week.id}

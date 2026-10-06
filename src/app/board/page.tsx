@@ -609,6 +609,7 @@ export default function BoardPage() {
           actionOnlyActive={actionOnlyActive}
           availableWeeks={availableWeeks}
           hasEarlyGame={hasEarlyGame}
+          isSubmitting={isSubmitting}
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}
           survivorControlsEnabled={survivorControlsEnabled}

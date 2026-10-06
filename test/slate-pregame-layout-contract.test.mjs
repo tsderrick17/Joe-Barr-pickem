@@ -15,6 +15,14 @@ test("pregame rows reclaim unused Survivor lanes while final phone rows use comp
   assert.match(css, /\.slate-game-row\.no-survivor-layout\.is-final \.slate-team-result-mark/);
 });
 
+test("the Slate cannot switch weeks while a save is in flight", async () => {
+  const header = await readFile(new URL("../src/components/slate-header.tsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../src/app/board/page.tsx", import.meta.url), "utf8");
+
+  assert.match(header, /disabled=\{isSubmitting\}[\s\S]*id="week-selector"/);
+  assert.match(page, /<SlateHeader[\s\S]*?isSubmitting=\{isSubmitting\}[\s\S]*?onChooseWeek=\{chooseWeek\}/);
+});
+
 test("phone rows without Survivor chips keep the spread and lock note out of the team names", async () => {
   const css = await readStylesheet();
   const phone = css.slice(css.indexOf("@media (max-width: 767px) {\n  .slate-game-row.no-survivor-layout:not(.is-final) {".replace(/\n/g, css.includes("\r\n") ? "\r\n" : "\n")));
