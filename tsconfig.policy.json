@@ -13,7 +13,11 @@
     "src/lib/survivor-availability.js",
     "src/lib/survivor-chip-visibility.js",
     "src/lib/health-probe-debounce.js",
-    "src/lib/ticket-completion.js"
+    "src/lib/ticket-completion.js",
+    "src/lib/eastern-time.js",
+    "src/lib/weekly-recap-timing.js",
+    "src/lib/week-rollover.js",
+    "src/lib/schedule-provider-backoff.js"
   ],
   "exclude": ["node_modules"]
 }
