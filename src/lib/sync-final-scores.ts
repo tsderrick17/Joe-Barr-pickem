@@ -12,6 +12,10 @@ import {
   type ScoreCheckBackoff,
   type ScorePollingMode,
 } from "@/lib/score-polling-plan";
+import {
+  fetchScoreProviderEvents,
+  ScoreProviderClientError,
+} from "@/lib/score-provider-client";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
@@ -20,7 +24,6 @@ import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
 import {
   matchProviderFinalScores,
   selectCompletedProviderEvents,
-  type ProviderScoreEvent,
 } from "@/lib/score-provider-matching";
 
 type GameRow = {
@@ -297,27 +300,12 @@ export async function syncFinalScores({
   let failedRequestsUsed: string | null = null;
   let failedRequestsLast: string | null = null;
   try {
-    const query = new URLSearchParams({ apiKey: oddsApiKey, daysFrom: "3" });
     providerRequestAttempted = true;
-    const response = await fetch(
-      `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?${query}`,
-      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
-    );
-    const requestsRemaining = response.headers.get("x-requests-remaining");
-    const requestsUsed = response.headers.get("x-requests-used");
-    const requestsLast = response.headers.get("x-requests-last");
+    const providerResponse = await fetchScoreProviderEvents(oddsApiKey);
+    const { requestsRemaining, requestsUsed, requestsLast } = providerResponse;
     failedRequestsRemaining = requestsRemaining;
     failedRequestsUsed = requestsUsed;
     failedRequestsLast = requestsLast;
-
-    if (!response.ok) {
-      throw new Error("The NFL score feed could not be reached right now.");
-    }
-
-    const providerPayload: unknown = await response.json();
-    if (!Array.isArray(providerPayload)) {
-      throw new Error("The NFL score feed returned an invalid response.");
-    }
     providerResponseAccepted = true;
 
     // One paid response already contains every current NFL game. Use it to
@@ -325,7 +313,7 @@ export async function syncFinalScores({
     // individual retry timer is what triggered this request.
     const completedEvents = selectCompletedProviderEvents(
       scoreDueGames,
-      providerPayload as ProviderScoreEvent[],
+      providerResponse.events,
     );
 
     if (completedEvents.length === 0) {
@@ -442,6 +430,11 @@ export async function syncFinalScores({
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "The score sync failed.";
+    if (error instanceof ScoreProviderClientError) {
+      failedRequestsRemaining = error.requestsRemaining;
+      failedRequestsUsed = error.requestsUsed;
+      failedRequestsLast = error.requestsLast;
+    }
     if (!providerResponseAccepted) {
       try {
         // Network failures, timeouts, HTTP errors, and malformed payloads use
