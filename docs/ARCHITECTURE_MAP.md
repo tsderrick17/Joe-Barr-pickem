@@ -23,10 +23,9 @@ performance or security decision.
 Player authentication uses a bearer session checked against Supabase Auth and
 an active `players` row. Home, Profile, Season Snapshot, Slate, Pick'em save,
 Survivor, Pool Chat, and Bowl Pool routes share the request-scoped server
-access resolver; other player routes remain to be migrated. Browser reads and refreshes share the session path in
-[`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
-authorization cache. Continue migrating routes individually with failure tests.
-Commissioner routes use the shared gate. Automation uses a separate secret,
+access resolver. PIN sign-in remains a separate credential exchange. Browser
+reads and refreshes share the session path in [`auth-session.ts`](../src/lib/auth-session.ts),
+with no durable browser authorization cache. Commissioner routes use the shared gate. Automation uses a separate secret,
 lease, and heartbeat path; a player's browser token does not authorize workers.
 
 ## Read-path cost inventory
