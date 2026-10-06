@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { prepareAtsReplacements } from "@/lib/slate-submission";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -18,9 +18,8 @@ function pickSaveMessage(selectionCount: number) {
 export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
   if (!url || !key) return NextResponse.json({ error: "The server is missing required configuration." }, { status: 500 });
-  if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) return NextResponse.json({ error: "You must be signed in to save picks." }, { status: 401 });
   let input: unknown;
   try {
     input = await request.json();
@@ -37,16 +36,18 @@ export async function POST(request: NextRequest) {
   const selections = body.selections;
   const includesSurvivor = Object.hasOwn(body, "survivorSelection");
 
-  const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await retrySafeRead(() => authClient.auth.getUser(
-    authorization.slice("Bearer ".length),
-  ));
-  if (!user) return NextResponse.json({ error: "Your sign-in session could not be verified." }, { status: 401 });
-
-  // A database hiccup must not be reported as "not active" or "not found".
-  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, active").eq("auth_user_id", user.id).maybeSingle());
-  if (playerError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
-  if (!player?.active) return NextResponse.json({ error: "Your player profile is not active in this Pick'em." }, { status: 403 });
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) {
+    const message = access.status === 503
+      ? "Pick'em is having trouble reaching its records right now. Please try again in a minute."
+      : access.status === 500
+        ? "The server is missing required configuration."
+        : access.status === 403
+          ? "Your player profile is not active in this Pick'em."
+          : "Your sign-in session could not be verified.";
+    return NextResponse.json({ error: message, code: access.code }, { status: access.status });
+  }
+  const player = access.player;
 
   const { data: period, error: periodError } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
   if (periodError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });

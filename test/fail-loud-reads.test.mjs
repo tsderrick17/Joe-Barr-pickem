@@ -4,12 +4,13 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("a database error is never reported to a player as an inactive profile or a missing week", async () => {
+test("Pick'em saves use shared access failures and board reads fail loudly on database errors", async () => {
   const picks = await read("src/app/api/picks/route.ts");
   const board = await read("src/app/api/board/route.ts");
-  assert.match(picks, /if \(playerError\) return NextResponse\.json\([^\n]*status: 503/);
+  assert.match(picks, /authenticateActivePlayer\(request\)/);
+  assert.match(picks, /access\.status === 503/);
+  assert.match(picks, /access\.status === 403/);
   assert.match(picks, /if \(periodError\) return NextResponse\.json\([^\n]*status: 503/);
-  assert.ok(picks.indexOf("if (playerError)") < picks.indexOf("if (!player?.active)"));
   assert.ok(picks.indexOf("if (periodError)") < picks.indexOf("if (!period)"));
   assert.match(board, /if \(playerError\) \{\s*return NextResponse\.json\([^\n]*status: 503/);
   assert.ok(board.indexOf("if (playerError)") < board.indexOf("if (!player || !player.active)"));
