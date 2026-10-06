@@ -5,7 +5,7 @@ import {
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import {
   nextScoreCheckAt,
-  shouldHoldScorePollingForQuota,
+  shouldProtectScoreProviderQuota,
 } from "@/lib/score-check-backoff";
 import {
   selectEligibleScoreGames,
@@ -256,13 +256,14 @@ export async function syncFinalScores({
   const latestAllowanceDetails = latestAllowanceRun?.details as { requestsRemaining?: unknown } | null;
   const lastRemaining = parseCreditHeader(latestAllowanceDetails?.requestsRemaining);
   const lastObservedAt = latestAllowanceRun?.completed_at ?? latestAllowanceRun?.started_at ?? null;
-  const onlyRepeatedDelayedGames = eligibleGames.every(
-    (game) => (backoffByGameId.get(game.id)?.attempts ?? 0) >= 2,
-  );
   if (
-    eligibleGames.length > 0 &&
-    onlyRepeatedDelayedGames &&
-    shouldHoldScorePollingForQuota(lastRemaining, lastObservedAt, now)
+    shouldProtectScoreProviderQuota(
+      eligibleGames,
+      backoffByGameId,
+      lastRemaining,
+      lastObservedAt,
+      now,
+    )
   ) {
     warnings.push(
       `Score polling is conserving the remaining Odds API allowance (${lastRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,

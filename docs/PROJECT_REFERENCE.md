@@ -105,8 +105,9 @@ modules with no database access, each covered by tests with fictional rows:
   `src/lib/score-polling-plan.ts` selects due games whose persisted retry
   cooldown has elapsed (or whose cooldown is explicitly bypassed) and
   determines regular/playoff polling mode from that eligible set. Provider
-  cadence, quota protection, persistent backoff state, and atomic grading
-  remain in the worker/database path.
+  cadence, persistent backoff state, and atomic grading remain in the
+  worker/database path; `src/lib/score-check-backoff.ts` owns the quota-reserve
+  policy and retry ladder.
 
 The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
 is cancelled when the page unmounts. A late session failure after navigation

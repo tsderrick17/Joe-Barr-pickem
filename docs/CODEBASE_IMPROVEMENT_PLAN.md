@@ -22,12 +22,13 @@ isolates completed-event selection and provider-team score matching in a pure
 module. Due-game cooldown eligibility and the regular/playoff polling-mode
 decision now live in a second pure module. Provider HTTP/JSON intake is isolated
 behind a tested transport boundary that preserves quota headers on failure;
-the polling cadence, quota guard, persistent retry backoff, and atomic database
-grading path are unchanged.
+the repeated-delay/provider-reserve conjunction is now an explicit tested
+backoff policy. The polling cadence, quota thresholds, persistent retry
+backoff, and atomic database grading path are unchanged.
 Environment-dependent isolated database,
 full-season/weekly rehearsal, and isolated-copy checks are not implied by a
-passing local application suite. The current application suite passes (580
-tests: 560 pass, 20 environment-gated skips, none failing); lint and both
+passing local application suite. The current application suite passes (581
+tests: 561 pass, 20 environment-gated skips, none failing); lint and both
 TypeScript checks pass. The production compile succeeds, but Next's final route
 collection cannot finish in this environment because server-side Supabase
 configuration is absent. A repeat of the fictional response-shaping benchmark

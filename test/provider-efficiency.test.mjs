@@ -3,8 +3,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { nextScoreCheckAt } from "../src/lib/score-check-backoff.ts";
-import { shouldHoldScorePollingForQuota } from "../src/lib/score-check-backoff.ts";
+import {
+  nextScoreCheckAt,
+  shouldHoldScorePollingForQuota,
+  shouldProtectScoreProviderQuota,
+} from "../src/lib/score-check-backoff.ts";
 import { providerRequestCost, summarizeProviderEfficiency } from "../src/lib/provider-efficiency.js";
 import { isEasternPrelockRefreshWindow } from "../src/lib/prelock-refresh-window.ts";
 
@@ -39,6 +42,25 @@ test("playoff polling uses the same predictable ladder while the fifty-credit re
   assert.equal(nextScoreCheckAt(9, now, true), "2026-09-14T00:20:00.000Z");
   assert.equal(shouldHoldScorePollingForQuota(49, "2026-09-13T00:00:00.000Z", now), true);
   assert.equal(shouldHoldScorePollingForQuota(50, "2026-09-13T00:00:00.000Z", now), false);
+});
+
+test("score quota protection waits until every eligible game has repeated delayed checks", () => {
+  const now = new Date("2026-09-14T00:00:00.000Z");
+  const games = [{ id: "repeated" }, { id: "first-check" }];
+  const allRepeated = new Map([
+    ["repeated", { attempts: 4 }],
+    ["first-check", { attempts: 2 }],
+  ]);
+  const oneFresh = new Map([
+    ["repeated", { attempts: 4 }],
+    ["first-check", { attempts: 1 }],
+  ]);
+  const observedAt = "2026-09-13T00:00:00.000Z";
+
+  assert.equal(shouldProtectScoreProviderQuota(games, allRepeated, 49, observedAt, now), true);
+  assert.equal(shouldProtectScoreProviderQuota(games, oneFresh, 49, observedAt, now), false);
+  assert.equal(shouldProtectScoreProviderQuota(games, allRepeated, 50, observedAt, now), false);
+  assert.equal(shouldProtectScoreProviderQuota([], new Map(), 1, observedAt, now), false);
 });
 
 test("only the daylight-safe invocation at 7 AM Eastern may refresh pregame odds", () => {

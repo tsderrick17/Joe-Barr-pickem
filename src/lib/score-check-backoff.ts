@@ -43,3 +43,18 @@ export function shouldHoldScorePollingForQuota(
     observed.getUTCMonth() === now.getUTCMonth()
   );
 }
+
+/** Protect the provider reserve only after every eligible game has repeated a delayed check. */
+export function shouldProtectScoreProviderQuota(
+  eligibleGames: readonly { id: string }[],
+  backoffByGameId: ReadonlyMap<string, { attempts: number }>,
+  remaining: number | null,
+  observedAt: string | null,
+  now = new Date(),
+) {
+  return (
+    eligibleGames.length > 0 &&
+    eligibleGames.every((game) => (backoffByGameId.get(game.id)?.attempts ?? 0) >= 2) &&
+    shouldHoldScorePollingForQuota(remaining, observedAt, now)
+  );
+}
