@@ -9,7 +9,11 @@
     "src/lib/line-fallback-policy.js",
     "src/lib/pick-visibility.js",
     "src/lib/score-window.js",
-    "src/lib/scoring-period.js"
+    "src/lib/scoring-period.js",
+    "src/lib/survivor-availability.js",
+    "src/lib/survivor-chip-visibility.js",
+    "src/lib/health-probe-debounce.js",
+    "src/lib/ticket-completion.js"
   ],
   "exclude": ["node_modules"]
 }

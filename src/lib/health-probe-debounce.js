@@ -1,5 +1,9 @@
 export const CRITICAL_WORKER_DEBOUNCE_MINUTES = 10;
 
+/**
+ * @param {{ healthy: boolean, unhealthySince: string | null }} probe
+ * @param {Date} [checkedAt]
+ */
 export function isProbeHealthyAfterDebounce({ healthy, unhealthySince }, checkedAt = new Date()) {
   if (healthy) return true;
   if (!unhealthySince) return true;

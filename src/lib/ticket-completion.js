@@ -2,6 +2,15 @@
  * A Survivor selection counts on the personal ticket while the player is
  * eligible for the current scoring period. An elimination recorded during
  * this period still counts for this week's ticket; it changes next period.
+ * @param {{
+ *   isPlayoff?: boolean,
+ *   maxPicks: number,
+ *   pickemSelections: number,
+ *   survivorAvailable: boolean,
+ *   survivorPickMade: boolean,
+ *   survivorStatus: string | null,
+ *   survivorRequired?: boolean | null,
+ * }} ticket
  */
 export function ticketCompletion({
   isPlayoff = false,

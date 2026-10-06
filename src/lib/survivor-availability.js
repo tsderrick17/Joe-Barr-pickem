@@ -2,6 +2,7 @@
  * A team this entry already used in an earlier week. The selection being made
  * and the pick saved for this week are never "used": they stay choosable until
  * the game starts (a started game is locked, not unavailable).
+ * @param {{ teamId: string, usedTeamIds: string[], selectedTeamId: string | null, savedTeamId: string | null }} selection
  */
 export function isSurvivorTeamUsed({ teamId, usedTeamIds, selectedTeamId, savedTeamId }) {
   return usedTeamIds.includes(teamId) && teamId !== selectedTeamId && teamId !== savedTeamId;
@@ -10,6 +11,16 @@ export function isSurvivorTeamUsed({ teamId, usedTeamIds, selectedTeamId, savedT
 // The Slate is the only player-facing Survivor selector. Keep the visibility
 // decision deterministic so an expired or historical period never presents a
 // chip that the database would correctly reject.
+/**
+ * @param {{
+ *   periodType?: string,
+ *   periodStatus?: string,
+ *   survivorAvailable: boolean,
+ *   survivorStatus: string | null,
+ *   selectedGameKickoffAt?: string | null,
+ *   now?: Date,
+ * }} slate
+ */
 export function isSurvivorSlateEditable({
   periodType,
   periodStatus,
