@@ -2,7 +2,7 @@
  * Resolve one request's player access without caching identity or permissions.
  * The injected reads keep auth failure behavior executable without a live pool.
  *
- * @template {{ active: boolean, is_commissioner: boolean }} T
+ * @template {{ id: string, active: boolean, is_commissioner: boolean }} T
  * @param {{ authorization: string | null, configured: boolean, verifyToken: (token: string) => Promise<{ data?: { user?: { id: string } | null }, error?: { status?: number | string } | null }>, loadPlayer: (userId: string) => Promise<{ data?: T | null, error?: unknown }>, requireCommissioner?: boolean }} options
  * @returns {Promise<{ ok: true, player: T } | { ok: false, status: 401 | 403 | 500 | 503, code: string }>}
  */

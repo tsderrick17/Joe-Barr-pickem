@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { bowlPoolAccessFailure } from "../src/lib/bowl-pool-access.js";
 
 test("player submissions do not wait for a pool-wide maintenance RPC", async () => {
   const [picks, survivor] = await Promise.all([
@@ -25,7 +26,11 @@ test("database replacements void only the submitter's disrupted receipts atomica
 test("Bowl Pool reports a temporary data-service outage instead of a false sign-out", async () => {
   const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
 
-  assert.match(route, /type PlayerLookup/);
-  assert.match(route, /"The Bowl Pool service is temporarily unavailable\. Please try again\."/);
-  assert.match(route, /playerLookup\.error === "unavailable" \? 503 : 401/);
+  assert.equal((route.match(/authenticateActivePlayer\(request\)/g) ?? []).length, 2);
+  assert.match(route, /bowlPoolAccessFailure\(access, "view"\)/);
+  assert.match(route, /bowlPoolAccessFailure\(access, "save"\)/);
+  assert.deepEqual(bowlPoolAccessFailure({ ok: false, status: 503, code: "profile_unavailable" }, "view"), {
+    status: 503,
+    body: { error: "The Bowl Pool service is temporarily unavailable. Please try again.", code: "profile_unavailable" },
+  });
 });
