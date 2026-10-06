@@ -98,9 +98,14 @@ test("a rejected score-provider call persists per-game backoff before failing", 
 });
 
 test("one paid score response settles every due completed game it already contains", async () => {
-  const source = await readFile(path.join(root, "src/lib/sync-final-scores.ts"), "utf8");
-  assert.match(source, /const dueGameByExternalId = new Map\([\s\S]*scoreDueGames\.flatMap/);
+  const [source, matching] = await Promise.all([
+    readFile(path.join(root, "src/lib/sync-final-scores.ts"), "utf8"),
+    readFile(path.join(root, "src/lib/score-provider-matching.ts"), "utf8"),
+  ]);
+  assert.match(source, /selectCompletedProviderEvents\(\s*scoreDueGames/);
   assert.match(source, /const savedGames = scoreDueGames\.filter/);
+  assert.match(matching, /dueGames\.flatMap\(\(game\) => game\.odds_event_id/);
+  assert.match(matching, /dueGameIds\.has\(event\.id\) && event\.completed/);
   assert.match(source, /period\.period_type === "playoff"/);
 });
 

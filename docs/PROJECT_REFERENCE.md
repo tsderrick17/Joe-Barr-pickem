@@ -97,6 +97,11 @@ modules with no database access, each covered by tests with fictional rows:
   refresh. The page callback hydrates player-specific saved state on bootstrap
   and week changes; a kickoff refresh updates only public game state and never
   replaces an in-progress pick draft.
+- `src/lib/sync-final-scores.ts` orchestrates score polling and atomic
+  finalization. `src/lib/score-provider-matching.ts` contains the pure boundary
+  that selects completed events for due, linked games and maps valid provider
+  scores to stored teams. Provider cadence, quota protection, persistent
+  backoff, and atomic grading remain in the worker/database path.
 
 The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
 is cancelled when the page unmounts. A late session failure after navigation

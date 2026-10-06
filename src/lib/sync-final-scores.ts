@@ -14,13 +14,12 @@ import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { eliminateSurvivorNoPicks } from "@/lib/eliminate-survivor-no-picks";
 import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
+import {
+  matchProviderFinalScores,
+  selectCompletedProviderEvents,
+  type ProviderScoreEvent,
+} from "@/lib/score-provider-matching";
 
-type Score = { name: string; score: string | number | null };
-type ScoreEvent = {
-  id: string;
-  completed: boolean;
-  scores?: Score[];
-};
 type GameRow = {
   id: string;
   external_game_id: string;
@@ -31,7 +30,6 @@ type GameRow = {
   kickoff_at: string;
   status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
 };
-type TeamRow = { id: string; full_name: string };
 type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
 type ScoreCheckBackoffRow = {
   game_id: string;
@@ -88,12 +86,6 @@ async function deferUnfinishedScoreChecks(
     .from("score_check_backoff")
     .upsert(rows, { onConflict: "game_id" });
   if (error) throw new Error("Delayed score checks could not be rescheduled safely.");
-}
-
-function parseScore(value: string | number | null | undefined) {
-  if (typeof value === "number" && Number.isInteger(value)) return value;
-  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
-  return Number(value);
 }
 
 function parseCreditHeader(value: unknown) {
@@ -340,14 +332,9 @@ export async function syncFinalScores({
     // One paid response already contains every current NFL game. Use it to
     // settle every due game it can prove final, even when another game's
     // individual retry timer is what triggered this request.
-    const dueGameByExternalId = new Map(
-      scoreDueGames.flatMap((game) => game.odds_event_id ? [[game.odds_event_id, game]] : []),
-    );
-    const completedEvents = (providerPayload as ScoreEvent[]).filter(
-      (event) =>
-        dueGameByExternalId.has(event.id) &&
-        event.completed &&
-        event.scores?.length === 2,
+    const completedEvents = selectCompletedProviderEvents(
+      scoreDueGames,
+      providerPayload as ProviderScoreEvent[],
     );
 
     if (completedEvents.length === 0) {
@@ -364,9 +351,8 @@ export async function syncFinalScores({
       return result;
     }
 
-    const eventByExternalId = new Map(completedEvents.map((event) => [event.id, event]));
     const savedGames = scoreDueGames.filter((game) =>
-      Boolean(game.odds_event_id && eventByExternalId.has(game.odds_event_id)),
+      Boolean(game.odds_event_id && completedEvents.some((event) => event.id === game.odds_event_id)),
     );
     const teamIds = [...new Set(savedGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
     const { data: teams, error: teamsError } = teamIds.length
@@ -375,27 +361,13 @@ export async function syncFinalScores({
 
     if (teamsError || !teams) throw new Error("The NFL team list could not be loaded.");
 
-    const teamIdByName = new Map(
-      (teams as TeamRow[]).map((team) => [team.full_name, team.id]),
+    const matchedScores = matchProviderFinalScores(
+      savedGames,
+      completedEvents,
+      teams as Array<{ id: string; full_name: string }>,
     );
-    const finalizedGames: FinalGameRow[] = [];
-
-    for (const game of savedGames) {
-      const scores = game.odds_event_id
-        ? eventByExternalId.get(game.odds_event_id)?.scores ?? []
-        : [];
-      const scoreByTeamId = new Map(
-        scores.map((score) => [teamIdByName.get(score.name), parseScore(score.score)]),
-      );
-      const awayScore = scoreByTeamId.get(game.away_team_id);
-      const homeScore = scoreByTeamId.get(game.home_team_id);
-
-      if (awayScore === null || awayScore === undefined || homeScore === null || homeScore === undefined) continue;
-      finalizedGames.push({ ...game, awayScore, homeScore });
-    }
-
-    const unmatchedCompletedGames =
-      completedEvents.length - finalizedGames.length;
+    const finalizedGames: FinalGameRow[] = matchedScores.finalizedGames;
+    const unmatchedCompletedGames = matchedScores.unmatchedCompletedGames;
 
     if (finalizedGames.length > 0) {
       const { data: atomicRows, error: atomicError } = await supabaseAdmin.rpc(
