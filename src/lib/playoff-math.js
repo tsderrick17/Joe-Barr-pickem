@@ -1,3 +1,4 @@
+// @ts-check
 /** @param {string | Date} value */
 function easternDay(value) {
   const parts = new Intl.DateTimeFormat("en-US", {
