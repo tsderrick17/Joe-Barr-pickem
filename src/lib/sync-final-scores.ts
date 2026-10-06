@@ -5,10 +5,13 @@ import {
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import {
   nextScoreCheckAt,
-  scorePollingMode,
   shouldHoldScorePollingForQuota,
-  type ScorePollingMode,
 } from "@/lib/score-check-backoff";
+import {
+  selectEligibleScoreGames,
+  type ScoreCheckBackoff,
+  type ScorePollingMode,
+} from "@/lib/score-polling-plan";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
@@ -31,12 +34,6 @@ type GameRow = {
   status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
 };
 type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
-type ScoreCheckBackoffRow = {
-  game_id: string;
-  attempts: number;
-  next_check_at: string;
-};
-
 export type ScoreSyncResult = {
   checkedAt: string;
   eligibleGames: number;
@@ -60,7 +57,7 @@ export type ScoreSyncResult = {
 
 async function deferUnfinishedScoreChecks(
   games: GameRow[],
-  previousChecks: Map<string, ScoreCheckBackoffRow>,
+  previousChecks: Map<string, ScoreCheckBackoff>,
   checkedAt: string,
   playoffPeriodIds: Set<string>,
 ) {
@@ -200,19 +197,13 @@ export async function syncFinalScores({
   if (scoreCheckBackoffsError) {
     throw new Error("Delayed score checks could not be loaded safely.");
   }
-  const backoffByGameId = new Map(
-    ((scoreCheckBackoffs ?? []) as ScoreCheckBackoffRow[]).map((row) => [
-      row.game_id,
-      row,
-    ]),
-  );
-  const eligibleGames = scoreDueGames.filter((game) => {
-    const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
-    return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
+  const { backoffByGameId, eligibleGames, pollingMode } = selectEligibleScoreGames({
+    dueGames: scoreDueGames,
+    backoffs: (scoreCheckBackoffs ?? []) as ScoreCheckBackoff[],
+    playoffPeriodIds,
+    now,
+    bypassProviderCooldown,
   });
-  const pollingMode = scorePollingMode(
-    eligibleGames.some((game) => playoffPeriodIds.has(game.scoring_period_id)),
-  );
 
   // Every outcome reports the same fields; only what actually differs is passed in.
   const buildResult = (overrides: Partial<ScoreSyncResult> = {}): ScoreSyncResult => ({

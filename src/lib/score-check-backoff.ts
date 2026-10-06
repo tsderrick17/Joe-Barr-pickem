@@ -1,15 +1,9 @@
 const MINUTE = 60_000;
 
-export type ScorePollingMode = "regular" | "playoff";
-
 // Both seasons use the same predictable post-kickoff ladder. The 10-minute
 // worker tick makes the first six windows 10 minutes apart in wall-clock time;
 // later windows deliberately widen to preserve provider headroom.
 export const SCORE_POLLING_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240] as const;
-
-export function scorePollingMode(isPlayoff: boolean): ScorePollingMode {
-  return isPlayoff ? "playoff" : "regular";
-}
 
 export function scorePollingDelayMinutes(
   attempts: number,
