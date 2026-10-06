@@ -21,7 +21,8 @@
     "src/lib/ats-grading.js",
     "src/lib/survivor-grading.js",
     "src/lib/playoff-math.js",
-    "src/lib/championship-policy.js"
+    "src/lib/championship-policy.js",
+    "src/lib/final-score-reconciliation.js"
   ],
   "exclude": ["node_modules"]
 }
