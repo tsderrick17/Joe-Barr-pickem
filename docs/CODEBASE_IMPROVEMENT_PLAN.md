@@ -10,12 +10,14 @@ and grading; and TypeScript checking for core policy modules. The Slate state
 work is active: selection drafts and saved snapshots now share a reducer,
 week switching is locked during saves, initial bootstrap reads are bounded and
 cancelled on unmount, and pending Pool Action preference changes survive stale
-week responses. The current full repository suite passes (562 tests: 542 pass,
-20 skipped, none failing); the skipped cases require the isolated database,
+week responses. Ambiguous pick-save outcomes now trigger one safe read rather
+than an automatic mutation retry. The current full repository suite passes
+(567 tests: 547 pass, 20 skipped, none failing); the skipped cases require the
+isolated database,
 full-season/weekly rehearsal switches, or an isolated-copy setup. The isolated
 database/browser evidence and Phase 0 route-cost measurements are still
 outstanding. Generated database types and drift checks,
-the remaining Slate request/state extraction and uncertain-save recovery,
+the remaining Slate request/state extraction and isolated browser evidence,
 worker extraction/cancellation, and measured query optimizations remain open.
 This document does not change pool rules, authorize a production data
 correction, or supersede the project reference.

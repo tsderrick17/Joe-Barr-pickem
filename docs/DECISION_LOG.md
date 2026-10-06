@@ -36,6 +36,19 @@ the stale response cannot flip the view back. Restore the previous value if
 the save fails, and allow only one preference save at a time to avoid
 out-of-order writes.
 
+## 2026-10-05 — STATE-003 — Verify uncertain Slate saves with a safe read
+
+**Status:** Accepted for Pick'em and Survivor saves from The Slate
+
+Never replay a pick mutation because its response was lost or failed: the
+database may already have committed the save. For transport failures and
+server errors, make one bounded authenticated read of the player's saved
+Slate. Mark the captured request snapshot saved only if the returned picks
+match exactly; otherwise update the saved baseline from that read while
+preserving any newer draft. If transport failure may leave the write in flight,
+hold another submission until that week has been reloaded. If the read itself
+is unavailable, use the same hold. Omitted Survivor remains outside the check.
+
 ## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
 
 **Status:** Accepted for the selected-period grading dashboard read

@@ -17,6 +17,7 @@ export type ReceiptTeam = {
 type Props = {
   isLoading: boolean;
   isSubmitting: boolean;
+  saveVerificationRequired: boolean;
   periodType: "regular" | "playoff" | undefined;
   selectionLimit: number;
   selectedTeams: ReceiptTeam[];
@@ -41,7 +42,7 @@ type Props = {
  * and (during the regular season) the Survivor pick. It owns the receipt's
  * wording and status rules; the page hands it plain facts.
  */
-function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, onSubmit, onRemove }: Props) {
+function SlateReceipt({ isLoading, isSubmitting, saveVerificationRequired, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, onSubmit, onRemove }: Props) {
   const hasUnsavedChanges = pickemHasUnsavedChanges || survivor.hasUnsavedChanges;
   const survivorReceipt = survivor.teamName || (survivor.status === "complete" ? "COMPLETE" : survivor.status === "eliminated" ? "OUT" : "OPEN");
   // Saved selections arrive asynchronously. Keep the receipt neutral until
@@ -81,6 +82,8 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
   ].filter(Boolean).join(" · ");
   const submitHint = receiptIsLoading
     ? "CHECKING SAVED PICKS"
+    : saveVerificationRequired
+      ? "REFRESH WEEK TO VERIFY SAVE"
     : isSubmitting
       ? "SAVING PICKS"
       : receiptNeedsSaving
@@ -102,7 +105,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
           <button
             className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
-            disabled={receiptIsLoading || isSubmitting}
+            disabled={receiptIsLoading || isSubmitting || saveVerificationRequired}
             onClick={onSubmit}
             type="button"
           >

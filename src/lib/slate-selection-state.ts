@@ -16,6 +16,7 @@ export type SlateSelectionAction =
   | { type: "choose-survivor"; pick: SlatePick | null }
   | { type: "reconcile-picks"; picks: SlatePick[] }
   | { type: "reconcile-survivor"; pick: SlatePick | null }
+  | { type: "observe-server-state"; picks: SlatePick[]; survivorPick?: SlatePick | null }
   | { type: "save-succeeded"; submittedPicks: SlatePick[]; submittedSurvivorPick?: SlatePick | null };
 
 export const initialSlateSelectionState: SlateSelectionState = {
@@ -55,6 +56,12 @@ export function slateSelectionReducer(
       return { ...state, selectedPicks: action.picks };
     case "reconcile-survivor":
       return { ...state, survivorPick: action.pick };
+    case "observe-server-state":
+      return {
+        ...state,
+        savedPicks: action.picks,
+        ...(Object.hasOwn(action, "survivorPick") ? { savedSurvivorPick: action.survivorPick ?? null } : {}),
+      };
     case "save-succeeded":
       return {
         ...state,

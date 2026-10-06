@@ -61,3 +61,18 @@ test("a save that did not include Survivor leaves its saved pick untouched", () 
 
   assert.equal(state.savedSurvivorPick, survivorPick);
 });
+
+test("an uncertain-save read refreshes saved state without overwriting the active draft", () => {
+  const drafted = [{ gameId: "game-1", teamId: "team-b" }];
+  const serverSaved = [{ gameId: "game-1", teamId: "team-a" }];
+  const state = slateSelectionReducer({
+    ...initialSlateSelectionState,
+    selectedPicks: drafted,
+  }, {
+    type: "observe-server-state",
+    picks: serverSaved,
+  });
+
+  assert.deepEqual(state.selectedPicks, drafted);
+  assert.deepEqual(state.savedPicks, serverSaved);
+});

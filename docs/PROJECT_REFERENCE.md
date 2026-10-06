@@ -148,6 +148,14 @@ measure database requests or end-to-end route time.
   remain changeable.
 - A Pick'em save never resubmits or validates an unchanged Survivor selection.
   A sealed Survivor pick therefore cannot block a later legal Pick'em save.
+- A transport failure or server error during a Pick'em save is an uncertain
+  outcome, not an automatic retry. The Slate makes one bounded authenticated
+  board read: an exact match marks the submitted snapshot saved; a differing
+  response refreshes the saved baseline without erasing newer draft edits. If
+  transport failure leaves the write potentially in flight, submit is held
+  until the player reloads that week; if the read itself is unavailable, the
+  same guard remains until refresh. Survivor is included in verification only
+  when that save actually changed it.
 - Pick'em and Bowl Pool save routes reject malformed bodies, duplicate game
   selections, and oversized arrays before reading a slate or writing picks.
   Omitting `survivorSelection` leaves it unchanged; explicit `null` requests a

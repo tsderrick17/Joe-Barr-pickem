@@ -18,6 +18,7 @@ import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer } from "@/lib/slate-view";
+import { confirmsSlateSubmission, type SlateSaveVerification } from "@/lib/slate-save-verification";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
 import type { PickSaveRequest, PickSaveResponse, ProfileUpdateRequest, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
@@ -28,6 +29,7 @@ import { initialSlateSelectionState, slateSelectionReducer, type SlatePick } fro
 // to return rather than telling a player it failed while the server finishes.
 const PICK_SAVE_TIMEOUT_MS = 30_000;
 const BOARD_LOAD_TIMEOUT_MS = 15_000;
+const SAVE_VERIFY_TIMEOUT_MS = 8_000;
 
 function SlateLoadingShell() {
   return (
@@ -88,6 +90,7 @@ export default function BoardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
+  const [saveVerificationRequiredForPeriod, setSaveVerificationRequiredForPeriod] = useState<string | null>(null);
   const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep"; token: number } | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
@@ -160,6 +163,7 @@ export default function BoardPage() {
       );
 
       applyBoard(data);
+      setSaveVerificationRequiredForPeriod((current) => current === period.id ? null : current);
       setClockSynchronized(true);
     } catch (error) {
       if (requestId === boardRequestId.current) {
@@ -519,18 +523,71 @@ export default function BoardPage() {
     await loadWeek(selectedWeek);
   }
 
+  async function verifySubmittedPicks(
+    scoringPeriodId: string,
+    submittedPicks: SlatePick[],
+    submittedSurvivorPick: SlatePick | null,
+    verifySurvivor: boolean,
+  ): Promise<SlateSaveVerification> {
+    const request = new AbortController();
+    const requestTimer = window.setTimeout(() => request.abort(), SAVE_VERIFY_TIMEOUT_MS);
+
+    try {
+      const response = await fetchWithSession(
+        `/api/board?scoringPeriodId=${encodeURIComponent(scoringPeriodId)}`,
+        { signal: request.signal },
+      );
+      if (!response.ok) return { kind: "unavailable" };
+
+      const data: unknown = await response.json();
+      return confirmsSlateSubmission(
+        data,
+        submittedPicks,
+        verifySurvivor ? submittedSurvivorPick : undefined,
+      );
+    } catch (error) {
+      if (error instanceof SessionUnavailableError) window.location.replace("/login");
+      return { kind: "unavailable" };
+    } finally {
+      window.clearTimeout(requestTimer);
+    }
+  }
+
   async function submitPicks() {
     setSelectionWarning("");
 
     if (!week) {
       return;
     }
+    if (saveVerificationRequiredForPeriod === week.id) {
+      setSelectionWarning("Refresh this week before submitting again so its saved picks can be verified.");
+      return;
+    }
 
     setIsSubmitting(true);
+    const submittedWeekId = week.id;
     const submittedPicks = selectedPicks;
     const submittedSurvivorPick = survivorPick;
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
+
+    function applyVerifiedSave() {
+      setSaveVerificationRequiredForPeriod(null);
+      dispatchSelections({
+        type: "save-succeeded",
+        submittedPicks,
+        ...(survivorAvailable && survivorHasUnsavedChanges ? { submittedSurvivorPick } : {}),
+      });
+    }
+
+    function applyObservedSaveState(verification: SlateSaveVerification) {
+      if (verification.kind !== "different") return;
+      dispatchSelections({
+        type: "observe-server-state",
+        picks: verification.savedPicks,
+        ...(Object.hasOwn(verification, "savedSurvivorPick") ? { survivorPick: verification.savedSurvivorPick } : {}),
+      });
+    }
 
     try {
       const submission: PickSaveRequest = buildSlateSubmission({
@@ -552,6 +609,25 @@ export default function BoardPage() {
       const data = (await response.json().catch(() => ({}))) as PickSaveResponse;
 
       if (!response.ok) {
+        if (response.status >= 500) {
+          const verification = await verifySubmittedPicks(
+            submittedWeekId,
+            submittedPicks,
+            submittedSurvivorPick,
+            Object.hasOwn(submission, "survivorSelection"),
+          );
+          if (verification.kind === "confirmed") {
+            applyVerifiedSave();
+            setSelectionWarning("The save response failed, but a follow-up check confirmed your picks were saved.");
+            return;
+          }
+          applyObservedSaveState(verification);
+          setSaveVerificationRequiredForPeriod(verification.kind === "unavailable" ? submittedWeekId : null);
+          setSelectionWarning(verification.kind === "different"
+            ? "Your saved picks have been refreshed after an interrupted save. Review the receipt before submitting again."
+            : "We couldn't confirm whether your picks were saved. Refresh The Slate before submitting again.");
+          return;
+        }
         setSelectionWarning(
           data.error ?? "Your picks could not be saved. Please try again.",
         );
@@ -569,9 +645,22 @@ export default function BoardPage() {
         return;
       }
 
-      setSelectionWarning(
-        "Your picks are taking too long to save. Please try again.",
+      const verification = await verifySubmittedPicks(
+        submittedWeekId,
+        submittedPicks,
+        submittedSurvivorPick,
+        survivorAvailable && survivorHasUnsavedChanges,
       );
+      if (verification.kind === "confirmed") {
+        applyVerifiedSave();
+        setSelectionWarning("The save response was interrupted, but a follow-up check confirmed your picks were saved.");
+      } else {
+        applyObservedSaveState(verification);
+        setSaveVerificationRequiredForPeriod(submittedWeekId);
+        setSelectionWarning(verification.kind === "different"
+          ? "The save may still be finishing. Refresh this week before submitting again."
+          : "We couldn't confirm whether your picks were saved. Refresh The Slate before submitting again.");
+      }
     } finally {
       window.clearTimeout(requestTimer);
       setIsSubmitting(false);
@@ -631,6 +720,7 @@ export default function BoardPage() {
         <SlateReceipt
           isLoading={isLoading}
           isSubmitting={isSubmitting}
+          saveVerificationRequired={saveVerificationRequiredForPeriod === week?.id}
           onRemove={removeSelection}
           onSubmit={submitPicks}
           periodType={week?.period_type}
