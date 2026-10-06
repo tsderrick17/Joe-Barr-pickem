@@ -93,6 +93,11 @@ modules with no database access, each covered by tests with fictional rows:
 
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
 
+The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
+is cancelled when the page unmounts. A late session failure after navigation
+must not redirect the player from the page they navigated to. Week changes
+retain their own latest-request cancellation and stale-response guard.
+
 A change to who can see what belongs in one of these modules, with its test.
 
 For a fictional-data CPU and JSON-size baseline of the two player response

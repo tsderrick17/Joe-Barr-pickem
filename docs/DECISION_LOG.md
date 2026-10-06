@@ -15,6 +15,17 @@ intentional 500. Start with a read route so the contract can be exercised
 without changing save retry behavior. Migrate other routes only with their own
 failure tests and isolated player-flow evidence. Do not cache authorization.
 
+## 2026-10-05 — STATE-001 — Bound and cancel the Slate bootstrap read
+
+**Status:** Accepted for the Slate's initial page load
+
+The initial Slate bootstrap uses the authenticated browser session and can
+remain on the loading shell if its board request stalls. Bound that read to 15
+seconds, cancel it when the page unmounts, and ignore late errors after
+navigation. This preserves the existing authentication and retry policy while
+making the page lifecycle explicit; week-change requests retain their separate
+latest-request guard.
+
 ## 2026-10-05 — PERF-001 — Reuse grading game rows for the line query
 
 **Status:** Accepted for the selected-period grading dashboard read

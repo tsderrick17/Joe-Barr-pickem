@@ -27,6 +27,7 @@ import { initialSlateSelectionState, slateSelectionReducer, type SlatePick } fro
 // progress. Keep the request alive long enough for that safe, serialized save
 // to return rather than telling a player it failed while the server finishes.
 const PICK_SAVE_TIMEOUT_MS = 30_000;
+const BOARD_LOAD_TIMEOUT_MS = 15_000;
 
 function SlateLoadingShell() {
   return (
@@ -178,6 +179,8 @@ export default function BoardPage() {
 
   useEffect(() => {
     let disposed = false;
+    const request = new AbortController();
+    const requestTimer = window.setTimeout(() => request.abort(), BOARD_LOAD_TIMEOUT_MS);
 
     async function loadBoard() {
       const requestedWeekId = new URLSearchParams(window.location.search).get("week");
@@ -185,7 +188,7 @@ export default function BoardPage() {
       if (requestedWeekId) params.set("week", requestedWeekId);
 
       try {
-        const response = await fetchWithSession(`/api/board?${params}`);
+        const response = await fetchWithSession(`/api/board?${params}`, { signal: request.signal });
         const data = (await response.json()) as BoardResponse;
 
         if (disposed) return;
@@ -225,12 +228,14 @@ export default function BoardPage() {
         applyBoard(data);
         setClockSynchronized(true);
       } catch (error) {
+        if (disposed) return;
         if (error instanceof SessionUnavailableError) {
           window.location.replace("/login");
           return;
         }
         setErrorMessage("The Slate is taking too long to load. Please try again.");
       } finally {
+        window.clearTimeout(requestTimer);
         if (!disposed) setIsLoading(false);
       }
     }
@@ -239,6 +244,8 @@ export default function BoardPage() {
 
     return () => {
       disposed = true;
+      window.clearTimeout(requestTimer);
+      request.abort();
     };
   }, []);
 
