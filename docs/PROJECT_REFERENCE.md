@@ -1,6 +1,6 @@
 # Joe Barr Memorial Pick'em project reference
 
-Last verified against `main`: 2026-10-02 (commit `2dd8e31`).
+Last verified against `main`: 2026-10-05 (commit `145c8f7`).
 
 This is the durable product and system reference for the Joe Barr Memorial
 Pick'em application. It explains what must remain true across code changes,
@@ -105,9 +105,12 @@ measure database requests or end-to-end route time.
 - The Season Snapshot read route pilots a request-scoped access result. A bad
   session is 401; a verified but missing or inactive player is 403;
   unavailable auth or player storage is 503; missing server configuration is
-  500. The response includes a stable error code. Temporary failures must not
-  be presented as a lost sign-in. Other player routes retain their prior
-  authentication handling until separately migrated and tested.
+  500. The response includes a stable error code. The Pick'em save route uses
+  the same result after validating its payload, while retaining safe retries
+  for token and profile reads; its selection mutation is never retried blindly.
+  Temporary failures must not be presented as a lost sign-in. Other player
+  routes retain their prior authentication handling until separately migrated
+  and tested.
 - PIN sign-in is routed through the application. Five recent failures from one
   privacy-safe source fingerprint start a one-minute cooldown; ten start a
   15-minute cooldown and open a Commissioner incident and email alert.
