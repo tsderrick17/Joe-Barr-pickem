@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("initial Slate bootstrap is bounded and cancelled when its page unmounts", async () => {
-  const source = await readFile(new URL("../src/app/board/page.tsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/lib/use-slate-board-data.ts", import.meta.url), "utf8");
 
   assert.match(source, /const BOARD_LOAD_TIMEOUT_MS = 15_000;/);
   assert.match(source, /const request = new AbortController\(\);[\s\S]*?setTimeout\(\(\) => request\.abort\(\), BOARD_LOAD_TIMEOUT_MS\)/);

@@ -11,16 +11,20 @@ work is active: selection drafts and saved snapshots now share a reducer,
 week switching is locked during saves, initial bootstrap reads are bounded and
 cancelled on unmount, and pending Pool Action preference changes survive stale
 week responses. Ambiguous pick-save outcomes now trigger one safe read rather
-than an automatic mutation retry. The current full repository suite passes
-(567 tests: 547 pass, 20 skipped, none failing); the skipped cases require the
-isolated database,
-full-season/weekly rehearsal switches, or an isolated-copy setup. The isolated
-database/browser evidence and Phase 0 route-cost measurements are still
-outstanding. Generated database types and drift checks,
-the remaining Slate request/state extraction and isolated browser evidence,
-worker extraction/cancellation, and measured query optimizations remain open.
-This document does not change pool rules, authorize a production data
-correction, or supersede the project reference.
+than an automatic mutation retry. The Slate's bootstrap/week loading, request
+cancellation, server clock, and kickoff visibility refresh now live in a
+dedicated data hook; its kickoff refresh intentionally never hydrates player
+drafts. Browser-width and isolated player-flow evidence for this extraction
+remain outstanding. Phase 0 route-cost measurements, generated database types
+and drift checks, worker extraction/cancellation, and measured query
+optimizations also remain open. Environment-dependent isolated database,
+full-season/weekly rehearsal, and isolated-copy checks are not implied by a
+passing local application suite. The current application suite passes (571
+tests: 551 pass, 20 environment-gated skips, none failing); lint and both
+TypeScript checks pass. The production compile succeeds, but Next's final route
+collection cannot finish in this environment because server-side Supabase
+configuration is absent. This document does not change pool rules, authorize a
+production data correction, or supersede the project reference.
 Recheck the current branch before starting each work package: development with
 Claude and the stylesheet work may have advanced the baseline.
 

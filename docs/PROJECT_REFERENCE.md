@@ -92,6 +92,11 @@ modules with no database access, each covered by tests with fictional rows:
   Pick saves preserve omitted versus explicit-null Survivor choices.
 
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
+- `src/lib/use-slate-board-data.ts` owns the Slate's bootstrap and week reads,
+  cancellation/stale-response guards, server clock, and kickoff visibility
+  refresh. The page callback hydrates player-specific saved state on bootstrap
+  and week changes; a kickoff refresh updates only public game state and never
+  replaces an in-progress pick draft.
 
 The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
 is cancelled when the page unmounts. A late session failure after navigation

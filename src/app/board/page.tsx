@@ -6,10 +6,6 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import {
-  selectAvailableScoringPeriods,
-  selectDefaultScoringPeriod,
-} from "@/lib/scoring-period";
-import {
   reconcileAtsDraftAtKickoff,
   reconcileSurvivorDraftAtKickoff,
 } from "@/lib/slate-draft-locks";
@@ -21,14 +17,14 @@ import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelected
 import { confirmsSlateSubmission, type SlateSaveVerification } from "@/lib/slate-save-verification";
 import SlateHeader from "@/components/slate-header";
 import SlateReceipt from "@/components/slate-receipt";
-import type { PickSaveRequest, PickSaveResponse, ProfileUpdateRequest, SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
+import type { PickSaveRequest, PickSaveResponse, ProfileUpdateRequest, SlateGame as BoardGame, SlateResponse as BoardResponse } from "@/lib/api-contracts";
 import { initialSlateSelectionState, slateSelectionReducer, type SlatePick } from "@/lib/slate-selection-state";
+import { useSlateBoardData } from "@/lib/use-slate-board-data";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
 // to return rather than telling a player it failed while the server finishes.
 const PICK_SAVE_TIMEOUT_MS = 30_000;
-const BOARD_LOAD_TIMEOUT_MS = 15_000;
 const SAVE_VERIFY_TIMEOUT_MS = 8_000;
 
 function SlateLoadingShell() {
@@ -69,15 +65,9 @@ function isEarlyGame(game: BoardGame) {
 }
 
 export default function BoardPage() {
-  const [weeks, setWeeks] = useState<ScoringPeriod[]>([]);
-  const [week, setWeek] = useState<ScoringPeriod | null>(null);
-  const [nextWeekAvailableAt, setNextWeekAvailableAt] = useState<number | null>(null);
-  const [games, setGames] = useState<BoardGame[]>([]);
   const [showActionOnly, setShowActionOnly] = useState(false);
   const showActionOnlyOverride = useRef<boolean | null>(null);
   const [isSavingDisplayPreference, setIsSavingDisplayPreference] = useState(false);
-  const [currentTime, setCurrentTime] = useState(() => Date.now());
-  const [clockSynchronized, setClockSynchronized] = useState(false);
   const [selectionState, dispatchSelections] = useReducer(slateSelectionReducer, initialSlateSelectionState);
   const { selectedPicks, savedPicks, survivorPick, savedSurvivorPick } = selectionState;
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
@@ -85,247 +75,36 @@ export default function BoardPage() {
   const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
   const [survivorOnReceipt, setSurvivorOnReceipt] = useState(true);
   const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
-  const [playoffEliminated, setPlayoffEliminated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [selectionWarning, setSelectionWarning] = useState("");
   const [saveVerificationRequiredForPeriod, setSaveVerificationRequiredForPeriod] = useState<string | null>(null);
   const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep"; token: number } | null>(null);
-  const activeBoardRequest = useRef<AbortController | null>(null);
-  const boardRequestId = useRef(0);
   const selectionFeedbackToken = useRef(0);
-  const serverClockOffset = useRef(0);
-  const kickoffVisibilityRefreshedGameIds = useRef(new Set<string>());
 
-  // One place that puts a board response into the page's state, used by the
-  // first load and by every week change. It also applies the player's durable
-  // display choice (All Games or Pool Action), which the bootstrap once forgot.
-  function applyBoard(data: BoardResponse) {
+  // Board reads own public game data. This callback hydrates only the
+  // player-specific picks and preferences, never called by kickoff refreshes.
+  const applyPlayerBoard = useStableCallback((data: BoardResponse) => {
     const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
-    setGames(data.games);
     setShowActionOnly(showActionOnlyOverride.current ?? Boolean(data.showPoolAction));
-    setPlayoffEliminated(data.pickem.playoffEliminated);
     dispatchSelections({ type: "hydrate", picks: data.myPicks, survivorPick: pick });
     setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
     setSurvivorAvailable(data.survivor.available);
     setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
     setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
     setSurvivorStatus(data.survivor.status);
-  }
-
-  async function loadWeek(period: ScoringPeriod) {
-    const requestId = boardRequestId.current + 1;
-    boardRequestId.current = requestId;
-    activeBoardRequest.current?.abort();
-
-    const request = new AbortController();
-    activeBoardRequest.current = request;
-    const requestTimer = window.setTimeout(() => request.abort(), 15_000);
-
-    setIsLoading(true);
-    setErrorMessage("");
-    setSelectionWarning("");
-    setPlayoffEliminated(false);
-    setClockSynchronized(false);
-    kickoffVisibilityRefreshedGameIds.current.clear();
-    setWeek(period);
-
-    try {
-      const response = await fetchWithSession(
-        `/api/board?scoringPeriodId=${period.id}`,
-        {
-        signal: request.signal,
-        },
-      );
-
-      const data = (await response.json()) as BoardResponse;
-
-      if (requestId !== boardRequestId.current) return;
-
-      if (!response.ok) {
-        setErrorMessage(data.error ?? "The Slate could not be loaded.");
-        return;
-      }
-
-      const serverTime = Date.parse(data.serverTime);
-      if (!Number.isFinite(serverTime)) {
-        setErrorMessage("The Slate clock could not be verified safely.");
-        return;
-      }
-
-      serverClockOffset.current = serverTime - Date.now();
-      setCurrentTime(serverTime);
-      kickoffVisibilityRefreshedGameIds.current = new Set(
-        data.games
-          .filter((game) => Date.parse(game.kickoffAt) <= serverTime)
-          .map((game) => game.id),
-      );
-
-      applyBoard(data);
-      setSaveVerificationRequiredForPeriod((current) => current === period.id ? null : current);
-      setClockSynchronized(true);
-    } catch (error) {
-      if (requestId === boardRequestId.current) {
-        if (error instanceof SessionUnavailableError) {
-          window.location.replace("/login");
-          return;
-        }
-
-        setErrorMessage("The Slate is taking too long to load. Please try again.");
-      }
-    } finally {
-      window.clearTimeout(requestTimer);
-      if (requestId === boardRequestId.current) {
-        activeBoardRequest.current = null;
-        setIsLoading(false);
-      }
-    }
-  }
-
-  useEffect(() => {
-    let disposed = false;
-    const request = new AbortController();
-    const requestTimer = window.setTimeout(() => request.abort(), BOARD_LOAD_TIMEOUT_MS);
-
-    async function loadBoard() {
-      const requestedWeekId = new URLSearchParams(window.location.search).get("week");
-      const params = new URLSearchParams({ bootstrap: "1" });
-      if (requestedWeekId) params.set("week", requestedWeekId);
-
-      try {
-        const response = await fetchWithSession(`/api/board?${params}`, { signal: request.signal });
-        const data = (await response.json()) as BoardResponse;
-
-        if (disposed) return;
-        if (!response.ok || !data.bootstrap) {
-          setErrorMessage(data.error ?? "The Slate could not be loaded.");
-          return;
-        }
-
-        const loadedWeeks = data.bootstrap.weeks;
-        const manualAccessAt = data.bootstrap.nextWeekAvailableAt
-          ? Date.parse(data.bootstrap.nextWeekAvailableAt)
-          : null;
-        const availableWeeks = selectAvailableScoringPeriods(loadedWeeks, {
-          now: Date.parse(data.serverTime),
-          nextWeekAvailableAt: manualAccessAt,
-        }) as ScoringPeriod[];
-        const initialWeek = requestedWeekId
-          ? availableWeeks.find((period) => period.id === requestedWeekId) ??
-            selectDefaultScoringPeriod(loadedWeeks)
-          : selectDefaultScoringPeriod(loadedWeeks);
-
-        if (!initialWeek) {
-          setErrorMessage("The weekly schedule could not be loaded.");
-          return;
-        }
-
-        serverClockOffset.current = Date.parse(data.serverTime) - Date.now();
-        setCurrentTime(Date.parse(data.serverTime));
-        kickoffVisibilityRefreshedGameIds.current = new Set(
-          data.games
-            .filter((game) => Date.parse(game.kickoffAt) <= Date.parse(data.serverTime))
-            .map((game) => game.id),
-        );
-        setWeeks(loadedWeeks);
-        setNextWeekAvailableAt(manualAccessAt);
-        setWeek(initialWeek);
-        applyBoard(data);
-        setClockSynchronized(true);
-      } catch (error) {
-        if (disposed) return;
-        if (error instanceof SessionUnavailableError) {
-          window.location.replace("/login");
-          return;
-        }
-        setErrorMessage("The Slate is taking too long to load. Please try again.");
-      } finally {
-        window.clearTimeout(requestTimer);
-        if (!disposed) setIsLoading(false);
-      }
-    }
-
-    void loadBoard();
-
-    return () => {
-      disposed = true;
-      window.clearTimeout(requestTimer);
-      request.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const refreshTime = window.setInterval(
-      () => setCurrentTime(Date.now() + serverClockOffset.current),
-      60_000,
-    );
-    return () => window.clearInterval(refreshTime);
-  }, []);
-
-  useEffect(() => {
-    if (!week || isLoading || !clockSynchronized || games.length === 0) return;
-
-    const requestId = boardRequestId.current;
-    const dueGameIds = games
-      .filter((game) => new Date(game.kickoffAt).getTime() <= currentTime && !kickoffVisibilityRefreshedGameIds.current.has(game.id))
-      .map((game) => game.id);
-
-    const refreshPublicVisibility = async (gameIds: string[]) => {
-      gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.add(gameId));
-
-      try {
-        const response = await fetchWithSession(`/api/board?scoringPeriodId=${week.id}`);
-        const data = (await response.json()) as BoardResponse;
-        if (requestId !== boardRequestId.current) return;
-        if (!response.ok) {
-          gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
-          return;
-        }
-
-        const serverTime = Date.parse(data.serverTime);
-        if (!Number.isFinite(serverTime)) {
-          gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
-          return;
-        }
-
-        serverClockOffset.current = serverTime - Date.now();
-        setCurrentTime(serverTime);
-        setGames(data.games);
-        setPlayoffEliminated(data.pickem.playoffEliminated);
-      } catch {
-        // The next minute tick retries a harmless read. Keep player drafts in
-        // memory rather than resetting the entire Slate after a brief outage.
-        gameIds.forEach((gameId) => kickoffVisibilityRefreshedGameIds.current.delete(gameId));
-      }
-    };
-
-    if (dueGameIds.length) {
-      void refreshPublicVisibility(dueGameIds);
-      return;
-    }
-
-    const nextKickoff = games
-      .map((game) => new Date(game.kickoffAt).getTime())
-      .filter((kickoffAt) => kickoffAt > currentTime)
-      .sort((left, right) => left - right)[0];
-    if (!nextKickoff) return;
-
-    // A small cushion lets the kickoff boundary settle server-side before the
-    // public receipt is read. The same server clock governs both behaviors.
-    const timer = window.setTimeout(
-      () => void refreshPublicVisibility(games.filter((game) => new Date(game.kickoffAt).getTime() === nextKickoff).map((game) => game.id)),
-      Math.max(nextKickoff - currentTime, 0) + 500,
-    );
-    return () => window.clearTimeout(timer);
-  }, [clockSynchronized, currentTime, games, isLoading, week]);
-
-  const availableWeeks = useMemo<ScoringPeriod[]>(() => {
-    return selectAvailableScoringPeriods(weeks, {
-      now: currentTime,
-      nextWeekAvailableAt,
-    }) as ScoringPeriod[];
-  }, [currentTime, nextWeekAvailableAt, weeks]);
+  });
+  const {
+    availableWeeks,
+    clockSynchronized,
+    currentTime,
+    errorMessage,
+    games,
+    isLoading,
+    loadWeek,
+    playoffEliminated,
+    week,
+    weeks,
+  } = useSlateBoardData(applyPlayerBoard);
 
   const gamesByDay = useMemo(() => groupGamesByDay(games), [games]);
 
@@ -520,7 +299,11 @@ export default function BoardPage() {
       return;
     }
 
-    await loadWeek(selectedWeek);
+    setSelectionWarning("");
+    const loaded = await loadWeek(selectedWeek);
+    if (loaded) {
+      setSaveVerificationRequiredForPeriod((current) => current === selectedWeek.id ? null : current);
+    }
   }
 
   async function verifySubmittedPicks(
