@@ -2,10 +2,9 @@
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
 import SlatePerformancePanel from "@/components/slate-performance-panel";
+import type { CreditUsage, EfficiencyPoint, EfficiencySummary } from "@/lib/api-contracts";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
-export type EfficiencyPoint = { slateStartedAt: string; creditsPerFinal: number | null; creditsPerGame: number | null; latencyMinutes: number | null; settledGames: number; productiveRate: number | null; credits: number; finals: number; games: number; calls: number; attribution: string };
-export type EfficiencySummary = { totalCredits: number; scoreCredits: number; spreadCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string };
-export type CreditUsage = { monthLabel: string; trackedCredits: number; forecastCredits: number; forecastTotal: number; forecastFrom: string | null; forecastAssumptions: string; reportedUsed: number | null; providerLimit: number | null; sundayAverageCredits: number | null; regularSundaysElapsed?: number; remaining: number | null; reportedAt: string | null; days: Array<{ date: string; credits: number; cumulative: number; scores: number; lines: number; other: number; estimatedCalls: number }>; calendarDays: Array<{ date: string; credits: number; cumulative: number; scores: number; lines: number; other: number; estimatedCalls: number; forecast: number; forecastCumulative: number | null; forecastScores: number; forecastLines: number; forecastOther: number; forecastGames: number; forecastSlates: number }> };
+export type { CreditUsage, EfficiencyPoint, EfficiencySummary } from "@/lib/api-contracts";
 const date = (value: string, timeZone: string, time = false) => new Date(value).toLocaleString("en-US", { timeZone, month: "short", day: "numeric", ...(time ? { hour: "numeric", minute: "2-digit" } : {}) });
 const format = (value: number | null | undefined) => formatAdminNumber(value, { maximumFractionDigits: 1 });
 const card = "min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6";

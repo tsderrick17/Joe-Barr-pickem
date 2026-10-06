@@ -1,29 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
+import EfficiencyTrendPanel from "@/components/efficiency-trend-panel";
 import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import type { GradingDashboardReady, GradingDashboardResponse } from "@/lib/api-contracts";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
 
-type Dashboard = {
-  checkedAt: string;
-  creditUsage: CreditUsage;
-  ladderCoverage?: { since: string | null; runs: number };
-  ladderSummary: Array<{ rung: number; windowMinutes: number; newFinals: number; pickedUp: number; percentage: number; newFinalsPercentage: number }>;
-  status: "healthy" | "attention";
-  periods: Array<{ id: string; displayName: string; status: string; type: string }>;
-  period: { id: string; displayName: string; type: string; status: string } | null;
-  metrics: { games: number; live: number; settled: number; awaitingGrade: number; gradeEligibleGames: number; gradeCompleteGames: number; pendingGradeGames: number; attention: number; activePlayers: number; lastScoreSyncAt: string | null; lastScoreSyncAgeMinutes: number | null; latestScoreSyncStatus: string; providerAllowance: number | null; pickOutcomes: { win: number; loss: number; void: number; pending: number }; survivorEntries: { active: number; eliminated: number; complete: number }; reminders: { scheduled: number; sending: number; sent: number; cancelled: number; test: number }; efficiency: { totalCredits: number; scoreCredits: number; spreadCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string; history: EfficiencyPoint[] }; settlementLatency: { averageMinutes: number | null; slowestMinutes: number | null; samples: number; history: Array<{ label: string; shortLabel: string; minutes: number }> }; comparison: { previousPeriod: string | null; previousAverageMinutes: number | null; deltaMinutes: number | null; history: Array<{ id: string; label: string; shortLabel: string; averageMinutes: number | null; samples: number }> }; readiness: { scheduleLoaded: boolean; linesLocked: number; lineTotal: number; nextKickoffAt: string | null; nextLineLockAt: string | null } } | null;
-  games: Array<{ id: string; away: string; home: string; awayName: string; homeName: string; kickoffAt: string; finalizedAt: string | null; status: string; state: string; score: string | null; needsAttention: boolean; picks: { total: number; pending: number; graded: number; visible: boolean }; survivor: { total: number; pending: number } }>;
-  attention: Array<{ id: string; severity: string; title: string; detail: string }>;
-  audit: Array<{ id: string; action: string; entityType: string; details: Record<string, unknown>; createdAt: string }>;
-  workerRuns: Array<{ jobType: string; status: string; startedAt: string; completedAt: string | null; error: string | null }>;
-  cadence: { firstCheckMinutesAfterKickoff: number; cronIntervalMinutes: number; regularRetryMinutes: number[]; playoffRetryMinutes: number[]; note: string };
-  scorePolls: Array<{ startedAt: string; completedAt: string | null; status: string; eligibleGames: number; completedGamesFound: number; finalScoresImported: number; newFinals: number; requestsLast: number; pollingMode: string; quotaProtected: boolean }>;
-  incidents: Array<{ id: string; title: string; severity: string; detectedAt: string; lastSeenAt: string; resolvedAt: string | null }>;
-  reminders: Array<{ id: string; category: string; title: string; scheduledFor: string; status: string }>;
-};
+type Dashboard = GradingDashboardReady;
 
 type Filter = "all" | "attention" | "live" | "settled";
 
@@ -95,9 +79,16 @@ export default function GradingDashboard() {
     setLoading(true); setError("");
     try {
       const response = await fetchWithSession(requestedPeriodId ? `/api/admin/grading-dashboard?periodId=${encodeURIComponent(requestedPeriodId)}` : "/api/admin/grading-dashboard");
-      const payload = await response.json();
+      const payload = (await response.json()) as GradingDashboardResponse & { error?: string };
       if (!response.ok) throw new Error(payload.error ?? "The grading dashboard could not load.");
       if (requestSequence !== requestSequenceRef.current) return;
+      if (!payload.period || !payload.metrics) {
+        setData(null);
+        setError("errorSummary" in payload
+          ? payload.errorSummary.join(" ") || "The grading dashboard has no scoring period to display."
+          : "The grading dashboard has no scoring period to display.");
+        return;
+      }
       setData(payload);
       const resolvedPeriodId = payload.period?.id ?? "";
       periodIdRef.current = resolvedPeriodId;

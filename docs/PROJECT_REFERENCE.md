@@ -82,13 +82,12 @@ modules with no database access, each covered by tests with fictional rows:
   always visible to them, everyone else's only at kickoff).
 - `src/lib/reveal-rows.ts` builds the rows of the pick-reveal email images (only
   picks on the revealed games, in the current period, from allowed players).
-- `src/lib/api-contracts.ts` defines the viewer-safe Slate and Standings JSON
-  shapes shared by each route and its page. Route responses must satisfy these
-  types at build time; database rows are not exposed as API contracts. A new
-  Survivor entry state must receive an explicit viewer rule before it can be
-  serialized as a familiar state. It also defines `PickSaveRequest`, shared by
-  the Pad's submission builder and the server's validated save parser; omitted
-  versus explicit-null Survivor choices remain distinct.
+- `src/lib/api-contracts.ts` defines viewer-safe Slate and Standings payloads,
+  the Pick'em save request, and the grading dashboard response. Routes and
+  consumers share these contracts; grading's populated and no-period responses
+  are modeled separately. Database rows are not exposed as API contracts. A
+  new Survivor entry state needs an explicit viewer rule before serialization.
+  Pick saves preserve omitted versus explicit-null Survivor choices.
 
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
 
