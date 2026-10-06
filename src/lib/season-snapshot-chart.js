@@ -1,4 +1,6 @@
+// @ts-check
 /** Fit the timeline to the chart: baseline at the left, latest week at the right. */
+/** @param {number} weekIndex @param {number} weekCount @param {number} [width] @param {number} [left] @param {number} [right] */
 export function snapshotX(weekIndex, weekCount, width = 700, left = 48, right = 18) {
   return left + weekIndex * ((width - left - right) / Math.max(1, weekCount));
 }
@@ -21,16 +23,22 @@ export function snapshotX(weekIndex, weekCount, width = 700, left = 48, right = 
  * @returns {T[]}
  */
 export function snapshotStackOrder(weeks, players, baseline = {}) {
+  /** @type {Map<string, number[]>} */
   const timelines = new Map(players.map((player) => [player.id, [baseline[player.id] ?? 0]]));
   for (const week of weeks) {
     const scores = new Map(week.scores.map((score) => [score.playerId, score.wins]));
     for (const player of players) {
       const line = timelines.get(player.id);
-      line.push(scores.has(player.id) ? scores.get(player.id) : line[line.length - 1]);
+      if (!line) throw new Error("Snapshot timeline is missing a player.");
+      line.push(scores.get(player.id) ?? line[line.length - 1]);
     }
   }
   return players
-    .map((player, index) => ({ player, index, line: timelines.get(player.id) }))
+    .map((player, index) => {
+      const line = timelines.get(player.id);
+      if (!line) throw new Error("Snapshot timeline is missing a player.");
+      return { player, index, line };
+    })
     .sort((a, b) => {
       for (let week = a.line.length - 1; week >= 0; week -= 1) {
         if (a.line[week] !== b.line[week]) return b.line[week] - a.line[week];
@@ -41,6 +49,11 @@ export function snapshotStackOrder(weeks, players, baseline = {}) {
 }
 
 /** Lower-ranked colors are painted widest first; leaders remain visible inside. */
+/**
+ * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
+ * @param {Array<{ id: string }>} standings
+ * @param {Record<string, number>} [startWinsById]
+ */
 export function snapshotLayers(weeks, standings, startWinsById = {}) {
   const segments = [];
   let previous = new Map(standings.map((player) => [player.id, startWinsById[player.id] ?? 0]));
@@ -75,15 +88,23 @@ export function snapshotLayers(weeks, standings, startWinsById = {}) {
  * week to their slot at the end, so a line only bends at week boundaries, the
  * same as an ordinary line chart. Slots keep the same stacking order at both
  * ends, so bands on a shared path never cross or overlap.
+ * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
+ * @param {Array<{ id: string }>} standings
+ * @param {Record<string, number>} baseline
+ * @param {(weekIndex: number) => number} x
+ * @param {(wins: number) => number} y
+ * @param {number} [thickness]
  */
 export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3) {
   const scores = [standings.map((player) => ({ playerId: player.id, wins: baseline[player.id] ?? 0 })), ...weeks.map((week) => week.scores)];
   const nodes = scores.map((entries, weekIndex) => {
     const totals = new Map(entries.map((entry) => [entry.playerId, entry.wins]));
+    /** @type {Map<number, string[]>} */
     const groups = new Map();
     for (const player of standings) {
       if (!totals.has(player.id)) continue;
       const wins = totals.get(player.id);
+      if (typeof wins !== "number") continue;
       groups.set(wins, [...(groups.get(wins) ?? []), player.id]);
     }
     const positions = new Map();
@@ -110,7 +131,9 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3)
 }
 
 /** A filled strip, including inset bevel strips that never extend outside it. */
+/** @param {Array<{ x: number, top: number, bottom: number }>} points @param {number} [upper] @param {number} [lower] */
 export function snapshotRibbonPath(points, upper = 0, lower = 1) {
+  /** @param {number} fraction */
   const edge = (fraction) => points.map((point) => `${point.x},${point.top + (point.bottom - point.top) * fraction}`);
   return `M${edge(upper).join(" L")} L${edge(lower).reverse().join(" L")} Z`;
 }
