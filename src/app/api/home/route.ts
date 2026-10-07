@@ -5,6 +5,7 @@ import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
+import { seasonPhaseFromRows } from "@/lib/season-phase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
   const [seasonResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("seasons")
-      .select("id, year")
+      .select("id, year, state")
       .eq("year", currentSeasonYear())
       .maybeSingle(),
     supabaseAdmin
@@ -447,6 +448,7 @@ export async function GET(request: NextRequest) {
     serverTime: currentTime.toISOString(),
     viewerPlayerId: viewer.id,
     isCommissioner: viewer.is_commissioner,
+    seasonPhase: seasonPhaseFromRows(season, periods),
     seasonSnapshotReleased: seasonSnapshotReleased(periods),
     showSurvivorStandings: viewer.show_survivor_standings,
     showBowlCard: viewer.show_bowl_card,

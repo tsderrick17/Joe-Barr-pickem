@@ -112,3 +112,12 @@ test("every dispatcher and every direct cron job is gated in the database, so id
   // The preseason bootstrap (which performs the August 1 rollover) and the watchdog are deliberately not gated.
   assert.doesNotMatch(sql, /bootstrap-season|cron\/watchdog/);
 });
+
+test("routes read the phase from the season and period rows they already loaded", async () => {
+  const { seasonPhaseFromRows } = await import("../src/lib/season-phase.ts");
+  const periods = (regular, superBowl) => [{ display_name: "Week 1", status: regular }, { display_name: "Super Bowl", status: superBowl }];
+  assert.equal(seasonPhaseFromRows({ state: "complete" }, periods("complete", "complete")), "off_season");
+  assert.equal(seasonPhaseFromRows({ state: "playoffs" }, periods("complete", "active")), "in_season");
+  assert.equal(seasonPhaseFromRows({ state: "complete" }, [{ display_name: "Week 1", status: "complete" }]), "in_season", "no Super Bowl period: never the off-season");
+  assert.equal(seasonPhaseFromRows(null, []), "in_season");
+});

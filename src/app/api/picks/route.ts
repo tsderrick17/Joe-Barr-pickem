@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { parsePickSubmission } from "@/lib/selection-submission";
+import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { playerAccessErrorMessage } from "@/lib/player-access-result";
 
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: playerAccessErrorMessage(access.code), code: access.code }, { status: access.status });
   }
   const { player } = access;
+
+  const closed = await refuseWhenSeasonClosed();
+  if (closed) return closed;
 
   const { data: period, error: periodError } = await retrySafeRead(() => supabaseAdmin.from("scoring_periods").select("max_picks, season_id, status, period_type").eq("id", scoringPeriodId).maybeSingle());
   if (periodError) return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });

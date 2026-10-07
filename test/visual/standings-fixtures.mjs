@@ -100,6 +100,11 @@ export const SCENARIOS = {
   "playoff-wildcard": { ...base, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // Divisional round: four picks each.
   "playoff-divisional": { ...base, isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
+  // The off-season after the graded Super Bowl: every table is shown whole whatever the player had hidden, the
+  // hide and "− OUT" buttons are gone, and a closed banner leads the page.
+  "off-season": { ...base, seasonPhase: "off_season", isPlayoff: true, week: "Super Bowl", weekStatus: "complete", maxPicks: 1, serverTime: "2027-02-20T18:00:00Z", showSurvivorStandings: false, showBowlCard: false, hidePickemEliminatedRows: true, hideSurvivorEliminatedRows: true, survivorAvailable: false, rows: rows({ maxPicks: 1, playoff: true }), survivorRows: [] },
+  // A player out of the playoff race mid-playoffs gets the same quiet page: banner, no ticket.
+  "playoff-viewer-out": { ...base, viewerPlayerId: "p7", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   // The Bowl Card in its other states (the Bowl data for each is BOWL_BY_SCENARIO).
   "bowl-results": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-champion": { ...base, showBowlCard: true, serverTime: "2027-01-12T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },

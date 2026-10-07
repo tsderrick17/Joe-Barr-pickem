@@ -10,6 +10,7 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import BowlCard from "@/components/bowl-card";
+import SeasonClosedBanner from "@/components/season-closed-banner";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
@@ -308,6 +309,13 @@ export default function HomePage() {
     return <StandingsLoadingShell />;
   }
 
+  // The off-season shows every table whole: the hide and "− OUT" choices (and their buttons) are suspended until August 1.
+  const offSeason = data.seasonPhase === "off_season";
+  // A player out of the playoff race gets the same quiet page as the off-season: no ticket, a banner, until August 1.
+  const viewerEliminated = Boolean(viewerRow?.playoffEliminated);
+  const seasonClosedForViewer = offSeason || viewerEliminated;
+  const shown = offSeason ? { ...data, showSurvivorStandings: true, hidePickemEliminatedRows: false, hideSurvivorEliminatedRows: false, showBowlCard: true } : data;
+
   return (
     <>
     {bowlReady ? null : <StandingsLoadingShell />}
@@ -327,7 +335,7 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        <MyTicket
+        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} /> : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}
@@ -337,15 +345,15 @@ export default function HomePage() {
           survivorRequired={viewerSurvivor?.requiredThisPeriod}
           survivorStatus={data.survivorComplete ? "complete" : viewerSurvivor?.status ?? "active"}
           week={data.week}
-        />
+        />}
 
         <PickemScoreboard
-          hideEliminatedRows={data.hidePickemEliminatedRows}
+          hideEliminatedRows={shown.hidePickemEliminatedRows}
           isCommissioner={data.isCommissioner}
           seasonSnapshotReleased={data.seasonSnapshotReleased ?? false}
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
-          onToggleEliminatedRows={() => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}
+          onToggleEliminatedRows={offSeason ? undefined : () => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}
           rows={data.rows}
           viewerPlayerId={data.viewerPlayerId}
           week={data.week}
@@ -432,11 +440,12 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        {!data.isPlayoff ? <SurvivorTable data={data} savingDisplay={false} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
+        {!data.isPlayoff ? <SurvivorTable data={shown} displayLocked={offSeason} savingDisplay={false} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
         <BowlCard
           fallbackRows={data.rows}
           isCommissioner={data.isCommissioner}
-          minimized={bowlPoolMinimized}
+          displayLocked={offSeason}
+          minimized={offSeason ? false : bowlPoolMinimized}
           onError={setErrorMessage}
           onReady={markBowlReady}
           onSetDisplay={setBowlCardDisplay}

@@ -3,7 +3,7 @@ import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshot
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
-const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open"]);
+const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season"]);
 
 /** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
 async function signIn(page: Page, theme: string) {
@@ -32,10 +32,10 @@ async function serve(page: Page, scenario: string) {
 
 async function settle(page: Page) {
   await page.goto("/");
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.reload();
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((resolve) => setTimeout(resolve, 30)); }
@@ -51,7 +51,9 @@ async function settle(page: Page) {
   // for the tiles to land, then return to the top for the capture.
   if (await page.locator(".bowl-standings-scroll").count()) {
     await page.locator(".bowl-standings-scroll").first().scrollIntoViewIfNeeded();
-    await page.waitForTimeout(200);
+    // Long enough for the card to finish settling: a baseline recorded with -u takes the first frame it sees, and
+    // the card was still changing on Linux at 200 ms, so recording and checking disagreed about its final look.
+    await page.waitForTimeout(1500);
   }
   await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 10_000 });
   await page.evaluate(() => window.scrollTo(0, 0));

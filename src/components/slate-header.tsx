@@ -12,10 +12,12 @@ type Props = {
   onToggleDisplay: () => void;
   survivorControlsEnabled: boolean;
   hasEarlyGame: boolean;
+  /** The off-season: the how-to-pick instructions are not shown. */
+  readOnly?: boolean;
 };
 
 /** The Slate's masthead: title, week picker, the All Games / Pool Action switch, and the how-to panel. */
-function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame }: Props) {
+function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame, readOnly = false }: Props) {
   return (
   <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
     <div className="slate-header-grid grid gap-5 md:gap-0">
@@ -54,11 +56,12 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
       </div>
 
       <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-        <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorControlsEnabled ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        {readOnly ? null : <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-[#1d1d1f] bg-[#eee4d1] px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorControlsEnabled ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
           <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
           {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose one outright winner.</p> : null}
           <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SUBMIT</strong>Review your choices, then click <span className="font-black">SUBMIT</span> to save the picks currently shown.</p>
         </div>
+        }
         <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 md:gap-0">
           <div className="md:pl-4">
             <p>Lines lock at 8 AM on gameday, unless otherwise noted.</p>
@@ -66,7 +69,7 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
           </div>
           <div className="border-t border-[#b7aea0] pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
             <p>Favorites left; home team ALL CAPS.</p>
-            <p className="mt-1">Changes allowed until kickoff time.</p>
+            {readOnly ? null : <p className="mt-1">Changes allowed until kickoff time.</p>}
           </div>
         </div>
         {hasEarlyGame ? (

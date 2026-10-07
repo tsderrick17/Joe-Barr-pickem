@@ -12,7 +12,8 @@ import {
 import { currentSeasonYear } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
-import type { SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
+import type { SeasonPhase, SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
+import { seasonPhaseFromRows } from "@/lib/season-phase";
 import {
   activeSurvivor,
   concludedSurvivor,
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
   // rendering a player's Slate. Run it after the response is handed back.
   after(() => recordPlayerActivity(player.id));
 
+  let seasonPhase: SeasonPhase | undefined;
   let bootstrap: {
     weeks: ScoringPeriodRow[];
     nextWeekAvailableAt: string | null;
@@ -56,7 +58,7 @@ export async function GET(request: NextRequest) {
   if (bootstrapRequested && !scoringPeriodId) {
     const { data: season, error: seasonError } = await supabaseAdmin
       .from("seasons")
-      .select("id")
+      .select("id, state")
       .eq("year", currentSeasonYear())
       .maybeSingle();
 
@@ -130,6 +132,7 @@ export async function GET(request: NextRequest) {
 
     scoringPeriodId = selectedWeek.id;
     bootstrap = { weeks, nextWeekAvailableAt };
+    seasonPhase = seasonPhaseFromRows(season, periodRows ?? []);
   }
 
   if (!scoringPeriodId) {
@@ -422,6 +425,7 @@ export async function GET(request: NextRequest) {
     },
     survivor,
     bootstrap,
+    seasonPhase,
     showPoolAction: Boolean((players ?? []).find((item) => item.id === player.id)?.show_pool_action),
   } satisfies SlateResponse);
 }

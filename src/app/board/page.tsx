@@ -19,6 +19,7 @@ import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
+import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 
@@ -79,6 +80,8 @@ export default function BoardPage() {
   const [clockSynchronized, setClockSynchronized] = useState(false);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
+  // The off-season (after the graded Super Bowl, until August 1): the Slate is a read-only record.
+  const [seasonOver, setSeasonOver] = useState(false);
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
@@ -103,6 +106,7 @@ export default function BoardPage() {
   // display choice (All Games or Pool Action), which the bootstrap once forgot.
   function applyBoard(data: BoardResponse) {
     const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
+    if (data.seasonPhase) setSeasonOver(data.seasonPhase === "off_season");
     setGames(data.games);
     setShowActionOnly(Boolean(data.showPoolAction));
     setPlayoffEliminated(data.pickem.playoffEliminated);
@@ -358,7 +362,9 @@ export default function BoardPage() {
 
   const selectionLimit = week?.max_picks ?? 2;
 
-  const isReadOnly = week?.status === "complete" || playoffEliminated;
+  const isReadOnly = week?.status === "complete" || playoffEliminated || seasonOver;
+  // The off-season, and a player out of the playoff race, get a quiet page: a banner instead of the receipt.
+  const seasonClosedForViewer = seasonOver || playoffEliminated;
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
     : null;
@@ -366,7 +372,7 @@ export default function BoardPage() {
     ? games.find((game) => game.id === savedSurvivorPick.gameId) ?? null
     : null;
   const survivorLockGame = savedSurvivorGame ?? survivorSelectedGame;
-  const survivorControlsEnabled = isSurvivorSlateEditable({
+  const survivorControlsEnabled = !seasonOver && isSurvivorSlateEditable({
     periodType: week?.period_type,
     periodStatus: week?.status,
     survivorAvailable,
@@ -608,17 +614,20 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
+        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} /></div> : null}
+
         <SlateHeader
           actionOnlyActive={actionOnlyActive}
           availableWeeks={availableWeeks}
           hasEarlyGame={hasEarlyGame}
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}
+          readOnly={seasonClosedForViewer}
           survivorControlsEnabled={survivorControlsEnabled}
           week={week}
         />
 
-        <SlateReceipt
+        {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
           isSubmitting={isSubmitting}
           onRemove={removeSelection}
@@ -638,14 +647,7 @@ export default function BoardPage() {
             status: survivorStatus,
             teamName: survivorTeamName(survivorPick),
           }}
-        />
-
-        {playoffEliminated ? (
-          <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">
-            <p className="font-bold">Playoff race: mathematically eliminated</p>
-            <p className="mt-1 text-sm">Your existing selections remain on the Slate for the season&apos;s audit trail. You are not eligible to make further Pick&apos;em selections.</p>
-          </section>
-        ) : null}
+        />}
 
         {errorMessage ? (
           <div className="mt-8">

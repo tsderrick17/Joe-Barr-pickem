@@ -100,6 +100,8 @@
   font-family: var(--ledger-hand-font);
   font-size: .88rem;
 }
+/* The Super Bowl round has one pick per row and room for it: keep the pick and its W or L on one line. */
+.pickem-ledger-grid[data-picks="1"] .pickem-ledger-pick > span { white-space: nowrap; }
 /* Give the first pick a quiet visual gutter after the player-name lane. */
 .pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
 @media (min-width: 640px) {
@@ -125,12 +127,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
   color: #b42318;
   display: inline-block;
-  font-size: clamp(.9rem, 2.5vw, 1.35rem);
+  /* Sized to sit inside its own row: a larger, steeper stamp used to spill into the row above. */
+  font-size: clamp(.72rem, 2.1vw, .95rem);
   font-weight: 950;
-  letter-spacing: .12em;
+  letter-spacing: .1em;
+  line-height: 1;
   opacity: .88;
-  padding: .18rem .45rem .14rem;
-  transform: rotate(-5deg);
+  padding: .14rem .4rem .1rem;
+  transform: rotate(-3deg);
 }
 /* Standings is intentionally a tighter scorecard surface than the Slate.
    Keep both the visible chat and its compact restore control on that same
@@ -177,16 +181,15 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
   .playoff-scoreboard-pick { font-size: .86rem; }
-  /* The round name drops to its own line under the title instead of squeezing
-     "Playoff Ledger" and its OUT toggle onto two lines each. */
-  .playoff-scoreboard .pickem-ledger-masthead { flex-wrap: wrap; }
-  .playoff-scoreboard .pickem-ledger-masthead h2 { white-space: nowrap; }
-  .playoff-scoreboard .pickem-ledger-period { flex-basis: 100%; order: 3; text-align: left; }
   /* Four, five, or six picks do not fit across a phone, so each player's picks
      wrap into two short lines beside the score and name instead of scrolling
      sideways: 2 x 2 for four picks, 3 x 2 for five or six. */
   .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: 100%; }
   .playoff-scoreboard .pickem-ledger-grid tbody { display: block; }
+  /* The round name row spans the whole pad, as the week does in the regular season. */
+  .playoff-scoreboard .pickem-ledger-grid thead,
+  .playoff-scoreboard .pickem-ledger-grid thead tr,
+  .playoff-scoreboard .pickem-ledger-grid thead th { display: block; }
   .playoff-scoreboard .pickem-ledger-grid tr {
     display: grid;
     grid-template-columns: 2.4rem 4.4rem repeat(3, minmax(0, 1fr));
