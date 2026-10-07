@@ -17,12 +17,12 @@ globalThis.seasonClosedDatabase = {
 };
 const player = { id: "p1", first_name: "Dana", is_commissioner: false, active: true, notification_email: null };
 globalThis.seasonClosedAccess = async () => ({ ok: true, player });
-globalThis.seasonClosedProfile = async () => player;
+globalThis.seasonClosedPerson = player;
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = globalThis.seasonClosedDatabase;", shortCircuit: true };
     if (specifier === "@/lib/authenticate-active-player") return { url: "data:text/javascript,export const authenticateActivePlayer = globalThis.seasonClosedAccess;", shortCircuit: true };
-    if (specifier === "@/lib/authenticated-profile-player") return { url: "data:text/javascript,export const authenticatedProfilePlayer = globalThis.seasonClosedProfile;", shortCircuit: true };
+    if (specifier === "@/lib/authenticated-profile-player") return { url: "data:text/javascript,export const profilePlayerAccess = async () => ({ ok: true, player: globalThis.seasonClosedPerson });", shortCircuit: true };
     return nextResolve(specifier, context);
   },
 });

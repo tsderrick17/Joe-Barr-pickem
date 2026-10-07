@@ -3,7 +3,8 @@ import {
   AutomationAlreadyRunningError,
   runWithAutomationLease,
 } from "@/lib/automation-execution-lease";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { buildScheduleGame } from "@/lib/schedule-game";
 import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
 import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
@@ -80,12 +81,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!(await requireCommissioner(request))) {
-      return NextResponse.json(
-        { error: "Commissioner access is required." },
-        { status: 403 },
-      );
-    }
+    const commissionerResult = await commissionerAccess(request);
+    if (!commissionerResult.ok) return accessDenied(commissionerResult);
   }
 
   try {

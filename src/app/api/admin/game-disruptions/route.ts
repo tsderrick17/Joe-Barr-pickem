@@ -1,12 +1,14 @@
 import { readJsonObject } from "@/lib/request-validation";
 import { parseGameDisruption } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
+  const commissioner = commissionerResult.player;
 
   const input = await readJsonObject(request);
   if (!input) return NextResponse.json({ error: "The disruption record was incomplete." }, { status: 400 });

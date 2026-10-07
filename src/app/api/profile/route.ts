@@ -1,15 +1,15 @@
 import { readJsonObject } from "@/lib/request-validation";
 import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { NextRequest, NextResponse } from "next/server";
-import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
+import { profilePlayerAccess } from "@/lib/authenticated-profile-player";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
 
 export async function GET(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request, true);
-  if (!player) {
-    return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
-  }
+  const playerAccess = await profilePlayerAccess(request, true);
+  if (!playerAccess.ok) return accessDenied(playerAccess);
+  const player = playerAccess.player;
 
   return NextResponse.json({
     firstName: player.first_name,
@@ -47,10 +47,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request, true);
-  if (!player) {
-    return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
-  }
+  const playerAccess = await profilePlayerAccess(request, true);
+  if (!playerAccess.ok) return accessDenied(playerAccess);
+  const player = playerAccess.player;
 
   let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showBowlCard?: unknown; showPoolAction?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
   try {

@@ -12,14 +12,13 @@ globalThis.validationDatabase = {
   auth: { admin: { getUserById() { databaseCalls += 1; throw new Error("no"); }, updateUserById() { databaseCalls += 1; throw new Error("no"); } } },
 };
 const person = { id: "p1", first_name: "Dana", is_commissioner: true, active: true, notification_email: null };
-globalThis.validationCommissioner = async () => person;
-globalThis.validationProfilePlayer = async () => person;
+globalThis.validationPerson = person;
 registerHooks({
   resolve(specifier, context, nextResolve) {
     const stubs = {
       "@/lib/supabase-admin": "export const supabaseAdmin = globalThis.validationDatabase;",
-      "@/lib/require-commissioner": "export const requireCommissioner = globalThis.validationCommissioner;",
-      "@/lib/authenticated-profile-player": "export const authenticatedProfilePlayer = globalThis.validationProfilePlayer;",
+      "@/lib/require-commissioner": "export const commissionerAccess = async () => ({ ok: true, player: globalThis.validationPerson });",
+      "@/lib/authenticated-profile-player": "export const profilePlayerAccess = async () => ({ ok: true, player: globalThis.validationPerson });",
     };
     if (stubs[specifier]) return { url: `data:text/javascript,${encodeURIComponent(stubs[specifier])}`, shortCircuit: true };
     return nextResolve(specifier, context);

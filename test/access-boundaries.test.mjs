@@ -23,7 +23,8 @@ test("every commissioner route uses the shared commissioner gate", async () => {
 
   for (const route of routes) {
     const source = await readFile(route, "utf8");
-    assert.match(source, /requireCommissioner/, `${path.relative(root, route)} must use requireCommissioner`);
+    assert.match(source, /commissionerAccess/, `${path.relative(root, route)} must use commissionerAccess`);
+    assert.match(source, /accessDenied|authorize\(/, `${path.relative(root, route)} must answer a failed result with its real status`);
   }
 });
 
