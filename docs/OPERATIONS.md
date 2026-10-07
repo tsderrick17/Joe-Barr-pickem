@@ -413,9 +413,9 @@ responsive image. Each reminder and recap is keyed and recorded with an
 immutable source snapshot, so retries cannot duplicate a delivery or mutate a
 previously sent result.
 
-Before the December launch gate, Bowl placeholders and missing lines are
-intentional and do not make the public Bowl health monitor fail. After the
-player-visible launch/first kickoff, the same endpoint becomes strict about
+Before the player-visible December launch gate, Bowl placeholders and missing
+lines are intentional and do not make the public Bowl health monitor fail. From
+player visibility onward, even before first kickoff, the endpoint checks
 schedule, locks, results, receipts, and settlement reconciliation. A cancelled,
 postponed, or no-contest game is recorded through the Commissioner Bowl
 exceptions control so its picks are voided or retained according to the

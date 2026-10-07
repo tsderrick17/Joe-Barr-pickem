@@ -165,7 +165,7 @@ passing local application suite. Direct PostgreSQL rehearsal tests now share a
 fail-closed connection gate: they require the exact isolated confirmation,
 validate PostgreSQL URLs, and reject the production project reference before
 connecting. Its local tests and the launch-preflight contract test pass. The
-current application suite passes (729 tests: 709 pass, 20 environment-gated
+current application suite passes (740 tests: 720 pass, 20 environment-gated
 skips, none failing); lint passes. The production compile succeeds, but Next's
 final route collection cannot finish in this environment because server-side
 Supabase configuration is absent. A repeat of the fictional response-shaping benchmark

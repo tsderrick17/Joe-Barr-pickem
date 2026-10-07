@@ -4,6 +4,7 @@ import { bowlPoolAccessFailure } from "@/lib/bowl-pool-access.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { bowlPoolLaunchAt, compareBowlPoolStandings } from "@/lib/bowl-pool.js";
+import { activeBowlStandingsEntries } from "@/lib/bowl-pool-standings-entries.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { parseBowlSubmission } from "@/lib/selection-submission";
 
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
   }
   const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
   const finalCombinedPoints = finalGame && Number.isInteger(finalGame.away_score) && Number.isInteger(finalGame.home_score) ? finalGame.away_score! + finalGame.home_score! : null;
-  const standings = (allEntries ?? []).filter((entry) => entry.status === "active").map((entry) => ({
+  const standings = activeBowlStandingsEntries(allEntries).map((entry) => ({
     playerId: entry.player_id,
     playerName: playerNameById.get(entry.player_id) ?? "Player",
     wins: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "win").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "win" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),

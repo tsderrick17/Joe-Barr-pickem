@@ -9,6 +9,12 @@ the original save failed. An omitted Survivor field leaves that pick unchanged;
 an explicit clear is a separate request. Do not change a player's selection
 directly in production to work around a rejected request.
 
+For a Pick'em save access error, 401 means the session must be renewed; 403
+means the verified player identity is missing or inactive; 503 means an auth
+or profile dependency is temporarily unavailable. A 503 is not evidence that
+the player lost access. The response's `code` identifies the failing boundary;
+do not resubmit an uncertain save until the saved card has been read back.
+
 If Standings reports an unsupported Survivor entry status, treat it as a
 database/application contract mismatch. Check the current migration and entry
 record in a safe read; do not relabel the state in the browser or edit a

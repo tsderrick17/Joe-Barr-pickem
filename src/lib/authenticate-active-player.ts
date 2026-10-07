@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { resolvePlayerAccess } from "@/lib/player-access-result";
+import { retrySafeRead } from "@/lib/retry-safe-read";
 
 type ActivePlayerProfile = {
   id: string;
@@ -112,7 +113,7 @@ export async function authenticateActivePlayer(
       const client = createClient(url!, publishableKey!, {
         global: { headers: { Authorization: authorization! } },
       });
-      return client.auth.getUser(token);
+      return retrySafeRead(() => client.auth.getUser(token));
     },
     loadPlayer: async (userId) => {
       // Import only after configuration is checked so a missing server key
@@ -123,11 +124,11 @@ export async function authenticateActivePlayer(
         : includeStandingsPreferences
           ? "id, active, is_commissioner, show_survivor_standings, show_bowl_card, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows"
           : "id, active, is_commissioner";
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await retrySafeRead(() => supabaseAdmin
         .from("players")
         .select(columns)
         .eq("auth_user_id", userId)
-        .maybeSingle();
+        .maybeSingle());
       return {
         data: data as ActivePlayerProfile | null,
         error,

@@ -38,10 +38,12 @@ export async function POST(request: NextRequest) {
 
   const access = await authenticateActivePlayer(request);
   if (!access.ok) {
-    const message = access.status === 503
-      ? "Pick'em is having trouble reaching its records right now. Please try again in a minute."
-      : access.status === 500
+    const message = access.status === 500
         ? "The server is missing required configuration."
+        : access.status === 503
+          ? access.code === "auth_unavailable"
+            ? "The sign-in service could not be reached. Please try again in a minute."
+            : "Pick'em is having trouble reaching its records right now. Please try again in a minute."
         : access.status === 403
           ? "Your player profile is not active in this Pick'em."
           : "Your sign-in session could not be verified.";
