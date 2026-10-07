@@ -181,16 +181,15 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
   .playoff-scoreboard-pick { font-size: .86rem; }
-  /* The round name drops to its own line under the title instead of squeezing
-     "Playoff Ledger" and its OUT toggle onto two lines each. */
-  .playoff-scoreboard .pickem-ledger-masthead { flex-wrap: wrap; }
-  .playoff-scoreboard .pickem-ledger-masthead h2 { white-space: nowrap; }
-  .playoff-scoreboard .pickem-ledger-period { flex-basis: 100%; order: 3; text-align: left; }
   /* Four, five, or six picks do not fit across a phone, so each player's picks
      wrap into two short lines beside the score and name instead of scrolling
      sideways: 2 x 2 for four picks, 3 x 2 for five or six. */
   .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: 100%; }
   .playoff-scoreboard .pickem-ledger-grid tbody { display: block; }
+  /* The round name row spans the whole pad, as the week does in the regular season. */
+  .playoff-scoreboard .pickem-ledger-grid thead,
+  .playoff-scoreboard .pickem-ledger-grid thead tr,
+  .playoff-scoreboard .pickem-ledger-grid thead th { display: block; }
   .playoff-scoreboard .pickem-ledger-grid tr {
     display: grid;
     grid-template-columns: 2.4rem 4.4rem repeat(3, minmax(0, 1fr));
