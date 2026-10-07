@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -17,16 +17,12 @@ import { buildSlateSubmission } from "@/lib/slate-submission";
 import { isSurvivorSlateEditable } from "@/lib/survivor-availability";
 import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
-import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
+import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
 import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
-
-type SelectedPick = {
-  gameId: string;
-  teamId: string;
-};
+import { initialSlateState, slateReducer, type SelectedPick } from "@/lib/slate-state";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
@@ -71,55 +67,19 @@ function isEarlyGame(game: BoardGame) {
 }
 
 export default function BoardPage() {
-  const [weeks, setWeeks] = useState<ScoringPeriod[]>([]);
-  const [week, setWeek] = useState<ScoringPeriod | null>(null);
-  const [nextWeekAvailableAt, setNextWeekAvailableAt] = useState<number | null>(null);
-  const [games, setGames] = useState<BoardGame[]>([]);
-  const [showActionOnly, setShowActionOnly] = useState(false);
+  // The page's state is one reducer (src/lib/slate-state.ts): what the server said, the draft being edited, what was
+  // last saved, which load is current, and the save in flight. The clock ticks on its own.
+  const [state, dispatch] = useReducer(slateReducer, initialSlateState);
+  const {
+    weeks, week, nextWeekAvailableAt, games, showActionOnly, seasonOver, playoffEliminated, survivorUsedTeamIds, survivorAvailable,
+    survivorChipsVisible, survivorOnReceipt, survivorStatus, clockSynchronized, isLoading, errorMessage, isSubmitting,
+  } = state;
+  const { draftPicks: selectedPicks, draftSurvivor: survivorPick, savedPicks, savedSurvivor: savedSurvivorPick, warning: selectionWarning, feedback: selectionFeedback } = state;
   const [currentTime, setCurrentTime] = useState(() => Date.now());
-  const [clockSynchronized, setClockSynchronized] = useState(false);
-  const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
-  const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
-  // The off-season (after the graded Super Bowl, until August 1): the Slate is a read-only record.
-  const [seasonOver, setSeasonOver] = useState(false);
-  const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
-  const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
-  const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
-  const [survivorAvailable, setSurvivorAvailable] = useState(true);
-  const [survivorChipsVisible, setSurvivorChipsVisible] = useState(true);
-  const [survivorOnReceipt, setSurvivorOnReceipt] = useState(true);
-  const [survivorStatus, setSurvivorStatus] = useState<"active" | "eliminated" | "complete">("active");
-  const [playoffEliminated, setPlayoffEliminated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [selectionWarning, setSelectionWarning] = useState("");
-  const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; teamId: string; type: "sweep"; token: number } | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
-  const selectionFeedbackToken = useRef(0);
   const serverClockOffset = useRef(0);
   const kickoffVisibilityRefreshedGameIds = useRef(new Set<string>());
-
-  // One place that puts a board response into the page's state, used by the
-  // first load and by every week change. It also applies the player's durable
-  // display choice (All Games or Pool Action), which the bootstrap once forgot.
-  function applyBoard(data: BoardResponse) {
-    const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
-    if (data.seasonPhase) setSeasonOver(data.seasonPhase === "off_season");
-    setGames(data.games);
-    setShowActionOnly(Boolean(data.showPoolAction));
-    setPlayoffEliminated(data.pickem.playoffEliminated);
-    setSelectedPicks(data.myPicks);
-    setSavedPicks(data.myPicks);
-    setSurvivorPick(pick);
-    setSavedSurvivorPick(pick);
-    setSurvivorUsedTeamIds(data.survivor.usedTeamIds);
-    setSurvivorAvailable(data.survivor.available);
-    setSurvivorChipsVisible(data.survivor.chipsVisible !== false);
-    setSurvivorOnReceipt(data.survivor.showOnReceipt !== false);
-    setSurvivorStatus(data.survivor.status);
-  }
 
   async function loadWeek(period: ScoringPeriod) {
     const requestId = boardRequestId.current + 1;
@@ -130,13 +90,8 @@ export default function BoardPage() {
     activeBoardRequest.current = request;
     const requestTimer = window.setTimeout(() => request.abort(), 15_000);
 
-    setIsLoading(true);
-    setErrorMessage("");
-    setSelectionWarning("");
-    setPlayoffEliminated(false);
-    setClockSynchronized(false);
+    dispatch({ type: "load-started", loadId: requestId, week: period });
     kickoffVisibilityRefreshedGameIds.current.clear();
-    setWeek(period);
 
     try {
       const response = await fetchWithSession(
@@ -151,13 +106,13 @@ export default function BoardPage() {
       if (requestId !== boardRequestId.current) return;
 
       if (!response.ok) {
-        setErrorMessage(data.error ?? "The Slate could not be loaded.");
+        dispatch({ type: "load-failed", loadId: requestId, message: data.error ?? "The Slate could not be loaded." });
         return;
       }
 
       const serverTime = Date.parse(data.serverTime);
       if (!Number.isFinite(serverTime)) {
-        setErrorMessage("The Slate clock could not be verified safely.");
+        dispatch({ type: "load-failed", loadId: requestId, message: "The Slate clock could not be verified safely." });
         return;
       }
 
@@ -169,8 +124,7 @@ export default function BoardPage() {
           .map((game) => game.id),
       );
 
-      applyBoard(data);
-      setClockSynchronized(true);
+      dispatch({ type: "board-loaded", loadId: requestId, board: data });
     } catch (error) {
       if (requestId === boardRequestId.current) {
         if (error instanceof SessionUnavailableError) {
@@ -178,14 +132,12 @@ export default function BoardPage() {
           return;
         }
 
-        setErrorMessage("The Slate is taking too long to load. Please try again.");
+        dispatch({ type: "load-failed", loadId: requestId, message: "The Slate is taking too long to load. Please try again." });
       }
     } finally {
       window.clearTimeout(requestTimer);
-      if (requestId === boardRequestId.current) {
-        activeBoardRequest.current = null;
-        setIsLoading(false);
-      }
+      if (requestId === boardRequestId.current) activeBoardRequest.current = null;
+      dispatch({ type: "load-finished", loadId: requestId });
     }
   }
 
@@ -203,7 +155,7 @@ export default function BoardPage() {
 
         if (disposed) return;
         if (!response.ok || !data.bootstrap) {
-          setErrorMessage(data.error ?? "The Slate could not be loaded.");
+          dispatch({ type: "load-failed", loadId: boardRequestId.current, message: data.error ?? "The Slate could not be loaded." });
           return;
         }
 
@@ -221,7 +173,7 @@ export default function BoardPage() {
           : selectDefaultScoringPeriod(loadedWeeks);
 
         if (!initialWeek) {
-          setErrorMessage("The weekly schedule could not be loaded.");
+          dispatch({ type: "load-failed", loadId: boardRequestId.current, message: "The weekly schedule could not be loaded." });
           return;
         }
 
@@ -232,19 +184,15 @@ export default function BoardPage() {
             .filter((game) => Date.parse(game.kickoffAt) <= Date.parse(data.serverTime))
             .map((game) => game.id),
         );
-        setWeeks(loadedWeeks);
-        setNextWeekAvailableAt(manualAccessAt);
-        setWeek(initialWeek);
-        applyBoard(data);
-        setClockSynchronized(true);
+        dispatch({ type: "bootstrap-loaded", loadId: boardRequestId.current, weeks: loadedWeeks, nextWeekAvailableAt: manualAccessAt, week: initialWeek, board: data });
       } catch (error) {
         if (error instanceof SessionUnavailableError) {
           window.location.replace("/login");
           return;
         }
-        setErrorMessage("The Slate is taking too long to load. Please try again.");
+        dispatch({ type: "load-failed", loadId: boardRequestId.current, message: "The Slate is taking too long to load. Please try again." });
       } finally {
-        if (!disposed) setIsLoading(false);
+        if (!disposed) dispatch({ type: "load-finished", loadId: boardRequestId.current });
       }
     }
 
@@ -291,8 +239,7 @@ export default function BoardPage() {
 
         serverClockOffset.current = serverTime - Date.now();
         setCurrentTime(serverTime);
-        setGames(data.games);
-        setPlayoffEliminated(data.pickem.playoffEliminated);
+        dispatch({ type: "kickoff-refreshed", loadId: requestId, board: data });
       } catch {
         // The next minute tick retries a harmless read. Keep player drafts in
         // memory rather than resetting the entire Slate after a brief outage.
@@ -423,42 +370,36 @@ export default function BoardPage() {
     if (!atsDraft.changed && !survivorDraft.changed) return;
 
     const reconcileTimer = window.setTimeout(() => {
-      if (atsDraft.changed) setSelectedPicks(atsDraft.selections);
-      if (survivorDraft.changed) setSurvivorPick(survivorDraft.selection);
-      if (atsDraft.discardedAtKickoff || survivorDraft.discardedAtKickoff) {
-        setSelectionWarning(
-          "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed.",
-        );
-      }
+      dispatch({
+        type: "draft-reconciled",
+        picks: atsDraft.changed ? atsDraft.selections : null,
+        survivor: survivorDraft.changed ? { pick: survivorDraft.selection } : null,
+        warning: atsDraft.discardedAtKickoff || survivorDraft.discardedAtKickoff
+          ? "Kickoff passed. Unsaved changes for that game were discarded; submitted picks remain sealed."
+          : null,
+      });
     }, 0);
 
     return () => window.clearTimeout(reconcileTimer);
   }, [clockSynchronized, currentTime, games, isLoading, savedPicks, savedSurvivorPick, selectedPicks, survivorPick]);
 
-  function showSelectionFeedback(gameId: string, teamId: string, type: "sweep") {
-    selectionFeedbackToken.current += 1;
-    setSelectionFeedback({ gameId, teamId, type, token: selectionFeedbackToken.current });
-  }
-
   function chooseTeam(gameId: string, teamId: string) {
     if (isReadOnly) return;
 
-    setSelectionWarning("");
+    dispatch({ type: "warning-cleared" });
 
     const choice = decidePickChoice({ picks: selectedPicks, games, gameId, teamId, now: currentTime, limit: selectionLimit });
     switch (choice.kind) {
       case "sealed":
       case "limit":
-        setSelectionWarning(choice.warning);
+        dispatch({ type: "warned", message: choice.warning });
         return;
       case "remove":
-        setSelectedPicks((current) => withoutGame(current, gameId));
-        setSelectionFeedback(null);
+        dispatch({ type: "pick-removed", gameId, clearFeedback: true });
         return;
       case "swap":
       case "add":
-        setSelectedPicks((current) => withPick(current, gameId, teamId));
-        showSelectionFeedback(gameId, teamId, "sweep");
+        dispatch({ type: "pick-added", gameId, teamId });
         return;
     }
   }
@@ -469,33 +410,32 @@ export default function BoardPage() {
     const choice = decideSurvivorChoice({ games, gameId, teamId, now: currentTime, current: survivorPick, saved: savedSurvivorPick, usedTeamIds: survivorUsedTeamIds });
     if (choice.kind === "ignore") return;
     if (choice.kind === "warn") {
-      setSelectionWarning(choice.warning);
+      dispatch({ type: "warned", message: choice.warning });
       return;
     }
 
-    setSelectionWarning("");
-    setSurvivorPick({ gameId, teamId });
+    dispatch({ type: "survivor-chosen", pick: { gameId, teamId } });
   }
 
   function removeSelection(gameId: string) {
-    setSelectionWarning("");
+    dispatch({ type: "warning-cleared" });
     const removal = decideRemoval({ games, gameId, now: currentTime });
     if (!removal.allowed) {
-      setSelectionWarning(removal.warning);
+      dispatch({ type: "warned", message: removal.warning });
       return;
     }
-    setSelectedPicks((current) => withoutGame(current, gameId));
+    dispatch({ type: "pick-removed", gameId, clearFeedback: false });
   }
 
   // Flip between All Games and Pool Action, and remember the choice.
   const toggleDisplay = useStableCallback(() => {
     const next = !showActionOnly;
-    setShowActionOnly(next);
+    dispatch({ type: "display-changed", showActionOnly: next });
     void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) }).then(async (response) => {
       if (!response.ok) throw new Error();
     }).catch(() => {
-      setShowActionOnly(showActionOnly);
-      setSelectionWarning("Your Slate display preference could not be saved.");
+      dispatch({ type: "display-changed", showActionOnly });
+      dispatch({ type: "warned", message: "Your Slate display preference could not be saved." });
     });
   });
 
@@ -517,13 +457,15 @@ export default function BoardPage() {
   }
 
   async function submitPicks() {
-    setSelectionWarning("");
-
     if (!week) {
       return;
     }
 
-    setIsSubmitting(true);
+    // What is sent is what gets recorded as saved, even if the draft changes while the save is in flight.
+    const sentPicks = selectedPicks;
+    const sentSurvivor = survivorAvailable ? { pick: survivorPick } : null;
+    const loadId = boardRequestId.current;
+    dispatch({ type: "submit-started" });
     const request = new AbortController();
     const requestTimer = window.setTimeout(() => request.abort(), PICK_SAVE_TIMEOUT_MS);
 
@@ -536,7 +478,7 @@ export default function BoardPage() {
         body: JSON.stringify({
           ...buildSlateSubmission({
             scoringPeriodId: week.id,
-            selections: selectedPicks,
+            selections: sentPicks,
             survivorAvailable,
             survivorHasUnsavedChanges,
             survivorPick,
@@ -551,28 +493,37 @@ export default function BoardPage() {
       };
 
       if (!response.ok) {
-        setSelectionWarning(
-          data.error ?? "Your picks could not be saved. Please try again.",
-        );
+        dispatch({ type: "submit-failed", message: data.error ?? "Your picks could not be saved. Please try again." });
         return;
       }
 
-      setSavedPicks(selectedPicks);
-      if (survivorAvailable) {
-        setSavedSurvivorPick(survivorPick);
-      }
+      dispatch({ type: "submit-succeeded", picks: sentPicks, survivor: sentSurvivor });
     } catch (error) {
       if (error instanceof SessionUnavailableError) {
         window.location.replace("/login");
+        dispatch({ type: "submit-failed", message: "" });
         return;
       }
 
-      setSelectionWarning(
-        "Your picks are taking too long to save. Please try again.",
-      );
+      dispatch({ type: "submit-failed", message: "Your picks are taking too long to save. Please try again." });
+      // The save may have gone through even though its answer never arrived. Read what the server holds before
+      // offering another submission: if it matches what was sent, the save worked and nothing is left unsaved.
+      void confirmSaveOutcome(week.id, loadId, sentPicks);
     } finally {
       window.clearTimeout(requestTimer);
-      setIsSubmitting(false);
+    }
+  }
+
+  async function confirmSaveOutcome(weekId: string, loadId: number, sentPicks: SelectedPick[]) {
+    try {
+      const response = await fetchWithSession(`/api/board?scoringPeriodId=${weekId}`, { cache: "no-store" });
+      if (!response.ok) return;
+      const board = (await response.json()) as BoardResponse;
+      if (loadId !== boardRequestId.current) return;
+      dispatch({ type: "saved-state-read", loadId, board });
+      if (!picksDiffer(board.myPicks, sentPicks)) dispatch({ type: "warning-cleared" });
+    } catch {
+      // The player can retry; the draft is untouched either way.
     }
   }
 
