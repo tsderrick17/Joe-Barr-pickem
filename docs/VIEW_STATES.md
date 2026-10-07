@@ -24,7 +24,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff round open | `playoff-upcoming` |
 | Playoff round, six picks | `playoff-six-picks` |
 | Playoff games live | `playoff-live` |
-| Off-season: closed banner, read-only, no Submit or how-to copy | `off-season` |
+| Off-season: "See you next season!" banner instead of the receipt, read-only, no how-to copy | `off-season` |
+| Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
 
 ## Standings (`/`) — `standings.visual.spec.ts`, fixtures `standings-fixtures.mjs`
 
@@ -36,7 +37,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Survivor has a champion | `regular-complete` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
-| Off-season: closed banner, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
+| Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
+| Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
 | Bowl Card with a champion crowned | `bowl-champion` |

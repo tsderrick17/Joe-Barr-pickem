@@ -311,6 +311,9 @@ export default function HomePage() {
 
   // The off-season shows every table whole: the hide and "− OUT" choices (and their buttons) are suspended until August 1.
   const offSeason = data.seasonPhase === "off_season";
+  // A player out of the playoff race gets the same quiet page as the off-season: no ticket, a banner, until August 1.
+  const viewerEliminated = Boolean(viewerRow?.playoffEliminated);
+  const seasonClosedForViewer = offSeason || viewerEliminated;
   const shown = offSeason ? { ...data, showSurvivorStandings: true, hidePickemEliminatedRows: false, hideSurvivorEliminatedRows: false, showBowlCard: true } : data;
 
   return (
@@ -332,19 +335,17 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {offSeason ? <SeasonClosedBanner /> : null}
-
-        <MyTicket
+        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} /> : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}
-          readOnly={data.weekStatus === "complete" || offSeason}
+          readOnly={data.weekStatus === "complete"}
           survivorAvailable={data.survivorAvailable}
           survivorPick={ticketSurvivor}
           survivorRequired={viewerSurvivor?.requiredThisPeriod}
           survivorStatus={data.survivorComplete ? "complete" : viewerSurvivor?.status ?? "active"}
           week={data.week}
-        />
+        />}
 
         <PickemScoreboard
           hideEliminatedRows={shown.hidePickemEliminatedRows}

@@ -32,10 +32,10 @@ async function serve(page: Page, scenario: string) {
 
 async function settle(page: Page) {
   await page.goto("/");
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.reload();
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((resolve) => setTimeout(resolve, 30)); }

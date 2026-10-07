@@ -86,5 +86,9 @@ test("the player pages treat a missing season phase as in season, and lock the d
   assert.match(standings, /displayLocked=\{offSeason\}/);
   assert.match(slate, /if \(data\.seasonPhase\) setSeasonOver\(data\.seasonPhase === "off_season"\);/);
   assert.match(slate, /const isReadOnly = week\?\.status === "complete" \|\| playoffEliminated \|\| seasonOver;/);
-  assert.match(slate, /readOnly=\{seasonOver\}/);
+  assert.match(slate, /const seasonClosedForViewer = seasonOver \|\| playoffEliminated;/);
+  assert.match(slate, /\{seasonClosedForViewer \? null : <SlateReceipt/);
+  // The ticket and the receipt are gone, for the off-season and for a player out of the playoff race.
+  assert.match(standings, /const seasonClosedForViewer = offSeason \|\| viewerEliminated;/);
+  assert.match(standings, /\{seasonClosedForViewer \? <SeasonClosedBanner eliminated=\{!offSeason\} \/> : <MyTicket/);
 });

@@ -32,8 +32,6 @@ type Props = {
     details: { name: string; abbreviation: string } | null;
   };
   selectionWarning: string;
-  /** The off-season: there is nothing left to save, so the Submit button is gone. */
-  readOnly?: boolean;
   onSubmit: () => void;
   onRemove: (gameId: string) => void;
 };
@@ -43,7 +41,7 @@ type Props = {
  * and (during the regular season) the Survivor pick. It owns the receipt's
  * wording and status rules; the page hands it plain facts.
  */
-function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, readOnly = false, onSubmit, onRemove }: Props) {
+function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, onSubmit, onRemove }: Props) {
   const hasUnsavedChanges = pickemHasUnsavedChanges || survivor.hasUnsavedChanges;
   const survivorReceipt = survivor.teamName || (survivor.status === "complete" ? "COMPLETE" : survivor.status === "eliminated" ? "OUT" : "OPEN");
   // Saved selections arrive asynchronously. Keep the receipt neutral until
@@ -75,15 +73,13 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
   };
   const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
   const openPickCount = selectedTeams.length - sealedPickCount;
-  const duePickCount = readOnly ? 0 : Math.max(selectionLimit - selectedTeams.length, 0);
+  const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
   const pickemReceiptStateDetail = [
     sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
     openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} EDITABLE` : "",
     duePickCount > 0 ? `${duePickCount} DUE` : "",
   ].filter(Boolean).join(" · ");
-  const submitHint = readOnly
-    ? "SEASON CLOSED"
-    : receiptIsLoading
+  const submitHint = receiptIsLoading
     ? "CHECKING SAVED PICKS"
     : isSubmitting
       ? "SAVING PICKS"
@@ -104,7 +100,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
         <span>YOUR RECEIPT</span>
         <div className="slate-receipt-actions">
           <Link href="/#my-ticket"><span className="receipt-link-lead">VIEW </span>FULL TICKET</Link>
-          {readOnly ? null : <button
+          <button
             className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
             disabled={receiptIsLoading || isSubmitting}
             onClick={onSubmit}
@@ -112,7 +108,6 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           >
             SUBMIT
           </button>
-          }
         </div>
         <span className="slate-receipt-footnote">
           <span
@@ -138,7 +133,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
               <span>{index + 1}. {team.abbreviation}{team.lineValue ? <small className={team.isLineLocked ? "is-official" : ""}> {team.lineValue}</small> : null}</span>
               {team.canRemove ? <button aria-label={`Remove ${team.name}`} onClick={() => onRemove(team.gameId)} type="button">×</button> : <span aria-label="Sealed at kickoff" className="slate-receipt-lock-mark" role="img">🔒</span>}
             </span>
-          )) : readOnly ? <strong className="is-quiet">NO PICKS</strong> : <strong className="is-due">PICK DUE</strong>}
+          )) : <strong className="is-due">PICK DUE</strong>}
         </div>
         <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPickCount}/{selectionLimit} · {receiptStatusLabel(pickemReceiptStatus)}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
       </div>

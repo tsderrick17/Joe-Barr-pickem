@@ -363,6 +363,8 @@ export default function BoardPage() {
   const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete" || playoffEliminated || seasonOver;
+  // The off-season, and a player out of the playoff race, get a quiet page: a banner instead of the receipt.
+  const seasonClosedForViewer = seasonOver || playoffEliminated;
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
     : null;
@@ -612,7 +614,7 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
-        {seasonOver ? <div className="mt-5"><SeasonClosedBanner /></div> : null}
+        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} /></div> : null}
 
         <SlateHeader
           actionOnlyActive={actionOnlyActive}
@@ -620,19 +622,18 @@ export default function BoardPage() {
           hasEarlyGame={hasEarlyGame}
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}
-          readOnly={seasonOver}
+          readOnly={seasonClosedForViewer}
           survivorControlsEnabled={survivorControlsEnabled}
           week={week}
         />
 
-        <SlateReceipt
+        {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
           isSubmitting={isSubmitting}
           onRemove={removeSelection}
           onSubmit={submitPicks}
           periodType={week?.period_type}
           pickemHasUnsavedChanges={pickemHasUnsavedChanges}
-          readOnly={seasonOver}
           selectedPickCount={selectedPicks.length}
           selectedTeams={selectedTeams}
           selectionLimit={selectionLimit}
@@ -646,14 +647,7 @@ export default function BoardPage() {
             status: survivorStatus,
             teamName: survivorTeamName(survivorPick),
           }}
-        />
-
-        {playoffEliminated ? (
-          <section className="mt-5 border-l-4 border-red-800 bg-red-50 px-4 py-3 text-red-950">
-            <p className="font-bold">Playoff race: mathematically eliminated</p>
-            <p className="mt-1 text-sm">Your existing selections remain on the Slate for the season&apos;s audit trail. You are not eligible to make further Pick&apos;em selections.</p>
-          </section>
-        ) : null}
+        />}
 
         {errorMessage ? (
           <div className="mt-8">
