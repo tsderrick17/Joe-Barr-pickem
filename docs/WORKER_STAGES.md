@@ -1,7 +1,7 @@
 # Worker stages, deadlines and retries
 
-How the automation workers are organized, where a run may stop, and what is safe to repeat. This covers the score
-worker and the official line-lock worker; the reminder and Bowl workers follow in the same pattern.
+How the automation workers are organized, where a run may stop, and what is safe to repeat. This covers the score,
+official line-lock, reminder and Bowl workers.
 
 ## One run
 
@@ -54,3 +54,30 @@ After the commit nothing checks for cancellation, because the remaining steps ha
 rejection is handled, two runs keep separate contexts, and both workers stop before touching the database or the
 provider. `test/score-work-plan.test.mjs` covers the decisions. Changes to the score worker's orchestration also
 need the full-season certification (`isolated-integration.yml` with `full_season_drill`).
+
+## Reminder worker (`sendDueReminders`)
+
+The database claims the due reminders first (`claim_due_push_reminders` marks them `sending`). What each outcome
+becomes is decided by pure functions in `src/lib/reminder-outcome.ts`: not ready (suppressed for good only for a
+terminal reason, otherwise waits), delivered (sent, failed, retry in 15 minutes, or suppressed), error (retry only if
+delivery never started or the email could not be prepared), and release (handed back with no delay).
+
+| Stage | Checkpoint before | Safe to retry |
+| --- | --- | --- |
+| Claim due reminders | no | yes (the claim is the lease on each reminder) |
+| For each claimed reminder: checkpoint | **yes, once, before anything for that reminder** | yes |
+| Readiness check | no (inside the reminder) | yes (read) |
+| Email delivery (per-address receipts) | **never**: a reminder is not interrupted once it starts | receipts stop a repeated attempt from emailing anyone twice |
+| Record the outcome | no | yes |
+
+When the run is stopped at that checkpoint, this reminder and every later claimed one have not started delivery, so
+they are handed straight back to the queue (status `scheduled`, no delay) instead of waiting for the stale-claim timer
+(20 minutes). If a hand-back write fails, the stale-claim recovery still returns it.
+
+## Bowl worker (`syncBowlPool`)
+
+Pure rules are in `src/lib/bowl-line-policy.ts` (half-point hooks, the favorite from ESPN's sign, the lock stamp, and
+when a line is due to lock). Stages, each with a checkpoint before it and each idempotent: annual schedule import,
+schedule and lines from the odds feed, scores, kickoff transitions, missing-pick losses, withdrawn-draft purge, grade
+final picks (grades and result receipts in one database call), champion refresh, season status. All three provider
+requests carry the cancellable signal.
