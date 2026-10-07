@@ -36,10 +36,9 @@ test("playoff recaps explicitly memorialize eliminations and champions", () => {
   assert.match(emailReminders, /Eliminated from Pick'em today/);
 });
 
-test("weekly Survivor recap names new eliminations and reports only entries remaining", () => {
-  assert.match(emailReminders, /weeklySurvivorUpdateCopy/);
-  assert.match(emailReminders, /was" : "were"\} eliminated this week/);
-  assert.match(emailReminders, /entry remains" : "entries remain"/);
+test("weekly Survivor recap keeps the remaining count directly under the Survivor table", () => {
   assert.match(recapImage, /const survivorFooter/);
+  assert.match(recapImage, /note=\{survivorFooter\}/);
+  assert.doesNotMatch(emailReminders, /survivorUpdateBlock/);
   assert.doesNotMatch(recapImage, /survivor\.in\} in · \$\{snapshot\.survivor\.out\} out/);
 });
