@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { derivePlayerAuthPassword, PLAYER_AUTH_CREDENTIAL_VERSION, playerAuthEmail } from "../../src/lib/player-auth-credential";
 
 const enabled = process.env.PICKEM_E2E_ENABLED === "true";
 const confirmation = process.env.PICKEM_TEST_DATABASE_CONFIRMATION;
@@ -103,12 +104,18 @@ async function prepareFixture(): Promise<Fixture> {
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const firstName = `E2E ${suffix}`;
   const pin = String(1000 + Math.floor(Math.random() * 8999));
-  // The player-facing PIN screen deliberately derives this address; use the
-  // same credential shape here so this is a true browser login, not a bypass.
-  const email = `pin-${pin}@pickemjb.app`;
-  const password = `pickem-${pin}`;
+  // Use the same server-protected Auth credential as the login route so this
+  // remains a true browser login without making the PIN the Auth password.
+  if (!serviceRoleKey) throw new Error("The isolated service-role key is required.");
+  const email = playerAuthEmail(pin);
+  const password = derivePlayerAuthPassword(pin, serviceRoleKey);
 
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata: { pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION },
+  });
   if (authError || !authData.user) throw new Error(authError?.message ?? "Could not create the isolated test player.");
 
   const { data: season, error: seasonError } = await admin.from("seasons").select("id").eq("year", 2026).single();

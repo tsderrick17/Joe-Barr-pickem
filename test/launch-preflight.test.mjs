@@ -16,6 +16,8 @@ test("launch preflight verifies every external game-day dependency without sendi
   assert.match(source, /supabaseServerCredentialSource/);
   assert.match(source, /authorized && authoritativeSource/);
   assert.match(source, /compatibility fallback/);
+  assert.match(source, /player-auth-credential/);
+  assert.match(source, /PLAYER_AUTH_PEPPER is missing or shorter than 32 characters/);
   assert.doesNotMatch(source, /\/odds\/\?|\/smtp\/email|import-games/);
 });
 

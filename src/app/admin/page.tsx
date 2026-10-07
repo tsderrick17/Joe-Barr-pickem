@@ -25,6 +25,7 @@ const CommissionerOperationsMap = dynamic(() => import("@/components/commissione
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
+const PlayerSignInHardening = dynamic(() => import("@/components/player-sign-in-hardening"));
 
 type Spread = {
   team: string;
@@ -320,6 +321,7 @@ export default function AdminPage() {
             <details>
               <summary>Commissioner handbook <span>Runbook, pool rules, and rare controls</span></summary>
               <CommissionerHandbook />
+              <PlayerSignInHardening />
             </details>
           </section>
         </> : null}

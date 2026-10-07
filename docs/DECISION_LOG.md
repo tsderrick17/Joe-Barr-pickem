@@ -1448,3 +1448,27 @@ or inactive player. Verified inactive players receive 403. The Standings profile
 query also retrieves its display preferences, replacing its separate viewer
 read; the pool's season and player-list reads remain independent. Successful
 response shapes and database scoring/mutation rules are unchanged.
+
+## 2026-10-06 — Separate the player PIN from the Auth credential
+
+Keep the familiar four-digit pool PIN, but never use it or a predictable
+transformation of it as the Supabase Auth password. Derive a versioned,
+high-entropy credential on the server with HMAC-SHA-256 and a dedicated,
+server-only `PLAYER_AUTH_PEPPER`. It is intentionally independent of the
+Supabase service key so routine key rotation cannot lock out players. Launch
+preflight treats a missing or weak pepper as a blocking configuration error.
+New accounts receive the protected credential immediately.
+
+For the transition, the application may try a legacy password only after the
+protected credential fails. A successful legacy check must rotate the account
+and authenticate again with the protected credential before returning a
+session. A Commissioner-only, explicitly confirmed operation rotates all
+remaining accounts, preserves player PINs, records only aggregate counts in
+the audit log, and is safe to re-run. Remove the legacy fallback after the
+bulk rotation has been verified in production.
+
+Enforce a site-wide Content Security Policy alongside the existing response
+headers. Production dependencies block at high severity; the complete tooling
+tree blocks at critical severity. Any lower development-only advisory exception
+must be specific, dated, owned, and documented rather than hidden by a broad
+override or a permanently weakened gate.

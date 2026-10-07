@@ -194,6 +194,20 @@ one day; investigate only missing, failed, or duplicate receipts.
 4. If pool data remains visible but controls vanish, inspect `/api/profile` and
    the shared session path. Do not add broad player-table policies as a UI fix.
 
+### Harden legacy player credentials
+
+After the credential-hardening release, open **Commissioner → System →
+Commissioner handbook** and choose **Harden player sign-ins** once. Confirm the
+operation. It preserves every four-digit player PIN, replaces the underlying
+Auth passwords, and writes an aggregate audit receipt without storing a PIN in
+the receipt. A partial failure is safe to retry. Confirm the success message,
+then sign out and sign back in through the normal PIN screen before removing
+the legacy fallback in a later release. Before deploying this release, create a
+stable, random `PLAYER_AUTH_PEPPER` of at least 32 characters in every Vercel
+environment. Never reuse, log, or commit it; rotating it requires immediately
+re-running this account-hardening operation while a Commissioner session is
+still valid.
+
 ## Backup recovery
 
 Use a backup only for genuine disaster recovery, not an ordinary late score.

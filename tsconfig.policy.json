@@ -24,7 +24,9 @@
     "src/lib/championship-policy.js",
     "src/lib/final-score-reconciliation.js",
     "src/lib/slate-draft-locks.js",
-    "src/lib/slate-submission.js"
+    "src/lib/slate-submission.js",
+    "src/lib/player-auth-credential.js",
+    "src/lib/player-pin-authentication.js"
   ],
   "exclude": ["node_modules"]
 }

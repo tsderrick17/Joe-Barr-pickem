@@ -26,6 +26,9 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_URL: process.env.PICKEM_TEST_SUPABASE_URL ?? "",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PICKEM_TEST_SUPABASE_PUBLISHABLE_KEY ?? "",
       SUPABASE_SERVICE_ROLE_KEY: process.env.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY ?? "",
+      // Isolated tests use their isolated server credential only as the test
+      // pepper; production requires its own independently managed value.
+      PLAYER_AUTH_PEPPER: process.env.PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY ?? "",
     },
   } : undefined,
 });
