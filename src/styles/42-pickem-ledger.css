@@ -77,6 +77,7 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
    vertical scrollbar. Its height is content-driven; only narrow viewports
    may need the intentional horizontal scroll. */
 .survivor-standings-scroll {
+  background: var(--pool-paper);
   overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
