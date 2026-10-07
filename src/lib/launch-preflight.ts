@@ -4,6 +4,7 @@ import {
   supabaseServerCredentialUsesFallback,
 } from "@/lib/supabase-admin";
 import { assessAutomationWorkerHeartbeat } from "@/lib/automation-heartbeat";
+import { playerAuthPepper } from "@/lib/player-auth-config";
 
 export type LaunchPreflightCheck = {
   check_id: string;
@@ -154,6 +155,19 @@ async function checkCronAuthorization(): Promise<LaunchPreflightCheck> {
   );
 }
 
+function checkPlayerAuthCredential(): LaunchPreflightCheck {
+  const configured = Boolean(playerAuthPepper());
+  return check(
+    "player-auth-credential",
+    "Player sign-in credential",
+    configured,
+    configured
+      ? "The dedicated server-only player credential pepper is configured."
+      : "PLAYER_AUTH_PEPPER is missing or shorter than 32 characters; PIN sign-in is unavailable.",
+    "authorization",
+  );
+}
+
 async function checkWatchdogHeartbeat(): Promise<LaunchPreflightCheck> {
   const { data, error } = await supabaseAdmin
     .from("automation_worker_heartbeats")
@@ -197,5 +211,5 @@ export async function runExternalConfigurationChecks() {
     checkBrevo(),
     checkCommissionerAlerts(),
   ]);
-  return [supabaseAuthorization, cronAuthorization, oddsProvider, ...brevoChecks, commissionerAlerts];
+  return [supabaseAuthorization, cronAuthorization, checkPlayerAuthCredential(), oddsProvider, ...brevoChecks, commissionerAlerts];
 }

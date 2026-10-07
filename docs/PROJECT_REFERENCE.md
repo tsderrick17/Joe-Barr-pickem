@@ -120,6 +120,13 @@ measure database requests or end-to-end route time.
   15-minute cooldown and open a Commissioner incident and email alert.
   Successful login clears prior failures, no individual player PIN is locked
   by this protection, and raw PINs or network addresses are never retained.
+- The four-digit PIN is not the Supabase Auth password. Auth accounts use a
+  versioned HMAC credential derived only on the server from the PIN and a
+  dedicated `PLAYER_AUTH_PEPPER`. Launch preflight fails when that protected
+  value is missing or too short. A legacy account may use its former credential
+  once through the application route; the route must rotate it before returning
+  a session. The Commissioner can idempotently rotate every remaining account
+  from System → Commissioner handbook, and that bulk operation is audited.
 - A player can always see their own selections.
 - Another player's selection remains hidden until that selected game's kickoff.
   Reveal is per game, not all-at-once for the week.

@@ -42,7 +42,7 @@ npm run lint
 npm run build
 ```
 
-Integration and browser tests need the isolated credentials described in [isolated testing](docs/isolated-integration-tests.md). Do not point them at production. A local application run additionally needs Supabase publishable and server credentials plus the provider/email settings for the features being exercised; keep those values in ignored local configuration, never in a commit. A successful build alone does not prove production database migrations or external services are ready.
+Integration and browser tests need the isolated credentials described in [isolated testing](docs/isolated-integration-tests.md). Do not point them at production. A local application run additionally needs Supabase publishable and server credentials, a dedicated server-only `PLAYER_AUTH_PEPPER` of at least 32 random characters, and the provider/email settings for the features being exercised; keep those values in ignored local configuration, never in a commit. A successful build alone does not prove production database migrations or external services are ready.
 
 The normal test suite already validates local Markdown links and key operating-contract statements, so documentation drift is part of the pull-request quality gate.
 
@@ -59,5 +59,6 @@ The normal test suite already validates local Markdown links and key operating-c
 | How are database changes and isolated tests handled? | [Migration workflow](docs/supabase-github-cutover.md) · [Isolated testing](docs/isolated-integration-tests.md) |
 | How are external alarms and errors triaged? | [Uptime monitoring](docs/uptime-monitoring.md) · [Sentry guide](docs/sentry-runbook.md) |
 | What visual and maintenance conventions apply? | [Visual system](docs/visual-design-system.md) · [Maintenance checklist](docs/MAINTENANCE_CHECKLIST.md) |
+| How are dependency advisories reviewed? | [Dependency security](docs/DEPENDENCY_SECURITY.md) |
 
 Coding agents should begin with [AGENTS.md](AGENTS.md). The current migrations and executable tests take precedence over prose when they disagree. Update the affected reference and runbook with any behavior change, and preserve historical decisions by marking superseded guidance rather than silently erasing it. Never commit PINs, tokens, player data, private provider responses, or production fixtures.

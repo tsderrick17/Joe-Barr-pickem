@@ -21,6 +21,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "build-only-publishable-key"
       SUPABASE_SECRET_KEY: "build-only-secret-key"
+      PLAYER_AUTH_PEPPER: "build-only-player-auth-pepper-value"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
@@ -32,9 +33,11 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      # sharp/libheif is an acknowledged upstream advisory with no fix yet;
-      # keep blocking critical advisories without blocking previews on it.
-      - run: npm audit --omit=dev --audit-level=critical
+      # Production dependencies block at high severity. The full tree blocks
+      # critical advisories; reviewed dev-only exceptions live in the security
+      # policy and remain visible through Dependabot.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=critical
       - run: npm run build
 
   # Exact-match screenshots of every view, state, width and theme, in the same

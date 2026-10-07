@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { derivePlayerAuthPassword, PLAYER_AUTH_CREDENTIAL_VERSION, playerAuthEmail } from "@/lib/player-auth-credential";
+import { playerAuthPepper } from "@/lib/player-auth-config";
 
 export async function GET(request: NextRequest) {
   if (!(await requireCommissioner(request))) {
@@ -89,8 +91,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const email = `pin-${pin}@pickemjb.app`;
-  const password = `pickem-${pin}`;
+  const email = playerAuthEmail(pin);
+  const authPepper = playerAuthPepper();
+  if (!authPepper) {
+    return NextResponse.json(
+      { error: "Player sign-in security is not configured." },
+      { status: 503 },
+    );
+  }
+  const password = derivePlayerAuthPassword(pin, authPepper);
 
   const {
     data: createdAccount,
@@ -99,6 +108,7 @@ export async function POST(request: NextRequest) {
     email,
     password,
     email_confirm: true,
+    app_metadata: { pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION },
   });
 
   if (accountError || !createdAccount.user) {

@@ -7,6 +7,8 @@ records.
 ## Weekly
 
 - Review the latest **Production smoke gate** and encrypted-backup workflow.
+- Review [dependency security](DEPENDENCY_SECURITY.md), including every dated
+  exception, before its review deadline.
 - Confirm UptimeRobot has exactly one monitor for production, automation
   heartbeat, line-lock workers, score workers, reminder workers, Bowl Pool,
   critical workers, and encrypted backup.

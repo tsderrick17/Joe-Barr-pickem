@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, supabaseServerKey } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import { authenticatePlayerPin } from "@/lib/player-pin-authentication";
+import { playerAuthPepper } from "@/lib/player-auth-config";
 
 export const runtime = "nodejs";
 
@@ -57,7 +59,8 @@ export async function POST(request: NextRequest) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !publishableKey) return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
+  const authPepper = playerAuthPepper();
+  if (!url || !publishableKey || !authPepper) return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
 
   let sourceFingerprint: string;
   let pinFingerprint: string;
@@ -79,12 +82,21 @@ export async function POST(request: NextRequest) {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
     global: { headers: { "sb-forwarded-for": requestSource(request) } },
   });
-  const { data, error } = await auth.auth.signInWithPassword({
-    email: `pin-${pin}@pickemjb.app`,
-    password: `pickem-${pin}`,
+  // Existing accounts used the four-digit PIN as part of their Auth password.
+  // The shared transition accepts that credential only long enough to rotate
+  // it, then returns a newly authenticated server-derived session.
+  const authentication = await authenticatePlayerPin({
+    pin,
+    serverSecret: authPepper,
+    signIn: (credentials) => auth.auth.signInWithPassword(credentials),
+    updateAccount: (userId, attributes) => supabaseAdmin.auth.admin.updateUserById(userId, attributes),
   });
+  if (authentication.rotationFailed) {
+    return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
+  }
+  const { data, error } = authentication.auth;
 
-  if (error || !data.session) {
+  if (error || !data.session || !data.user) {
     const { error: recordError } = await supabaseAdmin.rpc("record_failed_pin_login", {
       attempt_source_fingerprint: sourceFingerprint,
       attempt_pin_fingerprint: pinFingerprint,
