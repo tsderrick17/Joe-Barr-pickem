@@ -21,8 +21,11 @@ performance or security decision.
 Player authentication uses a bearer session checked against Supabase Auth and
 an active `players` row. Browser reads and refreshes share the session path in
 [`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
-authorization cache. Most routes still express auth failures independently, so
-the shared-result migration must proceed route by route with failure tests.
+authorization cache. Season Snapshot, Pick'em saves, Standings, Slate,
+Survivor, and Bowl Pool use the request-scoped result. Standings includes its display
+preferences in that one profile read. Other routes still express auth failures
+independently, so the shared-result migration must proceed route by route with
+failure tests.
 Commissioner routes use the shared gate. Automation uses a separate secret,
 lease, and heartbeat path; a player's browser token does not authorize workers.
 

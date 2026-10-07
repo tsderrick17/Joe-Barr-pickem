@@ -7,6 +7,7 @@ let authAttempts = 0;
 let profileAttempts = 0;
 let transientAuth = false;
 let transientProfile = false;
+let selectedColumns = [];
 globalThis.activePlayerAuthFixture = () => ({
   auth: {
     async getUser() {
@@ -20,7 +21,7 @@ globalThis.activePlayerDatabaseFixture = {
   from(table) {
     assert.equal(table, "players");
     return {
-      select() { return this; },
+      select(columns) { selectedColumns.push(columns); return this; },
       eq() { return this; },
       async maybeSingle() {
         profileAttempts += 1;
@@ -67,4 +68,15 @@ test("request-scoped access retries only transient token and profile reads", asy
   assert.equal((await authenticateActivePlayer(request())).ok, true);
   assert.equal(authAttempts, 1);
   assert.equal(profileAttempts, 2);
+});
+
+test("home access reads display preferences in the same verified profile lookup", async () => {
+  transientProfile = false;
+  selectedColumns = [];
+  const result = await authenticateActivePlayer(request(), { profile: "home" });
+  assert.equal(result.ok, true);
+  assert.equal(selectedColumns.length, 1);
+  assert.match(selectedColumns[0], /show_survivor_standings/);
+  assert.match(selectedColumns[0], /hide_survivor_eliminated_rows/);
+  assert.match(selectedColumns[0], /active/);
 });

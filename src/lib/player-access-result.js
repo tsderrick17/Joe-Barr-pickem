@@ -39,3 +39,16 @@ export async function resolvePlayerAccess({ authorization, configured, verifyTok
   }
   return { ok: true, player: profile.data };
 }
+
+/** @param {string} code */
+export function playerAccessErrorMessage(code) {
+  switch (code) {
+    case "auth_not_configured": return "The server is missing required configuration.";
+    case "auth_unavailable": return "The sign-in service could not be reached. Please try again in a minute.";
+    case "profile_unavailable": return "Pick'em is having trouble reaching its records right now. Please try again in a minute.";
+    case "player_not_found":
+    case "player_inactive": return "Your player profile is not active in this Pick'em.";
+    case "commissioner_required": return "Commissioner access is required.";
+    default: return "Your sign-in session could not be verified.";
+  }
+}
