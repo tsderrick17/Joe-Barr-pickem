@@ -1,4 +1,5 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useBlindTable } from "@/components/collapse";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
@@ -66,7 +67,9 @@ export default function PickemScoreboard({
   seasonSnapshotReleased = false,
 }: Props) {
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
-  const displayedRows = hideEliminatedRows ? rows.filter((row) => !row.playoffEliminated) : rows;
+  const tableBox = useRef<HTMLDivElement>(null);
+  const eliminatedHidden = useBlindTable(hideEliminatedRows, tableBox);
+  const displayedRows = eliminatedHidden ? rows.filter((row) => !row.playoffEliminated) : rows;
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
   // Commissioners always; players from Week 6 until the Aug 1 season reset.
   const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;
@@ -93,7 +96,7 @@ export default function PickemScoreboard({
         </div>
         {flipButton}
       </div>
-      <div className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
+      <div ref={tableBox} className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`} data-picks={maxPicks}>
           {!isPlayoff ? <colgroup>
             <col className="pickem-ledger-wins-column" />
@@ -106,7 +109,7 @@ export default function PickemScoreboard({
           <tbody>
             {displayedRows.map((row) => {
               return (
-                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} key={row.id}>
+                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} data-blind-row={row.playoffEliminated ? "" : undefined} key={row.id}>
                   <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={row.trophies?.some((title) => title.includes("Pick'em Champion"))} titles={row.trophies} /></span></td>
                   {row.playoffEliminated ? (

@@ -64,3 +64,13 @@ test("an opening blind ends at the content's exact height, not a rounded one", a
   assert.doesNotMatch(source, /= node\.scrollHeight;/);
   assert.match(source, /new ResizeObserver/);
 });
+
+test("the Pick'em Pad's hidden rows roll away with the table's box, like the Survivor table's", async () => {
+  const pad = await readFile(new URL("../src/components/pickem-scoreboard.tsx", import.meta.url), "utf8");
+  const collapse = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
+  assert.match(pad, /useBlindTable\(hideEliminatedRows, tableBox\)/);
+  assert.match(pad, /data-blind-row=\{row\.playoffEliminated \? "" : undefined\}/);
+  // The rows leave the page only after the box has rolled shut, and the held animation is released in that render.
+  assert.match(collapse, /export function useBlindTable/);
+  assert.match(collapse, /holding\.current = animation;/);
+});
