@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   if (!(player.email_notifications_enabled && player.notification_email)) {
     return NextResponse.json({ error: "Turn on email reminders in Notifications before sending a test." }, { status: 409 });
   }
-  const email = await deliverEmailTest(reminder, commissioner.id, player.notification_email);
+  const email = await deliverEmailTest({ ...reminder, category: "custom", audience: "all_active" }, commissioner.id, player.notification_email);
   if (email.sent !== 1) {
     return NextResponse.json({ error: email.errors[0] ?? "Brevo did not accept the test email." }, { status: 502 });
   }

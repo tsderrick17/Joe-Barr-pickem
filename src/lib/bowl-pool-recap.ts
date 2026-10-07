@@ -18,10 +18,7 @@ export type BowlLineLockSnapshot = {
   games: Array<{ name: string; favorite: string; underdog: string; line: string }>;
 };
 
-type PlayerName = { first_name: string | null; last_name: string | null } | null;
-type BowlEntry = { id: string; player_id: string; players: PlayerName };
 type BowlGame = { id: string; season_id: string; bowl_name: string; kickoff_at: string; status: string; away_score: number | null; home_score: number | null; away_team_id: string | null; home_team_id: string | null; away: { short_name: string | null } | null; home: { short_name: string | null } | null; bowl_pool_game_lines: { favorite_team_id: string | null; locked_spread: number | null }[] | null };
-type BowlChampion = { player_id: string; players: PlayerName };
 
 function lineText(value: number | null) { return value === null ? "—" : value === 0 ? "PK" : `-${value}`; }
 
@@ -63,9 +60,9 @@ export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: 
   if (gameError || !(games ?? []).length) throw new Error("Bowl recap results could not be read.");
   const seasonId = games![0].season_id as string;
   const [{ data: entries, error: entryError }, { data: results, error: resultError }, { data: champions, error: championError }, { data: seasonGames, error: seasonGamesError }, { data: priorRecaps, error: priorRecapError }] = await Promise.all([
-    supabaseAdmin.from("bowl_pool_entries").select("id, player_id, players(first_name, last_name)").eq("season_id", seasonId).in("status", ["active", "complete"]),
+    supabaseAdmin.from("bowl_pool_entries").select("id, player_id, players(first_name)").eq("season_id", seasonId).in("status", ["active", "complete"]),
     supabaseAdmin.from("bowl_pool_game_results").select("entry_id, game_id, result"),
-    supabaseAdmin.from("bowl_pool_championships").select("player_id, players(first_name, last_name)").eq("season_id", seasonId),
+    supabaseAdmin.from("bowl_pool_championships").select("player_id, players(first_name)").eq("season_id", seasonId),
     supabaseAdmin.from("bowl_pool_games").select("id,status").eq("season_id", seasonId),
     supabaseAdmin.from("push_reminders").select("id, source_game_ids, recap_snapshot").eq("category", "bowl_daily_recap").neq("id", reminderId).not("recap_snapshot", "is", null),
   ]);
@@ -75,19 +72,19 @@ export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: 
     const entryResults = resultsByEntry.get(result.entry_id) ?? new Map<string, string>();
     entryResults.set(result.game_id, result.result); resultsByEntry.set(result.entry_id, entryResults);
   }
-  const rows = ((entries ?? []) as unknown as BowlEntry[]).map((entry) => {
+  const rows = (entries ?? []).map((entry) => {
     const entryResults = resultsByEntry.get(entry.id) ?? new Map<string, string>();
     const all = [...entryResults.values()];
-    return { name: [entry.players?.first_name, entry.players?.last_name].filter(Boolean).join(" ") || "Player", wins: all.filter((result) => result === "win").length, results: gameIds.map((id) => entryResults.get(id) === "win" ? "W" : entryResults.get(id) === "loss" ? "L" : "—") };
+    return { name: (entry.players?.first_name ?? "") || "Player", wins: all.filter((result) => result === "win").length, results: gameIds.map((id) => entryResults.get(id) === "win" ? "W" : entryResults.get(id) === "loss" ? "L" : "—") };
   }).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name));
-  const gamesView = (games! as unknown as BowlGame[]).map((game) => {
+  const gamesView = games!.map((game) => {
     const line = Array.isArray(game.bowl_pool_game_lines) ? game.bowl_pool_game_lines[0] : game.bowl_pool_game_lines;
     const favoriteAway = line?.favorite_team_id && line.favorite_team_id === game.away_team_id;
     const favorite = favoriteAway ? game.away?.short_name : game.home?.short_name;
     const underdog = favoriteAway ? game.home?.short_name : game.away?.short_name;
     return { name: game.bowl_name, favorite: favorite ?? "TBD", underdog: underdog ?? "TBD", line: lineText(line?.locked_spread ?? null), favoriteScore: favoriteAway ? game.away_score : game.home_score, underdogScore: favoriteAway ? game.home_score : game.away_score, status: game.status };
   });
-  const championsCrowned = ((champions ?? []) as unknown as BowlChampion[]).map((champion) => [champion.players?.first_name, champion.players?.last_name].filter(Boolean).join(" ")).filter(Boolean);
+  const championsCrowned = (champions ?? []).map((champion) => (champion.players?.first_name ?? "")).filter(Boolean);
   const leaderWins = rows[0]?.wins ?? 0;
   const remainingGames = (seasonGames ?? []).filter((game) => !["final", "cancelled", "no_contest"].includes(game.status)).length;
   const seasonGameIds = new Set((seasonGames ?? []).map((game) => game.id));

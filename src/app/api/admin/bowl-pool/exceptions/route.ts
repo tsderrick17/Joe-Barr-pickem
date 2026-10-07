@@ -9,11 +9,11 @@ async function seasonGames() {
   if (!season) return [];
   const { data: games, error } = await supabaseAdmin.from("bowl_pool_games").select("id, bowl_name, kickoff_at, status, away_team_id, home_team_id").eq("season_id", season.id).order("kickoff_at");
   if (error || !games) throw new Error("Bowl Pool exceptions could not be loaded.");
-  const teamIds = [...new Set(games.flatMap((game) => [game.away_team_id, game.home_team_id]).filter(Boolean))];
+  const teamIds = [...new Set(games.flatMap((game) => [game.away_team_id, game.home_team_id]).filter((id): id is string => Boolean(id)))];
   const { data: teams, error: teamError } = teamIds.length ? await supabaseAdmin.from("bowl_pool_teams").select("id, display_name").in("id", teamIds) : { data: [], error: null };
   if (teamError) throw new Error("Bowl Pool team details could not be loaded.");
   const names = new Map((teams ?? []).map((team) => [team.id, team.display_name]));
-  return games.map((game) => ({ id: game.id, bowlName: game.bowl_name, kickoffAt: game.kickoff_at, status: game.status, awayTeam: names.get(game.away_team_id) ?? "Team TBD", homeTeam: names.get(game.home_team_id) ?? "Team TBD" }));
+  return games.map((game) => ({ id: game.id, bowlName: game.bowl_name, kickoffAt: game.kickoff_at, status: game.status, awayTeam: names.get(game.away_team_id ?? "") ?? "Team TBD", homeTeam: names.get(game.home_team_id ?? "") ?? "Team TBD" }));
 }
 
 export async function GET(request: NextRequest) {
@@ -33,19 +33,21 @@ export async function POST(request: NextRequest) {
   let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" | "rescheduled"; kickoffAt?: string; changeId?: string };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 }); }
   if (!body.gameId || !["postponed", "cancelled", "no_contest", "rescheduled"].includes(body.status ?? "")) return NextResponse.json({ error: "Choose a Bowl Pool game and a valid disruption status." }, { status: 400 });
+  const gameId = body.gameId;
+  const status = body.status as string;
   if (body.status === "rescheduled" && body.changeId) {
-    const { error } = await supabaseAdmin.from("bowl_pool_schedule_changes").update({ reviewed_at: new Date().toISOString() }).eq("id", body.changeId).eq("game_id", body.gameId);
+    const { error } = await supabaseAdmin.from("bowl_pool_schedule_changes").update({ reviewed_at: new Date().toISOString() }).eq("id", body.changeId).eq("game_id", gameId);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ message: "Schedule change marked reviewed." });
   }
   if (body.status === "rescheduled") {
     if (!body.kickoffAt || !Number.isFinite(Date.parse(body.kickoffAt))) return NextResponse.json({ error: "A valid future kickoff is required to reschedule a Bowl game." }, { status: 400 });
-    const { error } = await supabaseAdmin.rpc("reschedule_bowl_game", { target_game_id: body.gameId, new_kickoff_at: new Date(body.kickoffAt).toISOString(), actor_player_id: commissioner.id });
+    const { error } = await supabaseAdmin.rpc("reschedule_bowl_game", { target_game_id: gameId, new_kickoff_at: new Date(body.kickoffAt).toISOString(), actor_player_id: commissioner.id });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed" }).in("category", ["bowl_pick_due", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [body.gameId]);
+    await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed" }).in("category", ["bowl_pick_due", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [gameId]);
     return NextResponse.json({ message: "Bowl Pool game rescheduled. Its picks were preserved and reminders will be rebuilt." });
   }
-  const { data, error } = await supabaseAdmin.rpc("record_bowl_game_disruption", { target_game_id: body.gameId, disruption_status: body.status, actor_player_id: commissioner.id });
+  const { data, error } = await supabaseAdmin.rpc("record_bowl_game_disruption", { target_game_id: gameId, disruption_status: status, actor_player_id: commissioner.id });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   const voided = Number(data?.[0]?.picks_voided ?? 0);
   return NextResponse.json({ message: `${body.status === "no_contest" ? "No contest" : body.status === "cancelled" ? "Cancellation" : "Postponement"} recorded. ${voided} Bowl Pool pick${voided === 1 ? "" : "s"} voided.` });

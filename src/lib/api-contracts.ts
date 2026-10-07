@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 // Viewer-safe JSON returned by player routes. Keep database rows and private
 // pre-kickoff picks out of these contracts; route shaping owns disclosure.
 
@@ -26,7 +27,7 @@ export type SlateGame = {
   preliminarySpread: number | null;
   spreadSource: string | null;
   spreadLockedAt: string | null;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: GameStatus;
   awayScore: number | null;
   homeScore: number | null;
   awayResult: "win" | "loss" | null;

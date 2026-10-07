@@ -40,9 +40,10 @@ export async function getSeasonBootstrapStatus(now = new Date()): Promise<Season
   ]);
   if (seasonError || runError || turnoverError) throw new Error("Season bootstrap status could not be loaded.");
   const turnoverStatus = turnover as SeasonBootstrapStatus["turnover"];
+  const lastRunStatus = lastRun as SeasonBootstrapStatus["lastRun"];
   if (!season) return {
     seasonYear, seasonId: null, seasonState: null, regularPeriods: 0,
-    loadedGames: 0, complete: false, lastRun, turnover: turnoverStatus,
+    loadedGames: 0, complete: false, lastRun: lastRunStatus, turnover: turnoverStatus,
   };
   const { data: periods, error: periodsError } = await supabaseAdmin.from("scoring_periods")
     .select("id").eq("season_id", season.id).eq("period_type", "regular");
@@ -57,7 +58,7 @@ export async function getSeasonBootstrapStatus(now = new Date()): Promise<Season
     seasonYear, seasonId: season.id, seasonState: season.state,
     regularPeriods: periodIds.length, loadedGames,
     complete: periodIds.length >= MIN_REGULAR_SEASON_WEEKS && loadedGames >= MIN_REGULAR_SEASON_GAMES,
-    lastRun: lastRun as SeasonBootstrapStatus["lastRun"],
+    lastRun: lastRunStatus,
     turnover: turnoverStatus,
   };
 }

@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { getWatchdogStatus } from "@/lib/watchdog-status";
@@ -11,7 +12,7 @@ type GameRow = {
   id: string;
   kickoff_at: string;
   line_lock_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
+  status: GameStatus;
   finalized_at: string | null;
 };
 

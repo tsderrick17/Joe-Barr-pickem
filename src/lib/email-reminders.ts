@@ -29,7 +29,6 @@ type EmailRecipient = {
   email: string;
 };
 
-type BowlRecipientEntry = { id: string; player_id: string; players: { notification_email: string | null; email_notifications_enabled: boolean } | null };
 
 type ExistingDelivery = {
   id: string;
@@ -213,7 +212,7 @@ async function recipientsForReminder(reminder: Reminder) {
       const pickedEntries = new Set((picks ?? []).map((pick) => pick.entry_id));
       selected = selected.filter((entry) => !pickedEntries.has(entry.id));
     }
-    return (selected as unknown as BowlRecipientEntry[]).flatMap((entry) => entry.players?.email_notifications_enabled && entry.players.notification_email
+    return selected.flatMap((entry) => entry.players?.email_notifications_enabled && entry.players.notification_email
       ? [{ playerId: entry.player_id, email: entry.players.notification_email as string }] : []);
   }
   const playerIds = await eligiblePlayerIds(reminder.audience);

@@ -109,7 +109,9 @@ async function syncAnnualSchedule(now: Date) {
       const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
       // A locked line is official and is never replaced. A new game gets its
       // first line; a still-preliminary line may be refreshed.
-      const provisionalLine = { game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), locked_at: now >= new Date(kickoff) ? kickoff : null };
+      const provisionalLine = { game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), // KNOWN DEFECT, found by the generated types: the column is NOT NULL (default now()), so a line stored before kickoff
+      // with NULL is rejected by the database. See docs/DECISION_LOG.md ("Generated database types").
+      locked_at: (now >= new Date(kickoff) ? kickoff : null) as string };
       const { error: newLineError } = await supabaseAdmin.from("bowl_pool_game_lines").upsert(provisionalLine, { onConflict: "game_id", ignoreDuplicates: true });
       if (newLineError) throw new Error("A Bowl Pool line could not be saved.");
       const { error: refreshLineError } = await supabaseAdmin.from("bowl_pool_game_lines").update(provisionalLine).eq("game_id", saved.id).is("locked_at", null);

@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { NextRequest, NextResponse } from "next/server";
 import { getWatchdogStatus } from "@/lib/watchdog-status";
 import { checkAutomationHealth } from "@/lib/automation-health";
@@ -11,7 +12,6 @@ import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
 import { loadSeasonLadder, type SeasonLadder } from "@/lib/season-ladder";
 import { readGradingGamesAndLines } from "@/lib/grading-dashboard-reads";
 
-type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 const GAME_STATUS_GRACE_MINUTES = 15;
 
 // Fetch every receipt, including busy months that exceed Supabase's page limit.

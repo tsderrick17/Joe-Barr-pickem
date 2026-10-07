@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { gradeAtsPick } from "@/lib/ats-grading";
 import { shouldShowSurvivorOnReceipt } from "@/lib/survivor-receipt-visibility";
 
@@ -18,7 +19,7 @@ export type GameRow = {
   kickoff_at: string;
   line_lock_at: string;
   is_international: boolean;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: GameStatus;
   away_score: number | null;
   home_score: number | null;
 };

@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import {
   advanceScoringPeriods,
   type WeekRolloverResult,
@@ -29,7 +30,7 @@ type GameRow = {
   away_team_id: string;
   home_team_id: string;
   kickoff_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
+  status: GameStatus;
 };
 type TeamRow = { id: string; full_name: string };
 type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
