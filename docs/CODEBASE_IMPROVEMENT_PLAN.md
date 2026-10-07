@@ -2,20 +2,40 @@
 
 Prepared: October 5, 2026. Review baseline: `34e12ac` on `main`.
 
-Status: in execution. The first combined release (`145c8f7`) delivered save
-validation, the 2026 holder-display scope, shared Slate/Standings contracts,
-the Season Snapshot auth pilot, session cache/retry tests, the architecture
-map, and one grading-dashboard read reduction. Its application, visual,
-isolated player-flow, and production smoke gates passed. Full route/database
-cost measurements, generated database types, and the remaining phases are
-still open. Pick'em saves subsequently gained request-scoped auth, and the
-current package extends it to Standings, Slate, Survivor, and Bowl Pool with route failure
-tests while removing Standings' duplicate viewer lookup. Commissioner and
-remaining player routes, generated database types, state/worker extraction,
-and measured cost budgets remain open. The isolated player-flow gate remains
-required. This document does not change
-pool rules, authorize a production data correction, or supersede the project
-reference.
+Status: phases 1 through 5 and the measurement half of phase 6 are delivered
+(October 5 to 7, 2026). Remaining work is listed under "Still open" below.
+This document does not change pool rules, authorize a production data
+correction, or supersede the project reference.
+
+### Delivered
+
+| Work | Pull request |
+|---|---|
+| Save validation, 2026 holder-display scope, shared contracts, Season Snapshot auth pilot, architecture map | first combined release (`145c8f7`) |
+| Off-season engine (`season_phase()`, gated dispatchers and cron jobs, app gate) | #427 |
+| Off-season player view; pad and ticket fixes | #428 |
+| Season Snapshot "Season / Playoffs" switch | #429 |
+| Generated database types, shared status lists, drift check (found: nonexistent `players.last_name` select, seven disagreeing `GameStatus` unions, `no_contest` shown as live) | #430 |
+| Body validation on every mutation route; recorded inaugural champion | #431 |
+| One authentication result on every protected route | #432 |
+| Bowl lines lock the morning of game day; preliminary until then | #433 |
+| Route cost baseline and regression budgets (Home, Slate) | #434 |
+| Slate page state as one reducer; uncertain saves confirmed from the server | #435 |
+| Worker deadline context with checkpoints; pure score decisions; stage documentation | #436 |
+| Reminder and Bowl worker checkpoints; pure reminder and Bowl line policy | #437 |
+| Documentation refresh | this change |
+
+### Still open
+
+- **Cross-layer scoring scenarios** (the phase 3 item): the same scenario list
+  run through the application scorer and the database functions.
+- **Picks read** on Standings loads a whole season of picks (about 64 KB at
+  week 16 for an 8 KB response); scope it, then ratchet the budget down.
+- **Cost baselines** for the workers and the grading dashboard.
+- **Remaining contracts and JavaScript checks** beyond the routes already typed.
+- **Stylesheet refactor** (color tokens, `!important` and duplicate selectors)
+  and the **football loader**, both tracked separately from this plan.
+
 Recheck the current branch before starting each work package: development with
 Claude and the stylesheet work may have advanced the baseline.
 
@@ -396,16 +416,14 @@ and delivery receipts when recovering from a failed release.
 
 ## Completion scorecard
 
-- Key database operations and API responses have dependable shared contracts.
-- Authentication distinguishes lost access from temporary service failure.
-- Invalid submissions cannot reach property access or mutations unchecked.
-- Competitive rules have execution coverage across application and database.
-- State transitions preserve drafts and reject stale responses.
-- Worker stages, deadlines, and uncertain outcomes have an explicit contract.
-- Cost improvements have measured evidence and practical regression budgets.
-- Styling and functional refactors remain independently reviewable.
-- Current reference/runbook entries describe the delivered behavior, and every
+- [x] Key database operations and API responses have dependable shared contracts (generated types; typed routes still being extended).
+- [x] Authentication distinguishes lost access from temporary service failure.
+- [x] Invalid submissions cannot reach property access or mutations unchecked.
+- [ ] Competitive rules have execution coverage across application and database (application scenarios exist; the shared database run is open).
+- [x] State transitions preserve drafts and reject stale responses (Slate reducer; browser flow spec).
+- [x] Worker stages, deadlines, and uncertain outcomes have an explicit contract ([WORKER_STAGES.md](WORKER_STAGES.md)).
+- [~] Cost improvements have measured evidence and practical regression budgets (Home and Slate measured and budgeted; workers, grading dashboard and the picks read are open).
+- [ ] Styling and functional refactors remain independently reviewable (stylesheet work still ahead).
+- [x] Current reference/runbook entries describe the delivered behavior, and every
   milestone identifies remaining work instead of claiming blanket completion.
 
-Begin with A and B. Review their evidence, then proceed through contracts and
-authentication before changing page state or worker orchestration.

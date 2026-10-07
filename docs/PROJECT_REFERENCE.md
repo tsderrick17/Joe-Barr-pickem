@@ -96,6 +96,26 @@ For a fictional-data CPU and JSON-size baseline of the two player response
 shapers, see [response cost baseline](RESPONSE_COST_BASELINE.md). It does not
 measure database requests or end-to-end route time.
 
+## Request boundaries
+
+- **One authentication result.** Every protected route uses `authenticateActivePlayer`
+  (directly, or through `commissionerAccess` and `profilePlayerAccess`): 401 for a
+  missing or invalid session, 403 for an inactive player or a missing role, 503 for
+  a sign-in or database outage (never reported as lost access), 500 for missing
+  configuration, each with a stable `code`. Nothing is cached and only safe reads are
+  retried.
+- **Bodies are validated before use.** Routes read JSON with `readJsonObject` and
+  take fields through the parsers in `src/lib/request-bodies.ts`; a malformed, null,
+  array or mistyped body is a 400 before any pool data is read or written.
+- **Database types are generated and committed** (`src/lib/database.types.ts`, from
+  the isolated database via `npm run db:types`). The isolated workflow checks that
+  they still match the schema when a pull request touches migrations or the types.
+  Status lists come from `src/lib/db-statuses.ts`, checked against the migrations'
+  CHECK constraints.
+- **Route cost budgets.** `test/route-cost-budgets.json` caps database requests, rows
+  and bytes for `/api/home` and `/api/board`; see
+  [RESPONSE_COST_BASELINE.md](RESPONSE_COST_BASELINE.md).
+
 ## Player identity and privacy
 
 - Players authenticate with their assigned pool identity and PIN/session flow.
@@ -245,6 +265,15 @@ measure database requests or end-to-end route time.
 - NCAA ATS picks follow the NFL privacy and locked-line rules. A whole-number
   source spread is adjusted by half a point for this pool so it cannot push;
   an actual `PK` game remains `PK`. A win is one standings point.
+- A Bowl line locks at 8:00 AM Eastern on its game day, like an NFL spread
+  (the schedule import and the provider sync both set `line_lock_at` that way).
+  Until then the line is preliminary: the latest provider spread is kept on the
+  line row with `locked_at` empty and shown in black; at the lock `locked_at` is
+  filled and the line, shown in teal, never changes. Only a locked line, or a pick,
+  freezes a game's teams and kickoff, so a provider moving a kickoff while the
+  spread is still preliminary is accepted. Health, integrity and the official-lines
+  email count only locked lines. The pool is live from December 1 (Eastern) until
+  its champion is crowned and never runs in the NFL off-season.
 - Bowl standings are visible to all players in an expandable grid. Before a
   game's kickoff, only the owner can see their selection; after kickoff the
   represented pick is public. Final cells show a full green win or red loss.
@@ -388,6 +417,30 @@ may enrich spreads but cannot override canonical schedule assignments.
 - The turnover creates missing active-player Survivor entries for the new
   season and stores one permanent kept/deleted-count receipt. Retrying returns
   that receipt without cleaning twice.
+
+### Off-season mode
+
+- The season runs from August 1 (Eastern) until the Super Bowl is final and
+  graded. `public.season_phase()` (and its application mirror in
+  `src/lib/season-phase.ts`) answers `in_season` or `off_season`: the current
+  season year's row is complete **and** its Super Bowl period is complete. At
+  12:00 AM Eastern on August 1 the season year turns over, the new year has no
+  completed Super Bowl, and the phase flips back without anyone acting.
+- Outside their windows the line-lock, reminder and Bowl dispatchers return
+  false inside Supabase, and the score worker, pre-lock spread refresh and
+  email-schedule reconciliation (called straight from pg_cron) carry the same
+  `season_phase()` gate, so an idle off-season tick never wakes a function. The
+  cron routes also answer `skipped` before taking a lease. The preseason
+  bootstrap (which performs the August 1 rollover) and the watchdog are not gated.
+  If the phase cannot be read the routes treat it as in season.
+- Players see a "See you next season!" banner in place of the ticket and the
+  Slate receipt, every table whole (stored hide choices are suspended, not
+  erased) with no hide, "− OUT" or Bowl-hide buttons, and a read-only Slate.
+  `/api/picks`, `/api/survivor`, `/api/bowl-pool` and the display fields of
+  `/api/profile` answer 409 `season_closed`. A player eliminated from the playoff
+  race gets the same quiet page ("You have been eliminated, thanks for playing.")
+  until August 1. Notification settings, the Pool Action filter, Pool Chat, the
+  Season Snapshot and its controls, and every Commissioner tool stay available.
 
 ## Automation safety and efficiency
 
