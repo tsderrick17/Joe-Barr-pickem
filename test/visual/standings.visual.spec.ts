@@ -80,7 +80,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
           if (scenario === "commissioner-playoff") {
             // The other half: the regular season, with its 6 Wk / All range.
             await page.getByRole("button", { name: "Season", exact: true }).click();
-            await page.waitForTimeout(600);
+            await page.waitForTimeout(1500);
             await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
           }
         }

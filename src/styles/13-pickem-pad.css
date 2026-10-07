@@ -200,6 +200,18 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
 }
+@media (max-width: 380px) {
+  /* Three columns of picks no longer fit beside the score and name on the narrowest phones (the last pick ran off
+     the edge), so five or six picks read in two columns and three short lines instead. */
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] tr,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] tr { grid-template-columns: 2.4rem 4.4rem repeat(2, minmax(0, 1fr)); }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-player,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-player { grid-row: 1 / span 3; }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-pick[colspan],
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-pick[colspan] { grid-row: 1 / span 3; }
+}
 /* Tablet and up: every pick of the round sits on one line per player. Each
    column is only as wide as its longest entry (abbreviations and spreads vary)
    plus one even gap, and the pad hugs the ledger instead of stretching across
@@ -299,8 +311,8 @@ html[data-theme="night"] .playoff-scoreboard {
 .season-snapshot-view + .pad-flip-button { margin-left: auto; }
 @media (max-width: 639px) {
   /* On a phone the week range drops to its own line under the switch, flush right, and the flip button stays up top. */
-  .season-snapshot .pickem-ledger-masthead { flex-wrap: wrap; row-gap: .4rem; }
-  .season-snapshot .pickem-ledger-masthead h2 { flex: 1 1 0; min-width: 5.5rem; }
+  .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) { flex-wrap: wrap; row-gap: .4rem; }
+  .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) h2 { flex: 1 1 0; min-width: 5.5rem; }
   .season-snapshot-view ~ .pad-flip-button { margin-left: auto; order: 2; }
   .season-snapshot-view ~ .season-snapshot-range { margin-left: auto; order: 3; }
 }

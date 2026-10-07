@@ -1489,3 +1489,5 @@ The Pick'em Pad is now titled "Pick'em Pad" in every round (it read "Playoff Led
 ## Season Snapshot: Season / Playoffs switch
 
 Once the playoffs begin, the Season Snapshot used to show only the playoff chart and hid the 6 Wk / All range. It now has a two-part Season | Playoffs switch right after the graph title (equal-width halves, the same look as the range toggle). It opens on Playoffs, remembers the last choice on the device (read when the pad is first turned over, like the range), and shows the 6 Wk / All range only on Season. Before the playoffs there is no switch. On phones the range drops to its own line under the switch so nothing overflows the pad. It stays available in the off-season: it is archive browsing.
+
+On phones 380 px wide and narrower, the playoff ticket lists a round's picks in one column (two columns made team names wrap mid-name, "Tennessee / Titans") and the Pick'em Pad shows five or six picks in two columns and three short lines (three columns ran the last pick off the edge). Wider phones are unchanged.
