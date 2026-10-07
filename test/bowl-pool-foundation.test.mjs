@@ -119,3 +119,13 @@ test("Bowl readiness treats preseason TBD teams as setup while preserving order 
   assert.match(route, /problem\.includes\("missing a team"\)/);
   assert.match(migration, /row_number\(\) over \(partition by season_id order by kickoff_at, id\)/i);
 });
+
+test("Bowl readiness reuses its game and entry reads and fails closed on dependent read errors", async () => {
+  const route = await readFile(new URL("../src/app/api/admin/bowl-pool-readiness/route.ts", import.meta.url), "utf8");
+  assert.equal((route.match(/from\("bowl_pool_games"\)/g) ?? []).length, 1);
+  assert.equal((route.match(/from\("bowl_pool_entries"\)/g) ?? []).length, 1);
+  assert.match(route, /const gameIds = \(games \?\? \[\]\)\.map\(\(game\) => game\.id\)/);
+  assert.match(route, /const entryIds = \(entries \?\? \[\]\)\.map\(\(entry\) => entry\.id\)/);
+  assert.match(route, /if \(gamesError \|\| entriesError\)/);
+  assert.match(route, /if \(linesError \|\| picksError \|\| resultsError \|\| changesError\)/);
+});

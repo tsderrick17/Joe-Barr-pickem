@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import pg from "pg";
+import { isolatedDatabaseEnabled } from "./test-database.mjs";
 
-const enabled = process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
-  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
+const enabled = isolatedDatabaseEnabled();
 const skip = !enabled && "Set PICKEM_TEST_DATABASE_URL for the isolated database to run this test.";
 
 async function one(client, sql, values = []) {

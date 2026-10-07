@@ -4,7 +4,7 @@ import {
 } from "@/lib/advance-scoring-periods";
 import { isDueForFinalScoreCheck } from "@/lib/score-window";
 import {
-  nextScoreCheckAt,
+  buildDeferredScoreCheckRows,
   shouldProtectScoreProviderQuota,
 } from "@/lib/score-check-backoff";
 import {
@@ -66,21 +66,11 @@ async function deferUnfinishedScoreChecks(
 ) {
   if (games.length === 0) return;
 
-  const checked = new Date(checkedAt);
-  const rows = games.map((game) => {
-    const previous = previousChecks.get(game.id);
-    const attempts = (previous?.attempts ?? 0) + 1;
-    return {
-      game_id: game.id,
-      attempts,
-      last_checked_at: checkedAt,
-      next_check_at: nextScoreCheckAt(
-        attempts,
-        checked,
-        playoffPeriodIds.has(game.scoring_period_id),
-      ),
-      updated_at: checkedAt,
-    };
+  const rows = buildDeferredScoreCheckRows({
+    games,
+    previousChecks,
+    checkedAt,
+    playoffPeriodIds,
   });
   const { error } = await supabaseAdmin
     .from("score_check_backoff")
@@ -146,7 +136,7 @@ export async function syncFinalScores({
   const checkedAt = new Date().toISOString();
   const now = new Date(checkedAt);
   const warnings: string[] = [];
-  await ensureAnnualSeasonRollover(checkedAt);
+  await ensureAnnualSeasonRollover(checkedAt, signal);
   signal?.throwIfAborted();
   await voidDisruptedPicks();
   signal?.throwIfAborted();

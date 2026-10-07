@@ -17,18 +17,23 @@ export type AnnualSeasonTurnoverResult = {
  */
 export async function ensureAnnualSeasonRollover(
   evaluatedAt = new Date().toISOString(),
+  signal?: AbortSignal,
 ): Promise<AnnualSeasonTurnoverResult> {
+  signal?.throwIfAborted();
   const { error: rolloverError } = await supabaseAdmin.rpc("ensure_annual_season_rollover", {
     evaluated_at: evaluatedAt,
   });
+  signal?.throwIfAborted();
   if (rolloverError) {
     throw new Error("The annual season handoff could not be verified safely.");
   }
 
+  signal?.throwIfAborted();
   const { data, error: turnoverError } = await supabaseAdmin.rpc(
     "perform_annual_season_turnover",
     { evaluated_at: evaluatedAt },
   );
+  signal?.throwIfAborted();
   if (turnoverError || !data) {
     throw new Error("The annual season cleanup could not be verified safely.");
   }

@@ -8,6 +8,10 @@ const DEFAULT_MAX_AGE_MINUTES = 35;
  * Diagnostic watchdog runs may fail independently without taking liveness
  * down; freshness of the last success is the circuit breaker for repeated
  * failures.
+ * @param {{ last_succeeded_at?: string | null, [key: string]: unknown } | null | undefined} row
+ * @param {Date} [now]
+ * @param {number} [maxAgeMinutes]
+ * @returns {{ healthy: false, reason: "missing" | "invalid" } | { healthy: boolean, reason: "current" | "stale", ageSeconds: number }}
  */
 export function assessAutomationWorkerHeartbeat(row, now = new Date(), maxAgeMinutes = DEFAULT_MAX_AGE_MINUTES) {
   if (!row?.last_succeeded_at) return { healthy: false, reason: "missing" };

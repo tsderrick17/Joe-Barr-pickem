@@ -13,5 +13,6 @@ test("the edge-to-edge Colts horseshoe is scaled down, wide marks up, and unknow
   assert.ok(teamLogoScale("IND") < 0.9);
   assert.ok(teamLogoScale("SEA") > 1.1);
   assert.equal(teamLogoScale("ind"), teamLogoScale("IND"));
+  assert.equal(teamLogoScale(" ind "), teamLogoScale("IND"));
   assert.equal(teamLogoScale("XYZ"), 1);
 });

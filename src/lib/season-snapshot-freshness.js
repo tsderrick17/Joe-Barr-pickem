@@ -25,6 +25,7 @@ const clamp = (value, low, high) => Math.min(Math.max(value, low), high);
 
 /**
  * @param {{ now: number, maxPicks?: number | null, games: Array<{ id: string, kickoff_at: string }>, picks: Array<{ player_id: string, game_id: string, result: string }>, playerIds: string[] }} week
+ * @returns {{ settled: boolean, lastKickoff: number | null, earliestGrade: number | null }}
  */
 export function activeWeekState({ now, maxPicks, games, picks, playerIds }) {
   const kickoffs = new Map(games.map((game) => [game.id, new Date(game.kickoff_at).getTime()]));
@@ -56,6 +57,7 @@ export function activeWeekState({ now, maxPicks, games, picks, playerIds }) {
  * How long a chart built at `now` can be trusted before it could have changed.
  * @param {number} now
  * @param {Array<ReturnType<typeof activeWeekState>>} weeks the active weeks (usually one)
+ * @returns {number}
  */
 export function snapshotFreshForMs(now, weeks) {
   if (!weeks.length || weeks.every((week) => week.settled)) return HOLD_MS;

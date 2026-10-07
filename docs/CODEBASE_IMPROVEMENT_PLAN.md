@@ -4,42 +4,178 @@ Prepared: October 5, 2026. Review baseline: `34e12ac` on `main`.
 
 Status: in execution on the October 5 review baseline. Completed locally so
 far: mutation-boundary validation and the launch-year holder correction;
-shared player-access handling across the principal player routes; browser
-session lifecycle coverage; shared API contracts for Slate, profile, saves,
-and grading; and TypeScript checking for core policy modules. The Slate state
-work is active: selection drafts and saved snapshots now share a reducer,
+shared player-access handling across the principal player routes and all
+28 commissioner routes (39 read and mutation handlers).
+Commissioner access preserves bounded profile retries and explicit failure
+codes; executable tests stop protected work on every failure category. The
+compatibility adapter is removed. Successful-path tests preserve verified audit
+identity, worker leases, cancellation signals, and exact automation-secret dispatch. Browser
+session lifecycle coverage, including the real browser request/cache wiring
+for concurrent reads, identity changes, profile-save invalidation, and a
+same-origin bearer-token boundary. The browser request, cache, and server
+player-access modules now join checked JavaScript policy types; shared
+API contracts for Slate, profile, saves,
+and grading; and TypeScript checking for core policy modules. Bowl pennant
+color normalization and season labeling have also been added to that checked
+set without changing runtime behavior. Pure reminder-readiness rules are now
+checked too, including a fail-closed test for unrecognized game statuses.
+Survivor reminder period rules now also have checked JSDoc types and explicit
+regular-season-only coverage. Public-pick visibility now joins the focused
+typecheck and has coverage for malformed dates and unrevealed rows. Survivor
+receipt visibility has an explicit period type and regression coverage for
+invalid timestamps and the kickoff boundary. Pick-column ordering now handles
+invalid kickoff timestamps deterministically and is policy-typechecked. The
+generated team-logo scale map and lookup are also typechecked from their
+generator template, with team asset coverage intact. Bowl receipt summary and
+selection equality helpers now have checked input/output types. The pure
+watchdog policy now has explicit health, bootstrap, and signal contracts and is
+included in the focused JSDoc typecheck without changing watchdog behavior.
+Bowl Pool settlement reconciliation now
+has an explicit schema-aligned input/output contract and is included in that
+typecheck; its settlement rules are unchanged. Provider-vs-stored
+final-score reconciliation now also has an explicit union
+return contract in the focused typecheck; missing, non-final, matching, and
+mismatching cases keep their existing behavior. Bowl email schedule helpers now
+have explicit input/output types within the same check. This also brought the
+shared Eastern schedule-time utilities into the gate, with typed dates and
+week-window inputs while retaining DST calculations. Bowl Pool schedule
+integrity now has a direct checked contract rather than a duplicate TypeScript
+forwarding adapter; malformed persisted status strings remain accepted at the
+boundary so the validator can report them as integrity problems. The read-only
+Season Readiness assessment now has
+an explicit typed report/check contract, with unknown persisted status strings
+still reaching its existing diagnostics. The read-only Opening Week checklist
+now has an explicit report/check contract, including the distinct manual-check
+state. Email, schedule, and readiness behavior is unchanged. Bowl Pool's access-error shaper
+now has an explicit typed status/body contract so 401, 403, configuration, and
+temporary-outage responses remain distinct. The deterministic Season Recovery
+Rehearsal also has a typed health/report contract while retaining its
+database-free, read-only nature; operational dashboard reads and backup and
+worker health assessments also have checked contracts; the policy check now covers 61 JavaScript
+modules.
+The Slate state work is active:
+selection drafts and saved snapshots now share a reducer,
 week switching is locked during saves, initial bootstrap reads are bounded and
 cancelled on unmount, and pending Pool Action preference changes survive stale
 week responses. Ambiguous pick-save outcomes now trigger one safe read rather
 than an automatic mutation retry. The Slate's bootstrap/week loading, request
 cancellation, server clock, and kickoff visibility refresh now live in a
 dedicated data hook; its kickoff refresh intentionally never hydrates player
-drafts. Browser-width and isolated player-flow evidence for this extraction
-remain outstanding. Phase 0 route-cost measurements, generated database types
+drafts. A mocked-browser race test now delays one week response until after a
+later selection has loaded, and verifies the stale response cannot replace the
+visible week or picks. All 53 mocked Slate browser/visual cases pass on
+Windows, including the recorded phone, tablet, and desktop widths and the
+stale-response race. The separate Standings visual suite also passes all 68
+regular-season, bowl, and commissioner cases at its recorded widths. Isolated
+player-flow evidence for the extraction remains outstanding. Phase 0
+route-cost measurements, generated database types
 and drift checks, further worker-stage extraction and isolated cancellation
 proof, and
-measured query optimizations also remain open. The first worker slice now
+measured query optimizations also remain open. The grading dashboard's duplicate
+selected-game read has already been removed: its line lookup reuses the selected
+game result, covered by `test/grading-dashboard-reads.test.mjs`; full-route cost
+measurement is still open. Bowl readiness now also reuses its one game and
+entry reads for dependent queries, removing four redundant reads from the
+populated route path; related-read errors now fail closed. The exact source-level
+request reduction is regression-tested, but full-route cost measurement remains
+open. The Pick'em Pad shaper now indexes season wins and current picks in one
+pass instead of rescanning both collections for each player. Its fictional
+early/late/playoff shaping medians improved locally with identical output bytes;
+the response-cost baseline records the limited before/after and keeps timings
+non-gating. The first worker slice now
 isolates completed-event selection and provider-team score matching in a pure
 module. Due-game cooldown eligibility and the regular/playoff polling-mode
 decision now live in a second pure module. Provider HTTP/JSON intake is isolated
 behind a tested transport boundary that preserves quota headers on failure;
 the repeated-delay/provider-reserve conjunction is now an explicit tested
-backoff policy. The score worker now receives the lease abort signal in its
+backoff policy. The shared retry policy also builds deterministic rows for
+unfinished score checks, with per-game attempt increments and the existing
+retry ladder tested independently of the database upsert. The score worker now
+receives the lease abort signal in its
 scheduled, manual, and watchdog paths, cancels the provider request, and checks
 the signal between database stages. The lease still outlives a timed-out call;
-other workers have not adopted cooperative cancellation. The polling cadence,
+the line-lock worker now does the same on all three entry paths, with its
+provider fetch honoring the lease signal and preserving quota headers on HTTP
+failure. The shared lease wrapper now has executable claim, overlap, heartbeat,
+release-retry, and timeout-retention tests instead of a source-text assertion.
+Reminder delivery has since adopted the lease abort signal on cron and watchdog
+paths, with receipt-aware handling. A route audit now confirms every current
+scheduled or Commissioner-triggered leased worker entrypoint passes its lease
+signal into a cancellation-aware worker. The remaining cancellation gap is
+isolated timeout/retry recovery evidence, not missing signal wiring.
+The leased watchdog now passes its 90-second execution deadline through both
+cron and Commissioner entry points. It checks cancellation between health,
+recovery, configuration, and incident stages; nested recovery workers receive
+both the watchdog and their own lease signals. Alert delivery is allowed to
+settle after its attempt receipt is persisted. Focused tests cover the route
+contract, stage boundaries, and child signal composition; isolated timeout and
+recovery proof remains open. The Bowl score route now passes its 270-second lease signal into
+the worker; ESPN and optional Odds API requests combine it with their existing
+12-second cap, and schedule/score loops stop at safe boundaries. Already-started
+database writes and atomic settlement RPCs are allowed to finish before the next
+cancellation check, including paired line-history writes. Focused tests cover
+the route contract, bounded abortable provider requests, loop/stage checks, and
+the atomic-call boundary; isolated timeout recovery for the Bowl worker remains
+open. The preseason bootstrap now receives its lease signal on all
+scheduled and Commissioner import paths. Its 30-second provider read is
+abortable, validation checks stop before writes, and its final schedule import
+RPC is deliberately allowed to finish and record the result once started.
+Annual rollover also checks between its two atomic phases, including when
+invoked during NFL score sync. Tests cover these boundaries, but isolated
+timeout recovery remains open. The Commissioner schedule-refresh worker now
+passes its lease signal to both provider requests, records successful provider
+usage before resuming cancellation checks, and stops before its atomic import;
+the canonical-schedule and Odds API import RPCs are allowed to finish once
+started. Focused tests cover the route and both atomic boundaries. The
+15-minute reminder-schedule reconciler also now receives its
+lease signal: it checks between its three independent plan stages, around reads
+and writes, and inside per-message scheduling loops. Partially applied plans
+remain safe because stable automation keys and uniqueness guards make the next
+pass converge without duplicate deliveries. Its tests preserve this route and
+stage boundary; isolated timeout/retry rehearsal is still needed.
+The polling cadence,
 quota thresholds, persistent retry backoff, and atomic database grading path
-are unchanged.
+are unchanged. Reminder delivery's completed/failed/retry decision now lives in
+a separately tested, policy-typechecked helper. Its tests preserve the
+15-minute retry delay, partial-recipient handling, and fail-closed treatment
+of an unknown error after delivery begins; transport and receipts remain
+unchanged. Thirty additional execution tests now exercise the real reminder
+worker and recipient-delivery code with mocked external stages: claim failures,
+readiness and suppression, partial delivery, guarded receipt retries, lost
+responses, and uncertain provider acceptance. These replace two source-text
+assertions with runtime evidence. Reminder delivery now receives the lease abort
+signal on cron and watchdog paths, releases unprocessed claims, and aborts
+active provider calls while keeping uncertain recipient receipts non-retryable.
+Unattempted recipients keep their normal 15-minute retry. Tests cover these
+branches, but claim concurrency and timeout recovery still need isolated
+evidence. The line-lock worker's provider/PK/fallback/missing-line selection
+is also a pure, policy-typechecked stage with direct behavior tests; atomic
+database locking and provider cadence remain in the worker. It now rejects
+mismatched or partial provider matchups, non-finite points, and invalid saved
+fallbacks before the atomic call; isolated line-lock rehearsal is still needed
+before release. A shared fictional
+ATS scenario matrix now independently states
+expected results for half/whole/zero spreads, favorite and underdog covers,
+pushes, ties, incomplete official lines, and invalid picks; application grading
+passes the matrix. Running the same cases through the database procedure is
+still pending isolated-database access.
 Environment-dependent isolated database,
 full-season/weekly rehearsal, and isolated-copy checks are not implied by a
-passing local application suite. The current application suite passes (588
-tests: 568 pass, 20 environment-gated skips, none failing); lint and both
-TypeScript checks pass. The production compile succeeds, but Next's final route
-collection cannot finish in this environment because server-side Supabase
-configuration is absent. A repeat of the fictional response-shaping benchmark
+passing local application suite. Direct PostgreSQL rehearsal tests now share a
+fail-closed connection gate: they require the exact isolated confirmation,
+validate PostgreSQL URLs, and reject the production project reference before
+connecting. Its local tests and the launch-preflight contract test pass. The
+current application suite passes (729 tests: 709 pass, 20 environment-gated
+skips, none failing); lint passes. The production compile succeeds, but Next's
+final route collection cannot finish in this environment because server-side
+Supabase configuration is absent. A repeat of the fictional response-shaping benchmark
 matched the recorded payload sizes and remained below 0.17 ms median per call;
-it does not substitute for the isolated database-backed route measurements.
-This worktree has no isolated-test credentials, so no route request or external
+the fictional JSON fragments now have a deterministic 125%-of-baseline size
+budget. The Grading refresh policy has direct boundary tests for its one- and
+15-minute cadences, and operating docs were corrected to the later accepted
+15-minute quiet cadence. Neither the fragment budget nor its timing results
+substitute for isolated database-backed route measurements.
+This worktree has no isolated-test credentials, so no live route request or external
 Supabase connection was attempted. This document does not change pool rules,
 authorize a production data correction, or supersede the project reference.
 Recheck the current branch before starting each work package: development with

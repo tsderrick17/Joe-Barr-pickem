@@ -19,3 +19,9 @@ test("a game with no kickoff time goes last", () => {
   const picks = [pick("x", undefined), pick("y", "2026-10-04T13:00:00Z")];
   assert.deepEqual([...picks].sort(comparePickColumns).map((item) => item.gameId), ["y", "x"]);
 });
+
+test("invalid kickoff times go last in deterministic game-id order", () => {
+  const picks = [pick("no-time", null), pick("valid", "2026-10-04T13:00:00Z"), pick("bad-time", "not-a-date")];
+  assert.deepEqual([...picks].sort(comparePickColumns).map((item) => item.gameId), ["valid", "bad-time", "no-time"]);
+  assert.deepEqual([...picks].reverse().sort(comparePickColumns).map((item) => item.gameId), ["valid", "bad-time", "no-time"]);
+});

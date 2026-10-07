@@ -1,8 +1,19 @@
 import { providerRequestCost } from "./provider-efficiency.js";
 import { getLineLock } from "./schedule-time.js";
 
+/** @typedef {import("./provider-efficiency.js").ProviderRun} ProviderRun */
+/** @typedef {{ kickoff_at?: string | null, kickoffAt?: string | null, line_lock_at?: string | null, lineLockAt?: string | null, finalized_at?: string | null, status?: string | null }} ScheduleGame */
+/** @typedef {ScheduleGame & { kickoff_at: string }} EfficiencyGame */
+/** @typedef {{ firstKickoff: number, games: ScheduleGame[] }} ScheduleSlate */
+/** @typedef {{ firstKickoff: number, games: EfficiencyGame[] }} EfficiencySlate */
+/** @typedef {{ slateStartedAt: string, games: number, settledGames: number, latencyMinutes: number | null, credits: number, finals: number, calls: number, productive: number, ambiguous: boolean, start: number, end: number }} SlateAccumulator */
+/** @typedef {{ date: string, credits: number, cumulative: number, scores: number, lines: number, other: number, estimatedCalls: number, forecast: number, forecastCumulative: number | null, forecastScores: number, forecastLines: number, forecastOther: number, forecastGames: number, forecastSlates: number, forecastRefreshes: number, forecastLockFetches: number }} CreditDay */
+/** @typedef {{ timestamp: number, used: number, remaining: number, limit: number, reportedAt: string }} ProviderCreditSnapshot */
+/** @typedef {import("./api-contracts").EfficiencyPoint} EfficiencyPoint */
+
 const SLATE_GROUP_GAP = 30 * 60000;
 const DEFAULT_SCORE_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
+/** @param {Date | number} value @param {string} timeZone */
 function dateKeyInZone(value, timeZone) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
@@ -13,22 +24,28 @@ function dateKeyInZone(value, timeZone) {
   const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
 }
+/** @param {unknown} value @returns {number | null} */
 function reported(value) {
   if (value == null || value === "") return null;
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
+/**
+ * @param {ProviderRun[]} runs
+ * @param {number} [fallbackLimit]
+ * @returns {ProviderCreditSnapshot | null}
+ */
 export function latestProviderCreditSnapshot(runs, fallbackLimit = 500) {
   let latest = null;
   for (const run of runs) {
-    const timestamp = Date.parse(run.completed_at ?? run.started_at);
+    const timestamp = Date.parse(run.completed_at ?? run.started_at ?? "");
     if (!Number.isFinite(timestamp)) continue;
     const used = reported(run.details?.requestsUsed);
     const remaining = reported(run.details?.requestsRemaining);
     if (used === null && remaining === null) continue;
     const limit = used !== null && remaining !== null ? used + remaining : fallbackLimit;
-    const coherentUsed = used ?? Math.max(0, limit - remaining);
+    const coherentUsed = used ?? Math.max(0, limit - (remaining ?? 0));
     const coherentRemaining = remaining ?? Math.max(0, limit - coherentUsed);
     if (!latest || timestamp > latest.timestamp) {
       latest = { timestamp, used: coherentUsed, remaining: coherentRemaining, limit };
@@ -47,12 +64,13 @@ const PRIOR_FIRST_HOUR_SHARE = 0.9;
  * It is a 15-day moving average; with too little history the
  * 90% prior stands in.
  */
+/** @param {ScheduleGame[]} games @param {Date} [now] @returns {{ share: number, slates: number, measured: boolean }} */
 export function firstHourSettleShare(games, now = new Date()) {
   const since = now.getTime() - HISTORY_DAYS * 86400000;
   let settledFast = 0;
   let total = 0;
   for (const slate of scheduleSlates(games)) {
-    const kickoffs = slate.games.map((game) => Date.parse(game.kickoff_at ?? game.kickoffAt));
+    const kickoffs = slate.games.map((game) => Date.parse(game.kickoff_at ?? game.kickoffAt ?? ""));
     const pollingStart = Math.max(...kickoffs) + 170 * 60000;
     if (pollingStart < since || pollingStart > now.getTime()) continue;
     const finals = slate.games.map((game) => Date.parse(game.finalized_at ?? ""));
@@ -64,6 +82,7 @@ export function firstHourSettleShare(games, now = new Date()) {
   return { share: Math.min(0.99, Math.max(0.5, settledFast / total)), slates: total, measured: true };
 }
 
+/** @param {number} x */
 function normalCdf(x) {
   // Abramowitz and Stegun 7.1.26, accurate to about 1e-7.
   const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
@@ -77,6 +96,7 @@ function normalCdf(x) {
  * its settle time is normally distributed across that hour (centered, with the
  * hour spanning plus or minus two standard deviations), cut off at the hour.
  */
+/** @param {number[]} rungMinutes */
 function firstHourExpectedChecks(rungMinutes) {
   const total = rungMinutes.reduce((sum, minutes) => sum + minutes, 0);
   const mean = total / 2;
@@ -94,6 +114,7 @@ function firstHourExpectedChecks(rungMinutes) {
 }
 
 /** Expected provider score checks for one slate given the retry ladder and the first-hour share. */
+/** @param {number[]} retryMinutes @param {number} firstHourShare */
 export function expectedScoreChecks(retryMinutes, firstHourShare) {
   let elapsed = 0;
   let firstHour = 0;
@@ -113,11 +134,13 @@ export function expectedScoreChecks(retryMinutes, firstHourShare) {
   };
 }
 
+/** @param {ScheduleGame[]} games @returns {ScheduleSlate[]} */
 function scheduleSlates(games) {
-  const sorted = [...games].sort((a, b) => Date.parse(a.kickoff_at ?? a.kickoffAt) - Date.parse(b.kickoff_at ?? b.kickoffAt));
+  const sorted = [...games].sort((a, b) => Date.parse(a.kickoff_at ?? a.kickoffAt ?? "") - Date.parse(b.kickoff_at ?? b.kickoffAt ?? ""));
+  /** @type {ScheduleSlate[]} */
   const groups = [];
   for (const game of sorted) {
-    const kickoff = Date.parse(game.kickoff_at ?? game.kickoffAt);
+    const kickoff = Date.parse(game.kickoff_at ?? game.kickoffAt ?? "");
     if (!Number.isFinite(kickoff)) continue;
     const group = groups.at(-1);
     if (!group || kickoff - group.firstKickoff > SLATE_GROUP_GAP) groups.push({ firstKickoff: kickoff, games: [game] });
@@ -126,12 +149,21 @@ function scheduleSlates(games) {
   return groups;
 }
 
+/**
+ * Build calendar-month actual and schedule-based provider-credit estimates.
+ * @param {ProviderRun[]} runs
+ * @param {Date} [now]
+ * @param {ScheduleGame[]} [games]
+ * @param {number[]} [retryMinutes]
+ * @param {Array<string | number | Date>} [regularSeasonGameDates]
+ */
 export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = DEFAULT_SCORE_RETRY_MINUTES, regularSeasonGameDates = []) {
   const timeZone = "America/New_York";
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
   const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
   const todayIndex = now.getUTCDate() - 1;
   const todayKey = new Date(start + todayIndex * 86400000).toISOString().slice(0, 10);
+  /** @type {CreditDay[]} */
   const allDays = Array.from({ length: daysInMonth }, (_, index) => ({
     date: new Date(start + index * 86400000).toISOString(), credits: 0, cumulative: 0,
     scores: 0, lines: 0, other: 0, estimatedCalls: 0,
@@ -139,13 +171,15 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   }));
   const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
   for (const run of runs) {
-    const timestamp = Date.parse(run.completed_at ?? run.started_at);
+    const timestamp = Date.parse(run.completed_at ?? run.started_at ?? "");
     if (timestamp < start || timestamp > now.getTime() || !Number.isFinite(timestamp)) continue;
     const day = allDays[Math.floor((timestamp - start) / 86400000)];
     const cost = providerRequestCost(run);
     day.credits += cost;
     const isLineRun = run.job_type === "line_locks" || run.job_type === "odds";
-    day[run.job_type === "scores" ? "scores" : isLineRun ? "lines" : "other"] += cost;
+    if (run.job_type === "scores") day.scores += cost;
+    else if (isLineRun) day.lines += cost;
+    else day.other += cost;
     if (cost > 0 && reported(run.details?.requestsLast) === null) day.estimatedCalls++;
   }
   let cumulative = 0;
@@ -175,7 +209,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   // on (6 PM the day before for early games, 8 AM on game day for the rest).
   const lockMoments = new Set();
   for (const game of games) {
-    const kickoff = Date.parse(game.kickoff_at ?? game.kickoffAt);
+    const kickoff = Date.parse(game.kickoff_at ?? game.kickoffAt ?? "");
     if (!Number.isFinite(kickoff) || kickoff <= now.getTime()) continue;
     const lockAt = Date.parse(game.line_lock_at ?? game.lineLockAt ?? getLineLock(new Date(kickoff)).lineLockAt);
     if (!Number.isFinite(lockAt) || lockAt <= now.getTime() || lockAt >= monthEnd) continue;
@@ -205,13 +239,13 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     .filter((key) => new Date(`${key}T12:00:00Z`).getUTCDay() === 0 && key <= dateKeyInZone(now, timeZone)))];
   const sundayCredits = new Map(regularSundayKeys.map((key) => [key, 0]));
   for (const run of runs) {
-    const timestamp = Date.parse(run.completed_at ?? run.started_at);
+    const timestamp = Date.parse(run.completed_at ?? run.started_at ?? "");
     if (!Number.isFinite(timestamp)) continue;
     const key = dateKeyInZone(new Date(timestamp), timeZone);
-    if (sundayCredits.has(key)) sundayCredits.set(key, sundayCredits.get(key) + providerRequestCost(run));
+    if (sundayCredits.has(key)) sundayCredits.set(key, (sundayCredits.get(key) ?? 0) + providerRequestCost(run));
   }
   const sundayAverageCredits = regularSundayKeys.length
-    ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
+    ? Math.round((regularSundayKeys.reduce((sum, key) => sum + (sundayCredits.get(key) ?? 0), 0) / regularSundayKeys.length) * 10) / 10
     : null;
   const provider = latestProviderCreditSnapshot(runs);
   return {
@@ -231,7 +265,9 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
 
 // Old receipts do not identify games. Only unambiguous live polling windows
 // can be attributed; overlapping windows are withheld, never counted twice.
+/** @param {EfficiencyGame[]} games @param {ProviderRun[]} runs @param {Date} [now] @returns {EfficiencyPoint[]} */
 export function slateEfficiencySeries(games, runs, now = new Date()) {
+  /** @type {EfficiencySlate[]} */
   const groups = [];
   for (const game of [...games].sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))) {
     const kickoff = Date.parse(game.kickoff_at);
@@ -240,25 +276,26 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
     if (!group || kickoff - group.firstKickoff > SLATE_GROUP_GAP) groups.push({ firstKickoff: kickoff, games: [game] });
     else group.games.push(game);
   }
+  /** @type {SlateAccumulator[]} */
   const slates = groups.map(({ firstKickoff, games: slateGames }) => {
     const slateStartedAt = new Date(firstKickoff).toISOString();
     const latestKickoff = Math.max(...slateGames.map((game) => Date.parse(game.kickoff_at)));
-    const complete = slateGames.every((game) => game.finalized_at && (game.status == null || game.status === "final") && Number.isFinite(Date.parse(game.finalized_at)));
+    const complete = slateGames.every((game) => game.finalized_at && (game.status == null || game.status === "final") && Number.isFinite(Date.parse(game.finalized_at ?? "")));
     const latencyMinutes = complete
-      ? Math.round(slateGames.reduce((total, game) => total + Math.max(0, (Date.parse(game.finalized_at) - latestKickoff) / 60000), 0) / slateGames.length)
+      ? Math.round(slateGames.reduce((total, game) => total + Math.max(0, (Date.parse(game.finalized_at ?? "") - latestKickoff) / 60000), 0) / slateGames.length)
       : null;
     return {
     slateStartedAt, games: slateGames.length, settledGames: complete ? slateGames.length : 0, latencyMinutes, credits: 0, finals: 0, calls: 0, productive: 0,
     ambiguous: false,
     start: Date.parse(slateStartedAt) + 170 * 60000,
     end: slateGames.every((game) => game.finalized_at)
-      ? Math.max(...slateGames.map((game) => Date.parse(game.finalized_at))) + 60000
+      ? Math.max(...slateGames.map((game) => Date.parse(game.finalized_at ?? ""))) + 60000
       : Math.min(now.getTime(), Date.parse(slateStartedAt) + 24 * 60 * 60000),
     };
   });
   for (const run of runs) {
     if (run.job_type !== "scores" || providerRequestCost(run) <= 0) continue;
-    const timestamp = Date.parse(run.started_at ?? run.completed_at);
+    const timestamp = Date.parse(run.started_at ?? run.completed_at ?? "");
     const candidates = slates.filter((slate) => timestamp >= slate.start && timestamp <= slate.end);
     if (candidates.length !== 1) { for (const slate of candidates) slate.ambiguous = true; continue; }
     const slate = candidates[0];
@@ -279,10 +316,13 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
 // Fifteen Eastern calendar dates, including the point's date. Weight by games,
 // not by slate, so a single-game Thursday does not count like a Sunday slate.
 const easternDayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
+/** @param {EfficiencyPoint[]} points @param {number} index @returns {number | null} */
 export function rollingCreditsPerGame15Days(points, index) {
   if (points[index]?.creditsPerGame == null) return null;
+  /** @param {string} value */
   const day = (value) => {
     const parts = easternDayFormatter.formatToParts(new Date(value));
+    /** @param {string} type */
     const valueOf = (type) => Number(parts.find((part) => part.type === type)?.value);
     return Date.UTC(valueOf("year"), valueOf("month") - 1, valueOf("day")) / 86400000;
   };

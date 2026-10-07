@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import pg from "pg";
+import { isolatedDatabaseEnabled } from "./test-database.mjs";
 
 // Runs on every isolated workflow run (same gate as the weekly rehearsal).
-const enabled = process.env.PICKEM_WEEKLY_REHEARSAL === "true"
-  && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
-  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
+const enabled = isolatedDatabaseEnabled({ flagName: "PICKEM_WEEKLY_REHEARSAL", flagValue: "true" });
 
 const HOUR = 60 * 60 * 1000;
 const at = (offsetMs) => new Date(Date.now() + offsetMs).toISOString();

@@ -3,6 +3,10 @@
  * than forty games. The receipt reports progress and save state rather than
  * trying to squeeze every selection into a tiny strip.
  */
+/**
+ * @param {{ selectedCount?: number, totalGames?: number, tiebreaker?: string | number, hasUnsavedChanges?: boolean, isSubmitting?: boolean }} [options]
+ * @returns {{ picksLabel: string, tiebreakerLabel: string, status: string, state: "quiet" | "unsaved" | "complete" }}
+ */
 export function bowlReceiptSummary({ selectedCount = 0, totalGames = 0, tiebreaker = "", hasUnsavedChanges = false, isSubmitting = false } = {}) {
   const hasSchedule = totalGames > 0;
   const tiebreakerEntered = String(tiebreaker).trim().length > 0;
@@ -55,7 +59,9 @@ export function bowlReceiptSummary({ selectedCount = 0, totalGames = 0, tiebreak
 }
 
 /** Compare selections by game/value rather than object insertion order. */
+/** @param {Record<string, unknown>} [first] @param {Record<string, unknown>} [second] @returns {boolean} */
 export function bowlSelectionsEqual(first = {}, second = {}) {
+  /** @param {Record<string, unknown>} values */
   const canonicalize = (values) => Object.fromEntries(
     Object.entries(values).sort(([firstId], [secondId]) => firstId.localeCompare(secondId)),
   );

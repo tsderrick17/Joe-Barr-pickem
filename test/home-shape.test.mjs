@@ -50,6 +50,25 @@ test("rows are sorted by wins, then name, and carry trophies and elimination", (
   assert.deepEqual([rowFor(rows, "Chris").playoffEliminated, rowFor(rows, "Dana").playoffEliminated], [true, false]);
 });
 
+test("large season histories count only wins and keep the visible slate picks grouped by player", () => {
+  const rows = shape({
+    allPicks: [
+      ...week,
+      ...Array.from({ length: 90 }, (_, index) => pick(
+        index % 3 === 0 ? "p1" : index % 3 === 1 ? "p2" : "p3",
+        `history-${index}`,
+        "ind",
+        index % 4 === 0 ? "win" : index % 4 === 1 ? "void" : "pending",
+        `history-week-${Math.floor(index / 6)}`,
+      )),
+    ],
+    currentWeekPicks: week,
+  });
+
+  assert.deepEqual(rows.map((row) => [row.id, row.wins]), [["p1", 9], ["p2", 8], ["p3", 7]]);
+  assert.deepEqual(rows.map((row) => [row.id, row.picks.length]), [["p1", 2], ["p2", 2], ["p3", 1]]);
+});
+
 test("results, spreads and line-lock flags follow the line on record", () => {
   const [ind] = rowFor(shape(), "Dana").picks;
   assert.deepEqual([ind.resultMark, ind.spread, ind.isLineLocked], ["W", "-3.5", true]);

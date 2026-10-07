@@ -23,6 +23,10 @@ const PLAYER_SECONDS_PER_ACTIVE_DAY = 30;
 // 10.4 GB of Functions Storage over about 730 Vercel deployments (production and previews).
 const FUNCTION_BYTES_PER_DEPLOYMENT = (10.4 * 1024 ** 3) / 730;
 
+/**
+ * @param {{ activePlayers: number, days?: number }} options
+ * @returns {{ seconds: number, backgroundSeconds: number, playerSeconds: number }}
+ */
 export function estimateFluidCpu({ activePlayers, days = 30 }) {
   const backgroundPerDay = SCHEDULED_JOBS_PER_DAY.reduce((sum, job) => sum + job.perDay * job.cpuSeconds, 0) + HEALTH_PROBE_SECONDS_PER_DAY;
   const backgroundSeconds = backgroundPerDay * days;
@@ -30,6 +34,7 @@ export function estimateFluidCpu({ activePlayers, days = 30 }) {
   return { seconds: backgroundSeconds + playerSeconds, backgroundSeconds, playerSeconds };
 }
 
+/** @param {number} deployments @returns {number} */
 export function estimateFunctionsStorageBytes(deployments) {
   return Math.max(0, deployments) * FUNCTION_BYTES_PER_DEPLOYMENT;
 }

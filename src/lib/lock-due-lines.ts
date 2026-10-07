@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
-import { isFallbackLineFresh } from "@/lib/line-fallback-policy.js";
+import { selectLineLockDecisions } from "@/lib/line-lock-decisions.js";
+import { fetchLineLockProviderEvents } from "@/lib/line-lock-provider-client.js";
 
 type DueGame = {
   id: string;
@@ -25,34 +26,6 @@ type HistoryRow = {
   captured_at: string;
 };
 
-type OddsOutcome = {
-  name: string;
-  point?: number;
-};
-
-type OddsEvent = {
-  id: string;
-  bookmakers?: Array<{
-    key: string;
-    markets?: Array<{
-      key: string;
-      outcomes?: OddsOutcome[];
-    }>;
-  }>;
-};
-
-type LockDecision = {
-  gameId: string;
-  favoriteTeamId: string;
-  spread: number;
-  source: string;
-  sourceCapturedAt: string;
-  usedFallback: boolean;
-  wasPickEm: boolean;
-  // Fresh provider lines also join the preliminary-spread history.
-  recordHistory: boolean;
-};
-
 export type LockLinesResult = {
   checkedAt: string;
   dueGames: number;
@@ -69,10 +42,13 @@ export type LockLinesResult = {
 
 export async function lockDueLines(
   currentTime = new Date(),
+  signal?: AbortSignal,
 ): Promise<LockLinesResult> {
   try {
-    return await lockDueLinesInternal(currentTime);
+    signal?.throwIfAborted();
+    return await lockDueLinesInternal(currentTime, signal);
   } catch (error) {
+    signal?.throwIfAborted();
     const message =
       error instanceof Error ? error.message : "The official line check failed.";
 
@@ -91,12 +67,15 @@ export async function lockDueLines(
 
 async function lockDueLinesInternal(
   currentTime = new Date(),
+  signal?: AbortSignal,
 ): Promise<LockLinesResult> {
   const oddsApiKey = process.env.ODDS_API_KEY;
   const checkedAt = currentTime.toISOString();
   const warnings: string[] = [];
 
+  signal?.throwIfAborted();
   await voidDisruptedPicks();
+  signal?.throwIfAborted();
 
   const { data: candidates, error: candidatesError } =
     await supabaseAdmin
@@ -108,6 +87,7 @@ async function lockDueLinesInternal(
       .lte("line_lock_at", checkedAt)
       .gt("kickoff_at", checkedAt)
       .order("line_lock_at");
+  signal?.throwIfAborted();
 
   if (candidatesError) {
     throw new Error("Games due for line locking could not be loaded.");
@@ -136,6 +116,7 @@ async function lockDueLinesInternal(
       .from("game_lines")
       .select("game_id")
       .in("game_id", candidateIds);
+  signal?.throwIfAborted();
 
   if (existingLinesError) {
     throw new Error("Existing official lines could not be checked.");
@@ -183,6 +164,7 @@ async function lockDueLinesInternal(
     .from("teams")
     .select("id, full_name")
     .in("id", teamIds);
+  signal?.throwIfAborted();
 
   if (teamsError || !teams) {
     throw new Error("The NFL team list could not be loaded.");
@@ -212,6 +194,7 @@ async function lockDueLinesInternal(
       )
       .in("game_id", dueGameIds)
       .order("captured_at", { ascending: false });
+  signal?.throwIfAborted();
 
   if (historyError) {
     throw new Error("Saved spread history could not be loaded.");
@@ -225,170 +208,27 @@ async function lockDueLinesInternal(
     }
   }
 
-  let providerAvailable = true;
-  let requestsRemaining: string | null = null;
-  let requestsUsed: string | null = null;
-  let requestsLast: string | null = null;
-  let oddsEvents: OddsEvent[] = [];
+  const provider = await fetchLineLockProviderEvents(configuredOddsApiKey, fetch, signal);
+  signal?.throwIfAborted();
+  if (provider.warning) warnings.push(provider.warning);
 
-  try {
-    const query = new URLSearchParams({
-      apiKey: configuredOddsApiKey,
-      regions: "us",
-      markets: "spreads",
-      bookmakers: "draftkings",
-      oddsFormat: "american",
+  const { decisions, missingGames, warnings: decisionWarnings } =
+    selectLineLockDecisions({
+      dueGames,
+      oddsEvents: provider.events,
+      latestHistoryByGameId,
+      teamNameById,
+      teamIdByName,
+      checkedAt,
     });
-
-    const response = await fetch(
-      `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?${query}`,
-      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
-    );
-
-    requestsRemaining =
-      response.headers.get("x-requests-remaining");
-    requestsUsed = response.headers.get("x-requests-used");
-    requestsLast = response.headers.get("x-requests-last");
-
-    if (!response.ok) {
-      providerAvailable = false;
-      warnings.push(
-        "The live odds provider was unavailable. Last known lines were used where possible.",
-      );
-    } else {
-      const payload: unknown = await response.json();
-      if (Array.isArray(payload)) {
-        oddsEvents = payload as OddsEvent[];
-      } else {
-        providerAvailable = false;
-        warnings.push(
-          "The live odds provider returned an unexpected response. Last known lines were used where possible.",
-        );
-      }
-    }
-  } catch {
-    providerAvailable = false;
-    warnings.push(
-      "The live odds provider could not be reached. Last known lines were used where possible.",
-    );
-  }
-
-  const eventByExternalId = new Map(
-    oddsEvents.map((event) => [event.id, event]),
-  );
-
-  const decisions: LockDecision[] = [];
-  const missingGames: string[] = [];
-
-  for (const game of dueGames) {
-    const event = game.odds_event_id
-      ? eventByExternalId.get(game.odds_event_id)
-      : undefined;
-    const draftKings = event?.bookmakers?.find(
-      (bookmaker) => bookmaker.key === "draftkings",
-    );
-    const spreadMarket = draftKings?.markets?.find(
-      (market) => market.key === "spreads",
-    );
-    const outcomes = spreadMarket?.outcomes ?? [];
-
-    const favorite = outcomes.find(
-      (outcome) =>
-        typeof outcome.point === "number" &&
-        outcome.point < 0,
-    );
-
-    const isPickEm =
-      outcomes.length === 2 &&
-      outcomes.every(
-        (outcome) =>
-          typeof outcome.point === "number" &&
-          outcome.point === 0,
-      );
-
-    if (favorite) {
-      const favoriteTeamId = teamIdByName.get(favorite.name);
-
-      if (favoriteTeamId) {
-        const spread = Math.abs(favorite.point ?? 0);
-
-        decisions.push({
-          gameId: game.id,
-          favoriteTeamId,
-          spread,
-          source: "DraftKings",
-          sourceCapturedAt: checkedAt,
-          usedFallback: false,
-          wasPickEm: false,
-          recordHistory: true,
-        });
-
-
-        continue;
-      }
-    }
-
-    if (isPickEm) {
-      // The pool's PK convention is home-team left. Keeping that designation
-      // stable also makes tickets, Slate rows, and immutable emails agree.
-      const favoriteTeamId = game.home_team_id;
-
-      decisions.push({
-        gameId: game.id,
-        favoriteTeamId,
-        spread: 0,
-        source: "DraftKings",
-        sourceCapturedAt: checkedAt,
-        usedFallback: false,
-        wasPickEm: true,
-        recordHistory: true,
-      });
-
-
-      continue;
-    }
-
-    const previousLine = latestHistoryByGameId.get(game.id);
-
-    if (
-      previousLine?.favorite_team_id &&
-      isFallbackLineFresh(previousLine.captured_at, checkedAt)
-    ) {
-      decisions.push({
-        gameId: game.id,
-        favoriteTeamId: previousLine.favorite_team_id,
-        spread: Number(previousLine.spread),
-        source: `${previousLine.source} - last known`,
-        sourceCapturedAt: previousLine.captured_at,
-        usedFallback: true,
-        wasPickEm: Number(previousLine.spread) === 0,
-        recordHistory: false,
-      });
-
-      continue;
-    }
-
-    const awayTeam =
-      teamNameById.get(game.away_team_id) ?? "Unknown team";
-    const homeTeam =
-      teamNameById.get(game.home_team_id) ?? "Unknown team";
-
-    missingGames.push(`${awayTeam} at ${homeTeam}`);
-    if (previousLine?.favorite_team_id) {
-      const ageMilliseconds =
-        Date.parse(checkedAt) - Date.parse(previousLine.captured_at);
-      const ageDescription = Number.isFinite(ageMilliseconds)
-        ? `${Math.max(0, Math.floor(ageMilliseconds / (60 * 60 * 1000)))} hours old`
-        : "too old to verify";
-      warnings.push(
-        `${awayTeam} at ${homeTeam} was not locked because its last known line was ${ageDescription}. Commissioner review is required.`,
-      );
-    }
-  }
+  warnings.push(...decisionWarnings);
 
   let lockedCount = 0;
 
   if (decisions.length > 0) {
+    // Do not start a new commit after timeout. An RPC already in flight may
+    // still commit, so the retained lease and atomic write remain essential.
+    signal?.throwIfAborted();
     // The official line, its history snapshot, and its audit entry are saved
     // together. If any part fails, none of it is saved and the next run retries.
     const { data: savedCount, error: lockError } = await supabaseAdmin.rpc(
@@ -407,6 +247,7 @@ async function lockDueLinesInternal(
         locked_at: checkedAt,
       },
     );
+    signal?.throwIfAborted();
 
     if (lockError || typeof savedCount !== "number") {
       throw new Error("The official game lines could not be saved.");
@@ -431,13 +272,14 @@ async function lockDueLinesInternal(
       (decision) => decision.wasPickEm,
     ).length,
     missingGames,
-    providerAvailable,
-    requestsRemaining,
-    requestsUsed,
-    requestsLast,
+    providerAvailable: provider.providerAvailable,
+    requestsRemaining: provider.requestsRemaining,
+    requestsUsed: provider.requestsUsed,
+    requestsLast: provider.requestsLast,
     warnings,
   };
 
+  signal?.throwIfAborted();
   const { error: runError } = await supabaseAdmin
     .from("sync_runs")
     .insert({
@@ -447,6 +289,7 @@ async function lockDueLinesInternal(
       completed_at: new Date().toISOString(),
       details: result,
     });
+  signal?.throwIfAborted();
 
   if (runError) {
     warnings.push(

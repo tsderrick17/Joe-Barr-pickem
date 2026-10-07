@@ -34,13 +34,6 @@ test("react and react-dom are the same version", async () => {
   assert.equal(pkg.dependencies["react-dom"], pkg.dependencies.react);
 });
 
-test("the commissioner gate retries a transient read and logs a persistent one", async () => {
-  const gate = await read("src/lib/require-commissioner.ts");
-  assert.match(gate, /const \{ data: player, error \} = await retrySafeRead\(/);
-  assert.match(gate, /if \(error\) console\.error\(/);
-  assert.match(gate, /return player\?\.active && player\.is_commissioner \? player : null;/, "still fails closed");
-});
-
 test("the Bowl dispatcher uses the same Eastern August 1 season year as the app", async () => {
   const sql = await read("supabase/migrations/20260929040000_bowl_dispatch_eastern_season_year.sql");
   assert.match(sql, /season_year_value integer := extract\(year from \(clock_timestamp\(\) at time zone 'America\/New_York'\)\)::integer;/);

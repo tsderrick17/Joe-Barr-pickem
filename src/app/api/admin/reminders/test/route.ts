@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deliverEmailTest } from "@/lib/email-reminders";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
+  const commissioner = access.player;
   const body = await request.json().catch(() => ({})) as { template?: unknown };
   const selectionPreview = body.template === "selections";
   const { data: selectionTemplate } = selectionPreview

@@ -2,77 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { gradeAtsPick } from "../src/lib/ats-grading.js";
 import { isDueForFinalScoreCheck } from "../src/lib/score-window.js";
+import { atsGradingScenarios } from "./fixtures/ats-grading-scenarios.mjs";
 
-const game = {
-  favoriteTeamId: "away",
-  lockedSpread: 3.5,
-  awayTeamId: "away",
-  homeTeamId: "home",
-  awayScore: 24,
-  homeScore: 20,
-};
-
-test("grades an ATS favorite win and underdog loss", () => {
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away" }), "win");
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "home" }), "loss");
-});
-
-test("records ATS pushes as losses", () => {
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "away", awayScore: 24, homeScore: 21, lockedSpread: 3 }),
-    "loss",
-  );
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "home", awayScore: 24, homeScore: 21, lockedSpread: 3 }),
-    "loss",
-  );
-});
-
-test("grades an underdog cover and a favorite ATS loss", () => {
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "home", awayScore: 24, homeScore: 23 }),
-    "win",
-  );
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "away", awayScore: 24, homeScore: 23 }),
-    "loss",
-  );
-});
-
-test("grades a home favorite and its opponent from the same final score", () => {
-  const homeFavorite = {
-    selectedTeamId: "home",
-    favoriteTeamId: "home",
-    lockedSpread: 4.5,
-    awayTeamId: "away",
-    homeTeamId: "home",
-    awayScore: 17,
-    homeScore: 24,
-  };
-
-  assert.equal(gradeAtsPick(homeFavorite), "win");
-  assert.equal(
-    gradeAtsPick({ ...homeFavorite, selectedTeamId: "away" }),
-    "loss",
-  );
-});
-
-test("grades a pick-em winner and records a tie as a loss", () => {
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: 0, awayScore: 20, homeScore: 17 }),
-    "win",
-  );
-  assert.equal(
-    gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: 0, awayScore: 20, homeScore: 20 }),
-    "loss",
-  );
-});
-
-test("does not grade without a usable official line", () => {
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", favoriteTeamId: null }), "pending");
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", lockedSpread: Number.NaN }), "pending");
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "other" }), "pending");
-  assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", homeScore: null }), "pending");
+test("ATS grading matches the independently specified shared scenario matrix", () => {
+  for (const { name, pick, expected } of atsGradingScenarios) {
+    assert.equal(gradeAtsPick(pick), expected, name);
+  }
 });
 
 test("begins final-score checks two hours and fifty minutes after kickoff", () => {

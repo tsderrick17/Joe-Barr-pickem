@@ -61,21 +61,35 @@ export async function getSeasonBootstrapStatus(now = new Date()): Promise<Season
     turnover: turnoverStatus,
   };
 }
-export async function prepareFullSchedule(now = new Date()) {
+export async function prepareFullSchedule(now = new Date(), signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const seasonYear = seasonYearAt(now);
   const sourceUrl = process.env.NFL_FULL_SCHEDULE_URL ?? NFLVERSE_SCHEDULE_URL;
   let response: Response;
   try {
-    response = await fetch(sourceUrl, { cache: "no-store", signal: AbortSignal.timeout(30_000) });
+    const timeout = AbortSignal.timeout(30_000);
+    response = await fetch(sourceUrl, { cache: "no-store", signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
   } catch {
+    signal?.throwIfAborted();
     throw new Error("The full-season schedule provider could not be reached.");
   }
+  signal?.throwIfAborted();
   if (!response.ok) throw new Error("The full-season schedule provider did not return a usable schedule.");
-  const games = parseNflverseRegularSeason(await response.text(), seasonYear);
+  let sourceText: string;
+  try {
+    sourceText = await response.text();
+  } catch (error) {
+    signal?.throwIfAborted();
+    throw error;
+  }
+  signal?.throwIfAborted();
+  const games = parseNflverseRegularSeason(sourceText, seasonYear);
+  signal?.throwIfAborted();
   const [{ data: season }, { data: teams, error: teamsError }] = await Promise.all([
     supabaseAdmin.from("seasons").select("id, state").eq("year", seasonYear).maybeSingle(),
     supabaseAdmin.from("teams").select("id, abbreviation").eq("active", true),
   ]);
+  signal?.throwIfAborted();
   if (!season) throw new Error(`The ${seasonYear} season has not been set up yet.`);
   if (season.state !== "preseason") throw new Error("The full-season bootstrap is preseason-only; use live reconciliation after the season begins.");
   if (teamsError || !teams) throw new Error("The NFL team list could not be loaded.");
@@ -86,10 +100,14 @@ export async function prepareFullSchedule(now = new Date()) {
     .select("id, display_order, starts_at, ends_at").eq("season_id", season.id)
     .eq("period_type", "regular").order("display_order");
   let { data: periods, error: periodsError } = await loadPeriods();
+  signal?.throwIfAborted();
   if (!periodsError && periods && periods.length < weeks) {
+    signal?.throwIfAborted();
     const { error: extendError } = await supabaseAdmin.rpc("ensure_regular_season_weeks", { target_season_id: season.id, week_count: weeks });
+    signal?.throwIfAborted();
     if (extendError) throw new Error(`The season template could not be extended to ${weeks} weeks: ${extendError.message}`);
     ({ data: periods, error: periodsError } = await loadPeriods());
+    signal?.throwIfAborted();
   }
   if (periodsError || !periods || periods.length !== weeks) throw new Error(`The ${weeks}-week schedule does not match the season's ${periods?.length ?? 0} regular-season weeks. Nothing was changed.`);
   const teamId = new Map((teams as TeamRow[]).map((team) => [team.abbreviation, team.id]));
@@ -114,16 +132,24 @@ export async function prepareFullSchedule(now = new Date()) {
   return { seasonYear, season, games, scheduleGames, periodAssignments, sourceUrl };
 }
 
-export async function bootstrapFullSchedule({ automatic = false, now = new Date() } = {}) {
-  if (automatic) await ensureAnnualSeasonRollover(now.toISOString());
+export async function bootstrapFullSchedule({ automatic = false, now = new Date(), signal }: { automatic?: boolean; now?: Date; signal?: AbortSignal } = {}) {
+  signal?.throwIfAborted();
+  if (automatic) await ensureAnnualSeasonRollover(now.toISOString(), signal);
+  signal?.throwIfAborted();
   const before = await getSeasonBootstrapStatus(now);
+  signal?.throwIfAborted();
   if (before.complete) return { outcome: "already_complete" as const, ...before };
   const { data: run, error: runError } = await supabaseAdmin.from("sync_runs")
     .insert({ provider: "nflverse", job_type: "season_bootstrap", status: "started", details: { automatic, seasonYear: before.seasonYear } })
     .select("id").single();
   if (runError || !run) throw new Error("The season bootstrap attempt could not be recorded.");
   try {
-    const prepared = await prepareFullSchedule(now);
+    signal?.throwIfAborted();
+    const prepared = await prepareFullSchedule(now, signal);
+    signal?.throwIfAborted();
+    // From here, the import and its run receipt must complete together. A
+    // timeout after this point cannot establish whether the atomic import ran;
+    // let its response determine success/failure instead of aborting the call.
     const { data, error } = await supabaseAdmin.rpc("import_full_schedule_atomically", {
       target_season_id: prepared.season.id,
       period_assignments: prepared.periodAssignments,

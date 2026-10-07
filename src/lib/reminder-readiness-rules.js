@@ -3,10 +3,19 @@ import {
   isSettledGameStatus,
 } from "./game-status-policy.js";
 
+/** @typedef {{ ready: boolean, reason: string | null, terminal?: boolean }} Readiness */
+/** @typedef {{ id: string }} Period */
+/** @typedef {{ kickoff_at: string, status: string }} Game */
+
+/** @param {string} status */
 export function isTerminalGameStatus(status) {
   return isSettledGameStatus(status);
 }
 
+/**
+ * @param {{ activePeriod: Period | null | undefined, gameCount: number }} input
+ * @returns {Readiness}
+ */
 export function isFreshSlateReady({ activePeriod, gameCount }) {
   if (!activePeriod) return { ready: false, reason: "The new week is not active yet." };
   return gameCount > 1
@@ -14,6 +23,10 @@ export function isFreshSlateReady({ activePeriod, gameCount }) {
     : { ready: false, reason: "The new week does not yet have a full Slate." };
 }
 
+/**
+ * @param {{ period: Period | null | undefined, games: Game[], pendingAtsCount: number, now: Date, easternDay: (value: string) => string }} input
+ * @returns {Readiness}
+ */
 export function isPlayoffDayRecapReady({ period, games, pendingAtsCount, now, easternDay }) {
   if (!period) return { ready: false, reason: "A playoff round is not active yet." };
   const started = games.filter((game) => new Date(game.kickoff_at) <= now);
@@ -24,6 +37,10 @@ export function isPlayoffDayRecapReady({ period, games, pendingAtsCount, now, ea
   return pendingAtsCount === 0 ? { ready: true, reason: null } : { ready: false, reason: "Playoff grades are still being finalized." };
 }
 
+/**
+ * @param {{ activePeriod: Period | null | undefined, games: Game[], window: "early" | "late", now: Date, easternWeekday: (value: string) => string, easternHour: (value: string) => number }} input
+ * @returns {Readiness}
+ */
 export function isSundayWindowReady({ activePeriod, games, window, now, easternWeekday, easternHour }) {
   if (!activePeriod) return { ready: false, reason: "There is no active week for the Sunday reveal." };
   const [startHour, endHour] = window === "early" ? [12, 16] : [16, 20];
@@ -33,6 +50,10 @@ export function isSundayWindowReady({ activePeriod, games, window, now, easternW
   return { ready: true, reason: null };
 }
 
+/**
+ * @param {{ kickoffReady: Readiness, selectedPickCount: number }} input
+ * @returns {Readiness}
+ */
 export function publicRevealSelectionReadiness({ kickoffReady, selectedPickCount }) {
   if (!kickoffReady.ready) return kickoffReady;
   if (selectedPickCount > 0) return { ready: true, reason: null };
@@ -43,6 +64,10 @@ export function publicRevealSelectionReadiness({ kickoffReady, selectedPickCount
   };
 }
 
+/**
+ * @param {{ slateReady: Readiness, eligiblePlayerCount: number }} input
+ * @returns {Readiness}
+ */
 export function finalLinesSelectionReadiness({ slateReady, eligiblePlayerCount }) {
   if (!slateReady.ready) return slateReady;
   if (eligiblePlayerCount === 0) {

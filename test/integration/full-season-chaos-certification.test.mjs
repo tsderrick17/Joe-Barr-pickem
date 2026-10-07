@@ -4,10 +4,9 @@ import { dirname } from "node:path";
 import test from "node:test";
 import pg from "pg";
 import { regularSeasonTeamPairs } from "../fixtures/balanced-regular-season.mjs";
+import { isolatedDatabaseEnabled } from "./test-database.mjs";
 
-const enabled = process.env.PICKEM_FULL_SEASON_DRILL === "true"
-  && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
-  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
+const enabled = isolatedDatabaseEnabled({ flagName: "PICKEM_FULL_SEASON_DRILL", flagValue: "true" });
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;

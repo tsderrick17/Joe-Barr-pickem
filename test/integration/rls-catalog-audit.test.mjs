@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import pg from "pg";
+import { isolatedDatabaseEnabled } from "./test-database.mjs";
 
-const enabled = process.env.PICKEM_RLS_AUDIT === "true"
-  && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
-  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
+const enabled = isolatedDatabaseEnabled({ flagName: "PICKEM_RLS_AUDIT", flagValue: "true" });
 
 const sensitiveTables = [
   "players",

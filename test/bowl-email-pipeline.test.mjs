@@ -47,7 +47,7 @@ test("Bowl score automation has its own fifteen-minute endpoint", () => {
   const route = read("src/app/api/cron/sync-bowl-scores/route.ts");
   const nflRoute = read("src/app/api/cron/sync-scores/route.ts");
   const migration = read("supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql");
-  assert.match(route, /runWithAutomationLease\("bowl_scores", syncBowlPool\)/);
+  assert.match(route, /runWithAutomationLeaseContext\("bowl_scores", \(\{ signal \}\) => syncBowlPool\(new Date\(\), signal\)\)/);
   assert.doesNotMatch(nflRoute, /syncBowlPool/);
   assert.match(migration, /refresh-bowl-pool-every-fifteen-minutes/);
   assert.match(migration, /public\.dispatch_bowl_sync_if_due\(\)/);

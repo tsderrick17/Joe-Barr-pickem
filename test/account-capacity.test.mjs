@@ -61,3 +61,11 @@ test("the Vercel estimates reproduce the observed 30-day figures", async () => {
   assert.ok(Math.abs(estimateFunctionsStorageBytes(730) / 1024 ** 3 - 10.4) < 0.05);
   assert.ok(estimateFluidCpu({ activePlayers: 5 }).seconds < estimateFluidCpu({ activePlayers: 11 }).seconds);
 });
+
+test("the Vercel estimates clamp negative inputs and honor an explicit zero-day window", async () => {
+  const { estimateFluidCpu, estimateFunctionsStorageBytes } = await import("../src/lib/vercel-usage-estimate.js");
+  const noDays = estimateFluidCpu({ activePlayers: 12, days: 0 });
+  assert.deepEqual(noDays, { seconds: 0, backgroundSeconds: 0, playerSeconds: 0 });
+  assert.equal(estimateFluidCpu({ activePlayers: -12 }).playerSeconds, 0);
+  assert.equal(estimateFunctionsStorageBytes(-12), 0);
+});

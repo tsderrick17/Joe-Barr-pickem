@@ -3,11 +3,13 @@ import { easternDateTimeToUtc, easternParts } from "./eastern-time.js";
 export { easternDateTimeToUtc };
 
 /** Eastern parts with the short weekday name ("Mon") this module has always returned. */
+/** @param {Date | string | number} date */
 export function getEasternParts(date) {
   const { year, month, day, hour, minute, weekdayShort } = easternParts(date);
   return { year, month, day, hour, minute, weekday: weekdayShort };
 }
 
+/** @param {Date | string | number} kickoff @returns {string} Tuesday-based Eastern scoring-period key. */
 export function getWeekStartKey(kickoff) {
   const eastern = getEasternParts(kickoff);
   const date = new Date(Date.UTC(eastern.year, eastern.month - 1, eastern.day));
@@ -16,6 +18,7 @@ export function getWeekStartKey(kickoff) {
   return date.toISOString().slice(0, 10);
 }
 
+/** @param {string} weekStartKey - Eastern scoring-period start date in YYYY-MM-DD format. */
 export function getWeekWindow(weekStartKey) {
   const [year, month, day] = weekStartKey.split("-").map(Number);
   const start = easternDateTimeToUtc(year, month, day, 0);
@@ -24,6 +27,7 @@ export function getWeekWindow(weekStartKey) {
   return { startsAt: start.toISOString(), endsAt: end.toISOString() };
 }
 
+/** @param {Date | string | number} kickoff */
 export function getLineLock(kickoff) {
   const eastern = getEasternParts(kickoff);
   const isInternational = eastern.weekday === "Sun" && eastern.hour < 12;

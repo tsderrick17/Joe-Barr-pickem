@@ -1,6 +1,6 @@
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { assessBowlPoolIntegrity } from "@/lib/bowl-pool-integrity";
+import { assessBowlPoolIntegrity } from "@/lib/bowl-pool-integrity.js";
 import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function checkBowlPoolHealth() {

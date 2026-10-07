@@ -1,13 +1,36 @@
+/** @typedef {{ status: string, started_at: string, completed_at: string | null }} WatchdogScoreRun */
+/** @typedef {{ overdueScheduled: number, staleSending: number, overdueTitles?: string[] }} WatchdogReminderHealth */
+/** @typedef {{ consecutive_failures: number, next_retry_at: string }} WatchdogProviderCircuit */
+/** @typedef {{ id: string, attempted_pins: number }} WatchdogPinAttackIncident */
+/** @typedef {{
+ *  missingOfficialLines: number,
+ *  latestScores: WatchdogScoreRun | null,
+ *  scoreChecksDueNow: number,
+ *  providerAllowance: number | null,
+ *  scoreProviderFailureStreak: number,
+ *  scoreCandidates?: number,
+ *  reminderHealth: WatchdogReminderHealth,
+ *  pendingScheduleReviews: number,
+ *  scheduleProviderCircuit?: WatchdogProviderCircuit | null,
+ *  pinAttackIncidents?: WatchdogPinAttackIncident[],
+ * }} WatchdogHealth */
+/** @typedef {{ status: "blocked" | "completed", blockers: string[] }} WatchdogTurnover */
+/** @typedef {{ seasonYear: number, loadedGames: number, complete: boolean, seasonState?: string | null, turnover?: WatchdogTurnover | null }} WatchdogBootstrap */
+/** @typedef {{ configured: true, healthy: boolean, problems: string[] } | { configured: false, healthy?: boolean, problems?: string[] }} WatchdogBowlHealth */
+/** @typedef {{ key: string, severity: "critical" | "warning", title: string, detail: string }} WatchdogSignal */
+
 /**
  * @param {{
- *   health: any,
- *   bootstrap: any,
+ *   health: WatchdogHealth,
+ *   bootstrap: WatchdogBootstrap,
  *   preflightChecks?: Array<{ label: string, passed: boolean }>,
- *   bowlHealth?: { configured?: boolean, healthy?: boolean, problems?: string[] } | null,
+ *   bowlHealth?: WatchdogBowlHealth | null,
  *   now?: Date,
  * }} input
+ * @returns {WatchdogSignal[]}
  */
 export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [], bowlHealth = null, now = new Date() }) {
+  /** @type {WatchdogSignal[]} */
   const signals = [];
   if (bootstrap.turnover?.status === "blocked") {
     signals.push({
@@ -53,18 +76,19 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       detail: `${health.pendingScheduleReviews} changed game${health.pendingScheduleReviews === 1 ? " is" : "s are"} locked, settled, re-paired, or assigned to another scoring period. Safe schedule corrections continue automatically; these games remain pinned until reviewed.`,
     });
   }
-  if (bowlHealth?.configured && !bowlHealth.healthy) {
+  if (bowlHealth?.configured === true && !bowlHealth.healthy) {
     signals.push({
       key: "bowl-pool-integrity-needs-review", severity: "critical",
       title: "Bowl Pool integrity needs review",
       detail: bowlHealth.problems.join(" ") || "Bowl Pool schedule, lines, picks, or result receipts failed reconciliation. Open Commissioner Desk → Bowl Pool readiness.",
     });
   }
-  if ((health.scheduleProviderCircuit?.consecutive_failures ?? 0) >= 3) {
+  const scheduleCircuit = health.scheduleProviderCircuit;
+  if (scheduleCircuit && scheduleCircuit.consecutive_failures >= 3) {
     signals.push({
       key: "schedule-provider-cooldown", severity: "warning",
       title: "The NFL schedule provider is repeatedly unavailable",
-      detail: `${health.scheduleProviderCircuit.consecutive_failures} consecutive refresh attempts failed. Automatic requests are paused until ${health.scheduleProviderCircuit.next_retry_at}; the Commissioner can still run an emergency refresh.`,
+      detail: `${scheduleCircuit.consecutive_failures} consecutive refresh attempts failed. Automatic requests are paused until ${scheduleCircuit.next_retry_at}; the Commissioner can still run an emergency refresh.`,
     });
   }
   for (const incident of health.pinAttackIncidents ?? []) {
@@ -102,12 +126,14 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
 // the commissioner receives one useful message instead of a reopen/notify loop.
 export const WATCHDOG_REPEAT_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 
+/** @param {string | null | undefined} lastNotifiedAt @param {Date} [now] */
 export function isWatchdogRepeatNotificationDue(lastNotifiedAt, now = new Date()) {
   if (!lastNotifiedAt) return true;
   const timestamp = new Date(lastNotifiedAt).getTime();
   return !Number.isFinite(timestamp) || now.getTime() - timestamp >= WATCHDOG_REPEAT_COOLDOWN_MS;
 }
 
+/** @param {Date} value */
 function easternDayKey(value) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
@@ -117,6 +143,7 @@ function easternDayKey(value) {
   }).format(value);
 }
 
+/** @param {{ status?: string | null, started_at?: string | null } | null | undefined} latestRun @param {Date} [now] */
 export function isConfigurationDriftCheckDue(latestRun, now = new Date()) {
   if (!latestRun?.started_at) return true;
   const startedAt = new Date(latestRun.started_at);

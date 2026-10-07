@@ -96,6 +96,23 @@ retains both recovery paths:
 Both automatic and manual imports use the same validation and atomic database
 function, so the recovery path cannot bypass gameweek-pinning protections.
 
+The bootstrap's execution timeout is 540 seconds and its lease is 600 seconds.
+The provider request is abortable and capped at 30 seconds; cancellation during
+validation stops before the atomic import. Once the import RPC starts, it is
+allowed to finish and save its run receipt rather than risking an unknown
+partial outcome. If the request times out while that import is underway, check
+the Schedule panel/run receipt before manually retrying. Annual rollover checks
+for cancellation between its two atomic database phases.
+
+The Commissioner's in-season schedule-refresh route uses a 540-second timeout
+and a 600-second lease. Its canonical NFL schedule read (30 seconds) and Odds
+API read (20 seconds) accept the lease signal. If an Odds response arrives
+before cancellation, its provider-usage receipt and circuit update are saved
+before the worker stops. Cancellation during validation stops before an
+import; once either atomic schedule procedure starts, it is allowed to settle.
+After a timeout, wait for the lease to expire and inspect the saved schedule
+and provider receipt before retrying.
+
 The first safe run on or after August 1 also certifies the prior season before
 annual cleanup. It refuses cleanup while a period, game, grade, schedule review,
 or championship remains unfinished. After certification it removes replaced
@@ -158,7 +175,7 @@ Still needs a person, and alerts the commissioner by email when it does:
 ## App read load
 
 The commissioner Grading page polls once per minute during live games, open
-attention items, or the 15 minutes around kickoff; otherwise it polls every five
+attention items, or the 15 minutes around kickoff; otherwise it polls every 15
 minutes. Hidden tabs pause polling and refresh on return. The Home standings route
 does not run Survivor enrollment or elimination maintenance. Whole-season pick
 queries paginate past PostgREST's 1,000-row cap, and activity timestamps are
@@ -179,6 +196,13 @@ work alongside an unhealthy worker receipt, the watchdog first makes one normal
 lease-protected recovery attempt. It keeps provider quota protection, retry
 backoff, delivery deduplication, and all existing database safeguards; it then
 rechecks health and leaves the incident open if recovery did not complete.
+The 90-second watchdog execution timeout is passed into its diagnostic and
+recovery stages. On timeout, it stops starting later checks or incident work;
+recovery subworkers also receive the watchdog signal while retaining their own
+leases. Database calls already in progress are not assumed rolled back. After
+the alert-attempt receipt is saved, watchdog email delivery is allowed to settle
+before cancellation is checked again, avoiding an unrecorded or falsely skipped
+provider attempt.
 
 The only alert conditions are:
 
@@ -273,6 +297,32 @@ flight may still complete; use the saved run and grades to assess the result,
 then allow the normal atomic recovery on the next leased run. Do not infer that
 the timed-out call rolled back.
 
+The reminder worker also receives its 540-second lease timeout signal on cron
+and watchdog runs. It returns unprocessed claimed reminders to the scheduled
+queue and stops starting later work. An active Brevo request is aborted, but
+the provider may already have accepted it; that recipient receipt is therefore
+not automatically retried. Other recipients that were never attempted retain
+their safe 15-minute retry path. The lease remains held until its 600-second
+expiry after timeout. Check reminder and per-recipient receipts before any
+manual recovery.
+
+The 15-minute reminder-schedule reconciler uses a 540-second execution timeout
+with a 600-second lease. It stops between its Pick'em plan, weekly recap, and
+Bowl email passes, and checks cancellation while updating or queuing messages.
+Some schedule rows may already have been reconciled when a timeout occurs;
+stable automation keys make rerunning safe. The next scheduled maintenance
+pass completes the reconciliation. Do not interpret a timeout as a rollback of
+database work already in flight.
+
+The Bowl score worker uses a 270-second execution timeout and a 300-second
+lease. Its timeout signal cancels ESPN/Odds API requests (each still capped at
+12 seconds) and stops later schedule or score stages at safe boundaries. A
+database operation already in progress is not forcibly cancelled; associated
+line-history writes and atomic settlement calls are allowed to finish, then the
+worker stops before starting subsequent work. The next scheduled pass is the
+recovery path; do not treat a timed-out call as proof that its database work
+rolled back.
+
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing
 result proves the full cron definitions and Vault authorization, the deployed
@@ -340,7 +390,11 @@ commissioner readiness panel reports missing teams or locked lines, ordering or
 status corruption, missing result receipts, pending final picks, and pick/result
 mismatches. The watchdog raises one commissioner incident for any unresolved
 problem. The public monitor contract is `GET /api/health/bowl-pool`; it returns
-only `ok` or `unavailable` and is safe to monitor externally.
+only `ok` or `unavailable` and is safe to monitor externally. The commissioner
+readiness route reads the game and entry inventories once, then reuses their IDs
+for lines, picks, result receipts, and schedule changes. If one of those related
+reads fails, readiness returns an error rather than presenting partial data as
+a clean result; heartbeat failures remain separately reported as unavailable.
 
 The encrypted backup workflow restores and verifies the Bowl Pool tables in its
 disposable PostgreSQL database. A restore that lacks Bowl Pool tables fails the

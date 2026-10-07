@@ -1,8 +1,12 @@
+// @ts-check
+/** @typedef {{ status: 401 | 403 | 500 | 503, body: { error: string, code: string } }} BowlPoolAccessFailure */
+
 /**
  * Keep Bowl Pool's viewer-facing auth errors consistent with the shared
  * request-scoped player access result.
  * @param {{ ok: false, status: 401 | 403 | 500 | 503, code: string }} access
  * @param {"view" | "save"} action
+ * @returns {BowlPoolAccessFailure}
  */
 export function bowlPoolAccessFailure(access, action) {
   const message = access.status === 503

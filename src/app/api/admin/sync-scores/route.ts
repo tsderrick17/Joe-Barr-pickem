@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   try {
     const result = await runWithAutomationLeaseContext("scores", ({ signal }) =>
@@ -36,9 +35,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   const { data: latestRun, error } = await supabaseAdmin
     .from("sync_runs")

@@ -1,6 +1,5 @@
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import { shouldRevealPick } from "@/lib/pick-visibility";
-import { countPickemWins } from "@/lib/standings";
 
 // The Pick'em Pad's rows, shaped from rows the route has already read. Nothing here touches
 // the database: it is where a pick is shown to, or kept from, each viewer (a player's own
@@ -45,13 +44,25 @@ export function shapePadRows({
   viewerPlayerId: string;
   now: Date;
 }) {
+  const winsByPlayerId = new Map(players.map((player) => [player.id, 0]));
+  for (const pick of allPicks) {
+    if (pick.result !== "win") continue;
+    const wins = winsByPlayerId.get(pick.player_id);
+    if (wins !== undefined) winsByPlayerId.set(pick.player_id, wins + 1);
+  }
+
+  const currentPicksByPlayerId = new Map(players.map((player) => [player.id, [] as PadPickRow[]]));
+  for (const pick of currentWeekPicks) {
+    const playerPicks = currentPicksByPlayerId.get(pick.player_id);
+    if (playerPicks) playerPicks.push(pick);
+  }
+
   return players
     .map((player) => {
-      const wins = countPickemWins(allPicks.filter((pick) => pick.player_id === player.id));
+      const wins = winsByPlayerId.get(player.id) ?? 0;
 
       // A pick keeps its column: kickoff order, not submission order.
-      const weeklyPicks = currentWeekPicks
-        .filter((pick) => pick.player_id === player.id)
+      const weeklyPicks = (currentPicksByPlayerId.get(player.id) ?? [])
         .sort((first, second) => comparePickColumns(
           { gameId: first.game_id, kickoffAt: gameById.get(first.game_id)?.kickoff_at },
           { gameId: second.game_id, kickoffAt: gameById.get(second.game_id)?.kickoff_at },

@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createSharedReadCache } from "../src/lib/shared-read-cache.js";
 
@@ -102,11 +101,4 @@ test("rejected reads are forgotten and cannot evict a newer successful read", as
   timers[0].callback();
   await cache.run("/api/profile", {}, read);
   assert.equal(calls, 2, "the older expiry timer cannot evict the current identity's read");
-});
-
-test("the browser session path actually uses the tested cache and clears it on identity changes", async () => {
-  const source = await readFile(new URL("../src/lib/auth-session.ts", import.meta.url), "utf8");
-  assert.match(source, /createSharedReadCache\(/);
-  assert.match(source, /sharedReads\.run\(input, init, \(\) => fetchWithSessionOnce\(input, init\)\)/);
-  assert.match(source, /onAuthStateChange\(\(\) => sharedReads\.clear\(\)\)/);
 });

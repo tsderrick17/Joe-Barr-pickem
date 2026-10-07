@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { getWatchdogStatus } from "@/lib/watchdog-status";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { weekRolloverAt } from "@/lib/week-rollover";
@@ -28,9 +28,8 @@ function stage(id: string, label: string, state: StageState, detail: string, nex
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   try {
     const now = new Date();

@@ -2,6 +2,7 @@ import "./helpers/typescript-renderer.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { selectEligibleScoreGames } from "../src/lib/score-polling-plan.ts";
+import { buildDeferredScoreCheckRows } from "../src/lib/score-check-backoff.ts";
 
 const dueGames = [
   { id: "no-backoff", scoring_period_id: "regular-week" },
@@ -10,6 +11,37 @@ const dueGames = [
 ];
 const now = new Date("2026-10-05T18:00:00.000Z");
 const playoffPeriodIds = new Set(["playoff-round"]);
+
+test("deferred score checks produce stable per-game retry rows with incremented attempts", () => {
+  const rows = buildDeferredScoreCheckRows({
+    games: [
+      { id: "first", scoring_period_id: "regular-week" },
+      { id: "playoff", scoring_period_id: "playoff-round" },
+      { id: "new", scoring_period_id: "regular-week" },
+    ],
+    previousChecks: new Map([
+      ["first", { attempts: 2 }],
+      ["playoff", { attempts: 8 }],
+    ]),
+    checkedAt: now.toISOString(),
+    playoffPeriodIds,
+  });
+
+  assert.deepEqual(rows, [
+    { game_id: "first", attempts: 3, last_checked_at: now.toISOString(), next_check_at: "2026-10-05T18:10:00.000Z", updated_at: now.toISOString() },
+    { game_id: "playoff", attempts: 9, last_checked_at: now.toISOString(), next_check_at: "2026-10-05T18:20:00.000Z", updated_at: now.toISOString() },
+    { game_id: "new", attempts: 1, last_checked_at: now.toISOString(), next_check_at: "2026-10-05T18:10:00.000Z", updated_at: now.toISOString() },
+  ]);
+});
+
+test("deferred score checks leave empty batches empty", () => {
+  assert.deepEqual(buildDeferredScoreCheckRows({
+    games: [],
+    previousChecks: new Map(),
+    checkedAt: now.toISOString(),
+    playoffPeriodIds,
+  }), []);
+});
 
 test("only due cooldowns block score polling, and playoff mode follows eligible games", () => {
   const result = selectEligibleScoreGames({

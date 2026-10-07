@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await runWithAutomationLease("line_locks", lockDueLines);
+    const result = await runWithAutomationLeaseContext("line_locks", ({ signal }) =>
+      lockDueLines(new Date(), signal),
+    );
 
     return NextResponse.json({
       success: true,

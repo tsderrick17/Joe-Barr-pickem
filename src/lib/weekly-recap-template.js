@@ -4,6 +4,7 @@
  * Pick'em-only instead of repeatedly describing a finished pool.
  *
  * @param {{ activeEntryCount: number, championCrownedInPeriod: boolean }} state
+ * @returns {"weekly_recap" | "weekly_recap_pickem_only"}
  */
 export function weeklyRecapTemplateId(state) {
   return state.activeEntryCount > 1 || state.championCrownedInPeriod

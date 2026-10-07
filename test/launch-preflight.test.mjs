@@ -47,9 +47,11 @@ test("scheduled isolated certification includes the live-week database rehearsal
   const drill = await readFile(new URL("../scripts/season-drill.mjs", import.meta.url), "utf8");
   const packageSource = await readFile(new URL("../package.json", import.meta.url), "utf8");
   const rehearsal = await readFile(new URL("./integration/weekly-live-week-rehearsal.test.mjs", import.meta.url), "utf8");
+  const databaseGate = await readFile(new URL("./integration/test-database.mjs", import.meta.url), "utf8");
   assert.match(workflow, /PICKEM_WEEKLY_REHEARSAL:\s*"true"/);
   assert.match(drill, /run\("test:all"\)/);
   assert.match(packageSource, /node --test \\"test\/\*\*\/\*\.test\.mjs\\"/);
-  assert.match(rehearsal, /PICKEM_WEEKLY_REHEARSAL === "true"/);
-  assert.match(rehearsal, /PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"/);
+  assert.match(rehearsal, /isolatedDatabaseEnabled\(\{ flagName: "PICKEM_WEEKLY_REHEARSAL", flagValue: "true" \}\)/);
+  assert.match(databaseGate, /env\.PICKEM_TEST_DATABASE_CONFIRMATION !== "isolated"/);
+  assert.match(databaseGate, /Refusing to run integration tests against the production database/);
 });

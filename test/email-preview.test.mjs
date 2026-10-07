@@ -8,7 +8,9 @@ let authorized = true;
 let databaseReads = 0;
 const { emailArtworkSample } = await import("../src/lib/email-artwork-sample.ts");
 const snapshot = emailArtworkSample("weekly_recap");
-globalThis.emailPreviewCommissioner = () => authorized ? { id: "commissioner-fixture" } : null;
+globalThis.emailPreviewCommissioner = () => authorized
+  ? { ok: true, player: { id: "commissioner-fixture" } }
+  : { ok: false, status: 403, code: "commissioner_required" };
 globalThis.emailPreviewDatabase = {
   from(table) {
     databaseReads++;
@@ -22,7 +24,7 @@ globalThis.emailPreviewDatabase = {
 };
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (specifier === "@/lib/require-commissioner") return { url: "data:text/javascript,export const requireCommissioner = async () => globalThis.emailPreviewCommissioner();", shortCircuit: true };
+    if (specifier === "@/lib/require-commissioner") return { url: "data:text/javascript,export const requireCommissionerAccess = async () => globalThis.emailPreviewCommissioner(); export const commissionerAccessFailure = (access) => Response.json({error: 'Commissioner access is required.', code: access.code}, {status: access.status});", shortCircuit: true };
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = globalThis.emailPreviewDatabase;", shortCircuit: true };
     return nextResolve(specifier, context);
   },

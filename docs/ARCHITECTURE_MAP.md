@@ -1,7 +1,8 @@
 # Application architecture and measurement map
 
-Verified from `main` at `f0a529a` on October 5, 2026. This map is a guide to
-ownership and request boundaries, not a replacement for
+Prepared from `main` at `f0a529a` on October 5, 2026; the read-path notes below
+were reconciled with the current source on October 6, 2026. This map is a guide
+to ownership and request boundaries, not a replacement for
 [PROJECT_REFERENCE.md](PROJECT_REFERENCE.md), current migrations, or tests.
 Paths and conditional requests may change; recheck the code before making a
 performance or security decision.
@@ -16,7 +17,7 @@ performance or security decision.
 | Survivor | [`/api/survivor`](../src/app/api/survivor/route.ts) uses request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts) for both reads and saves and records player activity only after access succeeds. | The selected period and entry status are loaded after authorization; auth errors keep stable status codes and distinguish service outages from sign-in failures. | Survivor entries and picks, with `replace_unlocked_survivor_pick` enforcing kickoff and team-reuse rules. |
 | Profile and display preferences | [`/api/profile`](../src/app/api/profile/route.ts) returns the shared [`ProfileResponse`](../src/lib/api-contracts.ts) and accepts partial [`ProfileUpdateRequest`](../src/lib/api-contracts.ts) updates. | Notification settings, navigation identity, and display toggles share one payload contract; malformed non-object updates are rejected while legacy reminder fields remain supported. | Player profile preferences and notification settings. |
 | Bowl Pool | [`/api/bowl-pool`](../src/app/api/bowl-pool/route.ts) uses the request-scoped [`authenticateActivePlayer`](../src/lib/authenticate-active-player.ts) result for reads and saves. | [`bowl-pool-access.js`](../src/lib/bowl-pool-access.js) preserves stable 401/403/500/503 error semantics and does not turn temporary outages into sign-outs. | Atomic `save_bowl_pool_submission` RPC, kickoff guards, and Bowl Pool entry/pick records. |
-| Grading dashboard | [`/api/admin/grading-dashboard`](../src/app/api/admin/grading-dashboard/route.ts) checks the Commissioner, then reads season/period, game and pick status, worker records, reminders, incidents, and provider history. | [`require-commissioner.ts`](../src/lib/require-commissioner.ts) gates access; shared [`GradingDashboardResponse`](../src/lib/api-contracts.ts) aligns the route and page, including the distinct no-period state. | Final/grade/line records and audited worker runs. |
+| Grading dashboard | [`/api/admin/grading-dashboard`](../src/app/api/admin/grading-dashboard/route.ts) checks the Commissioner, then reads season/period, game and pick status, worker records, reminders, incidents, and provider history. | [`require-commissioner.ts`](../src/lib/require-commissioner.ts) gates access; shared [`GradingDashboardResponse`](../src/lib/api-contracts.ts) aligns the route and page, including the distinct no-period state. [`grading-dashboard-reads.js`](../src/lib/grading-dashboard-reads.js) shares the selected-period games request with the locked-line lookup. | Final/grade/line records and audited worker runs. |
 | Final-score worker | [`/api/cron/sync-scores`](../src/app/api/cron/sync-scores/route.ts) checks the automation secret and takes an execution lease before [`sync-final-scores.ts`](../src/lib/sync-final-scores.ts). | Due-game/backoff/quota checks decide whether the provider is called. Verified finals are normalized and applied through guarded database operations; absence from a provider response is not deletion. | Atomic grading, disruption, eligibility, period-transition, audit, and run-record functions. |
 | Official lines | [`/api/cron/lock-lines`](../src/app/api/cron/lock-lines/route.ts) uses the same secret/lease boundary before [`lock-due-lines.ts`](../src/lib/lock-due-lines.ts). | Due-game selection, provider validation, and freshness of fallback lines. | Atomic official-line lock and audit operations; a locked line is not replaced retroactively. |
 | Scheduled email | [`/api/cron/maintain-reminders`](../src/app/api/cron/maintain-reminders/route.ts) reconciles future messages; [`/api/cron/send-reminders`](../src/app/api/cron/send-reminders/route.ts) claims and delivers due messages. Both are leased. | [`reminder-readiness.ts`](../src/lib/reminder-readiness.ts) can defer/suppress; [`email-reminders.ts`](../src/lib/email-reminders.ts) selects recipients and preserves delivery receipts. | `push_reminders` and delivery records. The table/RPC names are historical; the transport is email. |
@@ -40,7 +41,7 @@ complete route before changing a query.
 | --- | --- | --- |
 | Home | Starts with viewer/season/player reads, then periods. `readAllPages` loads non-void picks for all season periods in 1,000-row pages; game/team/line detail is conditional on selected picks. Survivor data adds more paged reads when shown. | High: early/late season and playoff row counts, page count, response bytes, and time. Any aggregation must preserve win, void, and reveal semantics. |
 | Slate | Bootstrapping adds season/period and sometimes active-game reads. The chosen week loads games, own picks, period, players, teams, line history, and conditional Survivor reads; public picks are limited to started games. | High: distinguish initial bootstrap from week switch and a post-kickoff refresh. Record conditional Survivor and playoff paths separately. |
-| Grading dashboard | Loads health/watchdog/reminders plus season and period, then a broad parallel batch. The selected period's `games` rows are read once in full and again for IDs before the `game_lines` read. Provider runs and the season ladder paginate; the ladder has a short in-process cache. | High: instrument the duplicate game lookup and provider-history page count before optimizing. Compare request count, rows, bytes, and elapsed time, including a cold cache. |
+| Grading dashboard | Loads health/watchdog/reminders plus season and period, then a broad parallel batch. The selected-period games request is shared with the dependent `game_lines` lookup: its IDs are derived from the same result, so games are not fetched a second time. Provider runs and the season ladder paginate; the ladder has a short in-process cache. | High: measure total request count, provider-history page count, rows, response bytes, and elapsed time with cold and warm caches. Do not count the former duplicate-game lookup as an open optimization. |
 
 Local response-shaping benchmarks time in-process transformation and fragment
 serialization. They do **not** measure database traffic, complete route
@@ -62,7 +63,7 @@ privacy and rule tests should become a regression budget.
   manually enabled full-season/weekly rehearsals are expected to skip locally;
   a green local run is not equivalent to a passed isolated lifecycle workflow.
 - `npm run lint` and `npm run build` cover the application and TypeScript build.
-  `npm run typecheck` additionally checks fifteen JavaScript policy
+  `npm run typecheck` additionally checks 61 JavaScript policy
   modules listed in `tsconfig.policy.json` with JSDoc types. This is a focused
   boundary, not a claim that every JavaScript module is checked; expand it as
   modules gain accurate input contracts. CI runs this check before tests.

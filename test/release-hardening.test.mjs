@@ -101,10 +101,7 @@ test("home and grading polling pause while hidden and grading adapts to workload
   assert.match(home, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
   // Reveals still refresh at the exact kickoff instead of waiting for the poll.
   assert.match(home, /revealTimer = window\.setTimeout/);
-  assert.match(grading, /const FAST_REFRESH_MS = 60_000;/);
-  assert.match(grading, /const QUIET_REFRESH_MS = 15 \* 60_000;/);
-  assert.match(grading, /if \(data\.metrics\?\.live \|\| data\.attention\.length\) return FAST_REFRESH_MS;/);
-  assert.match(grading, /return kickoffIsNear \? FAST_REFRESH_MS : QUIET_REFRESH_MS;/);
+  assert.match(grading, /gradingRefreshInterval\(data\)/);
   assert.match(grading, /document\.visibilityState === "visible" && inFlightRequestsRef\.current === 0/);
   assert.match(grading, /window\.setInterval\(refreshIfIdle, pollingInterval\)/);
   assert.match(grading, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);

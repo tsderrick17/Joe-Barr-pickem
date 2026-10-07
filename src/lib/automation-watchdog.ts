@@ -1,6 +1,6 @@
 import { checkAutomationHealth } from "@/lib/automation-health";
 export { getWatchdogStatus } from "@/lib/watchdog-status";
-import { AutomationAlreadyRunningError, runWithAutomationLease, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { getSeasonBootstrapStatus } from "@/lib/full-schedule-bootstrap";
 import { runExternalConfigurationChecks, type LaunchPreflightCheck } from "@/lib/launch-preflight";
 import { lockDueLines } from "@/lib/lock-due-lines";
@@ -100,20 +100,27 @@ async function checkConfigurationDrift(now: Date, latestRun: ConfigurationRun | 
  * assessment has proved is both due and unhealthy. Each operation still uses
  * its normal lease, provider limits, and idempotent worker implementation.
  */
-async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof checkAutomationHealth>>) {
+async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof checkAutomationHealth>>, executionSignal?: AbortSignal) {
+  executionSignal?.throwIfAborted();
   const jobs = new Set(health.criticalWorkers.problems.map((problem) => problem.jobName));
   const recoveryTasks: Array<readonly [CriticalWorkerRecovery["job"], () => Promise<unknown>]> = [];
 
-  if (jobs.has("line_locks")) recoveryTasks.push(["line_locks", () => runWithAutomationLease("line_locks", lockDueLines)]);
-  if (jobs.has("scores")) recoveryTasks.push(["scores", () => runWithAutomationLeaseContext("scores", ({ signal }) => syncFinalScores({ signal }))]);
-  if (jobs.has("reminders")) recoveryTasks.push(["reminders", () => runWithAutomationLease("reminders", sendDueReminders)]);
+  if (jobs.has("line_locks")) recoveryTasks.push(["line_locks", () => runWithAutomationLeaseContext("line_locks", ({ signal }) =>
+    lockDueLines(new Date(), executionSignal ? AbortSignal.any([signal, executionSignal]) : signal))]);
+  if (jobs.has("scores")) recoveryTasks.push(["scores", () => runWithAutomationLeaseContext("scores", ({ signal }) =>
+    syncFinalScores({ signal: executionSignal ? AbortSignal.any([signal, executionSignal]) : signal }))]);
+  if (jobs.has("reminders")) recoveryTasks.push(["reminders", () => runWithAutomationLeaseContext("reminders", ({ signal }) =>
+    sendDueReminders(executionSignal ? AbortSignal.any([signal, executionSignal]) : signal))]);
 
   const recoveries: CriticalWorkerRecovery[] = [];
   for (const [job, task] of recoveryTasks) {
+    executionSignal?.throwIfAborted();
     try {
       await task();
+      executionSignal?.throwIfAborted();
       recoveries.push({ job, outcome: "recovered" });
     } catch (error) {
+      executionSignal?.throwIfAborted();
       if (error instanceof AutomationAlreadyRunningError) {
         recoveries.push({ job, outcome: "already-running" });
         continue;
@@ -125,7 +132,8 @@ async function recoverCriticalWorkerWork(health: Awaited<ReturnType<typeof check
   return recoveries;
 }
 
-export async function runAutomationWatchdog(now = new Date()) {
+export async function runAutomationWatchdog(now = new Date(), executionSignal?: AbortSignal) {
+  executionSignal?.throwIfAborted();
   const { data: run, error: runError } = await supabaseAdmin.from("sync_runs")
     .insert({ provider: "internal", job_type: "watchdog", status: "started" }).select("id").single();
   if (runError || !run) throw new Error("The watchdog run could not be recorded.");
@@ -138,6 +146,7 @@ export async function runAutomationWatchdog(now = new Date()) {
   // fails closed because there is no fresh pulse.
   await recordAutomationWorkerHeartbeat("watchdog", "success");
   try {
+    executionSignal?.throwIfAborted();
     const [initialHealth, bootstrap, preflight, storagePrune, configurationRun, bowlHealth] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
       isWeeklyStoragePruneDue(now)
@@ -147,14 +156,18 @@ export async function runAutomationWatchdog(now = new Date()) {
         .eq("job_type", "configuration_drift").order("started_at", { ascending: false }).limit(1).maybeSingle(),
       checkBowlPoolHealth(),
     ]);
+    executionSignal?.throwIfAborted();
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
     if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
     if (configurationRun.error) throw new Error("The latest configuration-drift check could not be loaded.");
-    const criticalWorkerRecovery = await recoverCriticalWorkerWork(initialHealth);
+    const criticalWorkerRecovery = await recoverCriticalWorkerWork(initialHealth, executionSignal);
+    executionSignal?.throwIfAborted();
     // Re-read after any attempted recovery so the incident state reflects the
     // saved worker receipt and remaining real work, never a hopeful attempt.
     const health = criticalWorkerRecovery.length ? await checkAutomationHealth(new Date()) : initialHealth;
+    executionSignal?.throwIfAborted();
     const configurationChecks = await checkConfigurationDrift(now, configurationRun.data as ConfigurationRun | null);
+    executionSignal?.throwIfAborted();
     const signals = evaluateWatchdogSignals({
       health,
       bootstrap,
@@ -165,6 +178,7 @@ export async function runAutomationWatchdog(now = new Date()) {
     const { data: recentAlerts, error: alertsError } = await supabaseAdmin.from("automation_alerts")
       .select("id, signal_key, notified_at, notification_attempted_at, resolved_at")
       .order("detected_at", { ascending: false }).limit(100);
+    executionSignal?.throwIfAborted();
     if (alertsError) throw new Error("Open watchdog incidents could not be loaded.");
     // A failed bookkeeping write on one incident must not stop the others from
     // being opened or sent, so it is counted and reported rather than thrown.
@@ -188,6 +202,7 @@ export async function runAutomationWatchdog(now = new Date()) {
     let opened = 0;
     let notified = 0;
     for (const signal of signals) {
+      executionSignal?.throwIfAborted();
       let alert = openByKey.get(signal.key);
       const wasAlreadyOpen = Boolean(alert);
       if (!alert) {
@@ -198,12 +213,14 @@ export async function runAutomationWatchdog(now = new Date()) {
         if (error || !inserted) throw new Error("A watchdog incident could not be recorded.");
         alert = inserted as AlertRow;
         opened += 1;
+        executionSignal?.throwIfAborted();
       } else {
         const { error: refreshError } = await supabaseAdmin.from("automation_alerts").update({ last_seen_at: now.toISOString(), severity: signal.severity, title: signal.title, detail: signal.detail, details: signal }).eq("id", alert.id);
         if (refreshError) {
           bookkeepingFailures += 1;
           console.error("An open watchdog incident could not be refreshed.", { signalKey: signal.key });
         }
+        executionSignal?.throwIfAborted();
       }
       const repeatQuiet = !wasAlreadyOpen && !isWatchdogRepeatNotificationDue(lastNotifiedByKey.get(signal.key), now);
       const retryDue = !alert.notification_attempted_at || now.getTime() - new Date(alert.notification_attempted_at).getTime() >= 30 * 60 * 1000;
@@ -216,6 +233,9 @@ export async function runAutomationWatchdog(now = new Date()) {
           console.error("A watchdog alert attempt could not be recorded, so the alert was not sent.", { signalKey: signal.key });
           continue;
         }
+        // Once the attempt receipt is durable, do not insert a cancellation
+        // checkpoint before sending: that would record an attempt that never
+        // reached the provider and delay the next safe try by 30 minutes.
         try {
           const recipients = await notifyCommissioners(signal);
           notified += 1;
@@ -225,8 +245,10 @@ export async function runAutomationWatchdog(now = new Date()) {
           const { error: failureRecordError } = await supabaseAdmin.from("automation_alerts").update({ notification_error: error instanceof Error ? error.message : "Alert delivery failed." }).eq("id", alert.id);
           if (failureRecordError) console.error("A watchdog alert delivery failure could not be saved.", { signalKey: signal.key });
         }
+        executionSignal?.throwIfAborted();
       }
     }
+    executionSignal?.throwIfAborted();
     const details = {
       signals: signals.length,
       opened,

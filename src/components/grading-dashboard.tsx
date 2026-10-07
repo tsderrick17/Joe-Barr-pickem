@@ -6,6 +6,7 @@ import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { GradingDashboardReady, GradingDashboardResponse } from "@/lib/api-contracts";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
+import { gradingRefreshInterval } from "@/lib/grading-refresh-policy.js";
 
 type Dashboard = GradingDashboardReady;
 
@@ -13,22 +14,6 @@ type Filter = "all" | "attention" | "live" | "settled";
 
 const stateLabels: Record<string, string> = { scheduled: "Scheduled", live: "Live", settled: "Settled", needs_review: "Needs review", stale: "Stale", held: "Held" };
 const filters: Array<[Filter, string]> = [["all", "All"], ["attention", "Attention"], ["live", "Live"], ["settled", "Settled"]];
-const FAST_REFRESH_MS = 60_000;
-const QUIET_REFRESH_MS = 15 * 60_000;
-const KICKOFF_REFRESH_WINDOW_MS = 15 * 60_000;
-
-function refreshInterval(data: Dashboard | null) {
-  if (!data) return FAST_REFRESH_MS;
-  if (data.metrics?.live || data.attention.length) return FAST_REFRESH_MS;
-  const now = Date.now();
-  const kickoffIsNear = data.games.some((game) => {
-    if (game.state !== "scheduled") return false;
-    const kickoffAt = Date.parse(game.kickoffAt);
-    return Number.isFinite(kickoffAt) && Math.abs(kickoffAt - now) <= KICKOFF_REFRESH_WINDOW_MS;
-  });
-  return kickoffIsNear ? FAST_REFRESH_MS : QUIET_REFRESH_MS;
-}
-
 function local(value: string | null) { return value ? new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "-"; }
 function shortTime(value: string) { return new Date(value).toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", minute: "2-digit" }); }
 function percent(part: number, whole: number) { return whole ? Math.round(part / whole * 100) : 0; }
@@ -111,7 +96,7 @@ export default function GradingDashboard() {
   }, [refresh]);
   // Live games, attention items, and nearby kickoffs stay responsive. Quiet
   // periods poll less often; hidden tabs pause and refresh immediately on return.
-  const pollingInterval = refreshInterval(data);
+  const pollingInterval = gradingRefreshInterval(data);
   useEffect(() => {
     const refreshIfIdle = () => {
       if (document.visibilityState === "visible" && inFlightRequestsRef.current === 0) void refresh();

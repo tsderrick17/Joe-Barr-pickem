@@ -25,16 +25,17 @@ use **Show all** to restore the full field. Touching shaded ribbons make tied
 paths distinguishable without moving anyone off their actual win total. The
 chart loads only while visible and follows the normal standings refresh.
 
-If the Season Snapshot alone fails to load, inspect its API status before
-asking a player to sign in again. A 401 means the request token is absent or
+If a player data route or any commissioner read or action fails, inspect its
+API status before asking a player to sign
+in again. A 401 means the request token is absent or
 invalid; 403 means a verified pool identity is missing, inactive, or lacks
 the needed role. A 503 with
 `auth_unavailable` or `profile_unavailable` means a temporary dependency
 failure, so retry the read after service recovers. A 500 with
 `auth_not_configured` requires checking the deployment's Supabase variables.
-This is a pilot contract for this read route, not yet a guarantee for every
-player route. Do not change player records or issue a new PIN to work around
-an outage.
+Access failures stop before protected work. Do not automatically retry a
+mutation after an ambiguous transport failure; inspect saved state first.
+Do not change player records or issue a new PIN to work around an outage.
 
 Start at **Commissioner → Overview**. The live operations map is the first
 place to check schedule, selections, line locks, scoring, recap readiness, and
@@ -145,6 +146,11 @@ Never overwrite the original audit event or type an estimated score.
 4. A preliminary line no more than 24 hours old may be used automatically.
    Older or unverified lines remain preliminary; let the affected pick remain
    pending until Commissioner review provides a trustworthy official line.
+   An unverified line includes a provider market for the wrong matchup,
+   incomplete or non-finite points, or malformed saved history.
+5. If the check timed out, wait for its lease to expire and inspect the saved
+   official line before another recovery attempt. An in-flight atomic lock
+   could have committed despite the timeout response.
 
 ## Reminder, reveal, or recap is late
 

@@ -4,12 +4,20 @@ import {
   isFreshSlateReady,
   isPlayoffDayRecapReady,
   isSundayWindowReady,
+  isTerminalGameStatus,
 } from "../src/lib/reminder-readiness-rules.js";
 
 const active = { id: "week-6" };
 const easternDay = (value) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(value));
 const easternWeekday = (value) => new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(value));
 const easternHour = (value) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(value)));
+
+test("reminder readiness treats only known terminal game states as settled", () => {
+  assert.equal(isTerminalGameStatus("final"), true);
+  assert.equal(isTerminalGameStatus("cancelled"), true);
+  assert.equal(isTerminalGameStatus("live"), false);
+  assert.equal(isTerminalGameStatus("provider-added-status"), false);
+});
 
 test("does not announce a fresh Slate until the active period has a usable schedule", () => {
   assert.equal(isFreshSlateReady({ activePeriod: active, gameCount: 1 }).ready, false);

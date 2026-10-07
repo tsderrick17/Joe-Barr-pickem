@@ -73,10 +73,10 @@ test("five-minute reminder delivery no longer reconciles future schedules", asyn
     readFile(new URL("../supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql", import.meta.url), "utf8"),
   ]);
   assert.doesNotMatch(worker, /ensureAutomaticEmailPlanMessages|ensureAutomaticWeeklyRecap|ensureAutomaticBowlPoolEmails/);
-  assert.match(maintenance, /ensureAutomaticEmailPlanMessages\(\)/);
-  assert.match(maintenance, /ensureAutomaticWeeklyRecap\(\)/);
-  assert.match(maintenance, /ensureAutomaticBowlPoolEmails\(\)/);
-  assert.match(route, /runWithAutomationLease\("reminder_schedule"/);
+  assert.match(maintenance, /ensureAutomaticEmailPlanMessages\(signal\)/);
+  assert.match(maintenance, /ensureAutomaticWeeklyRecap\(new Date\(\), signal\)/);
+  assert.match(maintenance, /ensureAutomaticBowlPoolEmails\(new Date\(\), signal\)/);
+  assert.match(route, /runWithAutomationLeaseContext\("reminder_schedule", \(\{ signal \}\) => maintainAutomaticReminderSchedule\(signal\)\)/);
   assert.match(migration, /reconcile-pickem-email-schedule-every-fifteen-minutes/);
 });
 

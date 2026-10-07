@@ -8,6 +8,7 @@ import {
 import {
   isSettledGameStatus,
 } from "../src/lib/game-status-policy.js";
+import { selectLineLockDecisions } from "../src/lib/line-lock-decisions.js";
 
 const migrationUrl = new URL(
   "../supabase/migrations/20260826010000_harden_pool_lifecycle_edges.sql",
@@ -75,11 +76,22 @@ test("PIN failures use progressive source cooldowns without locking a player PIN
 });
 
 test("PK lines designate the home team and no-contests remain void", async () => {
-  const [sql, lockSource] = await Promise.all([
-    readFile(migrationUrl, "utf8"),
-    readFile(new URL("../src/lib/lock-due-lines.ts", import.meta.url), "utf8"),
-  ]);
-  assert.match(lockSource, /const favoriteTeamId = game\.home_team_id/);
+  const sql = await readFile(migrationUrl, "utf8");
+  const { decisions } = selectLineLockDecisions({
+    dueGames: [{ id: "game-1", odds_event_id: "event-1", away_team_id: "away", home_team_id: "home" }],
+    oddsEvents: [{
+      id: "event-1",
+      bookmakers: [{ key: "draftkings", markets: [{ key: "spreads", outcomes: [
+        { name: "Away Team", point: 0 },
+        { name: "Home Team", point: 0 },
+      ] }] }],
+    }],
+    latestHistoryByGameId: new Map(),
+    teamNameById: new Map([["away", "Away Team"], ["home", "Home Team"]]),
+    teamIdByName: new Map([["Away Team", "away"], ["Home Team", "home"]]),
+    checkedAt: "2026-09-13T12:00:00.000Z",
+  });
+  assert.equal(decisions[0]?.favoriteTeamId, "home");
   assert.match(sql, /return query select 0, 0/);
   assert.match(sql, /not exists \([\s\S]*from public\.survivor_picks survivor_pick/);
   assert.doesNotMatch(sql, /no_contest_graded_loss/);

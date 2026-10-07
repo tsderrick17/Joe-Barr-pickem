@@ -104,10 +104,11 @@ modules with no database access, each covered by tests with fictional rows:
   games and maps valid provider scores to stored teams.
   `src/lib/score-polling-plan.ts` selects due games whose persisted retry
   cooldown has elapsed (or whose cooldown is explicitly bypassed) and
-  determines regular/playoff polling mode from that eligible set. Provider
-  cadence, persistent backoff state, and atomic grading remain in the
-  worker/database path; `src/lib/score-check-backoff.ts` owns the quota-reserve
-  policy and retry ladder.
+  determines regular/playoff polling mode from that eligible set. The shared
+  `src/lib/score-check-backoff.ts` policy owns the retry ladder, quota reserve,
+  and deterministic retry-row construction; the score worker still owns the
+  database upsert. Provider cadence, persisted backoff state, and atomic grading
+  remain in the worker/database path.
 
 The Slate's initial authenticated bootstrap read is bounded to 15 seconds and
 is cancelled when the page unmounts. A late session failure after navigation
@@ -128,6 +129,9 @@ measure database requests or end-to-end route time.
 - Players authenticate with their assigned pool identity and PIN/session flow.
 - Concurrent page and navigation startup share one in-flight session read. The
   result is not cached after completion, so sign-out and expiry remain immediate.
+- The browser's authenticated request helper accepts same-origin application
+  URLs only. It rejects an external URL before reading the session or attaching
+  a bearer token; provider and other external requests use separate clients.
 - Header identity and Commissioner access use the same authenticated profile
   route as the rest of the app. A temporary profile-read failure does not erase
   an already verified identity; an invalid session returns the player to PIN
@@ -153,6 +157,13 @@ measure database requests or end-to-end route time.
   playoff eligibility snapshots, service-only functions, or commissioner APIs.
 - Commissioner routes use the shared commissioner gate. Scheduled mutation
   routes require the shared automation bearer secret.
+- All commissioner reads and mutations use the same explicit access statuses
+  and error codes as player routes. Their shared
+  resolver checks active membership and the commissioner role on every request
+  and retains bounded retries for transient profile reads. Dependency failures
+  return unavailable, not denied, before protected work or body parsing.
+  Audited mutations derive the actor from the verified profile. The scheduled
+  import retains its exact automation-secret path and execution lease.
 
 ## Pick'em selection and scoring
 
@@ -307,6 +318,10 @@ across daylight-saving changes.
    If the provider is unavailable, the most recent preliminary line may lock
    only when it is no more than 24 hours old. An older or unverified line stays
    preliminary and opens an urgent Commissioner review instead of being guessed.
+   The live DraftKings market must represent both teams in that game with
+   finite, opposing points. A fallback must still name one of those teams and
+   carry a finite, nonnegative spread; mismatched or malformed lines never
+   become official automatically.
 4. Final-score eligibility begins two hours and fifty minutes after kickoff. Automation polls
    only eligible unfinished games, imports verified finals, and grades ATS and
    Survivor atomically.
@@ -357,6 +372,13 @@ playoff wins.
   no database change and is retried later.
 - Initial import assigns and permanently pins every game to its scoring period
   and original NFL gameweek.
+- Scheduled and Commissioner bootstrap entry points share the 540-second
+  execution deadline and 600-second lease. The provider fetch is abortable;
+  cancellation stops during validation, before the import. Once the single
+  atomic schedule-import RPC starts, the worker lets it finish and records its
+  result. For a timeout during that RPC, inspect the bootstrap run receipt
+  before retrying manually. Annual turnover checks cancellation between its
+  two atomic phases.
 
 ### In-season reconciliation
 
@@ -369,6 +391,11 @@ playoff wins.
   original pool week.
 - Changes to a locked, settled, disrupted, re-paired, or cross-period game are
   quarantined for commissioner review. Safe unrelated changes continue.
+- The Commissioner schedule-refresh route passes its 540-second execution
+  signal into both canonical NFL and Odds API requests. A completed Odds
+  response's usage receipt is saved before cancellation checks resume. Checks
+  stop before writes, while either atomic schedule RPC is allowed to finish;
+  the shared lease expires at 600 seconds.
 - A game omitted by the provider is reported but never deleted.
 - Database triggers independently reject changes that would break gameweek or
   pick-to-game scoring-period consistency.
@@ -426,7 +453,22 @@ may enrich spreads but cannot override canonical schedule assignments.
   starts no further score work. The lease stays held until its 300-second
   expiry. A database call already in flight may have committed, so the next
   run relies on atomic finalization and recovery rather than treating timeout
-  as proof of rollback. Other workers still use the existing caller timeout.
+  as proof of rollback. The line-lock worker likewise receives the lease abort
+  signal on scheduled, Commissioner, and watchdog paths. At its 90-second
+  timeout it cancels a pending provider request and stops between database
+  stages; its 120-second lease remains held. A line-lock database call already
+  in flight may still commit, so recovery must inspect the saved line rather
+  than assuming rollback. The Bowl score worker now also receives its lease
+  signal: ESPN/Odds API requests are abortable within their 12-second cap, and
+  schedule, score, and settlement stages stop before starting further work.
+  In-flight database writes and atomic settlement RPCs are allowed to finish;
+  the Bowl lease remains held until its 300-second expiry after the 270-second
+  timeout. The leased watchdog also receives its 90-second deadline in cron
+  and Commissioner runs. It stops between diagnostic and incident stages and
+  passes cancellation into its lease-protected line, score, and reminder
+  recovery attempts. In-progress database work is not assumed rolled back; an
+  alert send is allowed to settle after its attempt receipt is saved. These
+  workers still require isolated timeout/recovery evidence before release.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
@@ -540,6 +582,18 @@ may enrich spreads but cannot override canonical schedule assignments.
   source-game snapshot, and the unique reminder/player delivery receipt plus
   uncertain-retry guard prevent duplicate copies without suppressing a different
   valid message.
+- Reminder delivery uses the shared lease deadline on cron and watchdog runs.
+  Before email attempts, cancellation returns claimed reminders to the scheduled
+  queue. During delivery, it aborts the active provider request and preserves
+  the receipt as uncertain/non-retryable; recipients not yet attempted use the
+  normal 15-minute retry. A timeout does not prove that Brevo or a database
+  operation rolled back.
+- The slower reminder-schedule reconciler also receives its 540-second lease
+  signal (600-second lease). It checks between Pick'em, weekly-recap, and Bowl
+  passes, and between per-message database work. A partial schedule update is
+  safe to resume: stable automation keys and unique guards make the next pass
+  converge without duplicating a delivery. Database requests already underway
+  are not forcibly cancelled.
 - ESPN is the default NCAA Bowl Pool schedule, preliminary-line, and final-score
   source. The Odds API's NCAAF markets are used only when
   `BOWL_POOL_ODDS_API_ENABLED=true`; an existing preliminary line may lock when
@@ -572,7 +626,7 @@ shows the latest run of each worker, and the efficiency totals are season to dat
 
 The Grading charts share the dashboard's selected period and adaptive refresh:
 every minute while games are live, attention items are open, or a scheduled
-kickoff is within 15 minutes; otherwise every five minutes. Polling pauses while
+kickoff is within 15 minutes; otherwise every 15 minutes. Polling pauses while
 the tab is hidden and refreshes immediately on return. A periodic poll is skipped
 while another dashboard request is in flight. The Standings page polls every
 three minutes while visible, refreshes when the player returns (at most every 30

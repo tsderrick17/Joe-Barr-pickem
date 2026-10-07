@@ -1,3 +1,8 @@
+// @ts-check
+/** @typedef {{ id: string, label: string, detail: string, state: "ready" | "attention" | "setup" | "manual" }} OpeningWeekCheck */
+/** @typedef {{ status: "ready" | "setup" | "attention", checks: OpeningWeekCheck[] }} OpeningWeekAssessment */
+
+/** @param {string} id @param {string} label @param {string} detail @param {OpeningWeekCheck["state"]} [state] @returns {OpeningWeekCheck} */
 function item(id, label, detail, state = "ready") {
   return { id, label, detail, state };
 }
@@ -6,7 +11,14 @@ function item(id, label, detail, state = "ready") {
  * A deliberately read-only opening-week checklist. It only reports whether
  * the pieces needed for a clean launch are present; it never opens a period,
  * imports games, sends email, or changes a pick.
- * @param {{periods: Array<{id: string, display_name?: string, display_order?: number, period_type: string}>, games: Array<{scoring_period_id: string, kickoff_at?: string, line_lock_at?: string, away_team_id?: string, home_team_id?: string, status: string}>, activePlayerCount: number, automationChecks?: Array<{passed: boolean, label: string}>, readinessChecks?: Array<{id: string, state: string, detail?: string}>}} input
+ * @param {{
+ *   periods: Array<{ id: string, display_name?: string, display_order?: number, period_type: string }>,
+ *   games: Array<{ scoring_period_id: string, kickoff_at?: string | null, line_lock_at?: string | null, away_team_id?: string | null, home_team_id?: string | null, status: string }>,
+ *   activePlayerCount: number,
+ *   automationChecks?: Array<{ passed: boolean, label: string }>,
+ *   readinessChecks?: Array<{ id: string, state: string, detail: string }>,
+ * }} input
+ * @returns {OpeningWeekAssessment}
  */
 export function assessOpeningWeekChecklist({ periods, games, activePlayerCount, automationChecks = [], readinessChecks = [] }) {
   const checks = [];

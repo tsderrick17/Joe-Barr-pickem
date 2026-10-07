@@ -1,9 +1,18 @@
+// @ts-check
+/** @typedef {{ id: string, display_name: string, status: string, period_type: string, max_picks: number, starts_at?: string | null }} SeasonReadinessPeriod */
+/** @typedef {{ id: string, scoring_period_id: string, gameweek_key?: string | null, kickoff_at: string | null, line_lock_at: string | null, away_team_id: string | null, home_team_id: string | null, status: string }} SeasonReadinessGame */
+/** @typedef {{ status: string, processing_started_at: string | null }} SeasonReadinessReminder */
+/** @typedef {{ id: string, label: string, detail: string, state: "pass" | "setup" | "attention" }} SeasonReadinessCheck */
+/** @typedef {{ status: "ready" | "setup" | "attention", checks: SeasonReadinessCheck[] }} SeasonReadinessAssessment */
+
 const SETTLED_GAME_STATUSES = new Set(["final", "postponed", "cancelled", "no_contest"]);
 
+/** @param {string} id @param {string} label @param {string} detail @param {SeasonReadinessCheck["state"]} [state] @returns {SeasonReadinessCheck} */
 function check(id, label, detail, state = "pass") {
   return { id, label, detail, state };
 }
 
+/** @param {string} value @returns {string} */
 function gameweekKey(value) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -11,6 +20,7 @@ function gameweekKey(value) {
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(new Date(value));
+  /** @param {string} type */
   const number = (type) => Number(parts.find((part) => part.type === type)?.value);
   const day = new Date(Date.UTC(number("year"), number("month") - 1, number("day")));
   day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() - 2 + 7) % 7));
@@ -20,6 +30,16 @@ function gameweekKey(value) {
 /**
  * A read-only, data-shape audit for the season's operational prerequisites.
  * It intentionally does not make schedule, pick, or reminder changes.
+ *
+ * @param {{
+ *   seasonState?: string,
+ *   periods: SeasonReadinessPeriod[],
+ *   games: SeasonReadinessGame[],
+ *   reminders: SeasonReadinessReminder[],
+ *   emailDeliveryFailures?: number,
+ *   now?: Date,
+ * }} input
+ * @returns {SeasonReadinessAssessment}
  */
 export function assessSeasonReadiness({ seasonState, periods, games, reminders, emailDeliveryFailures = 0, now = new Date() }) {
   const checks = [];

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 
 type OddsApiEvent = {
   id: string;
@@ -20,29 +20,14 @@ type OddsApiEvent = {
 };
 
 export async function GET(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const oddsApiKey = process.env.ODDS_API_KEY;
 
-  if (!supabaseUrl || !supabasePublishableKey || !oddsApiKey) {
+  if (!oddsApiKey) {
     return NextResponse.json(
       { error: "Server configuration is incomplete." },
       { status: 500 },
-    );
-  }
-
-  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "Sign in is required." },
-      { status: 401 },
-    );
-  }
-
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
     );
   }
 

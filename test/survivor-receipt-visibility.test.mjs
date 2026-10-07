@@ -27,6 +27,13 @@ test("after a champion is crowned the section stays for that week, then leaves f
   assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: null }), false);
 });
 
+test("champion-week visibility fails closed for invalid timestamps and includes an exact kickoff boundary", () => {
+  const crowned = "2026-12-18T01:00:00Z";
+  assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: "not-a-date" }), false);
+  assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: "not-a-date" }), false);
+  assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: crowned }), true);
+});
+
 test("the Standings ticket tears off its Survivor section for players who are out or after a champion", async () => {
   const { readFile } = await import("node:fs/promises");
   const ticket = await readFile(new URL("../src/components/my-ticket.tsx", import.meta.url), "utf8");

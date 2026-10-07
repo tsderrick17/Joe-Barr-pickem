@@ -1,27 +1,35 @@
+/** @typedef {{ job_type?: string | null, started_at?: string | null, completed_at?: string | null, details?: Record<string, unknown> | null, [key: string]: unknown }} ProviderRun */
+/** @typedef {{ credits: number, finals: number, creditsPerFinal: number | null }} ScoreSlice */
+/** @typedef {{ windowDays: number, providerCalls: number, totalCredits: number, scoreCredits: number, spreadCredits: number, scoreCalls: number, finalizedGames: number, productiveScoreCalls: number, productiveRate: number | null, creditsPerFinal: number | null, currentSevenDayCreditsPerFinal: number | null, previousSevenDayCreditsPerFinal: number | null, trend: "insufficient" | "improving" | "worsening" | "steady" }} ProviderEfficiencySummary */
+
+/** @param {unknown} value */
 function wholeNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const numeric = typeof value === "number" ? value : Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
 }
 
+/** @param {ProviderRun | null | undefined} run @returns {Record<string, unknown>} */
 function detailsFor(run) {
   return run?.details && typeof run.details === "object" ? run.details : {};
 }
 
+/** @param {ProviderRun | null | undefined} run @returns {number} */
 export function providerRequestCost(run) {
   const details = detailsFor(run);
   const reported = wholeNumber(details.requestsLast);
   if (reported !== null) return reported;
   if (run?.job_type === "scores" && details.providerChecked === true) return 2;
-  if (run?.job_type === "line_locks" && wholeNumber(details.dueGames) > 0) return 1;
+  if (run?.job_type === "line_locks" && (wholeNumber(details.dueGames) ?? 0) > 0) return 1;
   if (run?.job_type === "odds" && details.providerChecked !== false) return 1;
   return 0;
 }
 
+/** @param {ProviderRun[]} runs @param {Date} start @param {Date} end @returns {ScoreSlice} */
 function scoreSlice(runs, start, end) {
   const rows = runs.filter((run) => {
     if (run.job_type !== "scores") return false;
-    const timestamp = new Date(run.completed_at ?? run.started_at).getTime();
+    const timestamp = new Date(run.completed_at ?? run.started_at ?? "").getTime();
     return timestamp >= start.getTime() && timestamp < end.getTime();
   });
   const credits = rows.reduce((total, run) => total + providerRequestCost(run), 0);
@@ -29,6 +37,12 @@ function scoreSlice(runs, start, end) {
   return { credits, finals, creditsPerFinal: finals > 0 ? Number((credits / finals).toFixed(2)) : null };
 }
 
+/**
+ * Summarize observed provider costs, score productivity, and recent cost trend.
+ * @param {ProviderRun[]} runs
+ * @param {Date} [now]
+ * @returns {ProviderEfficiencySummary}
+ */
 export function summarizeProviderEfficiency(runs, now = new Date()) {
   const scoreRuns = runs.filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
   const totalCredits = runs.reduce((total, run) => total + providerRequestCost(run), 0);

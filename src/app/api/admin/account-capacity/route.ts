@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadAccountCapacity, loadStorageTableUsage } from "@/lib/account-capacity";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   try {
     const [accounts, storageTables] = await Promise.all([

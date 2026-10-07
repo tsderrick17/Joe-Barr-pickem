@@ -150,7 +150,7 @@ const EMAIL_ARTWORK_RENDER_VERSION = 1;
 /** Render each reminder image before delivery and point emails at immutable
  * public Storage objects. Keep dynamic URLs as a safe fallback while the
  * bucket or additive manifest column is being deployed. */
-async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<string, string> | undefined> {
+async function prepareEmailArtworkUrls(reminder: Reminder, signal?: AbortSignal): Promise<Record<string, string> | undefined> {
   const snapshot = reminder.recap_snapshot as EmailArtworkSnapshot | null | undefined;
   const kinds = emailArtworkKinds(reminder.category, snapshot);
   if (!snapshot || !kinds.length) return undefined;
@@ -175,6 +175,7 @@ async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<strin
   let uploadedAny = false;
 
   for (const kind of kinds) {
+    signal?.throwIfAborted();
     if (typeof paths[kind] === "string") {
       imageUrls[kind] = supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).getPublicUrl(paths[kind]).data.publicUrl;
       continue;
@@ -183,6 +184,7 @@ async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<strin
     try {
       const rendered = await renderEmailArtwork(snapshot, kind, { density });
       const image = Buffer.from(await rendered.arrayBuffer());
+      signal?.throwIfAborted();
       const objectPath = `v${EMAIL_ARTWORK_RENDER_VERSION}/${fingerprint}/${kind}.png`;
       const { error } = await supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).upload(objectPath, image, {
         cacheControl: "31536000",
@@ -197,6 +199,7 @@ async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<strin
       uploadedAny = true;
       imageUrls[kind] = supabaseAdmin.storage.from(EMAIL_ARTWORK_BUCKET).getPublicUrl(objectPath).data.publicUrl;
     } catch (error) {
+      if (signal?.aborted) throw error;
       console.warn("Static email artwork rendering failed; using the image route for this image.", { kind, message: error instanceof Error ? error.message : "render-error" });
     }
   }
@@ -264,7 +267,8 @@ async function recipientsForReminder(reminder: Reminder) {
     .map((player) => ({ playerId: player.id, email: player.notification_email! }));
 }
 
-async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
+async function recordAndSend(reminder: Reminder, recipient: EmailRecipient, signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const { data: createdDelivery, error: createError } = await supabaseAdmin
     .from("email_reminder_deliveries")
     .insert({ reminder_id: reminder.id, player_id: recipient.playerId, email_address: recipient.email })
@@ -373,7 +377,9 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
         textContent: `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
-      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(EMAIL_TIMEOUT_MS)])
+        : AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     const payload = await response.json().catch(() => ({})) as { messageId?: string; code?: string; message?: string };
     if (!response.ok) {
@@ -429,9 +435,10 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
   }
 }
 
-export async function deliverEmailReminder(reminder: Reminder, limitedRecipients?: EmailRecipient[]) {
+export async function deliverEmailReminder(reminder: Reminder, limitedRecipients?: EmailRecipient[], signal?: AbortSignal) {
   let recipients: EmailRecipient[];
   try {
+    signal?.throwIfAborted();
     if (reminder.category === "weekly_recap") reminder.recap_snapshot = await ensureWeeklyRecapSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "playoff_day_recap") reminder.recap_snapshot = await ensurePlayoffDayRecapSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "playoff_public_reveal") reminder.recap_snapshot = await ensurePlayoffPublicRevealSnapshot(reminder.id, reminder.recap_snapshot);
@@ -443,13 +450,16 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
     if (reminder.category === "featured_window_reveal") reminder.recap_snapshot = await ensureFeaturedWindowRevealSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "bowl_daily_recap") reminder.recap_snapshot = await ensureBowlDailyRecapSnapshot(reminder.id, reminder.recap_snapshot);
     if (reminder.category === "bowl_line_lock") reminder.recap_snapshot = await ensureBowlLineLockSnapshot(reminder.id, reminder.recap_snapshot);
+    signal?.throwIfAborted();
     if (emailArtworkKinds(reminder.category, reminder.recap_snapshot).length) {
       const { data, error } = await supabaseAdmin.from("reminder_templates").select("image_options").eq("template_id", emailArtworkTemplateId(reminder.category, reminder.recap_snapshot)).maybeSingle();
       // The additive preference column may briefly lag an application deployment.
       if (error && error.code !== "42703" && error.code !== "PGRST204") throw new Error("Email image preferences could not be loaded.");
       reminder.imageOptions = emailArtworkOptions(data?.image_options);
     }
+    signal?.throwIfAborted();
     recipients = limitedRecipients ?? await recipientsForReminder(reminder);
+    signal?.throwIfAborted();
   } catch (reason) {
     throw new ReminderPreparationError(
       reason instanceof Error
@@ -472,8 +482,15 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
       suppressionReason: "No player has an outstanding Pick'em selection.",
     };
   }
-  if (recipients.length && emailArtworkKinds(reminder.category, reminder.recap_snapshot).length) {
-    reminder.artworkUrls = await prepareEmailArtworkUrls(reminder);
+  try {
+    if (recipients.length && emailArtworkKinds(reminder.category, reminder.recap_snapshot).length) {
+      reminder.artworkUrls = await prepareEmailArtworkUrls(reminder, signal);
+    }
+    signal?.throwIfAborted();
+  } catch (reason) {
+    throw new ReminderPreparationError(
+      reason instanceof Error ? reason.message : "The email reminder could not be prepared.",
+    );
   }
   let sent = 0;
   let failed = 0;
@@ -481,7 +498,22 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
   let retryableFailed = 0;
   const errors: string[] = [];
   for (const recipient of recipients) {
-    const result = await recordAndSend(reminder, recipient);
+    if (signal?.aborted) {
+      failed += 1;
+      retryableFailed += 1;
+      errors.push("Delivery stopped before all recipients were attempted.");
+      break;
+    }
+    let result: Awaited<ReturnType<typeof recordAndSend>>;
+    try {
+      result = await recordAndSend(reminder, recipient, signal);
+    } catch (error) {
+      if (!signal?.aborted) throw error;
+      failed += 1;
+      retryableFailed += 1;
+      errors.push("Delivery stopped before the next recipient was attempted.");
+      break;
+    }
     sent += Number(result.sent);
     failed += Number(result.failed);
     skipped += Number(result.skipped);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getWeekStartKey } from "@/lib/schedule-time.js";
@@ -33,30 +33,15 @@ type PeriodRow = {
 
 
 export async function GET(request: NextRequest) {
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
+  const commissioner = access.player;
   const seasonYear = seasonYearAt();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const oddsApiKey = process.env.ODDS_API_KEY;
-  if (!supabaseUrl || !supabasePublishableKey || !oddsApiKey) {
+  if (!oddsApiKey) {
     return NextResponse.json(
       { error: "The server is missing required configuration." },
       { status: 500 },
-    );
-  }
-
-  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "You must be signed in to use this page." },
-      { status: 401 },
-    );
-  }
-
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
     );
   }
 

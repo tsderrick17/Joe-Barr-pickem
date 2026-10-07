@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { seasonYearAt } from "@/lib/season";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function seasonGames() {
@@ -17,7 +17,8 @@ async function seasonGames() {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   try {
     const games = await seasonGames();
     const { data: changes } = await supabaseAdmin.from("bowl_pool_schedule_changes").select("id, game_id, old_kickoff_at, new_kickoff_at, detected_at").is("reviewed_at", null).in("game_id", games.map((game) => game.id)).order("detected_at", { ascending: false });
@@ -28,8 +29,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
+  const commissioner = access.player;
   let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" | "rescheduled"; kickoffAt?: string; changeId?: string };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 }); }
   if (!body.gameId || !["postponed", "cancelled", "no_contest", "rescheduled"].includes(body.status ?? "")) return NextResponse.json({ error: "Choose a Bowl Pool game and a valid disruption status." }, { status: 400 });

@@ -1,3 +1,12 @@
+// @ts-check
+/** @typedef {{ id: string, kickoff_at: string, order_index: number, status: string, away_team_id: string | null, home_team_id: string | null }} BowlIntegrityGame */
+/** @typedef {{ game_id: string }} BowlIntegrityLine */
+/** @typedef {{ healthy: boolean, problems: string[], missingLines: number, gameCount: number }} BowlIntegrityAssessment */
+
+/**
+ * @param {BowlIntegrityGame[]} games
+ * @returns {number}
+ */
 export function countMissingBowlTeamSlots(games) {
   return games.reduce(
     (total, game) => total + (game.away_team_id ? 0 : 1) + (game.home_team_id ? 0 : 1),
@@ -5,6 +14,12 @@ export function countMissingBowlTeamSlots(games) {
   );
 }
 
+/**
+ * @param {BowlIntegrityGame[]} games
+ * @param {BowlIntegrityLine[]} lines
+ * @param {Date} [now]
+ * @returns {BowlIntegrityAssessment}
+ */
 export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   const problems = [];
   const ordered = [...games].sort((a, b) => a.order_index - b.order_index);

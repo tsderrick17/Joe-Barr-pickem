@@ -1471,3 +1471,142 @@ database operation already in flight may have committed. Atomic finalization
 and pending-grade recovery remain the source of truth for the next run. Other
 workers retain their existing zero-argument callbacks until their own stage
 boundaries and retry behavior are covered.
+
+## 2026-10-06 — Reject unverified official-line candidates before atomic lock
+
+Line-lock selection now requires a live DraftKings spread market for the
+scheduled game's two teams, with finite opposing points. A saved fallback must
+be no more than 24 hours old, identify one of those teams, and contain a finite
+nonnegative spread. Invalid or mismatched candidates remain unlocked for
+Commissioner review instead of entering the atomic line-lock call. This
+tightens validation only; the lock deadline, provider cadence, fallback age,
+and database write path do not change.
+
+## 2026-10-06 — Stop line-lock stages after the lease timeout
+
+Scheduled, Commissioner, and watchdog line-lock paths now pass the existing
+lease abort signal to the worker. Provider fetch combines that signal with its
+20-second request timeout; a lease abort is never treated as ordinary provider
+unavailability that would trigger a saved-line fallback. The worker checks
+between database stages and before the atomic lock. The 90-second caller
+timeout still leaves the lease held until its 120-second expiry. An atomic
+database call in flight may have committed, so recovery checks the saved line
+and does not assume cancellation rolled it back.
+
+## 2026-10-06 — Keep browser bearer tokens on the application origin
+
+The shared browser request helper is used for player and Commissioner API
+calls. It now rejects cross-origin URLs before session lookup or fetch, so an
+accidental external URL cannot receive a pool session token. Current callers
+use local `/api/` paths; provider traffic continues through separate clients.
+The in-flight read and short-lived profile-cache behavior is unchanged.
+
+## 2026-10-06 — Distinguish commissioner access outages from denied access
+
+All 28 commissioner routes (39 handlers) now return the shared access result:
+401 for an invalid session, 403 for a missing/inactive player or insufficient
+role, 503 for an auth/profile dependency failure, and 500 for missing server
+configuration. The commissioner adapter uses the same player-access policy,
+preserves its bounded profile-read retry, and never caches role authorization.
+The player-or-null compatibility adapter is removed. Executable tests cover
+every handler's failure boundary and successful mutation audit identity,
+worker overlap refusal, cancellation signals, and the scheduled import's exact
+automation secret. These changes affect authorization responses, not pool
+rules, automatic mutation retries, or worker execution safeguards.
+
+## 2026-10-06 — Preserve reminder receipts across lease cancellation
+
+Add execution coverage for the real reminder worker and recipient-delivery
+implementation, replacing the sender-name and duplicate-receipt source-text
+assertions. Tests simulate claim/readiness failures, suppression, partial
+delivery, safe 425/429 retries, exhausted attempts, and accepted messages whose
+receipt response is lost. A guarded reminder update cannot overwrite a
+completed state; uncertain provider acceptance is not a preparation failure.
+Mocks isolate database, provider, and artwork boundaries so no message is sent.
+Cron and watchdog now pass the reminder lease's abort signal to the worker and
+Brevo requests. A timeout returns unprocessed claimed reminders to the queue.
+An in-flight request records an uncertain, non-retryable recipient outcome,
+while recipients not yet attempted remain eligible for the normal 15-minute
+retry. This stops a cancelled batch from continuing through later messages
+without risking duplicate delivery. Mocked execution tests cover these paths;
+isolated claim concurrency and timeout recovery are still required.
+
+## 2026-10-06 — Stop Bowl score stages after the lease timeout
+
+The Bowl score route now passes the existing 270-second lease timeout signal
+into its worker. ESPN and optional Odds API requests combine that signal with
+their existing 12-second request cap; a timeout is not turned into an ordinary
+provider outage or an empty-feed fallback. Schedule import and score loops
+check cancellation between game-level work and refresh stages. A database
+operation already in progress is allowed to finish, including paired line
+history writes and atomic missing-pick settlement, draft cleanup, grading, and
+champion refresh calls; the worker checks the signal before moving on to a
+later operation. The 300-second lease remains held after caller timeout, and a
+later scheduled pass remains the recovery path. Focused tests protect these
+contracts; mocked route/structure coverage does not replace isolated timeout
+and database recovery evidence.
+
+## 2026-10-06 — Make season bootstrap cancellation safe
+
+The scheduled bootstrap and both Commissioner import actions now pass the
+season-bootstrap lease signal to the worker. Its 30-second provider read is
+abortable, and the worker stops during validation before beginning further
+database work. Once `import_full_schedule_atomically` starts, it is allowed to
+finish and write the success/failure run receipt; aborting an atomic import
+mid-flight would leave the caller unable to distinguish commit from rollback.
+The annual rollover's two atomic RPCs now check cancellation between phases,
+including when the score worker invokes rollover. The bootstrap lease remains
+held until its 600-second expiry after the 540-second timeout. Focused tests
+protect these boundaries; isolated timeout/recovery verification remains
+outstanding.
+
+## 2026-10-06 — Stop schedule refresh before its atomic import on timeout
+
+The Commissioner and daylight-safe scheduled schedule-refresh calls now share
+the `schedule_refresh` lease signal. The canonical NFL schedule and Odds API
+fetches combine that signal with their existing 30- and 20-second caps. An
+abort is not recorded as an ordinary Odds-provider failure. If a valid Odds
+response has arrived, its usage receipt and circuit reset are written before
+the worker resumes cancellation checks. The worker then stops before starting
+an import when the lease has expired. Once canonical reconciliation or the
+combined schedule/line import RPC starts, it is allowed to settle atomically;
+the shared lease remains held until its 600-second expiry after the 540-second
+caller timeout. Focused tests cover these boundaries; isolated timeout and
+database recovery evidence remains necessary.
+
+## 2026-10-06 — Stop reminder-schedule reconciliation after lease timeout
+
+The 15-minute schedule-maintenance route now passes its 540-second execution
+signal to the worker. Cancellation is checked between the Pick'em, weekly
+recap, and Bowl schedule passes, as well as between reads and writes and inside
+per-message loops. Database requests already in flight are allowed to finish.
+A timeout can leave some scheduled messages updated or inserted; this is safe
+to resume because automation keys and unique guards make each pass idempotent.
+The 600-second lease still outlives a timed-out caller. Focused tests cover the
+route and cancellation boundaries; isolated timeout/retry behavior remains to
+be rehearsed.
+
+## 2026-10-06 — Stop watchdog stages after its lease timeout
+
+Both scheduled and Commissioner watchdog invocations now pass the 90-second
+lease signal into the diagnostic worker. It stops before later recovery,
+configuration, or incident work after cancellation. Any critical worker
+recovery combines the watchdog signal with that worker's own lease signal, so
+recovery retains its normal overlap protection while respecting the shorter
+outer deadline. A watchdog email is allowed to settle after its attempt receipt
+is saved; interrupting that send would create an ambiguous delivery. In-flight
+database operations are not treated as rolled back. This narrows post-timeout
+background work without changing the heartbeat contract or alert deduplication.
+Local contract tests cover the signal plumbing; isolated timeout recovery still
+needs verification.
+
+## 2026-10-06 — Reuse Bowl Pool readiness source reads
+
+The Commissioner Bowl readiness route now reads games and entries once, reuses
+their IDs for related line, pick, result, and schedule-change reads, and fails
+closed when one of those required reads errors. On a populated season, the
+normal source-level request path drops from twelve database reads to eight by
+removing three repeated game-ID reads and one repeated entry-ID read. This is a
+deterministic query-count reduction from the route, not a production latency or
+database-plan measurement. Heartbeat errors remain soft and visible as
+`unavailable`; they do not suppress otherwise valid pool readiness.

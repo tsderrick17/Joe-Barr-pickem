@@ -10,8 +10,10 @@
  * @returns {number}
  */
 export function comparePickColumns(first, second) {
-  const firstKickoff = first.kickoffAt ? new Date(first.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
-  const secondKickoff = second.kickoffAt ? new Date(second.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
+  const firstParsedKickoff = first.kickoffAt ? Date.parse(first.kickoffAt) : Number.NaN;
+  const secondParsedKickoff = second.kickoffAt ? Date.parse(second.kickoffAt) : Number.NaN;
+  const firstKickoff = Number.isFinite(firstParsedKickoff) ? firstParsedKickoff : Number.MAX_SAFE_INTEGER;
+  const secondKickoff = Number.isFinite(secondParsedKickoff) ? secondParsedKickoff : Number.MAX_SAFE_INTEGER;
   if (firstKickoff !== secondKickoff) return firstKickoff - secondKickoff;
   return String(first.gameId ?? "").localeCompare(String(second.gameId ?? ""));
 }

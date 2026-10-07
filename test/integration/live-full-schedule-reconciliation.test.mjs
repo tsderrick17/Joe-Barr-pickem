@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import pg from "pg";
+import { isolatedDatabaseEnabled } from "./test-database.mjs";
 
-const enabled = process.env.PICKEM_FULL_SEASON_DRILL === "true"
-  && process.env.PICKEM_TEST_DATABASE_CONFIRMATION === "isolated"
-  && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
+const enabled = isolatedDatabaseEnabled({ flagName: "PICKEM_FULL_SEASON_DRILL", flagValue: "true" });
 
 test("canonical schedule reconciliation moves safe games and quarantines locked changes", {
   skip: !enabled && "Run the manual isolated workflow with full_season_drill enabled.",

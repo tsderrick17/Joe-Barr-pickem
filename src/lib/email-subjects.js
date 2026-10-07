@@ -1,3 +1,4 @@
+/** @param {string} value */
 function easternDateLabel(value) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -6,6 +7,7 @@ function easternDateLabel(value) {
   }).format(new Date(value));
 }
 
+/** @param {string} value */
 function easternPlayoffDayLabel(value) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -17,6 +19,7 @@ function easternPlayoffDayLabel(value) {
 
 /**
  * @param {{ templateId: string, title: string, periodName: string | null | undefined, eventAt?: string | null, matchupLabel?: string | null }} options
+ * @returns {string}
  */
 export function automaticEmailSubject({ templateId, title, periodName, eventAt = null, matchupLabel = null }) {
   const weekTemplates = new Set(["weekly", "weekly_recap", "weekly_recap_pickem_only"]);

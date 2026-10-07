@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type GameRow = {
@@ -12,12 +12,8 @@ type GameRow = {
 };
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
-    );
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   const [exceptionResult, pendingPickResult, recordableResult] = await Promise.all([
     supabaseAdmin

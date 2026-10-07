@@ -1,29 +1,53 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { resolvePlayerAccess } from "@/lib/player-access-result";
 import { retrySafeRead } from "@/lib/retry-safe-read";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export async function requireCommissioner(request: NextRequest) {
+type CommissionerProfile = {
+  id: string;
+  first_name: string;
+  active: boolean;
+  is_commissioner: boolean;
+};
+
+/** Request-scoped access; dependency failures remain distinct from denial. */
+export async function requireCommissionerAccess(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const serverKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   const authorization = request.headers.get("authorization");
-  if (!url || !key || !authorization?.startsWith("Bearer ")) return null;
 
-  const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user } } = await authClient.auth.getUser(
-    authorization.slice("Bearer ".length),
-  );
-  if (!user) return null;
+  return resolvePlayerAccess({
+    authorization,
+    configured: Boolean(url && key && serverKey),
+    requireCommissioner: true,
+    verifyToken: async (token) => {
+      const authClient = createClient(url!, key!, {
+        global: { headers: { Authorization: authorization! } },
+      });
+      return authClient.auth.getUser(token);
+    },
+    loadPlayer: async (userId) => {
+      const { supabaseAdmin } = await import("@/lib/supabase-admin");
+      // Preserve the bounded retry for a transient profile read. Authorization
+      // itself is never cached, and no commissioner action is retried here.
+      const { data, error } = await retrySafeRead(() => supabaseAdmin
+        .from("players")
+        .select("id, first_name, active, is_commissioner")
+        .eq("auth_user_id", userId)
+        .maybeSingle());
+      return { data: data as CommissionerProfile | null, error };
+    },
+  });
+}
 
-  // Retry a brief database hiccup so the Commissioner is not shown "access
-  // required" for a transient error. A persistent error still denies access
-  // (fail closed) but is logged so it isn't mistaken for a permissions problem.
-  const { data: player, error } = await retrySafeRead(() => supabaseAdmin
-    .from("players")
-    .select("id, first_name, active, is_commissioner")
-    .eq("auth_user_id", user.id)
-    .maybeSingle());
-  if (error) console.error("Commissioner access could not be verified because the player record could not be read.");
-
-  return player?.active && player.is_commissioner ? player : null;
+export function commissionerAccessFailure(access: { status: 401 | 403 | 500 | 503; code: string }) {
+  const error = access.status === 401
+    ? "Your sign-in session could not be verified."
+    : access.status === 403
+      ? "Commissioner access is required."
+      : access.status === 500
+        ? "The server is missing required configuration."
+        : "Commissioner access could not be verified right now. Please try again.";
+  return NextResponse.json({ error, code: access.code }, { status: access.status });
 }

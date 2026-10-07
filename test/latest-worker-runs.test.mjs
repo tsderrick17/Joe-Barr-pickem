@@ -13,3 +13,12 @@ test("worker activity keeps the newest invocation when database results are desc
     ["line_locks", "2026-09-28T14:00:00Z"],
   ]);
 });
+
+test("worker activity ignores invalid timestamps and keeps the later row on a timestamp tie", () => {
+  const runs = [
+    { job_type: "scores", started_at: "2026-09-28T15:00:00Z", status: "failed" },
+    { job_type: "scores", started_at: "invalid", status: "success" },
+    { job_type: "scores", started_at: "2026-09-28T15:00:00Z", status: "success" },
+  ];
+  assert.deepEqual(latestWorkerRuns(runs), [runs[2]]);
+});

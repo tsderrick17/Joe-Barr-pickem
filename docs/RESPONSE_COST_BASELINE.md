@@ -13,6 +13,9 @@ output. The script exercises the production `shapePadRows` and
 100 calls; `medianMs` is the median per-call time. `shapedBytes` is the UTF-8
 JSON size of the shaped fragment, **not** the full HTTP response. The test
 checks scenario and output shape but intentionally has no wall-clock limit.
+It also enforces a deterministic JSON-fragment budget of 125% of each byte
+baseline below. A larger intentional response requires updating this budget
+with a reason; timing remains a reported trend, not a CI threshold.
 
 | Scenario | Inputs | Standings fragment | Slate fragment |
 | --- | --- | ---: | ---: |
@@ -27,6 +30,16 @@ exactly. These are local shaping costs, not promises about another machine.
 The playoff Standings fragment grows because every player has six current-round
 picks. Input/output row counts and byte sizes are the reproducible comparison;
 time should be compared across repeated runs on the same machine.
+
+On October 6, the Pad shaper was changed from rescanning both pick lists for
+each player to indexing season wins and current-week picks in one pass. A
+same-session before/after sample on Windows/Node 22.23.1 measured Standings
+shaping at 0.062 to 0.045 ms early, 0.060 to 0.035 ms late, and 0.161 to
+0.127 ms in the playoff fixture (one prior-baseline run; three post-change
+runs, with the listed post-change median). Shaped byte counts and row counts
+were identical. This is an observed response-shaping improvement only; it does
+not establish faster API routes or lower Vercel usage. Timings remain
+non-gating.
 
 ## What is still required for a route-cost baseline
 

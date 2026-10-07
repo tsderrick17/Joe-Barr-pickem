@@ -97,6 +97,14 @@ export async function fetchWithSession(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
+  // Only application requests may receive the player's bearer token. A
+  // caller accidentally passing a provider or external URL must fail before
+  // session lookup or fetch, even if the URL also has an /api/ path.
+  const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const target = new URL(rawUrl, window.location.origin);
+  if (target.origin !== window.location.origin) {
+    throw new TypeError("Authenticated requests must target this application.");
+  }
   return sharedReads.run(input, init, () => fetchWithSessionOnce(input, init));
 }
 

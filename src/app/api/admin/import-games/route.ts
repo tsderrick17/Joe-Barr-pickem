@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   AutomationAlreadyRunningError,
-  runWithAutomationLease,
+  runWithAutomationLeaseContext,
 } from "@/lib/automation-execution-lease";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { buildScheduleGame } from "@/lib/schedule-game";
 import { reconcileFullSeasonSchedule } from "@/lib/full-schedule-reconciliation";
 import { getLineLock, getWeekStartKey, getWeekWindow } from "@/lib/schedule-time";
@@ -65,6 +65,11 @@ export async function POST(request: NextRequest) {
     Boolean(cronSecret) &&
     authorization === `Bearer ${cronSecret}`;
 
+  if (!isAutomation) {
+    const access = await requireCommissionerAccess(request);
+    if (!access.ok) return commissionerAccessFailure(access);
+  }
+
   if (!supabaseUrl || !supabasePublishableKey || !oddsApiKey) {
     return NextResponse.json(
       { error: "The server is missing required configuration." },
@@ -72,25 +77,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!isAutomation) {
-    if (!authorization?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "You must be signed in to import games." },
-        { status: 401 },
-      );
-    }
-
-    if (!(await requireCommissioner(request))) {
-      return NextResponse.json(
-        { error: "Commissioner access is required." },
-        { status: 403 },
-      );
-    }
-  }
-
   try {
-    return await runWithAutomationLease("schedule_refresh", () =>
-      refreshSchedule({ oddsApiKey, isAutomation }),
+    return await runWithAutomationLeaseContext("schedule_refresh", ({ signal }) =>
+      refreshSchedule({ oddsApiKey, isAutomation, signal }),
     );
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) {
@@ -111,10 +100,13 @@ export async function POST(request: NextRequest) {
 async function refreshSchedule({
   oddsApiKey,
   isAutomation,
+  signal,
 }: {
   oddsApiKey: string;
   isAutomation: boolean;
+  signal: AbortSignal;
 }) {
+  signal.throwIfAborted();
   const checkedAt = new Date();
   // Two UTC schedules cover daylight and standard time. Only the invocation
   // that actually lands at 7 AM Eastern may spend a provider credit.
@@ -129,6 +121,7 @@ async function refreshSchedule({
 
   if (isAutomation) {
     const circuit = await getScheduleProviderCircuit();
+    signal.throwIfAborted();
     if (circuit.blocked) {
       return NextResponse.json({
         success: true,
@@ -148,19 +141,23 @@ async function refreshSchedule({
   let canonicalSchedule: Awaited<ReturnType<typeof reconcileFullSeasonSchedule>> | null = null;
   let canonicalScheduleWarning: string | null = null;
   try {
-    canonicalSchedule = await reconcileFullSeasonSchedule();
+    canonicalSchedule = await reconcileFullSeasonSchedule(new Date(), signal);
   } catch (error) {
+    signal.throwIfAborted();
     canonicalScheduleWarning = error instanceof Error ? error.message : "The canonical NFL schedule could not be reconciled.";
   }
+  signal.throwIfAborted();
 
   let oddsResponse: Response;
 
   try {
+    const timeout = AbortSignal.timeout(20_000);
     oddsResponse = await fetch(
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${oddsApiKey}&regions=us&markets=spreads&bookmakers=draftkings`,
-      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+      { cache: "no-store", signal: AbortSignal.any([signal, timeout]) },
     );
   } catch (error) {
+    signal.throwIfAborted();
     const cooldown = await recordScheduleProviderFailure(error);
     return NextResponse.json(
       {
@@ -170,7 +167,6 @@ async function refreshSchedule({
       { status: 502 },
     );
   }
-
   if (!oddsResponse.ok) {
     const cooldown = await recordScheduleProviderFailure(
       new Error(`The NFL odds feed returned HTTP ${oddsResponse.status}.`),
@@ -189,21 +185,8 @@ async function refreshSchedule({
     const payload: unknown = await oddsResponse.json();
     if (!Array.isArray(payload)) throw new Error("The NFL odds feed returned an invalid response.");
     events = payload as OddsEvent[];
-    await supabaseAdmin.from("sync_runs").insert({
-      provider: "The Odds API",
-      job_type: "odds",
-      status: "success",
-      completed_at: new Date().toISOString(),
-      details: {
-        kind: "prelock_spread_refresh",
-        providerChecked: true,
-        requestsRemaining: oddsResponse.headers.get("x-requests-remaining"),
-        requestsUsed: oddsResponse.headers.get("x-requests-used"),
-        requestsLast: oddsResponse.headers.get("x-requests-last"),
-      },
-    });
-    await clearScheduleProviderCircuit();
   } catch (error) {
+    signal.throwIfAborted();
     const cooldown = await recordScheduleProviderFailure(error);
     return NextResponse.json(
       {
@@ -214,11 +197,28 @@ async function refreshSchedule({
     );
   }
 
+  await supabaseAdmin.from("sync_runs").insert({
+    provider: "The Odds API",
+    job_type: "odds",
+    status: "success",
+    completed_at: new Date().toISOString(),
+    details: {
+      kind: "prelock_spread_refresh",
+      providerChecked: true,
+      requestsRemaining: oddsResponse.headers.get("x-requests-remaining"),
+      requestsUsed: oddsResponse.headers.get("x-requests-used"),
+      requestsLast: oddsResponse.headers.get("x-requests-last"),
+    },
+  });
+  await clearScheduleProviderCircuit();
+  signal.throwIfAborted();
+
   const { data: season } = await supabaseAdmin
     .from("seasons")
     .select("id")
     .eq("year", seasonYear)
     .maybeSingle();
+  signal.throwIfAborted();
 
   if (!season) {
     return NextResponse.json(
@@ -231,6 +231,7 @@ async function refreshSchedule({
     .from("teams")
     .select("id, full_name")
     .eq("active", true);
+  signal.throwIfAborted();
 
   if (teamsError || !teams) {
     return NextResponse.json(
@@ -244,6 +245,7 @@ async function refreshSchedule({
     .select("id, display_order, starts_at, ends_at")
     .eq("season_id", season.id)
     .order("display_order");
+  signal.throwIfAborted();
 
   if (periodsError || !periods || periods.length === 0) {
     return NextResponse.json(
@@ -262,6 +264,7 @@ async function refreshSchedule({
   const unknownTeams = new Set<string>();
 
   for (const event of events) {
+    signal.throwIfAborted();
     if (!teamIdByName.has(event.away_team)) {
       unknownTeams.add(event.away_team);
     }
@@ -319,6 +322,7 @@ async function refreshSchedule({
   let nextEmptyPeriodIndex = 0;
 
   for (const [weekStartKey] of groupedWeeks) {
+    signal.throwIfAborted();
     const savedPeriod = periodsByWeekStart.get(weekStartKey);
 
     if (savedPeriod) {
@@ -362,6 +366,7 @@ async function refreshSchedule({
   const gamesToUpsert = [];
 
   for (const event of events) {
+    signal.throwIfAborted();
     const kickoff = new Date(event.commence_time);
     const weekStartKey = getWeekStartKey(kickoff);
     const period = periodForWeek.get(weekStartKey);
@@ -436,6 +441,10 @@ async function refreshSchedule({
     ];
   });
 
+  signal.throwIfAborted();
+  // The schedule, period assignments, and lines commit atomically. Once the
+  // database call starts, let its outcome settle instead of cancelling a
+  // request whose commit status would otherwise be unknown.
   const { data: importRows, error: importError } = await supabaseAdmin.rpc(
     "import_schedule_atomically",
     {

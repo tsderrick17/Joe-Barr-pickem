@@ -55,11 +55,15 @@ export function snapshotStackOrder(weeks, players, baseline = {}) {
  * @param {Record<string, number>} [startWinsById]
  */
 export function snapshotLayers(weeks, standings, startWinsById = {}) {
+  /** @type {Array<{ weekIndex: number, from: number, to: number, playerIds: string[] }>} */
   const segments = [];
+  /** @type {Map<string, number>} */
   let previous = new Map(standings.map((player) => [player.id, startWinsById[player.id] ?? 0]));
 
   for (const [weekIndex, week] of weeks.entries()) {
+    /** @type {Map<string, number>} */
     const current = new Map(week.scores.map((score) => [score.playerId, score.wins]));
+    /** @type {Map<string, string[]>} */
     const bySegment = new Map();
 
     for (const player of standings) {
@@ -97,7 +101,9 @@ export function snapshotLayers(weeks, standings, startWinsById = {}) {
  */
 export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3) {
   const scores = [standings.map((player) => ({ playerId: player.id, wins: baseline[player.id] ?? 0 })), ...weeks.map((week) => week.scores)];
+  /** @type {Array<Map<string, { top: number, bottom: number }>>} */
   const nodes = scores.map((entries, weekIndex) => {
+    /** @type {Map<string, number>} */
     const totals = new Map(entries.map((entry) => [entry.playerId, entry.wins]));
     /** @type {Map<number, string[]>} */
     const groups = new Map();
@@ -107,6 +113,7 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3)
       if (typeof wins !== "number") continue;
       groups.set(wins, [...(groups.get(wins) ?? []), player.id]);
     }
+    /** @type {Map<string, { top: number, bottom: number }>} */
     const positions = new Map();
     for (const [wins, ids] of groups) {
       ids.forEach((id, rank) => {
@@ -122,8 +129,9 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3)
   return snapshotLayers(weeks, standings, baseline).segments.flatMap((segment) => {
     const ids = [...segment.playerIds].reverse();
     return ids.map((playerId) => {
-      const start = nodes[segment.weekIndex].get(playerId);
-      const end = nodes[segment.weekIndex + 1].get(playerId);
+      const start = nodes[segment.weekIndex]?.get(playerId);
+      const end = nodes[segment.weekIndex + 1]?.get(playerId);
+      if (!start || !end) throw new Error("Snapshot ribbon endpoint is missing.");
       const points = [{ x: x(segment.weekIndex), ...start }, { x: x(segment.weekIndex + 1), ...end }];
       return { playerId, weekIndex: segment.weekIndex, points };
     });

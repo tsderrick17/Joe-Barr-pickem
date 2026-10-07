@@ -1,6 +1,13 @@
 import { easternParts } from "./eastern-time.js";
 const EASTERN_ZONE = "America/New_York";
 
+/** @typedef {{ id: string, period_type: string }} ScoringPeriod */
+/** @typedef {{ id: string, kickoff_at: string, line_lock_at: string, is_international: boolean, status: string }} ScheduledGame */
+/** @typedef {{ automationKey: string, templateId: string, category: string, audience: string, scheduledFor: string, sourceScoringPeriodId: string, sourceGameIds: string[] }} EmailPlanCandidate */
+/** @typedef {ReturnType<typeof easternParts>} EasternParts */
+/** @typedef {{ parts: EasternParts, games: ScheduledGame[] }} GameDay */
+
+/** @type {Record<string, number>} */
 const weekdayIndex = {
   Sunday: 0,
   Monday: 1,
@@ -11,6 +18,14 @@ const weekdayIndex = {
   Saturday: 6,
 };
 
+/**
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @param {number} hour
+ * @param {number} [minute]
+ * @returns {string}
+ */
 function easternWallTime(year, month, day, hour, minute = 0) {
   const noonUtc = new Date(Date.UTC(year, month - 1, day, 12));
   const zoneName = new Intl.DateTimeFormat("en-US", {
@@ -23,19 +38,32 @@ function easternWallTime(year, month, day, hour, minute = 0) {
   return new Date(Date.UTC(year, month - 1, day, hour, minute) - offsetMinutes * 60_000).toISOString();
 }
 
+/** @param {Pick<EasternParts, "year" | "month" | "day">} parts @param {number} days */
 function shiftEasternDate(parts, days) {
   const shifted = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days, 12));
   return { year: shifted.getUTCFullYear(), month: shifted.getUTCMonth() + 1, day: shifted.getUTCDate() };
 }
 
+/** @param {Pick<EasternParts, "year" | "month" | "day">} parts */
 function keyDate(parts) {
   return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 }
 
+/** @param {ScheduledGame} game */
 function isPlayable(game) {
   return !["postponed", "cancelled", "no_contest"].includes(game.status);
 }
 
+/**
+ * @param {ScoringPeriod} period
+ * @param {string} templateId
+ * @param {string} category
+ * @param {string} audience
+ * @param {string} scheduledFor
+ * @param {string} suffix
+ * @param {string[]} [gameIds]
+ * @returns {EmailPlanCandidate}
+ */
 function candidate(period, templateId, category, audience, scheduledFor, suffix, gameIds = []) {
   return {
     automationKey: `plan:${period.id}:${templateId}:${suffix}`,
@@ -48,10 +76,17 @@ function candidate(period, templateId, category, audience, scheduledFor, suffix,
   };
 }
 
+/**
+ * Build deterministic automatic-email occurrences for one scoring period.
+ * @param {ScoringPeriod} period
+ * @param {ScheduledGame[]} rawGames
+ * @returns {EmailPlanCandidate[]}
+ */
 export function buildEmailPlanSchedule(period, rawGames) {
   const games = rawGames.filter(isPlayable).sort((a, b) => a.kickoff_at.localeCompare(b.kickoff_at));
   if (!games.length) return [];
   const result = [];
+  /** @type {Map<string, GameDay>} */
   const dayGroups = new Map();
   for (const game of games) {
     const parts = easternParts(game.kickoff_at);
@@ -80,17 +115,21 @@ export function buildEmailPlanSchedule(period, rawGames) {
       result.push(candidate(period, "pick_due_sunday_3", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 15), `${date}:15`));
       result.push(candidate(period, "pick_due_sunday_6", "pick_due", "pick_due", easternWallTime(parts.year, parts.month, parts.day, 18), `${date}:18`));
 
-      for (const [window, templateId, category, start, end] of [
+      /** @type {Array<[string, string, string, number, number]>} */
+      const revealWindows = [
         ["early", "sunday_early_reveal", "sunday_early_reveal", 12, 16],
         ["late", "sunday_late_reveal", "sunday_late_reveal", 16, 20],
-      ]) {
+      ];
+      for (const [window, templateId, category, start, end] of revealWindows) {
         const windowGames = dayGames.filter((game) => {
           const hour = easternParts(game.kickoff_at).hour;
           return hour >= start && hour < end;
         });
         if (windowGames.length) {
           const scheduledFor = windowGames.map((game) => game.kickoff_at).sort().at(-1);
-          result.push(candidate(period, templateId, category, "all_active", scheduledFor, `${date}:${window}`, windowGames.map((game) => game.id)));
+          if (scheduledFor) {
+            result.push(candidate(period, templateId, category, "all_active", scheduledFor, `${date}:${window}`, windowGames.map((game) => game.id)));
+          }
         }
       }
     }
@@ -100,7 +139,9 @@ export function buildEmailPlanSchedule(period, rawGames) {
 
     if (period.period_type === "playoff") {
       const lastKickoff = dayGames.map((game) => new Date(game.kickoff_at).getTime()).sort((a, b) => a - b).at(-1);
-      result.push(candidate(period, "playoff_day_recap", "playoff_day_recap", "all_active", new Date(lastKickoff + 6 * 60 * 60_000).toISOString(), date, dayGames.map((game) => game.id)));
+      if (lastKickoff !== undefined) {
+        result.push(candidate(period, "playoff_day_recap", "playoff_day_recap", "all_active", new Date(lastKickoff + 6 * 60 * 60_000).toISOString(), date, dayGames.map((game) => game.id)));
+      }
     }
   }
 
@@ -108,6 +149,7 @@ export function buildEmailPlanSchedule(period, rawGames) {
     result.push(candidate(period, "early_lock", "early_lock", "all_active", game.line_lock_at, game.id, [game.id]));
   }
 
+  /** @type {Map<string, ScheduledGame[]>} */
   const kickoffGroups = new Map();
   for (const game of games) kickoffGroups.set(game.kickoff_at, [...(kickoffGroups.get(game.kickoff_at) ?? []), game]);
   if (period.period_type === "playoff") {

@@ -3,12 +3,13 @@ import { automaticEmailSubject } from "@/lib/email-subjects.js";
 import { reminderTemplates } from "@/lib/reminder-templates";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-async function cancelScheduledPickemPlanMessages() {
+async function cancelScheduledPickemPlanMessages(signal?: AbortSignal) {
   // A completed season has no active scoring period, but a reminder from the
   // final period may still be sitting in the queue. Cancel those plan items
   // explicitly so championship completion is a hard stop for Pick'em mail.
   // The weekly recap is queued independently and must remain available to
   // deliver the final results and champion announcement.
+  signal?.throwIfAborted();
   const { data, error } = await supabaseAdmin
     .from("push_reminders")
     .update({
@@ -20,11 +21,13 @@ async function cancelScheduledPickemPlanMessages() {
     .like("automation_key", "plan:%")
     .neq("category", "weekly_recap")
     .select("id");
+  signal?.throwIfAborted();
   if (error) throw new Error("Scheduled Pick'em emails could not be stopped after the season ended.");
   return data?.length ?? 0;
 }
 
-export async function ensureAutomaticEmailPlanMessages() {
+export async function ensureAutomaticEmailPlanMessages(signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const { data: period, error: periodError } = await supabaseAdmin
     .from("scoring_periods")
     .select("id, period_type, display_name")
@@ -32,9 +35,10 @@ export async function ensureAutomaticEmailPlanMessages() {
     .order("display_order")
     .limit(1)
     .maybeSingle();
+  signal?.throwIfAborted();
   if (periodError) throw new Error("The active week could not be loaded for automatic emails.");
   if (!period) {
-    const cancelled = await cancelScheduledPickemPlanMessages();
+    const cancelled = await cancelScheduledPickemPlanMessages(signal);
     return { created: 0, cancelled, reason: "no_active_period" };
   }
 
@@ -43,6 +47,7 @@ export async function ensureAutomaticEmailPlanMessages() {
     supabaseAdmin.from("players").select("id").eq("active", true).eq("is_commissioner", true).order("created_at").limit(1).maybeSingle(),
     supabaseAdmin.from("reminder_templates").select("template_id, title, body"),
   ]);
+  signal?.throwIfAborted();
   if (gamesError) throw new Error("The active schedule could not be loaded for automatic emails.");
   if (commissionerError || !commissioner) throw new Error("Automatic emails need an active commissioner sender.");
   if (templateError) throw new Error("The saved email wording could not be loaded.");
@@ -51,6 +56,7 @@ export async function ensureAutomaticEmailPlanMessages() {
   const { data: teams, error: teamsError } = teamIds.length
     ? await supabaseAdmin.from("teams").select("id, mascot").in("id", teamIds)
     : { data: [], error: null };
+  signal?.throwIfAborted();
   if (teamsError) throw new Error("Automatic email matchup labels could not be loaded.");
 
   const schedule = buildEmailPlanSchedule(period, games ?? []);
@@ -87,6 +93,7 @@ export async function ensureAutomaticEmailPlanMessages() {
     .select("automation_key, status")
     .eq("source_scoring_period_id", period.id)
     .not("automation_key", "is", null);
+  signal?.throwIfAborted();
   if (existingError) throw new Error("Existing automatic emails could not be reconciled.");
 
   const currentKeys = new Set(rows.map((row) => row.automation_key));
@@ -94,20 +101,24 @@ export async function ensureAutomaticEmailPlanMessages() {
     .filter((item) => item.status === "scheduled" && item.automation_key && !currentKeys.has(item.automation_key))
     .map((item) => item.automation_key);
   if (staleScheduledKeys.length) {
+    signal?.throwIfAborted();
     const { error: deleteError } = await supabaseAdmin
       .from("push_reminders")
       .delete()
       .eq("status", "scheduled")
       .in("automation_key", staleScheduledKeys);
+    signal?.throwIfAborted();
     if (deleteError) throw new Error("Outdated automatic emails could not be replaced after a schedule change.");
   }
 
   for (const row of rows) {
+    signal?.throwIfAborted();
     const { error: updateError } = await supabaseAdmin
       .from("push_reminders")
       .update(row)
       .eq("automation_key", row.automation_key)
       .eq("status", "scheduled");
+    signal?.throwIfAborted();
     if (updateError) throw new Error("A scheduled automatic email could not follow the latest schedule or wording.");
   }
 
@@ -124,10 +135,12 @@ export async function ensureAutomaticEmailPlanMessages() {
   // upsert failed after updating the existing schedule and blocked all due
   // reminders. The execution lease makes this read-then-insert path safe; a
   // concurrent manual creation is a harmless duplicate and remains a no-op.
+  signal?.throwIfAborted();
   const { data, error } = await supabaseAdmin
     .from("push_reminders")
     .insert(missingRows)
     .select("id");
+  signal?.throwIfAborted();
   if (error?.code === "23505") return { created: 0, reason: "already_queued" };
   if (error) throw new Error("The automatic email plan could not be queued.");
   return { created: data?.length ?? 0, reason: null };

@@ -1,34 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !publishableKey) {
-    return NextResponse.json(
-      { error: "The server is missing required configuration." },
-      { status: 500 },
-    );
-  }
-
-  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "You must be signed in." }, { status: 401 });
-  }
-
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
-    );
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   try {
-    const result = await runWithAutomationLease("line_locks", lockDueLines);
+    const result = await runWithAutomationLeaseContext("line_locks", ({ signal }) =>
+      lockDueLines(new Date(), signal),
+    );
 
     const message =
       result.dueGames === 0
@@ -58,12 +41,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
-    );
-  }
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   const now = new Date().toISOString();
   const [latestResult, dueGamesResult] = await Promise.all([

@@ -19,6 +19,7 @@ test("backup heartbeat fails closed for failed, stale, missing, or malformed run
   assert.equal(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "2026-09-13T16:59:59Z" }, now).healthy, false);
   assert.deepEqual(assessBackupWorkflowRun(null, now), { healthy: false, reason: "missing" });
   assert.deepEqual(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "bad" }, now), { healthy: false, reason: "invalid" });
+  assert.deepEqual(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: 1_790_000_000_000 }, now), { healthy: false, reason: "invalid" });
 });
 
 test("free backup monitoring uses an opaque HTTP endpoint and no paid push heartbeat", async () => {

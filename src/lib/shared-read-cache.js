@@ -45,7 +45,7 @@ export function createSharedReadCache({ origin, schedule = (callback, delay) => 
     if (key) {
       const existing = reads.get(key);
       if (existing) return (await existing).clone();
-      const kept = KEPT_READ_PATHS.has(url.pathname) && init.cache !== "no-store";
+      const kept = url !== null && KEPT_READ_PATHS.has(url.pathname) && init.cache !== "no-store";
       const response = operation();
       reads.set(key, response);
       const forget = () => { if (reads.get(key) === response) reads.delete(key); };

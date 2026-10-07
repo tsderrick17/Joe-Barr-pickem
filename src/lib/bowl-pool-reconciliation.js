@@ -1,6 +1,25 @@
+/** @typedef {"scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest"} BowlSettlementGameStatus */
+/** @typedef {{ id: string, status: BowlSettlementGameStatus }} BowlSettlementGame */
+/** @typedef {{ id: string, status: "active" | "withdrawn" | "complete" }} BowlSettlementEntry */
+/** @typedef {{ entry_id: string, game_id: string, result: "pending" | "win" | "loss" | "void" }} BowlSettlementPick */
+/** @typedef {{ entry_id: string, game_id: string, result: "win" | "loss" | "void" }} BowlSettlementReceipt */
+/** @typedef {{ game_id: string }} BowlSettlementLine */
+/** @typedef {{ healthy: boolean, problems: string[] }} BowlSettlementAssessment */
+
+/**
+ * @param {{
+ *   games: BowlSettlementGame[],
+ *   entries: BowlSettlementEntry[],
+ *   picks: BowlSettlementPick[],
+ *   results: BowlSettlementReceipt[],
+ *   lines: BowlSettlementLine[],
+ * }} input
+ * @returns {BowlSettlementAssessment}
+ */
 export function assessBowlPoolSettlement({ games, entries, picks, results, lines }) {
   const problems = [];
   const lineIds = new Set(lines.map((line) => line.game_id));
+  /** @param {{ entry_id: string, game_id: string }} row */
   const key = (row) => `${row.entry_id}:${row.game_id}`;
   const resultKeys = new Set();
   for (const result of results) {

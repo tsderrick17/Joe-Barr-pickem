@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { parseBowlPoolScheduleCsv } from "@/lib/bowl-pool-schedule.js";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 
 export async function POST(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   try {
     const body = await request.json() as { seasonYear?: number; csv?: string };
     const seasonYear = Number(body.seasonYear);
@@ -25,7 +26,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const year = Number(request.nextUrl.searchParams.get("seasonYear") || currentSeasonYear());
   const { data: season } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", year).maybeSingle();
   if (!season) return NextResponse.json({ games: [] });

@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { reminderTemplate } from "@/lib/reminder-templates";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { emailArtworkOptions } from "@/lib/email-artwork-options";
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const { data, error } = await supabaseAdmin.from("reminder_templates").select("template_id, title, body, image_options");
   if (error) return NextResponse.json({ error: "Standard email wording could not be loaded." }, { status: 500 });
   return NextResponse.json({ templates: (data ?? []).map((template) => ({ id: template.template_id, title: template.title, body: template.body, imageOptions: emailArtworkOptions(template.image_options) })) });
 }
 
 export async function PUT(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
+  const commissioner = access.player;
   let body: { id?: unknown; title?: unknown; message?: unknown; imageOptions?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Standard email wording was incomplete." }, { status: 400 }); }
   const id = typeof body.id === "string" ? body.id : "";
@@ -26,7 +28,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const id = request.nextUrl.searchParams.get("id") ?? "";
   if (!reminderTemplate(id)) return NextResponse.json({ error: "Choose a standard email to reset." }, { status: 400 });
   const { error } = await supabaseAdmin.from("reminder_templates").delete().eq("template_id", id);

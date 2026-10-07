@@ -3,6 +3,7 @@ import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { QUIET_GRADING_REFRESH_MS } from "../src/lib/grading-refresh-policy.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -67,4 +68,14 @@ test("current operating docs follow the latest score schedule and Bowl provider"
   assert.match(reference, /ESPN is the default NCAA Bowl Pool/);
   assert.doesNotMatch(reference, /CollegeFootballData/);
   assert.doesNotMatch(operations, /full 272-game schedule/);
+});
+
+test("operating docs match the current quiet Grading refresh cadence", async () => {
+  const [reference, operations] = await Promise.all([
+    readFile(path.join(root, "docs", "PROJECT_REFERENCE.md"), "utf8"),
+    readFile(path.join(root, "docs", "OPERATIONS.md"), "utf8"),
+  ]);
+  assert.equal(QUIET_GRADING_REFRESH_MS, 15 * 60_000);
+  assert.match(reference, /kickoff is within 15 minutes; otherwise every 15 minutes/);
+  assert.match(operations, /otherwise it polls every 15\s+minutes/);
 });

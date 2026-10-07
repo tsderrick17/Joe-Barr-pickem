@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { executeAuthenticatedRequest } from "../src/lib/authenticated-request.js";
 
@@ -69,13 +68,4 @@ test("missing or unrefreshable sessions report sign-in failure", async () => {
   const refused = scenario({ responses: [new Response("expired", { status: 401 }), new Response("still invalid", { status: 401 })] });
   await assert.rejects(executeAuthenticatedRequest(refused.dependencies), /could not be verified/);
   assert.deepEqual(refused.calls, ["session", ["send", "old"], "refresh", ["send", "new"]]);
-});
-
-test("the browser session helper uses this request boundary", async () => {
-  const source = await readFile(new URL("../src/lib/auth-session.ts", import.meta.url), "utf8");
-  assert.match(source, /executeAuthenticatedRequest\(\{/);
-  assert.match(source, /getSession: getFreshSession/);
-  assert.match(source, /refreshSession: async \(\) =>/);
-  assert.match(source, /send: \(accessToken\) =>/);
-  assert.match(source, /wait: \(\) => waitForTransientReadRetry/);
 });

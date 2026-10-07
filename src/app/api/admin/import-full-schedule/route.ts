@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { bootstrapFullSchedule, prepareFullSchedule } from "@/lib/full-schedule-bootstrap";
-import { requireCommissioner } from "@/lib/require-commissioner";
-
-async function authorize(request: NextRequest) {
-  if (!request.headers.get("authorization")?.startsWith("Bearer ")) return false;
-  return Boolean(await requireCommissioner(request));
-}
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 
 export async function GET(request: NextRequest) {
-  if (!(await authorize(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   try {
     const prepared = await prepareFullSchedule();
     const weekCounts = Object.fromEntries(Array.from({ length: 18 }, (_, index) => [index + 1, prepared.games.filter((game) => game.week === index + 1).length]));
@@ -20,9 +16,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await authorize(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   try {
-    const result = await runWithAutomationLease("season_bootstrap", () => bootstrapFullSchedule());
+    const result = await runWithAutomationLeaseContext("season_bootstrap", ({ signal }) => bootstrapFullSchedule({ signal }));
     return NextResponse.json({ message: result.outcome === "already_complete" ? "The complete schedule is already loaded and pinned." : "The complete regular-season schedule is loaded and pinned. Daily reconciliation will keep it current.", ...result });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) return NextResponse.json({ error: error.message }, { status: 409 });

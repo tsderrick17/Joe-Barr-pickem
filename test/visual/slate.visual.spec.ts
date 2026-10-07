@@ -60,6 +60,50 @@ for (const scenario of Object.keys(SCENARIOS)) {
   }
 }
 
+test("Slate week changes ignore a late response from the previously selected week", async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 900 });
+  await signIn(page);
+
+  const initial = boardResponse("upcoming-picked");
+  // Make two historical weeks available so the browser can switch twice while
+  // the first request is still in flight; the initial board remains Week 5.
+  initial.bootstrap.weeks.find((week) => week.id === "week-6")!.status = "complete";
+  initial.bootstrap.weeks.find((week) => week.id === "week-7")!.status = "complete";
+  const makeWeekResponse = (teamId: string) => ({
+    ...boardResponse("upcoming-unpicked"),
+    myPicks: [{ gameId: "g0", teamId }],
+  });
+
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname !== "/api/board") return route.fulfill({ status: 204, body: "" });
+    if (url.searchParams.has("bootstrap")) return route.fulfill({ json: initial });
+    if (url.searchParams.get("scoringPeriodId") === "week-6") {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      return route.fulfill({ json: makeWeekResponse("pit") }).catch(() => undefined);
+    }
+    if (url.searchParams.get("scoringPeriodId") === "week-7") {
+      return route.fulfill({ json: makeWeekResponse("cle") });
+    }
+    return route.fulfill({ json: initial });
+  });
+  await page.route("https://placeholder.invalid/**", (route) => route.abort());
+  await page.goto("/board");
+
+  const weekSelector = page.locator("#week-selector");
+  await expect(weekSelector).toHaveValue("week-5");
+  const weekSixRequest = page.waitForRequest((request) => new URL(request.url()).searchParams.get("scoringPeriodId") === "week-6", { timeout: 10_000 });
+  await weekSelector.selectOption("week-6");
+  await weekSixRequest;
+  await weekSelector.selectOption("week-7");
+
+  await expect(weekSelector).toHaveValue("week-7");
+  await expect(page.locator(".slate-game-row").first().locator(".slate-team-selection")).toContainText("CLEVELAND BROWNS");
+  await page.waitForTimeout(800);
+  await expect(weekSelector).toHaveValue("week-7");
+  await expect(page.locator(".slate-game-row").first().locator(".slate-team-selection")).toContainText("CLEVELAND BROWNS");
+});
+
 // Choosing a third pick when two are saved raises the receipt's warning tab, which has the same die-cut corners.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Slate receipt warning at ${label}`, async ({ page }) => {

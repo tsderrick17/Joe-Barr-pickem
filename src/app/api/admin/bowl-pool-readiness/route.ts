@@ -1,24 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSeasonYear } from "@/lib/season";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { assessBowlPoolIntegrity, countMissingBowlTeamSlots } from "@/lib/bowl-pool-integrity";
+import { assessBowlPoolIntegrity, countMissingBowlTeamSlots } from "@/lib/bowl-pool-integrity.js";
 import { assessBowlPoolSettlement } from "@/lib/bowl-pool-reconciliation.js";
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const { data: season, error } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at").eq("season_year", currentSeasonYear()).maybeSingle();
   if (error || !season) return NextResponse.json({ error: "Bowl Pool season is not configured." }, { status: 404 });
-  const [{ data: games, error: gamesError }, { data: lines }, { data: heartbeats, error: heartbeatError }, { data: entries }, { data: picks }, { data: results }, { count: openScheduleChanges }] = await Promise.all([
+  const [
+    { data: games, error: gamesError },
+    { data: heartbeats, error: heartbeatError },
+    { data: entries, error: entriesError },
+  ] = await Promise.all([
     supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, order_index, away_team_id, home_team_id, status").eq("season_id", season.id).order("kickoff_at"),
-    supabaseAdmin.from("bowl_pool_game_lines").select("game_id, source, locked_at").in("game_id", (await supabaseAdmin.from("bowl_pool_games").select("id").eq("season_id", season.id)).data?.map((game) => game.id) ?? []),
     supabaseAdmin.from("automation_worker_heartbeats").select("job_name, last_status, last_succeeded_at, updated_at").in("job_name", ["schedule_refresh", "line_locks", "scores"]),
     supabaseAdmin.from("bowl_pool_entries").select("id,status").eq("season_id", season.id),
-    supabaseAdmin.from("bowl_pool_picks").select("entry_id,game_id,result").in("entry_id", (await supabaseAdmin.from("bowl_pool_entries").select("id").eq("season_id", season.id)).data?.map((entry) => entry.id) ?? []),
-    supabaseAdmin.from("bowl_pool_game_results").select("entry_id,game_id,result").in("game_id", (await supabaseAdmin.from("bowl_pool_games").select("id").eq("season_id", season.id)).data?.map((game) => game.id) ?? []),
-    supabaseAdmin.from("bowl_pool_schedule_changes").select("id", { count: "exact", head: true }).is("reviewed_at", null).in("game_id", (await supabaseAdmin.from("bowl_pool_games").select("id").eq("season_id", season.id)).data?.map((game) => game.id) ?? []),
   ]);
-  if (gamesError) return NextResponse.json({ error: "Bowl Pool readiness could not be read." }, { status: 500 });
+  if (gamesError || entriesError) return NextResponse.json({ error: "Bowl Pool readiness could not be read." }, { status: 500 });
+
+  const gameIds = (games ?? []).map((game) => game.id);
+  const entryIds = (entries ?? []).map((entry) => entry.id);
+  const emptyRead = { data: [], error: null };
+  const [
+    { data: lines, error: linesError },
+    { data: picks, error: picksError },
+    { data: results, error: resultsError },
+    { count: openScheduleChanges, error: changesError },
+  ] = await Promise.all([
+    gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id, source, locked_at").in("game_id", gameIds) : Promise.resolve(emptyRead),
+    entryIds.length ? supabaseAdmin.from("bowl_pool_picks").select("entry_id,game_id,result").in("entry_id", entryIds) : Promise.resolve(emptyRead),
+    gameIds.length ? supabaseAdmin.from("bowl_pool_game_results").select("entry_id,game_id,result").in("game_id", gameIds) : Promise.resolve(emptyRead),
+    gameIds.length ? supabaseAdmin.from("bowl_pool_schedule_changes").select("id", { count: "exact", head: true }).is("reviewed_at", null).in("game_id", gameIds) : Promise.resolve({ count: 0, error: null }),
+  ]);
+  if (linesError || picksError || resultsError || changesError) {
+    return NextResponse.json({ error: "Bowl Pool readiness could not be read." }, { status: 500 });
+  }
   const future = (games ?? []).filter((game) => new Date(game.kickoff_at).getTime() > Date.now());
   const missingTeams = countMissingBowlTeamSlots(games ?? []);
   const lockedGames = (games ?? []).filter((game) => game.status !== "scheduled").length;

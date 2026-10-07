@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { bootstrapFullSchedule } from "@/lib/full-schedule-bootstrap";
 
 export const runtime = "nodejs";
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   if (!secret) return NextResponse.json({ error: "The automation secret is not configured." }, { status: 500 });
   if (request.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "Unauthorized automation request." }, { status: 401 });
   try {
-    const result = await runWithAutomationLease("season_bootstrap", () => bootstrapFullSchedule({ automatic: true }));
+    const result = await runWithAutomationLeaseContext("season_bootstrap", ({ signal }) => bootstrapFullSchedule({ automatic: true, signal }));
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) {

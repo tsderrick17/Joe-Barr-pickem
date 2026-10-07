@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { reconcileFinalScores } from "@/lib/final-score-reconciliation";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type ScoreEvent = { id: string; completed: boolean; scores?: Array<{ name: string; score: string | number | null }> };
@@ -12,7 +12,8 @@ function parseScore(value: string | number | null | undefined) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
   const oddsApiKey = process.env.ODDS_API_KEY;
   if (!oddsApiKey) return NextResponse.json({ error: "The NFL score provider is not configured." }, { status: 500 });
 

@@ -1,4 +1,17 @@
-/** Return the newest recorded invocation for each worker, regardless of input order. */
+/**
+ * @typedef {Object} WorkerRun
+ * @property {string} job_type
+ * @property {string} started_at
+ * @property {string | null} completed_at
+ * @property {string} status
+ * @property {string | null} error_message
+ */
+
+/** Return the newest recorded invocation for each worker, regardless of input order.
+ * Invalid timestamps are ignored; ties prefer the later row in the supplied list.
+ * @param {WorkerRun[] | null | undefined} runs
+ * @returns {WorkerRun[]}
+ */
 export function latestWorkerRuns(runs) {
   const latest = new Map();
   for (const run of runs ?? []) {

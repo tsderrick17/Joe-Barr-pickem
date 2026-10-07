@@ -1,12 +1,17 @@
+// @ts-check
 import { gradeAtsPick } from "./ats-grading.js";
 import { resolvePickemChampions } from "./championship-policy.js";
 import { calculatePlayoffEligibility } from "./playoff-math.js";
 import { gradeSurvivorPick } from "./survivor-grading.js";
 
+/** @typedef {{ id: string, label: string, detail: string, passed: boolean }} SeasonRecoveryCheck */
+/** @typedef {{ status: "healthy" | "attention", checks: SeasonRecoveryCheck[] }} SeasonRecoveryReport */
+
 /**
  * A deterministic, in-memory rehearsal of the season's important recovery
  * paths. It exists to prove the rules still agree after refactors without
  * reading or mutating a real player, pick, game, or scoring period.
+ * @returns {SeasonRecoveryReport}
  */
 export function runSeasonRecoveryRehearsal() {
   const atsResult = gradeAtsPick({

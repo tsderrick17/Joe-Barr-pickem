@@ -11,11 +11,20 @@ test("Pool Action keeps future games and selected started games", () => {
   assert.equal(shouldShowPoolActionMatchup({ kickoffAt: "2026-09-13T17:00:00.000Z", now, hasSelections: false }), false);
 });
 
+test("Pool Action hides malformed kickoff timestamps even when selections exist", () => {
+  assert.equal(shouldShowPoolActionMatchup({ kickoffAt: "not-a-date", now, hasSelections: true }), false);
+  assert.equal(shouldShowPoolActionMatchup({ kickoffAt: "2026-09-13T20:00:00.000Z", now: "not-a-date", hasSelections: true }), false);
+});
+
 test("public reveal images omit players without a revealed selection", () => {
+  const selected = { name: "Tyler", wins: 1, picks: ["IND"] };
   assert.deepEqual(onlyPublicPickRows([
-    { name: "Tyler", wins: 1, picks: ["IND"] },
+    selected,
     { name: "Gary", wins: 2, picks: [] },
-  ]), [{ name: "Tyler", wins: 1, picks: ["IND"] }]);
+    { name: "John", wins: 3 },
+    { name: "Rick", wins: 4, picks: null },
+    { name: "Ron", wins: 5, picks: "SEA" },
+  ]), [selected]);
 });
 
 test("every public-pick email image applies the Pool Action row filter", async () => {

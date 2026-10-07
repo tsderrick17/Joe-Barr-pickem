@@ -4,6 +4,12 @@ These tests are deliberately unable to run against the live pool. They require a
 
 Never place the production project URL (`qtuycmgjiizrahfchsxe`) in any `PICKEM_TEST_*` setting. The test harness rejects it before it makes a request.
 
+Direct PostgreSQL lifecycle tests use the same fail-closed policy: they do not
+run without the exact `isolated` confirmation, and when enabled they reject
+malformed/non-PostgreSQL URLs and the production project reference before
+opening a database connection. This is a final safeguard, not a substitute for
+using the separate disposable project described below.
+
 ## One-time setup
 
 1. Create a separate free Supabase project named something unmistakable, such as `Joe Barr Pick'em Test`.

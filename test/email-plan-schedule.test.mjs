@@ -54,8 +54,10 @@ test("playoff plans use kickoff reveals and one recap per game day", () => {
   assert.equal(schedule.filter((item) => item.templateId === "featured_window_reveal").length, 0);
 });
 
-test("cancelled games do not create email occurrences", () => {
-  assert.deepEqual(buildEmailPlanSchedule(period, [game("cancelled", "2026-09-13T17:00:00.000Z", { status: "cancelled" })]), []);
+test("postponed, cancelled, and no-contest games do not create email occurrences", () => {
+  for (const status of ["postponed", "cancelled", "no_contest"]) {
+    assert.deepEqual(buildEmailPlanSchedule(period, [game(status, "2026-09-13T17:00:00.000Z", { status })]), []);
+  }
 });
 
 test("a rescheduled game produces replacement keys while preserving the game receipt", () => {

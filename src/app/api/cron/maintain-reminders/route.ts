@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { AutomationAlreadyRunningError, runWithAutomationLeaseContext } from "@/lib/automation-execution-lease";
 import { maintainAutomaticReminderSchedule } from "@/lib/automatic-reminder-maintenance";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized automation request." }, { status: 401 });
   }
   try {
-    return NextResponse.json({ success: true, ...(await runWithAutomationLease("reminder_schedule", maintainAutomaticReminderSchedule)) });
+    return NextResponse.json({ success: true, ...(await runWithAutomationLeaseContext("reminder_schedule", ({ signal }) => maintainAutomaticReminderSchedule(signal))) });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) return NextResponse.json({ success: true, skipped: true, message: error.message });
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Automatic reminder schedules could not be reconciled." }, { status: 500 });

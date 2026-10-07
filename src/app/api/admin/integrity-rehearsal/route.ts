@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assessSeasonIntegrity } from "@/lib/integrity-rehearsal";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { requireCommissionerAccess, commissionerAccessFailure } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const access = await requireCommissionerAccess(request);
+  if (!access.ok) return commissionerAccessFailure(access);
 
   const [periodsResult, gamesResult, picksResult, survivorPicksResult, linesResult] = await Promise.all([
     supabaseAdmin.from("scoring_periods").select("id, max_picks, status"),
