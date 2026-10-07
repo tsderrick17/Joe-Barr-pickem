@@ -17,8 +17,8 @@ test("PIN sign-in uses protected Auth credentials and monitors only privacy-safe
   assert.match(route, /clear_failed_pin_logins/);
   assert.match(route, /authenticatePlayerPin/);
   assert.match(authentication, /derivePlayerAuthPassword/);
-  assert.match(authentication, /legacyPlayerAuthPassword/);
-  assert.match(authentication, /updateAccount/);
+  assert.doesNotMatch(authentication, /legacyPlayerAuthPassword/);
+  assert.doesNotMatch(authentication, /updateAccount/);
   assert.ok(route.indexOf("record_failed_pin_login") > route.indexOf("if (error || !data.session)"));
   assert.match(players, /derivePlayerAuthPassword/);
   assert.doesNotMatch(players, /password\s*=\s*`pickem-/);

@@ -82,18 +82,11 @@ export async function POST(request: NextRequest) {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
     global: { headers: { "sb-forwarded-for": requestSource(request) } },
   });
-  // Existing accounts used the four-digit PIN as part of their Auth password.
-  // The shared transition accepts that credential only long enough to rotate
-  // it, then returns a newly authenticated server-derived session.
   const authentication = await authenticatePlayerPin({
     pin,
     serverSecret: authPepper,
     signIn: (credentials) => auth.auth.signInWithPassword(credentials),
-    updateAccount: (userId, attributes) => supabaseAdmin.auth.admin.updateUserById(userId, attributes),
   });
-  if (authentication.rotationFailed) {
-    return response({ error: "Sign-in is temporarily unavailable. Try again shortly." }, 503);
-  }
   const { data, error } = authentication.auth;
 
   if (error || !data.session || !data.user) {

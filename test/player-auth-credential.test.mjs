@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   derivePlayerAuthPassword,
-  legacyPlayerAuthPassword,
   PLAYER_AUTH_CREDENTIAL_VERSION,
   playerAuthEmail,
 } from "../src/lib/player-auth-credential.js";
@@ -20,7 +19,6 @@ test("player Auth credentials are deterministic, strong, and not the PIN", () =>
   assert.equal(first.includes("1234"), false);
   assert.ok(first.length >= 40);
   assert.equal(playerAuthEmail("1234"), "pin-1234@pickemjb.app");
-  assert.equal(legacyPlayerAuthPassword("1234"), "pickem-1234");
   assert.equal(PLAYER_AUTH_CREDENTIAL_VERSION, 2);
 });
 

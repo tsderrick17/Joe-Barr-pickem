@@ -1459,13 +1459,12 @@ Supabase service key so routine key rotation cannot lock out players. Launch
 preflight treats a missing or weak pepper as a blocking configuration error.
 New accounts receive the protected credential immediately.
 
-For the transition, the application may try a legacy password only after the
-protected credential fails. A successful legacy check must rotate the account
-and authenticate again with the protected credential before returning a
-session. A Commissioner-only, explicitly confirmed operation rotates all
-remaining accounts, preserves player PINs, records only aggregate counts in
-the audit log, and is safe to re-run. Remove the legacy fallback after the
-bulk rotation has been verified in production.
+The transition shipped with a temporary legacy fallback and a Commissioner-only,
+explicitly confirmed bulk rotation. Production verification completed on
+2026-10-06: all 11 player accounts were rotated, preserving their PINs and
+recording only aggregate counts in the audit log. The fallback is now removed;
+future pepper rotations must use the audited bulk operation before the new
+credential is required.
 
 Enforce a site-wide Content Security Policy alongside the existing response
 headers. Production dependencies block at high severity; the complete tooling

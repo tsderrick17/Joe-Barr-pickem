@@ -19,8 +19,3 @@ export function derivePlayerAuthPassword(pin, serverSecret) {
 
   return `P${PLAYER_AUTH_CREDENTIAL_VERSION}!${digest}`;
 }
-
-/** @param {string} pin */
-export function legacyPlayerAuthPassword(pin) {
-  return `pickem-${pin}`;
-}
