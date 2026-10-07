@@ -11,7 +11,7 @@ test("Slate loads do not wait on pool-wide maintenance or unpublished picks", as
   assert.match(route, /after\(\(\) => recordPlayerActivity\(player\.id\)\)/);
   assert.doesNotMatch(route, /await voidDisruptedPicks\(\)/);
   assert.doesNotMatch(route, /await eliminateSurvivorNoPicks\(\)/);
-  assert.match(route, /const startedGameIds = \(games as GameRow\[\]\)/);
+  assert.match(route, /const startedGameIds = \(games\)/);
   assert.match(route, /\.in\("game_id", startedGameIds\)/);
   assert.match(route, /if \(period\.period_type !== "playoff"\)/);
 });

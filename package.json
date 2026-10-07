@@ -23,6 +23,8 @@
     "test:all": "npm run test:migrations && npm test",
     "test:migrations": "node scripts/check-migration-versions.mjs",
     "test:visual": "playwright test --config playwright.visual.config.ts",
+    "db:types": "node scripts/database-types.mjs",
+    "db:types:check": "node scripts/database-types.mjs --check",
     "measure:shaping": "node scripts/measure-response-shaping.mjs"
   },
   "dependencies": {

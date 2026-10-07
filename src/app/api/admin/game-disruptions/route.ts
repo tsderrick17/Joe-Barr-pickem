@@ -12,13 +12,15 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "The disruption record was incomplete." }, { status: 400 });
   }
-  if (!body.gameId || !["postponed", "cancelled", "no_contest"].includes(body.status ?? "")) {
+  if (!body.gameId || !body.status || !["postponed", "cancelled", "no_contest"].includes(body.status)) {
     return NextResponse.json({ error: "Choose a game and a valid disruption status." }, { status: 400 });
   }
+  const gameId = body.gameId;
+  const status = body.status;
 
   const { data, error } = await supabaseAdmin.rpc("record_game_disruption", {
-    target_game_id: body.gameId,
-    disruption_status: body.status,
+    target_game_id: gameId,
+    disruption_status: status,
     actor_player_id: commissioner.id,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

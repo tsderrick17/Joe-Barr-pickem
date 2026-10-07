@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import type { Json } from "@/lib/database.types";
 
 const RETRY_DELAY_MS = 150;
 
@@ -6,7 +7,7 @@ type SyncRunFields = {
   status: "success" | "failed" | "skipped";
   completed_at: string;
   error_message?: string | null;
-  details?: unknown;
+  details?: Json;
 };
 
 /**

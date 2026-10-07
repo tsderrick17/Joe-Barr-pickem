@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
   let hardened = 0;
 
   for (const player of players ?? []) {
-    if (!player.auth_user_id || !/^\d{4}$/.test(player.login_pin ?? "")) {
+    const loginPin = player.login_pin ?? "";
+    if (!player.auth_user_id || !/^\d{4}$/.test(loginPin)) {
       failures.push(player.id);
       continue;
     }
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       player.auth_user_id,
       {
-        password: derivePlayerAuthPassword(player.login_pin, authPepper),
+        password: derivePlayerAuthPassword(loginPin, authPepper),
         app_metadata: {
           ...(account.user.app_metadata ?? {}),
           pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION,

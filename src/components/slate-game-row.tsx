@@ -1,5 +1,7 @@
 "use client";
 
+import type { GameStatus } from "@/lib/db-statuses";
+
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
@@ -11,7 +13,7 @@ export type SlateGameRowData = {
   kickoffAt: string;
   lineLockAt: string;
   isInternational: boolean;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: GameStatus;
   awayTeam: string;
   homeTeam: string;
   awayTeamAbbreviation: string;
@@ -105,7 +107,7 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
   const isFinal = game.status === "final";
   // Kickoff, not a delayed provider status, is the fair public-receipt line.
   // The card becomes live at that moment and remains a fixed audit record after final.
-  const isLive = hasStarted && !isFinal && game.status !== "postponed" && game.status !== "cancelled";
+  const isLive = hasStarted && !isFinal && game.status !== "postponed" && game.status !== "cancelled" && game.status !== "no_contest";
   const lockedSpread = game.officialSpread !== null;
   const showSpecialLockNote = game.isInternational && !lockedSpread;
   const hasPublishedPick = left.pickers.length > 0 || right.pickers.length > 0;
@@ -250,11 +252,13 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
     ? "POSTPONED"
     : game.status === "cancelled"
       ? "CANCELLED"
-      : isLive
-        ? "LIVE"
-        : isFinal
-          ? "FINAL"
-          : null;
+      : game.status === "no_contest"
+        ? "NO CONTEST"
+        : isLive
+          ? "LIVE"
+          : isFinal
+            ? "FINAL"
+            : null;
 
   return <article ref={rowRef} style={rowStyle} className={`slate-game-row relative z-0 grid ${rowColumns} ${survivor?.enabled ? "has-survivor-layout" : "no-survivor-layout"} items-center gap-0.5 border-b border-[#c8c1b5] ${settledLayout ? "is-final" : ""} ${isLive ? "is-live" : ""} ${hasSurvivorSelection ? "has-survivor-selection" : ""} ${compactFinal ? "py-0.5" : "py-1.5"} pl-1 pr-1 min-[380px]:gap-1 md:gap-3 md:py-2 md:pl-2 md:pr-4 ${alternate ? "bg-[#f4ede1]" : "bg-[#fffdf8]"}`}>
     <div aria-label={statusLabel ? `${statusLabel} game` : undefined} className="text-center text-[10px] font-bold leading-3 text-slate-600 md:text-xs">
