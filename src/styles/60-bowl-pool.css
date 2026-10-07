@@ -150,7 +150,8 @@
 .bowl-card-section .survivor-title-toggle { background: transparent; border-color: var(--bowl-gold); color: var(--bowl-gold); }
 .bowl-card-section .bowl-standings-scroll { background: var(--bowl-paper); border-bottom: 2px solid var(--bowl-navy) !important; box-shadow: none; }
 /* Dates, games, and lines read like a scoreboard header. */
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]) {
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child span:not([aria-hidden]),
+.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden] {
   background: var(--bowl-navy) !important;
   color: var(--bowl-gold-soft) !important;
   font-family: var(--font-graduate), Georgia, serif;

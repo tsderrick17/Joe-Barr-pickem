@@ -175,13 +175,6 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
   --bowl-game-width: 7.5rem;
 }
 
-/* The frozen portion of the date rail is part of the scoreboard header too.
-   Keeping it navy prevents a pale blank strip from appearing when the schedule
-   is dragged sideways on a narrow screen. */
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden] {
-  background: var(--bowl-navy) !important;
-}
-
 @media (max-width: 639px) {
   .bowl-standings-scroll { --bowl-game-width: 7.25rem; }
 }
