@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { after, NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
+import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { shouldShowSurvivorSlateChips } from "@/lib/survivor-chip-visibility";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
@@ -30,64 +31,16 @@ export async function GET(request: NextRequest) {
   // Disruption voiding and Survivor no-pick settlement run in the protected
   // line-lock and score workers. Keeping this endpoint read-only means a
   // player never waits on pool-wide maintenance just to open The Slate.
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
   const query = new URL(request.url).searchParams;
   let scoringPeriodId = query.get("scoringPeriodId");
   const bootstrapRequested = query.get("bootstrap") === "1";
 
-  if (!supabaseUrl || !supabasePublishableKey) {
-    return NextResponse.json(
-      { error: "The server is missing required configuration." },
-      { status: 500 },
-    );
-  }
-
-  if (!authorization?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "You must be signed in to view the board." },
-      { status: 401 },
-    );
-  }
-
-  const authClient = createClient(supabaseUrl, supabasePublishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Your sign-in session could not be verified." },
-      { status: 401 },
-    );
-  }
-
-  const { data: player, error: playerError } = await supabaseAdmin
-    .from("players")
-    .select("id, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  // A database hiccup must not tell a real player their profile is inactive.
-  if (playerError) {
-    return NextResponse.json({ error: "Pick'em is having trouble reaching its records right now. Please try again in a minute." }, { status: 503 });
-  }
-
-  if (!player || !player.active) {
-    return NextResponse.json(
-      { error: "Your player profile is not active in this Pick'em." },
-      { status: 403 },
-    );
-  }
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return NextResponse.json(
+    { error: playerAccessErrorMessage(access.code), code: access.code },
+    { status: access.status },
+  );
+  const { player } = access;
   // Presence is Commissioner-facing information, never a prerequisite for
   // rendering a player's Slate. Run it after the response is handed back.
   after(() => recordPlayerActivity(player.id));

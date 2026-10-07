@@ -21,11 +21,3 @@ test("database replacements void only the submitter's disrupted receipts atomica
   assert.match(migration, /perform public\.replace_unlocked_picks\(/);
   assert.match(migration, /perform public\.replace_unlocked_survivor_pick\(/);
 });
-
-test("Bowl Pool reports a temporary data-service outage instead of a false sign-out", async () => {
-  const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
-
-  assert.match(route, /type PlayerLookup/);
-  assert.match(route, /"The Bowl Pool service is temporarily unavailable\. Please try again\."/);
-  assert.match(route, /playerLookup\.error === "unavailable" \? 503 : 401/);
-});

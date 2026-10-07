@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
+import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -16,83 +17,16 @@ type Period = {
   status: "upcoming" | "active" | "complete";
 };
 
-type PlayerAuthentication =
-  | { ok: true; player: { id: string; active: boolean } }
-  | { ok: false; error: string; status: 401 | 500 | 503 };
-
-async function authenticatedPlayer(
-  request: NextRequest,
-): Promise<PlayerAuthentication> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
-
-  if (!url || !key) {
-    return {
-      ok: false,
-      error: "The server is missing required configuration.",
-      status: 500 as const,
-    };
-  }
-  if (!authorization?.startsWith("Bearer ")) {
-    return {
-      ok: false,
-      error: "You must be signed in as an active player.",
-      status: 401 as const,
-    };
-  }
-
-  const authClient = createClient(url, key, {
-    global: { headers: { Authorization: authorization } },
-  });
-  const { data: { user }, error: userError } = await retrySafeRead(() => authClient.auth.getUser(
-    authorization.slice("Bearer ".length),
-  ));
-  if (userError || !user) {
-    const serviceUnavailable =
-      userError ? (userError.status ?? 500) >= 500 : false;
-    return {
-      ok: false,
-      error: serviceUnavailable
-        ? "The sign-in service could not be reached."
-        : "You must be signed in as an active player.",
-      status: serviceUnavailable ? (503 as const) : (401 as const),
-    };
-  }
-
-  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin
-    .from("players")
-    .select("id, active")
-    .eq("auth_user_id", user.id)
-    .maybeSingle());
-
-  if (playerError) {
-    return {
-      ok: false,
-      error: "Your player profile could not be loaded.",
-      status: 503 as const,
-    };
-  }
-  if (!player?.active) {
-    return {
-      ok: false,
-      error: "You must be signed in as an active player.",
-      status: 401 as const,
-    };
-  }
-  await recordPlayerActivity(player.id);
-  return { ok: true, player };
-}
-
 async function survivorContext(request: NextRequest) {
-  const authentication = await authenticatedPlayer(request);
-  if (!authentication.ok) {
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) {
     return {
-      error: authentication.error,
-      status: authentication.status,
+      error: playerAccessErrorMessage(access.code),
+      status: access.status,
     };
   }
-  const { player } = authentication;
+  const { player } = access;
+  await recordPlayerActivity(player.id);
 
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin
     .from("seasons")

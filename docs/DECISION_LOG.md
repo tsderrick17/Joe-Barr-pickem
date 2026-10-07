@@ -1438,3 +1438,13 @@ be reachable from a Client Component. Mark its single privileged entry module
 with Next.js `server-only`, which makes the framework fail the build if a
 client import is added directly or through another module. Keep browser reads
 on the publishable-key client and viewer-safe API routes instead.
+
+## 2026-10-06 — Share active-player access across the primary pool routes
+
+Standings, Slate, Survivor, and Bowl Pool now use the same request-scoped token and active
+profile verification as Pick'em saves and Season Snapshot. A temporary Auth or
+profile read failure returns 503 instead of appearing to be an invalid session
+or inactive player. Verified inactive players receive 403. The Standings profile
+query also retrieves its display preferences, replacing its separate viewer
+read; the pool's season and player-list reads remain independent. Successful
+response shapes and database scoring/mutation rules are unchanged.

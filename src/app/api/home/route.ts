@@ -1,6 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { seasonSnapshotReleased } from "@/lib/season-snapshot.js";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
+import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
@@ -57,59 +58,14 @@ type ScoringPeriodRow = {
 };
 
 export async function GET(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const authorization = request.headers.get("authorization");
+  const access = await authenticateActivePlayer(request, { profile: "home" });
+  if (!access.ok) return NextResponse.json(
+    { error: playerAccessErrorMessage(access.code), code: access.code },
+    { status: access.status },
+  );
+  const viewer = access.player;
 
-  if (!supabaseUrl || !supabasePublishableKey) {
-    return NextResponse.json(
-      { error: "The server is missing required configuration." },
-      { status: 500 },
-    );
-  }
-
-  if (!authorization?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "You must be signed in to view the Standings." },
-      { status: 401 },
-    );
-  }
-
-  const authClient = createClient(supabaseUrl, supabasePublishableKey, {
-    global: {
-      headers: {
-        Authorization: authorization,
-      },
-    },
-  });
-
-  const {
-    data: { user },
-    error: userError,
-  } = await authClient.auth.getUser(authorization.slice("Bearer ".length));
-
-  if (userError || !user) {
-    return NextResponse.json(
-      {
-        error:
-          userError && (userError.status ?? 500) >= 500
-            ? "The sign-in service could not be reached."
-            : "Your sign-in session could not be verified.",
-      },
-      { status: userError && (userError.status ?? 500) >= 500 ? 503 : 401 },
-    );
-  }
-
-  const [viewerResult, seasonResult, playersResult] = await Promise.all([
-    supabaseAdmin
-      .from("players")
-      .select(
-        "id, is_commissioner, show_survivor_standings, show_bowl_card, show_pool_chat, hide_pickem_eliminated_rows, hide_survivor_eliminated_rows",
-      )
-      .eq("auth_user_id", user.id)
-      .eq("active", true)
-      .maybeSingle(),
+  const [seasonResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("seasons")
       .select("id, year")
@@ -122,23 +78,13 @@ export async function GET(request: NextRequest) {
       .order("first_name"),
   ]);
 
-  if (viewerResult.error || seasonResult.error) {
+  if (seasonResult.error) {
     console.error("Home bootstrap query failed.", {
-      viewerCode: viewerResult.error?.code,
       seasonCode: seasonResult.error?.code,
     });
     return NextResponse.json(
       { error: "The current pool could not be loaded safely." },
       { status: 503 },
-    );
-  }
-
-  const viewer = viewerResult.data;
-
-  if (!viewer) {
-    return NextResponse.json(
-      { error: "Your player profile is not active in this Pick'em." },
-      { status: 403 },
     );
   }
 

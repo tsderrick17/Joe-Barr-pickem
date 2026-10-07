@@ -8,8 +8,12 @@ the Season Snapshot auth pilot, session cache/retry tests, the architecture
 map, and one grading-dashboard read reduction. Its application, visual,
 isolated player-flow, and production smoke gates passed. Full route/database
 cost measurements, generated database types, and the remaining phases are
-still open. The next package extends request-scoped auth to Pick'em saves;
-its isolated player-flow gate remains required. This document does not change
+still open. Pick'em saves subsequently gained request-scoped auth, and the
+current package extends it to Standings, Slate, Survivor, and Bowl Pool with route failure
+tests while removing Standings' duplicate viewer lookup. Commissioner and
+remaining player routes, generated database types, state/worker extraction,
+and measured cost budgets remain open. The isolated player-flow gate remains
+required. This document does not change
 pool rules, authorize a production data correction, or supersede the project
 reference.
 Recheck the current branch before starting each work package: development with

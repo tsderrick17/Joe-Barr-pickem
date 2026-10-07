@@ -1,29 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
+import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
 import { bowlPoolLaunchAt, compareBowlPoolStandings } from "@/lib/bowl-pool.js";
 import { activeBowlStandingsEntries } from "@/lib/bowl-pool-standings-entries.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { parseBowlSubmission } from "@/lib/selection-submission";
-
-type CurrentPlayer = { id: string; first_name: string; active: boolean; is_commissioner: boolean };
-type PlayerLookup =
-  | { player: CurrentPlayer; error: null }
-  | { player: null; error: "unauthorized" | "unavailable" };
-
-async function currentPlayer(request: NextRequest): Promise<PlayerLookup> {
-  const authorization = request.headers.get("authorization");
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!authorization?.startsWith("Bearer ") || !url || !key) return { player: null, error: "unauthorized" };
-  const authClient = createClient(url, key, { global: { headers: { Authorization: authorization } } });
-  const { data: { user }, error: userError } = await retrySafeRead(() => authClient.auth.getUser(authorization.slice("Bearer ".length)));
-  if (userError || !user) return { player: null, error: userError && (userError.status ?? 500) >= 500 ? "unavailable" : "unauthorized" };
-  const { data: player, error: playerError } = await retrySafeRead(() => supabaseAdmin.from("players").select("id, first_name, active, is_commissioner").eq("auth_user_id", user.id).maybeSingle());
-  if (playerError) return { player: null, error: "unavailable" };
-  return player?.active ? { player, error: null } : { player: null, error: "unauthorized" };
-}
 
 async function seasonAndGames() {
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", currentSeasonYear()).maybeSingle());
@@ -34,9 +17,9 @@ async function seasonAndGames() {
 }
 
 export async function GET(request: NextRequest) {
-  const playerLookup = await currentPlayer(request);
-  if (!playerLookup.player) return NextResponse.json({ error: playerLookup.error === "unavailable" ? "The Bowl Pool service is temporarily unavailable. Please try again." : "You must be signed in to view the Bowl Pool." }, { status: playerLookup.error === "unavailable" ? 503 : 401 });
-  const player = playerLookup.player;
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return NextResponse.json({ error: playerAccessErrorMessage(access.code), code: access.code }, { status: access.status });
+  const { player } = access;
   const context = await seasonAndGames();
   if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
   const now = new Date();
@@ -124,9 +107,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const playerLookup = await currentPlayer(request);
-  if (!playerLookup.player) return NextResponse.json({ error: playerLookup.error === "unavailable" ? "The Bowl Pool service is temporarily unavailable. Please try again." : "You must be signed in to save Bowl Pool selections." }, { status: playerLookup.error === "unavailable" ? 503 : 401 });
-  const player = playerLookup.player;
+  const access = await authenticateActivePlayer(request);
+  if (!access.ok) return NextResponse.json({ error: playerAccessErrorMessage(access.code), code: access.code }, { status: access.status });
+  const { player } = access;
   let input: unknown;
   try { input = await request.json(); } catch { return NextResponse.json({ error: "Your Bowl Pool submission was incomplete." }, { status: 400 }); }
   const parsed = parseBowlSubmission(input);

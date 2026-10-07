@@ -105,15 +105,16 @@ measure database requests or end-to-end route time.
   route as the rest of the app. A temporary profile-read failure does not erase
   an already verified identity; an invalid session returns the player to PIN
   sign-in instead of leaving a half-signed-in page.
-- The Season Snapshot read route pilots a request-scoped access result. A bad
+- Season Snapshot, Pick'em saves, Standings, Slate, Survivor, and Bowl Pool use a
+  request-scoped active-player access result. A bad
   session is 401; a verified but missing or inactive player is 403;
   unavailable auth or player storage is 503; missing server configuration is
-  500. The response includes a stable error code. The Pick'em save route uses
-  the same result after validating its payload, while retaining safe retries
-  for token and profile reads; its selection mutation is never retried blindly.
-  Temporary failures must not be presented as a lost sign-in. Other player
-  routes retain their prior authentication handling until separately migrated
-  and tested.
+  500. Standings reads its display preferences in the same verified profile
+  lookup. Read and save responses include a stable error code; Pick'em save
+  validates its payload before access, retries only safe token/profile reads,
+  and never blindly retries its selection mutation. Temporary failures must
+  not be presented as a lost sign-in. Other player routes retain their prior
+  authentication handling until separately migrated and tested.
 - PIN sign-in is routed through the application. Five recent failures from one
   privacy-safe source fingerprint start a one-minute cooldown; ten start a
   15-minute cooldown and open a Commissioner incident and email alert.
