@@ -84,7 +84,8 @@ test("the player pages treat a missing season phase as in season, and lock the d
   assert.match(standings, /showSurvivorStandings: true, hidePickemEliminatedRows: false, hideSurvivorEliminatedRows: false, showBowlCard: true/);
   assert.match(standings, /onToggleEliminatedRows=\{offSeason \? undefined :/);
   assert.match(standings, /displayLocked=\{offSeason\}/);
-  assert.match(slate, /if \(data\.seasonPhase\) setSeasonOver\(data\.seasonPhase === "off_season"\);/);
+  const slateState = await readFile(new URL("../src/lib/slate-state.ts", import.meta.url), "utf8");
+  assert.match(slateState, /seasonOver: data\.seasonPhase \? data\.seasonPhase === "off_season" : state\.seasonOver/);
   assert.match(slate, /const isReadOnly = week\?\.status === "complete" \|\| playoffEliminated \|\| seasonOver;/);
   assert.match(slate, /const seasonClosedForViewer = seasonOver \|\| playoffEliminated;/);
   assert.match(slate, /\{seasonClosedForViewer \? null : <SlateReceipt/);
