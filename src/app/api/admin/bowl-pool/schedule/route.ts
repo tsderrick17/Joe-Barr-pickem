@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseBowlSchedule } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { parseBowlPoolScheduleCsv } from "@/lib/bowl-pool-schedule.js";
@@ -8,9 +10,10 @@ import { currentSeasonYear } from "@/lib/season";
 export async function POST(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   try {
-    const body = await request.json() as { seasonYear?: number; csv?: string };
-    const seasonYear = Number(body.seasonYear);
-    if (!Number.isInteger(seasonYear) || !body.csv) return NextResponse.json({ error: "seasonYear and csv are required." }, { status: 400 });
+    const input = await readJsonObject(request);
+    const body = input ? parseBowlSchedule(input) : null;
+    if (!body) return NextResponse.json({ error: "seasonYear and csv are required." }, { status: 400 });
+    const { seasonYear } = body;
     if (Date.now() >= Date.parse(bowlPoolLaunchAt(seasonYear))) return NextResponse.json({ error: "The schedule is locked after player launch." }, { status: 409 });
     const rows = parseBowlPoolScheduleCsv(body.csv);
     const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: seasonYear, player_visible_at: bowlPoolLaunchAt(seasonYear) }, { onConflict: "season_year" }).select("id").single();

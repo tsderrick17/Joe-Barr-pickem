@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseTestEmail } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { deliverEmailTest } from "@/lib/email-reminders";
 import { requireCommissioner } from "@/lib/require-commissioner";
@@ -6,8 +8,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export async function POST(request: NextRequest) {
   const commissioner = await requireCommissioner(request);
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  const body = await request.json().catch(() => ({})) as { template?: unknown };
-  const selectionPreview = body.template === "selections";
+  // The body is optional: a missing or malformed one is the plain test email.
+  const { selectionPreview } = parseTestEmail((await readJsonObject(request)) ?? {});
   const { data: selectionTemplate } = selectionPreview
     ? await supabaseAdmin.from("reminder_templates").select("title, body").eq("template_id", "pick_due_sunday_11").maybeSingle()
     : { data: null };

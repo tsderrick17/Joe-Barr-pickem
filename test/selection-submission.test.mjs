@@ -48,12 +48,25 @@ test("Bowl submissions accept known teams and commissioner placeholders, but not
   ]) assert.equal(parseBowlSubmission(input).value, null);
 });
 
-test("only the uncrowned launch season uses the inaugural holder display fallback", () => {
-  const activePlayers = [{ id: "john-id", first_name: " John " }, { id: "other-id", first_name: "Dana" }];
-  const displayId = (seasonYear, recordedChampionId = null, players = activePlayers) => survivorChampionDisplayId({ seasonYear, recordedChampionId, activePlayers: players });
+test("the inaugural Survivor champion is shown only in the uncrowned launch season, from the recorded history", () => {
+  const activePlayers = [{ id: "john-id" }, { id: "dana-id" }];
+  const history = [{ player_id: "john-id", pool: "survivor", season_year: 2025 }, { player_id: "dana-id", pool: "pickem", season_year: 2025 }];
+  const displayId = (seasonYear, recordedChampionId = null, championships = history, players = activePlayers) => survivorChampionDisplayId({ seasonYear, recordedChampionId, championships, activePlayers: players });
+  // Launch season, no champion yet: the recorded 2025 Survivor champion.
   assert.equal(displayId(2026), "john-id");
+  // Later seasons never fall back to anyone.
   assert.equal(displayId(2027), null);
+  assert.equal(displayId(2025), null);
+  // A crowned season shows its own champion, whatever the history says.
   assert.equal(displayId(2027, "winner-id"), "winner-id");
   assert.equal(displayId(2026, "winner-id"), "winner-id");
-  assert.equal(displayId(2026, null, [{ id: "not-john", first_name: "Johnny" }]), null);
+  // No name matching: a player called John with no recorded championship is not the holder.
+  assert.equal(displayId(2026, null, [{ player_id: "dana-id", pool: "pickem", season_year: 2025 }], [{ id: "johnny" }]), null);
+  // The Pick'em champion of 2025 is not the Survivor holder, and an inactive or absent holder shows no one.
+  assert.equal(displayId(2026, null, [{ player_id: "dana-id", pool: "pickem", season_year: 2025 }]), null);
+  assert.equal(displayId(2026, null, history, [{ id: "dana-id" }]), null);
+  assert.equal(displayId(2026, null, []), null);
+  // Co-champions in 2025: the first one who is still active.
+  const co = [{ player_id: "gone-id", pool: "survivor", season_year: 2025 }, { player_id: "john-id", pool: "survivor", season_year: 2025 }];
+  assert.equal(displayId(2026, null, co), "john-id");
 });

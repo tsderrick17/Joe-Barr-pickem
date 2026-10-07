@@ -1,3 +1,4 @@
+import { readJsonObject } from "@/lib/request-validation";
 import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
@@ -53,7 +54,9 @@ export async function PUT(request: NextRequest) {
 
   let body: { notificationEmail?: unknown; emailNotificationsEnabled?: unknown; emailWeeklyEnabled?: unknown; emailFinalLinesEnabled?: unknown; emailSundayFinalLinesEnabled?: unknown; emailEarlyLockEnabled?: unknown; emailPickDueEnabled?: unknown; emailPickDueSundayEarlyEnabled?: unknown; emailPickDueSundayAfternoonEnabled?: unknown; emailPickDuePrimetimeEnabled?: unknown; emailWeeklyRecapEnabled?: unknown; emailPlayoffDayRecapEnabled?: unknown; emailPlayoffPublicRevealEnabled?: unknown; emailAtsDueEnabled?: unknown; emailSurvivorDueEnabled?: unknown; emailSundayEarlyRevealEnabled?: unknown; emailSundayLateRevealEnabled?: unknown; emailFeaturedWindowRevealEnabled?: unknown; emailCustomEnabled?: unknown; showSurvivorStandings?: unknown; showBowlCard?: unknown; showPoolAction?: unknown; showPoolChat?: unknown; hidePickemEliminatedRows?: unknown; hideSurvivorEliminatedRows?: unknown };
   try {
-    body = await request.json();
+    const parsed = await readJsonObject(request);
+    if (!parsed) return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
+    body = parsed as typeof body;
   } catch {
     return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
   }

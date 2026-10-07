@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseGameDisruption } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -6,17 +8,11 @@ export async function POST(request: NextRequest) {
   const commissioner = await requireCommissioner(request);
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
 
-  let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "The disruption record was incomplete." }, { status: 400 });
-  }
-  if (!body.gameId || !body.status || !["postponed", "cancelled", "no_contest"].includes(body.status)) {
-    return NextResponse.json({ error: "Choose a game and a valid disruption status." }, { status: 400 });
-  }
-  const gameId = body.gameId;
-  const status = body.status;
+  const input = await readJsonObject(request);
+  if (!input) return NextResponse.json({ error: "The disruption record was incomplete." }, { status: 400 });
+  const body = parseGameDisruption(input);
+  if (!body) return NextResponse.json({ error: "Choose a game and a valid disruption status." }, { status: 400 });
+  const { gameId, status } = body;
 
   const { data, error } = await supabaseAdmin.rpc("record_game_disruption", {
     target_game_id: gameId,

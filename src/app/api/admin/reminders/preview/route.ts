@@ -1,3 +1,4 @@
+import { readJsonObject } from "@/lib/request-validation";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -45,8 +46,8 @@ async function previewSnapshot(reminder: Reminder): Promise<EmailArtworkSnapshot
 
 export async function POST(request: NextRequest) {
   if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  const input = await request.json().catch(() => null);
-  if (!input || typeof input !== "object") return NextResponse.json({ error: "Choose an email to preview." }, { status: 400 });
+  const input = await readJsonObject(request);
+  if (!input) return NextResponse.json({ error: "Choose an email to preview." }, { status: 400 });
   const template = typeof input.templateId === "string" ? reminderTemplate(input.templateId) : null;
   let reminder: Reminder | null = null;
   if (typeof input.reminderId === "string") {

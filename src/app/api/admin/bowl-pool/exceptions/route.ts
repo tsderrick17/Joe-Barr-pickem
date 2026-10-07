@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseBowlException } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { seasonYearAt } from "@/lib/season";
 import { requireCommissioner } from "@/lib/require-commissioner";
@@ -30,11 +32,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const commissioner = await requireCommissioner(request);
   if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  let body: { gameId?: string; status?: "postponed" | "cancelled" | "no_contest" | "rescheduled"; kickoffAt?: string; changeId?: string };
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 }); }
-  if (!body.gameId || !["postponed", "cancelled", "no_contest", "rescheduled"].includes(body.status ?? "")) return NextResponse.json({ error: "Choose a Bowl Pool game and a valid disruption status." }, { status: 400 });
+  const input = await readJsonObject(request);
+  if (!input) return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 });
+  const body = parseBowlException(input);
+  if (!body) return NextResponse.json({ error: "Choose a Bowl Pool game and a valid disruption status." }, { status: 400 });
   const gameId = body.gameId;
-  const status = body.status as string;
+  const status = body.status;
   if (body.status === "rescheduled" && body.changeId) {
     const { error } = await supabaseAdmin.from("bowl_pool_schedule_changes").update({ reviewed_at: new Date().toISOString() }).eq("id", body.changeId).eq("game_id", gameId);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
