@@ -165,6 +165,8 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
   /* Keep the initial desktop view compact: frozen player columns plus six
      complete game columns. The schedule itself remains horizontally scrollable. */
   max-width: 100%;
+  background: var(--bowl-paper);
+  overscroll-behavior-x: contain;
   width: min(100%, 53rem);
   scroll-padding-left: 8rem;
   scroll-snap-type: x mandatory;
@@ -205,6 +207,10 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
     width: min(74.5rem, calc(100vw - 2rem));
   }
   .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
+
+  /* On desktop the ornament is the Bowl Card's full-width header rule, just
+     like the ticket below it; keep the compact capped treatment on phones. */
+  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament span { max-width: none; }
 }
 
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
