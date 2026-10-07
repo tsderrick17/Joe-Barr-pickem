@@ -248,7 +248,7 @@ export type Database = {
         Row: {
           favorite_team_id: string | null
           game_id: string
-          locked_at: string
+          locked_at: string | null
           locked_spread: number
           manual_override: boolean
           source: string
@@ -258,7 +258,7 @@ export type Database = {
         Insert: {
           favorite_team_id?: string | null
           game_id: string
-          locked_at?: string
+          locked_at?: string | null
           locked_spread: number
           manual_override?: boolean
           source: string
@@ -268,7 +268,7 @@ export type Database = {
         Update: {
           favorite_team_id?: string | null
           game_id?: string
-          locked_at?: string
+          locked_at?: string | null
           locked_spread?: number
           manual_override?: boolean
           source?: string
