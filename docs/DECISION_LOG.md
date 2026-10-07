@@ -1522,3 +1522,11 @@ The old helpers returned a player or null; their replacements (`commissionerAcce
 ## The Pick'em Pad's "− OUT" rolls too
 
 The Survivor table's "− OUT" rolled its rows away like a blind, but the Pad's snapped. A table row cannot shrink on its own, so the Pad rolls the box around the table instead: from its old height to its new one, with the hidden rows kept on the page until the box has rolled shut (and put back at once when shown). The target accounts for the row above the hidden ones losing its bottom border, so the page below lands on its final position without a last-frame jump. Measured at 390 px: hide 1111 to 1092 and show 1092 to 1111, both smooth, no overshoot.
+
+## Bowl lines lock the morning of game day, like the NFL
+
+A Bowl line is preliminary until the game-day morning lock, then fixed. `line_lock_at` is now 8 AM Eastern on the game's day (the NFL rule, `getLineLock`), set by the provider sync and by the schedule CSV import; it used to be the kickoff time itself. Until the lock, the sync keeps the latest provider spread on the line row with `locked_at` empty (the Bowl pages already show that in black and the locked line in teal); at the lock `locked_at` is filled and the line never changes again.
+
+This needed a migration (`20261007020000_bowl_provisional_lines.sql`): `bowl_pool_game_lines.locked_at` was `NOT NULL DEFAULT now()`, so the preliminary line the sync wrote would have been rejected by the database, which the generated types exposed (see "Generated database types"). The column may now be empty and has no default, and the matchup guard (`protect_bowl_game_identity`) freezes a game's teams and kickoff only for picks or a locked line, so a provider moving a kickoff while the spread is still preliminary no longer breaks the sync. Health, integrity and the official-lines email count only locked lines. Grading is unchanged: it uses whichever line exists when the game is final, which is the locked one in normal running. The lifecycle test fixtures lock their lines explicitly now that the default is gone.
+
+Also: type generation retries when the container registry rate limits the CI runner ("toomanyrequests"), which failed the first attempt of this change.

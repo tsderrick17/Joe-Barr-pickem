@@ -35,7 +35,8 @@ export async function ensureBowlLineLockSnapshot(reminderId: string, current: un
     kind: "bowl_line_lock",
     day: new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date(games[0].kickoff_at)),
     games: playable.map((game) => {
-      const line = Array.isArray(game.bowl_pool_game_lines) ? game.bowl_pool_game_lines[0] : game.bowl_pool_game_lines;
+      // Only a locked line is official; a preliminary one is not shown in the official-lines email.
+      const line = [game.bowl_pool_game_lines].flat().find((candidate) => candidate?.locked_at);
       const away = Array.isArray(game.away) ? game.away[0] : game.away;
       const home = Array.isArray(game.home) ? game.home[0] : game.home;
       const favoriteAway = line?.favorite_team_id === game.away_team_id;

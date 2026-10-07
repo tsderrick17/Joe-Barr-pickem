@@ -18,7 +18,7 @@ export async function checkBowlPoolHealth() {
   if (entriesError) throw entriesError;
   const entryIds = (entries ?? []).map((entry) => entry.id);
   const [linesResult, picksResult, resultsResult] = await Promise.all([
-    gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id").in("game_id", gameIds) : Promise.resolve({ data: [], error: null }),
+    gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id").not("locked_at", "is", null).in("game_id", gameIds) : Promise.resolve({ data: [], error: null }),
     entryIds.length ? supabaseAdmin.from("bowl_pool_picks").select("entry_id,game_id,result").in("entry_id", entryIds) : Promise.resolve({ data: [], error: null }),
     gameIds.length ? supabaseAdmin.from("bowl_pool_game_results").select("entry_id,game_id,result").in("game_id", gameIds) : Promise.resolve({ data: [], error: null }),
   ]);
