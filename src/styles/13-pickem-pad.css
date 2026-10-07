@@ -123,9 +123,9 @@ html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue)
 html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
 html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .pickem-eliminated-stamp {
-  border: 3px solid #b42318;
+  border: 3px solid var(--c-b42318);
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
-  color: #b42318;
+  color: var(--c-b42318);
   display: inline-block;
   /* Sized to sit inside its own row: a larger, steeper stamp used to spill into the row above. */
   font-size: clamp(.72rem, 2.1vw, .95rem);
@@ -248,8 +248,8 @@ html[data-theme="night"] .playoff-scoreboard {
 @keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .season-snapshot {
-  --snapshot-paper: #fbf7ec;
-  color: #25334a;
+  --snapshot-paper: var(--c-fbf7ec);
+  color: var(--c-25334a);
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -275,7 +275,7 @@ html[data-theme="night"] .playoff-scoreboard {
   padding-bottom: 6px; /* keeps the scrollbar off the week numbers */
   scroll-snap-type: x mandatory;
 }
-.season-snapshot-plot-scroll:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
+.season-snapshot-plot-scroll:focus-visible { outline: 2px solid var(--c-2a78d6); outline-offset: 2px; }
 .season-snapshot-plot-track { position: relative; }
 .season-snapshot-plot-track svg { display: block; max-width: none; }
 /* One notch per week: the view always lands on an exact six-week window. */
@@ -285,7 +285,7 @@ html[data-theme="night"] .playoff-scoreboard {
 /* All / 6 Wk sits between the title and the flip button. */
 /* Two equal columns: both halves take the wider label's width. */
 .season-snapshot-range {
-  border: 1px solid #a59b8d;
+  border: 1px solid var(--c-a59b8d);
   border-radius: 999px;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
@@ -294,16 +294,16 @@ html[data-theme="night"] .playoff-scoreboard {
   overflow: hidden;
 }
 .season-snapshot-range button {
-  background: #fffdf8;
+  background: var(--pool-surface);
   color: #40516a;
   font: 800 .66rem/1 Arial, sans-serif;
   min-height: 1.9rem;
   padding: 0 .5rem;
   transition: background .15s ease, color .15s ease;
 }
-.season-snapshot-range button + button { border-left: 1px solid #a59b8d; }
-.season-snapshot-range button[aria-pressed="true"] { background: #25334a; color: #fbf7ec; }
-.season-snapshot-range button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
+.season-snapshot-range button + button { border-left: 1px solid var(--c-a59b8d); }
+.season-snapshot-range button[aria-pressed="true"] { background: var(--c-25334a); color: var(--c-fbf7ec); }
+.season-snapshot-range button:focus-visible { outline: 2px solid var(--c-2a78d6); outline-offset: -2px; }
 .season-snapshot-range + .pad-flip-button { margin-left: .5rem; }
 /* Once the playoffs begin: Regular | Playoffs sits right after the title; the week range follows it. */
 .season-snapshot-view { margin-left: .75rem; }
@@ -319,7 +319,7 @@ html[data-theme="night"] .playoff-scoreboard {
 
 .season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
 .season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem; min-width: 0; }
-.season-snapshot-chart-title { color: #25334a; font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
+.season-snapshot-chart-title { color: var(--c-25334a); font: 800 .82rem/1.3 Arial, sans-serif; margin: .2rem 0; }
 
 /* Lines draw in from the left once, then fade rather than jump when someone is
    hovered, hidden, or shown. */
@@ -363,22 +363,22 @@ html[data-theme="night"] .playoff-scoreboard {
 
 .season-snapshot-key-row:hover,
 .season-snapshot-key-row:focus-visible {
-  background: #fff;
+  background: var(--c-ffffff);
   box-shadow: 0 .2rem .6rem -.3rem rgb(37 51 74 / .5);
   transform: translateX(-2px);
 }
-.season-snapshot-key-row:focus-visible { outline: 2px solid #2a78d6; outline-offset: 1px; }
+.season-snapshot-key-row:focus-visible { outline: 2px solid var(--c-2a78d6); outline-offset: 1px; }
 .season-snapshot-key-row.is-hidden { background: transparent; border-style: dashed; opacity: .5; }
 .season-snapshot-key-row.is-hidden .season-snapshot-key-name { text-decoration: line-through; }
 .season-snapshot-key-row.is-hidden .season-snapshot-swatch { filter: grayscale(1); opacity: .6; }
 .season-snapshot-key-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .season-snapshot-swatch { border-radius: 999px; box-shadow: inset 0 1px rgb(255 255 255 / .32), inset 0 -1px rgb(16 32 48 / .3); height: .32rem; width: 1.1rem; }
 .season-snapshot-show-all {
-  color: #25334a;
+  color: var(--c-25334a);
 }
 .season-snapshot-show-all:not(:disabled):hover,
-.season-snapshot-show-all:not(:disabled):focus-visible { background: #25334a; color: #fbf7ec; }
-.season-snapshot-show-all { border: 1px solid #25334a; border-radius: 999px; font: 800 .66rem/1.2 Arial, sans-serif; margin-top: .15rem; padding: .28rem .8rem; transition: background .15s ease, color .15s ease; width: 100%; grid-column: 1 / -1; }
+.season-snapshot-show-all:not(:disabled):focus-visible { background: var(--c-25334a); color: var(--c-fbf7ec); }
+.season-snapshot-show-all { border: 1px solid var(--c-25334a); border-radius: 999px; font: 800 .66rem/1.2 Arial, sans-serif; margin-top: .15rem; padding: .28rem .8rem; transition: background .15s ease, color .15s ease; width: 100%; grid-column: 1 / -1; }
 .season-snapshot-show-all:disabled { border-color: #c9c2b5; color: #a39c90; cursor: default; }
 .season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; margin: 0; padding: 1rem .3rem; }
 
@@ -392,8 +392,8 @@ html[data-theme="night"] .playoff-scoreboard {
 
 .survivor-title-toggle {
   align-items: center;
-  background: #fffdf8;
-  border: 1px solid #a59b8d;
+  background: var(--pool-surface);
+  border: 1px solid var(--c-a59b8d);
   border-radius: 999px;
   color: #40516a;
   display: inline-flex;
