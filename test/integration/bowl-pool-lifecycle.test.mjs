@@ -86,8 +86,8 @@ test("isolated Bowl Pool season: entries, locks, grading, disruptions, receipts,
 
     // g1: home -3.5 · g2: PK · g3: away -7.5 (will be cancelled) · g4 (title game): home -1.5
     const line = (game, favorite, spread) => client.query(`
-      insert into public.bowl_pool_game_lines (game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at)
-      values ($1, $2, $3, $3, 'bowl-lifecycle-test', clock_timestamp())
+      insert into public.bowl_pool_game_lines (game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at, locked_at)
+      values ($1, $2, $3, $3, 'bowl-lifecycle-test', clock_timestamp(), clock_timestamp())
     `, [game, favorite, spread]);
     await line(g1, home(g1), 3.5);
     await line(g2, null, 0);
@@ -232,7 +232,7 @@ test("isolated Bowl Pool tiebreaker: closest guess wins a tie, a missing guess l
         values ($1, $2, 'Title', $3, $3, 1, $4, $5) returning id
       `, [season.id, `${token}-${season.id}`, at(2 * HOUR), t1, t2])).id;
       await client.query("update public.bowl_pool_seasons set championship_game_id = $2 where id = $1", [season.id, game]);
-      await client.query("insert into public.bowl_pool_game_lines (game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at) values ($1, $2, 3.5, 3.5, 'tie-test', clock_timestamp())", [game, t2]);
+      await client.query("insert into public.bowl_pool_game_lines (game_id, favorite_team_id, source_spread, locked_spread, source, source_captured_at, locked_at) values ($1, $2, 3.5, 3.5, 'tie-test', clock_timestamp(), clock_timestamp())", [game, t2]);
       const players = [];
       for (const [index, guess] of guesses.entries()) {
         const id = (await one(client, "insert into public.players(first_name) values ($1) returning id", [`Tie ${index} ${token}`])).id;

@@ -19,7 +19,17 @@ if (process.env.PICKEM_TEST_DATABASE_CONFIRMATION !== "isolated" || !url.include
   process.exit(1);
 }
 
-const result = spawnSync("supabase", ["gen", "types", "typescript", "--db-url", url, "--schema", "public"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+// The CLI reads the schema through a postgres-meta container pulled from a public registry, which sometimes
+// answers "too many requests" to a shared CI address. That is not a schema problem, so wait and try again.
+function generate() {
+  return spawnSync("supabase", ["gen", "types", "typescript", "--db-url", url, "--schema", "public"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+}
+let result = generate();
+for (let attempt = 1; attempt < 5 && result.status !== 0 && /toomanyrequests|Rate exceeded|exit 125/i.test(result.stderr ?? ""); attempt += 1) {
+  console.error(`The container registry is rate limiting this runner; retrying in ${attempt * 20} seconds (attempt ${attempt + 1} of 5).`);
+  spawnSync("sleep", [String(attempt * 20)]);
+  result = generate();
+}
 if (result.status !== 0 || !result.stdout.trim()) {
   console.error("The Supabase CLI could not generate types.");
   console.error((result.stderr || "").replace(/postgres(ql)?:\/\/\S+/g, "[connection string hidden]"));
