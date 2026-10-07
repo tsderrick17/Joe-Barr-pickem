@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lockDueLines } from "@/lib/lock-due-lines";
+import { skipOutsideSeason } from "@/lib/off-season-gate";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 
 export const runtime = "nodejs";
@@ -23,6 +24,9 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
+
+  const idle = await skipOutsideSeason("season");
+  if (idle) return idle;
 
   try {
     const result = await runWithAutomationLease("line_locks", lockDueLines);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
+import { skipOutsideSeason } from "@/lib/off-season-gate";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 
 export const runtime = "nodejs";
@@ -21,6 +22,9 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
+
+  const idle = await skipOutsideSeason("season");
+  if (idle) return idle;
 
   try {
     const nfl = await runWithAutomationLease("scores", syncFinalScores);
