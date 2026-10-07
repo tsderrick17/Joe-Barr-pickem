@@ -1,3 +1,4 @@
+import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { playerAccessErrorMessage } from "@/lib/player-access-result";
@@ -110,6 +111,8 @@ export async function POST(request: NextRequest) {
   const access = await authenticateActivePlayer(request);
   if (!access.ok) return NextResponse.json({ error: playerAccessErrorMessage(access.code), code: access.code }, { status: access.status });
   const { player } = access;
+  const closed = await refuseWhenSeasonClosed();
+  if (closed) return closed;
   let input: unknown;
   try { input = await request.json(); } catch { return NextResponse.json({ error: "Your Bowl Pool submission was incomplete." }, { status: 400 }); }
   const parsed = parseBowlSubmission(input);

@@ -24,6 +24,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff round open | `playoff-upcoming` |
 | Playoff round, six picks | `playoff-six-picks` |
 | Playoff games live | `playoff-live` |
+| Off-season: closed banner, read-only, no Submit or how-to copy | `off-season` |
 
 ## Standings (`/`) — `standings.visual.spec.ts`, fixtures `standings-fixtures.mjs`
 
@@ -35,6 +36,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Survivor has a champion | `regular-complete` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
+| Off-season: closed banner, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
 | Bowl Card with a champion crowned | `bowl-champion` |
@@ -42,7 +44,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Not joined, entry closed | `bowl-closed-not-joined` |
 | Bowl Card minimized | `bowl-minimized` |
 
-Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `bowl-claim-open`.
+Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `bowl-claim-open`, `off-season`.
 
 ## Bowl picks (`/bowl-pool`) — `bowl.visual.spec.ts`
 

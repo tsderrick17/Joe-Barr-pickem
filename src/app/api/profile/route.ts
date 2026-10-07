@@ -1,3 +1,4 @@
+import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -55,6 +56,13 @@ export async function PUT(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Your notification settings were incomplete." }, { status: 400 });
+  }
+
+  // Display choices (hide a table, the Bowl Card or eliminated rows) go away with the season. Notification settings, the Pool Action filter and Pool Chat stay.
+  const displayFields = ["showSurvivorStandings", "showBowlCard", "hidePickemEliminatedRows", "hideSurvivorEliminatedRows"] as const;
+  if (displayFields.some((field) => (body as Record<string, unknown>)[field] !== undefined)) {
+    const closed = await refuseWhenSeasonClosed();
+    if (closed) return closed;
   }
 
   const hasEmailUpdate = typeof body.notificationEmail === "string";

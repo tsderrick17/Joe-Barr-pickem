@@ -35,6 +35,9 @@ export type SlateGame = {
   homePickers: string[];
 };
 
+/** In season, or the off-season between the graded Super Bowl and August 1 (see season-phase.ts). */
+export type SeasonPhase = "in_season" | "off_season";
+
 export type SlateResponse = {
   serverTime: string;
   games: SlateGame[];
@@ -50,6 +53,8 @@ export type SlateResponse = {
     usedTeamIds: string[];
   };
   showPoolAction: boolean;
+  /** Sent with the bootstrap request (the first load of the page). */
+  seasonPhase?: SeasonPhase;
   bootstrap?: {
     weeks: SlateScoringPeriod[];
     nextWeekAvailableAt: string | null;
@@ -77,6 +82,7 @@ export type StandingsRow = {
 };
 
 export type StandingsResponse = {
+  seasonPhase: SeasonPhase;
   serverTime: string;
   viewerPlayerId: string;
   isCommissioner: boolean;

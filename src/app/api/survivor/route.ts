@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
@@ -165,6 +166,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const context = await survivorContext(request);
   if ("error" in context) return NextResponse.json({ error: context.error }, { status: context.status });
+  const closed = await refuseWhenSeasonClosed();
+  if (closed) return closed;
   if (context.season.survivor_champion_player_id) {
     return NextResponse.json({ error: "Survivor is complete for the season." }, { status: 409 });
   }

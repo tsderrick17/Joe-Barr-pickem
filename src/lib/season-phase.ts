@@ -1,5 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { EASTERN_TIME_ZONE } from "@/lib/season";
+import type { SeasonPhase } from "@/lib/api-contracts";
+
+export type { SeasonPhase };
 
 /**
  * The pool's season runs from August 1 (Eastern) until the Super Bowl is final and graded. The database
@@ -7,13 +10,17 @@ import { EASTERN_TIME_ZONE } from "@/lib/season";
  * below are the same rules for the application and for tests, and the two are checked against one table
  * of scenarios.
  */
-export type SeasonPhase = "in_season" | "off_season";
 
 /** The season row for the Eastern season year of the moment being asked about, if there is one. */
 export type SeasonFacts = { state: string; superBowlStatus: string | null } | null;
 
 export function seasonPhaseAt(season: SeasonFacts): SeasonPhase {
   return season?.state === "complete" && season.superBowlStatus === "complete" ? "off_season" : "in_season";
+}
+
+/** The phase from rows a route has already read: the season row and its scoring periods. */
+export function seasonPhaseFromRows(season: { state: string } | null, periods: Array<{ display_name: string; status: string }>): SeasonPhase {
+  return seasonPhaseAt(season ? { state: season.state, superBowlStatus: periods.find((period) => period.display_name === "Super Bowl")?.status ?? null } : null);
 }
 
 function easternMonth(at: Date) {

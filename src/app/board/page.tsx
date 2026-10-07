@@ -19,6 +19,7 @@ import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer, withPick, withoutGame } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
+import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 
@@ -79,6 +80,8 @@ export default function BoardPage() {
   const [clockSynchronized, setClockSynchronized] = useState(false);
   const [selectedPicks, setSelectedPicks] = useState<SelectedPick[]>([]);
   const [savedPicks, setSavedPicks] = useState<SelectedPick[]>([]);
+  // The off-season (after the graded Super Bowl, until August 1): the Slate is a read-only record.
+  const [seasonOver, setSeasonOver] = useState(false);
   const [survivorPick, setSurvivorPick] = useState<SelectedPick | null>(null);
   const [savedSurvivorPick, setSavedSurvivorPick] = useState<SelectedPick | null>(null);
   const [survivorUsedTeamIds, setSurvivorUsedTeamIds] = useState<string[]>([]);
@@ -103,6 +106,7 @@ export default function BoardPage() {
   // display choice (All Games or Pool Action), which the bootstrap once forgot.
   function applyBoard(data: BoardResponse) {
     const pick = data.survivor.pick ? { gameId: data.survivor.pick.game_id, teamId: data.survivor.pick.selected_team_id } : null;
+    if (data.seasonPhase) setSeasonOver(data.seasonPhase === "off_season");
     setGames(data.games);
     setShowActionOnly(Boolean(data.showPoolAction));
     setPlayoffEliminated(data.pickem.playoffEliminated);
@@ -358,7 +362,7 @@ export default function BoardPage() {
 
   const selectionLimit = week?.max_picks ?? 2;
 
-  const isReadOnly = week?.status === "complete" || playoffEliminated;
+  const isReadOnly = week?.status === "complete" || playoffEliminated || seasonOver;
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
     : null;
@@ -366,7 +370,7 @@ export default function BoardPage() {
     ? games.find((game) => game.id === savedSurvivorPick.gameId) ?? null
     : null;
   const survivorLockGame = savedSurvivorGame ?? survivorSelectedGame;
-  const survivorControlsEnabled = isSurvivorSlateEditable({
+  const survivorControlsEnabled = !seasonOver && isSurvivorSlateEditable({
     periodType: week?.period_type,
     periodStatus: week?.status,
     survivorAvailable,
@@ -608,12 +612,15 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-[#e9e2d3] text-[#171719]">
       <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
+        {seasonOver ? <div className="mt-5"><SeasonClosedBanner /></div> : null}
+
         <SlateHeader
           actionOnlyActive={actionOnlyActive}
           availableWeeks={availableWeeks}
           hasEarlyGame={hasEarlyGame}
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}
+          readOnly={seasonOver}
           survivorControlsEnabled={survivorControlsEnabled}
           week={week}
         />
@@ -625,6 +632,7 @@ export default function BoardPage() {
           onSubmit={submitPicks}
           periodType={week?.period_type}
           pickemHasUnsavedChanges={pickemHasUnsavedChanges}
+          readOnly={seasonOver}
           selectedPickCount={selectedPicks.length}
           selectedTeams={selectedTeams}
           selectionLimit={selectionLimit}

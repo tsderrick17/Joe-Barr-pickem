@@ -45,9 +45,11 @@ const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer }: { row
 });
 
 /** The Survivor Table: a row per player, one logo per week, with an IN/OUT status column. */
-export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay, setEliminatedRowsHidden }: {
+export default function SurvivorTable({ data, savingDisplay, displayLocked = false, setSurvivorDisplay, setEliminatedRowsHidden }: {
   data: SurvivorTableData;
   savingDisplay: boolean;
+  /** The off-season: the table is shown whole and its hide and "− OUT" buttons are gone. */
+  displayLocked?: boolean;
   setSurvivorDisplay: (show: boolean) => void | Promise<void>;
   setEliminatedRowsHidden: (pool: "pickem" | "survivor", hidden: boolean) => void | Promise<void>;
 }) {
@@ -55,7 +57,7 @@ export default function SurvivorTable({ data, savingDisplay, setSurvivorDisplay,
   const eliminatedRowsHidden = useBlindRows(data.hideSurvivorEliminatedRows, gridRef);
   return (
 <section className={`pickem-ledger survivor-ledger py-6 sm:py-7 ${data.showSurvivorStandings ? "" : "is-minimized"}`}>
-    <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2><button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>{data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
+    <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2>{displayLocked ? null : <button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>}{!displayLocked && data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
     <Collapse open={data.showSurvivorStandings}>{data.survivorAvailable ? (
       <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
