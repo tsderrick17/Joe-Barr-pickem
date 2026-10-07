@@ -111,6 +111,8 @@ export const SCENARIOS = {
   "bowl-claim-open": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-closed-not-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  // In the playoffs the Season Snapshot gets a Regular | Playoffs switch (it opens on the playoffs).
+  "commissioner-playoff": { ...base, isCommissioner: true, seasonSnapshotReleased: true, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // A commissioner can turn the pad over to the Season Snapshot.
   "commissioner": { ...base, isCommissioner: true, seasonSnapshotReleased: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
 };
@@ -130,14 +132,16 @@ export function homeResponse(name) {
 }
 
 /** Cumulative wins by week for the Season Snapshot, in a fixed order. */
-export function seasonSnapshotResponse() {
+export function seasonSnapshotResponse(scenario = "") {
   const scores = NAMES.map((_, playerIndex) => Array.from({ length: 5 }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
   return {
     regular: Array.from({ length: 5 }, (_, week) => ({
       id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < 4,
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
-    playoffs: [],
+    playoffs: scenario === "commissioner-playoff"
+      ? [{ id: "playoff-1", label: "Wild Card", complete: true, scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex) })) }]
+      : [],
     colorOrder: NAMES.map((_, playerIndex) => `p${playerIndex}`),
   };
 }

@@ -25,7 +25,7 @@ async function serve(page: Page, scenario: string) {
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: home.isCommissioner, showPoolChat: false } }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse((BOWL_BY_SCENARIO as Record<string, Parameters<typeof bowlResponse>[0]>)[scenario]) }));
-  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse() }));
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse(scenario) }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(home.serverTime) });
 }
@@ -74,11 +74,17 @@ for (const scenario of Object.keys(SCENARIOS)) {
         await serve(page, scenario);
         await settle(page);
         await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
-        if (scenario === "commissioner") {
+        if (scenario === "commissioner" || scenario === "commissioner-playoff") {
           // The back of the pad: the Season Snapshot.
           await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
           await page.waitForTimeout(1200);
           await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+          if (scenario === "commissioner-playoff") {
+            // The other half: the regular season, with its 6 Wk / All range.
+            await page.getByRole("button", { name: "Season", exact: true }).click();
+            await page.waitForTimeout(1500);
+            await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+          }
         }
       });
     }

@@ -415,6 +415,29 @@ html[data-theme="night"] .my-ticket-barcode {
   .my-ticket-change-note { font-size: .53rem; }
   .my-ticket-barcode { width: 3.2rem; }
 }
+@media (max-width: 380px) {
+  /* On the narrowest phones two columns leave each team name too little room and it wraps mid-name
+     ("Tennessee / Titans"). Read the stubs in one tidy column instead. */
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--4,
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--5,
+  .my-ticket-columns.is-playoff .my-ticket-picks.is-playoff-picks--6 {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  /* One column leaves room for the regular-season stub: the name and kickoff on the left, the spread
+     centered between them on the right. */
+  .my-ticket-picks.is-playoff-picks--4 li,
+  .my-ticket-picks.is-playoff-picks--5 li,
+  .my-ticket-picks.is-playoff-picks--6 li { align-items: center; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-selection,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-selection,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-selection { display: grid; }
+  .my-ticket-picks.is-playoff-picks--4 .my-ticket-selection > strong,
+  .my-ticket-picks.is-playoff-picks--5 .my-ticket-selection > strong,
+  .my-ticket-picks.is-playoff-picks--6 .my-ticket-selection > strong { grid-column: auto; }
+}
+
 
 @media (max-width: 379px) {
   .slate-game-row.has-survivor-layout {
