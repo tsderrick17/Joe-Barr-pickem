@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseNewPlayer } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCommissioner } from "@/lib/require-commissioner";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -43,22 +45,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
   }
 
-  let body: {
-    firstName?: string;
-    pin?: string;
-  };
-
-  try {
-    body = await request.json();
-  } catch {
+  const input = await readJsonObject(request);
+  if (!input) {
     return NextResponse.json(
       { error: "The player information was not valid." },
       { status: 400 },
     );
   }
-
-  const firstName = body.firstName?.trim() ?? "";
-  const pin = body.pin?.trim() ?? "";
+  const { firstName, pin } = parseNewPlayer(input);
 
   if (
     firstName.length < 1 ||

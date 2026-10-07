@@ -1,3 +1,5 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseSurvivorSubmission } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { refuseWhenSeasonClosed } from "@/lib/off-season-gate";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
@@ -171,19 +173,23 @@ export async function POST(request: NextRequest) {
   if (context.season.survivor_champion_player_id) {
     return NextResponse.json({ error: "Survivor is complete for the season." }, { status: 409 });
   }
-  let body: { gameId?: string; teamId?: string };
-
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
+  const input = await readJsonObject(request);
+  if (!input) {
     return NextResponse.json(
       { error: "Your Survivor submission was incomplete." },
       { status: 400 },
     );
   }
-  const replacementPick = body.gameId && body.teamId
-    ? { game_id: body.gameId, selected_team_id: body.teamId }
-    : null;
+  const submission = parseSurvivorSubmission(input);
+  if (!submission) {
+    return NextResponse.json(
+      { error: "Your Survivor submission was incomplete." },
+      { status: 400 },
+    );
+  }
+  const replacementPick = submission.clear
+    ? null
+    : { game_id: submission.gameId, selected_team_id: submission.teamId };
 
   const { error } = await supabaseAdmin.rpc("replace_unlocked_survivor_pick", {
     target_survivor_entry_id: context.entry.id,

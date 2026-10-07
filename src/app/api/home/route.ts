@@ -205,6 +205,7 @@ export async function GET(request: NextRequest) {
   const survivorChampionPlayerId = survivorChampionDisplayId({
     seasonYear: season.year,
     recordedChampionId: championSeason?.survivor_champion_player_id ?? null,
+    championships: championshipRows ?? [],
     activePlayers: players,
   });
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
