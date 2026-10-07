@@ -34,6 +34,8 @@ export default function SiteNav() {
   }, []);
 
   useEffect(() => {
+    if (pathname === "/login") return;
+
     let active = true;
 
     async function loadNavigation(attempt = 0) {
