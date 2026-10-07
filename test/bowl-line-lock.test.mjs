@@ -25,10 +25,10 @@ test("the schedule CSV import gives each Bowl game that same game-day lock inste
 test("the provider sync stores a preliminary line with locked_at empty until the game-day lock, then fixes it", async () => {
   const sync = await read("src/lib/sync-bowl-pool.ts");
   assert.match(sync, /line_lock_at: getLineLock\(new Date\(kickoff\)\)\.lineLockAt/);
-  assert.match(sync, /locked_at: now >= new Date\(row\.line_lock_at\) \? now\.toISOString\(\) : null/);
+  assert.match(sync, /locked_at: lockStampFor\(row\.line_lock_at, now\) as string/);
   // A line that is already locked is never replaced by a later provider refresh.
   assert.match(sync, /\.update\(provisionalLine\)\.eq\("game_id", saved\.id\)\.is\("locked_at", null\)/);
-  assert.match(sync, /new Date\(game\.line_lock_at\) > now \|\| alreadyLocked\.has\(game\.id\)/);
+  assert.match(sync, /if \(!lineIsDueToLock\(game\.line_lock_at, now, alreadyLocked\.has\(game\.id\)\)\) continue;/);
   assert.doesNotMatch(sync, /KNOWN DEFECT/);
 });
 

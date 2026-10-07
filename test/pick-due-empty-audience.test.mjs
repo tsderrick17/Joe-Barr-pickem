@@ -11,5 +11,7 @@ test("an empty Pick Due audience is a suppressed no-op, not a sent email", async
   assert.match(delivery, /reminder\.category === "pick_due" && recipients\.length === 0/);
   assert.match(delivery, /No player has an outstanding Pick'em selection\./);
   assert.match(worker, /if \(emailDelivery\.suppressed\)/);
-  assert.match(worker, /status: "suppressed"/);
+  // The status each outcome ends in is decided by one pure function (src/lib/reminder-outcome.ts).
+  const outcome = await readFile(new URL("../src/lib/reminder-outcome.ts", import.meta.url), "utf8");
+  assert.match(outcome, /if \(delivery\.suppressed\) return \{ status: "suppressed"/);
 });

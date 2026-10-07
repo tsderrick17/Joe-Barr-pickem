@@ -8,6 +8,8 @@ import type {
 } from "@/lib/reminder-audience";
 import { reminderReadiness } from "@/lib/reminder-readiness";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { checkpoint, ExecutionCancelledError } from "@/lib/execution-context";
+import { isSafelyRetryable, updateForDelivery, updateForError, updateForReadiness, updateForRelease, type ReminderUpdate } from "@/lib/reminder-outcome";
 
 type Reminder = {
   id: string;
@@ -20,14 +22,7 @@ type Reminder = {
   source_scoring_period_id?: string | null;
 };
 
-type ClaimedReminderUpdate = {
-  status: "scheduled" | "sent" | "failed" | "suppressed";
-  scheduled_for?: string;
-  processing_started_at: null;
-  updated_at: string;
-  sent_at?: string | null;
-  suppression_reason?: string | null;
-};
+type ClaimedReminderUpdate = ReminderUpdate;
 
 async function updateClaimedReminder(
   reminderId: string,
@@ -43,6 +38,17 @@ async function updateClaimedReminder(
 
   if (error || !data) {
     throw new Error("The reminder delivery state could not be recorded.");
+  }
+}
+
+/** Best effort, one write each: a failure leaves the reminder claimed, and the stale-claim recovery returns it. */
+async function releaseUnstartedReminders(reminders: Reminder[]) {
+  for (const reminder of reminders) {
+    try {
+      await updateClaimedReminder(reminder.id, updateForRelease(new Date()));
+    } catch {
+      console.error("A claimed reminder could not be handed back after a stopped run.", { reminderId: reminder.id });
+    }
   }
 }
 
@@ -62,28 +68,25 @@ export async function sendDueReminders() {
     emailFailed: 0,
   };
 
-  for (const reminder of (reminders ?? []) as Reminder[]) {
+  const claimed = (reminders ?? []) as Reminder[];
+  for (const [index, reminder] of claimed.entries()) {
+    // Stop between reminders, never inside one. A reminder this run has not reached has not started delivery, so it is
+    // handed straight back to the queue instead of waiting out the stale-claim timer.
+    try {
+      checkpoint("next reminder");
+    } catch (error) {
+      if (error instanceof ExecutionCancelledError) {
+        await releaseUnstartedReminders(claimed.slice(index));
+      }
+      throw error;
+    }
     let deliveryStarted = false;
     try {
       const readiness = await reminderReadiness(reminder.category, reminder.source_game_ids, reminder.source_scoring_period_id);
       if (!readiness.ready) {
-        if (readiness.terminal) {
-          await updateClaimedReminder(reminder.id, {
-            status: "suppressed",
-            processing_started_at: null,
-            suppression_reason: readiness.reason,
-            updated_at: new Date().toISOString(),
-          });
-          result.suppressed += 1;
-          continue;
-        }
-        await updateClaimedReminder(reminder.id, {
-          status: "scheduled",
-          processing_started_at: null,
-          updated_at: new Date().toISOString(),
-        });
-
-        result.deferred += 1;
+        await updateClaimedReminder(reminder.id, updateForReadiness(readiness, new Date()));
+        if (readiness.terminal) result.suppressed += 1;
+        else result.deferred += 1;
         continue;
       }
 
@@ -91,64 +94,20 @@ export async function sendDueReminders() {
       const emailDelivery = await deliverEmailReminder(reminder);
       const completedAt = new Date();
       if (emailDelivery.suppressed) {
-        await updateClaimedReminder(reminder.id, {
-          status: "suppressed",
-          processing_started_at: null,
-          suppression_reason: emailDelivery.suppressionReason,
-          updated_at: completedAt.toISOString(),
-        });
+        await updateClaimedReminder(reminder.id, updateForDelivery(emailDelivery, completedAt));
         result.reminders += 1;
         result.suppressed += 1;
         continue;
       }
-      const reminderUpdate: ClaimedReminderUpdate =
-        emailDelivery.retryableFailed > 0
-          ? {
-              status: "scheduled",
-              scheduled_for: new Date(
-                completedAt.getTime() + 15 * 60 * 1000,
-              ).toISOString(),
-              processing_started_at: null,
-              updated_at: completedAt.toISOString(),
-            }
-          : emailDelivery.failed > 0
-            ? {
-                status: "failed",
-                processing_started_at: null,
-                updated_at: completedAt.toISOString(),
-              }
-            : {
-                status: "sent",
-                sent_at: completedAt.toISOString(),
-                processing_started_at: null,
-                updated_at: completedAt.toISOString(),
-              };
+      const reminderUpdate = updateForDelivery(emailDelivery, completedAt);
       await updateClaimedReminder(reminder.id, reminderUpdate);
 
       result.reminders += 1;
       result.emailSent += emailDelivery.sent;
       result.emailFailed += emailDelivery.failed;
     } catch (reason) {
-      const safelyRetryable =
-        !deliveryStarted || reason instanceof ReminderPreparationError;
-      const failedAt = new Date();
-      await updateClaimedReminder(
-        reminder.id,
-        safelyRetryable
-          ? {
-              status: "scheduled",
-              scheduled_for: new Date(
-                failedAt.getTime() + 15 * 60 * 1000,
-              ).toISOString(),
-              processing_started_at: null,
-              updated_at: failedAt.toISOString(),
-            }
-          : {
-              status: "failed",
-              processing_started_at: null,
-              updated_at: failedAt.toISOString(),
-            },
-      );
+      const safelyRetryable = isSafelyRetryable(deliveryStarted, reason instanceof ReminderPreparationError);
+      await updateClaimedReminder(reminder.id, updateForError(safelyRetryable, new Date()));
       console.error("Email reminder delivery could not be completed.", {
         reminderId: reminder.id,
         safelyRetryable,

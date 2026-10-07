@@ -2,6 +2,8 @@ import { seasonYearAt } from "@/lib/season";
 import { normalizeHexColor } from "@/lib/bowl-pennant.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getLineLock } from "@/lib/schedule-time.js";
+import { checkpoint, providerSignal } from "@/lib/execution-context";
+import { favoriteFromEspn, lineIsDueToLock, lockedSpreadFromOdds, lockStampFor, poolSpreadFromEspn } from "@/lib/bowl-line-policy";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
 type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: { id?: string; displayName?: string; abbreviation?: string; color?: string; alternateColor?: string; shortDisplayName?: string; location?: string }; homeAway?: "home" | "away" }> }> };
@@ -13,7 +15,7 @@ async function providerEvents(path: string, query: Record<string, string>) {
   if (path.includes("americanfootball_ncaaf") && process.env.BOWL_POOL_ODDS_API_ENABLED !== "true") return [] as ProviderEvent[];
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return [] as ProviderEvent[];
-  const response = await fetch(`https://api.the-odds-api.com/v4/${path}?${new URLSearchParams({ apiKey, ...query })}`, { signal: AbortSignal.timeout(12_000), cache: "no-store" });
+  const response = await fetch(`https://api.the-odds-api.com/v4/${path}?${new URLSearchParams({ apiKey, ...query })}`, { signal: providerSignal(12_000), cache: "no-store" });
   if (!response.ok) return [] as ProviderEvent[];
   const payload = await response.json();
   return Array.isArray(payload) ? payload as ProviderEvent[] : [];
@@ -63,7 +65,7 @@ async function syncAnnualSchedule(now: Date) {
   const year = seasonYearAt(now);
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: `${year}-12-07T08:00:00.000Z` }, { onConflict: "season_year" }).select("id").single();
   if (seasonError || !season) return 0;
-  const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(year) })}`, { signal: AbortSignal.timeout(12_000), cache: "no-store" }).catch(() => null);
+  const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(year) })}`, { signal: providerSignal(12_000), cache: "no-store" }).catch(() => null);
   if (!response?.ok) return 0;
   const payload = await response.json().catch(() => null) as { events?: EspnEvent[] } | null;
   const events = (payload?.events ?? []).filter((event) => event.season?.type === 3 && event.competitions?.[0]?.competitors?.length === 2);
@@ -106,13 +108,13 @@ async function syncAnnualSchedule(now: Date) {
     if (!error && saved) { used.add(saved.id); imported += 1; if (/national championship|championship game/i.test(bowlName)) championshipGameId = saved.id; }
     const espnSpread = competition?.odds?.find((odds) => Number.isFinite(odds.spread))?.spread;
     if (!error && saved && typeof espnSpread === "number" && Number.isFinite(espnSpread)) {
-      const favoriteId = espnSpread < 0 ? teamIds[1] : espnSpread > 0 ? teamIds[0] : null;
-      const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
+      const favoriteId = favoriteFromEspn(espnSpread, teamIds[0], teamIds[1]);
+      const poolSpread = poolSpreadFromEspn(espnSpread);
       // A locked line is official and is never replaced. A new game gets its
       // first line; a still-preliminary line may be refreshed.
       const provisionalLine = { game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), 
       // The line is preliminary (locked_at empty) until the game-day morning lock, then fixed, like an NFL spread.
-      locked_at: now >= new Date(row.line_lock_at) ? now.toISOString() : null };
+      locked_at: lockStampFor(row.line_lock_at, now) as string };
       const { error: newLineError } = await supabaseAdmin.from("bowl_pool_game_lines").upsert(provisionalLine, { onConflict: "game_id", ignoreDuplicates: true });
       if (newLineError) throw new Error("A Bowl Pool line could not be saved.");
       const { error: refreshLineError } = await supabaseAdmin.from("bowl_pool_game_lines").update(provisionalLine).eq("game_id", saved.id).is("locked_at", null);
@@ -169,7 +171,7 @@ async function syncScheduleAndLines(now: Date) {
     const { error: gameError } = await supabaseAdmin.from("bowl_pool_games").update({ odds_event_id: event.id, away_team_id: teamRows[0], home_team_id: teamRows[1] }).eq("id", game.id);
     if (gameError) continue;
     scheduleGames += 1;
-    if (new Date(game.line_lock_at) > now || alreadyLocked.has(game.id)) continue;
+    if (!lineIsDueToLock(game.line_lock_at, now, alreadyLocked.has(game.id))) continue;
     const outcome = event.bookmakers?.flatMap((bookmaker) => bookmaker.markets ?? []).find((market) => market.key === "spreads")?.outcomes ?? [];
     const favorite = outcome.find((row) => typeof row.point === "number" && row.point < 0) ?? outcome.find((row) => typeof row.point === "number" && row.point === 0 && row.name === event.home_team);
     if (!favorite || typeof favorite.point !== "number") {
@@ -179,7 +181,7 @@ async function syncScheduleAndLines(now: Date) {
     const favoriteId = favorite.name === event.away_team ? teamRows[0] : favorite.name === event.home_team ? teamRows[1] : null;
     if (!favoriteId) continue;
     const sourceSpread = Math.abs(favorite.point);
-    const lockedSpread = Number.isInteger(sourceSpread) && sourceSpread !== 0 ? sourceSpread + 0.5 : sourceSpread;
+    const lockedSpread = lockedSpreadFromOdds(sourceSpread);
     const { error: lineError } = await supabaseAdmin.from("bowl_pool_game_lines").upsert({ game_id: game.id, favorite_team_id: favoriteId, source_spread: sourceSpread, locked_spread: lockedSpread, source: "The Odds API", source_captured_at: now.toISOString(), locked_at: now.toISOString() }, { onConflict: "game_id" });
     if (!lineError) {
       const { error: historyError } = await supabaseAdmin.from("bowl_pool_spread_history").insert({ game_id: game.id, favorite_team_id: favoriteId, source_spread: sourceSpread, pool_spread: lockedSpread, source: "The Odds API", captured_at: now.toISOString() });
@@ -198,7 +200,7 @@ async function syncScores(now: Date) {
   // feed remains an optional fallback when explicitly enabled, but score
   // settlement must not depend on a paid NCAAF entitlement.
   const seasonYear = seasonYearAt(now);
-  const espnResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(seasonYear) })}`, { signal: AbortSignal.timeout(12_000), cache: "no-store" }).catch(() => null);
+  const espnResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(seasonYear) })}`, { signal: providerSignal(12_000), cache: "no-store" }).catch(() => null);
   const espnPayload = espnResponse?.ok ? await espnResponse.json().catch(() => null) as { events?: EspnEvent[] } | null : null;
   const espnEvents = espnPayload?.events ?? [];
   const oddsEvents = process.env.BOWL_POOL_ODDS_API_ENABLED === "true"
@@ -242,25 +244,35 @@ async function refreshSeasonStatus(now: Date) {
 
 export async function syncBowlPool(now = new Date()) {
   const evaluatedAt = now.toISOString();
+  // A checkpoint before each stage lets a run past its deadline stop instead of starting more work; every stage
+  // is idempotent, so the next run simply repeats what was left.
+  checkpoint("annual schedule");
   const scheduleImported = await syncAnnualSchedule(now);
+  checkpoint("schedule and lines");
   const provider = await syncScheduleAndLines(now);
+  checkpoint("scores");
   const finalizedGames = await syncScores(now);
+  checkpoint("kickoff transitions");
   const { data: scheduled, error: scheduleError } = await supabaseAdmin.from("bowl_pool_games").select("id").eq("status", "scheduled").lte("kickoff_at", evaluatedAt);
   if (scheduleError) throw new Error("Bowl Pool kickoff transitions could not be loaded.");
   if (scheduled?.length) {
     const { error } = await supabaseAdmin.from("bowl_pool_games").update({ status: "live" }).in("id", scheduled.map((game) => game.id));
     if (error) throw new Error("Bowl Pool kickoff transitions could not be saved.");
   }
+  checkpoint("missing-pick losses");
   const { data: missing, error: missingError } = await supabaseAdmin.rpc("settle_bowl_pool_missing_picks", { evaluated_at: evaluatedAt });
   if (missingError) throw new Error("Bowl Pool missing-pick losses could not be settled.");
+  checkpoint("withdrawn drafts");
   const { error: purgeError } = await supabaseAdmin.rpc("purge_withdrawn_bowl_pool_drafts", { evaluated_at: evaluatedAt });
   if (purgeError) throw new Error("Withdrawn Bowl Pool drafts could not be purged.");
 
   // Grades and their result receipts are saved together in one database call.
+  checkpoint("grade final picks");
   const { data: gradedCount, error: gradeError } = await supabaseAdmin.rpc("grade_bowl_pool_final_picks", { evaluated_at: evaluatedAt });
   if (gradeError) throw new Error("Bowl Pool grades could not be saved.");
   const picksGraded = Number(gradedCount ?? 0);
 
+  checkpoint("champion refresh");
   const { data: currentSeason, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYearAt(now)).maybeSingle();
   if (seasonError) throw new Error("The Bowl Pool season could not be loaded.");
   if (currentSeason) {
