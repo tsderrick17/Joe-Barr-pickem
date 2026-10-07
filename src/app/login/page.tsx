@@ -16,8 +16,28 @@ export default function LoginPage() {
 
     async function redirectSignedInPlayer() {
       const session = await getFreshSession();
-      if (active && session) {
-        router.replace("/");
+      if (!active || !session) return;
+
+      // A locally persisted Supabase session is not enough to prove that the
+      // application still accepts the session. Verify it against the server
+      // before redirecting, otherwise an expired/revoked token can bounce
+      // forever between the app and this page.
+      try {
+        const response = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          if (active) router.replace("/");
+          return;
+        }
+
+        if (response.status === 401) {
+          await supabase.auth.signOut({ scope: "local" });
+        }
+      } catch {
+        // Keep the login form available during a temporary profile outage.
       }
     }
 
