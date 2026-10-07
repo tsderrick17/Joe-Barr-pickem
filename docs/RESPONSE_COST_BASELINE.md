@@ -1,5 +1,8 @@
 # Player-response cost baseline
 
+> **Update, October 7, 2026.** The route-level measurement this document called for now exists: see
+> "Route-read baseline and budgets" below. The shaping baseline further down is kept as it was.
+
 Prepared: October 5, 2026. Source baseline: `34e12ac` on `main`.
 
 This is a deliberately limited, reproducible **response-shaping** baseline.
@@ -50,3 +53,51 @@ Use the existing guarded isolated environment and its player/commissioner
 identities. Do not collect credentials, player names, picks, or emails in the
 report. Do not add a durable page-request log or production fixture. No query
 optimization should claim a before/after win from the shaping numbers alone.
+
+## Route-read baseline and budgets
+
+`npm run measure:routes` runs the **real** `/api/home` and `/api/board?bootstrap=1` handlers against fictional,
+season-sized fixtures (11 players, 16 games a week, two picks a player a week, 18 regular weeks and four playoff
+rounds) and an in-memory stand-in for the database. It counts each read's database requests, rows, bytes read from
+the database, and response bytes. It needs no credentials, touches no real data, and is deterministic, so it runs in
+`npm test`. Wall-clock time is **not** measured (a fake database has no network); latency is reported below from
+read-only samples of public endpoints and is never a gate.
+
+| Read | Requests | Rows | Database bytes | Response bytes |
+| --- | ---: | ---: | ---: | ---: |
+| `/api/home`, week 3 | 12 | 210 | 25,585 | 7,741 |
+| `/api/home`, week 16 | 12 | 496 | 77,570 | 7,752 |
+| `/api/home`, divisional round | 15 | 586 | 95,726 | 14,360 |
+| `/api/home`, week 16, three prior seasons on file | 12 | 496 | 77,570 | 7,752 |
+| `/api/board` (bootstrap), week 3 | 15 | 178 | 19,294 | 12,366 |
+| `/api/board` (bootstrap), week 16 | 15 | 178 | 19,387 | 12,384 |
+| `/api/board` (bootstrap), divisional round | 15 | 157 | 15,693 | 7,339 |
+| `/api/board` (bootstrap), week 16, three prior seasons on file | 15 | 178 | 19,387 | 12,384 |
+
+What the numbers say:
+
+- **The Standings read loads the whole season's picks.** `/api/home` reads every pick of the season to compute each
+  player's win total: at week 16 that is 352 rows and about 64 KB, most of its database traffic, to build a response
+  of about 8 KB. It grows with every week. This is the first, clearest optimization target (a count the database does,
+  or a per-player totals read).
+- **History is already scoped.** Three prior seasons on file add nothing to either read.
+- **Request counts are modest and flat** (12 to 15 a read) and do not grow through the season.
+- A player's read makes no write beyond the existing activity timestamp.
+
+`test/route-cost-budgets.json` holds a ceiling for each read (these numbers plus 15%). `test/route-cost.test.mjs`
+fails a pull request that exceeds one, and also guards that history stays scoped. To raise a ceiling on purpose, edit
+the file in the same pull request and say why in the decision log. An optimization should tighten them.
+
+### Production observation (October 7, 2026, read-only)
+
+Five sequential requests each to two public endpoints from one machine: `/api/health` answered in 0.26 to 0.46 s
+(median 0.41 s, 54 bytes) and `/login` in 0.07 to 0.19 s (median 0.09 s, 12,882 bytes). These include the network
+from one location and say nothing about the signed-in routes, which need a player session. No production fixture,
+write or real delivery was used. Vercel usage (invocations, CPU, egress) is not read here; compare it over equivalent
+game-activity windows from the Vercel dashboard when judging an optimization.
+
+### Not measured yet
+
+Worker costs (score sync, line lock, reminders, Bowl sync) and the Commissioner grading dashboard are not in this
+baseline: the workers talk to outside providers, and the dashboard needs a larger fake-database surface. Add them
+the same way when one of them is the next thing to optimize.

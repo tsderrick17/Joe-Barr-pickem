@@ -1,0 +1,53 @@
+{
+  "_comment": "Ceilings for one read of each route, set from `npm run measure:routes` with 15% headroom. A deliberate increase edits this file in the same pull request, with the reason in the decision log. Deterministic counts and bytes only; latency is reported, never gated.",
+  "budgets": {
+    "home/early_regular": {
+      "requests": 14,
+      "rows": 242,
+      "databaseBytes": 29423,
+      "responseBytes": 8903
+    },
+    "board/early_regular": {
+      "requests": 18,
+      "rows": 205,
+      "databaseBytes": 22189,
+      "responseBytes": 14221
+    },
+    "home/late_regular": {
+      "requests": 14,
+      "rows": 571,
+      "databaseBytes": 89206,
+      "responseBytes": 8915
+    },
+    "board/late_regular": {
+      "requests": 18,
+      "rows": 205,
+      "databaseBytes": 22296,
+      "responseBytes": 14242
+    },
+    "home/playoff_round": {
+      "requests": 18,
+      "rows": 674,
+      "databaseBytes": 110085,
+      "responseBytes": 16514
+    },
+    "board/playoff_round": {
+      "requests": 18,
+      "rows": 181,
+      "databaseBytes": 18047,
+      "responseBytes": 8440
+    },
+    "home/multi_season": {
+      "requests": 14,
+      "rows": 571,
+      "databaseBytes": 89206,
+      "responseBytes": 8915
+    },
+    "board/multi_season": {
+      "requests": 18,
+      "rows": 205,
+      "databaseBytes": 22296,
+      "responseBytes": 14242
+    }
+  }
+}

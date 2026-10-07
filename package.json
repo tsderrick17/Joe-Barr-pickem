@@ -25,7 +25,8 @@
     "test:visual": "playwright test --config playwright.visual.config.ts",
     "db:types": "node scripts/database-types.mjs",
     "db:types:check": "node scripts/database-types.mjs --check",
-    "measure:shaping": "node scripts/measure-response-shaping.mjs"
+    "measure:shaping": "node scripts/measure-response-shaping.mjs",
+    "measure:routes": "node scripts/measure-routes.mjs"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "5.3.0",
