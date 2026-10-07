@@ -12,6 +12,9 @@ test("PIN sign-in uses protected Auth credentials and monitors only privacy-safe
     readFile(new URL("../src/lib/player-pin-authentication.js", import.meta.url), "utf8"),
   ]);
   assert.match(page, /fetch\("\/api\/login"/);
+  assert.match(page, /name="password"/);
+  assert.match(page, /autoComplete="current-password"/);
+  assert.doesNotMatch(page, /autoComplete="one-time-code"/);
   assert.match(route, /createHmac\("sha256"/);
   assert.match(route, /record_failed_pin_login/);
   assert.match(route, /clear_failed_pin_logins/);

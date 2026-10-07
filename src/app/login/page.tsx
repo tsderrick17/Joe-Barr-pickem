@@ -133,12 +133,17 @@ export default function LoginPage() {
 
           <input
             id="pin"
+            name="password"
             type="password"
             inputMode="numeric"
             maxLength={4}
             minLength={4}
             pattern="[0-9]*"
-            autoComplete="one-time-code"
+            // This is a PIN for the player, but it is the site's reusable sign-in
+            // secret. `one-time-code` explicitly prevents Chrome from offering
+            // to save it; `current-password` preserves the same privacy intent
+            // while allowing the browser's password manager to help players.
+            autoComplete="current-password"
             placeholder="••••"
             value={pin}
             onChange={(event) =>
