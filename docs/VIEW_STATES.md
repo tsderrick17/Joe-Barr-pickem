@@ -39,6 +39,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
 | Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
+| Season Snapshot in the playoffs: a Season / Playoffs switch beside the title (opens on Playoffs); Season shows the 6 Wk / All range | `commissioner-playoff` (flipped, both halves) |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
 | Bowl Card with a champion crowned | `bowl-champion` |
