@@ -1471,3 +1471,7 @@ headers. Production dependencies block at high severity; the complete tooling
 tree blocks at critical severity. Any lower development-only advisory exception
 must be specific, dated, owned, and documented rather than hidden by a broad
 override or a permanently weakened gate.
+
+## The Pick'em Pad's "− OUT" rolls too
+
+The Survivor table's "− OUT" rolled its rows away like a blind, but the Pad's snapped. A table row cannot shrink on its own, so the Pad rolls the box around the table instead: from its old height to its new one, with the hidden rows kept on the page until the box has rolled shut (and put back at once when shown). The target accounts for the row above the hidden ones losing its bottom border, so the page below lands on its final position without a last-frame jump. Measured at 390 px: hide 1111 to 1092 and show 1092 to 1111, both smooth, no overshoot.

@@ -153,3 +153,79 @@ export function useBlindRows(hidden: boolean, container: RefObject<HTMLElement |
 
   return rowsHidden;
 }
+
+/**
+ * The same blind for a table, whose rows cannot shrink on their own: the box around the table rolls
+ * from its old height to its new one. Hidden rows stay on the page until it has rolled shut, and shown
+ * rows are put back at once and roll open. Rows to hide carry `data-blind-row`. Returns whether those
+ * rows should be left out of the render.
+ */
+function setOverflow(node: HTMLElement, value: string) {
+  node.style.overflow = value;
+}
+
+/** A table box's height now, and what it will be once its `data-blind-row` rows are gone. */
+function hiddenHeights(node: HTMLElement) {
+  const from = node.getBoundingClientRect().height;
+  const rows = [...node.querySelectorAll<HTMLElement>("[data-blind-row]")];
+  const rowsHeight = rows.reduce((sum, row) => sum + row.getBoundingClientRect().height, 0);
+  // The row above the hidden ones becomes the last row and loses its bottom border.
+  const lastKept = [...node.querySelectorAll<HTMLElement>("tbody > tr:not([data-blind-row])")].pop();
+  const border = lastKept ? parseFloat(getComputedStyle(lastKept).borderBottomWidth) || 0 : 0;
+  return { from, to: Math.max(0, from - rowsHeight - border) };
+}
+
+export function useBlindTable(hidden: boolean, box: RefObject<HTMLElement | null>) {
+  const [rowsHidden, setRowsHidden] = useState(hidden);
+  const previous = useRef(hidden);
+  const running = useRef<Animation | null>(null);
+  const holding = useRef<Animation | null>(null);
+  const settledHeight = useRef(0);
+
+  if (!hidden && rowsHidden) setRowsHidden(false);
+
+  // Once the rows are gone the page itself is in the end state, so let go of the held animation.
+  useLayoutEffect(() => {
+    if (!rowsHidden) return;
+    holding.current?.cancel();
+    holding.current = null;
+  }, [rowsHidden]);
+
+  useLayoutEffect(() => {
+    const node = box.current;
+    if (!node) return;
+    if (previous.current === hidden) {
+      if (!running.current && !holding.current) settledHeight.current = node.getBoundingClientRect().height;
+      return;
+    }
+    previous.current = hidden;
+    running.current?.cancel();
+    holding.current?.cancel();
+    running.current = holding.current = null;
+    if (!canSlide(node)) {
+      if (hidden) window.setTimeout(() => setRowsHidden(true), 0);
+      return;
+    }
+    const heights = hidden ? hiddenHeights(node) : { from: settledHeight.current, to: node.getBoundingClientRect().height };
+    const { from, to } = heights;
+    if (Math.abs(from - to) < 1) {
+      if (hidden) window.setTimeout(() => setRowsHidden(true), 0);
+      return;
+    }
+    setOverflow(node, "hidden");
+    const animation = node.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: BLIND_MS, easing: BLIND_EASING, fill: hidden ? "forwards" : "none" });
+    running.current = animation;
+    animation.onfinish = () => {
+      if (running.current !== animation) return;
+      running.current = null;
+      setOverflow(node, "");
+      settledHeight.current = to;
+      if (hidden) {
+        holding.current = animation;
+        window.setTimeout(() => setRowsHidden(true), 0);
+      }
+    };
+  }, [hidden, box]);
+
+  return rowsHidden;
+}
