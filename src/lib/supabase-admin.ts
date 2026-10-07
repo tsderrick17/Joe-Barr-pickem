@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 // Prefer the credential maintained by the Vercel/Supabase integration. Keep
@@ -22,7 +23,7 @@ if (!supabaseUrl || !configuredSupabaseServerKey) {
 
 export const supabaseServerKey = configuredSupabaseServerKey;
 
-export const supabaseAdmin = createClient(
+export const supabaseAdmin = createClient<Database>(
   supabaseUrl,
   supabaseServerKey,
   {

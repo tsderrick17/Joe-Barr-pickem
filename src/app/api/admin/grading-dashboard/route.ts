@@ -1,7 +1,9 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { NextRequest, NextResponse } from "next/server";
 import { getWatchdogStatus } from "@/lib/watchdog-status";
 import { checkAutomationHealth } from "@/lib/automation-health";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
@@ -11,7 +13,6 @@ import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
 import { loadSeasonLadder, type SeasonLadder } from "@/lib/season-ladder";
 import { readGradingGamesAndLines } from "@/lib/grading-dashboard-reads";
 
-type GameStatus = "scheduled" | "live" | "final" | "postponed" | "cancelled";
 const GAME_STATUS_GRACE_MINUTES = 15;
 
 // Fetch every receipt, including busy months that exceed Supabase's page limit.
@@ -74,9 +75,8 @@ function gameState(game: { status: GameStatus; kickoff_at: string; finalized_at:
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
 
   try {
     const now = new Date();

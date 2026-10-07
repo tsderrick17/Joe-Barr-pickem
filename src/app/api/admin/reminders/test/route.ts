@@ -1,13 +1,17 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseTestEmail } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { deliverEmailTest } from "@/lib/email-reminders";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  const body = await request.json().catch(() => ({})) as { template?: unknown };
-  const selectionPreview = body.template === "selections";
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
+  const commissioner = commissionerResult.player;
+  // The body is optional: a missing or malformed one is the plain test email.
+  const { selectionPreview } = parseTestEmail((await readJsonObject(request)) ?? {});
   const { data: selectionTemplate } = selectionPreview
     ? await supabaseAdmin.from("reminder_templates").select("title, body").eq("template_id", "pick_due_sunday_11").maybeSingle()
     : { data: null };
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (!(player.email_notifications_enabled && player.notification_email)) {
     return NextResponse.json({ error: "Turn on email reminders in Notifications before sending a test." }, { status: 409 });
   }
-  const email = await deliverEmailTest(reminder, commissioner.id, player.notification_email);
+  const email = await deliverEmailTest({ ...reminder, category: "custom", audience: "all_active" }, commissioner.id, player.notification_email);
   if (email.sent !== 1) {
     return NextResponse.json({ error: email.errors[0] ?? "Brevo did not accept the test email." }, { status: 502 });
   }

@@ -49,6 +49,8 @@ type Props = {
   /** Players to list (with no wins) before the Bowl Pool has its own standings. */
   fallbackRows: Array<{ id: string; firstName: string }>;
   minimized: boolean;
+  /** The off-season: the card is shown whole and its hide button is gone. */
+  displayLocked?: boolean;
   savingDisplay: boolean;
   onSetDisplay: (show: boolean) => Promise<void>;
   onError: (message: string) => void;
@@ -67,7 +69,7 @@ export function bowlSpreadLabel(spread: number | string | null | undefined) {
   return String(spread).replace(/^[-−]\s*/, "");
 }
 
-export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, savingDisplay, onSetDisplay, onError, onReady }: Props) {
+export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, displayLocked = false, savingDisplay, onSetDisplay, onError, onReady }: Props) {
   const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
   const [claiming, setClaiming] = useState(false);
   const bowlScrollRef = useRef<HTMLDivElement | null>(null);
@@ -221,7 +223,7 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   return (
     <>
       {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay || claiming} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${minimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
-          <BowlCrest action={<button aria-expanded={!minimized} aria-label={minimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void onSetDisplay(minimized)} title={minimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{minimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" />
+          <BowlCrest action={displayLocked ? undefined : <button aria-expanded={!minimized} aria-label={minimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void onSetDisplay(minimized)} title={minimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{minimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" />
           <Collapse open={!minimized}>
             {bowlChampion ? <div className="border-b-2 border-[#1d1d1f] bg-[#f8f0d8] px-3 py-3 text-center font-bold text-[#5a430c]">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
             <div className="bowl-standings-scroll overflow-x-auto border-b-2 border-[#1d1d1f]" ref={bowlScrollRef}>

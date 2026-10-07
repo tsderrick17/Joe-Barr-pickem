@@ -3,20 +3,17 @@ import {
   derivePlayerAuthPassword,
   PLAYER_AUTH_CREDENTIAL_VERSION,
 } from "@/lib/player-auth-credential";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { playerAuthPepper } from "@/lib/player-auth-config";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) {
-    return NextResponse.json(
-      { error: "Commissioner access is required." },
-      { status: 403 },
-    );
-  }
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
+  const commissioner = commissionerResult.player;
 
   let confirmation = "";
   try {
@@ -55,7 +52,8 @@ export async function POST(request: NextRequest) {
   let hardened = 0;
 
   for (const player of players ?? []) {
-    if (!player.auth_user_id || !/^\d{4}$/.test(player.login_pin ?? "")) {
+    const loginPin = player.login_pin ?? "";
+    if (!player.auth_user_id || !/^\d{4}$/.test(loginPin)) {
       failures.push(player.id);
       continue;
     }
@@ -71,7 +69,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       player.auth_user_id,
       {
-        password: derivePlayerAuthPassword(player.login_pin, authPepper),
+        password: derivePlayerAuthPassword(loginPin, authPepper),
         app_metadata: {
           ...(account.user.app_metadata ?? {}),
           pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION,

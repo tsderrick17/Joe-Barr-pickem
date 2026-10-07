@@ -12,19 +12,15 @@ import {
 import { currentSeasonYear } from "@/lib/season";
 import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
-import type { SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
+import type { SeasonPhase, SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
+import { seasonPhaseFromRows } from "@/lib/season-phase";
 import {
   activeSurvivor,
   concludedSurvivor,
   shapeSlateGames,
   unavailableSurvivor,
   type GameRow,
-  type LockedLineRow,
-  type PreliminaryLineRow,
-  type PublicPickRow,
   type SlateSurvivor,
-  type SurvivorPickRow,
-  type TeamRow,
 } from "@/lib/slate-shape";
 
 export async function GET(request: NextRequest) {
@@ -45,6 +41,7 @@ export async function GET(request: NextRequest) {
   // rendering a player's Slate. Run it after the response is handed back.
   after(() => recordPlayerActivity(player.id));
 
+  let seasonPhase: SeasonPhase | undefined;
   let bootstrap: {
     weeks: ScoringPeriodRow[];
     nextWeekAvailableAt: string | null;
@@ -56,7 +53,7 @@ export async function GET(request: NextRequest) {
   if (bootstrapRequested && !scoringPeriodId) {
     const { data: season, error: seasonError } = await supabaseAdmin
       .from("seasons")
-      .select("id")
+      .select("id, state")
       .eq("year", currentSeasonYear())
       .maybeSingle();
 
@@ -73,6 +70,7 @@ export async function GET(request: NextRequest) {
       .eq("season_id", season.id)
       .order("display_order");
 
+    // Status and type columns are text with CHECK constraints; src/lib/db-statuses.ts lists the allowed values.
     const weeks = (periodRows ?? []) as ScoringPeriodRow[];
     if (periodsError || weeks.length === 0) {
       return NextResponse.json(
@@ -114,7 +112,7 @@ export async function GET(request: NextRequest) {
       nextWeekAvailableAt: nextWeekAvailableAt
         ? Date.parse(nextWeekAvailableAt)
         : null,
-    }) as ScoringPeriodRow[];
+    });
     const requestedWeekId = query.get("week");
     const requestedWeek = requestedWeekId
       ? availableWeeks.find((period) => period.id === requestedWeekId)
@@ -130,6 +128,7 @@ export async function GET(request: NextRequest) {
 
     scoringPeriodId = selectedWeek.id;
     bootstrap = { weeks, nextWeekAvailableAt };
+    seasonPhase = seasonPhaseFromRows(season, periodRows ?? []);
   }
 
   if (!scoringPeriodId) {
@@ -198,7 +197,7 @@ export async function GET(request: NextRequest) {
   // a fresh Slate avoids loading every player's upcoming selections, while a
   // kickoff refresh fetches precisely the started games that need disclosure.
   const currentTime = new Date();
-  const startedGameIds = (games as GameRow[])
+  const startedGameIds = (games)
     .filter((game) => new Date(game.kickoff_at) <= currentTime)
     .map((game) => game.id);
   const { data: publicPicks, error: publicPicksError } = startedGameIds.length
@@ -359,11 +358,11 @@ export async function GET(request: NextRequest) {
       } else {
         survivor = activeSurvivor({
           entry: survivorEntry as { status: "active" | "eliminated"; eliminated_scoring_period_id: string | null },
-          pick: survivorPick as SurvivorPickRow | null,
+          pick: survivorPick,
           usedPicks: usedSurvivorPicks,
           season,
           scoringPeriodId,
-          periodType: period.period_type,
+          periodType: period.period_type === "playoff" ? "playoff" : "regular",
           periodFirstKickoffAt: gamesResult.data?.[0]?.kickoff_at ?? null,
           chipsVisible: survivorChipsVisible,
         });
@@ -406,10 +405,10 @@ export async function GET(request: NextRequest) {
     serverTime: currentTime.toISOString(),
     games: shapeSlateGames({
       games: games as GameRow[],
-      teams: teams as TeamRow[],
-      history: history as PreliminaryLineRow[] | null,
-      lockedLines: lockedLines as LockedLineRow[] | null,
-      publicPicks: publicPicks as PublicPickRow[] | null,
+      teams: teams,
+      history: history,
+      lockedLines: lockedLines,
+      publicPicks: publicPicks,
       players,
       now: currentTime,
     }),
@@ -422,6 +421,7 @@ export async function GET(request: NextRequest) {
     },
     survivor,
     bootstrap,
+    seasonPhase,
     showPoolAction: Boolean((players ?? []).find((item) => item.id === player.id)?.show_pool_action),
   } satisfies SlateResponse);
 }

@@ -85,7 +85,7 @@ export default function PickemScoreboard({
       <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
       <div className="pickem-ledger-masthead">
         <div className="flex items-center gap-2">
-          <h2>{isPlayoff ? "Playoff Ledger" : "Pick'em Pad"}</h2>
+          <h2>Pick&apos;em Pad</h2>
           {hasEliminatedRows && onToggleEliminatedRows ? <button
             aria-label={hideEliminatedRows ? "Show eliminated Pick'em players" : "Hide eliminated Pick'em players"}
             className="survivor-title-toggle survivor-elimination-toggle"
@@ -94,7 +94,6 @@ export default function PickemScoreboard({
             type="button"
           >{hideEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}
         </div>
-        {isPlayoff ? <p className="pickem-ledger-period">{week.toUpperCase()}</p> : null}
         {flipButton}
       </div>
       <div ref={tableBox} className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
@@ -104,9 +103,9 @@ export default function PickemScoreboard({
             <col className="pickem-ledger-player-column" />
             {Array.from({ length: maxPicks }, (_, index) => <col key={index} />)}
           </colgroup> : null}
-          {!isPlayoff ? <thead>
+          <thead>
             <tr className="pickem-ledger-week-row"><th colSpan={maxPicks + 2}><span>{week}</span></th></tr>
-          </thead> : null}
+          </thead>
           <tbody>
             {displayedRows.map((row) => {
               return (

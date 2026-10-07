@@ -27,11 +27,14 @@ test("react and react-dom are the same version", async () => {
   assert.equal(pkg.dependencies["react-dom"], pkg.dependencies.react);
 });
 
-test("the commissioner gate retries a transient read and logs a persistent one", async () => {
+test("the commissioner gate reads the profile with retries and answers an outage as 503, never as lost access", async () => {
   const gate = await read("src/lib/require-commissioner.ts");
-  assert.match(gate, /const \{ data: player, error \} = await retrySafeRead\(/);
-  assert.match(gate, /if \(error\) console\.error\(/);
-  assert.match(gate, /return player\?\.active && player\.is_commissioner \? player : null;/, "still fails closed");
+  assert.match(gate, /authenticateActivePlayer\(request, \{ profile: "named", requireCommissioner: true \}\)/);
+  const auth = await read("src/lib/authenticate-active-player.ts");
+  assert.match(auth, /retrySafeRead\(\(\) => players\(\)/);
+  const policy = await read("src/lib/player-access-result.js");
+  assert.match(policy, /if \(profile\.error\) return \{ ok: false, status: 503, code: "profile_unavailable" \};/);
+  assert.match(policy, /commissioner_required/, "still fails closed for an ordinary player");
 });
 
 test("the Bowl dispatcher uses the same Eastern August 1 season year as the app", async () => {

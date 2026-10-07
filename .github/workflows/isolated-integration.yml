@@ -11,6 +11,11 @@ on:
         required: false
         default: false
         type: boolean
+      write_database_types:
+        description: Generate src/lib/database.types.ts from the isolated database and upload it as an artifact
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "17 14 * * 3"
 
@@ -72,6 +77,8 @@ jobs:
           esac
           echo "Using the explicitly confirmed isolated test environment."
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -101,6 +108,29 @@ jobs:
         run: |
           node scripts/prepare-isolated-schema.mjs
           supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+      - name: Generate database types for download
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.write_database_types }}
+        run: npm run db:types
+      - name: Upload generated database types
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.write_database_types }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: database-types
+          path: src/lib/database.types.ts
+          retention-days: 7
+      - name: Check database types match the schema
+        # A migration is the only thing that changes the schema, so a pull request checks the types when it
+        # touches migrations or the types file; the weekly run and a manual run always check. The shared
+        # isolated database can briefly hold another branch's migration, so an unrelated pull request is not
+        # failed for it.
+        run: |
+          check=false
+          if [ "${{ github.event_name }}" != "pull_request" ]; then check=true; fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # The checkout is the pull request merged into its base; its first parent is the base.
+            if git diff --name-only HEAD^1 HEAD | grep -Eq '^(supabase/migrations/|src/lib/database\.types\.ts)'; then check=true; fi
+          fi
+          if [ "$check" = "true" ] && [ -f src/lib/database.types.ts ]; then npm run db:types:check; else echo "Database type check not needed for this change."; fi
       - name: Run isolated season certification
         id: certification
         run: npm run test:season-drill

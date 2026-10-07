@@ -18,7 +18,7 @@ test("account capacity gauges use existing provider records and database details
   assert.match(capacity, /monthlyCreditSeries/);
   assert.match(capacity, /efficiencyStart/);
   assert.doesNotMatch(capacity, /api\.the-odds-api\.com/);
-  assert.match(route, /requireCommissioner/);
+  assert.match(route, /commissionerAccess/);
   assert.match(migration, /pg_database_size/);
   assert.match(migration, /revoke all.*from public, anon, authenticated/i);
   assert.match(panel, /Setup needed/);

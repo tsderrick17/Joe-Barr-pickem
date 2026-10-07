@@ -100,12 +100,19 @@ export const SCENARIOS = {
   "playoff-wildcard": { ...base, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // Divisional round: four picks each.
   "playoff-divisional": { ...base, isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
+  // The off-season after the graded Super Bowl: every table is shown whole whatever the player had hidden, the
+  // hide and "− OUT" buttons are gone, and a closed banner leads the page.
+  "off-season": { ...base, seasonPhase: "off_season", isPlayoff: true, week: "Super Bowl", weekStatus: "complete", maxPicks: 1, serverTime: "2027-02-20T18:00:00Z", showSurvivorStandings: false, showBowlCard: false, hidePickemEliminatedRows: true, hideSurvivorEliminatedRows: true, survivorAvailable: false, rows: rows({ maxPicks: 1, playoff: true }), survivorRows: [] },
+  // A player out of the playoff race mid-playoffs gets the same quiet page: banner, no ticket.
+  "playoff-viewer-out": { ...base, viewerPlayerId: "p7", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   // The Bowl Card in its other states (the Bowl data for each is BOWL_BY_SCENARIO).
   "bowl-results": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-champion": { ...base, showBowlCard: true, serverTime: "2027-01-12T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-claim-open": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-closed-not-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  // In the playoffs the Season Snapshot gets a Regular | Playoffs switch (it opens on the playoffs).
+  "commissioner-playoff": { ...base, isCommissioner: true, seasonSnapshotReleased: true, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // A commissioner can turn the pad over to the Season Snapshot.
   "commissioner": { ...base, isCommissioner: true, seasonSnapshotReleased: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
 };
@@ -125,14 +132,16 @@ export function homeResponse(name) {
 }
 
 /** Cumulative wins by week for the Season Snapshot, in a fixed order. */
-export function seasonSnapshotResponse() {
+export function seasonSnapshotResponse(scenario = "") {
   const scores = NAMES.map((_, playerIndex) => Array.from({ length: 5 }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
   return {
     regular: Array.from({ length: 5 }, (_, week) => ({
       id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < 4,
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
-    playoffs: [],
+    playoffs: scenario === "commissioner-playoff"
+      ? [{ id: "playoff-1", label: "Wild Card", complete: true, scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex) })) }]
+      : [],
     colorOrder: NAMES.map((_, playerIndex) => `p${playerIndex}`),
   };
 }

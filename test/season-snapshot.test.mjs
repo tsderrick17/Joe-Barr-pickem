@@ -302,7 +302,7 @@ test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by w
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
   const css = readStylesheetSync();
   assert.match(snapshot, /export const WINDOW_WEEKS = 6;/);
-  assert.match(snapshot, /<h2>Season Snapshot<\/h2>\s*\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
+  assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
   assert.match(snapshot, />All<\/button>/);
   assert.match(snapshot, />6 Wk<\/button>/);
   // Every week keeps a sixth of the view; the view opens on the latest six weeks.
@@ -441,4 +441,22 @@ test("the player key shows the chart's own totals, so totals and chart update to
   assert.match(snapshot, /<strong>\{total\}<\/strong>/);
   assert.doesNotMatch(snapshot, /<strong>\{player\.wins\}<\/strong>/);
   assert.doesNotMatch(snapshot, /\$\{player\.wins\} wins/);
+});
+
+test("once the playoffs begin the Snapshot gets a Season | Playoffs switch beside the title, and the range shows only on Season", () => {
+  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
+  const css = readStylesheetSync();
+  // The switch needs the playoffs to have begun; before that the chart is the regular season alone.
+  assert.match(snapshot, /const hasPlayoffs = isPlayoff \|\| \(snapshot\?\.playoffs\.length \?\? 0\) > 0;/);
+  assert.match(snapshot, /const shownView = hasPlayoffs \? view : "regular";/);
+  assert.match(snapshot, /<h2>Season Snapshot<\/h2>\s*\{hasPlayoffs \? <div aria-label="Season half shown" className="season-snapshot-range season-snapshot-view"/);
+  assert.match(snapshot, />Season<\/button>[\s\S]*>Playoffs<\/button>/);
+  // It opens on the playoffs, remembers the last choice on this device, and reads it only on first turn-over.
+  assert.match(snapshot, /useState<"regular" \| "playoffs">\("playoffs"\)/);
+  assert.match(snapshot, /setView\(readSetting\(VIEW_KEY\) === "regular" \? "regular" : "playoffs"\);/);
+  assert.match(snapshot, /saveSetting\(VIEW_KEY, next\);/);
+  // The week range belongs to the regular-season chart; the switch reuses the range toggle's equal-width halves.
+  assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown"/);
+  assert.match(snapshot, /view=\{shownView\}/);
+  assert.match(css, /\.season-snapshot-view \{ margin-left: \.75rem; \}/);
 });

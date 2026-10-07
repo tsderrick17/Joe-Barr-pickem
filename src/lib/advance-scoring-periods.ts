@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { weekRolloverAt } from "@/lib/week-rollover";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -14,7 +15,7 @@ type PeriodRow = {
 type GameRow = {
   id: string;
   kickoff_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
+  status: GameStatus;
   finalized_at: string | null;
 };
 
@@ -235,7 +236,8 @@ export async function advanceScoringPeriods(
     "complete_scoring_period_atomically",
     {
       target_scoring_period_id: activePeriod.id,
-      next_scoring_period_id: nextPeriod?.id ?? null,
+      // The last period of a season has no next one; the function accepts NULL, but the generated type cannot say so.
+      next_scoring_period_id: (nextPeriod?.id ?? null) as string,
       rollover_at: rolloverAt,
     },
   );

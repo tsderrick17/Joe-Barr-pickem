@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
   const { id } = await params;
   const { data, error } = await supabaseAdmin.from("push_reminders").update({
     status: "cancelled",

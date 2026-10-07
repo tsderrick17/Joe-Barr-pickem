@@ -1,3 +1,4 @@
+import type { GameStatus } from "@/lib/db-statuses";
 // Viewer-safe JSON returned by player routes. Keep database rows and private
 // pre-kickoff picks out of these contracts; route shaping owns disclosure.
 
@@ -26,7 +27,7 @@ export type SlateGame = {
   preliminarySpread: number | null;
   spreadSource: string | null;
   spreadLockedAt: string | null;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled";
+  status: GameStatus;
   awayScore: number | null;
   homeScore: number | null;
   awayResult: "win" | "loss" | null;
@@ -34,6 +35,9 @@ export type SlateGame = {
   awayPickers: string[];
   homePickers: string[];
 };
+
+/** In season, or the off-season between the graded Super Bowl and August 1 (see season-phase.ts). */
+export type SeasonPhase = "in_season" | "off_season";
 
 export type SlateResponse = {
   serverTime: string;
@@ -50,6 +54,8 @@ export type SlateResponse = {
     usedTeamIds: string[];
   };
   showPoolAction: boolean;
+  /** Sent with the bootstrap request (the first load of the page). */
+  seasonPhase?: SeasonPhase;
   bootstrap?: {
     weeks: SlateScoringPeriod[];
     nextWeekAvailableAt: string | null;
@@ -77,6 +83,7 @@ export type StandingsRow = {
 };
 
 export type StandingsResponse = {
+  seasonPhase: SeasonPhase;
   serverTime: string;
   viewerPlayerId: string;
   isCommissioner: boolean;

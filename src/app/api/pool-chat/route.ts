@@ -1,5 +1,8 @@
+import { readJsonObject } from "@/lib/request-validation";
+import { parseChatDelete, parseChatMessage } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
-import { authenticatedProfilePlayer } from "@/lib/authenticated-profile-player";
+import { profilePlayerAccess } from "@/lib/authenticated-profile-player";
+import { accessDenied } from "@/lib/access-response";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
@@ -60,8 +63,9 @@ async function loadMessages(seasonId: string, viewer: { id: string; is_commissio
 }
 
 export async function GET(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const playerAccess = await profilePlayerAccess(request);
+  if (!playerAccess.ok) return accessDenied(playerAccess);
+  const player = playerAccess.player;
 
   const season = await currentSeason();
   if (!season) return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
@@ -72,17 +76,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const playerAccess = await profilePlayerAccess(request);
+  if (!playerAccess.ok) return accessDenied(playerAccess);
+  const player = playerAccess.player;
 
-  let body: { message?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Write a message before sending." }, { status: 400 });
-  }
+  const input = await readJsonObject(request);
+  if (!input) return NextResponse.json({ error: "Write a message before sending." }, { status: 400 });
 
-  const message = typeof body.message === "string" ? body.message.trim().replace(/\s+/g, " ") : "";
+  const message = parseChatMessage(input);
   if (!message || message.length > 280) {
     return NextResponse.json({ error: "Write a message of up to 280 characters before sending." }, { status: 400 });
   }
@@ -117,16 +118,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const player = await authenticatedProfilePlayer(request);
-  if (!player) return NextResponse.json({ error: "You must be signed in as an active player." }, { status: 401 });
+  const playerAccess = await profilePlayerAccess(request);
+  if (!playerAccess.ok) return accessDenied(playerAccess);
+  const player = playerAccess.player;
 
-  let body: { messageId?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "That message could not be identified." }, { status: 400 });
-  }
-  if (typeof body.messageId !== "string") return NextResponse.json({ error: "That message could not be identified." }, { status: 400 });
+  const input = await readJsonObject(request);
+  const messageId = input ? parseChatDelete(input) : null;
+  if (!messageId) return NextResponse.json({ error: "That message could not be identified." }, { status: 400 });
 
   const season = await currentSeason();
   if (!season) return NextResponse.json({ error: "The current season could not be loaded." }, { status: 503 });
@@ -134,7 +132,7 @@ export async function DELETE(request: NextRequest) {
   const { data: message, error: messageError } = await supabaseAdmin
     .from("pool_chat_messages")
     .select("id, player_id, deleted_at")
-    .eq("id", body.messageId)
+    .eq("id", messageId)
     .eq("season_id", season.id)
     .maybeSingle();
   if (messageError || !message) return NextResponse.json({ error: "That message is no longer available." }, { status: 404 });

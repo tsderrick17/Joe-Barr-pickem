@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assessSeasonReadiness } from "@/lib/season-readiness";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
 
   const { data: season, error: seasonError } = await supabaseAdmin
     .from("seasons")

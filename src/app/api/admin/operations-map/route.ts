@@ -1,7 +1,9 @@
+import type { GameStatus } from "@/lib/db-statuses";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAutomationHealth } from "@/lib/automation-health";
 import { getWatchdogStatus } from "@/lib/watchdog-status";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { weekRolloverAt } from "@/lib/week-rollover";
@@ -11,7 +13,7 @@ type GameRow = {
   id: string;
   kickoff_at: string;
   line_lock_at: string;
-  status: "scheduled" | "live" | "final" | "postponed" | "cancelled" | "no_contest";
+  status: GameStatus;
   finalized_at: string | null;
 };
 
@@ -28,9 +30,8 @@ function stage(id: string, label: string, state: StageState, detail: string, nex
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) {
-    return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
-  }
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
 
   try {
     const now = new Date();

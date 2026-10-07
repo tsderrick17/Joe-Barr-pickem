@@ -55,6 +55,10 @@ export function bowlPoolLaunchAt(seasonYear) {
  * championship game is final, the same rule as the database champion: a guess
  * beats no guess, then the closest guess wins. Remaining ties: fewer losses,
  * then a stable player order.
+ *
+ * @param {any} first
+ * @param {any} second
+ * @param {number | null} [finalCombinedPoints]
  */
 export function compareBowlPoolStandings(first, second, finalCombinedPoints = null) {
   if (first.wins !== second.wins) return second.wins - first.wins;

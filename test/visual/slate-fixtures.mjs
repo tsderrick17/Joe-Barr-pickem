@@ -118,6 +118,10 @@ export const SCENARIOS = {
   "complete-no-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
   "playoff-upcoming": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true },
   "playoff-six-picks": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"], ["g5", "sf"]], survivor: "off", playoff: true },
+  // The off-season, after the graded Super Bowl: a read-only record with a closed banner and no Submit.
+  "off-season": { now: "2027-02-20T18:00:00Z", phase: "complete", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"]], survivor: "off", playoff: true, offSeason: true },
+  // Eliminated from the playoff race mid-playoffs: banner instead of the receipt, no Submit.
+  "playoff-eliminated": { now: "2027-01-17T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true, eliminated: true },
   "playoff-live": { now: "2027-01-10T19:00:00Z", phase: "live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"]], survivor: "off", playoff: true },
 };
 
@@ -132,7 +136,7 @@ export function boardResponse(name) {
     serverTime: new Date(now).toISOString(),
     games,
     myPicks: scenario.picks.map(([gameId, teamId]) => ({ gameId, teamId })),
-    pickem: { playoffEliminated: false },
+    pickem: { playoffEliminated: Boolean(scenario.eliminated) },
     survivor: {
       available: scenario.survivor !== "off",
       chipsVisible: scenario.survivor === "open" || scenario.survivor === "picked",
@@ -143,6 +147,7 @@ export function boardResponse(name) {
       usedTeamIds: ["kc", "det", "phi", "sf", ...(survivorPick ? ["buf"] : [])],
     },
     showPoolAction: false,
+    ...(scenario.offSeason ? { seasonPhase: "off_season" } : {}),
     bootstrap: { weeks: weeks(scenario.playoff ? "playoff-1" : "week-5"), nextWeekAvailableAt: null },
   };
 }

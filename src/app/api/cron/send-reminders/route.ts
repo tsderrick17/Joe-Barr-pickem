@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { skipOutsideSeason } from "@/lib/off-season-gate";
 import { sendDueReminders } from "@/lib/reminder-worker";
 
 export const runtime = "nodejs";
@@ -11,6 +12,8 @@ export async function POST(request: NextRequest) {
   if (request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized automation request." }, { status: 401 });
   }
+  const idle = await skipOutsideSeason("season");
+  if (idle) return idle;
   try {
     return NextResponse.json({ success: true, ...(await runWithAutomationLease("reminders", sendDueReminders)) });
   } catch (error) {

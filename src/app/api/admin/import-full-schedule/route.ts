@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
 import { bootstrapFullSchedule, prepareFullSchedule } from "@/lib/full-schedule-bootstrap";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 
+/** The refusal to send when the caller is not the signed-in Commissioner, or null when they are. */
 async function authorize(request: NextRequest) {
-  if (!request.headers.get("authorization")?.startsWith("Bearer ")) return false;
-  return Boolean(await requireCommissioner(request));
+  const access = await commissionerAccess(request);
+  return access.ok ? null : accessDenied(access);
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await authorize(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const denied = await authorize(request);
+  if (denied) return denied;
   try {
     const prepared = await prepareFullSchedule();
     const weekCounts = Object.fromEntries(Array.from({ length: 18 }, (_, index) => [index + 1, prepared.games.filter((game) => game.week === index + 1).length]));
@@ -20,7 +23,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await authorize(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const denied = await authorize(request);
+  if (denied) return denied;
   try {
     const result = await runWithAutomationLease("season_bootstrap", () => bootstrapFullSchedule());
     return NextResponse.json({ message: result.outcome === "already_complete" ? "The complete schedule is already loaded and pinned." : "The complete regular-season schedule is loaded and pinned. Daily reconciliation will keep it current.", ...result });

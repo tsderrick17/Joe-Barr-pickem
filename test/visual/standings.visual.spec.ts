@@ -3,7 +3,7 @@ import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshot
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
-const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open"]);
+const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season"]);
 
 /** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
 async function signIn(page: Page, theme: string) {
@@ -25,17 +25,17 @@ async function serve(page: Page, scenario: string) {
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: home.isCommissioner, showPoolChat: false } }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse((BOWL_BY_SCENARIO as Record<string, Parameters<typeof bowlResponse>[0]>)[scenario]) }));
-  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse() }));
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse(scenario) }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(home.serverTime) });
 }
 
 async function settle(page: Page) {
   await page.goto("/");
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.reload();
-  await expect(page.locator(".my-ticket").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".my-ticket, .season-closed-banner").first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((resolve) => setTimeout(resolve, 30)); }
@@ -51,7 +51,9 @@ async function settle(page: Page) {
   // for the tiles to land, then return to the top for the capture.
   if (await page.locator(".bowl-standings-scroll").count()) {
     await page.locator(".bowl-standings-scroll").first().scrollIntoViewIfNeeded();
-    await page.waitForTimeout(200);
+    // Long enough for the card to finish settling: a baseline recorded with -u takes the first frame it sees, and
+    // the card was still changing on Linux at 200 ms, so recording and checking disagreed about its final look.
+    await page.waitForTimeout(1500);
   }
   await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 10_000 });
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -72,11 +74,17 @@ for (const scenario of Object.keys(SCENARIOS)) {
         await serve(page, scenario);
         await settle(page);
         await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
-        if (scenario === "commissioner") {
+        if (scenario === "commissioner" || scenario === "commissioner-playoff") {
           // The back of the pad: the Season Snapshot.
           await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
           await page.waitForTimeout(1200);
           await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+          if (scenario === "commissioner-playoff") {
+            // The other half: the regular season, with its 6 Wk / All range.
+            await page.getByRole("button", { name: "Season", exact: true }).click();
+            await page.waitForTimeout(1500);
+            await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+          }
         }
       });
     }

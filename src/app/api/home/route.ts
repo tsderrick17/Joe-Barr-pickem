@@ -5,6 +5,7 @@ import { playerAccessErrorMessage } from "@/lib/player-access-result";
 import { nextPickRevealAt, shouldRevealPick } from "@/lib/pick-visibility";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
+import { seasonPhaseFromRows } from "@/lib/season-phase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
@@ -12,17 +13,10 @@ import { readAllPages } from "@/lib/read-all-pages";
 import { shapePadRows } from "@/lib/home-shape";
 import { survivorChampionDisplayId } from "@/lib/inaugural-survivor-holder";
 import { survivorEntryStatus, type StandingsResponse } from "@/lib/api-contracts";
+import type { PeriodStatus } from "@/lib/db-statuses";
 
 export const dynamic = "force-dynamic";
 
-type PickRow = {
-  player_id: string;
-  game_id: string;
-  selected_team_id: string;
-  scoring_period_id: string;
-  submitted_at: string;
-  result: string;
-};
 
 type GameRow = {
   id: string;
@@ -36,26 +30,8 @@ type PreliminaryLineRow = {
   captured_at: string;
 };
 
-type LockedLineRow = {
-  game_id: string;
-  favorite_team_id: string | null;
-  locked_spread: number | string;
-};
 
-type ChampionshipRow = {
-  player_id: string;
-  pool: "pickem" | "survivor" | "bowl";
-  season_year: number;
-};
 
-type ScoringPeriodRow = {
-  id: string;
-  display_name: string;
-  display_order: number;
-  status: "upcoming" | "active" | "complete";
-  period_type: "regular" | "playoff";
-  max_picks: number;
-};
 
 export async function GET(request: NextRequest) {
   const access = await authenticateActivePlayer(request, { profile: "home" });
@@ -68,7 +44,7 @@ export async function GET(request: NextRequest) {
   const [seasonResult, playersResult] = await Promise.all([
     supabaseAdmin
       .from("seasons")
-      .select("id, year")
+      .select("id, year, state")
       .eq("year", currentSeasonYear())
       .maybeSingle(),
     supabaseAdmin
@@ -111,7 +87,7 @@ export async function GET(request: NextRequest) {
   }
 
   const currentWeek = selectDefaultScoringPeriod(
-    periods as ScoringPeriodRow[],
+    periods,
   );
 
   if (!currentWeek) {
@@ -157,7 +133,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const allPicks = (picks ?? []) as PickRow[];
+  const allPicks = (picks ?? []);
 
   const currentWeekPicks = allPicks
     .filter((pick) => pick.scoring_period_id === currentWeek.id);
@@ -206,8 +182,8 @@ export async function GET(request: NextRequest) {
   }
   const trophiesByPlayerId = new Map<string, string[]>();
   const championshipCounts = new Map<string, number>();
-  for (const championship of (championshipRows ?? []) as ChampionshipRow[]) { const key = `${championship.season_year}:${championship.pool}`; championshipCounts.set(key, (championshipCounts.get(key) ?? 0) + 1); }
-  for (const championship of (championshipRows ?? []) as ChampionshipRow[]) {
+  for (const championship of (championshipRows ?? [])) { const key = `${championship.season_year}:${championship.pool}`; championshipCounts.set(key, (championshipCounts.get(key) ?? 0) + 1); }
+  for (const championship of (championshipRows ?? [])) {
     const poolLabel = championship.pool === "pickem" ? "Pick'em" : championship.pool === "survivor" ? "Survivor" : "Bowl Pool";
     const suffix = (championshipCounts.get(`${championship.season_year}:${championship.pool}`) ?? 0) > 1 ? "Co-Champion" : "Champion";
     const title = `'${String(championship.season_year).slice(-2)} ${poolLabel} ${suffix}`;
@@ -229,11 +205,12 @@ export async function GET(request: NextRequest) {
   const survivorChampionPlayerId = survivorChampionDisplayId({
     seasonYear: season.year,
     recordedChampionId: championSeason?.survivor_champion_player_id ?? null,
+    championships: championshipRows ?? [],
     activePlayers: players,
   });
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
   // Co-champions (a same-week finish or several survivors) are all named.
-  const survivorChampionIds = ((championshipRows ?? []) as ChampionshipRow[])
+  const survivorChampionIds = ((championshipRows ?? []))
     .filter((row) => row.pool === "survivor" && row.season_year === currentSeasonYear())
     .map((row) => row.player_id);
   const survivorChampionName = championSeason?.survivor_champion_player_id
@@ -244,11 +221,11 @@ export async function GET(request: NextRequest) {
   const teams = teamsResult.data;
 
   const gameById = new Map(
-    ((games ?? []) as GameRow[]).map((game) => [game.id, game]),
+    ((games ?? [])).map((game) => [game.id, game]),
   );
   const currentTime = new Date();
   const atsNextRevealAt = nextPickRevealAt(
-    ((games ?? []) as GameRow[]).map((game) => game.kickoff_at),
+    ((games ?? [])).map((game) => game.kickoff_at),
     currentTime,
   );
 
@@ -256,10 +233,10 @@ export async function GET(request: NextRequest) {
     (teams ?? []).map((team) => [team.id, { name: team.full_name, abbreviation: team.abbreviation }]),
   );
   const lockedLineByGameId = new Map(
-    ((lockedLinesResult.data ?? []) as LockedLineRow[]).map((line) => [line.game_id, line]),
+    ((lockedLinesResult.data ?? [])).map((line) => [line.game_id, line]),
   );
   const preliminaryLineByGameId = new Map<string, PreliminaryLineRow>();
-  for (const line of (historyResult.data ?? []) as PreliminaryLineRow[]) {
+  for (const line of (historyResult.data ?? [])) {
     if (!preliminaryLineByGameId.has(line.game_id)) preliminaryLineByGameId.set(line.game_id, line);
   }
 
@@ -360,7 +337,7 @@ export async function GET(request: NextRequest) {
           teamsCode: survivorTeamsError?.code,
         });
       } else {
-        survivorGames = (survivorGameRows ?? []) as GameRow[];
+        survivorGames = (survivorGameRows ?? []);
         const survivorGameById = new Map(
           survivorGames.map((game) => [game.id, game]),
         );
@@ -447,6 +424,7 @@ export async function GET(request: NextRequest) {
     serverTime: currentTime.toISOString(),
     viewerPlayerId: viewer.id,
     isCommissioner: viewer.is_commissioner,
+    seasonPhase: seasonPhaseFromRows(season, periods),
     seasonSnapshotReleased: seasonSnapshotReleased(periods),
     showSurvivorStandings: viewer.show_survivor_standings,
     showBowlCard: viewer.show_bowl_card,
@@ -455,10 +433,10 @@ export async function GET(request: NextRequest) {
     hideSurvivorEliminatedRows: viewer.hide_survivor_eliminated_rows,
     isPlayoff: currentWeek.period_type === "playoff",
     week: currentWeek.display_name,
-    weekStatus: currentWeek.status,
+    weekStatus: currentWeek.status as PeriodStatus,
     maxPicks: currentWeek.max_picks,
     nextRevealAt: nextPickRevealAt(
-      [...((games ?? []) as GameRow[]).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],
+      [...((games ?? [])).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],
       currentTime,
     ) ?? atsNextRevealAt,
     rows,

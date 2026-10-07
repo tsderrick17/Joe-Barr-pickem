@@ -1,5 +1,6 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
 
 type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string };
@@ -17,7 +18,7 @@ async function commissionerId() {
   return data.id;
 }
 
-async function queue(message: Record<string, unknown>) {
+async function queue(message: Database["public"]["Tables"]["push_reminders"]["Insert"]) {
   const { error } = await supabaseAdmin.from("push_reminders").insert(message);
   if (error?.code === "23505") return false;
   if (error) throw new Error("A Bowl Pool email could not be queued.");

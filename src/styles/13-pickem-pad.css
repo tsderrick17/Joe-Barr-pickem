@@ -100,6 +100,8 @@
   font-family: var(--ledger-hand-font);
   font-size: .88rem;
 }
+/* The Super Bowl round has one pick per row and room for it: keep the pick and its W or L on one line. */
+.pickem-ledger-grid[data-picks="1"] .pickem-ledger-pick > span { white-space: nowrap; }
 /* Give the first pick a quiet visual gutter after the player-name lane. */
 .pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
 @media (min-width: 640px) {
@@ -125,12 +127,14 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
   color: #b42318;
   display: inline-block;
-  font-size: clamp(.9rem, 2.5vw, 1.35rem);
+  /* Sized to sit inside its own row: a larger, steeper stamp used to spill into the row above. */
+  font-size: clamp(.72rem, 2.1vw, .95rem);
   font-weight: 950;
-  letter-spacing: .12em;
+  letter-spacing: .1em;
+  line-height: 1;
   opacity: .88;
-  padding: .18rem .45rem .14rem;
-  transform: rotate(-5deg);
+  padding: .14rem .4rem .1rem;
+  transform: rotate(-3deg);
 }
 /* Standings is intentionally a tighter scorecard surface than the Slate.
    Keep both the visible chat and its compact restore control on that same
@@ -177,16 +181,15 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
   .playoff-scoreboard-pick { font-size: .86rem; }
-  /* The round name drops to its own line under the title instead of squeezing
-     "Playoff Ledger" and its OUT toggle onto two lines each. */
-  .playoff-scoreboard .pickem-ledger-masthead { flex-wrap: wrap; }
-  .playoff-scoreboard .pickem-ledger-masthead h2 { white-space: nowrap; }
-  .playoff-scoreboard .pickem-ledger-period { flex-basis: 100%; order: 3; text-align: left; }
   /* Four, five, or six picks do not fit across a phone, so each player's picks
      wrap into two short lines beside the score and name instead of scrolling
      sideways: 2 x 2 for four picks, 3 x 2 for five or six. */
   .playoff-scoreboard .pickem-ledger-grid { min-width: 0; width: 100%; }
   .playoff-scoreboard .pickem-ledger-grid tbody { display: block; }
+  /* The round name row spans the whole pad, as the week does in the regular season. */
+  .playoff-scoreboard .pickem-ledger-grid thead,
+  .playoff-scoreboard .pickem-ledger-grid thead tr,
+  .playoff-scoreboard .pickem-ledger-grid thead th { display: block; }
   .playoff-scoreboard .pickem-ledger-grid tr {
     display: grid;
     grid-template-columns: 2.4rem 4.4rem repeat(3, minmax(0, 1fr));
@@ -196,6 +199,18 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-player { align-items: center; display: flex; grid-row: 1 / span 2; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-wins { justify-content: flex-end; }
   .playoff-scoreboard .pickem-ledger-grid .pickem-ledger-pick[colspan] { grid-column: 3 / -1; grid-row: 1 / span 2; }
+}
+@media (max-width: 380px) {
+  /* Three columns of picks no longer fit beside the score and name on the narrowest phones (the last pick ran off
+     the edge), so five or six picks read in two columns and three short lines instead. */
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] tr,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] tr { grid-template-columns: 2.4rem 4.4rem repeat(2, minmax(0, 1fr)); }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-player,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-wins,
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-player { grid-row: 1 / span 3; }
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="5"] .pickem-ledger-pick[colspan],
+  .playoff-scoreboard .pickem-ledger-grid[data-picks="6"] .pickem-ledger-pick[colspan] { grid-row: 1 / span 3; }
 }
 /* Tablet and up: every pick of the round sits on one line per player. Each
    column is only as wide as its longest entry (abbreviations and spreads vary)
@@ -290,6 +305,17 @@ html[data-theme="night"] .playoff-scoreboard {
 .season-snapshot-range button[aria-pressed="true"] { background: #25334a; color: #fbf7ec; }
 .season-snapshot-range button:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
 .season-snapshot-range + .pad-flip-button { margin-left: .5rem; }
+/* Once the playoffs begin: Regular | Playoffs sits right after the title; the week range follows it. */
+.season-snapshot-view { margin-left: .75rem; }
+.season-snapshot-view + .season-snapshot-range { margin-left: auto; }
+.season-snapshot-view + .pad-flip-button { margin-left: auto; }
+@media (max-width: 639px) {
+  /* On a phone the week range drops to its own line under the switch, flush right, and the flip button stays up top. */
+  .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) { flex-wrap: wrap; row-gap: .4rem; }
+  .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) h2 { flex: 1 1 0; min-width: 5.5rem; }
+  .season-snapshot-view ~ .pad-flip-button { margin-left: auto; order: 2; }
+  .season-snapshot-view ~ .season-snapshot-range { margin-left: auto; order: 3; }
+}
 
 .season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
 .season-snapshot-chart { display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem; min-width: 0; }

@@ -32,6 +32,7 @@ export function snapshotColors(standings: Player[], colorOrder: string[] = []) {
 // Chart choices are remembered on this device. Storage can be unavailable
 // (private browsing), in which case the defaults simply apply each time.
 const RANGE_KEY = "pickem.seasonSnapshot.range";
+const VIEW_KEY = "pickem.seasonSnapshot.view";
 const hiddenKey = (phase: "regular" | "playoffs") => `pickem.seasonSnapshot.hidden.${phase}`;
 function readSetting(key: string) {
   try { return window.localStorage.getItem(key); } catch { return null; }
@@ -165,8 +166,9 @@ function SnapshotChart({
 }
 
 /** The chart and its player key. Kept separate from loading so it renders from plain data. */
-export function SnapshotView({ standings, snapshot, isPlayoff, range = "all" }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range }) {
-  const showPlayoffs = isPlayoff || snapshot.playoffs.length > 0;
+export function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs" }) {
+  // Once the playoffs begin the chart can show either half; before then, only the regular season.
+  const showPlayoffs = view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0;
   const phase = showPlayoffs ? "playoffs" : "regular";
   // Last choice wins. With no saved choice, the playoff chart starts without
   // players who are out of the playoff race; press a name to bring one back.
@@ -234,11 +236,13 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   const [retry, setRetry] = useState(0);
   const [opened, setOpened] = useState(false);
   const [range, setRange] = useState<Range>("all");
+  const [view, setView] = useState<"regular" | "playoffs">("playoffs");
   // The saved view is read when the pad is first turned over, never during the
   // first render, so the server and browser always agree on the markup.
   if (active && !opened) {
     setOpened(true);
     setRange(readSetting(RANGE_KEY) === "six" ? "six" : "all");
+    setView(readSetting(VIEW_KEY) === "regular" ? "regular" : "playoffs");
     const saved = readSavedSnapshot();
     if (saved) setSnapshot(saved);
   }
@@ -272,8 +276,15 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
     });
   }, [active, refreshKey, retry, fetchSnapshot]);
 
-  // The week-range toggle is for the regular season only.
-  const showPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
+  // Once the playoffs begin a Regular | Playoffs switch appears and the chart opens on the playoffs. The
+  // week-range toggle belongs to the regular-season chart only.
+  const hasPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
+  const shownView = hasPlayoffs ? view : "regular";
+  const showPlayoffs = shownView === "playoffs";
+  const chooseView = (next: "regular" | "playoffs") => {
+    setView(next);
+    saveSetting(VIEW_KEY, next);
+  };
   const chooseRange = (next: Range) => {
     setRange(next);
     saveSetting(RANGE_KEY, next);
@@ -282,6 +293,10 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   return <div className="season-snapshot">
     <div className="pickem-ledger-masthead">
       <h2>Season Snapshot</h2>
+      {hasPlayoffs ? <div aria-label="Season half shown" className="season-snapshot-range season-snapshot-view" role="group">
+        <button aria-pressed={!showPlayoffs} onClick={() => chooseView("regular")} type="button">Season</button>
+        <button aria-pressed={showPlayoffs} onClick={() => chooseView("playoffs")} type="button">Playoffs</button>
+      </div> : null}
       {!showPlayoffs ? <div aria-label="Weeks shown" className="season-snapshot-range" role="group">
         <button aria-pressed={range === "all"} onClick={() => chooseRange("all")} type="button">All</button>
         <button aria-pressed={range === "six"} onClick={() => chooseRange("six")} type="button">6 Wk</button>
@@ -289,7 +304,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
       {flipButton}
     </div>
     <div className="season-snapshot-body">
-      {error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} />}
+      {error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
     </div>
   </div>;
 }

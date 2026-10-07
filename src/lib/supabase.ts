@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey =
@@ -8,7 +9,7 @@ if (!supabaseUrl || !supabasePublishableKey) {
   throw new Error("Missing Supabase environment variables.");
 }
 
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   supabaseUrl,
   supabasePublishableKey,
   {
