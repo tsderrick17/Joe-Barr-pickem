@@ -73,7 +73,7 @@ test("the Survivor save asks the season question before it touches a pick", asyn
   const post = source.slice(source.indexOf("export async function POST"));
   const closed = post.indexOf("refuseWhenSeasonClosed()");
   assert.ok(closed > 0, "the Survivor POST refuses a closed season");
-  assert.ok(closed < post.indexOf("request.json()"), "before the body is read");
+  assert.ok(closed < post.indexOf("readJsonObject(request)"), "before the body is read");
   assert.ok(closed < post.indexOf('.rpc('), "and before any write");
 });
 

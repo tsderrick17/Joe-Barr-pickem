@@ -101,16 +101,16 @@ const routes = [
 
 for (const [path, method, badFields] of routes) {
   test(`${method} /api/${path}: malformed and incomplete bodies get a 400 and touch no pool data`, async () => {
-    const module = await import(`../src/app/api/${path}/route.ts`);
+    const routeModule = await import(`../src/app/api/${path}/route.ts`);
     for (const [raw, request] of requests(method)) {
       databaseCalls = 0;
-      const response = await module[method](request);
+      const response = await routeModule[method](request);
       assert.equal(response.status, 400, `${path} ${raw}`);
       assert.equal(databaseCalls, 0);
     }
-    for (const fields of badFields.filter((fields) => path !== "profile")) {
+    for (const fields of path === "profile" ? [] : badFields) {
       databaseCalls = 0;
-      const response = await module[method](new Request("http://localhost/x", { method, headers: { authorization: "Bearer fixture", "content-type": "application/json" }, body: JSON.stringify(fields) }));
+      const response = await routeModule[method](new Request("http://localhost/x", { method, headers: { authorization: "Bearer fixture", "content-type": "application/json" }, body: JSON.stringify(fields) }));
       assert.equal(response.status, 400, `${path} ${JSON.stringify(fields)}`);
       assert.equal(databaseCalls, 0, `${path} ${JSON.stringify(fields)}`);
     }
