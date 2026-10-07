@@ -22,17 +22,17 @@
    ledger mechanics as NFL Pick'em while making the competition immediately
    legible as its own event. Heading rules match the rest of the page. */
 .bowl-pool-page #bowl-selections {
-  border-color: #e0d2a8 !important;
-  border-top: 3px solid #b8892b !important;
-  background-color: var(--pool-surface) !important;
+  border-color: #e0d2a8;
+  border-top: 3px solid #b8892b;
+  background-color: var(--pool-surface);
   background-image: none;
 }
 .bowl-pool-page #bowl-selections > div:first-of-type {
   border-bottom-color: #e6dbb8;
 }
 .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
-  background: #f7efd9 !important;
-  color: #6b4f0f !important;
+  background: #f7efd9;
+  color: #6b4f0f;
   border-bottom: 1px solid #e0d2a8;
 }
 .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
@@ -42,38 +42,38 @@
    the player card;
 section[aria-labelledby="bowl-readiness-title"],
 #bowl-pool-exceptions {
-  border-bottom-color: #e0d2a8 !important;
+  border-bottom-color: #e0d2a8;
 }
 section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
 #bowl-pool-exceptions > div:not([class*="amber"]),
 #bowl-pool-exceptions li.border {
-  border-color: #e3d6ad !important;
-  background: linear-gradient(135deg, #fffdf8, #f9f2de) !important;
+  border-color: #e3d6ad;
+  background: linear-gradient(135deg, #fffdf8, #f9f2de);
 }
 section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 {
-  border-color: #8cc9ad !important;
-  background: #e4f6eb !important;
+  border-color: #8cc9ad;
+  background: #e4f6eb;
 }
 #bowl-pool-exceptions select { border-color: #d9c88f; background: #fffdf8; }
 #bowl-pool-exceptions button.border-amber-800 { border-color: #d9c88f; color: #6b4f0f; background: #f9f2de; }
 html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-zinc-300,
 html[data-theme="night"] #bowl-pool-exceptions > div:not([class*="amber"]),
-html[data-theme="night"] #bowl-pool-exceptions li.border { border-color: #7a6a3a !important; background: #2a2618 !important; }
-html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 { border-color: #3e937a !important; background: #1b4d48 !important; }
+html[data-theme="night"] #bowl-pool-exceptions li.border { border-color: #7a6a3a; background: #2a2618; }
+html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div > p.border-green-700 { border-color: #3e937a; background: #1b4d48; }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row {
   border-color: #d8d0c4;
-  background-color: #fffdf8 !important;
+  background-color: #fffdf8;
   background-image: none;
 }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) {
-  background-color: #f3f0e8 !important;
+  background-color: #f3f0e8;
 }
 .bowl-pool-page #bowl-selections .bowl-title-row { border-bottom-color: #e0d2a8; }
 .bowl-pool-page #bowl-selections .bowl-rules-compact { color: #6b6350; }
 .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child {
-  background: #f7efd9 !important;
-  border-color: #e0d2a8 !important;
-  color: #6b4f0f !important;
+  background: #f7efd9;
+  border-color: #e0d2a8;
+  color: #6b4f0f;
 }
 /* The Bowl Card's heading line matches the other standings headings (the
    ledger ink rule from .pickem-ledger-masthead), minimized or open. */
@@ -82,22 +82,22 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 }
 
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
-  background: linear-gradient(180deg, #f8f0da, #fcf8ec) !important;
+  background: linear-gradient(180deg, #f8f0da, #fcf8ec);
 }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child,
 .bowl-card-section .bowl-standings-tiebreaker-header {
-  background: var(--c-f5f0e6) !important;
+  background: var(--c-f5f0e6);
 }
 
 .bowl-card-section .bowl-standings-player-row.is-viewer {
-  background-color: var(--c-f8edcf) !important;
+  background-color: var(--c-f8edcf);
   background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
   box-shadow: inset 0 2px 0 #c89f00, inset 0 -2px 0 #e2c66a;
   color: #4a3a12;
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky {
-  background-color: var(--c-f8edcf) !important;
-  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
+  background-color: var(--c-f8edcf);
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-game-cell,
 .bowl-card-section .bowl-standings-player-row.is-viewer > span {
@@ -114,15 +114,15 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
   justify-content: flex-start;
 }
 .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
-  background-color: var(--c-f8edcf) !important;
+  background-color: var(--c-f8edcf);
 }
 
 /* Keep the selected Bowl player treatment continuous across the fixed
    identity columns, game results, and tiebreaker. The first cell carries the
    compact solid gold rail used by the other standings ledgers. */
 .bowl-card-section .bowl-standings-player-row.is-viewer > span {
-  background-color: var(--c-f8edcf) !important;
-  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25)) !important;
+  background-color: var(--c-f8edcf);
+  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
   box-shadow: inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
 }
 
@@ -130,12 +130,12 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
    individual result cell. This keeps the name, score and game columns aligned. */
 
 .bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
-  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d !important;
+  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d;
 }
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  border-color: #7a6a3a !important;
-  background: #1b1a16 !important;
+  border-color: #7a6a3a;
+  background: #1b1a16;
 }
 
 html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
