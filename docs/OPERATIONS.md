@@ -114,6 +114,21 @@ period and gameweek. Changes involving a locked or settled game, different
 teams, or a different scoring period are quarantined for commissioner review;
 the rest of the schedule continues reconciling normally.
 
+## Off-season mode
+
+From the moment the Super Bowl is final and graded until 12:00 AM Eastern on August 1 the pool is in the
+off-season (`public.season_phase()`). Nothing needs doing:
+
+- the score, line-lock, reminder, reminder-schedule and Bowl workers do not call Vercel (the pg_cron jobs and
+  dispatchers return inside Supabase) and, if called, answer `skipped`; the watchdog and the preseason bootstrap
+  keep running, and the watchdog does not alert on idle workers;
+- players see "See you next season!" and a read-only record; the Commissioner tools stay open;
+- on August 1 the bootstrap job runs the annual rollover (blank season, certified cleanup, schedule import), and
+  the phase flips back with no button to press. The Bowl Pool stays closed until December 1.
+
+If a worker looks idle in the off-season, check `season_phase()` first. To confirm what the database thinks,
+ask a Commissioner to run `select public.season_phase();` in the SQL editor (read-only).
+
 ## Running unattended for years
 
 The yearly cycle runs on its own: on August 1 (Eastern) the score worker creates

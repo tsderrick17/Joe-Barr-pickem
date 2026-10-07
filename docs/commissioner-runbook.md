@@ -1,5 +1,9 @@
 # Commissioner recovery and release runbook
 
+## Off-season
+
+After the Super Bowl is graded players see "See you next season!" and a read-only record, and the automatic workers go idle until August 1. Every Commissioner tool stays available. Nothing needs doing; the new season opens by itself on August 1.
+
 ## Control-center overview
 
 A malformed Pick'em or Bowl Pool save is rejected with a client error before

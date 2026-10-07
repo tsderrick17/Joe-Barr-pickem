@@ -1,6 +1,6 @@
 # Application architecture and measurement map
 
-Verified from `main` at `f0a529a` on October 5, 2026. This map is a guide to
+Updated October 7, 2026 after the off-season, validation, authentication, types, budget, Slate and worker work. This map is a guide to
 ownership and request boundaries, not a replacement for
 [PROJECT_REFERENCE.md](PROJECT_REFERENCE.md), current migrations, or tests.
 Paths and conditional requests may change; recheck the code before making a
@@ -21,15 +21,26 @@ performance or security decision.
 Player authentication uses a bearer session checked against Supabase Auth and
 an active `players` row. Browser reads and refreshes share the session path in
 [`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
-authorization cache. Season Snapshot, Pick'em saves, Standings, Slate,
-Survivor, and Bowl Pool use the request-scoped result. Standings includes its display
-preferences in that one profile read. Other routes still express auth failures
-independently, so the shared-result migration must proceed route by route with
-failure tests.
-Commissioner routes use the shared gate. Automation uses a separate secret,
-lease, and heartbeat path; a player's browser token does not authorize workers.
+authorization cache. Every protected route, player and Commissioner, uses the one
+request-scoped result in [`authenticate-active-player.ts`](../src/lib/authenticate-active-player.ts)
+(401 / 403 / 503 / 500 with stable codes), through `commissionerAccess`
+and `profilePlayerAccess` where a name or the preference columns are needed.
+Automation uses a separate secret, lease, and heartbeat path; a player's browser
+token does not authorize workers.
+
+Other seams added since: request bodies are validated first ([`request-validation.ts`](../src/lib/request-validation.ts),
+[`request-bodies.ts`](../src/lib/request-bodies.ts)); database types are generated and
+committed ([`database.types.ts`](../src/lib/database.types.ts)); the season phase decides
+what runs and what players see ([`season-phase.ts`](../src/lib/season-phase.ts), `season_phase()` in the
+database); the Slate page's state is one reducer ([`slate-state.ts`](../src/lib/slate-state.ts)); and each
+automation run has a deadline context with checkpoints ([`execution-context.ts`](../src/lib/execution-context.ts),
+see [WORKER_STAGES.md](WORKER_STAGES.md)).
 
 ## Read-path cost inventory
+
+> Measured route costs for Home and the Slate now exist: [RESPONSE_COST_BASELINE.md](RESPONSE_COST_BASELINE.md),
+> with regression budgets in `test/route-cost-budgets.json`. The grading dashboard and the workers are still
+> only inventoried below.
 
 These are code-level observations, **not measured DB request counts or route
 latencies**. A conditional branch, pagination, cache hit, or helper query can

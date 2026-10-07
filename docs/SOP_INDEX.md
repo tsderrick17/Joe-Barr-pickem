@@ -22,6 +22,9 @@ guarded recovery tools for a specific observed condition.
 | Wednesday | Rehearse one complete save, revision, scoring, and week-handoff cycle in isolated-test | Review only a failed workflow |
 | Weekly | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
 | First eligible non-gameday in the first ten Eastern dates of each month | Run one isolated dependency/migration/lifecycle rehearsal | Review a failure, then use a deliberate manual retry; scheduled attempts do not repeat that month |
+| Super Bowl graded | The season phase becomes off-season: workers go idle, players see the closed page | None; do not re-enable anything |
+| December 1 (Eastern) | The Bowl Pool window opens: the dispatcher starts calling the Bowl worker | Check Bowl readiness once the schedule is imported |
+| 8 AM Eastern on a Bowl game day | The Bowl line locks (teal) | Act only if health reports a started game missing a locked line |
 | August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |
 
 ## Choose the right procedure
@@ -59,6 +62,10 @@ still validates a complete schedule but automation cannot finish, use the
 preview-first full-schedule recovery controls. See the automatic handoff section
 of [OPERATIONS.md](OPERATIONS.md).
 
+### A run was stopped by its deadline, or a worker looks idle
+
+A run past its deadline stops at its next checkpoint; the database lease is kept until it expires, so the next run is safe. See [WORKER_STAGES.md](WORKER_STAGES.md) for each stage and what is safe to repeat. In the off-season a worker is idle on purpose (see [OPERATIONS.md](OPERATIONS.md#off-season-mode)).
+
 ### A weekly or annual transition appears stuck
 
 Run the read-only Season Readiness check first. Confirm every game and
@@ -89,6 +96,10 @@ Regular includes the daily playoff recap after final grading. Players who have
 weekly recaps enabled receive those playoff round summaries too; the legacy
 dedicated playoff-recap choice remains honored for custom plans. Full Card adds
 every playoff kickoff reveal; exact simultaneous kickoffs share one message.
+
+### A migration changes the database schema
+
+The isolated workflow regenerates the database types and fails the pull request if `src/lib/database.types.ts` is out of date. Run the isolated workflow manually with `write_database_types` to download the new file, commit it, and see [PROJECT_REFERENCE.md](PROJECT_REFERENCE.md#request-boundaries). If the container registry rate-limits the runner the script retries; a re-run also clears it.
 
 ### A deployment changes database behavior
 
