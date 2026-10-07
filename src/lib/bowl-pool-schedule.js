@@ -1,3 +1,4 @@
+import { getLineLock } from "./schedule-time.js";
 const REQUIRED_COLUMNS = ["order", "bowl_name", "kickoff_at", "game_key"];
 
 export function normalizeBowlDisplayName(value) {
@@ -38,7 +39,7 @@ export function parseBowlPoolScheduleCsv(input) {
       provider_game_id: row.game_key.trim(),
       bowl_name: normalizeBowlDisplayName(row.bowl_name),
       kickoff_at: kickoff.toISOString(),
-      line_lock_at: kickoff.toISOString(),
+      line_lock_at: getLineLock(kickoff).lineLockAt,
       order_index: order,
       away_team: row.away_team?.trim() || null,
       home_team: row.home_team?.trim() || null,

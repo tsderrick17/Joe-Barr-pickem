@@ -1,6 +1,7 @@
 import { seasonYearAt } from "@/lib/season";
 import { normalizeHexColor } from "@/lib/bowl-pennant.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getLineLock } from "@/lib/schedule-time.js";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
 type EspnEvent = { id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: { id?: string; displayName?: string; abbreviation?: string; color?: string; alternateColor?: string; shortDisplayName?: string; location?: string }; homeAway?: "home" | "away" }> }> };
@@ -97,7 +98,7 @@ async function syncAnnualSchedule(now: Date) {
     // no-contest. New rows start scheduled; existing rows keep their status.
     // An existing game also keeps its curated bowl name and display order; the
     // provider only links it (provider_game_id) and corrects timing and teams.
-    const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: kickoff, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
+    const row = { season_id: season.id, provider_game_id: `espn:${event.id}`, bowl_name: bowlName, kickoff_at: kickoff, line_lock_at: getLineLock(new Date(kickoff)).lineLockAt, order_index: ++order, is_cfp: /playoff|championship|quarter|semi|first round/i.test(`${event.name} ${event.shortName}`), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null, away_team_id: teamIds[0], home_team_id: teamIds[1] };
     if (gameId && matched && matched.kickoff_at !== kickoff) await cancelQueuedBowlReminders(gameId);
     const { data: saved, error } = gameId
       ? await supabaseAdmin.from("bowl_pool_games").update(existingGameUpdate(row)).eq("id", gameId).select("id").single()
@@ -109,9 +110,9 @@ async function syncAnnualSchedule(now: Date) {
       const poolSpread = Math.ceil(Math.abs(espnSpread) * 2) / 2;
       // A locked line is official and is never replaced. A new game gets its
       // first line; a still-preliminary line may be refreshed.
-      const provisionalLine = { game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), // KNOWN DEFECT, found by the generated types: the column is NOT NULL (default now()), so a line stored before kickoff
-      // with NULL is rejected by the database. See docs/DECISION_LOG.md ("Generated database types").
-      locked_at: (now >= new Date(kickoff) ? kickoff : null) as string };
+      const provisionalLine = { game_id: saved.id, favorite_team_id: favoriteId, source_spread: poolSpread, locked_spread: poolSpread, source: `ESPN${competition?.odds?.[0]?.provider?.name ? ` (${competition.odds[0].provider.name})` : ""}`, source_captured_at: now.toISOString(), 
+      // The line is preliminary (locked_at empty) until the game-day morning lock, then fixed, like an NFL spread.
+      locked_at: now >= new Date(row.line_lock_at) ? now.toISOString() : null };
       const { error: newLineError } = await supabaseAdmin.from("bowl_pool_game_lines").upsert(provisionalLine, { onConflict: "game_id", ignoreDuplicates: true });
       if (newLineError) throw new Error("A Bowl Pool line could not be saved.");
       const { error: refreshLineError } = await supabaseAdmin.from("bowl_pool_game_lines").update(provisionalLine).eq("game_id", saved.id).is("locked_at", null);
