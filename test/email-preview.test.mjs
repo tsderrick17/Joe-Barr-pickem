@@ -22,7 +22,7 @@ globalThis.emailPreviewDatabase = {
 };
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (specifier === "@/lib/require-commissioner") return { url: "data:text/javascript,export const requireCommissioner = async () => globalThis.emailPreviewCommissioner();", shortCircuit: true };
+    if (specifier === "@/lib/require-commissioner") return { url: "data:text/javascript,export const commissionerAccess = async () => { const player = globalThis.emailPreviewCommissioner(); return player ? { ok: true, player } : { ok: false, status: 403, code: 'commissioner_required' }; };", shortCircuit: true };
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = globalThis.emailPreviewDatabase;", shortCircuit: true };
     return nextResolve(specifier, context);
   },

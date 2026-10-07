@@ -2,7 +2,8 @@ import { readJsonObject } from "@/lib/request-validation";
 import { parseBowlException } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
 import { seasonYearAt } from "@/lib/season";
-import { requireCommissioner } from "@/lib/require-commissioner";
+import { commissionerAccess } from "@/lib/require-commissioner";
+import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function seasonGames() {
@@ -19,7 +20,8 @@ async function seasonGames() {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await requireCommissioner(request))) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
   try {
     const games = await seasonGames();
     const { data: changes } = await supabaseAdmin.from("bowl_pool_schedule_changes").select("id, game_id, old_kickoff_at, new_kickoff_at, detected_at").is("reviewed_at", null).in("game_id", games.map((game) => game.id)).order("detected_at", { ascending: false });
@@ -30,8 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const commissioner = await requireCommissioner(request);
-  if (!commissioner) return NextResponse.json({ error: "Commissioner access is required." }, { status: 403 });
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
+  const commissioner = commissionerResult.player;
   const input = await readJsonObject(request);
   if (!input) return NextResponse.json({ error: "The Bowl Pool disruption record was incomplete." }, { status: 400 });
   const body = parseBowlException(input);
