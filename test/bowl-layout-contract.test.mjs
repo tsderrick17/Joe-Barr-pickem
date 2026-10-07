@@ -24,7 +24,8 @@ test("Bowl Card uses a gold theme and keeps the standard heading rule", () => {
   assert.doesNotMatch(bowl, /#0f766e|#155e59|#e8f3f0|#b9cfc8|#55b8aa/i);
   // The scoreboard header (dates, games, lines) is navy; the old gold header fill is gone.
   assert.doesNotMatch(css, /#8a6a1d/);
-  assert.match(css, /\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child span:not\(\[aria-hidden\]\) \{\s*background: var\(--bowl-navy\) !important;/);
+  assert.match(css, /\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child span:not\(\[aria-hidden\]\),\s*\.bowl-card-section \.bowl-standings-scroll > div > \.grid:first-child > span\[aria-hidden\] \{\s*background: var\(--bowl-navy\) !important;/);
+  assert.match(css, /\.bowl-card-section:not\(\.is-minimized\) \.bowl-crest-ornament span \{ max-width: none; \}/);
 });
 
 test("Bowl games-remaining counter is a larger split-flap tile; lines use the Bowl Pool's navy and old gold", () => {
