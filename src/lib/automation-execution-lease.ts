@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
+import { runInExecutionContext } from "@/lib/execution-context";
 
 export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "reminder_schedule" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
@@ -57,19 +58,35 @@ export class AutomationExecutionTimeoutError extends Error {
   }
 }
 
-async function withExecutionTimeout<T>(job: AutomationJob, task: () => Promise<T>) {
-  const timeoutMs = jobSettings[job].timeoutSeconds * 1000;
+/**
+ * Runs `task` with a deadline: the caller is released with a timeout error when it passes, and the run's context is
+ * cancelled so the task stops at its next checkpoint instead of starting more work. Exported so the timeout
+ * boundary can be tested with a short deadline.
+ */
+export async function runWithDeadline<T>(job: AutomationJob, timeoutMs: number, task: () => Promise<T>) {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const { result, cancel } = runInExecutionContext(timeoutMs, task);
+  // After a timeout the task's own outcome no longer matters to the caller: it is stopped at its next checkpoint,
+  // and whatever it throws then must not surface as an unhandled rejection.
+  result.catch(() => undefined);
   try {
     return await Promise.race([
-      task(),
+      result,
       new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new AutomationExecutionTimeoutError(job)), timeoutMs);
+        timer = setTimeout(() => {
+          const timeout = new AutomationExecutionTimeoutError(job);
+          cancel(timeout);
+          reject(timeout);
+        }, timeoutMs);
       }),
     ]);
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function withExecutionTimeout<T>(job: AutomationJob, task: () => Promise<T>) {
+  return runWithDeadline(job, jobSettings[job].timeoutSeconds * 1000, task);
 }
 
 export async function runWithAutomationLease<T>(

@@ -91,7 +91,8 @@ test("a failed provider response still counts a reported charge", () => {
 test("a rejected score-provider call persists per-game backoff before failing", async () => {
   const source = await readFile(path.join(root, "src/lib/sync-final-scores.ts"), "utf8");
   const failureHandler = source.slice(source.lastIndexOf("} catch (error)"));
-  assert.match(failureHandler, /if \(!providerResponseAccepted\)/);
+  // A provider failure backs the games off; a run stopped by its own deadline does not (see the cancellation tests).
+  assert.match(failureHandler, /if \(!providerResponseAccepted && !cancelledByDeadline\)/);
   assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds\)/);
   assert.match(failureHandler, /providerChecked: providerRequestAttempted/);
   assert.match(failureHandler, /requestsLast: failedRequestsLast/);

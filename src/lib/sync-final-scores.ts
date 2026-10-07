@@ -3,13 +3,9 @@ import {
   advanceScoringPeriods,
   type WeekRolloverResult,
 } from "@/lib/advance-scoring-periods";
-import { isDueForFinalScoreCheck } from "@/lib/score-window";
-import {
-  nextScoreCheckAt,
-  scorePollingMode,
-  shouldHoldScorePollingForQuota,
-  type ScorePollingMode,
-} from "@/lib/score-check-backoff";
+import { checkpoint, currentExecutionContext, ExecutionCancelledError, providerSignal } from "@/lib/execution-context";
+import { decideQuotaHold, pollingModeFor, selectDueGames, selectEligibleGames } from "@/lib/score-work-plan";
+import { nextScoreCheckAt, type ScorePollingMode } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
@@ -97,11 +93,6 @@ function parseScore(value: string | number | null | undefined) {
   return Number(value);
 }
 
-function parseCreditHeader(value: unknown) {
-  if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : null;
-  return typeof value === "string" && /^\d+$/.test(value) ? Number(value) : null;
-}
-
 async function recoverPendingFinalPickGrades() {
   // One database call grades every pending pick on a verified final together,
   // so an interruption can never leave a week half-graded.
@@ -152,18 +143,28 @@ export async function syncFinalScores({
   const checkedAt = new Date().toISOString();
   const now = new Date(checkedAt);
   const warnings: string[] = [];
+  // Stages run in order, with a checkpoint before each so a run past its deadline stops starting new work. Every
+  // stage is idempotent, so a stopped run is simply repeated by the next one.
+  checkpoint("annual season check");
   await ensureAnnualSeasonRollover(checkedAt);
+  checkpoint("void disrupted picks");
   await voidDisruptedPicks();
+  checkpoint("settle no-contest picks");
   const { error: noContestError } = await supabaseAdmin.rpc("settle_no_contest_picks", {
     evaluated_at: checkedAt,
   });
   if (noContestError) {
     throw new Error("Declared no-contest picks could not be settled safely.");
   }
+  checkpoint("Survivor no-pick eliminations");
   const noPickResult = await eliminateSurvivorNoPicks(checkedAt);
+  checkpoint("recover pending grades");
   const recoveredGrades = await recoverPendingFinalPickGrades();
+  checkpoint("advance scoring periods");
   const weekRollover = await advanceScoringPeriods(now);
+  checkpoint("playoff eligibility snapshot");
   await snapshotActivePlayoffEligibility();
+  checkpoint("read games awaiting scores");
   const providerLookbackStart = new Date(
     now.getTime() - 3 * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -181,9 +182,7 @@ export async function syncFinalScores({
     throw new Error("Games awaiting final scores could not be loaded.");
   }
 
-  const scoreDueGames = (unfinishedGames as GameRow[]).filter((game) =>
-    isDueForFinalScoreCheck({ kickoffAt: game.kickoff_at, status: game.status }, now),
-  );
+  const scoreDueGames = selectDueGames(unfinishedGames as GameRow[], now);
   const scorePeriodIds = [...new Set(scoreDueGames.map((game) => game.scoring_period_id))];
   const { data: scorePeriods, error: scorePeriodsError } = scorePeriodIds.length
     ? await supabaseAdmin
@@ -215,13 +214,8 @@ export async function syncFinalScores({
       row,
     ]),
   );
-  const eligibleGames = scoreDueGames.filter((game) => {
-    const nextCheckAt = backoffByGameId.get(game.id)?.next_check_at;
-    return bypassProviderCooldown || !nextCheckAt || new Date(nextCheckAt).getTime() <= now.getTime();
-  });
-  const pollingMode = scorePollingMode(
-    eligibleGames.some((game) => playoffPeriodIds.has(game.scoring_period_id)),
-  );
+  const eligibleGames = selectEligibleGames(scoreDueGames, backoffByGameId, now, bypassProviderCooldown);
+  const pollingMode = pollingModeFor(eligibleGames, playoffPeriodIds);
 
   // Every outcome reports the same fields; only what actually differs is passed in.
   const buildResult = (overrides: Partial<ScoreSyncResult> = {}): ScoreSyncResult => ({
@@ -264,27 +258,14 @@ export async function syncFinalScores({
   if (recentProviderRunsError) {
     throw new Error("Recent score-provider usage could not be loaded.");
   }
-  const latestAllowanceRun = (recentProviderRuns ?? []).find((providerRun) => {
-    const details = providerRun.details as { requestsRemaining?: unknown } | null;
-    return parseCreditHeader(details?.requestsRemaining) !== null;
-  }) ?? null;
-  const latestAllowanceDetails = latestAllowanceRun?.details as { requestsRemaining?: unknown } | null;
-  const lastRemaining = parseCreditHeader(latestAllowanceDetails?.requestsRemaining);
-  const lastObservedAt = latestAllowanceRun?.completed_at ?? latestAllowanceRun?.started_at ?? null;
-  const onlyRepeatedDelayedGames = eligibleGames.every(
-    (game) => (backoffByGameId.get(game.id)?.attempts ?? 0) >= 2,
-  );
-  if (
-    eligibleGames.length > 0 &&
-    onlyRepeatedDelayedGames &&
-    shouldHoldScorePollingForQuota(lastRemaining, lastObservedAt, now)
-  ) {
+  const quota = decideQuotaHold({ eligibleGames, backoffByGameId, recentProviderRuns: recentProviderRuns ?? [], now });
+  if (quota.hold) {
     warnings.push(
-      `Score polling is conserving the remaining Odds API allowance (${lastRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,
+      `Score polling is conserving the remaining Odds API allowance (${quota.creditsRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,
     );
     return buildResult({
       eligibleGames: eligibleGames.length,
-      requestsRemaining: String(lastRemaining),
+      requestsRemaining: String(quota.creditsRemaining),
       pollingMode,
       quotaProtected: true,
     });
@@ -309,6 +290,7 @@ export async function syncFinalScores({
     return noScoreResult;
   }
 
+  checkpoint("provider request");
   let providerResponseAccepted = false;
   let providerRequestAttempted = false;
   let failedRequestsRemaining: string | null = null;
@@ -319,7 +301,7 @@ export async function syncFinalScores({
     providerRequestAttempted = true;
     const response = await fetch(
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?${query}`,
-      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+      { cache: "no-store", signal: providerSignal(20_000) },
     );
     const requestsRemaining = response.headers.get("x-requests-remaining");
     const requestsUsed = response.headers.get("x-requests-used");
@@ -399,6 +381,8 @@ export async function syncFinalScores({
       completedEvents.length - finalizedGames.length;
 
     if (finalizedGames.length > 0) {
+      // The commit. After it the remaining steps are bookkeeping that must finish, so this is the last checkpoint.
+      checkpoint("finalize games");
       const { data: atomicRows, error: atomicError } = await supabaseAdmin.rpc(
         "finalize_games_atomically",
         {
@@ -480,7 +464,9 @@ export async function syncFinalScores({
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "The score sync failed.";
-    if (!providerResponseAccepted) {
+    // A run stopped by its own deadline is not a provider failure: it must not push games onto a longer retry delay.
+    const cancelledByDeadline = error instanceof ExecutionCancelledError || Boolean(currentExecutionContext()?.signal.aborted);
+    if (!providerResponseAccepted && !cancelledByDeadline) {
       try {
         // Network failures, timeouts, HTTP errors, and malformed payloads use
         // the same persistent per-game exponential backoff as a delayed final.

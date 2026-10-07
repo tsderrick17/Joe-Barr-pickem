@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { checkpoint, providerSignal } from "@/lib/execution-context";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { isFallbackLineFresh } from "@/lib/line-fallback-policy.js";
 
@@ -96,7 +97,11 @@ async function lockDueLinesInternal(
   const checkedAt = currentTime.toISOString();
   const warnings: string[] = [];
 
+  // A checkpoint before each stage lets a run past its deadline stop instead of starting more work; the next run
+  // finds the same due games.
+  checkpoint("void disrupted picks");
   await voidDisruptedPicks();
+  checkpoint("read games due a line");
 
   const { data: candidates, error: candidatesError } =
     await supabaseAdmin
@@ -240,9 +245,10 @@ async function lockDueLinesInternal(
       oddsFormat: "american",
     });
 
+    checkpoint("provider request");
     const response = await fetch(
       `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?${query}`,
-      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
+      { cache: "no-store", signal: providerSignal(20_000) },
     );
 
     requestsRemaining =
@@ -389,6 +395,8 @@ async function lockDueLinesInternal(
   let lockedCount = 0;
 
   if (decisions.length > 0) {
+    // The commit: a cancelled run never starts it, and the atomic function below keeps it all-or-nothing.
+    checkpoint("lock official lines");
     // The official line, its history snapshot, and its audit entry are saved
     // together. If any part fails, none of it is saved and the next run retries.
     const { data: savedCount, error: lockError } = await supabaseAdmin.rpc(
