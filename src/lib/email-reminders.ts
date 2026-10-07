@@ -74,19 +74,6 @@ function playoffEliminationCopy(snapshot: unknown) {
   return `Eliminated from Pick'em today: ${names.join(", ")}.`;
 }
 
-function weeklySurvivorUpdateCopy(snapshot: unknown) {
-  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "weekly_recap" || !("survivor" in snapshot)) return "";
-  const survivor = snapshot.survivor;
-  if (!survivor || typeof survivor !== "object" || !("in" in survivor) || typeof survivor.in !== "number") return "";
-  const eliminated = "rows" in survivor && Array.isArray(survivor.rows)
-    ? survivor.rows.flatMap((row) => row && typeof row === "object" && "eliminatedInRecapWeek" in row && row.eliminatedInRecapWeek === true && "name" in row && typeof row.name === "string" ? [row.name] : [])
-    : [];
-  const eliminationCopy = eliminated.length
-    ? `${eliminated.join(", ")} ${eliminated.length === 1 ? "was" : "were"} eliminated this week. `
-    : "";
-  return `${eliminationCopy}${survivor.in} ${survivor.in === 1 ? "entry remains" : "entries remain"}.`;
-}
-
 function playoffChampionCopy(snapshot: unknown) {
   if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "playoff_day_recap" || !("championsCrowned" in snapshot) || !Array.isArray(snapshot.championsCrowned)) return "";
   const names = snapshot.championsCrowned.filter((name): name is string => typeof name === "string");
@@ -137,11 +124,9 @@ export function messageHtml(reminder: Reminder) {
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
   const championCopy = playoffChampionCopy(reminder.recap_snapshot);
   const championBlock = championCopy ? `<p style="background:#ecfdf5;border-left:4px solid #007e72;color:#064e3b;font:700 16px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(championCopy)}</p>` : "";
-  const survivorUpdateCopy = weeklySurvivorUpdateCopy(reminder.recap_snapshot);
-  const survivorUpdateBlock = survivorUpdateCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(survivorUpdateCopy)}</p>` : "";
   const bowlCopy = bowlRecapCopy(reminder.recap_snapshot);
   const bowlBlock = bowlCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(bowlCopy)}</p>` : "";
-  return `<main style="box-sizing:border-box;width:100%;background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:24px;line-height:1.15;margin:0 0 14px">${escapeHtml(reminder.title)}</h1><p style="font:16px/1.45 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${survivorUpdateBlock}${bowlBlock}${recapImages}<p style="margin:20px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:24px 0 14px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0"><a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+  return `<main style="box-sizing:border-box;width:100%;background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:24px;line-height:1.15;margin:0 0 14px">${escapeHtml(reminder.title)}</h1><p style="font:16px/1.45 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${bowlBlock}${recapImages}<p style="margin:20px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:24px 0 14px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0"><a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 const EMAIL_ARTWORK_BUCKET = "email-artwork";
