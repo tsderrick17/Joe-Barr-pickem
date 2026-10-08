@@ -47,13 +47,14 @@ correction, or supersede the project reference.
   grants) in one `test/architecture-rules.test.mjs` with a header saying they are
   lint-style on purpose. Rule for new work: never assert CSS rule text; add a
   screenshot state instead.
-- **Night mode on tokens.** What is left (245 rules) is mostly
-  `html[data-theme="night"] [class*="text-slate-"]` style remaps of Tailwind utility
-  classes in `14-slate-rows.css`. The remap is flattened (every slate shade becomes
-  one night color) and arbitrary-hex classes (`text-[#171717]`) cannot be re-themed
-  with variables, so the real fix is to replace those utility classes in the TSX
-  with semantic classes or color tokens, component by component. That is a wide TSX
-  change; do it screenshot-first, one component at a time.
+- **Night mode: finished to a sensible stopping point** (#444, #454). What remains in the night rules (197 rules)
+  is, by declaration: 124 component-scoped custom-property overrides (`--ledger-ink`, `--receipt-paper`, ... the
+  intended pattern: the component reads a variable and night redefines it), 91 night-only overrides that have no
+  light counterpart to pair with, 85 color pairs and 17 Tailwind-class remaps. The last 102 were deliberately
+  left: each is either a class another selector targets by name, or a color whose night value wins by selector
+  specificity or `!important`, so turning it into a token would change what wins the cascade and recolor
+  something (the W/L marks went white in a trial). Doing them properly means giving those elements their own
+  classes first, one component at a time, screenshot first. Not urgent.
 - **Duplicate selectors** (104) are intentional base-and-override pairs; merging
   them was tried and abandoned (7 of 104 were safely mergeable).
 - The **football loader** is tracked separately.
