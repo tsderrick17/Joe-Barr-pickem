@@ -1,6 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
+// The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
+// painted frames so a recorded baseline and a later check agree about the settled chart.
+async function settled(page: Page) {
+  await page.evaluate(async () => {
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
+}
+
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
 const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season"]);
@@ -78,11 +87,13 @@ for (const scenario of Object.keys(SCENARIOS)) {
           // The back of the pad: the Season Snapshot.
           await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
           await page.waitForTimeout(1200);
+          await settled(page);
           await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
           if (scenario === "commissioner-playoff") {
             // The other half: the regular season, with its 6 Wk / All range.
             await page.getByRole("button", { name: "Season", exact: true }).click();
             await page.waitForTimeout(1500);
+            await settled(page);
             await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
           }
         }
