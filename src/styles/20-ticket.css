@@ -8,7 +8,7 @@
     #f3ead6;
   border: 1px solid #756b5b;
   box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
-  color: var(--nt-010);
+  color: var(--themed-text-6);
   margin-left: auto;
   margin-right: auto;
   /* Match the compact Pick'em Pad width rather than the former wide module
@@ -49,7 +49,7 @@
 }
 .my-ticket-race {
   align-items: end;
-  border-bottom: 2px solid var(--c-28221b);
+  border-bottom: 2px solid var(--brown-13);
   display: flex;
   justify-content: space-between;
   margin-top: .6rem;
@@ -98,7 +98,7 @@
   padding: .68rem .75rem .25rem 0;
 }
 .my-ticket-section + .my-ticket-section {
-  border-left: 1px dashed var(--c-958a77);
+  border-left: 1px dashed var(--brown-53);
   padding-left: .8rem;
   padding-right: 0;
 }
@@ -167,7 +167,7 @@
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 .my-ticket-selection small {
-  color: var(--c-665e51);
+  color: var(--brown-36);
   font: 700 .55rem/1.2 Arial, sans-serif;
   margin-top: .16rem;
 }
@@ -181,21 +181,21 @@
   font-size: .9rem;
 }
 .my-ticket-open {
-  color: var(--nt-011);
+  color: var(--themed-text-7);
   font: 900 .84rem/1 "Courier New", monospace;
   letter-spacing: .12em;
 }
 .my-ticket-survivor-pick {
   /* Matches the Pick'em list gap so both top receipt rules share one line. */
   margin-top: .35rem;
-  border-block: 1px dotted var(--c-958a77);
+  border-block: 1px dotted var(--brown-53);
   padding: .7rem 0;
 }
 .my-ticket-survivor-pick div {
   display: grid;
 }
 .my-ticket-survivor-pick small {
-  color: var(--c-665e51);
+  color: var(--brown-36);
   font: 800 .5rem/1.2 Arial, sans-serif;
   letter-spacing: .1em;
 }
@@ -211,14 +211,14 @@
   margin: 0;
 }
 .my-ticket-survivor-state {
-  border-block: 1px dotted var(--c-958a77);
+  border-block: 1px dotted var(--brown-53);
   font: 900 .75rem/1.2 "Courier New", monospace;
   margin-top: .35rem;
   padding: .8rem 0;
 }
 .my-ticket-instructions {
-  border-top: 1px dashed var(--c-958a77);
-  color: var(--c-665e51);
+  border-top: 1px dashed var(--brown-53);
+  color: var(--brown-36);
   font: 700 .58rem/1.35 Arial, sans-serif;
   margin-top: .3rem;
   padding-top: .45rem;
@@ -234,7 +234,7 @@
 .my-ticket-survivor .my-ticket-instructions p { text-wrap: balance; }
 .my-ticket-footer {
   align-items: end;
-  border-top: 2px solid var(--c-28221b);
+  border-top: 2px solid var(--brown-13);
   display: grid;
   font-family: Arial, sans-serif;
   gap: .5rem;
@@ -246,7 +246,7 @@
 }
 .my-ticket-completion {
   align-self: stretch;
-  color: var(--c-665e51);
+  color: var(--brown-36);
   display: grid;
   gap: .16rem;
 }
@@ -258,8 +258,8 @@
 .my-ticket-completion > span:last-child {
   align-self: end;
 }
-.my-ticket-completion.is-open > span:last-child { color: var(--c-a82820); }
-.my-ticket-completion.is-filled > span:last-child { color: var(--c-08764e); }
+.my-ticket-completion.is-open > span:last-child { color: var(--red-39); }
+.my-ticket-completion.is-filled > span:last-child { color: var(--green-25); }
 .my-ticket-footer > div {
   align-self: stretch;
   grid-column: 2;
@@ -270,7 +270,7 @@
 }
 .my-ticket-footer small {
   align-self: start;
-  color: var(--c-665e51);
+  color: var(--brown-36);
   font-size: .46rem;
   font-weight: 800;
   letter-spacing: .09em;
@@ -280,21 +280,21 @@
   font: 900 .64rem/1.25 Arial, sans-serif;
   letter-spacing: .08em;
 }
-.my-ticket-footer strong.is-open { color: var(--c-a82820); }
-.my-ticket-footer strong.is-filled { color: var(--c-08764e); }
+.my-ticket-footer strong.is-open { color: var(--red-39); }
+.my-ticket-footer strong.is-filled { color: var(--green-25); }
 .my-ticket-barcode {
   align-self: end;
   grid-column: 3;
   justify-self: end;
   background: linear-gradient(90deg,
-    var(--c-28221b) 0 2%, transparent 2% 4%, var(--c-28221b) 4% 5%, transparent 5% 8%, var(--c-28221b) 8% 12%, transparent 12% 14%,
-    var(--c-28221b) 14% 15%, transparent 15% 18%, var(--c-28221b) 18% 21%, transparent 21% 23%, var(--c-28221b) 23% 24%, transparent 24% 28%,
-    var(--c-28221b) 28% 33%, transparent 33% 35%, var(--c-28221b) 35% 37%, transparent 37% 41%, var(--c-28221b) 41% 42%, transparent 42% 45%,
-    var(--c-28221b) 45% 49%, transparent 49% 51%, var(--c-28221b) 51% 54%, transparent 54% 57%, var(--c-28221b) 57% 58%, transparent 58% 61%,
-    var(--c-28221b) 61% 66%, transparent 66% 68%, var(--c-28221b) 68% 70%, transparent 70% 74%, var(--c-28221b) 74% 75%, transparent 75% 78%,
-    var(--c-28221b) 78% 83%, transparent 83% 85%, var(--c-28221b) 85% 88%, transparent 88% 91%, var(--c-28221b) 91% 92%, transparent 92% 96%,
-    var(--c-28221b) 96% 100%);
-  border-inline: 1px solid var(--c-28221b);
+    var(--brown-13) 0 2%, transparent 2% 4%, var(--brown-13) 4% 5%, transparent 5% 8%, var(--brown-13) 8% 12%, transparent 12% 14%,
+    var(--brown-13) 14% 15%, transparent 15% 18%, var(--brown-13) 18% 21%, transparent 21% 23%, var(--brown-13) 23% 24%, transparent 24% 28%,
+    var(--brown-13) 28% 33%, transparent 33% 35%, var(--brown-13) 35% 37%, transparent 37% 41%, var(--brown-13) 41% 42%, transparent 42% 45%,
+    var(--brown-13) 45% 49%, transparent 49% 51%, var(--brown-13) 51% 54%, transparent 54% 57%, var(--brown-13) 57% 58%, transparent 58% 61%,
+    var(--brown-13) 61% 66%, transparent 66% 68%, var(--brown-13) 68% 70%, transparent 70% 74%, var(--brown-13) 74% 75%, transparent 75% 78%,
+    var(--brown-13) 78% 83%, transparent 83% 85%, var(--brown-13) 85% 88%, transparent 88% 91%, var(--brown-13) 91% 92%, transparent 92% 96%,
+    var(--brown-13) 96% 100%);
+  border-inline: 1px solid var(--brown-13);
   height: 1.28rem;
   opacity: .9;
   width: 4.1rem;
@@ -327,17 +327,17 @@ html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
 html[data-theme="night"] .my-ticket-barcode {
   background: linear-gradient(90deg,
-    var(--c-f2e8d3) 0 2%, transparent 2% 4%, var(--c-f2e8d3) 4% 5%, transparent 5% 8%,
-    var(--c-f2e8d3) 8% 12%, transparent 12% 14%, var(--c-f2e8d3) 14% 15%, transparent 15% 18%,
-    var(--c-f2e8d3) 18% 21%, transparent 21% 23%, var(--c-f2e8d3) 23% 24%, transparent 24% 28%,
-    var(--c-f2e8d3) 28% 33%, transparent 33% 35%, var(--c-f2e8d3) 35% 37%, transparent 37% 41%,
-    var(--c-f2e8d3) 41% 42%, transparent 42% 45%, var(--c-f2e8d3) 45% 49%, transparent 49% 51%,
-    var(--c-f2e8d3) 51% 54%, transparent 54% 57%, var(--c-f2e8d3) 57% 58%, transparent 58% 61%,
-    var(--c-f2e8d3) 61% 66%, transparent 66% 68%, var(--c-f2e8d3) 68% 70%, transparent 70% 74%,
-    var(--c-f2e8d3) 74% 75%, transparent 75% 78%, var(--c-f2e8d3) 78% 83%, transparent 83% 85%,
-    var(--c-f2e8d3) 85% 88%, transparent 88% 91%, var(--c-f2e8d3) 91% 92%, transparent 92% 96%,
-    var(--c-f2e8d3) 96% 100%);
-  border-inline-color: var(--c-f2e8d3);
+    var(--sand-89) 0 2%, transparent 2% 4%, var(--sand-89) 4% 5%, transparent 5% 8%,
+    var(--sand-89) 8% 12%, transparent 12% 14%, var(--sand-89) 14% 15%, transparent 15% 18%,
+    var(--sand-89) 18% 21%, transparent 21% 23%, var(--sand-89) 23% 24%, transparent 24% 28%,
+    var(--sand-89) 28% 33%, transparent 33% 35%, var(--sand-89) 35% 37%, transparent 37% 41%,
+    var(--sand-89) 41% 42%, transparent 42% 45%, var(--sand-89) 45% 49%, transparent 49% 51%,
+    var(--sand-89) 51% 54%, transparent 54% 57%, var(--sand-89) 57% 58%, transparent 58% 61%,
+    var(--sand-89) 61% 66%, transparent 66% 68%, var(--sand-89) 68% 70%, transparent 70% 74%,
+    var(--sand-89) 74% 75%, transparent 75% 78%, var(--sand-89) 78% 83%, transparent 83% 85%,
+    var(--sand-89) 85% 88%, transparent 88% 91%, var(--sand-89) 91% 92%, transparent 92% 96%,
+    var(--sand-89) 96% 100%);
+  border-inline-color: var(--sand-89);
 }
 @media (max-width: 639px) {
 
@@ -391,7 +391,7 @@ html[data-theme="night"] .my-ticket-barcode {
 
   .my-ticket-section + .my-ticket-section {
     border-left: 0;
-    border-top: 1px dashed var(--c-958a77);
+    border-top: 1px dashed var(--brown-53);
     padding-left: 0;
   }
 
