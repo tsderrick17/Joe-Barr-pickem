@@ -256,7 +256,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
 html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
-  background: var(--blue-15);
+  background: var(--bowl-navy-lift);
   border-color: #6b8790;
   color: #dcebed;
 }
