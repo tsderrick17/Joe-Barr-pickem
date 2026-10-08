@@ -23,7 +23,13 @@ correction, or supersede the project reference.
 | Slate page state as one reducer; uncertain saves confirmed from the server | #435 |
 | Worker deadline context with checkpoints; pure score decisions; stage documentation | #436 |
 | Reminder and Bowl worker checkpoints; pure reminder and Bowl line policy | #437 |
-| Documentation refresh | this change |
+| Documentation refresh | #438 |
+| Stylesheet: 32 repeated colors become palette tokens; `!important` 224 to 11 (screenshots bisected which 11 are load-bearing); night-mode color overrides on theme-pair tokens (hex colors 694 to 371, night rules 262 to 245) | #439, #440–#443, #444 |
+| `.gitattributes` (LF) and renormalized files; Linux-only screenshot baselines | #445, #446 |
+| Deleted tests that pinned CSS text and markup (assertions 1,298 to 1,082) | #447 |
+| Bowl Card: narrower rail, ten games per desktop screen, animated heading rule, larger header text; flaky chart screenshot made deterministic | #448 |
+| Palette tokens named by hue and lightness, theme pairs by role | #449 |
+| Decision log and plan ledger for the clean-up | this change |
 
 ### Still open
 
@@ -33,8 +39,24 @@ correction, or supersede the project reference.
   week 16 for an 8 KB response); scope it, then ratchet the budget down.
 - **Cost baselines** for the workers and the grading dashboard.
 - **Remaining contracts and JavaScript checks** beyond the routes already typed.
-- **Stylesheet refactor** (color tokens, `!important` and duplicate selectors)
-  and the **football loader**, both tracked separately from this plan.
+- **Source-text tests, part 2** (about 1,080 assertions remain): convert the ones
+  that carry behavior (chart math, Season Snapshot logic, route rules) into tests
+  that run the code with `test/helpers/fake-pool-database.mjs` and
+  `renderToStaticMarkup`; collect the genuine architecture rules (every
+  Commissioner route uses the shared gate, no bare `AbortSignal.timeout`, SQL
+  grants) in one `test/architecture-rules.test.mjs` with a header saying they are
+  lint-style on purpose. Rule for new work: never assert CSS rule text; add a
+  screenshot state instead.
+- **Night mode on tokens.** What is left (245 rules) is mostly
+  `html[data-theme="night"] [class*="text-slate-"]` style remaps of Tailwind utility
+  classes in `14-slate-rows.css`. The remap is flattened (every slate shade becomes
+  one night color) and arbitrary-hex classes (`text-[#171717]`) cannot be re-themed
+  with variables, so the real fix is to replace those utility classes in the TSX
+  with semantic classes or color tokens, component by component. That is a wide TSX
+  change; do it screenshot-first, one component at a time.
+- **Duplicate selectors** (104) are intentional base-and-override pairs; merging
+  them was tried and abandoned (7 of 104 were safely mergeable).
+- The **football loader** is tracked separately.
 
 Recheck the current branch before starting each work package: development with
 Claude and the stylesheet work may have advanced the baseline.
