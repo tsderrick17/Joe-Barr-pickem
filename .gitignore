@@ -45,3 +45,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Locally recorded screenshot baselines (CI compares the -linux ones)
+/test/visual/*-snapshots/*-win32.png
+/test/visual/*-snapshots/*-darwin.png
