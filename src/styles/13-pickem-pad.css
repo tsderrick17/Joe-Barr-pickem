@@ -74,7 +74,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
-  padding-right: .38rem;
+  padding-right: .38rem !important;
   text-align: right;
 }
 /* Dad's paper scorecards kept the running total and name in a tight left
