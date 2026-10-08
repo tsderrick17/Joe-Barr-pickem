@@ -3,7 +3,7 @@
 /* Carry the same viewer marker across both standings ledgers: a quiet teal
    field, a left-hand rail, and a complete row outline. */
 .pickem-standings-row.viewer-row > td {
-  background-color: #dff0eb;
+  background-color: var(--nt-018);
   box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
 }
 .pickem-standings-row.viewer-row > td:first-child {
@@ -15,11 +15,10 @@
 /* The Pick'em Pad stays impartial: its ruled paper should not color a
    player's whole line. Survivor retains its stronger personal marker. */
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
-  background-color: transparent;
+  background-color: var(--nt-009);
   box-shadow: none;
 }
 html[data-theme="night"] .pickem-standings-row.viewer-row > td {
-  background-color: var(--c-16333a);
   box-shadow: inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
 }
 html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
@@ -29,7 +28,6 @@ html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
   box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
 }
 html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
-  background-color: transparent;
   box-shadow: none;
 }
 .playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78); }

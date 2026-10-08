@@ -22,7 +22,7 @@
    ledger mechanics as NFL Pick'em while making the competition immediately
    legible as its own event. Heading rules match the rest of the page. */
 .bowl-pool-page #bowl-selections {
-  border-color: #e0d2a8;
+  border-color: var(--nt-014);
   border-top: 3px solid #b8892b;
   background-color: var(--pool-surface);
   background-image: none;
@@ -78,7 +78,7 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 /* The Bowl Card's heading line matches the other standings headings (the
    ledger ink rule from .pickem-ledger-masthead), minimized or open. */
 .bowl-card-section .pickem-ledger-masthead {
-  border-bottom-color: #bdb3a3;
+  border-bottom-color: var(--nt-015);
 }
 
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
@@ -134,12 +134,7 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 }
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  border-color: #7a6a3a;
   background: #1b1a16;
-}
-
-html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
-  border-bottom-color: #7a6a3a;
 }
 
 /* Survivor Table and Bowl Card share one width contract with the Pick'em Pad above them.
@@ -216,15 +211,15 @@ html[data-theme="night"] .bowl-card-section .pickem-ledger-masthead {
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {
-  background: #a69f93;
+  background: var(--nt-016);
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
 }
-.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #716b61; background-clip: padding-box; }
+.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: var(--nt-017); background-clip: padding-box; }
 html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 transparent; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: #9aaabd; background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background-clip: padding-box; }
+html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background-clip: padding-box; }
 
 /* Ticket results stay deliberately simple: solid upright letters, identical
    sizing for wins and losses, and no surrounding badge or stamp outline. */
