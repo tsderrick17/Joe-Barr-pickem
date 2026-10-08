@@ -79,15 +79,15 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
     <section className="commissioner-map border-b-2 border-zinc-900 py-8" aria-labelledby="operations-map-title">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black tracking-[0.16em] text-zinc-600">LIVE OPERATIONS MAP</p>
+          <p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">LIVE OPERATIONS MAP</p>
           <h2 className="mt-1 font-serif text-3xl font-bold" id="operations-map-title">Where the pool stands</h2>
         </div>
-        <button className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">
+        <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">
           {loading ? "Checking…" : "Refresh map"}
         </button>
       </div>
 
-      {error ? <p className="mt-5 border-l-4 border-red-700 bg-red-50 p-4 font-semibold text-red-900">{error}</p> : null}
+      {error ? <p className="mt-5 border-l-4 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 font-semibold text-red-900">{error}</p> : null}
       {!map && loading ? <div className="mt-6 h-40 animate-pulse bg-zinc-200" aria-label="Loading live operations map" /> : null}
 
       {map ? <>
@@ -139,7 +139,7 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
           </div>
         </div> : null}
 
-        <div className="mt-4 flex flex-wrap justify-between gap-3 text-xs text-zinc-600">
+        <div className="mt-4 flex flex-wrap justify-between gap-3 text-xs text-(color:--themed-text-28)">
           <p>Checked {new Date(map.checkedAt).toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" })}</p>
           <p>{map.openIncidentCount ? `${map.openIncidentCount} open watchdog incident${map.openIncidentCount === 1 ? "" : "s"}` : "Watchdog is quiet"}{map.providerAllowance !== null && map.providerAllowance !== undefined ? ` · ${map.providerAllowance} provider credits` : ""}</p>
         </div>

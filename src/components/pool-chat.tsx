@@ -140,7 +140,7 @@ export default function PoolChat({ onHide }: Props) {
   }
 
   return (
-    <section aria-label="Pool chat" className="pool-chat border-y-2 border-[#1d1d1f] bg-[#fffdf8] px-4 py-3 sm:px-5">
+    <section aria-label="Pool chat" className="pool-chat border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 py-3 sm:px-5">
       <div aria-live="polite" className="max-h-[21.5rem] overflow-y-auto" ref={messagesViewport}>
         {loading ? <p className="py-3 text-sm text-slate-600">Opening chat...</p> : null}
         {!loading && !messages.length ? <p className="py-3 text-sm text-slate-600">No messages yet.</p> : null}
@@ -150,13 +150,13 @@ export default function PoolChat({ onHide }: Props) {
         </article>)}
       </div>
 
-      <form className="mt-3 border-t border-[#b7aea0] pt-2" onSubmit={sendMessage}>
+      <form className="mt-3 border-t border-(color:--themed-border-12) pt-2" onSubmit={sendMessage}>
         <label className="sr-only" htmlFor="pool-chat-message">Write a message</label>
         <div className="mb-2 flex items-center gap-2">
-          <button aria-expanded={showEmojiPicker} className={`rounded-full border px-2 py-1 text-sm transition ${showEmojiPicker ? "border-[#2b7773] bg-[#e5f2ef]" : "border-[#9b9284] bg-white hover:border-[#2b7773]"}`} onClick={() => setShowEmojiPicker((current) => !current)} type="button">🙂 <span className="sr-only">Choose an emoji</span></button>
+          <button aria-expanded={showEmojiPicker} className={`rounded-full border px-2 py-1 text-sm transition ${showEmojiPicker ? "border-[#2b7773] bg-[#e5f2ef]" : "border-[#9b9284] bg-(color:--themed-bg-26) hover:border-[#2b7773]"}`} onClick={() => setShowEmojiPicker((current) => !current)} type="button">🙂 <span className="sr-only">Choose an emoji</span></button>
         </div>
-        {showEmojiPicker ? <div aria-label="Emoji picker" className="mb-3 space-y-1.5 border-y border-[#d6cdbd] py-2.5">{EMOJI_GROUPS.map((group) => <div aria-label={group.label} className="flex flex-wrap gap-1" key={group.label} role="group">{group.emojis.map((emoji) => <button aria-label={`Add ${emoji}`} className="rounded border border-transparent px-1 text-base transition hover:-translate-y-px hover:border-[#2b7773] hover:bg-[#edf7ef]" key={emoji} onClick={() => setDraft((current) => `${current}${emoji}`)} title={emoji} type="button">{emoji}</button>)}</div>)}</div> : null}
-        <div className="flex gap-2"><input className="min-w-0 flex-1 border border-[#9b9284] bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-500 focus:border-[#00756e] focus:ring-1 focus:ring-[#00756e]" id="pool-chat-message" maxLength={280} onChange={(event) => setDraft(event.target.value)} placeholder="Message the pool..." value={draft} /><button className="bg-[#2b7773] px-4 text-sm font-bold text-white transition hover:bg-[#1e625e] disabled:cursor-not-allowed disabled:bg-slate-400" disabled={!draft.trim() || sending} type="submit">{sending ? "Sending..." : "Send"}</button></div>
+        {showEmojiPicker ? <div aria-label="Emoji picker" className="mb-3 space-y-1.5 border-y border-[#d6cdbd] py-2.5">{EMOJI_GROUPS.map((group) => <div aria-label={group.label} className="flex flex-wrap gap-1" key={group.label} role="group">{group.emojis.map((emoji) => <button aria-label={`Add ${emoji}`} className="rounded border border-transparent px-1 text-base transition hover:-translate-y-px hover:border-[#2b7773] hover:bg-(color:--themed-bg-15)" key={emoji} onClick={() => setDraft((current) => `${current}${emoji}`)} title={emoji} type="button">{emoji}</button>)}</div>)}</div> : null}
+        <div className="flex gap-2"><input className="min-w-0 flex-1 border border-[#9b9284] bg-(color:--themed-bg-26) px-3 py-2 text-sm outline-none placeholder:text-slate-500 focus:border-[#00756e] focus:ring-1 focus:ring-[#00756e]" id="pool-chat-message" maxLength={280} onChange={(event) => setDraft(event.target.value)} placeholder="Message the pool..." value={draft} /><button className="bg-[#2b7773] px-4 text-sm font-bold text-white transition hover:bg-[#1e625e] disabled:cursor-not-allowed disabled:bg-slate-400" disabled={!draft.trim() || sending} type="submit">{sending ? "Sending..." : "Send"}</button></div>
         <div className="mt-1 flex justify-between gap-3 text-[10px] text-slate-500"><span>{error}</span><div className="flex items-center gap-2"><button className="pool-chat-hide" onClick={onHide} type="button">Hide chat</button><span>{draft.length}/280</span></div></div>
       </form>
     </section>

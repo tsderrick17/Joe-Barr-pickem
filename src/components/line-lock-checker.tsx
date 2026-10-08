@@ -138,7 +138,7 @@ export default function LineLockChecker() {
         Official Spread Locks
       </h2>
 
-      <p className="mt-2 text-zinc-700">
+      <p className="mt-2 text-(color:--themed-text-29)">
         Locks only games whose scheduled official spread time has
         arrived. It is safe to run this check more than once.
       </p>
@@ -147,14 +147,14 @@ export default function LineLockChecker() {
         type="button"
         disabled={isChecking}
         onClick={checkOfficialLines}
-        className="mt-6 bg-zinc-900 px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-6 bg-(color:--themed-bg-27) px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isChecking
           ? "Checking official spreads..."
           : "Check official spread locks"}
       </button>
       <button
-        className="ml-3 mt-6 border border-zinc-900 bg-white px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        className="ml-3 mt-6 border border-zinc-900 bg-(color:--themed-bg-26) px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isLoadingLatest}
         onClick={loadLatestLock}
         type="button"
@@ -169,7 +169,7 @@ export default function LineLockChecker() {
       ) : null}
 
       {result ? (
-        <div className="mt-6 border border-green-800 bg-green-50 p-5 text-green-950">
+        <div className="mt-6 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) p-5 text-green-950">
           <p className="font-bold">{result.message}</p>
 
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
@@ -218,14 +218,14 @@ export default function LineLockChecker() {
 
       {latestRun ? (
         <div
-          className={`mt-6 border bg-white p-5 ${
+          className={`mt-6 border bg-(color:--themed-bg-26) p-5 ${
             latestRun.status === "failed" && latestRun.needsAttention
-              ? "border-red-700"
+              ? "border-(color:--themed-border-24)"
               : "border-zinc-400"
           }`}
         >
           <p className="font-bold">Most recent official line lock</p>
-          <p className="mt-1 text-sm text-zinc-700">
+          <p className="mt-1 text-sm text-(color:--themed-text-29)">
             Status: {latestRun.status === "failed"
               ? latestRun.needsAttention
                 ? "Needs attention"
@@ -238,7 +238,7 @@ export default function LineLockChecker() {
               : ""}
           </p>
           {latestRun.details ? (
-            <p className="mt-2 text-sm text-zinc-700">
+            <p className="mt-2 text-sm text-(color:--themed-text-29)">
               Games due: {latestRun.details.dueGames} · Lines locked:{" "}
               {latestRun.details.lockedGames} · Fallbacks used:{" "}
               {latestRun.details.fallbackLocks}
@@ -253,7 +253,7 @@ export default function LineLockChecker() {
       ) : null}
 
       {!isLoadingLatest && !latestRun && !errorMessage ? (
-        <p className="mt-6 text-sm text-zinc-600">
+        <p className="mt-6 text-sm text-(color:--themed-text-28)">
           No official line locks have been recorded yet.
         </p>
       ) : null}
