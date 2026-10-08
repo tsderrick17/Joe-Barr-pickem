@@ -42,11 +42,11 @@ export default function FinalScoreReconciliation() {
   return (
     <section className="commissioner-tool" id="final-score-reconciliation">
       <h2 className="font-serif text-2xl font-bold">Final Score Reconciliation</h2>
-      <p className="mt-2 text-zinc-700">Read-only comparison of recently saved finals against the score provider. It never alters scores, grades, or Survivor entries.</p>
-      <button className="mt-5 bg-zinc-900 px-5 py-3 font-bold text-white disabled:opacity-40" disabled={isChecking} onClick={check} type="button">{isChecking ? "Reconciling finals..." : "Reconcile recent finals"}</button>
+      <p className="mt-2 text-(color:--themed-text-29)">Read-only comparison of recently saved finals against the score provider. It never alters scores, grades, or Survivor entries.</p>
+      <button className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:opacity-40" disabled={isChecking} onClick={check} type="button">{isChecking ? "Reconciling finals..." : "Reconcile recent finals"}</button>
       {errorMessage ? <p className="mt-4 font-semibold text-red-700">{errorMessage}</p> : null}
       {result ? (
-        <div className={`mt-5 border p-4 ${result.mismatches ? "border-red-700 bg-red-50 text-red-950" : "border-green-800 bg-green-50 text-green-950"}`}>
+        <div className={`mt-5 border p-4 ${result.mismatches ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24) text-red-950" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23) text-green-950"}`}>
           <p className="font-bold">{result.mismatches ? `${result.mismatches} score mismatch${result.mismatches === 1 ? "" : "es"} needs review.` : "All recently saved finals match the provider."}</p>
           <p className="mt-1 text-sm">Checked {result.checkedGames} final game{result.checkedGames === 1 ? "" : "s"} at {new Date(result.checkedAt).toLocaleString()}.</p>
           {result.results.filter((game) => game.state !== "match").map((game) => (

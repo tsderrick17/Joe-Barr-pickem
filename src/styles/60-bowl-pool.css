@@ -176,7 +176,7 @@
 .bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft); }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child { background: transparent; }
 .bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift); border-color: var(--bowl-navy); color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; font-weight: 400; letter-spacing: .12em; }
-.bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper); border-color: #e7dfcb; }
+.bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper); border-color: var(--themed-border-26); }
 .bowl-card-section .bowl-standings-player-row.is-alt { background-color: var(--bowl-paper-alt); }
 /* Day-to-day column dividers are hairlines of old gold, not heavy gray rules. */
 
@@ -235,7 +235,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:nt
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky *,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--sand-91); }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: var(--blue-14); border-color: #2e3346; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: var(--blue-14); }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background-color: #20253a; }
 @media (max-width: 639px) {
   
@@ -466,5 +466,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 .bowl-score-tile.is-large { margin-top: .35rem; }
 .bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
 .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
-/* The empty corner over Tiebreaker looks just like the one over Games remaining: the page itself. */
+/* The empty corners over Games remaining and over Tiebreaker are the page itself, in day and night. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:first-child,
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: var(--sand-93); }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:first-child,
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: var(--background); }

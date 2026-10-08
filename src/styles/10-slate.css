@@ -36,7 +36,7 @@
 }
 
 .slate-mini-nav em {
-  color: var(--gray-40);
+  color: var(--themed-text-37);
   font-size: .5rem;
   font-style: normal;
   font-weight: 800;
@@ -53,11 +53,11 @@
   font-size: .5rem;
 }
 
-.slate-mini-nav strong.is-complete { color: var(--green-25); }
-.slate-mini-nav strong.is-due { color: var(--red-39); }
-.slate-mini-nav strong.is-out { color: var(--red-40); }
-.slate-mini-nav strong.is-quiet { color: var(--gray-40); }
-.slate-mini-nav strong.is-unsaved { color: #a86008; }
+.slate-mini-nav strong.is-complete { color: var(--themed-text-34); }
+.slate-mini-nav strong.is-due { color: var(--themed-text-35); }
+.slate-mini-nav strong.is-out { color: var(--themed-text-36); }
+.slate-mini-nav strong.is-quiet { color: var(--themed-text-37); }
+.slate-mini-nav strong.is-unsaved { color: var(--themed-text-38); }
 
 /* The Slate receipt is one fixed-height register. Its information hierarchy
    stays stable while the internal columns adapt to the pools that are actually

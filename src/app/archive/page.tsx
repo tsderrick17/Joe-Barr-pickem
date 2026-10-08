@@ -31,10 +31,10 @@ export default function ArchivePage() {
     return () => { active = false; };
   }, []);
 
-  return <main className="min-h-screen bg-[#f7f3e8] px-6 py-10 text-zinc-900"><div className="mx-auto max-w-4xl">
-    <header className="border-b-2 border-zinc-900 pb-6"><p className="text-xs font-black tracking-[0.16em] text-zinc-600">PERMANENT RECEIPTS</p><h1 className="mt-2 font-serif text-4xl font-bold">Week Archive</h1><p className="mt-2 max-w-2xl text-zinc-700">Every completed week retains its final slate, official lines, public pick receipts, results, and standings. Nothing here can be edited.</p></header>
+  return <main className="min-h-screen bg-[#f7f3e8] px-6 py-10 text-(color:--themed-text-31)"><div className="mx-auto max-w-4xl">
+    <header className="border-b-2 border-zinc-900 pb-6"><p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">PERMANENT RECEIPTS</p><h1 className="mt-2 font-serif text-4xl font-bold">Week Archive</h1><p className="mt-2 max-w-2xl text-(color:--themed-text-29)">Every completed week retains its final slate, official lines, public pick receipts, results, and standings. Nothing here can be edited.</p></header>
     {error ? <p className="mt-6 font-semibold text-red-700">{error}</p> : null}
-    {!error && periods.length === 0 ? <p className="mt-8 text-zinc-700">Completed weeks will appear here once the first slate is fully settled.</p> : null}
-    <ol className="mt-6 grid gap-3 sm:grid-cols-2">{periods.map((period) => <li className="border border-zinc-400 bg-white p-4" key={period.id}><p className="text-xs font-black tracking-[0.14em] text-zinc-600">{period.period_type === "playoff" ? "PLAYOFF ROUND" : "REGULAR SEASON"}</p><h2 className="mt-1 font-serif text-2xl font-bold">{period.display_name}</h2><p className="mt-1 text-sm text-zinc-700">Began {easternDate(period.starts_at)}</p><Link className="mt-4 inline-block font-bold underline" href={`/board?week=${encodeURIComponent(period.id)}`}>Review final slate and receipts</Link></li>)}</ol>
+    {!error && periods.length === 0 ? <p className="mt-8 text-(color:--themed-text-29)">Completed weeks will appear here once the first slate is fully settled.</p> : null}
+    <ol className="mt-6 grid gap-3 sm:grid-cols-2">{periods.map((period) => <li className="border border-zinc-400 bg-(color:--themed-bg-26) p-4" key={period.id}><p className="text-xs font-black tracking-[0.14em] text-(color:--themed-text-28)">{period.period_type === "playoff" ? "PLAYOFF ROUND" : "REGULAR SEASON"}</p><h2 className="mt-1 font-serif text-2xl font-bold">{period.display_name}</h2><p className="mt-1 text-sm text-(color:--themed-text-29)">Began {easternDate(period.starts_at)}</p><Link className="mt-4 inline-block font-bold underline" href={`/board?week=${encodeURIComponent(period.id)}`}>Review final slate and receipts</Link></li>)}</ol>
   </div></main>;
 }

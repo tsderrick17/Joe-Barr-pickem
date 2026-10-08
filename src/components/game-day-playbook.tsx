@@ -27,8 +27,8 @@ export default function GameDayPlaybook() {
 
   return <section className="game-day-playbook commissioner-tool">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div><p className="text-xs font-black tracking-[0.16em] text-zinc-600">GAMEDAY OPERATIONS PLAYBOOK</p><h2 className="mt-1 font-serif text-3xl font-bold">Follow the safe path</h2><p className="mt-2 text-zinc-700">Tap a stage for the exact check. Scheduled automation remains the primary path.</p></div>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-600">Ready → Lock → Grade → Verify → Resolve</p>
+      <div><p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">GAMEDAY OPERATIONS PLAYBOOK</p><h2 className="mt-1 font-serif text-3xl font-bold">Follow the safe path</h2><p className="mt-2 text-(color:--themed-text-29)">Tap a stage for the exact check. Scheduled automation remains the primary path.</p></div>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-(color:--themed-text-28)">Ready → Lock → Grade → Verify → Resolve</p>
     </div>
 
     <ol className="commissioner-flow mt-7" aria-label="Gameday operating flow" style={{ "--commissioner-step-count": steps.length } as CSSProperties}>
@@ -41,7 +41,7 @@ export default function GameDayPlaybook() {
     </ol>
 
     <div className="commissioner-map-detail is-active mt-6">
-      <div><p className="text-xs font-black tracking-[0.14em]">STEP {selectedIndex + 1} · {selected.time.toUpperCase()}</p><p className="mt-2 font-serif text-xl font-bold">{selected.title}</p><p className="mt-1 text-sm leading-5 text-zinc-700">{selected.body}</p></div>
+      <div><p className="text-xs font-black tracking-[0.14em]">STEP {selectedIndex + 1} · {selected.time.toUpperCase()}</p><p className="mt-2 font-serif text-xl font-bold">{selected.title}</p><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{selected.body}</p></div>
       <div className="commissioner-map-next"><p className="text-xs font-black tracking-[0.14em]">OPEN THE MATCHING CHECK</p><a className="mt-2 inline-block text-sm font-bold underline" href={selected.href} onClick={openMatchingCheck}>{selected.action}</a></div>
     </div>
   </section>;

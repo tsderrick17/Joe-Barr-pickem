@@ -140,12 +140,12 @@ export default function ScoreSyncChecker() {
   return (
     <section className="commissioner-tool" id="final-score-check">
       <h2 className="font-serif text-2xl font-bold">Final Score Check</h2>
-      <p className="mt-2 text-zinc-700">
+      <p className="mt-2 text-(color:--themed-text-29)">
         This follows the automatic rule: only games at least two hours and fifty minutes past
         kickoff are checked, and only final scores are saved.
       </p>
       <button
-        className="mt-5 bg-zinc-900 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isChecking}
         onClick={checkFinalScores}
         type="button"
@@ -153,7 +153,7 @@ export default function ScoreSyncChecker() {
         {isChecking ? "Checking final scores..." : "Check final scores now"}
       </button>
       <button
-        className="ml-3 mt-5 border border-zinc-900 bg-white px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
+        className="ml-3 mt-5 border border-zinc-900 bg-(color:--themed-bg-26) px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isLoadingLatest}
         onClick={loadLatestCheck}
         type="button"
@@ -164,7 +164,7 @@ export default function ScoreSyncChecker() {
       {errorMessage ? <p className="mt-4 font-semibold text-red-700">{errorMessage}</p> : null}
 
       {result ? (
-        <div className="mt-5 border border-green-800 bg-green-50 p-4 text-green-950">
+        <div className="mt-5 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) p-4 text-green-950">
           <p className="font-bold">{result.message}</p>
           <p className="mt-1 text-sm">
             Eligible games: {result.eligibleGames} {" · "}
@@ -176,7 +176,7 @@ export default function ScoreSyncChecker() {
               : ""}
           </p>
           {result.warnings.length > 0 ? (
-            <div className="mt-3 text-sm font-semibold text-amber-900">
+            <div className="mt-3 text-sm font-semibold text-(color:--themed-text-22)">
               {result.warnings.map((warning) => (
                 <p key={warning}>{warning}</p>
               ))}
@@ -186,7 +186,7 @@ export default function ScoreSyncChecker() {
       ) : null}
 
       {result?.weekRollover && result.weekRollover.action !== "none" ? (
-        <div className="mt-5 border border-zinc-400 bg-white p-4 text-zinc-900">
+        <div className="mt-5 border border-zinc-400 bg-(color:--themed-bg-26) p-4 text-(color:--themed-text-31)">
           <p className="font-bold">Weekly handoff</p>
           <p className="mt-1 text-sm">
             {result.weekRollover.action === "completed"
@@ -200,7 +200,7 @@ export default function ScoreSyncChecker() {
               : result.weekRollover.reason}
           </p>
           {result.weekRollover.rolloverAt ? (
-            <p className="mt-1 text-sm text-zinc-700">
+            <p className="mt-1 text-sm text-(color:--themed-text-29)">
               Scheduled handoff: {new Date(result.weekRollover.rolloverAt).toLocaleString()}
             </p>
           ) : null}
@@ -208,7 +208,7 @@ export default function ScoreSyncChecker() {
       ) : null}
 
       {latestRun ? (
-        <div className={`mt-5 border p-4 ${latestRun.status === "failed" ? "border-red-700 bg-red-50 text-red-950" : "border-zinc-400 bg-white"}`}>
+        <div className={`mt-5 border p-4 ${latestRun.status === "failed" ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24) text-red-950" : "border-zinc-400 bg-(color:--themed-bg-26)"}`}>
           <p className="font-bold">
             Most recent check: {latestRun.status === "success" ? "completed" : latestRun.status}
           </p>
@@ -233,7 +233,7 @@ export default function ScoreSyncChecker() {
             </p>
           ) : null}
           {latestRun.details?.warnings?.map((warning) => (
-            <p className="mt-2 text-sm font-semibold text-amber-900" key={warning}>
+            <p className="mt-2 text-sm font-semibold text-(color:--themed-text-22)" key={warning}>
               {warning}
             </p>
           ))}
@@ -242,7 +242,7 @@ export default function ScoreSyncChecker() {
       ) : null}
 
       {!isLoadingLatest && !latestRun && !errorMessage ? (
-        <p className="mt-5 text-sm text-zinc-600">
+        <p className="mt-5 text-sm text-(color:--themed-text-28)">
           No final score checks have been recorded yet.
         </p>
       ) : null}

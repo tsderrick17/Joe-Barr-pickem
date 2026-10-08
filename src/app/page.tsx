@@ -25,7 +25,7 @@ type DisplayPreferenceKey =
    duplicate pads and a visible jump without changing any pool behavior. */
 function StandingsLoadingShell() {
   return (
-    <main aria-busy="true" className="min-h-screen bg-[#f5f0e6] text-[#171719]">
+    <main aria-busy="true" className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
       <div className="mx-auto max-w-5xl px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
         <section className="standings-loading-ticket mx-auto w-full max-w-[30rem] border border-[#756b5b] bg-[#f3ead6] p-4 shadow-[0_4px_14px_rgba(44,36,24,.14)]">
           <div className="mx-auto h-3 w-44 bg-[#d9ceb8]" />
@@ -39,7 +39,7 @@ function StandingsLoadingShell() {
           <div className="mt-4 grid grid-cols-3 gap-4"><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /></div>
         </section>
         <section className="mx-auto w-full max-w-[30rem]">
-          <div className="h-12 border-y-2 border-[#1d1d1f] bg-[#fffdf8]" />
+          <div className="h-12 border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-20)" />
           <div className="standings-loading-rows" />
         </section>
       </div>
@@ -292,7 +292,7 @@ export default function HomePage() {
 
   if (errorMessage && !data) {
     return (
-      <main className="min-h-screen bg-[#f5f0e6] p-8 text-[#171719]">
+      <main className="min-h-screen bg-(color:--themed-bg-18) p-8 text-(color:--themed-text-18)">
         <p className="font-semibold text-red-700">{errorMessage}</p>
         <button
           className="mt-5 bg-[#1d1d1f] px-5 py-3 font-bold text-white"
@@ -320,10 +320,10 @@ export default function HomePage() {
     <>
     {bowlReady ? null : <StandingsLoadingShell />}
     <div className={bowlReady ? undefined : "h-0 overflow-hidden"} inert={!bowlReady} style={bowlReady ? undefined : { visibility: "hidden" }}>
-    <main className="min-h-screen bg-[#f5f0e6] text-[#171719]">
+    <main className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
       <div className="standings-stack mx-auto max-w-5xl px-4 sm:px-5 md:px-10">
         {errorMessage ? (
-          <div className="mb-5 flex flex-col gap-3 border-2 border-red-700 bg-red-50 p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-5 flex flex-col gap-3 border-2 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
             <p className="font-semibold">{errorMessage}</p>
             <button
               className="min-h-11 bg-red-800 px-4 py-2 font-bold text-white"
@@ -363,12 +363,12 @@ export default function HomePage() {
           <p className="mb-4 text-xs font-bold tracking-[0.2em] text-slate-600">
             PICK&apos;EM THIS WEEK
           </p>
-          <div className="border-y-2 border-[#1d1d1f]">
+          <div className="border-y-2 border-(color:--themed-border-10)">
             <table
               className="w-full table-fixed border-collapse text-left"
             >
               <thead>
-                <tr className="border-b-2 border-[#1d1d1f] text-xs tracking-[0.14em]">
+                <tr className="border-b-2 border-(color:--themed-border-10) text-xs tracking-[0.14em]">
                   <th className="w-12 px-2 py-3 sm:w-20 sm:px-3">WINS</th>
                   <th className="w-20 px-2 py-3 sm:w-40 sm:px-3"><span className="sr-only">Player</span></th>
                    {Array.from({ length: data!.maxPicks }, (_, index) => (
@@ -385,8 +385,8 @@ export default function HomePage() {
 
                   return (
                     <tr
-                      className={`border-b border-[#91afd0] last:border-b-0 ${
-                        isViewer ? "viewer-row bg-[#fffaf0]" : ""
+                      className={`border-b border-(color:--themed-border-11) last:border-b-0 ${
+                        isViewer ? "viewer-row bg-(color:--themed-bg-19)" : ""
                       }`}
                       key={row.id}
                     >

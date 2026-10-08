@@ -33,7 +33,7 @@ type SurvivorTableRow = SurvivorTableData["survivorRows"][number];
 /** One player's row. It redraws only when its own data changes, so toggling the table does not rebuild every logo. */
 const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer }: { row: SurvivorTableRow; rowIndex: number; isViewer: boolean }) {
   return (
-      <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-[#91afd0] last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`}>
+      <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-(color:--themed-border-11) last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`}>
         <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
         <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
         {Array.from({ length: 18 }, (_, index) => {
@@ -60,9 +60,9 @@ export default function SurvivorTable({ data, savingDisplay, displayLocked = fal
     <div className="pickem-ledger-masthead survivor-ledger-masthead"><div className="flex items-center gap-2"><h2>Survivor Table</h2>{displayLocked ? null : <button aria-expanded={data.showSurvivorStandings} aria-label={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void setSurvivorDisplay(!data.showSurvivorStandings)} title={data.showSurvivorStandings ? "Hide Survivor Table" : "Show Survivor Table"} type="button">{data.showSurvivorStandings ? "−" : "+"}</button>}{!displayLocked && data.showSurvivorStandings && data.survivorRows.some((row) => row.status === "eliminated") ? <button aria-label={data.hideSurvivorEliminatedRows ? "Show eliminated Survivor players" : "Hide eliminated Survivor players"} className="survivor-title-toggle survivor-elimination-toggle" disabled={savingDisplay} onClick={() => void setEliminatedRowsHidden("survivor", !data.hideSurvivorEliminatedRows)} title={data.hideSurvivorEliminatedRows ? "Show eliminated players" : "Hide eliminated players"} type="button">{data.hideSurvivorEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}</div><p className="pickem-ledger-period">{data.week.toUpperCase()}</p></div>
 
     <Collapse open={data.showSurvivorStandings}>{data.survivorAvailable ? (
-      <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
+      <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-(color:--themed-border-10)">
           <div className="survivor-standings-grid min-w-[47.5rem]" ref={gridRef}>
-          <div className="survivor-standings-header grid border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
+          <div className="survivor-standings-header grid border-b-2 border-(color:--themed-border-10) text-center text-[10px] font-black tracking-wide text-slate-600">
             <span aria-hidden="true" className="survivor-sticky-status py-2" />
             <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>
             {Array.from({ length: 18 }, (_, index) => <span className="py-2" key={index}>{index + 1}</span>)}
@@ -77,7 +77,7 @@ export default function SurvivorTable({ data, savingDisplay, displayLocked = fal
         </div>
       </div>
     ) : (
-      <div className="border-2 border-amber-700 bg-amber-50 p-4 text-amber-950">
+      <div className="border-2 border-(color:--themed-border-17) bg-(color:--themed-bg-21) p-4 text-(color:--themed-text-23)">
         <p className="font-bold">
           {data.survivorNotice ??
             "Survivor is temporarily unavailable. ATS standings remain current."}

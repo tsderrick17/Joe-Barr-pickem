@@ -70,10 +70,10 @@ function StatusCard({
   attention?: boolean;
 }) {
   return (
-    <article className={`border p-3 ${attention ? "border-amber-700 bg-amber-50" : "border-zinc-300 bg-white"}`}>
-      <p className="text-[11px] font-black tracking-[0.14em] text-zinc-600">{label}</p>
+    <article className={`border p-3 ${attention ? "border-(color:--themed-border-17) bg-(color:--themed-bg-21)" : "border-zinc-300 bg-(color:--themed-bg-26)"}`}>
+      <p className="text-[11px] font-black tracking-[0.14em] text-(color:--themed-text-28)">{label}</p>
       <p className="mt-1 font-bold">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-zinc-600">{detail}</p>
+      <p className="mt-1 text-xs leading-5 text-(color:--themed-text-28)">{detail}</p>
     </article>
   );
 }
@@ -144,11 +144,11 @@ export default function AutomationHealth() {
     <section className="commissioner-tool">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black tracking-[0.16em] text-zinc-600">AUTOMATION STATUS</p>
+          <p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">AUTOMATION STATUS</p>
           <h2 className="mt-1 font-serif text-2xl font-bold">The pool at a glance</h2>
-          <p className="mt-2 max-w-2xl text-zinc-700">Provider usage, cooldowns, and the last successful runs. Routine recovery is automatic; the override buttons are for a verified emergency.</p>
+          <p className="mt-2 max-w-2xl text-(color:--themed-text-29)">Provider usage, cooldowns, and the last successful runs. Routine recovery is automatic; the override buttons are for a verified emergency.</p>
         </div>
-        <button className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading || action !== null} onClick={refresh} type="button">
+        <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading || action !== null} onClick={refresh} type="button">
           {loading ? "Checking..." : "Refresh status"}
         </button>
       </div>
@@ -157,7 +157,7 @@ export default function AutomationHealth() {
       {message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
 
       {health ? <>
-        <div className={`mt-5 border p-4 ${health.status === "healthy" ? "border-green-800 bg-green-50 text-green-950" : "border-red-700 bg-red-50 text-red-950"}`}>
+        <div className={`mt-5 border p-4 ${health.status === "healthy" ? "border-(color:--themed-border-21) bg-(color:--themed-bg-23) text-green-950" : "border-(color:--themed-border-24) bg-(color:--themed-bg-24) text-red-950"}`}>
           <p className="font-bold">{health.status === "healthy" ? "Automation is healthy" : "Automation needs attention"}</p>
           {health.problems.length ? <ul className="mt-2 list-disc pl-5 text-sm">{health.problems.map((problem) => <li key={problem}>{problem}</li>)}</ul> : <p className="mt-1 text-sm">No overdue lines, stale scoring checks, provider incidents, or stuck reminders are detected.</p>}
         </div>
@@ -190,9 +190,9 @@ export default function AutomationHealth() {
           />
         </div>
 
-        <details className="mt-4 border border-zinc-400 bg-white p-4">
+        <details className="mt-4 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
           <summary className="cursor-pointer font-bold">Emergency manual controls</summary>
-          <p className="mt-2 text-sm text-zinc-700">These runs bypass provider cooldown timing only. Authentication, overlap leases, quota reserve, line locks, week pins, and atomic database checks remain enforced.</p>
+          <p className="mt-2 text-sm text-(color:--themed-text-29)">These runs bypass provider cooldown timing only. Authentication, overlap leases, quota reserve, line locks, week pins, and atomic database checks remain enforced.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="border border-zinc-900 px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("scores")} type="button">{action === "scores" ? "Checking scores..." : "Run score check now"}</button>
             <button className="border border-zinc-900 px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("schedule")} type="button">{action === "schedule" ? "Refreshing schedule..." : "Override schedule cooldown"}</button>

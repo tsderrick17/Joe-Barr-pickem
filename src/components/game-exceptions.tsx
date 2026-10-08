@@ -129,7 +129,7 @@ export default function GameExceptions() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl font-bold">Game Exceptions</h2>
-          <p className="mt-2 text-zinc-700">
+          <p className="mt-2 text-(color:--themed-text-29)">
             Record a verified postponement, cancellation, or no contest here.
             Pending picks are retained in the audit trail and settled by the
             published pool rules.
@@ -137,7 +137,7 @@ export default function GameExceptions() {
         </div>
 
         <button
-          className="border border-zinc-900 bg-white px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+          className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
           disabled={isLoading}
           onClick={loadExceptions}
           type="button"
@@ -152,29 +152,29 @@ export default function GameExceptions() {
       {successMessage ? <p className="mt-4 font-semibold text-green-800">{successMessage}</p> : null}
 
       {recordableGames.length ? (
-        <div className="mt-5 border border-zinc-400 bg-white p-4">
-          <p className="text-sm font-bold uppercase tracking-wide text-zinc-700">Record verified disruption</p>
+        <div className="mt-5 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
+          <p className="text-sm font-bold uppercase tracking-wide text-(color:--themed-text-29)">Record verified disruption</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <select className="min-w-64 border border-zinc-900 bg-white px-3 py-2" value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)}>
+            <select className="min-w-64 border border-zinc-900 bg-(color:--themed-bg-26) px-3 py-2" value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)}>
               <option value="">Choose a scheduled or live game</option>
               {recordableGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
             </select>
-            <button className="border border-amber-800 px-3 py-2 text-sm font-bold text-amber-950 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("postponed")} type="button">Mark postponed</button>
+            <button className="border border-(color:--themed-border-18) px-3 py-2 text-sm font-bold text-(color:--themed-text-23) disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("postponed")} type="button">Mark postponed</button>
             <button className="bg-red-800 px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
-            <button className="border border-red-800 px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>
+            <button className="border border-(color:--themed-border-25) px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>
           </div>
         </div>
       ) : null}
 
       {exceptions?.length === 0 ? (
-        <p className="mt-4 text-sm text-zinc-600">No game exceptions.</p>
+        <p className="mt-4 text-sm text-(color:--themed-text-28)">No game exceptions.</p>
       ) : null}
 
       {exceptions?.length ? (
         <ul className="mt-5 space-y-3">
           {exceptions.map((game) => (
-            <li className="border border-amber-800 bg-amber-50 p-4" key={game.id}>
-              <p className="font-bold uppercase tracking-wide text-amber-950">
+            <li className="border border-(color:--themed-border-18) bg-(color:--themed-bg-21) p-4" key={game.id}>
+              <p className="font-bold uppercase tracking-wide text-(color:--themed-text-23)">
                 {game.status === "pending_grade"
                   ? "FINAL PICK AWAITING LINE OR GRADE"
                   : game.status}
@@ -182,7 +182,7 @@ export default function GameExceptions() {
               <p className="mt-1 font-serif text-lg font-bold">
                 {game.awayTeam} at {game.homeTeam}
               </p>
-              <p className="mt-1 text-sm text-zinc-700">
+              <p className="mt-1 text-sm text-(color:--themed-text-29)">
                 {game.week} · {new Date(game.kickoffAt).toLocaleString()}
               </p>
             </li>
