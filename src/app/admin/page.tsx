@@ -26,6 +26,7 @@ const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
 const PlayerSignInHardening = dynamic(() => import("@/components/player-sign-in-hardening"));
+const CommissionerAssets = dynamic(() => import("@/components/commissioner-assets"));
 
 type Spread = {
   team: string;
@@ -93,6 +94,7 @@ const commissionerPanels = [
   ["bowl-pool", "Bowl Pool", "Bowl schedule, lines, entries, and settlement exceptions.", "04"],
   ["season-setup", "Season", "Schedule preparation and change control.", "05"],
   ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "06"],
+  ["assets", "Assets", "Every custom piece of the pool, live: buttons, chips, pennants, tiles, the football.", "07"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
@@ -284,6 +286,8 @@ export default function AdminPage() {
         </> : null}
 
         {activePanel === "grading" ? <GradingDashboard /> : null}
+
+        {activePanel === "assets" ? <CommissionerAssets /> : null}
 
         {activePanel === "game-day" ? <>
           <GameDayPlaybook />

@@ -55,6 +55,7 @@ const PANELS: Array<{ id: string; tab: number; states: string[]; open?: string[]
   { id: "bowl-pool", tab: 3, states: ["healthy", "attention"] },
   { id: "season-setup", tab: 4, states: ["healthy"] },
   { id: "system", tab: 5, states: ["healthy", "attention"], open: ["Automation health and alerts"] },
+  { id: "assets", tab: 6, states: ["healthy"] },
 ];
 
 for (const panel of PANELS) {
