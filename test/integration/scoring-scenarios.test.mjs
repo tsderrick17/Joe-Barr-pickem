@@ -23,14 +23,16 @@ test("the database grades every shared scoring scenario exactly as the applicati
     seasonId = season.id;
 
     const rows = [];
+    // One active period per season: every scenario has its own player, so each player's single pick and Survivor
+    // pick live in it without touching another scenario.
+    const { data: period, error: periodError } = await admin
+      .from("scoring_periods")
+      .insert({ season_id: seasonId, display_name: "Scoring scenarios", period_type: "regular", max_picks: 1, status: "active", display_order: 1 })
+      .select("id")
+      .single();
+    assert.equal(periodError, null, periodError?.message);
     for (const [index, scenario] of SCORING_SCENARIOS.entries()) {
       const label = `${token}${index}`;
-      const { data: period, error: periodError } = await admin
-        .from("scoring_periods")
-        .insert({ season_id: seasonId, display_name: `Scenario ${index + 1}`, period_type: "regular", max_picks: 1, status: "active", display_order: index + 1 })
-        .select("id")
-        .single();
-      assert.equal(periodError, null, periodError?.message);
       const { data: teams, error: teamsError } = await admin
         .from("teams")
         .insert([
