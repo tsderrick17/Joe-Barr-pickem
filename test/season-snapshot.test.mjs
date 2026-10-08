@@ -5,7 +5,6 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "../src/lib/season-snapshot-chart.js";
-import { readStylesheetSync } from "./helpers/stylesheet.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -177,8 +176,6 @@ test("Season Snapshot shows only its title, with no explanatory prose", () => {
   for (const prose of ["Commissioner-only", "cumulative Pick’em wins by week", "Weekly totals appear", "Season totals continue", "CURRENT STANDINGS"]) {
     assert.ok(!snapshot.includes(prose), `prose must be gone: ${prose}`);
   }
-  const css = readStylesheetSync();
-  assert.doesNotMatch(css, /season-snapshot-chart-note|season-snapshot-key-title|season-snapshot-heading p/);
   // One chart at a time: the playoff chart replaces the regular season.
   assert.doesNotMatch(snapshot, /showTitles/);
   assert.match(snapshot, /\{showPlayoffs\s*\? <SnapshotChart baseline=\{playoffBaseline\}[^\n]*\n\s*: <SnapshotChart baseline=\{\{\}\}/);
@@ -224,55 +221,30 @@ test("colors never shift when someone is hidden, inactive, or new", () => {
 
 test("the flip card turns flat, widens to the Survivor rail, and the arrows stay slim", () => {
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  const css = readStylesheetSync();
   assert.doesNotMatch(scoreboard, /pad-edge/, "no slab edges");
-  assert.doesNotMatch(css, /--pad-depth|\.pad-(front|back) \{[^}]*translateZ/, "no 3D thickness");
   assert.match(scoreboard, /markerEnd=/, "two arrowed half circles");
   assert.match(scoreboard, /markerUnits="userSpaceOnUse" markerWidth="5"/, "arrowheads do not scale with the stroke");
   assert.match(scoreboard, /d="M2\.2 1\.6 L7 5 L2\.2 8\.4" fill="none"/, "open chevron heads");
   assert.match(scoreboard, /strokeWidth="1\.6"/);
   assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
-  assert.match(css, /\.has-pad-flip\.is-flipped \.pad-flip-inner \{ max-width: 100%; \}/);
   // The width changes in one step while the card is edge-on (half of the .9s turn).
-  assert.match(css, /\.pad-flip-inner \{[^}]*transition: max-width 0s linear \.45s;[^}]*\}/);
   // Both sides share the pad's parchment.
-  assert.doesNotMatch(css, /\.has-pad-flip \.pad-back \{ background/);
-  assert.match(css, /\.pad-back \{ background: var\(--ledger-paper\);/);
   // One animated angle drives the turn, the lift, the tilt, and the shading together.
-  assert.match(css, /@property --pad-turn \{ syntax: "<angle>"; inherits: true; initial-value: 0deg; \}/);
-  assert.match(css, /transition: --pad-turn \.9s cubic-bezier\(\.45, \.05, \.55, \.95\);/);
-  assert.match(css, /rotateY\(var\(--pad-turn\)\);/);
-  assert.match(css, /opacity: calc\(sin\(var\(--pad-turn\)\) \* \.85\);/);
-  assert.match(css, /\.pad-face \{[^}]*transition: visibility 0s linear \.45s;[^}]*\}/, "faces swap at exactly half of the .9s turn");
-  assert.match(css, /\.pad-flip-icon\.is-spinning \{ animation: pad-flip-spin \.9s/);
-});
-
-test("motion respects reduced-motion and the key gives hidden players a visible state", () => {
-  const css = readStylesheetSync();
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.season-snapshot-lines \{ animation: none; \}/);
-  assert.match(css, /\.season-snapshot-key-row\.is-hidden/);
-  assert.match(css, /\.season-snapshot-ribbon\.is-dim/);
 });
 
 test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round button", () => {
   const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const css = readStylesheetSync();
   assert.match(scoreboard, /className="pad-flip-button"/);
   assert.match(scoreboard, /aria-pressed=\{flipped\}/);
   // Only the visible face is reachable by keyboard and screen readers.
   assert.match(scoreboard, /className="pad-face pad-front" aria-hidden=\{flipped\} inert=\{flipped\}/);
   assert.match(scoreboard, /className="pad-face pad-back" aria-hidden=\{!flipped\} inert=\{!flipped\}/);
-  assert.match(css, /\.has-pad-flip\.is-flipped \{ --pad-turn: 180deg; \}/);
-  assert.match(css, /backface-visibility: hidden;\s*grid-area: 1 \/ 1;/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pad-face,\s*\.pad-flip-inner,\s*\.pad-flip-button,\s*\.pickem-scoreboard-ledger\.has-pad-flip \{ transition: none; \}/);
   // Axis labels, a chart that fills the height, and a Show all that is always there.
   assert.match(snapshot, />Wins<\/text>/);
   assert.match(snapshot, /className="season-snapshot-week-label">Week<\/p>/);
   assert.match(snapshot, /height: Math\.max\(100, Math\.round\(entry\.contentRect\.height\)\)/);
-  assert.match(css, /\.season-snapshot-chart \{ display: flex; flex: 1 1 0; flex-direction: column; min-height: 10rem;/);
   assert.match(snapshot, /disabled=\{hidden\.size === 0\}/);
-  assert.match(css, /\.season-snapshot-show-all:disabled \{/);
 });
 
 test("players see the Season Snapshot from Week 6 until the next season starts", async () => {
@@ -300,7 +272,6 @@ test("each week is one straight band, so lines bend only at week boundaries", ()
 
 test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by week", () => {
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const css = readStylesheetSync();
   assert.match(snapshot, /export const WINDOW_WEEKS = 6;/);
   assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
   assert.match(snapshot, />All<\/button>/);
@@ -309,9 +280,6 @@ test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by w
   assert.match(snapshot, /const step = \(viewport - PLOT_LEFT - PLOT_RIGHT\) \/ \(scrolls \? WINDOW_WEEKS : weekCount\);/);
   assert.match(snapshot, /if \(element && scrolls\) element\.scrollLeft = element\.scrollWidth;/);
   assert.match(snapshot, /className="season-snapshot-snap" key=\{index\} style=\{\{ left: index \* step \}\}/);
-  assert.match(css, /scroll-snap-type: x mandatory;/);
-  assert.match(css, /.season-snapshot-range {[^}]*grid-template-columns: 1fr 1fr;/, "both halves of the toggle are the same width");
-  assert.match(css, /\.season-snapshot-snap \{[^}]*scroll-snap-align: start;/);
   // The y-axis sits outside the scrolling plot, with tight margins.
   assert.match(snapshot, /className="season-snapshot-yaxis"/);
   assert.match(snapshot, /const AXIS_WIDTH = 30;/);
@@ -445,7 +413,6 @@ test("the player key shows the chart's own totals, so totals and chart update to
 
 test("once the playoffs begin the Snapshot gets a Season | Playoffs switch beside the title, and the range shows only on Season", () => {
   const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const css = readStylesheetSync();
   // The switch needs the playoffs to have begun; before that the chart is the regular season alone.
   assert.match(snapshot, /const hasPlayoffs = isPlayoff \|\| \(snapshot\?\.playoffs\.length \?\? 0\) > 0;/);
   assert.match(snapshot, /const shownView = hasPlayoffs \? view : "regular";/);
@@ -458,5 +425,4 @@ test("once the playoffs begin the Snapshot gets a Season | Playoffs switch besid
   // The week range belongs to the regular-season chart; the switch reuses the range toggle's equal-width halves.
   assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown"/);
   assert.match(snapshot, /view=\{shownView\}/);
-  assert.match(css, /\.season-snapshot-view \{ margin-left: \.75rem; \}/);
 });

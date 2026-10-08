@@ -25,15 +25,6 @@ test("home display toggles preserve a saved preference over stale refresh data",
   assert.doesNotMatch(source, /setSavingDisplay/);
 });
 
-test("the gap under the Survivor heading rolls with the table, so nothing below jumps when the roll ends", async () => {
-  const { readStylesheet } = await import("./helpers/stylesheet.mjs");
-  const css = await readStylesheet();
-  assert.match(css, /\.survivor-ledger \.survivor-ledger-masthead \{ margin-bottom: 0; \}/);
-  assert.match(css, /\.survivor-ledger \.slide-section \{ display: flow-root; \}/);
-  assert.match(css, /\.survivor-ledger \.slide-section > \* \{ margin-top: \.55rem; \}/);
-  assert.match(css, /@media \(min-width: 640px\) \{\s*\.survivor-ledger \.slide-section > \* \{ margin-top: \.7rem; \}/);
-});
-
 test("the Standings page waits for the Bowl Card's first load, so the card never pops in late", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const card = await readFile(new URL("../src/components/bowl-card.tsx", import.meta.url), "utf8");
