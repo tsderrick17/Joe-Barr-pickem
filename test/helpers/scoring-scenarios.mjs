@@ -5,6 +5,8 @@
 // spread: the locked spread (always positive; 0 is a pick'em, where the line designates the home team).
 // ats: the side the player picked against the spread; survivor: the side picked straight up.
 // atsGrade: "win" | "loss" | "pending". survivorGrade: "win" | "loss".
+// dbRefuses: the database is stricter than the grading rule: it will not finalize a game that has ATS picks but no
+// official line (the whole call fails and nothing is graded), so the pick stays pending and the game is retried.
 //
 // Rules under test: a pick wins only if its side beats the number; a push (exactly the spread) is a LOSS for both
 // sides; Survivor is straight up and a tie is a LOSS; without a locked line an ATS pick stays pending.
@@ -22,7 +24,7 @@ export const SCORING_SCENARIOS = [
   { name: "pick'em line tied: a tie is a loss for both ATS picks", away: 20, home: 20, favorite: "home", spread: 0, ats: "home", atsGrade: "loss", survivor: "home", survivorGrade: "loss" },
   { name: "tied game: a Survivor tie is a loss, and the favorite does not cover", away: 20, home: 20, favorite: "away", spread: 3.5, ats: "away", atsGrade: "loss", survivor: "away", survivorGrade: "loss" },
   { name: "tied game: the underdog covers", away: 20, home: 20, favorite: "away", spread: 3.5, ats: "home", atsGrade: "win", survivor: "home", survivorGrade: "loss" },
-  { name: "no locked line yet: an ATS pick stays pending, Survivor is still graded", away: 31, home: 10, favorite: null, spread: null, ats: "away", atsGrade: "pending", survivor: "away", survivorGrade: "win" },
+  { name: "no locked line yet: an ATS pick stays pending, Survivor is still graded", away: 31, home: 10, favorite: null, spread: null, ats: "away", atsGrade: "pending", survivor: "away", survivorGrade: "win", dbRefuses: true },
   { name: "blowout: a large favorite covers a large spread", away: 45, home: 3, favorite: "away", spread: 20.5, ats: "away", atsGrade: "win", survivor: "away", survivorGrade: "win" },
   { name: "shutout: the underdog cannot cover a large spread", away: 0, home: 38, favorite: "home", spread: 14.5, ats: "away", atsGrade: "loss", survivor: "away", survivorGrade: "loss" },
 ];

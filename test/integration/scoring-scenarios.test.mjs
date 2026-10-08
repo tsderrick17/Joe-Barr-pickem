@@ -93,13 +93,22 @@ test("the database grades every shared scoring scenario exactly as the applicati
       const { error } = await admin.from("games").update({ kickoff_at: past }).eq("id", game.id);
       assert.equal(error, null, error?.message);
     }
+    const refused = rows.filter(({ scenario }) => scenario.dbRefuses);
+    const accepted = rows.filter(({ scenario }) => !scenario.dbRefuses);
+    // A game with ATS picks but no official line is refused outright, and nothing is graded by that call.
+    for (const { scenario, game, period, player } of refused) {
+      const { error: refusal } = await admin.rpc("finalize_games_atomically", { final_games: [{ game_id: game.id, away_score: scenario.away, home_score: scenario.home }] });
+      assert.match(refusal?.message ?? "", /official line/, scenario.name);
+      const { data: still } = await admin.from("picks").select("result").eq("player_id", player.id).eq("scoring_period_id", period.id).single();
+      assert.equal(still.result, scenario.atsGrade, `still pending: ${scenario.name}`);
+    }
     const { data: finalization, error: finalizationError } = await admin.rpc("finalize_games_atomically", {
-      final_games: rows.map(({ scenario, game }) => ({ game_id: game.id, away_score: scenario.away, home_score: scenario.home })),
+      final_games: accepted.map(({ scenario, game }) => ({ game_id: game.id, away_score: scenario.away, home_score: scenario.home })),
     });
     assert.equal(finalizationError, null, finalizationError?.message);
     assert.ok(finalization?.[0], "the finalization reports its counts");
 
-    for (const { scenario, period, player, entry } of rows) {
+    for (const { scenario, period, player, entry } of accepted) {
       const { data: pick } = await admin.from("picks").select("result").eq("player_id", player.id).eq("scoring_period_id", period.id).single();
       assert.equal(pick.result, scenario.atsGrade, `ATS: ${scenario.name}`);
       const { data: survivorPick } = await admin.from("survivor_picks").select("result").eq("survivor_entry_id", entry.id).eq("scoring_period_id", period.id).single();
