@@ -40,7 +40,7 @@ const TOSS = [
 
 /** A Raiders chip on the Operations desk to toss (click) or turn by hand (drag),
  *  for checking the chip from every angle. Nothing here touches pool data. */
-export default function ChipPlayground() {
+export default function ChipPlayground({ tossMs = 900 }: { tossMs?: number } = {}) {
   const [turn, setTurn] = useState({ x: 0, y: 0 });
   const [turning, setTurning] = useState(false);
   const turnRef = useRef(turn);
@@ -80,7 +80,7 @@ export default function ChipPlayground() {
       transform: `translateY(${stop.lift}px) rotateX(${from.x + (to.x - from.x) * stop.turn}deg) rotateY(${from.y + stop.wobble}deg) scale(${stop.scale})`,
     }));
     setTurning(true);
-    const animation = chip.animate(frames, { duration: 900, easing: "linear" });
+    const animation = chip.animate(frames, { duration: tossMs, easing: "linear" });
     animation.onfinish = () => {
       setTurnNow(to);
       setTurning(false);

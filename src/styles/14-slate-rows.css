@@ -411,7 +411,7 @@ button.slate-team-side:not(:disabled)::after {
   will-change: clip-path;
   /* Reveal fresh ink from the left. Unlike scaleX, already-painted ink never
      stretches or shifts while the marker continues across the word. */
-  animation: slate-selection-sweep 720ms cubic-bezier(.18,.72,.18,1) 35ms both;
+  animation: slate-selection-sweep var(--selection-sweep-ms, 720ms) cubic-bezier(.18,.72,.18,1) var(--selection-sweep-delay, 35ms) both;
 }
 
 @keyframes slate-selection-sweep {
