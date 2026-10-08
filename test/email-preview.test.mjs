@@ -1,7 +1,6 @@
 import "./helpers/typescript-renderer.mjs";
 import { registerHooks } from "node:module";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 let authorized = true;
@@ -66,9 +65,3 @@ test("delivery fixes density in each image URL and shows one combined summary", 
   assert.equal((html.match(/density=comfortable/g) ?? []).length, 2);
 });
 
-test("email editor keeps current image spacing fixed and exposes wording only", async () => {
-  const source = await readFile(new URL("../src/components/email-artwork-studio.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(source, /Image spacing|Comfortable —|Compact —/);
-  assert.doesNotMatch(source, /message: draft\.body, imageOptions:/);
-  assert.match(source, /Use default wording</);
-});

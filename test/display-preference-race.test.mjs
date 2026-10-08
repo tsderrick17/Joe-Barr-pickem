@@ -36,32 +36,3 @@ test("the Standings page waits for the Bowl Card's first load, so the card never
   assert.match(page, /window\.setTimeout\(\(\) => setBowlReady\(true\), 2500\)/);
 });
 
-test("rolling rows away takes their borders back smoothly, so nothing below jumps when the roll ends", async () => {
-  const source = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
-  // A border under a pixel is drawn as a whole pixel, so the roll uses a negative margin instead.
-  assert.match(source, /marginBottom: `\$\{-border\}px`/);
-  assert.doesNotMatch(source, /borderBottomWidth: "0px"/);
-  // The row above the rolled rows, which loses its border when it becomes the last row, is handled the same way
-  // and released once the rows have left the page.
-  assert.match(source, /holding\.current = animations;/);
-  assert.match(source, /for \(const animation of holding\.current\) animation\.cancel\(\);/);
-});
-
-test("an opening blind ends at the content's exact height, not a rounded one", async () => {
-  const source = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
-  assert.match(source, /function naturalHeight\(node: HTMLElement\)/);
-  assert.match(source, /const full = naturalHeight\(node\);/);
-  // scrollHeight rounds to whole pixels, which left the open ending up to half a pixel off and then settling.
-  assert.doesNotMatch(source, /= node\.scrollHeight;/);
-  assert.match(source, /new ResizeObserver/);
-});
-
-test("the Pick'em Pad's hidden rows roll away with the table's box, like the Survivor table's", async () => {
-  const pad = await readFile(new URL("../src/components/pickem-scoreboard.tsx", import.meta.url), "utf8");
-  const collapse = await readFile(new URL("../src/components/collapse.tsx", import.meta.url), "utf8");
-  assert.match(pad, /useBlindTable\(hideEliminatedRows, tableBox\)/);
-  assert.match(pad, /data-blind-row=\{row\.playoffEliminated \? "" : undefined\}/);
-  // The rows leave the page only after the box has rolled shut, and the held animation is released in that render.
-  assert.match(collapse, /export function useBlindTable/);
-  assert.match(collapse, /holding\.current = animation;/);
-});

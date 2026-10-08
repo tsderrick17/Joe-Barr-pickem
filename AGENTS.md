@@ -78,6 +78,9 @@ rule, preserve user data, and update stale documentation in the same change.
 2. Locate the governing rule in the project reference, decision log, tests,
    code, and latest migration before editing.
 3. Add or update a regression test for every rule or bug fix.
+   Never assert the text of the stylesheet or a component's markup: add or extend a
+   screenshot state instead (see `docs/VIEW_STATES.md`). Prefer a test that runs the
+   code over one that matches its source.
 4. If behavior, timing, operations, or a pool rule changes, update
    `docs/PROJECT_REFERENCE.md`, the relevant runbook, and
    `docs/DECISION_LOG.md` in the same pull request.
