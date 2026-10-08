@@ -45,7 +45,7 @@
   border-bottom: 1px solid var(--scorepad-blue);
 }
 .pickem-ledger-row:last-child { border-bottom: 0; }
-.pickem-ledger-row.is-eliminated { background: #e7dfd1; color: #69707a; }
+.pickem-ledger-row.is-eliminated { background: var(--nt-001); color: var(--nt-002); }
 .pickem-ledger-week-row th {
   /* The week is written directly on the same blue ruled line as the pad. */
   background: linear-gradient(to bottom, transparent calc(100% - 1px), var(--scorepad-blue) calc(100% - 1px));
@@ -89,7 +89,7 @@
   line-height: 1.06;
 }
 .pickem-ledger-pick {
-  color: #273349;
+  color: var(--nt-003);
   /* Match the handwritten names more closely without changing the ruled-row
      rhythm; the player cell already establishes each row's minimum height. */
   font-size: .95rem;
@@ -120,8 +120,6 @@ html[data-theme="night"] .pickem-ledger {
   --scorepad-red: #b86d68;
 }
 html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
-html[data-theme="night"] .pickem-ledger-row.is-eliminated { background: #37322e; color: #c2b7aa; }
-html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
 .pickem-eliminated-stamp {
   border: 3px solid var(--c-b42318);
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
