@@ -7,7 +7,7 @@ const css = await readStylesheet();
 test("Bowl standings game columns share fixed row tracks and centered baselines", () => {
   assert.match(
     css,
-    /\.bowl-standings-game-cell\s*\{[^}]*display:\s*grid !important;[^}]*grid-template-rows:\s*3rem 1\.6rem 1\.6rem 1\.6rem;/s,
+    /\.bowl-standings-game-cell\s*\{[^}]*display:\s*grid;[^}]*grid-template-rows:\s*3rem 1\.6rem 1\.6rem 1\.6rem;/s,
   );
   assert.match(
     css,

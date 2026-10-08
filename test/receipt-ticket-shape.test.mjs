@@ -57,8 +57,8 @@ test("notch and scallop bites are true half and quarter circles that shrink on p
 
 test("the strip is transparent so the scrolling page shows through, and its shadow follows the outline", () => {
   const strip = rule(".slate-mini-nav.slate-receipt-strip");
-  assert.match(strip, /background: transparent !important;/);
-  assert.match(strip, /box-shadow: none !important;/);
+  assert.match(strip, /background: transparent;/);
+  assert.match(strip, /box-shadow: none;/);
   const base = rule(".slate-receipt-strip {\n  --receipt-paper", "");
   assert.match(base, /filter: drop-shadow\(0 0 \.5px var\(--receipt-rule\)\) var\(--receipt-shadow\);/);
   assert.doesNotMatch(base, /box-shadow|background:|border-(top|bottom):/);

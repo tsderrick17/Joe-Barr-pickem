@@ -42,10 +42,10 @@ test("combined provider chart names independent credit and minute axes and retai
 
 test("the grading period control is a compact sticky rail, and commissioner cards collapse at tablet widths", () => {
   assert.match(dashboard, /sticky top-2 z-20/);
-  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem !important;'));
+  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem;'));
   assert.ok(css.includes(".grading-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }"));
   assert.ok(css.includes(".grading-desk > .sticky { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }"));
-  assert.match(css, /\.commissioner-map \{ padding-block: 1rem !important; \}/);
+  assert.match(css, /\.commissioner-map \{ padding-block: 1rem; \}/);
 });
 
 test("grading cards, worker columns, and operations actions keep stable non-overlapping layouts", async () => {

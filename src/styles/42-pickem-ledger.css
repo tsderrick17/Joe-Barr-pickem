@@ -32,24 +32,24 @@ html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pic
   background-color: transparent;
   box-shadow: none;
 }
-.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78) !important; }
+.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78); }
 .survivor-ledger-masthead h2 { margin: 0; }
 /* Keep the sticky player identity cells and the scrollable Survivor cells as
    one continuous active row in night mode. */
 html[data-theme="night"] .survivor-standings-row.viewer-row > td {
-  background-color: var(--c-16333a) !important;
-  color: #e8f5f1 !important;
+  background-color: var(--c-16333a);
+  color: #e8f5f1;
 }
 html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
 html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
-  background-color: var(--c-16333a) !important;
-  color: #e8f5f1 !important;
+  background-color: var(--c-16333a);
+  color: #e8f5f1;
 }
 /* Your own scorecard row gets a quiet teal ticket treatment in night mode,
    instead of disappearing into the alternating table surfaces. */
 html[data-theme="night"] .viewer-row {
   --survivor-row-bg: var(--c-16333a);
-  background-color: var(--c-16333a) !important;
+  background-color: var(--c-16333a);
   box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
 }
 html[data-theme="night"] .survivor-standings-header {

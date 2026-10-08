@@ -74,7 +74,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
-  padding-right: .38rem !important;
+  padding-right: .38rem;
   text-align: right;
 }
 /* Dad's paper scorecards kept the running total and name in a tight left
@@ -141,7 +141,7 @@ html[data-theme="night"] .pickem-ledger-pick { color: #e7e2d6; }
    rail instead of leaving a Slate-width gutter around the table. */
 body:has(.pickem-scoreboard-ledger) .pool-chat-dock .pool-chat,
 body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
-  max-width: var(--standings-module-width) !important;
+  max-width: var(--standings-module-width);
 }
 /* Postseason borrows the hand-scored, ruled-paper character of Joe's weekly
    texts without creating a separate source of truth from the regular board. */
@@ -154,7 +154,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   padding-left: .5rem;
   padding-right: .5rem;
 }
-.playoff-scoreboard tbody tr { background: transparent !important; }
+.playoff-scoreboard tbody tr { background: transparent; }
 .playoff-scoreboard-pick {
   font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
   font-size: .95rem;
@@ -168,7 +168,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   padding-right: .2rem;
 }
 .playoff-scoreboard--dense .pickem-ledger-wins {
-  padding-right: .24rem !important;
+  padding-right: .24rem;
   width: 2.4rem;
 }
 .playoff-scoreboard--dense .pickem-ledger-player {

@@ -222,18 +222,18 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 }
 .bowl-standings-game-cell {
   align-items: stretch;
-  display: grid !important;
+  display: grid;
   grid-template-rows: 3rem 1.6rem 1.6rem 1.6rem;
   min-height: 7.8rem;
-  padding-bottom: 0 !important;
-  padding-top: 0 !important;
+  padding-bottom: 0;
+  padding-top: 0;
   scroll-snap-align: start;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name,
 .bowl-standings-game-cell > .bowl-standings-team,
 .bowl-standings-game-cell > .bowl-standings-line {
   align-items: center;
-  display: flex !important;
+  display: flex;
   height: 100%;
   justify-content: center;
   line-height: 1;
@@ -244,8 +244,8 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 .bowl-standings-game-cell > .bowl-standings-team {
   /* Team labels are the actionable data on this ledger. Keep them fully
      opaque and ink-dark even when the surrounding cell uses muted slate ink. */
-  color: #111827 !important;
-  opacity: 1 !important;
+  color: #111827;
+  opacity: 1;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name {
   border-bottom: 1px solid #b8c0ca;
@@ -254,7 +254,7 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 }
 
 html[data-theme="night"] .bowl-standings-game-cell > .bowl-standings-team {
-  color: #f8fafc !important;
+  color: #f8fafc;
 }
 
 /* The Bowl Card uses a bespoke grid with intentionally light paper colors in
@@ -262,40 +262,40 @@ html[data-theme="night"] .bowl-standings-game-cell > .bowl-standings-team {
    never lands on parchment-colored cells. */
 html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
   background: #111c24;
-  border-color: #6b8790 !important;
+  border-color: #6b8790;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
 html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
-  background: var(--c-172731) !important;
-  border-color: #6b8790 !important;
-  color: #dcebed !important;
+  background: var(--c-172731);
+  border-color: #6b8790;
+  color: #dcebed;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-game-cell {
-  background: #1c2c36 !important;
-  border-color: #6b8790 !important;
-  color: #dcebed !important;
+  background: #1c2c36;
+  border-color: #6b8790;
+  color: #dcebed;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-bowl-name {
-  border-color: #637b84 !important;
-  color: #f6f7f2 !important;
+  border-color: #637b84;
+  color: #f6f7f2;
 }
-html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #e3bf91 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #e3bf91; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row {
-  background: var(--c-172731) !important;
+  background: var(--c-172731);
 }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span {
-  color: #e9f1f3 !important;
+  color: #e9f1f3;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky {
-  background: var(--c-172731) !important;
-  color: #f4f7f6 !important;
+  background: var(--c-172731);
+  color: #f4f7f6;
 }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f !important; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-green-"] { color: #80e4ac !important; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6 !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-green-"] { color: #80e4ac; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca !important; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca; }
 
 
 /* Commissioner desk: one visual language for the operational workspaces. */
@@ -449,12 +449,12 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 
 /* The period picker is a utility rail, not a second hero. Keep it to one
    compact row so it remains useful while sticky without covering the work. */
-[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem !important; top: .25rem; }
-[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.15rem !important; line-height: 1.05; margin: 0 !important; white-space: nowrap; }
-[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; flex-wrap: nowrap; gap: .5rem !important; }
-[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:last-child { flex-wrap: nowrap; gap: .35rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem; top: .25rem; }
+[aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: 1.15rem; line-height: 1.05; margin: 0; white-space: nowrap; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div { align-items: center; flex-wrap: nowrap; gap: .5rem; }
+[aria-labelledby="grading-dashboard-title"] > .sticky > div > div:last-child { flex-wrap: nowrap; gap: .35rem; }
 [aria-labelledby="grading-dashboard-title"] > .sticky select,
-[aria-labelledby="grading-dashboard-title"] > .sticky button { font-size: .72rem !important; line-height: 1.1; padding: .38rem .55rem !important; }
+[aria-labelledby="grading-dashboard-title"] > .sticky button { font-size: .72rem; line-height: 1.1; padding: .38rem .55rem; }
 [aria-labelledby="grading-dashboard-title"] > .sticky select { max-width: 15rem; }
 
 /* Grading desk: one status row, a scannable game list, and short fact lists.
@@ -499,7 +499,7 @@ html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
   .grading-status { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 639px) {
-  .grading-desk { border-radius: .75rem; padding: .6rem !important; }
+  .grading-desk { border-radius: .75rem; padding: .6rem; }
   .grading-status { padding: .75rem; }
   .grading-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grading-facts > div { flex-direction: column; gap: .1rem; }
@@ -546,14 +546,14 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 
 @media (max-width: 639px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
-  [aria-labelledby="grading-dashboard-title"] > .sticky { padding: .3rem .45rem !important; }
-  [aria-labelledby="grading-dashboard-title"] > .sticky > div { gap: .35rem !important; }
-  [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: .92rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky { padding: .3rem .45rem; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky > div { gap: .35rem; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky h2 { font-size: .92rem; }
   [aria-labelledby="grading-dashboard-title"] > .sticky label,
   [aria-labelledby="grading-dashboard-title"] > .sticky span.text-xs.text-zinc-400,
   [aria-labelledby="grading-dashboard-title"] > .sticky button:first-of-type { display: none; }
-  [aria-labelledby="grading-dashboard-title"] > .sticky select { min-width: 0; max-width: 9rem; padding: .34rem .4rem !important; }
-  [aria-labelledby="grading-dashboard-title"] > .sticky button { padding: .34rem .45rem !important; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky select { min-width: 0; max-width: 9rem; padding: .34rem .4rem; }
+  [aria-labelledby="grading-dashboard-title"] > .sticky button { padding: .34rem .45rem; }
   .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
   .commissioner-command-bar { grid-template-columns: minmax(0, 1fr); padding: .9rem; }
   .commissioner-command-bar h1 { font-size: 1.9rem; margin-top: .3rem; }
@@ -584,17 +584,17 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 .commissioner-command-bar { gap: .75rem; padding: clamp(.8rem, 1.6vw, 1.25rem); }
 .commissioner-panel-nav { padding: .5rem 0 .35rem; }
 .commissioner-panel-tab { font-size: .96rem; padding: .42rem .58rem; }
-.commissioner-map { padding-block: 1rem !important; }
-.commissioner-map-banner { margin-top: 1rem !important; padding: .75rem .9rem; }
-.commissioner-map-metrics { gap: .45rem; margin-top: .7rem !important; }
+.commissioner-map { padding-block: 1rem; }
+.commissioner-map-banner { margin-top: 1rem; padding: .75rem .9rem; }
+.commissioner-map-metrics { gap: .45rem; margin-top: .7rem; }
 .commissioner-map-metric { gap: .2rem; padding: .55rem .65rem; }
 .commissioner-map-metric strong { font-size: 1.08rem; }
-.commissioner-flow { list-style: none; margin-top: 1.25rem !important; }
+.commissioner-flow { list-style: none; margin-top: 1.25rem; }
 .commissioner-flow-button { min-height: 5.25rem; }
 .commissioner-flow-node { flex-basis: 2.35rem; height: 2.35rem; width: 2.35rem; }
 .commissioner-flow-step:not(:last-child)::after { top: 1.17rem; }
 .commissioner-flow-label { font-size: .88rem; margin-top: .45rem; }
-.commissioner-map-detail { gap: .8rem; margin-top: 1rem !important; padding: .7rem .8rem; }
+.commissioner-map-detail { gap: .8rem; margin-top: 1rem; padding: .7rem .8rem; }
 .commissioner-tool-card { margin-bottom: .65rem; padding: clamp(.7rem, 1.5vw, 1rem); }
 
 @media (max-width: 900px) {
@@ -604,7 +604,7 @@ html[data-theme="night"] .commissioner-panel-tab.is-active { background: #2b685d
 @media (max-width: 639px) {
   .commissioner-map-banner { gap: .75rem; }
   .commissioner-map-banner .font-serif { font-size: 1.25rem; }
-  .commissioner-flow { margin-top: .9rem !important; }
+  .commissioner-flow { margin-top: .9rem; }
   .commissioner-flow-button { min-height: 4.5rem; }
   .commissioner-map-detail { grid-template-columns: minmax(0, 1fr); }
   .commissioner-map-next { border-left: 0; border-top: 1px solid var(--pool-rule); padding: .6rem 0 0; }
