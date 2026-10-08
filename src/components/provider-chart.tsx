@@ -1,22 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { leftDomain, rightDomain } from "@/lib/chart-axis";
 
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
 export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string; stack?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
-function niceStep(value: number) {
-  const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, .01)));
-  const fraction = value / magnitude;
-  return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10) * magnitude;
-}
-function scaleMax(value: number) {
-  if (value <= 0) return 4;
-  // Keep the top gridline close to the observed data. The previous 1/2/5
-  // ladder could turn a ~200-minute period into a 400-minute chart.
-  return Math.max(4, Math.ceil((value * 1.15) / 10) * 10);
-}
-
 export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, rightAxis }: {
   points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean;
   rightAxis?: { label: string; suffix: string; scale?: "zero" | "tight" };
@@ -38,20 +27,9 @@ export default function ProviderChart({ points, series, label, histogram = false
   const plotWidth = width - left - edge, height = bottom - top;
   const highest = Math.max(0, ...points.map((point) => activeSeries.filter((item) => !item.axis).reduce((sum, item) => item.stack ? sum + (point.values[item.key] ?? 0) : Math.max(sum, point.values[item.key] ?? 0), 0)));
   const observed = points.flatMap((point) => activeSeries.filter((item) => !item.axis).map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
-  const observedMin = observed.length ? Math.min(...observed) : 0;
-  const observedMax = observed.length ? Math.max(...observed) : 0;
-  const rawRange = Math.max(observedMax - observedMin, Math.abs(observedMax) * .08, 1);
-  const tightStep = niceStep(rawRange / 4);
-  const minimum = yScale === "tight" && observed.length ? Math.max(0, Math.floor((observedMin - tightStep) / tightStep) * tightStep) : 0;
-  const maximum = histogram ? Math.max(4, Math.ceil(highest / 4) * 4) : yScale === "tight" && observed.length
-    ? Math.max(minimum + tightStep, Math.ceil((observedMax + tightStep) / tightStep) * tightStep)
-    : integerYAxis ? Math.ceil(scaleMax(highest) / 4) * 4 : scaleMax(highest);
+  const { minimum, maximum } = leftDomain({ observed, highest, scale: yScale, histogram, integer: integerYAxis });
   const rightValues = points.flatMap((point) => activeSeries.filter((item) => item.axis === "right").map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
-  const rightMin = rightValues.length ? Math.min(...rightValues) : 0;
-  const rightMax = rightValues.length ? Math.max(...rightValues) : 0;
-  const rightStep = niceStep(Math.max(rightMax - rightMin, rightMax * .08, 1) / 4);
-  const rightMinimum = rightAxis?.scale === "tight" && rightValues.length ? Math.max(0, Math.floor((rightMin - rightStep) / rightStep) * rightStep) : 0;
-  const rightMaximum = rightAxis?.scale === "tight" && rightValues.length ? Math.max(rightMinimum + rightStep, Math.ceil((rightMax + rightStep) / rightStep) * rightStep) : rightAxis ? scaleMax(rightMax) : 100;
+  const { minimum: rightMinimum, maximum: rightMaximum } = rightDomain({ values: rightValues, scale: rightAxis?.scale, present: Boolean(rightAxis) });
   const domain = Math.max(1, ...points.map((point) => point.end ?? 0));
   const x = (index: number) => histogram
     ? left + (((points[index].start ?? 0) + (points[index].end ?? 0)) / 2 / domain) * plotWidth
