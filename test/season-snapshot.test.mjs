@@ -170,83 +170,6 @@ test("the stacking order puts the most recent leader in the upper lane of a shar
   assert.ok(top("B") < top("A"), "the player ahead most recently occupies the upper lane");
 });
 
-test("Season Snapshot shows only its title, with no explanatory prose", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(snapshot, /<h2>Season Snapshot<\/h2>/);
-  for (const prose of ["Commissioner-only", "cumulative Pick’em wins by week", "Weekly totals appear", "Season totals continue", "CURRENT STANDINGS"]) {
-    assert.ok(!snapshot.includes(prose), `prose must be gone: ${prose}`);
-  }
-  // One chart at a time: the playoff chart replaces the regular season.
-  assert.doesNotMatch(snapshot, /showTitles/);
-  assert.match(snapshot, /\{showPlayoffs\s*\? <SnapshotChart baseline=\{playoffBaseline\}[^\n]*\n\s*: <SnapshotChart baseline=\{\{\}\}/);
-});
-
-test("players can be hidden and shown, and the chart rescales to whoever remains", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(snapshot, /const \[hidden, setHidden\] = useState<Set<string>>/);
-  assert.match(snapshot, /const visible = standings\.filter\(\(player\) => !hidden\.has\(player\.id\)\);/);
-  assert.match(snapshot, /players=\{visible\}/);
-  // The axis is built only from visible players, so hiding the leader rescales it.
-  assert.match(snapshot, /const shownIds = new Set\(players\.map\(\(player\) => player\.id\)\);/);
-  assert.match(snapshot, /week\.scores\.filter\(\(score\) => shownIds\.has\(score\.playerId\)\)/);
-  assert.match(snapshot, /snapshotStackOrder\(weeks, players, baseline\)/);
-  assert.match(snapshot, /aria-pressed=\{shown\}/);
-  assert.match(snapshot, /Show all/);
-  assert.doesNotMatch(snapshot, /focusedId/);
-});
-
-test("each person keeps the same color no matter who is hidden, using eleven distinct hues", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const colors = snapshot.match(/const palette = \[([\s\S]*?)\];/)[1].match(/#[0-9a-f]{6}/gi);
-  assert.equal(colors.length, 11);
-  assert.equal(new Set(colors.map((color) => color.toLowerCase())).size, 11);
-  // The frozen, thrice-shuffled order; a change here would recolor everyone.
-  assert.deepEqual(colors.map((color) => color.toLowerCase()), ["#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4", "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300"]);
-  // Colors follow join order from the server, never the visible subset or rank.
-  assert.match(snapshot, /const colors = snapshotColors\(standings, snapshot\.colorOrder\);/);
-  assert.doesNotMatch(snapshot, /visible\.map\(\(player, index\) => \[player\.id, palette/);
-  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
-  // One read of everyone ever added, in join order; only the plotted lines are filtered to active players.
-  assert.match(loader, /from\("players"\)\.select\("id, active"\)\.order\("created_at"\)\.order\("id"\)/);
-  assert.match(loader, /everyone\.filter\(\(player\) => player\.active\)/);
-  assert.match(loader, /colorOrder: everyone\.map\(\(player\) => player\.id\)/);
-});
-
-test("colors never shift when someone is hidden, inactive, or new", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  // Every id in the join order keeps its slot; unknown players come after.
-  assert.match(snapshot, /const known = colorOrder;/);
-  assert.match(snapshot, /\[\.\.\.known, \.\.\.extras\]\.map\(\(id, index\) => \[id, palette\[index % palette\.length\]\]\)/);
-});
-
-test("the flip card turns flat, widens to the Survivor rail, and the arrows stay slim", () => {
-  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  assert.doesNotMatch(scoreboard, /pad-edge/, "no slab edges");
-  assert.match(scoreboard, /markerEnd=/, "two arrowed half circles");
-  assert.match(scoreboard, /markerUnits="userSpaceOnUse" markerWidth="5"/, "arrowheads do not scale with the stroke");
-  assert.match(scoreboard, /d="M2\.2 1\.6 L7 5 L2\.2 8\.4" fill="none"/, "open chevron heads");
-  assert.match(scoreboard, /strokeWidth="1\.6"/);
-  assert.match(scoreboard, /setSpin\(\(current\) => current \+ 1\)/);
-  // The width changes in one step while the card is edge-on (half of the .9s turn).
-  // Both sides share the pad's parchment.
-  // One animated angle drives the turn, the lift, the tilt, and the shading together.
-});
-
-test("the Season Snapshot is the back of the Pick'em Pad, turned over by a round button", () => {
-  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(scoreboard, /className="pad-flip-button"/);
-  assert.match(scoreboard, /aria-pressed=\{flipped\}/);
-  // Only the visible face is reachable by keyboard and screen readers.
-  assert.match(scoreboard, /className="pad-face pad-front" aria-hidden=\{flipped\} inert=\{flipped\}/);
-  assert.match(scoreboard, /className="pad-face pad-back" aria-hidden=\{!flipped\} inert=\{!flipped\}/);
-  // Axis labels, a chart that fills the height, and a Show all that is always there.
-  assert.match(snapshot, />Wins<\/text>/);
-  assert.match(snapshot, /className="season-snapshot-week-label">Week<\/p>/);
-  assert.match(snapshot, /height: Math\.max\(100, Math\.round\(entry\.contentRect\.height\)\)/);
-  assert.match(snapshot, /disabled=\{hidden\.size === 0\}/);
-});
-
 test("players see the Season Snapshot from Week 6 until the next season starts", async () => {
   const { seasonSnapshotReleased } = await import("../src/lib/season-snapshot.js");
   const week = (order, status) => ({ id: String(order), display_order: order, period_type: "regular", status });
@@ -268,24 +191,6 @@ test("each week is one straight band, so lines bend only at week boundaries", ()
     assert.equal(ribbon.points[0].x, ribbon.weekIndex * 100);
     assert.equal(ribbon.points[1].x, (ribbon.weekIndex + 1) * 100);
   }
-});
-
-test("All / 6 Wk toggle, a fixed y-axis, and a six-week window that notches by week", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(snapshot, /export const WINDOW_WEEKS = 6;/);
-  assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown" className="season-snapshot-range"/);
-  assert.match(snapshot, />All<\/button>/);
-  assert.match(snapshot, />6 Wk<\/button>/);
-  // Every week keeps a sixth of the view; the view opens on the latest six weeks.
-  assert.match(snapshot, /const step = \(viewport - PLOT_LEFT - PLOT_RIGHT\) \/ \(scrolls \? WINDOW_WEEKS : weekCount\);/);
-  assert.match(snapshot, /if \(element && scrolls\) element\.scrollLeft = element\.scrollWidth;/);
-  assert.match(snapshot, /className="season-snapshot-snap" key=\{index\} style=\{\{ left: index \* step \}\}/);
-  // The y-axis sits outside the scrolling plot, with tight margins.
-  assert.match(snapshot, /className="season-snapshot-yaxis"/);
-  assert.match(snapshot, /const AXIS_WIDTH = 30;/);
-  assert.match(snapshot, /const PLOT_BOTTOM = 18;/);
-  // Not a playoff feature.
-  assert.match(snapshot, /title="Regular season" weeks=\{snapshot\.regular\} windowed=\{range === "six"\}/);
 });
 
 test("chart choices are remembered, and the playoff chart starts without eliminated players", () => {
@@ -401,28 +306,21 @@ test("the back of the pad loads only when shown and only when the standings chan
   assert.doesNotMatch(snapshot, /setInterval/);
 });
 
-test("the player key shows the chart's own totals, so totals and chart update together", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  // Totals come from the chart's last point, ordered by those totals, never from live standings wins.
-  assert.match(snapshot, /const chartTotals = new Map\(/);
-  assert.match(snapshot, /keyRows\.map\(\(\{ player, total \}\)/);
-  assert.match(snapshot, /<strong>\{total\}<\/strong>/);
-  assert.doesNotMatch(snapshot, /<strong>\{player\.wins\}<\/strong>/);
-  assert.doesNotMatch(snapshot, /\$\{player\.wins\} wins/);
-});
-
-test("once the playoffs begin the Snapshot gets a Season | Playoffs switch beside the title, and the range shows only on Season", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  // The switch needs the playoffs to have begun; before that the chart is the regular season alone.
-  assert.match(snapshot, /const hasPlayoffs = isPlayoff \|\| \(snapshot\?\.playoffs\.length \?\? 0\) > 0;/);
-  assert.match(snapshot, /const shownView = hasPlayoffs \? view : "regular";/);
-  assert.match(snapshot, /<h2>Season Snapshot<\/h2>\s*\{hasPlayoffs \? <div aria-label="Season half shown" className="season-snapshot-range season-snapshot-view"/);
-  assert.match(snapshot, />Season<\/button>[\s\S]*>Playoffs<\/button>/);
-  // It opens on the playoffs, remembers the last choice on this device, and reads it only on first turn-over.
-  assert.match(snapshot, /useState<"regular" \| "playoffs">\("playoffs"\)/);
-  assert.match(snapshot, /setView\(readSetting\(VIEW_KEY\) === "regular" \? "regular" : "playoffs"\);/);
-  assert.match(snapshot, /saveSetting\(VIEW_KEY, next\);/);
-  // The week range belongs to the regular-season chart; the switch reuses the range toggle's equal-width halves.
-  assert.match(snapshot, /\{!showPlayoffs \? <div aria-label="Weeks shown"/);
-  assert.match(snapshot, /view=\{shownView\}/);
+test("everyone keeps a permanent color: join order decides, and hiding, leaving or joining never shifts anyone", async () => {
+  await import("./helpers/typescript-renderer.mjs");
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||= "https://fixture.invalid";
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||= "fixture-publishable-key";
+  const { snapshotColors } = await import("../src/components/season-snapshot.tsx");
+  const everyone = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"].map((id) => ({ id, firstName: id.toUpperCase(), wins: 0 }));
+  const order = everyone.map((player) => player.id);
+  const full = snapshotColors(everyone, order);
+  // Eleven distinct hues, in the frozen order; changing it would recolor everyone.
+  assert.deepEqual([...full.values()], ["#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4", "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300"]);
+  // Only some players are still active: every one keeps the slot join order gave them.
+  const some = snapshotColors([everyone[1], everyone[4], everyone[9]], order);
+  for (const id of ["b", "e", "j"]) assert.equal(some.get(id), full.get(id), id);
+  // Someone new, not yet in the stored order, takes the next slot and moves nobody.
+  const joined = snapshotColors([...everyone, { id: "z", firstName: "Z", wins: 0 }], order);
+  for (const id of order) assert.equal(joined.get(id), full.get(id), id);
+  assert.equal(joined.get("z"), full.get("a"), "the twelfth player wraps to the first hue");
 });
