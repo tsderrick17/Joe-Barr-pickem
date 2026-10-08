@@ -116,27 +116,38 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: picks, error: picksError } = await readAllPages((from, to) =>
-    supabaseAdmin
-      .from("picks")
-      .select("player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result")
-      .in("scoring_period_id", periodIds)
-      .neq("result", "void")
-      .order("id")
-      .range(from, to),
-  );
+  // Two narrow reads instead of one wide one: this week's picks in full (the pad shows them), and only the winning
+  // picks' player ids for the season totals. The totals never needed the other columns, or the losses.
+  const [currentWeekResult, seasonWinsResult] = await Promise.all([
+    readAllPages((from, to) =>
+      supabaseAdmin
+        .from("picks")
+        .select("player_id, game_id, selected_team_id, scoring_period_id, submitted_at, result")
+        .eq("scoring_period_id", currentWeek.id)
+        .neq("result", "void")
+        .order("id")
+        .range(from, to),
+    ),
+    readAllPages((from, to) =>
+      supabaseAdmin
+        .from("picks")
+        .select("player_id, result")
+        .in("scoring_period_id", periodIds)
+        .eq("result", "win")
+        .order("id")
+        .range(from, to),
+    ),
+  ]);
 
-  if (picksError) {
+  if (currentWeekResult.error || seasonWinsResult.error) {
     return NextResponse.json(
       { error: "The Standings picks could not be loaded." },
       { status: 500 },
     );
   }
 
-  const allPicks = (picks ?? []);
-
-  const currentWeekPicks = allPicks
-    .filter((pick) => pick.scoring_period_id === currentWeek.id);
+  const currentWeekPicks = currentWeekResult.data ?? [];
+  const allPicks = seasonWinsResult.data ?? [];
 
   const gameIds = [
     ...new Set(currentWeekPicks.map((pick) => pick.game_id)),

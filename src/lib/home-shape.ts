@@ -34,7 +34,8 @@ export function shapePadRows({
   now,
 }: {
   players: Array<{ id: string; first_name: string }>;
-  allPicks: PadPickRow[];
+  /** Every winning pick of the season (player and result only): the season totals count these. */
+  allPicks: Array<Pick<PadPickRow, "player_id" | "result">>;
   currentWeekPicks: PadPickRow[];
   gameById: Map<string, PadGameRow>;
   teamById: Map<string, { name: string; abbreviation: string }>;

@@ -65,10 +65,10 @@ read-only samples of public endpoints and is never a gate.
 
 | Read | Requests | Rows | Database bytes | Response bytes |
 | --- | ---: | ---: | ---: | ---: |
-| `/api/home`, week 3 | 12 | 210 | 25,585 | 7,741 |
-| `/api/home`, week 16 | 12 | 496 | 77,570 | 7,752 |
-| `/api/home`, divisional round | 15 | 586 | 95,726 | 14,360 |
-| `/api/home`, week 16, three prior seasons on file | 12 | 496 | 77,570 | 7,752 |
+| `/api/home`, week 3 | 13 | 214 | 19,286 | 7,741 |
+| `/api/home`, week 16 | 13 | 461 | 27,834 | 7,752 |
+| `/api/home`, divisional round | 16 | 554 | 36,305 | 14,360 |
+| `/api/home`, week 16, three prior seasons on file | 13 | 461 | 27,834 | 7,752 |
 | `/api/board` (bootstrap), week 3 | 15 | 178 | 19,294 | 12,366 |
 | `/api/board` (bootstrap), week 16 | 15 | 178 | 19,387 | 12,384 |
 | `/api/board` (bootstrap), divisional round | 15 | 157 | 15,693 | 7,339 |
@@ -76,17 +76,19 @@ read-only samples of public endpoints and is never a gate.
 
 What the numbers say:
 
-- **The Standings read loads the whole season's picks.** `/api/home` reads every pick of the season to compute each
-  player's win total: at week 16 that is 352 rows and about 64 KB, most of its database traffic, to build a response
-  of about 8 KB. It grows with every week. This is the first, clearest optimization target (a count the database does,
-  or a per-player totals read).
+- **The Standings read used to load the whole season's picks** (352 rows and about 64 KB at week 16, most of its
+  database traffic, for an 8 KB response). It now reads this week's picks in full and only the winning picks' player
+  ids for the season totals: at week 16 the database bytes fell from 77,570 to 27,834 (about 64% less), the divisional
+  round from 95,726 to 36,305, with one more request and an identical response. The remaining weight is mostly the
+  current week's picks and the Survivor and history reads.
 - **History is already scoped.** Three prior seasons on file add nothing to either read.
 - **Request counts are modest and flat** (12 to 15 a read) and do not grow through the season.
 - A player's read makes no write beyond the existing activity timestamp.
 
 `test/route-cost-budgets.json` holds a ceiling for each read (these numbers plus 15%). `test/route-cost.test.mjs`
 fails a pull request that exceeds one, and also guards that history stays scoped. To raise a ceiling on purpose, edit
-the file in the same pull request and say why in the decision log. An optimization should tighten them.
+the file in the same pull request and say why in the decision log. An optimization should tighten them (the Standings
+read's change did).
 
 ### Production observation (October 7, 2026, read-only)
 

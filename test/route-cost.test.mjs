@@ -27,11 +27,13 @@ test("older seasons on file add nothing to a read: history is scoped to the curr
   }
 });
 
-test("the Standings read loads the whole season's picks, which is most of its database traffic (the known cost to reduce)", () => {
+test("the Standings read stays narrow: this week's picks plus only the winning picks' player ids, never the whole season", () => {
   const late = results["home/late_regular"];
   const picks = late.byTable["select:picks"];
-  assert.ok(picks.bytes > late.databaseBytes * 0.5, "if this fails the picks read got cheaper: tighten the budgets");
-  assert.ok(picks.bytes > late.responseBytes * 5, "the picks read is many times larger than the response it helps build");
+  // Two reads (this week's picks, and the season's wins). Loading every pick of the season took about 64 KB here.
+  assert.equal(picks.requests, 2);
+  assert.ok(picks.bytes < 20_000, `the picks reads are ${picks.bytes} bytes; the whole-season read was about 64,000`);
+  assert.ok(picks.bytes < late.databaseBytes * 0.6, "the picks reads are no longer most of the route's database traffic");
 });
 
 test("a read makes no write on the player's behalf beyond the activity timestamp", () => {
