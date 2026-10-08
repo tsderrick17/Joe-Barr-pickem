@@ -3,8 +3,8 @@
 Every view the app renders, every state it can be in, and the test that would
 fail if that state changed by even one pixel. **A new state or a new view ships
 with its fixture scenario and screenshots in the same pull request, and a row in
-this file.** Screenshots are recorded for Windows (`-win32`, run locally) and
-Linux (`-linux`, run in CI; see "Refreshing baselines" below).
+this file.** Only the Linux screenshots (`-linux`, recorded and checked in CI; see "Refreshing
+baselines" below) are committed. Local runs use personal, untracked baselines.
 
 Widths: phone 360, phone 390, tablet 700, desktop 1280 (the Slate also 900).
 Themes: day at every width; night at 390 and 1280 only. Fixed sample data,
@@ -95,8 +95,9 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Refreshing baselines after an intended change
 
-1. Run locally, look at the diff images in `test-results/`, then record Windows:
-   `npm run test:visual -- -u` and `EMAIL_BASELINE_UPDATE=1 npm test -- --test-name-pattern="email artwork baseline"`.
+1. Locally, first record baselines from `main` (`npm run test:visual -- -u`, ignored by git),
+   apply the change, rerun without `-u`, and look at the diff images in `test-results/`.
+   Email artwork (its Windows PNGs stay committed): `EMAIL_BASELINE_UPDATE=1 npm test -- --test-name-pattern="email artwork baseline"`.
 2. Record Linux: `gh workflow run visual-baselines.yml --ref <branch>`, wait for
    it, `gh run download <id> -n linux-baselines`, and commit the `*-linux.png`
    files and `test/email-artwork-baselines/linux/`.
