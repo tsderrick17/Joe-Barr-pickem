@@ -8,7 +8,7 @@
     #f3ead6;
   border: 1px solid #756b5b;
   box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
-  color: var(--c-28221b);
+  color: var(--nt-010);
   margin-left: auto;
   margin-right: auto;
   /* Match the compact Pick'em Pad width rather than the former wide module
@@ -181,7 +181,7 @@
   font-size: .9rem;
 }
 .my-ticket-open {
-  color: #923c24;
+  color: var(--nt-011);
   font: 900 .84rem/1 "Courier New", monospace;
   letter-spacing: .12em;
 }
@@ -305,7 +305,6 @@ html[data-theme="night"] .my-ticket {
     repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
     #29251f;
   border-color: #897e6b;
-  color: var(--c-f2e8d3);
   box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
 }
 html[data-theme="night"] .my-ticket-race,
@@ -323,9 +322,6 @@ html[data-theme="night"] .my-ticket-footer small,
 html[data-theme="night"] .my-ticket-open,
 html[data-theme="night"] .my-ticket-instructions {
   color: #bdb19b;
-}
-html[data-theme="night"] .my-ticket-open {
-  color: #f1b38c;
 }
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }

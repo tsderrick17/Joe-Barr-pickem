@@ -71,7 +71,7 @@
 .bowl-claim-stub button {
   background: var(--bowl-navy);
   border: 0;
-  color: var(--c-f4ecd9);
+  color: var(--nt-037);
   cursor: pointer;
   font-family: var(--font-graduate), Georgia, serif;
   font-size: .78rem;
@@ -183,7 +183,7 @@ html[data-theme="night"] .bowl-claim,
 html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--c-1b1f2b); --bowl-paper-alt: #20253a; --bowl-rule: #4d4a3e; --bowl-muted: #b9b19c; }
 html[data-theme="night"] .bowl-claim-main h3,
 html[data-theme="night"] .bowl-pool-page .bowl-game-name { color: var(--c-f4ecd9); }
-html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold); color: #16223a; }
+html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
 html[data-theme="night"] .bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: var(--c-f4ecd9); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child { background: var(--bowl-navy); border-color: var(--bowl-navy-lift); color: var(--bowl-gold-soft); }
