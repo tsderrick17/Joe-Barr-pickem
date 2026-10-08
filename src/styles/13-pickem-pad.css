@@ -168,7 +168,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   padding-right: .2rem;
 }
 .playoff-scoreboard--dense .pickem-ledger-wins {
-  padding-right: .24rem;
+  padding-right: .24rem !important;
   width: 2.4rem;
 }
 .playoff-scoreboard--dense .pickem-ledger-player {
