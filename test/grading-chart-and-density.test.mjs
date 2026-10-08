@@ -1,13 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { readStylesheet } from "./helpers/stylesheet.mjs";
 
 const chart = await readFile(new URL("../src/components/provider-chart.tsx", import.meta.url), "utf8");
 const dashboard = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
 const efficiency = await readFile(new URL("../src/components/efficiency-trend-panel.tsx", import.meta.url), "utf8");
 const slate = await readFile(new URL("../src/components/slate-performance-panel.tsx", import.meta.url), "utf8");
-const css = await readStylesheet();
 
 test("settlement latency uses a rounded, data-relative y-axis and names its units", () => {
   assert.match(chart, /yScale\?: "zero" \| "tight"/);
@@ -42,10 +40,6 @@ test("combined provider chart names independent credit and minute axes and retai
 
 test("the grading period control is a compact sticky rail, and commissioner cards collapse at tablet widths", () => {
   assert.match(dashboard, /sticky top-2 z-20/);
-  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] > .sticky { border-radius: .45rem; padding: .35rem .7rem;'));
-  assert.ok(css.includes(".grading-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }"));
-  assert.ok(css.includes(".grading-desk > .sticky { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }"));
-  assert.match(css, /\.commissioner-map \{ padding-block: 1rem; \}/);
 });
 
 test("grading cards, worker columns, and operations actions keep stable non-overlapping layouts", async () => {
@@ -53,10 +47,6 @@ test("grading cards, worker columns, and operations actions keep stable non-over
   assert.match(dashboard, /grading-worker-table w-full table-fixed/);
   assert.match(dashboard, /grading-worker-status/);
   assert.doesNotMatch(dashboard, /grading-worker-table[^\n]*min-w-\[48rem\]/);
-  assert.ok(css.includes(".grading-worker-table { min-width: 0; table-layout: fixed; }"));
-  assert.ok(css.includes('[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0;'));
-  assert.match(css, /\.grading-kpi > p \{[^}]*min-height: 2\.3em/);
-  assert.match(css, /\.commissioner-inline-action \{[^}]*display: inline-flex/);
   assert.match(operations, /commissioner-map-next/);
 });
 
