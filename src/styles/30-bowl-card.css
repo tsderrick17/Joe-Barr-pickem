@@ -164,11 +164,14 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
   background: var(--bowl-paper);
   overscroll-behavior-x: contain;
   width: min(100%, 53rem);
-  scroll-padding-left: 8rem;
+  scroll-padding-left: calc(var(--bowl-tile-col) + var(--bowl-name-col));
   scroll-snap-type: x mandatory;
   scrollbar-color: #a69f93 transparent;
   scrollbar-width: thin;
   --bowl-game-width: 7.5rem;
+  /* The frozen player rail: the games-left tile, then the name. */
+  --bowl-tile-col: 2.6rem;
+  --bowl-name-col: 4.4rem;
 }
 
 @media (max-width: 639px) {
@@ -184,8 +187,14 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
   }
 }
 
-@media (min-width: 1216px) {
-  .bowl-standings-scroll { --bowl-game-width: 8.3125rem; }
+/* From 1100px up the card is as wide as the window allows (78rem at most) and its game
+   columns are sized so ten complete games fit beside the frozen rail; a narrower window
+   keeps a 6.6rem floor and scrolls the rest. */
+@media (min-width: 1100px) {
+  .bowl-standings-scroll {
+    --bowl-game-width: max(6.6rem, calc((min(78rem, 100vw - 2rem) - var(--bowl-tile-col) - var(--bowl-name-col)) / 10));
+    width: min(100%, 78rem);
+  }
 }
 
 /* The page's ordinary standings rail is intentionally compact. On a true
@@ -200,14 +209,26 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
     max-width: none;
     transform: translateX(-50%);
     transition: width var(--section-glide);
-    width: min(74.5rem, calc(100vw - 2rem));
+    width: min(78rem, calc(100vw - 2rem));
   }
   .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
 
-  /* On desktop the ornament is the Bowl Card's full-width header rule, just
-     like the ticket below it; keep the compact capped treatment on phones. */
-  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament span { max-width: none; }
+  /* On desktop the gold heading rule is as wide as the ticket above while the card is
+     minimized and grows to the Survivor Table's width when it opens, over the same time
+     and curve as the table's blind. The phone keeps the compact capped rule. */
+  .bowl-card-section .bowl-crest-ornament {
+    margin-inline: auto;
+    max-width: var(--pad-width);
+    transition: max-width var(--section-glide);
+  }
+  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament { max-width: var(--rail-width); }
+  .bowl-card-section .bowl-crest-ornament span { max-width: none; }
 }
+
+/* The heading rule draws outward from the stars when the card first appears. */
+@keyframes bowl-rule-draw { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+.bowl-crest-ornament span:first-child { transform-origin: right center; }
+.bowl-crest-ornament span:last-child { transform-origin: left center; }
 
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }

@@ -16,7 +16,10 @@
 
 .bowl-crest { text-align: center; }
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
-.bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament span { animation: bowl-rule-draw 720ms cubic-bezier(.22, .61, .36, 1) 120ms both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+@media (prefers-reduced-motion: reduce) {
+  .bowl-crest-ornament span { animation: none; }
+}
 .bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
 .bowl-crest-title {
   align-items: center;
@@ -134,6 +137,7 @@
   border: 0;
   color: var(--bowl-gold-soft);
   font-family: var(--font-graduate), Georgia, serif;
+  font-size: .7rem;
   font-weight: 400;
   letter-spacing: .14em;
 }
@@ -163,14 +167,15 @@
   background: var(--bowl-navy-lift);
   border-color: var(--bowl-navy);
   color: var(--c-f4ecd9);
+  font-size: .69rem;
 }
-.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .06em; }
+.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-size: .8rem; font-weight: 400; letter-spacing: .06em; line-height: 1.1rem; }
 .bowl-card-section .bowl-standings-team { color: var(--c-f4ecd9) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line { color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
 .bowl-card-section .bowl-standings-game-cell .text-\[\#007e72\] { color: #8fd8cc; }
 .bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft); }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child { background: transparent; }
-.bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift); border-color: var(--bowl-navy); color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .12em; }
+.bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift); border-color: var(--bowl-navy); color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; font-weight: 400; letter-spacing: .12em; }
 .bowl-card-section .bowl-standings-player-row { background-color: var(--bowl-paper); border-color: #e7dfcb; }
 .bowl-card-section .bowl-standings-player-row.is-alt { background-color: var(--bowl-paper-alt); }
 /* Day-to-day column dividers are hairlines of old gold, not heavy gray rules. */
@@ -443,7 +448,7 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 .bowl-flap-half.is-bottom .bowl-flap-shade { background: linear-gradient(rgba(10, 14, 24, .85), rgba(10, 14, 24, .5)); }
 
 /* "Games" and "remaining" stack over the counter, all centered. */
-.bowl-games-remaining-label { line-height: 1.25; text-align: center; }
+.bowl-games-remaining-label { font-size: .64rem; line-height: 1.25; text-align: center; }
 
 /* ---- Bowl Pool picks page: the receipt sits right under the menu, Opt out is
    a small link in the board's corner, and each team is a large boxed target. */
