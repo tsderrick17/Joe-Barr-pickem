@@ -103,7 +103,7 @@
 
 .commissioner-flow-node {
   align-items: center;
-  background: var(--nt-019);
+  background: var(--nt-015);
   border: 2px solid #89837a;
   border-radius: 999px;
   display: flex;
@@ -122,9 +122,9 @@
   transform: translateY(-2px);
 }
 
-.commissioner-flow-step.is-complete .commissioner-flow-node { background: var(--nt-020); border-color: var(--nt-021); color: var(--c-ffffff); }
-.commissioner-flow-step.is-active .commissioner-flow-node { background: var(--nt-022); border-color: var(--nt-023); color: var(--nt-024); }
-.commissioner-flow-step.is-attention .commissioner-flow-node { background: var(--nt-025); border-color: var(--nt-026); color: var(--c-ffffff); }
+.commissioner-flow-step.is-complete .commissioner-flow-node { background: var(--nt-016); border-color: var(--nt-017); color: var(--c-ffffff); }
+.commissioner-flow-step.is-active .commissioner-flow-node { background: var(--nt-018); border-color: var(--nt-019); color: var(--nt-020); }
+.commissioner-flow-step.is-attention .commissioner-flow-node { background: var(--nt-021); border-color: var(--nt-022); color: var(--c-ffffff); }
 .commissioner-flow-step.is-waiting .commissioner-flow-node { background: #eee8dc; color: #676057; }
 .commissioner-flow-copy { display: block; min-width: 0; }
 .commissioner-flow-label {
@@ -132,9 +132,9 @@
   font-family: Georgia, serif;
   font-weight: 700;
 }
-.commissioner-flow-state { color: var(--nt-027); display: block; font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
-.commissioner-flow-step.is-active .commissioner-flow-state { color: var(--nt-028); }
-.commissioner-flow-step.is-attention .commissioner-flow-state { color: var(--nt-029); }
+.commissioner-flow-state { color: var(--nt-023); display: block; font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
+.commissioner-flow-step.is-active .commissioner-flow-state { color: var(--nt-024); }
+.commissioner-flow-step.is-attention .commissioner-flow-state { color: var(--nt-025); }
 
 .commissioner-map-detail {
   border-left: 5px solid #787169;
@@ -192,8 +192,8 @@ html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
 
 .pool-display-toggle {
   border: 1px solid #77746e;
-  background: var(--nt-030);
-  color: var(--nt-031);
+  background: var(--pool-surface);
+  color: #34415a;
   font-size: .62rem;
   font-weight: 900;
   letter-spacing: .08em;
@@ -203,7 +203,7 @@ html[data-theme="night"] .commissioner-map-next { border-color: #52615d; }
 }
 .pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: #e7f2ee; border-color: #167d75; color: var(--c-075f58); }
 .pool-display-toggle:disabled { cursor: wait; opacity: .6; }
-html[data-theme="night"] .pool-display-toggle { border-color: #788482; }
+html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
 html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: var(--c-ffffff); }
 
 /* Keep the Bowl Pool identity columns above the moving game matrix. The
@@ -238,7 +238,7 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 .bowl-standings-game-cell > .bowl-standings-team {
   /* Team labels are the actionable data on this ledger. Keep them fully
      opaque and ink-dark even when the surrounding cell uses muted slate ink. */
-  color: var(--nt-032);
+  color: var(--nt-026);
   opacity: 1;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name {
@@ -324,7 +324,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  color: var(--nt-041);
+  color: #736e66;
   display: inline-flex;
   flex: 0 0 auto;
   font-family: Georgia, serif;
@@ -334,7 +334,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 }
 .commissioner-panel-tab > span { color: #9a9389; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .61rem; font-weight: 800; letter-spacing: .08em; }
 .commissioner-panel-tab:hover { border-color: #b8b1a7; color: #1f2724; }
-.commissioner-panel-tab.is-active { background: var(--nt-042); border-color: var(--nt-042); color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
+.commissioner-panel-tab.is-active { background: var(--nt-035); border-color: var(--nt-035); color: #fffdf7; box-shadow: 0 3px 0 #79aa99; }
 .commissioner-panel-tab.is-active > span { color: #9bdbca; }
 /* Every desk tool shares one light card rhythm instead of heavy black rules. */
 .commissioner-tool { border-bottom: 1px solid var(--c-c8c2b7); padding: 1.25rem 0; }
@@ -384,18 +384,18 @@ html[data-theme="night"] .commissioner-tool { border-color: #3b514c; }
 .grading-worker-table { min-width: 0; table-layout: fixed; }
 /* "View chart data" is a plain ledger: one hairline per row, a header that stays
    put while the list scrolls, and numbers right-aligned so digits line up. */
-.provider-chart-table { border-collapse: collapse; color: var(--nt-033); }
+.provider-chart-table { border-collapse: collapse; color: var(--nt-027); }
 .provider-chart-table thead th {
-  background: var(--nt-034);
+  background: var(--nt-028);
   border-bottom: 1px solid #d4d4d8;
-  color: var(--nt-035);
+  color: var(--nt-029);
   font-weight: 700;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 .provider-chart-table tbody tr { border-top: 1px solid var(--c-f1f1f2); }
-.provider-chart-table tbody tr:nth-child(even) { background: var(--nt-036); }
+.provider-chart-table tbody tr:nth-child(even) { background: var(--nt-030); }
 .provider-chart-table th:not(:first-child),
 .provider-chart-table td:not(:first-child) { text-align: right; }
 html[data-theme="night"] .provider-chart-table thead th { border-bottom-color: #3f3f46; }
@@ -448,8 +448,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 /* Grading desk: one status row, a scannable game list, and short fact lists.
    Built to read on a phone first; font sizes match the existing tiles. */
 .grading-status { align-items: center; border: 1px solid; border-radius: .75rem; display: grid; gap: .9rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin-top: 1rem; padding: .9rem 1rem; }
-.grading-status.is-clear { background: var(--nt-037); border-color: var(--nt-038); }
-.grading-status.is-attention { background: var(--nt-039); border-color: var(--nt-040); }
+.grading-status.is-clear { background: var(--nt-031); border-color: var(--nt-032); }
+.grading-status.is-attention { background: var(--nt-033); border-color: var(--nt-034); }
 .grading-status-headline { display: grid; gap: .15rem; min-width: 0; }
 .grading-status-headline > span { font-size: .75rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
 .grading-status.is-clear .grading-status-headline > span { color: #065f46; }
@@ -511,7 +511,7 @@ html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
 .commissioner-tool-card--write .commissioner-tool-eyebrow { color: #9a590c; }
 .commissioner-diagnostics { border-bottom: 1px solid var(--c-c8c2b7); margin-top: 1rem; padding: .8rem 0 1.2rem; }
 .commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
-.commissioner-diagnostics summary span { color: var(--nt-043); display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
+.commissioner-diagnostics summary span { color: var(--nt-036); display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
 .commissioner-diagnostics > details + details { border-top: 1px solid var(--c-c8c2b7); margin-top: 1rem; padding-top: 1rem; }
 .commissioner-diagnostics details[open] summary { color: #9b2e1d; }
 
@@ -525,6 +525,7 @@ html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
 
 html[data-theme="night"] .commissioner-desk { background-image: radial-gradient(circle at 12% 0%, rgba(74, 178, 155, .13), transparent 24rem); }
 html[data-theme="night"] .commissioner-panel-nav, html[data-theme="night"] .commissioner-diagnostics { border-color: #48514e; }
+html[data-theme="night"] .commissioner-panel-tab { color: #b9c1bd; }
  html[data-theme="night"] .commissioner-tool-card { background: #172522; border-color: #44534e; }
 
 @media (max-width: 639px) {

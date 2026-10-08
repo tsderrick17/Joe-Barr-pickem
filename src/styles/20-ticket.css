@@ -8,7 +8,7 @@
     #f3ead6;
   border: 1px solid #756b5b;
   box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
-  color: var(--nt-011);
+  color: var(--nt-010);
   margin-left: auto;
   margin-right: auto;
   /* Match the compact Pick'em Pad width rather than the former wide module
@@ -181,7 +181,7 @@
   font-size: .9rem;
 }
 .my-ticket-open {
-  color: var(--nt-012);
+  color: var(--nt-011);
   font: 900 .84rem/1 "Courier New", monospace;
   letter-spacing: .12em;
 }
@@ -246,7 +246,7 @@
 }
 .my-ticket-completion {
   align-self: stretch;
-  color: var(--nt-013);
+  color: var(--c-665e51);
   display: grid;
   gap: .16rem;
 }
@@ -324,6 +324,7 @@ html[data-theme="night"] .my-ticket-instructions {
   color: #bdb19b;
 }
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
+html[data-theme="night"] .my-ticket-completion { color: #bdb19b; }
 html[data-theme="night"] .my-ticket-barcode {
   background: linear-gradient(90deg,
     var(--c-f2e8d3) 0 2%, transparent 2% 4%, var(--c-f2e8d3) 4% 5%, transparent 5% 8%,

@@ -1,14 +1,14 @@
 /* A selected ATS team reads like a marked betting ticket, not an inverted
    black block that fights the newspaper slate. */
 .slate-team-selection {
-  background: var(--nt-009);
-  color: var(--nt-010);
+  background: var(--nt-008);
+  color: var(--nt-009);
 }
 
 .slate-team-label--selected {
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  background: var(--nt-009);
+  background: transparent;
   /* Keep the marker attached to the words themselves.  The surrounding
      label lane is intentionally full-width for score alignment, but the
      selected label must remain content-sized so the highlight never becomes
@@ -509,8 +509,8 @@ button.slate-team-side:not(:disabled)::after {
   color: var(--nt-007);
 }
 
-.selection-chip small { color: var(--nt-006); }
-.selection-chip small.is-official { color: var(--nt-008); }
+.selection-chip small { color: var(--c-111111); }
+.selection-chip small.is-official { color: var(--official-line-color); }
 
 /* A restrained late-night sportsbook palette. Page components retain their
    newspaper proportions; the theme only swaps paper, ink, and line colors. */
@@ -630,9 +630,15 @@ html[data-theme="night"] .selection-chip button:hover {
   background-color: #472d35;
   color: #ffb4bd;
 }
+html[data-theme="night"] .selection-chip small { color: var(--c-111111); }
+html[data-theme="night"] .selection-chip small.is-official { color: var(--c-0f766e); }
 
 html[data-theme="night"] .slate-team-selection {
   box-shadow: none;
+}
+
+html[data-theme="night"] .slate-team-label--selected {
+  background: transparent;
 }
 
 html[data-theme="night"] .slate-team-label--selected::before,
