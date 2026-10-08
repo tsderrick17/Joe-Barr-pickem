@@ -146,7 +146,7 @@
   appearance: none;
   background: linear-gradient(180deg, #f7f7f6 0%, #e8e9e7 42%, #c8cbc9 100%);
   border: 2px outset #f9f9f9;
-  box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+  box-shadow: 1px 1px 0 var(--c-6f7474), inset 0 1px rgba(255, 255, 255, .92);
   color: #15191b;
   cursor: pointer;
   font-family: Arial, Helvetica, sans-serif;
@@ -186,7 +186,7 @@
   z-index: 1;
 }
 .slate-receipt-print:hover { filter: brightness(1.04); }
-.slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 #6f7474; transform: translate(1px, 1px); }
+.slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 var(--c-6f7474); transform: translate(1px, 1px); }
 .slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention 15s ease-in-out infinite; }
 .slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam 15s ease-in-out infinite; }
 
@@ -232,7 +232,7 @@
 .slate-receipt-footnote .receipt-printing-status { justify-content: center; min-height: 0; }
 .slate-receipt-footnote .receipt-printing-status.is-printing ~ .slate-receipt-submit-hint { visibility: hidden; }
 .slate-receipt-submit-hint {
-  color: #5d6470;
+  color: var(--c-5d6470);
   display: block;
   font-weight: 900;
   letter-spacing: .08em;
@@ -248,7 +248,7 @@
   /* The sheen clears at 20%; the press follows roughly .2 seconds later,
      while the 15-second cycle still governs click-to-click timing. */
   0%, 20.35%, 23%, 100% {
-    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .92);
+    box-shadow: 1px 1px 0 var(--c-6f7474), inset 0 1px rgba(255, 255, 255, .92);
     filter: none;
     transform: translate(0, 0);
   }
@@ -258,7 +258,7 @@
     transform: translate(1px, 1px);
   }
   22.1% {
-    box-shadow: 1px 1px 0 #6f7474, inset 0 1px rgba(255, 255, 255, .94);
+    box-shadow: 1px 1px 0 var(--c-6f7474), inset 0 1px rgba(255, 255, 255, .94);
     filter: brightness(1.04);
     transform: translate(0, 0);
   }
@@ -322,7 +322,7 @@
 .slate-receipt-selection-chip.is-sealed {
   background: #eef4f1;
   border-color: #8aa7a1;
-  border-left-color: #0f766e;
+  border-left-color: var(--c-0f766e);
   box-shadow: inset 0 0 0 1px rgba(15, 118, 110, .08);
 }
 .slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -335,7 +335,7 @@
 .slate-receipt-selection-chip button {
   background: transparent;
   border: 0;
-  color: #5d6470;
+  color: var(--c-5d6470);
   cursor: pointer;
   font-size: 1rem;
   font-weight: 900;
@@ -345,7 +345,7 @@
 }
 .slate-receipt-selection-chip button:hover { color: #9d1e1e; }
 .slate-receipt-lock-mark {
-  color: #0f766e;
+  color: var(--c-0f766e);
   flex: 0 0 auto;
   font-size: .7rem;
   line-height: 1;
@@ -353,7 +353,7 @@
 }
 
 .slate-receipt-pool > em {
-  color: #5d6470;
+  color: var(--c-5d6470);
   font-size: .48rem;
   font-style: normal;
   font-weight: 900;
@@ -363,7 +363,7 @@
   white-space: normal;
 }
 .slate-receipt-pool > em small { font-size: inherit; font-weight: inherit; }
-.slate-receipt-pool > em.is-complete { color: #08764e; }
+.slate-receipt-pool > em.is-complete { color: var(--c-08764e); }
 .slate-receipt-pool > em.is-unsaved { color: #a86008; }
 
 /* The Bowl Pool is a season card, not a short weekly slip. Keep its receipt
@@ -402,7 +402,7 @@
   letter-spacing: .11em;
   line-height: 1.1;
 }
-.bowl-receipt-metric.is-due strong { color: #a82820; }
+.bowl-receipt-metric.is-due strong { color: var(--c-a82820); }
 
 .bowl-receipt-strip button:disabled { cursor: default; }
 
@@ -430,15 +430,15 @@
   min-width: 0;
   width: min(3.7rem, calc(100% - (var(--receipt-chip-buffer) * 2)));
 }
-.slate-receipt-survivor .is-due { color: #a82820; }
-.slate-receipt-survivor .is-out { color: #b42318; }
-.slate-receipt-survivor .is-quiet { color: #5d6470; }
+.slate-receipt-survivor .is-due { color: var(--c-a82820); }
+.slate-receipt-survivor .is-out { color: var(--c-b42318); }
+.slate-receipt-survivor .is-quiet { color: var(--c-5d6470); }
 
 /* The warning hangs off the Pick'em section like a tab of the same paper: it
    sits under that column only, and the strip's outline follows its edges. */
 /* Same die-cut corners as the sections above it. The paper layer's own rule is the
    only line where it meets the Pick'em section, so there is no second dashed edge. */
-.slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: #a82820; }
+.slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: var(--c-a82820); }
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
@@ -505,7 +505,7 @@
   /* This lives outside the Slate header so it can remain in view while a
      player works through a long mobile slate. */
   .slate-mini-nav {
-    background: #fffdf8;
+    background: var(--pool-surface);
     box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
     margin-left: -.5rem;
     margin-right: -.5rem;
@@ -542,7 +542,7 @@
      long Slate. Desktop navigation scrolls away, so this owns the top edge
      once it reaches it—matching the mobile experience. */
   .slate-mini-nav {
-    background: var(--receipt-paper, #fffdf8);
+    background: var(--receipt-paper, var(--pool-surface));
     box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
     position: sticky;
     top: 0;
@@ -606,7 +606,7 @@
   width: 2.82rem;
 }
 
-.slate-view-switch > span.is-active { color: #25334a; }
+.slate-view-switch > span.is-active { color: var(--c-25334a); }
 
 .slate-view-switch button {
   background: linear-gradient(180deg, #7f888a 0%, #626a6c 52%, #4d5658 100%);
@@ -630,7 +630,7 @@
 }
 
 .slate-view-switch button > span {
-  background: linear-gradient(180deg, #ffffff 0%, #e7e6de 42%, #bcc0ba 100%);
+  background: linear-gradient(180deg, var(--c-ffffff) 0%, #e7e6de 42%, #bcc0ba 100%);
   border: 1px solid #3e4749;
   border-radius: .1rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .92), inset 0 -1px 1px rgba(55, 62, 63, .24), 0 2px 0 #252d2f, 0 4px 6px rgba(14, 19, 20, .46);
@@ -653,7 +653,7 @@
 
 .slate-action-empty {
   border-block: 1px solid #c8c1b5;
-  color: #5d6470;
+  color: var(--c-5d6470);
   font-size: .8rem;
   font-weight: 600;
   margin: 1.25rem 0 0;

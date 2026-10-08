@@ -1,6 +1,6 @@
 .survivor-poker-chip-wrap {
   --chip-primary: #1d1d1f;
-  --chip-secondary: #f5f0e6;
+  --chip-secondary: var(--c-f5f0e6);
   --chip-tertiary: #c99b3f;
   display: inline-grid;
   flex: 0 0 auto;
@@ -50,10 +50,10 @@
 .survivor-poker-chip-side {
   backface-visibility: hidden;
   background: conic-gradient(from -8deg,
-    var(--chip-secondary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-tertiary) 12deg 16deg, #ded9cf 16deg 90deg,
-    var(--chip-secondary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-tertiary) 102deg 106deg, #ded9cf 106deg 180deg,
-    var(--chip-secondary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-tertiary) 192deg 196deg, #ded9cf 196deg 270deg,
-    var(--chip-secondary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-tertiary) 282deg 286deg, #ded9cf 286deg 360deg);
+    var(--chip-secondary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-tertiary) 12deg 16deg, var(--c-ded9cf) 16deg 90deg,
+    var(--chip-secondary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-tertiary) 102deg 106deg, var(--c-ded9cf) 106deg 180deg,
+    var(--chip-secondary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-tertiary) 192deg 196deg, var(--c-ded9cf) 196deg 270deg,
+    var(--chip-secondary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-tertiary) 282deg 286deg, var(--c-ded9cf) 286deg 360deg);
   border: 2px solid color-mix(in srgb, var(--chip-primary) 34%, #77726a);
   border-radius: 50%;
   box-shadow: inset 0 2px 1px rgba(255,255,255,.82), inset 0 -2px 2px rgba(23,23,25,.2), 0 2px 4px rgba(23,23,25,.28);
@@ -68,15 +68,15 @@
 .survivor-poker-chip-back {
   transform: rotateY(180deg) translateZ(calc(var(--chip-t) / 2));
   background-image: conic-gradient(from -8deg,
-    var(--chip-tertiary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-secondary) 12deg 16deg, #ded9cf 16deg 90deg,
-    var(--chip-tertiary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-secondary) 102deg 106deg, #ded9cf 106deg 180deg,
-    var(--chip-tertiary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-secondary) 192deg 196deg, #ded9cf 196deg 270deg,
-    var(--chip-tertiary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-secondary) 282deg 286deg, #ded9cf 286deg 360deg);
+    var(--chip-tertiary) 0 4deg, var(--chip-primary) 4deg 12deg, var(--chip-secondary) 12deg 16deg, var(--c-ded9cf) 16deg 90deg,
+    var(--chip-tertiary) 90deg 94deg, var(--chip-primary) 94deg 102deg, var(--chip-secondary) 102deg 106deg, var(--c-ded9cf) 106deg 180deg,
+    var(--chip-tertiary) 180deg 184deg, var(--chip-primary) 184deg 192deg, var(--chip-secondary) 192deg 196deg, var(--c-ded9cf) 196deg 270deg,
+    var(--chip-tertiary) 270deg 274deg, var(--chip-primary) 274deg 282deg, var(--chip-secondary) 282deg 286deg, var(--c-ded9cf) 286deg 360deg);
 }
 
 /* Dashed inlay ring, under the center. */
 .survivor-poker-chip-side::before {
-  border: 1px dashed color-mix(in srgb, var(--chip-primary) 54%, #fffdf8);
+  border: 1px dashed color-mix(in srgb, var(--chip-primary) 54%, var(--pool-surface));
   border-radius: 50%;
   content: "";
   inset: calc(.24rem - 2px);
@@ -96,7 +96,7 @@
 
 .survivor-poker-chip-face {
   align-items: center;
-  background: radial-gradient(circle at 35% 27%, #ffffff 0 12%, color-mix(in srgb, var(--chip-secondary) 8%, #fffdf8) 54%, color-mix(in srgb, var(--chip-primary) 7%, #f1eee7) 100%);
+  background: radial-gradient(circle at 35% 27%, var(--c-ffffff) 0 12%, color-mix(in srgb, var(--chip-secondary) 8%, var(--pool-surface)) 54%, color-mix(in srgb, var(--chip-primary) 7%, #f1eee7) 100%);
   border: 1px solid rgba(23,23,25,.34);
   border-radius: 50%;
   display: flex;
@@ -155,17 +155,17 @@
   font-size: 2.35rem;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 1px 0 color-mix(in srgb, var(--chip-secondary) 75%, #fffdf8), 0 2px 2px rgba(23, 23, 25, .22);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--chip-secondary) 75%, var(--pool-surface)), 0 2px 2px rgba(23, 23, 25, .22);
   -webkit-text-stroke: 1px color-mix(in srgb, var(--chip-secondary) 64%, #171719);
 }
 
 .survivor-poker-chip-pick-mark {
   background: color-mix(in srgb, var(--chip-primary) 86%, #171719);
-  border: 1px solid color-mix(in srgb, var(--chip-secondary) 72%, #fffdf8);
+  border: 1px solid color-mix(in srgb, var(--chip-secondary) 72%, var(--pool-surface));
   border-radius: 999px;
   bottom: -.32rem;
   box-shadow: 0 1px 2px rgba(23, 23, 25, .22);
-  color: #fffdf8;
+  color: var(--pool-surface);
   font-family: var(--font-geist-sans), Arial, sans-serif;
   font-size: .28rem;
   font-weight: 900;
@@ -258,12 +258,12 @@
 }
 
 .survivor-poker-chip[data-state="official"] { box-shadow: 0 0 0 2px rgba(22,135,127,.32), 0 0 15px rgba(22,135,127,.42); }
-.survivor-poker-chip[data-state="official"] .survivor-poker-chip-side { border-color: #16877f; }
+.survivor-poker-chip[data-state="official"] .survivor-poker-chip-side { border-color: var(--c-16877f); }
 
 .survivor-poker-chip-seal {
   align-items: center;
   background: #e5f5f1;
-  border: 2px solid #0f766e;
+  border: 2px solid var(--c-0f766e);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(15, 118, 110, .28), inset 0 1px 0 rgba(255,255,255,.86);
   color: #08645f;
@@ -346,7 +346,7 @@
 }
 
 .survivor-chip-button:focus-visible {
-  outline: 2px solid #16877f;
+  outline: 2px solid var(--c-16877f);
   outline-offset: 2px;
 }
 
@@ -368,7 +368,7 @@
   --ledger-muted: #516076;
   /* A quiet scorepad parchment: warm enough to feel tactile, still light
      enough that the blue ruling and red margin remain crisp. */
-  --ledger-paper: #fbf7ec;
+  --ledger-paper: var(--c-fbf7ec);
   --ledger-hand-font: var(--font-architects-daughter), "Segoe Print", "Bradley Hand", cursive;
   --scorepad-blue: #9bb9de;
   --scorepad-red: #c76862;
@@ -450,8 +450,8 @@
 
 .pad-flip-button {
   align-items: center;
-  background: #fffdf8;
-  border: 1px solid #a59b8d;
+  background: var(--pool-surface);
+  border: 1px solid var(--c-a59b8d);
   border-radius: 999px;
   color: #40516a;
   display: inline-flex;
@@ -463,9 +463,9 @@
   width: 1.9rem;
 }
 .pad-flip-button:hover,
-.pad-flip-button:focus-visible { background: #fff; }
-.pad-flip-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 2px; }
-.pad-flip-button[aria-pressed="true"] { background: #25334a; border-color: #25334a; color: #fbf7ec; }
+.pad-flip-button:focus-visible { background: var(--c-ffffff); }
+.pad-flip-button:focus-visible { outline: 2px solid var(--c-2a78d6); outline-offset: 2px; }
+.pad-flip-button[aria-pressed="true"] { background: var(--c-25334a); border-color: var(--c-25334a); color: var(--c-fbf7ec); }
 /* The arrows spin once, in step with the page turning. */
 .pad-flip-icon.is-spinning { animation: pad-flip-spin .9s cubic-bezier(.2, .75, .2, 1); }
 @media (prefers-reduced-motion: reduce) {

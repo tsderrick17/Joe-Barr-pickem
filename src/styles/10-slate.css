@@ -7,7 +7,7 @@
 }
 
 .slate-mini-nav a {
-  color: #25334a;
+  color: var(--c-25334a);
   display: grid;
   gap: .16rem;
   min-width: 0;
@@ -36,7 +36,7 @@
 }
 
 .slate-mini-nav em {
-  color: #5d6470;
+  color: var(--c-5d6470);
   font-size: .5rem;
   font-style: normal;
   font-weight: 800;
@@ -53,10 +53,10 @@
   font-size: .5rem;
 }
 
-.slate-mini-nav strong.is-complete { color: #08764e; }
-.slate-mini-nav strong.is-due { color: #a82820; }
-.slate-mini-nav strong.is-out { color: #b42318; }
-.slate-mini-nav strong.is-quiet { color: #5d6470; }
+.slate-mini-nav strong.is-complete { color: var(--c-08764e); }
+.slate-mini-nav strong.is-due { color: var(--c-a82820); }
+.slate-mini-nav strong.is-out { color: var(--c-b42318); }
+.slate-mini-nav strong.is-quiet { color: var(--c-5d6470); }
 .slate-mini-nav strong.is-unsaved { color: #a86008; }
 
 /* The Slate receipt is one fixed-height register. Its information hierarchy
@@ -101,8 +101,8 @@
    where the ticket really ends, so when Survivor is torn off the Pick'em
    section takes over the same serrated right end. */
 .slate-receipt-strip {
-  --receipt-paper: #fffdf8;
-  --receipt-ink: #25334a;
+  --receipt-paper: var(--pool-surface);
+  --receipt-ink: var(--c-25334a);
   --receipt-rule: #b7aea0;
   --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
   filter: drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow);
@@ -112,12 +112,12 @@
   isolation: isolate;
   --receipt-notch: .42rem;
   --receipt-scallop: .17rem;
-  --receipt-bite-serrated-left: radial-gradient(circle at 0 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
-  --receipt-bite-serrated-right: radial-gradient(circle at 100% 50%, transparent var(--receipt-scallop), #000 calc(var(--receipt-scallop) + .5px));
-  --receipt-bite-top-left: radial-gradient(circle at 0 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
-  --receipt-bite-bottom-left: radial-gradient(circle at 0 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
-  --receipt-bite-top-right: radial-gradient(circle at 100% 0, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
-  --receipt-bite-bottom-right: radial-gradient(circle at 100% 100%, transparent var(--receipt-notch), #000 calc(var(--receipt-notch) + .5px));
+  --receipt-bite-serrated-left: radial-gradient(circle at 0 50%, transparent var(--receipt-scallop), var(--c-000000) calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-serrated-right: radial-gradient(circle at 100% 50%, transparent var(--receipt-scallop), var(--c-000000) calc(var(--receipt-scallop) + .5px));
+  --receipt-bite-top-left: radial-gradient(circle at 0 0, transparent var(--receipt-notch), var(--c-000000) calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-left: radial-gradient(circle at 0 100%, transparent var(--receipt-notch), var(--c-000000) calc(var(--receipt-notch) + .5px));
+  --receipt-bite-top-right: radial-gradient(circle at 100% 0, transparent var(--receipt-notch), var(--c-000000) calc(var(--receipt-notch) + .5px));
+  --receipt-bite-bottom-right: radial-gradient(circle at 100% 100%, transparent var(--receipt-notch), var(--c-000000) calc(var(--receipt-notch) + .5px));
   --receipt-serration-pitch: calc(var(--receipt-scallop) * 2.6);
 }
 

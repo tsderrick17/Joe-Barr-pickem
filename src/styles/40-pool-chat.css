@@ -28,7 +28,7 @@ html[data-theme="night"] .pool-chat input {
 html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 
 .pool-chat-dock {
-  background: #f5f0e6;
+  background: var(--c-f5f0e6);
   padding: 0 1rem 2rem;
 }
 

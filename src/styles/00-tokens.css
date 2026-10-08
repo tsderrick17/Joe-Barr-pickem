@@ -18,6 +18,40 @@
   --pool-space-1: .35rem;
   --pool-space-2: .7rem;
   --pool-space-3: 1.05rem;
+  /* Palette: every color used in four or more places, named by its value.
+     Night mode and semantic names are layered on these tokens in a later pass. */
+  --c-28221b: #28221b;
+  --c-f2e8d3: #f2e8d3;
+  --c-ffffff: #ffffff;
+  --c-25334a: #25334a;
+  --c-08764e: #08764e;
+  --c-f4ecd9: #f4ecd9;
+  --c-ded9cf: #ded9cf;
+  --c-5d6470: #5d6470;
+  --c-a82820: #a82820;
+  --c-f5f0e6: #f5f0e6;
+  --c-000000: #000000;
+  --c-111111: #111111;
+  --c-172731: #172731;
+  --c-edf7f5: #edf7f5;
+  --c-16333a: #16333a;
+  --c-e4e4e7: #e4e4e7;
+  --c-f1f1f2: #f1f1f2;
+  --c-16877f: #16877f;
+  --c-fbf7ec: #fbf7ec;
+  --c-52707a: #52707a;
+  --c-958a77: #958a77;
+  --c-665e51: #665e51;
+  --c-71717a: #71717a;
+  --c-b42318: #b42318;
+  --c-6f7474: #6f7474;
+  --c-0f766e: #0f766e;
+  --c-a59b8d: #a59b8d;
+  --c-2a78d6: #2a78d6;
+  --c-f8edcf: #f8edcf;
+  --c-075f58: #075f58;
+  --c-c8c2b7: #c8c2b7;
+  --c-1b1f2b: #1b1f2b;
 }
 
 

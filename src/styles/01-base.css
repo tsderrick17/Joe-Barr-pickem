@@ -63,13 +63,13 @@ body {
 .mobile-account-nav > div { min-height: 3.375rem; }
 
 .slate-loading-receipt {
-  background: linear-gradient(90deg, #fffdf8 0 33%, #f4ede1 33% 66%, #fffdf8 66% 100%);
+  background: linear-gradient(90deg, var(--pool-surface) 0 33%, #f4ede1 33% 66%, var(--pool-surface) 66% 100%);
 }
 
 .standings-loading-ticket { min-height: 19rem; }
 .standings-loading-rows {
   min-height: 28rem;
-  background: repeating-linear-gradient(to bottom, #fffdf8 0 3.5rem, #a9c5e7 3.5rem calc(3.5rem + 1px));
+  background: repeating-linear-gradient(to bottom, var(--pool-surface) 0 3.5rem, #a9c5e7 3.5rem calc(3.5rem + 1px));
 }
 
 /* Reserve the first Bowl Pool viewport while the authenticated profile and
