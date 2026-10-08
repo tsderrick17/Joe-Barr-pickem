@@ -8,7 +8,7 @@ test("every Bowl Card table line is one single 1px old-gold rule", async () => {
   const block = css.slice(css.indexOf("/* ---- Bowl Card: one line style for the whole table."));
   assert.match(block, /\.grid > span \{ border-width: 0; \}/);
   assert.match(block, /border-left: 1px solid var\(--bowl-gold\);/);
-  assert.match(block, /\.bowl-standings-player-row \{ border-width: 0 0 1px; border-style: solid; border-color: var\(--bowl-gold\); \}/);
+  assert.match(block, /\.bowl-standings-player-row \{ border-width: 0 0 1px !important; border-style: solid !important; border-color: var\(--bowl-gold\) !important; \}/);
   // The older double-width day dividers are gone.
   assert.doesNotMatch(css, /border-(?:left|right)-width: 2px/);
 });

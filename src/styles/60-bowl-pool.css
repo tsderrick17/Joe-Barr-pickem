@@ -164,8 +164,8 @@
   border-color: var(--bowl-navy);
   color: var(--c-f4ecd9);
 }
-.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .06em; }
-.bowl-card-section .bowl-standings-team { color: var(--c-f4ecd9); }
+.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .06em; }
+.bowl-card-section .bowl-standings-team { color: var(--c-f4ecd9) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line { color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
 .bowl-card-section .bowl-standings-game-cell .text-\[\#007e72\] { color: #8fd8cc; }
 .bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft); }
@@ -421,8 +421,8 @@ section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth
 section.pickem-ledger.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold); }
 section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold); }
 /* Row rules. */
-section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px; border-style: solid; border-color: var(--bowl-gold); }
-html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold); }
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
 
 /* A live game keeps the date column's width: the LIVE badge fits inside it. */
 .slate-live-badge { max-width: 100%; white-space: nowrap; }
