@@ -60,15 +60,13 @@ test("reminder claims are bounded and only receipt-free stale claims recover", a
   assert.match(lease, /reminders: { leaseSeconds: 600,/);
 });
 
-test("PIN failures use progressive source cooldowns without locking a player PIN", async () => {
+// The cooldown arithmetic itself is run against the real database in test/integration/pin-login-cooldown.test.mjs;
+// these are the rules around it that cannot be run without a sign-in.
+test("rule: the login route asks the database for the cooldown and answers with Retry-After, and the cooldown never edits a player", async () => {
   const [sql, route] = await Promise.all([
     readFile(migrationUrl, "utf8"),
     readFile(new URL("../src/app/api/login/route.ts", import.meta.url), "utf8"),
   ]);
-  assert.match(sql, /recent_attempts >= 10/);
-  assert.match(sql, /interval '15 minutes'/);
-  assert.match(sql, /recent_attempts >= 5/);
-  assert.match(sql, /interval '1 minute'/);
   assert.match(route, /pin_login_cooldown_seconds/);
   assert.match(route, /"Retry-After"/);
   assert.doesNotMatch(sql, /update public\.players/);
