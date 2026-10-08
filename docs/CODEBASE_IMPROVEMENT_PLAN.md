@@ -29,12 +29,11 @@ correction, or supersede the project reference.
 | Deleted tests that pinned CSS text and markup (assertions 1,298 to 1,082) | #447 |
 | Bowl Card: narrower rail, ten games per desktop screen, animated heading rule, larger header text; flaky chart screenshot made deterministic | #448 |
 | Palette tokens named by hue and lightness, theme pairs by role | #449 |
-| Decision log and plan ledger for the clean-up | this change |
+| Decision log and plan ledger for the clean-up | #450 |
+| Shared scoring scenarios: 16 cases through the application rules and `finalize_games_atomically` | this change |
 
 ### Still open
 
-- **Cross-layer scoring scenarios** (the phase 3 item): the same scenario list
-  run through the application scorer and the database functions.
 - **Picks read** on Standings loads a whole season of picks (about 64 KB at
   week 16 for an 8 KB response); scope it, then ratchet the budget down.
 - **Cost baselines** for the workers and the grading dashboard.
