@@ -81,7 +81,7 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
 }
 .survivor-standings-grid > .survivor-standings-header,
 .survivor-standings-grid > .survivor-standings-row {
-  grid-template-columns: 3rem 7rem repeat(18, minmax(2.5rem, 1fr));
+  grid-template-columns: 2.3rem 5.5rem repeat(18, minmax(2.2rem, 1fr));
 }
 
 .pool-chat-message {

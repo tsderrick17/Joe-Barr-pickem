@@ -61,7 +61,7 @@ export default function SurvivorTable({ data, savingDisplay, displayLocked = fal
 
     <Collapse open={data.showSurvivorStandings}>{data.survivorAvailable ? (
       <div className="survivor-standings-scroll overflow-x-auto border-y-2 border-[#1d1d1f]">
-          <div className="survivor-standings-grid min-w-[55.5rem]" ref={gridRef}>
+          <div className="survivor-standings-grid min-w-[47.5rem]" ref={gridRef}>
           <div className="survivor-standings-header grid border-b-2 border-[#1d1d1f] text-center text-[10px] font-black tracking-wide text-slate-600">
             <span aria-hidden="true" className="survivor-sticky-status py-2" />
             <span className="survivor-sticky-name px-2 py-2 text-left">PLAYER</span>

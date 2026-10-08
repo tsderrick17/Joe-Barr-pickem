@@ -88,21 +88,6 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .bowl-standings-tiebreaker-header {
   background: var(--sand-93);
 }
-
-.bowl-card-section .bowl-standings-player-row.is-viewer {
-  background-color: var(--sand-90);
-  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
-  box-shadow: inset 0 2px 0 #c89f00, inset 0 -2px 0 #e2c66a;
-  color: #4a3a12;
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky {
-  background-color: var(--sand-90);
-  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-game-cell,
-.bowl-card-section .bowl-standings-player-row.is-viewer > span {
-  color: #5a4614;
-}
 .bowl-card-section .bowl-standings-player-row > span {
   align-items: center;
   display: flex;
@@ -113,25 +98,13 @@ html[data-theme="night"] section[aria-labelledby="bowl-readiness-title"] > div >
 .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] {
   justify-content: flex-start;
 }
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
-  background-color: var(--sand-90);
-}
 
 /* Keep the selected Bowl player treatment continuous across the fixed
    identity columns, game results, and tiebreaker. The first cell carries the
    compact solid gold rail used by the other standings ledgers. */
-.bowl-card-section .bowl-standings-player-row.is-viewer > span {
-  background-color: var(--sand-90);
-  background-image: linear-gradient(90deg, rgba(212, 167, 0, .12), rgba(255, 239, 163, .22) 55%, rgba(255, 255, 255, .25));
-  box-shadow: inset 0 2px 0 rgba(200, 159, 0, .45), inset 0 -2px 0 rgba(226, 198, 106, .7);
-}
 
 /* One quiet, continuous viewer rail: the row owns the highlight, not each
    individual result cell. This keeps the name, score and game columns aligned. */
-
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
-  box-shadow: inset 0 2px 0 #d8b84d, inset 0 -2px 0 #d8b84d;
-}
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   border-color: #7a6a3a;
@@ -170,8 +143,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
   scrollbar-width: thin;
   --bowl-game-width: 7.5rem;
   /* The frozen player rail: the games-left tile, then the name. */
-  --bowl-tile-col: 2.6rem;
-  --bowl-name-col: 4.4rem;
+  --bowl-tile-col: 3rem;
+  --bowl-name-col: 5rem;
 }
 
 @media (max-width: 639px) {
@@ -187,14 +160,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
   }
 }
 
-/* From 1100px up the card is as wide as the window allows (78rem at most) and its game
-   columns are sized so ten complete games fit beside the frozen rail; a narrower window
-   keeps a 6.6rem floor and scrolls the rest. */
-@media (min-width: 1100px) {
-  .bowl-standings-scroll {
-    --bowl-game-width: max(6.6rem, calc((min(78rem, 100vw - 2rem) - var(--bowl-tile-col) - var(--bowl-name-col)) / 10));
-    width: min(100%, 78rem);
-  }
+@media (min-width: 1216px) {
+  .bowl-standings-scroll { --bowl-game-width: 8.3125rem; }
 }
 
 /* The page's ordinary standings rail is intentionally compact. On a true
@@ -209,7 +176,7 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
     max-width: none;
     transform: translateX(-50%);
     transition: width var(--section-glide);
-    width: min(78rem, calc(100vw - 2rem));
+    width: min(74.5rem, calc(100vw - 2rem));
   }
   .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
 

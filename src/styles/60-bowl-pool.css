@@ -231,25 +231,12 @@ html[data-theme="night"] .bowl-optout button:hover { color: var(--sand-91); }
 .bowl-card-section .bowl-standings-player-row > span[class*="text-slate-4"] { color: var(--bowl-rule); }
 .bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
 /* Your row: a soft gold wash and a gold edge, not a bright band. */
-.bowl-card-section .bowl-standings-player-row.is-viewer > span,
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
-  background: #f3ead4;
-  box-shadow: inset 0 1px 0 var(--bowl-gold-soft), inset 0 -1px 0 var(--bowl-gold-soft);
-  color: var(--bowl-navy);
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child { border-left: 3px solid var(--bowl-gold); }
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer .bowl-standings-sticky * { color: var(--bowl-navy); }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:nth-child(1),
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky *,
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--sand-91); }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row { background-color: var(--blue-14); border-color: #2e3346; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background-color: #20253a; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky {
-  color: var(--sand-91);
-}
 @media (max-width: 639px) {
   
   
@@ -259,8 +246,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer
   .bowl-pennant { width: 4.6rem; }
   .bowl-pennant-flag { font-size: .5rem; padding-right: .5rem; }
 }
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: none; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child { box-shadow: none; }
 .bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-navy); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
 html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-91); }
 /* The title stays centered; the show/hide control sits just beside it. */
@@ -270,14 +255,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-
 /* Day dividers are old gold. */
 
 /* Your row: the name area stays quiet, and your score sits in a small navy tile. */
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child {
-  background: var(--bowl-paper);
-  border-left: 0;
-  box-shadow: none;
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child { background: var(--bowl-paper-alt); }
 /* Bowl names wrap only between words, never mid-word. */
 .bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
 @media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
@@ -329,30 +306,13 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-
 .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: var(--bowl-paper); box-shadow: none; }
 .bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: var(--bowl-paper-alt); }
 .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold-soft); }
-.bowl-card-section .bowl-standings-player-row.is-viewer > span,
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > .bowl-standings-sticky,
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:first-child,
-.bowl-card-section .bowl-standings-player-row.is-viewer > span:last-child {
-  background: inherit;
-  border-left: 0;
-  box-shadow: none;
-}
-.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold-soft); }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky { background: var(--blue-14); }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt > .bowl-standings-sticky { background: #20253a; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > span,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky { background: inherit; box-shadow: none; }
-.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
-.bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:last-child,
-.bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: inherit; box-shadow: none; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer.is-alt > span:first-child,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-viewer:not(.is-alt) > span:first-child { background: inherit; box-shadow: none; }
 
 /* ---- Bowl Card score tiles as split-flap digits, like a stadium board */
 .bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; --flap-bg: var(--bowl-paper); --flap-ink: var(--bowl-navy); --flap-edge: var(--bowl-gold-soft); --flap-seam: rgba(22, 34, 58, .14); }
-.bowl-score-tile.is-viewer { --flap-bg: #0f1830; --flap-ink: var(--bowl-gold-soft); --flap-edge: var(--bowl-gold); --flap-seam: rgba(255, 255, 255, .18); }
-html[data-theme="night"] .bowl-score-tile:not(.is-viewer) { --flap-bg: #232838; --flap-ink: var(--sand-91); --flap-edge: #4d4a3e; --flap-seam: rgba(255, 255, 255, .12); }
+.bowl-score-tile.is-large { --flap-bg: #0f1830; --flap-ink: var(--bowl-gold-soft); --flap-edge: var(--bowl-gold); --flap-seam: rgba(255, 255, 255, .18); }
+html[data-theme="night"] .bowl-score-tile:not(.is-large) { --flap-bg: #232838; --flap-ink: var(--sand-91); --flap-edge: #4d4a3e; --flap-seam: rgba(255, 255, 255, .12); }
 .bowl-flap {
   border: 1px solid var(--flap-edge);
   border-radius: .18rem;
@@ -424,7 +384,6 @@ section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-sta
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:first-child,
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) > span:first-child { box-shadow: inset -1px 0 0 var(--bowl-gold); }
 section.pickem-ledger.bowl-card-section .bowl-standings-player-row > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold); }
-section.pickem-ledger.bowl-card-section .bowl-standings-player-row.is-viewer > .bowl-standings-sticky[title] { box-shadow: inset -1px 0 0 var(--bowl-gold); }
 /* Row rules. */
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-width: 0 0 1px !important; border-style: solid !important; border-color: var(--bowl-gold) !important; }
 html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .bowl-standings-player-row { border-color: var(--bowl-gold) !important; }
