@@ -124,7 +124,7 @@ function StillDigit({ digit }: { digit: number }) {
  * run on their own until `settled`; then, `landDelay` milliseconds later, they
  * flip on until they reach the real total, so the rows stop down the line.
  */
-export default function BowlScoreTile({ value, viewer, settled, landDelay = 0, large = false, animate = true }: { value: number; viewer: boolean; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean }) {
+export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
@@ -140,7 +140,7 @@ export default function BowlScoreTile({ value, viewer, settled, landDelay = 0, l
 
   const landed = still ? settled : landedDigits >= 2;
   return (
-    <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${viewer ? "is-viewer" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
+    <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
       {digits.map((digit, index) => (still
         ? <StillDigit digit={digit} key={index} />
         : <FlapDigit key={index} landing={landing} onLanded={markLanded} target={digit} />))}

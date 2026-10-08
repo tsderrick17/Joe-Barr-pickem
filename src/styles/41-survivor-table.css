@@ -16,7 +16,7 @@
 .survivor-sticky-name {
   border-right: 1px solid rgba(23, 23, 25, .09);
   justify-content: flex-start;
-  left: 3rem;
+  left: 2.3rem;
 }
 .survivor-standings-header {
   --survivor-row-bg: #ebe3d4;
