@@ -38,8 +38,8 @@ export default function PlayerSignInHardening() {
     <section className="commissioner-tool" aria-labelledby="player-sign-in-hardening-title">
       <p className="commissioner-tool-eyebrow">SECURITY</p>
       <h2 className="mt-1 font-serif text-2xl font-bold" id="player-sign-in-hardening-title">Player sign-ins</h2>
-      <p className="mt-2 text-sm text-zinc-700">Replace predictable legacy Auth passwords with server-protected credentials. Player PINs stay the same. The operation is audited and safe to re-run.</p>
-      <button className="mt-4 bg-zinc-900 px-4 py-2 font-bold text-white disabled:opacity-40" disabled={busy || Boolean(message)} onClick={hardenAccounts} type="button">
+      <p className="mt-2 text-sm text-(color:--themed-text-29)">Replace predictable legacy Auth passwords with server-protected credentials. Player PINs stay the same. The operation is audited and safe to re-run.</p>
+      <button className="mt-4 bg-(color:--themed-bg-27) px-4 py-2 font-bold text-white disabled:opacity-40" disabled={busy || Boolean(message)} onClick={hardenAccounts} type="button">
         {busy ? "Hardening sign-ins…" : message ? "Sign-ins hardened" : "Harden player sign-ins"}
       </button>
       {message ? <p className="mt-3 text-sm font-semibold text-green-800">{message}</p> : null}

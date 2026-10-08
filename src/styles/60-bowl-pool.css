@@ -507,5 +507,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 .bowl-score-tile.is-large { margin-top: .35rem; }
 .bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
 .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
-/* The empty corner over Tiebreaker looks just like the one over Games remaining: the page itself. */
+/* The empty corners over Games remaining and over Tiebreaker are the page itself, in day and night. */
+section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:first-child,
 section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: var(--sand-93); }
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:first-child,
+html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span[aria-hidden]:last-child { background: var(--background); }

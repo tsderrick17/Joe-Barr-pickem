@@ -24,9 +24,9 @@ export default function CommissionerHandbook() {
     <section className="commissioner-tool">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black tracking-[0.16em] text-zinc-600">COMMISSIONER REFERENCE</p>
+          <p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">COMMISSIONER REFERENCE</p>
           <h2 className="mt-1 font-serif text-3xl font-bold">Game day and season handbook</h2>
-          <p className="mt-2 max-w-3xl text-zinc-700">The safe operating order, the rules the system enforces, and the few moments that require a commissioner decision.</p>
+          <p className="mt-2 max-w-3xl text-(color:--themed-text-29)">The safe operating order, the rules the system enforces, and the few moments that require a commissioner decision.</p>
         </div>
       </div>
 
@@ -34,22 +34,22 @@ export default function CommissionerHandbook() {
         <div>
           <h3 className="font-serif text-2xl font-bold">Gameday runbook</h3>
           <ol className="mt-3 space-y-2">
-            {runbook.map(([title, detail]) => <li className="border border-zinc-300 bg-white p-3" key={title}><p className="font-bold">{title}</p><p className="mt-1 text-sm leading-5 text-zinc-700">{detail}</p></li>)}
+            {runbook.map(([title, detail]) => <li className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={title}><p className="font-bold">{title}</p><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</p></li>)}
           </ol>
         </div>
         <div>
           <h3 className="font-serif text-2xl font-bold">Published pool constitution</h3>
-          <p className="mt-2 text-sm leading-5 text-zinc-700">The public reference for what is submitted, when it becomes visible, how it is graded, and how the season is preserved.</p>
+          <p className="mt-2 text-sm leading-5 text-(color:--themed-text-29)">The public reference for what is submitted, when it becomes visible, how it is graded, and how the season is preserved.</p>
           <dl className="mt-3 space-y-2">
-            {constitution.map(([term, detail]) => <div className="border border-zinc-300 bg-white p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-zinc-700">{detail}</dd></div>)}
+            {constitution.map(([term, detail]) => <div className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</dd></div>)}
           </dl>
         </div>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Data-source contingency</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Before lock, retry the official-line check. At or after lock, preserve the saved official line; never retroactively replace it. A late score remains pending until verified.</p></article>
-        <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Rare controls</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Import is preview-first. Line locking is repeat-safe. Final-score reconciliation is read-only. A score correction requires the audited database workflow; disruption changes demand confirmation and write an audit record.</p></article>
-        <article className="border border-zinc-400 bg-[#fffaf0] p-4"><h3 className="font-bold">Season closeout</h3><p className="mt-1 text-sm leading-5 text-zinc-700">Confirm every period is complete, review the final archive, verify every champion and co-champion history record, then create—not overwrite—the next season.</p></article>
+        <article className="border border-zinc-400 bg-(color:--themed-bg-19) p-4"><h3 className="font-bold">Data-source contingency</h3><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">Before lock, retry the official-line check. At or after lock, preserve the saved official line; never retroactively replace it. A late score remains pending until verified.</p></article>
+        <article className="border border-zinc-400 bg-(color:--themed-bg-19) p-4"><h3 className="font-bold">Rare controls</h3><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">Import is preview-first. Line locking is repeat-safe. Final-score reconciliation is read-only. A score correction requires the audited database workflow; disruption changes demand confirmation and write an audit record.</p></article>
+        <article className="border border-zinc-400 bg-(color:--themed-bg-19) p-4"><h3 className="font-bold">Season closeout</h3><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">Confirm every period is complete, review the final archive, verify every champion and co-champion history record, then create—not overwrite—the next season.</p></article>
       </div>
     </section>
   );

@@ -256,7 +256,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
 html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
-  background: var(--blue-15);
+  background: var(--bowl-navy-lift);
   border-color: #6b8790;
   color: #dcebed;
 }
@@ -455,9 +455,9 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .grading-status.is-clear .grading-status-headline > span { color: #065f46; }
 .grading-status.is-attention .grading-status-headline > span { color: #991b1b; }
 .grading-status-headline > strong { font-family: Georgia, serif; font-size: 1.5rem; line-height: 1.15; }
-.grading-status-headline > small { color: #3f3f46; font-size: .875rem; }
+.grading-status-headline > small { color: var(--themed-text-40); font-size: .875rem; }
 .grading-kpis { display: grid; gap: .5rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.grading-kpi { background: var(--gray-100); border: 1px solid var(--gray-90); border-radius: .6rem; min-width: 0; padding: .55rem .65rem; }
+.grading-kpi { background: var(--themed-bg-30); border: 1px solid var(--gray-90); border-radius: .6rem; min-width: 0; padding: .55rem .65rem; }
 .grading-kpi.is-alert { border-color: #fca5a5; }
 .grading-kpi > p { color: var(--gray-46); font-size: 11px; font-weight: 900; letter-spacing: .12em; line-height: 1.15; min-height: 2.3em; text-transform: uppercase; }
 .grading-kpi > strong { display: block; font-family: Georgia, serif; font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
@@ -469,17 +469,16 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .grading-facts { display: grid; gap: .35rem; }
 .grading-facts > div { border-bottom: 1px solid #f4f4f5; display: flex; font-size: .875rem; gap: .75rem; justify-content: space-between; padding-bottom: .35rem; }
 .grading-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.grading-facts dt { color: #52525b; flex: 0 0 auto; }
+.grading-facts dt { color: var(--themed-text-41); flex: 0 0 auto; }
 .grading-facts dd { font-weight: 600; min-width: 0; overflow-wrap: anywhere; text-align: right; }
-.grading-log { background: var(--gray-100); border: 1px solid var(--gray-90); border-radius: .75rem; margin-top: 1rem; padding: .8rem 1rem; }
+.grading-log { background: var(--themed-bg-30); border: 1px solid var(--gray-90); border-radius: .75rem; margin-top: 1rem; padding: .8rem 1rem; }
 .grading-log > summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 700; }
 .grading-log > summary > span { color: var(--gray-46); display: block; font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700; }
 @media (max-width: 767px) {
   /* The phone nav is sticky too; park the grading rail just below it. */
   .grading-desk > .sticky { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }
 }
-html[data-theme="night"] .grading-kpi, html[data-theme="night"] .grading-log { background: #172522; border-color: #3b514c; }
-html[data-theme="night"] .grading-status-headline > small, html[data-theme="night"] .grading-facts dt { color: #b9c1bd; }
+html[data-theme="night"] .grading-kpi, html[data-theme="night"] .grading-log { border-color: #3b514c; }
 html[data-theme="night"] .grading-facts > div { border-color: #2a3a36; }
 @media (max-width: 900px) {
   .grading-status { grid-template-columns: minmax(0, 1fr); }
