@@ -74,18 +74,18 @@ export default function ProviderChart({ points, series, label, histogram = false
   return <div ref={container} className="min-w-0">
     <div className="provider-chart-legend mb-4 flex flex-wrap gap-x-5 gap-y-2">
       {series.map((item) => <button key={item.key} type="button" aria-pressed={!hidden.includes(item.key)}
-        className="provider-chart-legend-item inline-flex items-center gap-2 rounded px-1 py-1 text-xs font-semibold text-zinc-600 outline-offset-4 focus-visible:outline-2 focus-visible:outline-indigo-600"
+        className="provider-chart-legend-item inline-flex items-center gap-2 rounded px-1 py-1 text-xs font-semibold text-(color:--themed-text-28) outline-offset-4 focus-visible:outline-2 focus-visible:outline-indigo-600"
         onClick={() => setHidden((current) => current.includes(item.key) ? current.filter((key) => key !== item.key) : current.length < series.length - 1 ? [...current, item.key] : current)}>
         <span className="h-2 w-5 rounded-full" style={{ background: hidden.includes(item.key) ? "#d4d4d8" : item.color }} />
         <span>{item.label}</span>{right ? <span className="provider-chart-axis-label" aria-label={item.axis ? "right axis" : "left axis"}>{item.axis ? "R" : "L"}</span> : null}
       </button>)}
     </div>
     <div className="provider-chart-tooltip min-h-20 rounded-lg border border-zinc-100 bg-zinc-50/70 px-4 py-3">
-      <p className="text-xs font-medium text-zinc-500">{point?.label ?? "No observations yet"}</p>
-      <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">{activeSeries.map((item) => <p key={item.key} className="text-xs text-zinc-500">
+      <p className="text-xs font-medium text-(color:--themed-text-27)">{point?.label ?? "No observations yet"}</p>
+      <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">{activeSeries.map((item) => <p key={item.key} className="text-xs text-(color:--themed-text-27)">
         <strong className="mr-1.5 text-lg font-semibold tabular-nums" style={{ color: item.color }}>{point?.values[item.key] == null ? "—" : number(point.values[item.key]!)}{point?.values[item.key] == null ? "" : item.suffix}</strong>{item.label}
       </p>)}</div>
-      {point?.note ? <p className="mt-1 text-xs text-zinc-500">{point.note}</p> : null}
+      {point?.note ? <p className="mt-1 text-xs text-(color:--themed-text-27)">{point.note}</p> : null}
     </div>
     {points.length ? <>
       <svg className="mt-3 block w-full touch-pan-y" style={{ height: 286 }} viewBox={`0 0 ${width} 286`}
@@ -134,8 +134,8 @@ export default function ProviderChart({ points, series, label, histogram = false
             {points[i].shortLabel.split(", ").map((part, row) => <tspan key={row} x={x(i)} dy={row ? 13 : 0}>{part}</tspan>)}
           </text>)}
       </svg>
-    </> : <p className="py-14 text-center text-sm text-zinc-500">Recorded activity will appear here as it arrives.</p>}
-    <details className="provider-chart-data mt-3 text-xs text-zinc-500"><summary className="w-fit cursor-pointer py-1 font-medium">View chart data</summary>
+    </> : <p className="py-14 text-center text-sm text-(color:--themed-text-27)">Recorded activity will appear here as it arrives.</p>}
+    <details className="provider-chart-data mt-3 text-xs text-(color:--themed-text-27)"><summary className="w-fit cursor-pointer py-1 font-medium">View chart data</summary>
       <div className="mt-2 max-h-64 overflow-auto"><table className="provider-chart-table w-full text-left text-xs"><thead><tr><th className="p-2">Interval</th>{series.map((item) => <th className="p-2" key={item.key}>{item.label}</th>)}</tr></thead><tbody>
         {points.map((entry, i) => <tr key={i}><td className="p-2">{entry.label}</td>{series.map((item) => <td className="p-2 tabular-nums" key={item.key}>{entry.values[item.key] == null ? "—" : number(entry.values[item.key]!)}{entry.values[item.key] == null ? "" : item.suffix}</td>)}</tr>)}
       </tbody></table></div>

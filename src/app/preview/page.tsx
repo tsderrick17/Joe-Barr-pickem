@@ -227,8 +227,8 @@ function rehearsalSurvivorPick(scenario: Scenario) {
 
 function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; scenario: Scenario }) {
   if (scenario.emailImage === "slate") {
-    return <div aria-label="Sample Slate image included in this email" className="mt-6 overflow-hidden border border-[#b7aea0] bg-[#fffdf8]" role="img">
-      <div className="flex items-end justify-between border-b-2 border-[#171719] px-4 py-3">
+    return <div aria-label="Sample Slate image included in this email" className="mt-6 overflow-hidden border border-(color:--themed-border-12) bg-(color:--themed-bg-20)" role="img">
+      <div className="flex items-end justify-between border-b-2 border-(color:--themed-border-9) px-4 py-3">
         <strong className="font-serif text-xl">The Slate</strong>
         <span className="text-[10px] font-black tracking-[0.14em] text-slate-600">PRELIMINARY LINES</span>
       </div>
@@ -240,8 +240,8 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
   }
 
   const publicRows = rows.map((row) => ({ ...row, picks: row.picks.filter((pick) => pick.label && !pick.isHidden) })).filter((row) => scenario.emailImage === "recap" || row.picks.length > 0);
-  const pickemImage = <div aria-label={`Sample ${scenario.emailImage === "recap" ? "final recap" : "public picks"} image included in this email`} className="overflow-hidden border border-[#b7aea0] bg-[#fffaf0]" role="img">
-    <div className="flex items-end justify-between border-b-2 border-[#171719] px-4 py-3">
+  const pickemImage = <div aria-label={`Sample ${scenario.emailImage === "recap" ? "final recap" : "public picks"} image included in this email`} className="overflow-hidden border border-(color:--themed-border-12) bg-(color:--themed-bg-19)" role="img">
+    <div className="flex items-end justify-between border-b-2 border-(color:--themed-border-9) px-4 py-3">
       <strong className="font-serif text-xl">Pick&apos;em Pad</strong>
       <span className="text-[10px] font-black tracking-[0.14em] text-[#008c82]">{scenario.emailImage === "recap" ? "FINAL RESULTS" : "PUBLIC RECEIPTS"}</span>
     </div>
@@ -261,12 +261,12 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
 
   return <div className="mt-6 space-y-4">
     {pickemImage}
-    <div aria-label="Sample Survivor recap image included in this email" className="overflow-hidden border border-[#b7aea0] bg-[#fffdf8]" role="img">
-      <div className="flex items-end justify-between border-b-2 border-[#171719] px-4 py-3">
+    <div aria-label="Sample Survivor recap image included in this email" className="overflow-hidden border border-(color:--themed-border-12) bg-(color:--themed-bg-20)" role="img">
+      <div className="flex items-end justify-between border-b-2 border-(color:--themed-border-9) px-4 py-3">
         <strong className="font-serif text-xl">Survivor Table</strong>
         <span className="text-[10px] font-black tracking-[0.14em] text-slate-600">WEEK 4</span>
       </div>
-      <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] border-b-2 border-[#171719] px-3 py-2 text-[9px] font-black tracking-[0.08em] text-slate-600">
+      <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] border-b-2 border-(color:--themed-border-9) px-3 py-2 text-[9px] font-black tracking-[0.08em] text-slate-600">
         <span>STATUS</span><span>PLAYER</span>{[1, 2, 3, 4].map((week) => <span className="text-center" key={week}>W{week}</span>)}
       </div>
       {survivorRows.map((row) => <div className="grid grid-cols-[3.2rem_5rem_repeat(4,1fr)] items-center border-b border-[#9cc6ea] px-3 py-2 text-[11px]" key={row.name}>
@@ -279,14 +279,14 @@ function EmailSampleImage({ rows, scenario }: { rows: PickemScoreboardRow[]; sce
 
 function EmailPreview({ rows, scenario }: { rows: PickemScoreboardRow[]; scenario: Scenario }) {
   const isReveal = scenario.emailImage === "reveal";
-  return <section className="mx-auto mt-6 max-w-xl border border-[#c8c1b5] bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
+  return <section className="mx-auto mt-6 max-w-xl border border-(color:--themed-border-14) bg-(color:--themed-bg-26) p-5 shadow-sm sm:mt-8 sm:p-8">
     <p className="text-[10px] font-black tracking-[0.18em] text-slate-600">EMAIL PREVIEW - NEVER SENT</p>
     <p className="mt-4 text-xs font-bold tracking-[0.12em] text-slate-600">JOE BARR MEMORIAL PICK&apos;EM</p>
-    <h2 className="mt-2 font-serif text-3xl font-bold text-[#171719]">{scenario.emailTitle}</h2>
+    <h2 className="mt-2 font-serif text-3xl font-bold text-(color:--themed-text-18)">{scenario.emailTitle}</h2>
     <p className="mt-4 text-base leading-7 text-slate-700">{scenario.emailCopy}</p>
     <EmailSampleImage rows={rows} scenario={scenario} />
-    <div className="mt-6 border-y border-[#c8c1b5] bg-[#f4ede1] px-4 py-4 text-sm leading-6 text-slate-700">
-      <p className="font-bold text-[#171719]">What the player receives</p>
+    <div className="mt-6 border-y border-(color:--themed-border-14) bg-(color:--themed-bg-17) px-4 py-4 text-sm leading-6 text-slate-700">
+      <p className="font-bold text-(color:--themed-text-18)">What the player receives</p>
       <p className="mt-1">{isReveal ? "A public Pick'em receipt for started games, with every later game still hidden." : scenario.final ? "A final Pad snapshot with W/L stamps, standings movement, and an audit-safe link back to the pool." : "A current Slate snapshot and one clear button to review or make selections."}</p>
     </div>
     <a className="mt-6 inline-block bg-[#007e72] px-4 py-3 text-sm font-bold text-white" href="/board">Open Pick&apos;em</a>
@@ -302,15 +302,15 @@ export default function PreviewPage() {
   const ticketPicks = useMemo(() => rehearsalTicketPicks(scenario), [scenario]);
   const survivorPick = useMemo(() => rehearsalSurvivorPick(scenario), [scenario]);
 
-  return <main className="min-h-screen bg-[#e9e2d3] pb-8 text-[#171719]">
-    <div className="mx-auto max-w-5xl border-x border-[#1d1d1f] bg-[#fffdf8] px-4 py-5 sm:px-5 sm:py-8 md:px-10">
-      <header className="-mx-4 border-y-4 border-[#1d1d1f] px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
+  return <main className="min-h-screen bg-(color:--themed-bg-14) pb-8 text-(color:--themed-text-18)">
+    <div className="mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 py-5 sm:px-5 sm:py-8 md:px-10">
+      <header className="-mx-4 border-y-4 border-(color:--themed-border-10) px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10">
         <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_33rem] md:gap-8">
           <div className="min-w-0">
             <p className="text-xs font-black tracking-[0.18em] text-slate-600">SAFE PLAYER WALKTHROUGH</p>
             <h1 className="mt-1 font-serif text-3xl font-bold sm:text-4xl">{view === "ticket" ? "Personal ticket" : view === "slate" ? "The Slate" : view === "pad" ? "Pick'em Pad" : "Email preview"}</h1>
             <label className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600" htmlFor="rehearsal-scenario">VIEW REHEARSAL</label>
-            <select className="mt-1 border border-[#1d1d1f] bg-white px-3 py-1.5 text-sm font-semibold text-[#171719]" id="rehearsal-scenario" onChange={(event) => setScenarioKey(event.target.value)} value={scenarioKey}>
+            <select className="mt-1 border border-(color:--themed-border-10) bg-(color:--themed-bg-26) px-3 py-1.5 text-sm font-semibold text-(color:--themed-text-18)" id="rehearsal-scenario" onChange={(event) => setScenarioKey(event.target.value)} value={scenarioKey}>
               <option value="open">Week 4 - fresh blank ticket</option>
               <option value="saturday">Week 4 - Saturday before kickoff</option>
               <option value="sunday">Week 4 - Sunday 3 PM ET</option>
@@ -319,37 +319,37 @@ export default function PreviewPage() {
               <option value="playoff">Wild Card Sunday - partial locks</option>
             </select>
             <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Rehearsal view">
-              {(["ticket", "slate", "pad", "email"] as const).map((option) => <button className={`border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] ${view === option ? "border-[#007e72] bg-[#007e72] text-white" : "border-[#1d1d1f] bg-white text-[#171719]"}`} key={option} onClick={() => setView(option)} type="button">{option === "pad" ? "Pick'em Pad" : option === "email" ? "Email" : option === "ticket" ? "Ticket" : "Slate"}</button>)}
+              {(["ticket", "slate", "pad", "email"] as const).map((option) => <button className={`border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] ${view === option ? "border-[#007e72] bg-[#007e72] text-white" : "border-(color:--themed-border-10) bg-(color:--themed-bg-26) text-(color:--themed-text-18)"}`} key={option} onClick={() => setView(option)} type="button">{option === "pad" ? "Pick'em Pad" : option === "email" ? "Email" : option === "ticket" ? "Ticket" : "Slate"}</button>)}
             </div>
           </div>
-          <aside className="border-t border-[#b7aea0] pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
-            <p className="font-bold tracking-[0.12em] text-[#171719]">WHAT THIS CHECKS</p>
-            <div className="mt-2 grid gap-3 border-t border-[#b7aea0] pt-3 sm:grid-cols-2 sm:gap-5">
+          <aside className="border-t border-(color:--themed-border-12) pt-4 text-left text-xs leading-5 text-slate-700 md:self-stretch md:border-l md:border-t-0 md:pl-6 md:pt-0">
+            <p className="font-bold tracking-[0.12em] text-(color:--themed-text-18)">WHAT THIS CHECKS</p>
+            <div className="mt-2 grid gap-3 border-t border-(color:--themed-border-12) pt-3 sm:grid-cols-2 sm:gap-5">
               <p>Privacy at kickoff, official line locks, visible public receipts, final-score W/L marks, and historical audit views.</p>
-              <p className="border-t border-[#b7aea0] pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">The playoff rehearsal tests six selections in one round while preserving the rule that only started games are sealed.</p>
+              <p className="border-t border-(color:--themed-border-12) pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">The playoff rehearsal tests six selections in one round while preserving the rule that only started games are sealed.</p>
             </div>
           </aside>
         </div>
       </header>
 
-      <section className="mt-5 border-l-4 border-green-800 bg-[#edf7ef] px-4 py-3 text-green-950">
+      <section className="mt-5 border-l-4 border-(color:--themed-border-21) bg-(color:--themed-bg-15) px-4 py-3 text-green-950">
         <p className="font-bold">Rehearsal only - no live records are involved.</p>
         <p className="mt-1 text-sm">{scenario.timing} - {scenario.explanation}</p>
       </section>
 
       {view === "ticket" ? <section className="mx-auto mt-5 w-full max-w-[var(--standings-module-width)] sm:mt-8" aria-label="Rehearsal personal ticket">
         <MyTicket isPlayoff={scenario.isPlayoff} maxPicks={scenario.maxPicks} picks={ticketPicks} survivorAvailable={!scenario.isPlayoff} survivorPick={survivorPick} survivorStatus="active" week={scenario.week} />
-        <p className="mt-4 border-t border-[#b9b09d] pt-4 text-xs leading-5 text-slate-600">The ticket follows the active scoring period. Final selections keep their W/L stamps until the safe handoff; then the next week opens as a new ticket while the completed record stays in the historical Pad.</p>
+        <p className="mt-4 border-t border-(color:--themed-border-13) pt-4 text-xs leading-5 text-slate-600">The ticket follows the active scoring period. Final selections keep their W/L stamps until the safe handoff; then the next week opens as a new ticket while the completed record stays in the historical Pad.</p>
       </section> : null}
 
       {view === "slate" ? <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-labelledby="slate-heading">
-        <div className="border-y-2 border-[#1d1d1f] px-3 py-2 text-center"><h2 className="text-xs font-black tracking-[0.18em] text-[#171719] sm:text-sm" id="slate-heading">{scenario.isPlayoff ? "WILD CARD ROUND - ATS SLATE" : `SUNDAY - ${scenario.week.toUpperCase()} ATS SLATE`}</h2></div>
+        <div className="border-y-2 border-(color:--themed-border-10) px-3 py-2 text-center"><h2 className="text-xs font-black tracking-[0.18em] text-(color:--themed-text-18) sm:text-sm" id="slate-heading">{scenario.isPlayoff ? "WILD CARD ROUND - ATS SLATE" : `SUNDAY - ${scenario.week.toUpperCase()} ATS SLATE`}</h2></div>
         <div>{games.map((game, index) => <SlateGameRow alternate={index % 2 === 0} game={rehearsalSlateGame(game, index, scenario)} hasStarted={scenario.activeGames.includes(index) || scenario.finalGames.includes(index)} key={game.id} />)}</div>
       </section> : null}
 
       {view === "pad" ? <section className="mx-auto mt-5 w-full max-w-4xl sm:mt-8" aria-label="Rehearsal Pick'em Pad">
         <PickemScoreboard isPlayoff={scenario.isPlayoff} maxPicks={scenario.maxPicks} rows={rows} viewerPlayerId="tyler" week={scenario.week} />
-        <p className="mt-4 border-t border-[#b9b09d] pt-4 text-xs leading-5 text-slate-600">The rehearsal calculates wins from final W marks only. A submitted pick is never treated as a win before its game is final.</p>
+        <p className="mt-4 border-t border-(color:--themed-border-13) pt-4 text-xs leading-5 text-slate-600">The rehearsal calculates wins from final W marks only. A submitted pick is never treated as a win before its game is final.</p>
       </section> : null}
 
       {view === "email" ? <EmailPreview rows={rows} scenario={scenario} /> : null}

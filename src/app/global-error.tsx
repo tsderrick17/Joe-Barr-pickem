@@ -16,13 +16,13 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#f4efe4] px-6 py-16 text-[#171717]">
+      <body className="min-h-screen bg-[#f4efe4] px-6 py-16 text-(color:--themed-text-17)">
         <main className="mx-auto max-w-2xl border-y-4 border-[#1e1e20] py-10">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#425574]">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-(color:--themed-text-20)">
             Joe Barr Memorial Pick&apos;em
           </p>
           <h1 className="mt-3 font-serif text-4xl font-black">Something went wrong</h1>
-          <p className="mt-4 text-lg leading-7 text-[#324564]">
+          <p className="mt-4 text-lg leading-7 text-(color:--themed-text-19)">
             Your records have not been changed. Try loading the page again; the
             Commissioner has been notified if this keeps happening.
           </p>
