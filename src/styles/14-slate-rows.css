@@ -1,8 +1,8 @@
 /* A selected ATS team reads like a marked betting ticket, not an inverted
    black block that fights the newspaper slate. */
 .slate-team-selection {
-  background: transparent !important;
-  color: #47102e !important;
+  background: transparent;
+  color: #47102e;
 }
 
 .slate-team-label--selected {
@@ -428,7 +428,7 @@ button.slate-team-side:not(:disabled)::after {
 }
 
 .slate-team-selection .text-slate-200 {
-  color: #3f6867 !important;
+  color: #3f6867;
 }
 
 /* Survivor chips sit inside the matchup, on either side of the spread. Their
@@ -498,15 +498,15 @@ button.slate-team-side:not(:disabled)::after {
 }
 
 .selection-chip {
-  border-color: #d979ae !important;
+  border-color: #d979ae;
   border-left-color: #ad235f !important;
-  background: #f8d8e7 !important;
+  background: #f8d8e7;
   color: var(--c-111111);
   box-shadow: 0 1px 2px rgba(95, 20, 61, 0.12);
 }
 
 .selection-chip button {
-  color: #181116 !important;
+  color: #181116;
 }
 
 .selection-chip small { color: var(--c-111111); }
@@ -527,14 +527,14 @@ html[data-theme="night"] body {
 
 html[data-theme="night"] main,
 html[data-theme="night"] [class*="bg-[#f7f3e8]"] {
-  background-color: #0b1117 !important;
+  background-color: #0b1117;
 }
 
 html[data-theme="night"] [class*="bg-[#fffaf0]"],
 html[data-theme="night"] [class*="bg-[#fffdf8]"],
 html[data-theme="night"] [class*="bg-[#fbfaf7]"],
 html[data-theme="night"] [class*="bg-[#f5f0e6]"] {
-  background-color: #121b22 !important;
+  background-color: #121b22;
 }
 
 html[data-theme="night"] [class*="bg-[#e9e0cd]"],
@@ -545,11 +545,11 @@ html[data-theme="night"] [class*="bg-[#eee4d1]"],
 html[data-theme="night"] [class*="bg-[#f4ede1]"],
 html[data-theme="night"] [class*="bg-[#f0eadc]"],
 html[data-theme="night"] [class*="bg-[#f2eee6]"] {
-  background-color: #18252d !important;
+  background-color: #18252d;
 }
 
 html[data-theme="night"] [class*="bg-[#edf7ef]"] {
-  background-color: #102a27 !important;
+  background-color: #102a27;
 }
 
 /* Commissioner cards and form controls should not retain their light-mode
@@ -557,18 +557,18 @@ html[data-theme="night"] [class*="bg-[#edf7ef]"] {
 html[data-theme="night"] [class*="bg-white"],
 html[data-theme="night"] [class*="bg-green-50"],
 html[data-theme="night"] [class*="bg-amber-50"] {
-  background-color: var(--c-172731) !important;
+  background-color: var(--c-172731);
 }
 
 html[data-theme="night"] [class*="bg-red-50"] {
-  background-color: #3b2029 !important;
+  background-color: #3b2029;
 }
 
 html[data-theme="night"] input,
 html[data-theme="night"] textarea {
-  border-color: var(--c-52707a) !important;
-  background-color: #101c24 !important;
-  color: #f0f5f1 !important;
+  border-color: var(--c-52707a);
+  background-color: #101c24;
+  color: #f0f5f1;
   color-scheme: dark;
 }
 
@@ -579,13 +579,13 @@ html[data-theme="night"] textarea::placeholder {
 
 html[data-theme="night"] input:focus,
 html[data-theme="night"] textarea:focus {
-  border-color: #7ee1d2 !important;
+  border-color: #7ee1d2;
   outline: 2px solid rgba(126, 225, 210, 0.35);
   outline-offset: 2px;
 }
 
 html[data-theme="night"] [class*="bg-zinc-900"] {
-  background-color: #1c4146 !important;
+  background-color: #1c4146;
 }
 
 html[data-theme="night"] .slate-receipt-strip {
@@ -603,16 +603,16 @@ html[data-theme="night"] .slate-receipt-ticket > span,
 html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
 html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
 html[data-theme="night"] .slate-receipt-selection-chip {
-  background: #f8d8e7 !important;
-  border-color: #ec81ba !important;
-  border-left-color: #ad235f !important;
+  background: #f8d8e7;
+  border-color: #ec81ba;
+  border-left-color: #ad235f;
   color: var(--c-111111);
 }
 html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
-  background: linear-gradient(135deg, #17383a, #142e32) !important;
-  border-color: #66b9b1 !important;
-  border-left-color: #72ddd1 !important;
-  box-shadow: inset 0 0 0 1px rgba(114, 221, 209, .14) !important;
+  background: linear-gradient(135deg, #17383a, #142e32);
+  border-color: #66b9b1;
+  border-left-color: #72ddd1;
+  box-shadow: inset 0 0 0 1px rgba(114, 221, 209, .14);
 }
 html[data-theme="night"] .slate-receipt-selection-chip small { color: var(--c-111111); }
 html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
@@ -622,27 +622,27 @@ html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
 html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: var(--c-edf7f5); }
 
 html[data-theme="night"] .selection-chip {
-  border-color: #ec81ba !important;
-  border-left-color: #ad235f !important;
-  background: #f8d8e7 !important;
+  border-color: #ec81ba;
+  border-left-color: #ad235f;
+  background: #f8d8e7;
   color: var(--c-111111);
   box-shadow: 0 1px 2px rgba(0, 0, 0, .28);
 }
 
 html[data-theme="night"] .selection-chip button {
-  color: #181116 !important;
+  color: #181116;
 }
 
 html[data-theme="night"] .selection-chip button:hover {
-  background-color: #472d35 !important;
-  color: #ffb4bd !important;
+  background-color: #472d35;
+  color: #ffb4bd;
 }
 html[data-theme="night"] .selection-chip small { color: var(--c-111111); }
 html[data-theme="night"] .selection-chip small.is-official { color: var(--c-0f766e); }
 
 html[data-theme="night"] .slate-team-selection {
-  background: transparent !important;
-  color: #fff3fb !important;
+  background: transparent;
+  color: #fff3fb;
   box-shadow: none;
 }
 
@@ -669,25 +669,25 @@ html[data-theme="night"] .slate-team-label--selected::after {
    night mode; restate their hard-coded light-mode ink so the instructions do
    not disappear into the background. */
 html[data-theme="night"] .slate-header-grid > aside {
-  color: #cbd9df !important;
+  color: #cbd9df;
 }
 
 html[data-theme="night"] .slate-header-grid > aside > div {
-  border-color: #5f7d82 !important;
-  background-color: #1b2a31 !important;
-  color: #d9e7e8 !important;
+  border-color: #5f7d82;
+  background-color: #1b2a31;
+  color: #d9e7e8;
 }
 
 html[data-theme="night"] .slate-header-grid > aside strong {
-  color: #63e1d3 !important;
+  color: #63e1d3;
 }
 
 html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid {
-  border-color: #536f75 !important;
+  border-color: #536f75;
 }
 
 html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
-  border-color: #536f75 !important;
+  border-color: #536f75;
 }
 
 html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
@@ -717,9 +717,9 @@ html[data-theme="night"] .slate-action-empty { border-color: #6d746c; color: #c3
 }
 
 html[data-theme="night"] select {
-  border-color: #6ed7ca !important;
-  background-color: var(--c-172731) !important;
-  color: #f0f5f1 !important;
+  border-color: #6ed7ca;
+  background-color: var(--c-172731);
+  color: #f0f5f1;
   color-scheme: dark;
 }
 
@@ -744,55 +744,55 @@ html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   color: var(--c-edf7f5);
 }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-white"] { background-color: #132129 !important; }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-slate-100"] { background-color: #1b3038 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-white"] { background-color: #132129; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="bg-slate-100"] { background-color: #1b3038; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-200"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-300"] { border-color: var(--c-52707a) !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-300"] { border-color: var(--c-52707a); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-400"],
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-600"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4 !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--c-edf7f5) !important; }
+html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--c-edf7f5); }
 
 html[data-theme="night"] [class*="text-zinc-900"],
 html[data-theme="night"] [class*="text-[#171719]"],
 html[data-theme="night"] [class*="text-[#171717]"],
 html[data-theme="night"] [class*="text-[#29251d]"] {
-  color: #edf1eb !important;
+  color: #edf1eb;
 }
 
 html[data-theme="night"] [class*="text-slate-"],
 html[data-theme="night"] [class*="text-zinc-"],
 html[data-theme="night"] [class*="text-[#324564]"],
 html[data-theme="night"] [class*="text-[#425574]"] {
-  color: #b7c3cb !important;
+  color: #b7c3cb;
 }
 
 html[data-theme="night"] [class*="text-teal-"] {
-  color: #78d8cb !important;
+  color: #78d8cb;
 }
 
 html[data-theme="night"] [class*="text-green-950"],
 html[data-theme="night"] [class*="text-green-800"],
 html[data-theme="night"] [class*="text-green-700"] {
-  color: #a7edc9 !important;
+  color: #a7edc9;
 }
 
 html[data-theme="night"] [class*="text-red-950"],
 html[data-theme="night"] [class*="text-red-900"],
 html[data-theme="night"] [class*="text-red-800"],
 html[data-theme="night"] [class*="text-red-700"] {
-  color: #ffbdc4 !important;
+  color: #ffbdc4;
 }
 
 html[data-theme="night"] [class*="text-amber-950"],
 html[data-theme="night"] [class*="text-amber-900"],
 html[data-theme="night"] [class*="text-amber-800"] {
-  color: #ffd28a !important;
+  color: #ffd28a;
 }
 
 html[data-theme="night"] [class*="border-green-800"] {
-  border-color: #61c998 !important;
+  border-color: #61c998;
 }
 
 html[data-theme="night"] [class*="border-zinc-"],
@@ -801,21 +801,21 @@ html[data-theme="night"] [class*="border-slate-"] {
 }
 
 html[data-theme="night"] [class*="border-green-"] {
-  border-color: #61c998 !important;
+  border-color: #61c998;
 }
 
 html[data-theme="night"] [class*="border-red-"] {
-  border-color: #d87b89 !important;
+  border-color: #d87b89;
 }
 
 html[data-theme="night"] [class*="border-amber-"] {
-  border-color: #d2a35a !important;
+  border-color: #d2a35a;
 }
 
 html[data-theme="night"] [class*="border-[#1d1d1f]"],
 html[data-theme="night"] [class*="border-[#171719]"],
 html[data-theme="night"] [class*="border-black"] {
-  border-color: #6ed7ca !important;
+  border-color: #6ed7ca;
 }
 
 html[data-theme="night"] [class*="border-[#b7aea0]"],
@@ -823,5 +823,5 @@ html[data-theme="night"] [class*="border-[#b9b09d]"],
 html[data-theme="night"] [class*="border-[#c8c1b5]"],
 html[data-theme="night"] [class*="border-[#d1c9ba]"],
 html[data-theme="night"] [class*="border-[#91afd0]"] {
-  border-color: #314651 !important;
+  border-color: #314651;
 }
