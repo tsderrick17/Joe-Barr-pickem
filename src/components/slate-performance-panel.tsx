@@ -26,14 +26,14 @@ export default function SlatePerformancePanel({ history, summary }: {
   const settledGames = settled.reduce((total, point) => total + point.settledGames, 0);
   const averageLatency = settledGames ? Math.round(settled.reduce((total, point) => total + point.latencyMinutes! * point.settledGames, 0) / settledGames) : null;
 
-  return <section className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6" aria-label="Provider cost and settlement by kickoff slate">
+  return <section className="min-w-0 rounded-2xl border border-zinc-200 bg-(color:--themed-bg-26) p-4 shadow-sm sm:p-6" aria-label="Provider cost and settlement by kickoff slate">
     <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400">Score polling · Season to date</p>
-        <h3 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">Provider cost &amp; settlement</h3>
-        <p className="mt-2 text-xs text-zinc-500">One point per game-time slate · Eastern time</p>
+        <h3 className="mt-1 text-xl font-semibold tracking-tight text-(color:--themed-text-31)">Provider cost &amp; settlement</h3>
+        <p className="mt-2 text-xs text-(color:--themed-text-27)">One point per game-time slate · Eastern time</p>
       </div>
-      <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "14"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>{value === "all" ? "All slates" : "Last 14"}</button>)}</div>
+      <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "14"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-(color:--themed-bg-26) text-(color:--themed-text-31) shadow-sm" : "text-(color:--themed-text-27)"}`}>{value === "all" ? "All slates" : "Last 14"}</button>)}</div>
     </div>
     <div className="provider-efficiency-summary provider-performance-summary" aria-label="Provider cost and settlement summary">
       <div><span>Score credits</span><strong>{number(summary.scoreCredits)}</strong><small>Season-to-date polling</small></div>
@@ -64,6 +64,6 @@ export default function SlatePerformancePanel({ history, summary }: {
         { key: "latency", label: "Settlement latency", color: "#059669", axis: "right", suffix: "m" },
       ]}
     />
-    <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">Left axis: score-polling credits per settled game. Right axis: average minutes from the pooled kickoff to accepted final. The 15-day line is a game-weighted average over the current and previous 14 Eastern calendar dates; slates with missing or ambiguous credits are excluded. Credit attribution is estimated from polling times.</p>
+    <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Left axis: score-polling credits per settled game. Right axis: average minutes from the pooled kickoff to accepted final. The 15-day line is a game-weighted average over the current and previous 14 Eastern calendar dates; slates with missing or ambiguous credits are excluded. Credit attribution is estimated from polling times.</p>
   </section>;
 }

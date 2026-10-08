@@ -106,9 +106,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3e8] px-4 py-8 text-zinc-900 sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-[#f7f3e8] px-4 py-8 text-(color:--themed-text-31) sm:px-6 sm:py-12">
       <div className="mx-auto max-w-sm">
-        <p className="text-sm font-semibold tracking-[0.2em] text-zinc-600">
+        <p className="text-sm font-semibold tracking-[0.2em] text-(color:--themed-text-28)">
           JOE BARR MEMORIAL
         </p>
 
@@ -116,7 +116,7 @@ export default function LoginPage() {
           Lead Pipe Locks
         </h1>
 
-        <p className="mt-3 text-zinc-700">
+        <p className="mt-3 text-(color:--themed-text-29)">
           Enter your four-digit PIN to make picks and check the Standings.
         </p>
 
@@ -149,7 +149,7 @@ export default function LoginPage() {
             onChange={(event) =>
               setPin(event.target.value.replace(/\D/g, "").slice(0, 4))
             }
-            className="mt-3 min-h-14 w-full border border-zinc-500 bg-white px-4 py-3 text-center text-3xl tracking-[0.5em] outline-none focus:border-zinc-900"
+            className="mt-3 min-h-14 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-4 py-3 text-center text-3xl tracking-[0.5em] outline-none focus:border-zinc-900"
           />
 
           {errorMessage && (
@@ -161,7 +161,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={pin.length !== 4 || isSubmitting}
-            className="mt-6 min-h-12 w-full bg-zinc-900 px-4 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-6 min-h-12 w-full bg-(color:--themed-bg-27) px-4 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSubmitting ? "Signing in..." : "Enter Pick'em"}
           </button>

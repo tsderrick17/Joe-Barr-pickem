@@ -130,7 +130,7 @@ export default function PlayerManagementPage() {
   }
 
   return (
-    <main className="commissioner-subpage min-h-screen bg-[#f7f3e8] px-5 py-8 text-zinc-900 md:px-10">
+    <main className="commissioner-subpage min-h-screen bg-[#f7f3e8] px-5 py-8 text-(color:--themed-text-31) md:px-10">
       <div className="mx-auto max-w-5xl">
         <header className="border-b-2 border-zinc-900 pb-7">
           <div className="flex items-start justify-between gap-6">
@@ -143,7 +143,7 @@ export default function PlayerManagementPage() {
                 Player Setup
               </h1>
 
-              <p className="mt-3 text-lg text-zinc-700">
+              <p className="mt-3 text-lg text-(color:--themed-text-29)">
                 Add each player and assign their private PIN. Use a last initial only when two players share a first name.
             
               </p>
@@ -164,7 +164,7 @@ export default function PlayerManagementPage() {
               Add a Player
             </h2>
 
-            <p className="mt-2 text-zinc-700">
+            <p className="mt-2 text-(color:--themed-text-29)">
               Choose a unique four-digit PIN and give it directly to
               the player.
             </p>
@@ -187,7 +187,7 @@ export default function PlayerManagementPage() {
                 maxLength={40}
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
-                className="mt-2 w-full border border-zinc-500 bg-white px-4 py-3 text-lg outline-none focus:border-zinc-900"
+                className="mt-2 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-4 py-3 text-lg outline-none focus:border-zinc-900"
                 placeholder="Mike"
               />
 
@@ -212,7 +212,7 @@ export default function PlayerManagementPage() {
                     event.target.value.replace(/\D/g, "").slice(0, 4),
                   )
                 }
-                className="mt-2 w-full border border-zinc-500 bg-white px-4 py-3 text-center text-2xl tracking-[0.45em] outline-none focus:border-zinc-900"
+                className="mt-2 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-4 py-3 text-center text-2xl tracking-[0.45em] outline-none focus:border-zinc-900"
                 placeholder="0000"
               />
 
@@ -223,7 +223,7 @@ export default function PlayerManagementPage() {
               ) : null}
 
               {successMessage ? (
-                <p className="mt-4 border border-green-800 bg-green-50 px-4 py-3 font-semibold text-green-900">
+                <p className="mt-4 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) px-4 py-3 font-semibold text-green-900">
                   {successMessage}
                 </p>
               ) : null}
@@ -235,13 +235,13 @@ export default function PlayerManagementPage() {
                   pin.length !== 4 ||
                   isSubmitting
                 }
-                className="mt-6 w-full bg-zinc-900 px-5 py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-6 w-full bg-(color:--themed-bg-27) px-5 py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? "Adding player..." : "Add Player"}
               </button>
             </form>
 
-            <p className="mt-4 text-sm text-zinc-600">
+            <p className="mt-4 text-sm text-(color:--themed-text-28)">
 PINs are unique login identifiers and may be viewed here at any time.
             </p>
           </section>
@@ -258,7 +258,7 @@ PINs are unique login identifiers and may be viewed here at any time.
             </div>
 
             {errorMessage && !isLoading ? (
-              <div className="mt-6 flex items-center justify-between gap-4 border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <div className="mt-6 flex items-center justify-between gap-4 border border-(color:--themed-border-23) bg-(color:--themed-bg-24) px-4 py-3 text-sm text-red-800">
                 <span>{errorMessage}</span>
                 <button
                   type="button"
@@ -272,11 +272,11 @@ PINs are unique login identifiers and may be viewed here at any time.
 
             <div className="mt-4 border-y-2 border-zinc-900">
               {isLoading ? (
-                <p className="py-5 text-zinc-600">
+                <p className="py-5 text-(color:--themed-text-28)">
                   Loading players...
                 </p>
               ) : players.length === 0 ? (
-                <p className="py-5 text-zinc-600">
+                <p className="py-5 text-(color:--themed-text-28)">
                   No players have been added.
                 </p>
               ) : (
