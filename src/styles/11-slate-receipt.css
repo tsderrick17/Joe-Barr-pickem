@@ -558,11 +558,11 @@
   }
 
   .slate-action-instructions {
-    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr);
   }
 
   .slate-action-instructions.has-survivor {
-    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 

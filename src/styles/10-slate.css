@@ -125,7 +125,7 @@
    shadow. Both would show through the notches, so the strip is transparent and
    the drop shadow follows the ticket's real outline. */
 .slate-mini-nav.slate-receipt-strip {
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
 }
 

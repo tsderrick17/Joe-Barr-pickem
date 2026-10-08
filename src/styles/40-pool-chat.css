@@ -12,7 +12,7 @@ html[data-theme="night"] .pool-chat form {
 html[data-theme="night"] .pool-chat .text-slate-500,
 html[data-theme="night"] .pool-chat .text-slate-600,
 html[data-theme="night"] .pool-chat .text-slate-700 {
-  color: #cfd4ca !important;
+  color: #cfd4ca;
 }
 
 html[data-theme="night"] .pool-chat article {
@@ -46,6 +46,6 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 
 /* The compact restore control follows the same edge when chat is hidden. */
 .pool-chat-dock > div:not(.pool-chat) {
-  max-width: 64rem !important;
+  max-width: 64rem;
   width: 100%;
 }

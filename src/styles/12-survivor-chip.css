@@ -356,8 +356,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .survivor-poker-chip[data-state="picked"],
-  .survivor-poker-chip[data-animate="toss"] { animation: none !important; transform: none; }
-  .survivor-poker-chip-ground-shadow { animation: none !important; }
+  .survivor-poker-chip[data-animate="toss"] { animation: none; transform: none; }
+  .survivor-poker-chip-ground-shadow { animation: none; }
   .survivor-poker-chip-face { transition: none; }
   .survivor-poker-chip-wrap[data-state="picked"] .survivor-poker-chip-pick-mark { animation: none; opacity: 1; }
 }
