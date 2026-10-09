@@ -29,7 +29,12 @@
 .asset-card { background: var(--asset-card-bg); border: 1px solid var(--asset-card-rule); border-radius: .5rem; display: grid; gap: .75rem; break-inside: avoid; margin-bottom: 1rem; padding: 1rem; }
 .asset-card h3 { font: 700 1rem/1.2 var(--pool-display-font); margin: 0; }
 .asset-card p { color: var(--pool-muted); font-size: .8rem; line-height: 1.4; margin: 0; }
-.asset-stage { align-items: center; background: var(--asset-stage-bg); border-radius: .35rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 9rem; padding: 1rem; }
+.asset-stage { align-items: center; background: var(--asset-stage-bg); border-radius: .35rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 6rem; padding: 1.25rem 1rem; }
+/* Pieces are shown larger than live so their detail is easy to see. */
+.asset-stage > * { zoom: var(--asset-zoom, 1); }
+.asset-stage.is-playable { cursor: pointer; }
+.asset-stage.is-playable:focus-visible { outline: 2px solid var(--pool-teal); outline-offset: 2px; }
+.asset-row { align-items: center; display: flex; gap: 1rem; }
 .asset-stage.is-dark { background: var(--blue-14); }
 .asset-replay { border: 1px solid var(--pool-rule); border-radius: 999px; font: 700 .7rem/1 Arial, sans-serif; justify-self: start; letter-spacing: .08em; padding: .45rem .8rem; text-transform: uppercase; }
 .asset-replay:hover { border-color: var(--pool-teal); }
