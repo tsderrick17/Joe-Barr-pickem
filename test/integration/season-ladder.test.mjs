@@ -9,7 +9,7 @@ const { loadSeasonLadder } = await import("../../src/lib/season-ladder.ts");
 test("the grading histogram reads every recorded rung from the database, across pages, ignoring runs without one", { skip: !config && "Set the isolated PICKEM_TEST_SUPABASE_* variables to run database integration tests." }, async () => {
   const { admin } = createIsolatedClients(config);
   // A window far in the future cannot collide with real or other test rows.
-  const year = 4000 + Math.floor(Math.random() * 900);
+  const year = 4500 + Math.floor(Math.random() * 450);
   const at = (minute) => new Date(Date.UTC(year, 0, 1, 0, minute)).toISOString();
   const since = new Date(Date.UTC(year, 0, 1)).toISOString();
   const until = new Date(Date.UTC(year + 1, 0, 1)).toISOString();

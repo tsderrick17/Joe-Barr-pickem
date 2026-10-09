@@ -17,7 +17,7 @@ test("lock_official_lines_atomically saves lines, history, and audit together or
   try {
     const { data: season, error: seasonError } = await admin
       .from("seasons")
-      .insert({ year: 3000 + Math.floor(Math.random() * 1000), state: "regular_season" })
+      .insert({ year: 3300 + Math.floor(Math.random() * 300), state: "regular_season" })
       .select("id")
       .single();
     assert.equal(seasonError, null, seasonError?.message);
