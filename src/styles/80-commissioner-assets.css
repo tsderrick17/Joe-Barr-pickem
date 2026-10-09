@@ -5,19 +5,19 @@
 .football-loader-ball {
   --football-w: calc(70px * var(--football-scale, 1));
   --football-h: calc(107px * var(--football-scale, 1));
-  animation: football-spin var(--football-spin-s, .42s) steps(24) infinite;
-  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 24) var(--football-h) no-repeat;
+  animation: football-spin var(--football-spin-s, 3s) steps(48) infinite;
+  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 48) var(--football-h) no-repeat;
   display: block;
   filter: drop-shadow(0 .45rem .4rem rgba(44, 36, 24, .22));
   height: var(--football-h);
   width: var(--football-w);
 }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
-@keyframes football-spin { to { background-position-x: calc(var(--football-w) * -24); } }
+@keyframes football-spin { to { background-position-x: calc(var(--football-w) * -48); } }
 @keyframes football-wobble {
-  0% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 1.4deg))); }
-  40% { transform: rotate(calc(var(--football-tilt, 50deg) + var(--football-wobble, 1.4deg))); }
-  100% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 1.4deg) * .4)); }
+  0% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 0deg))); }
+  40% { transform: rotate(calc(var(--football-tilt, 50deg) + var(--football-wobble, 0deg))); }
+  100% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 0deg) * .4)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .football-loader-ball, .football-loader-tilt { animation: none; }

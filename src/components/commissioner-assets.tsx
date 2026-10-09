@@ -36,9 +36,9 @@ const KNOBS: Record<string, Knob[]> = {
   pennant: [{ key: "--pennant-raise-ms", label: "Raise length", min: 150, max: 2000, step: 10, unit: "ms", live: 620 }],
   tile: [{ key: "pace", label: "Time per flip", min: 40, max: 400, step: 5, unit: "ms", live: 140 }],
   football: [
-    { key: "--football-spin-s", label: "Time per turn", min: 0.15, max: 2, step: 0.01, unit: "s", live: 0.42 },
+    { key: "--football-spin-s", label: "Time per turn", min: 0.3, max: 6, step: 0.05, unit: "s", live: 3 },
     { key: "--football-tilt", label: "Tilt", min: 0, max: 90, step: 1, unit: "deg", live: 50 },
-    { key: "--football-wobble", label: "Wobble size", min: 0, max: 10, step: 0.1, unit: "deg", live: 1.4 },
+    { key: "--football-wobble", label: "Wobble size", min: 0, max: 10, step: 0.1, unit: "deg", live: 0 },
     { key: "--football-wobble-s", label: "Wobble pace", min: 0.3, max: 5, step: 0.1, unit: "s", live: 1.9 },
     { key: "--football-scale", label: "Size", min: 0.5, max: 2.5, step: 0.05, unit: "x", live: 1 },
   ],
@@ -191,7 +191,7 @@ export default function CommissionerAssets() {
           </span>
         </AssetCard>
 
-        <AssetCard actions={actions("football")} dark knobs={knobs("football")} note="The loading screen: the ball in a tight spiral, tipped nose-up, with a small wobble. With reduced motion it holds still." style={cssVars("football", values)} title="Loading football" zoom={1.3}>
+        <AssetCard actions={actions("football")} dark knobs={knobs("football")} note="The loading screen: the ball turning slowly and smoothly on its long axis, tipped nose-up. With reduced motion it holds still." style={cssVars("football", values)} title="Loading football" zoom={1.3}>
           <FootballLoader />
         </AssetCard>
 
