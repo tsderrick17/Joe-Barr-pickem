@@ -11,7 +11,7 @@ test("activate_scoring_period_atomically opens only the right period, once", { s
   let teamIds = [];
 
   try {
-    const { data: season, error: seasonError } = await admin.from("seasons").insert({ year: 3000 + Math.floor(Math.random() * 1000), state: "preseason" }).select("id").single();
+    const { data: season, error: seasonError } = await admin.from("seasons").insert({ year: 3000 + Math.floor(Math.random() * 300), state: "preseason" }).select("id").single();
     assert.equal(seasonError, null, seasonError?.message);
     seasonId = season.id;
 

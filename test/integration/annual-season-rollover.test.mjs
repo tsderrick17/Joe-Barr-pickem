@@ -10,7 +10,7 @@ const config = isolatedTestConfig();
 test("isolated annual rollover creates one audited season and preserves retry continuity", { skip: !config && "Set the isolated PICKEM_TEST_SUPABASE_* variables to run database integration tests." }, async () => {
   const { admin } = createIsolatedClients(config);
   // Far enough ahead that this proof cannot collide with a real imported season.
-  const targetYear = 4000 + Math.floor(Math.random() * 1000);
+  const targetYear = 5001 + Math.floor(Math.random() * 900);
   const templateYear = targetYear - 1;
   const evaluatedAt = `${targetYear}-08-01T12:00:00.000Z`;
   let seasonId;

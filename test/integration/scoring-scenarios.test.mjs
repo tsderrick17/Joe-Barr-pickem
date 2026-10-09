@@ -12,7 +12,7 @@ const skip = !config && "Set the isolated PICKEM_TEST_SUPABASE_* variables to ru
 test("the database grades every shared scoring scenario exactly as the application rules do", { skip }, async () => {
   const { admin } = createIsolatedClients(config);
   const token = testToken();
-  const year = 4000 + Math.floor(Math.random() * 1000);
+  const year = 4000 + Math.floor(Math.random() * 450);
   let seasonId;
   const teamIds = [];
   const playerIds = [];
