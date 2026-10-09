@@ -87,9 +87,9 @@ const PENNANT_TEAMS = {
 type ChipState = { team: string; state: "available" | "picked" | "official" | "unavailable"; size: "slate" | "ticket" | "summary"; spinning: boolean; tosses: number };
 type StampState = { result: "win" | "loss"; variant: "ticket" | "mark"; tilted: "yes" | "no" };
 
-function AssetCard({ title, note, children, actions, knobs, style, dark = false, wide = false, tall = false }: { title: string; note: string; children: ReactNode; actions?: ReactNode; knobs?: ReactNode; style?: CSSProperties; dark?: boolean; wide?: boolean; tall?: boolean }) {
+function AssetCard({ title, note, children, actions, knobs, style, dark = false, wide = false }: { title: string; note: string; children: ReactNode; actions?: ReactNode; knobs?: ReactNode; style?: CSSProperties; dark?: boolean; wide?: boolean }) {
   return (
-    <article className={`asset-card ${wide ? "is-wide" : ""} ${tall ? "is-tall" : ""}`}>
+    <article className={`asset-card ${wide ? "is-wide" : ""}`}>
       <div>
         <h3>{title}</h3>
         <p>{note}</p>
@@ -140,7 +140,7 @@ export default function CommissionerAssets() {
           <Choice label="Size" onChange={(size) => setChip((current) => ({ ...current, size }))} options={[["summary", "Small"], ["slate", "Slate"], ["ticket", "Ticket"]]} value={chip.size} />
           <Choice label="Idle spin" onChange={(spin) => setChip((current) => ({ ...current, spinning: spin === "on" }))} options={[["off", "Off"], ["on", "On"]]} value={chip.spinning ? "on" : "off"} />
           {knobs("chip")}
-        </>} note="One Survivor chip: choose its team, state and size, and toss it (click the chip or Toss). Each toss leans its axis and runs for a random time within the limits below." tall title="Survivor poker chip">
+        </>} note="One Survivor chip: choose its team, state and size, and toss it (click the chip or Toss). Each toss leans its axis and runs for a random time within the limits below." title="Survivor poker chip">
           <button aria-label="Toss the chip" className={`asset-chip-button is-${chip.size}`} onClick={toss} type="button">
             <SurvivorPokerChip
               abbreviation={chip.team}
