@@ -15,6 +15,8 @@ type Props = {
   unavailable?: boolean;
   size?: "wire" | "summary" | "ticket" | "slate";
   tooltip?: string;
+  /** The randomness of a toss (defaults to TOSS_DEFAULTS). */
+  tossRange?: TossRange;
   /** Build the 3D rim even when the chip is still. Off by default: a chip seen head on has no visible edge, and a Slate shows dozens of them. */
   showEdge?: boolean;
 };
@@ -45,14 +47,19 @@ const edgeSegments = Array.from({ length: 4 }, (_, quarter) => [
 
 const CHIP_LOGO_BOOST = 1.18;
 
+/** How random each toss is: the spin axis leans between leanMin and leanMax degrees, either way, and the flip lasts
+ *  between msMin and msMax. */
+export type TossRange = { leanMin: number; leanMax: number; msMin: number; msMax: number };
+export const TOSS_DEFAULTS: TossRange = { leanMin: 5, leanMax: 13, msMin: 780, msMax: 1060 };
+
 /** Each toss is a little different, like a real one: the spin axis leans a few degrees either way and the flip runs a bit faster or slower. */
-function randomToss() {
+export function randomToss(range: TossRange = TOSS_DEFAULTS) {
   const between = (low: number, high: number) => low + Math.random() * (high - low);
-  const lean = between(5, 13) * (Math.random() < 0.5 ? -1 : 1);
-  return { "--toss-axis": `${lean.toFixed(1)}deg`, "--toss-ms": `${Math.round(between(780, 1060))}ms` } as CSSProperties;
+  const lean = between(range.leanMin, range.leanMax) * (Math.random() < 0.5 ? -1 : 1);
+  return { "--toss-axis": `${lean.toFixed(1)}deg`, "--toss-ms": `${Math.round(between(range.msMin, range.msMax))}ms` } as CSSProperties;
 }
 
-export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip, showEdge = false }: Props) {
+export default function SurvivorPokerChip({ abbreviation, teamName, selected = false, official = false, animate = false, idleSpin = false, unavailable = false, size = "wire", tooltip, showEdge = false, tossRange }: Props) {
   // Display abbreviations may use scorepad casing (for example `Sea`), but
   // the public logo assets use the canonical uppercase team key (`SEA`).
   // Normalize at the asset boundary so presentation casing can never break a
@@ -66,7 +73,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   // The rim is only seen while the chip turns, so only a turning chip builds it.
   const renderEdge = showEdge || animate || idleSpin;
   // Chosen once per toss (a new toss remounts the chip), and only when there is one.
-  const [toss] = useState(() => (animate ? randomToss() : undefined));
+  const [toss] = useState(() => (animate ? randomToss(tossRange) : undefined));
   const face = (
     <span className="survivor-poker-chip-face" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
       <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />

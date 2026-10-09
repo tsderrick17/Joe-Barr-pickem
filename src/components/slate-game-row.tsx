@@ -1,5 +1,6 @@
 "use client";
 
+import { strokeJitter } from "@/lib/stroke-jitter";
 import type { GameStatus } from "@/lib/db-statuses";
 
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
@@ -79,19 +80,6 @@ type Props = {
     onChoose: (gameId: string, teamId: string) => void;
   };
 };
-
-/** A fresh, barely-there wobble for each highlighter stroke. Seeded from the team and
- *  the click, so it stays put on re-render but changes the next time it is marked. */
-function strokeJitter(seed: string): CSSProperties {
-  let hash = 2166136261;
-  for (let index = 0; index < seed.length; index += 1) hash = Math.imul(hash ^ seed.charCodeAt(index), 16777619);
-  const unit = (shift: number) => (((hash >>> shift) & 255) / 255) * 2 - 1;
-  return {
-    "--ink-x": `${(unit(0) * 0.06).toFixed(3)}em`,
-    "--ink-y": `${(unit(8) * 0.035).toFixed(3)}em`,
-    "--ink-turn": `${(unit(16) * 0.45).toFixed(2)}deg`,
-  } as CSSProperties;
-}
 
 function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFeedback = null, allowSelection = false, onChoose, survivor }: Props) {
   const [chipReplay, setChipReplay] = useState<Record<string, number>>({});
