@@ -152,6 +152,10 @@
   --themed-text-40: #3f3f46;
   --themed-text-41: #52525b;
   --themed-border-26: #e7dfcb;
+  /* The Commissioner assets gallery. */
+  --asset-card-bg: var(--pool-surface);
+  --asset-card-rule: var(--pool-rule);
+  --asset-stage-bg: var(--pool-paper);
 }
 
 html[data-theme="night"] {
@@ -252,6 +256,9 @@ html[data-theme="night"] {
   --themed-text-40: #b9c1bd;
   --themed-text-41: #b9c1bd;
   --themed-border-26: #2e3346;
+  --asset-card-bg: var(--blue-15);
+  --asset-card-rule: var(--blue-40);
+  --asset-stage-bg: var(--background);
 }
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {

@@ -1,0 +1,47 @@
+/* ---- Football loader ----
+   Tunable from the Commissioner Assets panel: spin time per turn, tilt, wobble size and pace, and scale. */
+.football-loader { align-items: center; display: inline-grid; gap: .55rem; justify-items: center; }
+.football-loader-tilt { animation: football-wobble var(--football-wobble-s, 1.9s) ease-in-out infinite alternate; display: block; transform: rotate(var(--football-tilt, 50deg)); }
+.football-loader-ball {
+  --football-w: calc(70px * var(--football-scale, 1));
+  --football-h: calc(107px * var(--football-scale, 1));
+  animation: football-spin var(--football-spin-s, .42s) steps(24) infinite;
+  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 24) var(--football-h) no-repeat;
+  display: block;
+  filter: drop-shadow(0 .45rem .4rem rgba(44, 36, 24, .22));
+  height: var(--football-h);
+  width: var(--football-w);
+}
+.football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
+@keyframes football-spin { to { background-position-x: calc(var(--football-w) * -24); } }
+@keyframes football-wobble {
+  0% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 1.4deg))); }
+  40% { transform: rotate(calc(var(--football-tilt, 50deg) + var(--football-wobble, 1.4deg))); }
+  100% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 1.4deg) * .4)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .football-loader-ball, .football-loader-tilt { animation: none; }
+}
+
+/* ---- Commissioner assets gallery ---- */
+.commissioner-assets { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); margin-top: 1rem; }
+.asset-card { background: var(--asset-card-bg); border: 1px solid var(--asset-card-rule); border-radius: .5rem; display: grid; gap: .75rem; grid-template-rows: auto 1fr auto; padding: 1rem; }
+.asset-card h3 { font: 700 1rem/1.2 var(--pool-display-font); margin: 0; }
+.asset-card p { color: var(--pool-muted); font-size: .8rem; line-height: 1.4; margin: 0; }
+.asset-stage { align-items: center; background: var(--asset-stage-bg); border-radius: .35rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 9rem; padding: 1rem; }
+.asset-stage.is-dark { background: var(--blue-14); }
+.asset-replay { border: 1px solid var(--pool-rule); border-radius: 999px; font: 700 .7rem/1 Arial, sans-serif; justify-self: start; letter-spacing: .08em; padding: .45rem .8rem; text-transform: uppercase; }
+.asset-replay:hover { border-color: var(--pool-teal); }
+.asset-submit .slate-receipt-print { width: 8rem; }
+.asset-card.is-wide { grid-column: 1 / -1; }
+.asset-chip { display: inline-flex; height: 3rem; width: 3rem; }
+.asset-highlight { display: inline-block; font-size: 1.05rem; font-weight: 700; max-width: 100%; position: relative; }
+.asset-highlight .slate-team-label { white-space: nowrap; }
+.asset-banners { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); width: 100%; }
+.asset-knobs { display: grid; gap: .45rem; }
+.asset-knob { align-items: center; display: grid; font-size: .72rem; gap: .4rem; grid-template-columns: 5.6rem minmax(0, 1fr) 3.2rem; }
+.asset-knob input { width: 100%; }
+.asset-knob output { font-variant-numeric: tabular-nums; text-align: right; }
+.asset-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.asset-settings { grid-column: 1 / -1; }
+.asset-settings pre { background: var(--asset-stage-bg); border-radius: .35rem; font-size: .72rem; margin: .5rem 0 0; overflow-x: auto; padding: .75rem; }

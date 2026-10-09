@@ -13,6 +13,7 @@
 @import "../styles/42-pickem-ledger.css";
 @import "../styles/50-commissioner.css";
 @import "../styles/60-bowl-pool.css";
+@import "../styles/80-commissioner-assets.css";
 
 @theme inline {
   --color-background: var(--background);

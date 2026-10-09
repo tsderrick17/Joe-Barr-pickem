@@ -16,7 +16,7 @@
 
 .bowl-crest { text-align: center; }
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
-.bowl-crest-ornament span { animation: bowl-rule-draw 720ms cubic-bezier(.22, .61, .36, 1) 120ms both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 720ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 120ms) both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
 @media (prefers-reduced-motion: reduce) {
   .bowl-crest-ornament span { animation: none; }
 }
@@ -114,7 +114,7 @@
 }
 .bowl-pennant-flag > span { display: block; overflow-wrap: anywhere; }
 .bowl-team-pick { display: inline-block; max-width: 100%; }
-.bowl-team-pick.is-new .bowl-pennant-flag { animation: bowl-pennant-raise 620ms cubic-bezier(.18, .8, .2, 1) both; transform-origin: left center; }
+.bowl-team-pick.is-new .bowl-pennant-flag { animation: bowl-pennant-raise var(--pennant-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; transform-origin: left center; }
 @keyframes bowl-pennant-raise {
   from { opacity: 0; transform: translateY(.6rem) scaleX(.55); }
   to { opacity: 1; transform: none; }

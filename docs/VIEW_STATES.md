@@ -70,11 +70,12 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
 | Season | `healthy` |
 | System (health and alerts open) | `healthy`, `attention` |
+| Assets (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
 | Players | one roster: commissioner, active, inactive, never signed in |
 | Reminders | scheduled, sent, cancelled-with-reason |
 
-The test coin (`ChipPlayground`) appears in the desk header at rest; its toss is
-covered by `test/chip-toss-contract.test.mjs`.
+The test coin (`ChipPlayground`) appears in the desk header at rest and again on the Assets panel,
+where it can be tossed or turned by hand.
 
 ## Account pages — `account.visual.spec.ts`
 

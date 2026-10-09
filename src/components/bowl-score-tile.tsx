@@ -28,8 +28,8 @@ const FALL_EASING = "cubic-bezier(.55, .06, .68, .19)";
  * transforms and opacity, which the graphics chip draws) and write the
  * numbers straight into the page, so React does not re-render on every flip.
  */
-function FlapDigit({ target, landing, onLanded }: { target: number; landing: boolean; onLanded: () => void }) {
-  const [feel] = useState<Feel>(() => ({ pace: 120 + Math.random() * 40, start: Math.floor(Math.random() * 10), extra: 2 + Math.floor(Math.random() * 3) }));
+function FlapDigit({ target, landing, onLanded, pace }: { target: number; landing: boolean; onLanded: () => void; pace?: number }) {
+  const [feel] = useState<Feel>(() => ({ pace: pace ?? 120 + Math.random() * 40, start: Math.floor(Math.random() * 10), extra: 2 + Math.floor(Math.random() * 3) }));
   const top = useRef<HTMLSpanElement | null>(null);
   const bottom = useRef<HTMLSpanElement | null>(null);
   const fold = useRef<HTMLSpanElement | null>(null);
@@ -124,7 +124,7 @@ function StillDigit({ digit }: { digit: number }) {
  * run on their own until `settled`; then, `landDelay` milliseconds later, they
  * flip on until they reach the real total, so the rows stop down the line.
  */
-export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean }) {
+export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** ms per flip; random 120-160 when omitted */ pace?: number }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
@@ -143,7 +143,7 @@ export default function BowlScoreTile({ value, settled, landDelay = 0, large = f
     <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
       {digits.map((digit, index) => (still
         ? <StillDigit digit={digit} key={index} />
-        : <FlapDigit key={index} landing={landing} onLanded={markLanded} target={digit} />))}
+        : <FlapDigit key={index} landing={landing} onLanded={markLanded} pace={pace} target={digit} />))}
     </span>
   );
 }
