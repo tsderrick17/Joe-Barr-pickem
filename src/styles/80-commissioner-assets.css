@@ -24,7 +24,9 @@
 }
 
 /* ---- Commissioner assets gallery ---- */
-.commissioner-assets { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); margin-top: 1rem; }
+.commissioner-assets { display: grid; gap: 1rem; grid-auto-flow: dense; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); margin-top: 1rem; }
+/* The chip card has the most controls: it runs two rows tall and the other cards stack two high beside it. */
+.asset-card.is-tall { grid-row: span 2; }
 .asset-card { background: var(--asset-card-bg); border: 1px solid var(--asset-card-rule); border-radius: .5rem; display: grid; gap: .75rem; grid-template-rows: auto 1fr auto; padding: 1rem; }
 .asset-card h3 { font: 700 1rem/1.2 var(--pool-display-font); margin: 0; }
 .asset-card p { color: var(--pool-muted); font-size: .8rem; line-height: 1.4; margin: 0; }

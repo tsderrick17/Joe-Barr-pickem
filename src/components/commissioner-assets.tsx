@@ -87,9 +87,9 @@ const PENNANT_TEAMS = {
 type ChipState = { team: string; state: "available" | "picked" | "official" | "unavailable"; size: "slate" | "ticket" | "summary"; spinning: boolean; tosses: number };
 type StampState = { result: "win" | "loss"; variant: "ticket" | "mark"; tilted: "yes" | "no" };
 
-function AssetCard({ title, note, children, actions, knobs, style, dark = false, wide = false }: { title: string; note: string; children: ReactNode; actions?: ReactNode; knobs?: ReactNode; style?: CSSProperties; dark?: boolean; wide?: boolean }) {
+function AssetCard({ title, note, children, actions, knobs, style, dark = false, wide = false, tall = false }: { title: string; note: string; children: ReactNode; actions?: ReactNode; knobs?: ReactNode; style?: CSSProperties; dark?: boolean; wide?: boolean; tall?: boolean }) {
   return (
-    <article className={`asset-card ${wide ? "is-wide" : ""}`}>
+    <article className={`asset-card ${wide ? "is-wide" : ""} ${tall ? "is-tall" : ""}`}>
       <div>
         <h3>{title}</h3>
         <p>{note}</p>
@@ -134,25 +134,13 @@ export default function CommissionerAssets() {
         <h2 id="commissioner-assets-title">Assets</h2>
       </div>
       <div className="commissioner-assets">
-        <AssetCard actions={actions("submit", "submit")} knobs={knobs("submit")} note="The receipt's Submit button. While picks are unsaved a sheen sweeps across it and then it presses itself, once per cycle." style={cssVars("submit", values)} title="Submit button">
-          <div className="asset-submit slate-receipt-ticket" key={keys.submit}>
-            <button className="slate-receipt-print needs-attention" type="button">SUBMIT</button>
-          </div>
-        </AssetCard>
-
-        <AssetCard actions={<><button className="asset-replay" onClick={() => setStroke((current) => current + 1)} type="button">Mark again</button><button className="asset-replay" onClick={resetGroup("highlight")} type="button">Live values</button></>} knobs={knobs("highlight")} note="The pen stroke that marks a Slate pick, sweeping in from the left. Each stroke wanders a little at random within the wander limits; Mark again draws a new one." style={cssVars("highlight", values)} title="Pick highlight">
-          <span className="asset-highlight" key={stroke}>
-            <span className="slate-team-label slate-team-label--selected slate-team-label--from-left slate-team-label--new" style={strokeJitter(`asset-${stroke}`, { x: values.jitterX, y: values.jitterY, turn: values.jitterTurn })}><span>Kansas City Chiefs</span></span>
-          </span>
-        </AssetCard>
-
         <AssetCard actions={<><button className="asset-replay" onClick={toss} type="button">Toss</button><button className="asset-replay" onClick={resetGroup("chip")} type="button">Live values</button></>} knobs={<>
           <Choice label="Team" onChange={(team) => setChip((current) => ({ ...current, team }))} options={CHIP_TEAMS.map(([key]) => [key, key])} value={chip.team} />
           <Choice label="State" onChange={(state) => setChip((current) => ({ ...current, state }))} options={[["available", "Available"], ["picked", "Picked"], ["official", "Official"], ["unavailable", "Unavailable"]]} value={chip.state} />
           <Choice label="Size" onChange={(size) => setChip((current) => ({ ...current, size }))} options={[["summary", "Small"], ["slate", "Slate"], ["ticket", "Ticket"]]} value={chip.size} />
           <Choice label="Idle spin" onChange={(spin) => setChip((current) => ({ ...current, spinning: spin === "on" }))} options={[["off", "Off"], ["on", "On"]]} value={chip.spinning ? "on" : "off"} />
           {knobs("chip")}
-        </>} note="One Survivor chip: choose its team, state and size, and toss it (click the chip or Toss). Each toss leans its axis and runs for a random time within the limits below." title="Survivor poker chip">
+        </>} note="One Survivor chip: choose its team, state and size, and toss it (click the chip or Toss). Each toss leans its axis and runs for a random time within the limits below." tall title="Survivor poker chip">
           <button aria-label="Toss the chip" className={`asset-chip-button is-${chip.size}`} onClick={toss} type="button">
             <SurvivorPokerChip
               abbreviation={chip.team}
@@ -169,6 +157,19 @@ export default function CommissionerAssets() {
             />
           </button>
         </AssetCard>
+
+        <AssetCard actions={actions("submit", "submit")} knobs={knobs("submit")} note="The receipt's Submit button. While picks are unsaved a sheen sweeps across it and then it presses itself, once per cycle." style={cssVars("submit", values)} title="Submit button">
+          <div className="asset-submit slate-receipt-ticket" key={keys.submit}>
+            <button className="slate-receipt-print needs-attention" type="button">SUBMIT</button>
+          </div>
+        </AssetCard>
+
+        <AssetCard actions={<><button className="asset-replay" onClick={() => setStroke((current) => current + 1)} type="button">Mark again</button><button className="asset-replay" onClick={resetGroup("highlight")} type="button">Live values</button></>} knobs={knobs("highlight")} note="The pen stroke that marks a Slate pick, sweeping in from the left. Each stroke wanders a little at random within the wander limits; Mark again draws a new one." style={cssVars("highlight", values)} title="Pick highlight">
+          <span className="asset-highlight" key={stroke}>
+            <span className="slate-team-label slate-team-label--selected slate-team-label--from-left slate-team-label--new" style={strokeJitter(`asset-${stroke}`, { x: values.jitterX, y: values.jitterY, turn: values.jitterTurn })}><span>Kansas City Chiefs</span></span>
+          </span>
+        </AssetCard>
+
 
         <AssetCard actions={actions("pennant", "pennant")} knobs={<><Choice label="School" onChange={setPennantTeam} options={[["ORE", "Oregon"], ["TROY", "Troy"], ["MRSH", "Marshall"]]} value={pennantTeam} />{knobs("pennant")}</>} note="A felt pennant in the school's colors, raised beside a Bowl Pool pick." style={cssVars("pennant", values)} title="Bowl Pool pennant">
           <span className="bowl-team-pick is-new" key={`${keys.pennant}-${pennantTeam}`}><BowlPennant side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>
