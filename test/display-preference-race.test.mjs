@@ -31,7 +31,7 @@ test("the Standings page waits for the Bowl Card's first load, so the card never
   // The card reports when its first load ends, whether it worked or not.
   assert.match(card, /\.catch\(\(\) => undefined\)\.finally\(\(\) => onReady\?\.\(\)\)/);
   // The page keeps the loading shell up, with the page laid out but hidden beneath it, until then, with a short time limit.
-  assert.match(page, /\{bowlReady \? null : <StandingsLoadingShell \/>\}/);
+  assert.match(page, /\{revealed \? null : <StandingsLoadingShell \/>\}/);
   assert.match(page, /onReady=\{markBowlReady\}/);
   assert.match(page, /window\.setTimeout\(\(\) => setBowlReady\(true\), 2500\)/);
 });

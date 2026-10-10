@@ -15,6 +15,7 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
 import FootballLoader from "@/components/football-loader";
+import { useImagesReady } from "@/lib/use-images-ready";
 type DisplayPreferenceKey =
   | "showSurvivorStandings"
   | "showBowlCard"
@@ -61,6 +62,9 @@ export default function HomePage() {
   const [bowlReady, setBowlReady] = useState(false);
   const markBowlReady = useStableCallback(() => setBowlReady(true));
   const hasData = data !== null;
+  // The football stays until the Bowl Card has loaded and every logo is drawn, so nothing fills in after it goes.
+  const imagesReady = useImagesReady(bowlReady);
+  const revealed = bowlReady && imagesReady;
   useEffect(() => {
     if (!hasData) return;
     const timer = window.setTimeout(() => setBowlReady(true), 2500);
@@ -301,8 +305,8 @@ export default function HomePage() {
 
   return (
     <>
-    {bowlReady ? null : <StandingsLoadingShell />}
-    <div className={bowlReady ? undefined : "h-0 overflow-hidden"} inert={!bowlReady} style={bowlReady ? undefined : { visibility: "hidden" }}>
+    {revealed ? null : <StandingsLoadingShell />}
+    <div className={revealed ? undefined : "h-0 overflow-hidden"} inert={!revealed}>
     <main className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
       <div className="standings-stack mx-auto max-w-5xl px-4 sm:px-5 md:px-10">
         {errorMessage ? (
