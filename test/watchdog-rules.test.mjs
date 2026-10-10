@@ -66,6 +66,19 @@ test("watchdog emits only actionable line, scoring, queue, schedule, and configu
   ]);
 });
 
+test("the configuration alert names the reason each check failed", () => {
+  const signals = evaluateWatchdogSignals({
+    health: healthy(), bootstrap: completeBootstrap, now: new Date("2026-08-20T13:00:00Z"),
+    preflightChecks: [
+      { label: "NFL odds provider", passed: false, detail: "Provider authentication or NFL availability failed (HTTP 401)." },
+      { label: "Watchdog cron", passed: false },
+      { label: "Brevo delivery account", passed: true, detail: "fine" },
+    ],
+  });
+  assert.equal(signals.length, 1);
+  assert.equal(signals[0].detail, "NFL odds provider (Provider authentication or NFL availability failed (HTTP 401).); Watchdog cron");
+});
+
 test("schedule alert waits until August 15 while automatic retries are expected", () => {
   const input = { health: healthy(), bootstrap: { ...completeBootstrap, loadedGames: 0, complete: false }, preflightChecks: [] };
   assert.equal(evaluateWatchdogSignals({ ...input, now: new Date("2026-08-14T16:00:00Z") }).length, 0);

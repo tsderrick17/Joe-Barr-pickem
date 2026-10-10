@@ -91,7 +91,8 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     signals.push({
       key: "automation-configuration-missing", severity: "critical",
       title: "Scheduled automation configuration is incomplete",
-      detail: failedPreflight.map((check) => check.label).join(", "),
+      // Say why each one failed, not just which: the commissioner should not have to open the desk to learn the reason.
+      detail: failedPreflight.map((check) => (check.detail ? `${check.label} (${check.detail})` : check.label)).join("; "),
     });
   }
   return signals;
