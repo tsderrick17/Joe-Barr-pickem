@@ -5,20 +5,27 @@
 .football-loader-ball {
   --football-w: calc(70px * var(--football-scale, 1));
   --football-h: calc(107px * var(--football-scale, 1));
-  animation: football-spin var(--football-spin-s, 1.5s) steps(48) infinite reverse;
-  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 48) var(--football-h) no-repeat;
+  /* 72 frames in a 9 x 8 grid: the across step runs once per row, the down step once per turn. */
+  animation: football-spin-x calc(var(--football-spin-s, 1.5s) / 8) steps(9) infinite reverse, football-spin-y var(--football-spin-s, 1.5s) steps(8) infinite reverse;
+  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 9) calc(var(--football-h) * 8) no-repeat;
   display: block;
   filter: drop-shadow(0 .45rem .4rem rgba(44, 36, 24, .22));
   height: var(--football-h);
   width: var(--football-w);
 }
 .football-loading-screen { display: grid; place-items: center; }
+.football-loading-screen--page { min-height: 100vh; }
+/* Hold the page still while a loading screen is up: the page is exactly the window tall (so nothing underneath can resize it)
+   and its scrollbar track stays in place, so the scrollbar neither changes size nor adds or removes width when the page is revealed. */
+html.is-loading-screen { overflow-y: scroll; }
+html.is-loading-screen body { height: 100vh; overflow: hidden; }
 /* On a phone the football sits high on the page (where the eye is) and twice as large. */
 @media (max-width: 767px) {
   .football-loading-screen { --football-scale: 2; padding-top: 12vh; place-items: start center; }
 }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
-@keyframes football-spin { to { background-position-x: calc(var(--football-w) * -48); } }
+@keyframes football-spin-x { to { background-position-x: calc(var(--football-w) * -9); } }
+@keyframes football-spin-y { to { background-position-y: calc(var(--football-h) * -8); } }
 @keyframes football-wobble {
   0% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg))); }
   40% { transform: rotate(calc(var(--football-tilt, 45deg) + var(--football-wobble, 0deg))); }
