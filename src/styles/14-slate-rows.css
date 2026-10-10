@@ -218,8 +218,16 @@ button.slate-team-side:not(:disabled)::after {
      above them runs the full team width on every row, instead of the width of
      whichever name happens to be on that row. */
   .slate-game-row.is-final .slate-team-label-lane { display: contents; }
-  .slate-game-row.is-final .slate-final-team-stack.is-left { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
-  .slate-game-row.is-final .slate-final-team-stack.is-right { grid-template-columns: minmax(0, 1fr) 2.3ch 1.3em; }
+  /* The team line is at least as long as the two longest picker names side by side (it grows only to fit a long team name
+     and score); the score sits in the middle of it with its W/L mark beside it. */
+  .slate-game-row.is-final .slate-final-team-stack.is-left,
+  .slate-game-row.is-final .slate-final-team-stack.is-right {
+    align-self: flex-start;
+    grid-template-columns: minmax(max-content, 1fr) auto auto minmax(0, 1fr);
+    max-width: 100%;
+    min-width: min(100%, calc(var(--slate-names-ch, 100) * 1ch));
+    width: max-content;
+  }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-label { grid-column: 1; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-score { grid-column: 2; }
   .slate-game-row.is-final .slate-final-team-stack.is-left .slate-team-result-mark { grid-column: 3; }
@@ -229,7 +237,8 @@ button.slate-team-side:not(:disabled)::after {
   .slate-game-row.is-final .slate-team-label,
   .slate-game-row.is-final .slate-team-score,
   .slate-game-row.is-final .slate-team-result-mark { grid-row: 1; }
-  .slate-game-row.is-final .slate-team-picker-list { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; max-width: none; }
+  /* Picker names stack two to a line. */
+  .slate-game-row.is-final .slate-team-picker-list { column-gap: .35rem; display: grid; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(2, max-content); justify-self: stretch; max-width: none; }
 }
 
 /* Upcoming rows have no score/result columns. Give each team name a full,

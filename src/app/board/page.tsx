@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -323,6 +323,12 @@ export default function BoardPage() {
     };
   })();
   const hasEarlyGame = games.some(isEarlyGame);
+  // A finished row is as wide as the pool's two longest picker names on one line (plus a little room), so every row's
+  // team line is the same length and a third or fourth name stacks beneath in pairs.
+  const slateNamesWidth = (() => {
+    const lengths = games.flatMap((game) => [...game.homePickers, ...game.awayPickers]).map((name) => name.length).sort((a, b) => b - a);
+    return lengths.length ? ({ "--slate-names-ch": `${Math.ceil((lengths[0] + (lengths[1] ?? lengths[0])) * 1.08 + 3)}` } as CSSProperties) : undefined;
+  })();
 
   useEffect(() => {
     if (isLoading || !clockSynchronized || games.length === 0) return;
@@ -588,7 +594,7 @@ export default function BoardPage() {
         ) : isLoading ? (
           <p className="mt-8">Loading {week.display_name}…</p>
         ) : (
-          <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 md:mt-8 md:space-y-7" id="slate-matchups">
+          <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 md:mt-8 md:space-y-7" id="slate-matchups" style={slateNamesWidth}>
             {actionOnlyActive && visibleGamesByDay.length === 0 ? (
               <p className="slate-action-empty">Every game still open for selection appears here. Locked games join this view as pool picks become public at kickoff.</p>
             ) : null}

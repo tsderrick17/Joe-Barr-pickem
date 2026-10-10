@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type Message = {
@@ -52,8 +52,6 @@ export default function PoolChat({ onHide }: Props) {
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const messagesViewport = useRef<HTMLDivElement>(null);
-  const hasPositionedMessages = useRef(false);
 
   const loadMessages = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -86,13 +84,6 @@ export default function PoolChat({ onHide }: Props) {
       document.removeEventListener("visibilitychange", refreshOnVisibility);
     };
   }, [loadMessages]);
-
-  useEffect(() => {
-    if (!messages.length || hasPositionedMessages.current) return;
-    const viewport = messagesViewport.current;
-    if (viewport) viewport.scrollTop = viewport.scrollHeight;
-    hasPositionedMessages.current = true;
-  }, [messages]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -141,16 +132,7 @@ export default function PoolChat({ onHide }: Props) {
 
   return (
     <section aria-label="Pool chat" className="pool-chat border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 py-3 sm:px-5">
-      <div aria-live="polite" className="max-h-[21.5rem] overflow-y-auto" ref={messagesViewport}>
-        {loading ? <p className="py-3 text-sm text-slate-600">Opening chat...</p> : null}
-        {!loading && !messages.length ? <p className="py-3 text-sm text-slate-600">No messages yet.</p> : null}
-        {messages.map((message) => <article className={`pool-chat-message ${message.isDeleted ? "is-deleted" : ""} ${message.isModerator ? "is-moderator" : ""}`} key={message.id}>
-          <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{message.isDeleted ? "Message removed." : message.body}</p>
-          <div className="pool-chat-message-meta"><strong className="font-serif">{message.playerName}</strong>{message.isModerator ? <span>MODERATOR</span> : null}<time dateTime={message.createdAt} title={messageDateTime(message.createdAt)}>{messageDateTime(message.createdAt)}</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
-        </article>)}
-      </div>
-
-      <form className="mt-3 border-t border-(color:--themed-border-12) pt-2" onSubmit={sendMessage}>
+      <form className="mb-3 border-b border-(color:--themed-border-12) pb-2" onSubmit={sendMessage}>
         <label className="sr-only" htmlFor="pool-chat-message">Write a message</label>
         <div className="mb-2 flex items-center gap-2">
           <button aria-expanded={showEmojiPicker} className={`rounded-full border px-2 py-1 text-sm transition ${showEmojiPicker ? "border-[#2b7773] bg-[#e5f2ef]" : "border-[#9b9284] bg-(color:--themed-bg-26) hover:border-[#2b7773]"}`} onClick={() => setShowEmojiPicker((current) => !current)} type="button">🙂 <span className="sr-only">Choose an emoji</span></button>
@@ -159,6 +141,16 @@ export default function PoolChat({ onHide }: Props) {
         <div className="flex gap-2"><input className="min-w-0 flex-1 border border-[#9b9284] bg-(color:--themed-bg-26) px-3 py-2 text-sm outline-none placeholder:text-slate-500 focus:border-[#00756e] focus:ring-1 focus:ring-[#00756e]" id="pool-chat-message" maxLength={280} onChange={(event) => setDraft(event.target.value)} placeholder="Message the pool..." value={draft} /><button className="bg-[#2b7773] px-4 text-sm font-bold text-white transition hover:bg-[#1e625e] disabled:cursor-not-allowed disabled:bg-slate-400" disabled={!draft.trim() || sending} type="submit">{sending ? "Sending..." : "Send"}</button></div>
         <div className="mt-1 flex justify-between gap-3 text-[10px] text-slate-500"><span>{error}</span><div className="flex items-center gap-2"><button className="pool-chat-hide" onClick={onHide} type="button">Hide chat</button><span>{draft.length}/280</span></div></div>
       </form>
+
+      <div aria-live="polite" className="max-h-[21.5rem] overflow-y-auto">
+        {loading ? <p className="py-3 text-sm text-slate-600">Opening chat...</p> : null}
+        {!loading && !messages.length ? <p className="py-3 text-sm text-slate-600">No messages yet.</p> : null}
+        {[...messages].reverse().map((message) => <article className={`pool-chat-message ${message.isDeleted ? "is-deleted" : ""} ${message.isModerator ? "is-moderator" : ""}`} key={message.id}>
+          <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{message.isDeleted ? "Message removed." : message.body}</p>
+          <div className="pool-chat-message-meta"><strong className="font-serif">{message.playerName}</strong>{message.isModerator ? <span>MODERATOR</span> : null}<time dateTime={message.createdAt} title={messageDateTime(message.createdAt)}>{messageDateTime(message.createdAt)}</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
+        </article>)}
+      </div>
+
     </section>
   );
 }
