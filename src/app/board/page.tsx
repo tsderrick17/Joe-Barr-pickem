@@ -32,7 +32,7 @@ const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 function SlateLoadingShell() {
   return (
-    <main aria-busy="true" className="grid min-h-screen place-items-center bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+    <main aria-busy="true" className="football-loading-screen min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
       <FootballLoader />
     </main>
   );

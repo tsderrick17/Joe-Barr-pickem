@@ -24,7 +24,7 @@ type DisplayPreferenceKey =
 /* While the signed-in data arrives, show only the spinning football on the page's own background. */
 function StandingsLoadingShell() {
   return (
-    <main aria-busy="true" className="grid min-h-screen place-items-center bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+    <main aria-busy="true" className="football-loading-screen min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
       <FootballLoader />
     </main>
   );
