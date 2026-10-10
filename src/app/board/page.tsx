@@ -23,7 +23,7 @@ import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 import { initialSlateState, slateReducer, type SelectedPick } from "@/lib/slate-state";
-import FootballLoader from "@/components/football-loader";
+import { FootballLoadingScreen } from "@/components/football-loader";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
@@ -32,9 +32,7 @@ const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 function SlateLoadingShell() {
   return (
-    <main aria-busy="true" className="football-loading-screen min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
-      <FootballLoader />
-    </main>
+    <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />
   );
 }
 

@@ -14,6 +14,11 @@
   width: var(--football-w);
 }
 .football-loading-screen { display: grid; place-items: center; }
+.football-loading-screen--page { min-height: 100vh; }
+/* Hold the page still while a loading screen is up: the page is exactly the window tall (so nothing underneath can resize it)
+   and its scrollbar track stays in place, so the scrollbar neither changes size nor adds or removes width when the page is revealed. */
+html.is-loading-screen { overflow-y: scroll; }
+html.is-loading-screen body { height: 100vh; overflow: hidden; }
 /* On a phone the football sits high on the page (where the eye is) and twice as large. */
 @media (max-width: 767px) {
   .football-loading-screen { --football-scale: 2; padding-top: 12vh; place-items: start center; }

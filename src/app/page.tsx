@@ -14,7 +14,7 @@ import SeasonClosedBanner from "@/components/season-closed-banner";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
-import FootballLoader from "@/components/football-loader";
+import { FootballLoadingScreen } from "@/components/football-loader";
 import { useImagesReady } from "@/lib/use-images-ready";
 type DisplayPreferenceKey =
   | "showSurvivorStandings"
@@ -25,9 +25,7 @@ type DisplayPreferenceKey =
 /* While the signed-in data arrives, show only the spinning football on the page's own background. */
 function StandingsLoadingShell() {
   return (
-    <main aria-busy="true" className="football-loading-screen min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
-      <FootballLoader />
-    </main>
+    <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />
   );
 }
 
