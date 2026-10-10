@@ -181,14 +181,14 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
   .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
 
   /* On desktop the gold heading rule is as wide as the ticket above while the card is
-     minimized and grows to the Survivor Table's width when it opens, over the same time
-     and curve as the table's blind. The phone keeps the compact capped rule. */
+     minimized and grows to the width of the Bowl Card's table (the card's own width) when it
+     opens, over the same time and curve as the table's blind. The phone keeps the compact capped rule. */
   .bowl-card-section .bowl-crest-ornament {
     margin-inline: auto;
     max-width: var(--pad-width);
     transition: max-width var(--section-glide);
   }
-  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament { max-width: var(--rail-width); }
+  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament { max-width: 74.5rem; }
   .bowl-card-section .bowl-crest-ornament span { max-width: none; }
 }
 
