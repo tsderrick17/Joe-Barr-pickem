@@ -179,8 +179,11 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
     width: min(74.5rem, calc(100vw - 2rem));
   }
   .bowl-card-section.is-minimized { max-width: none; width: var(--pad-width); }
+}
 
-  /* On desktop the gold heading rule always comes in at the collapsed length (as wide as the ticket above). Only when the card
+/* From a tablet width up the heading rule follows the card: it comes in at the collapsed length and opens out only with the card. */
+@media (min-width: 768px) {
+  /* The gold heading rule always comes in at the collapsed length (as wide as the ticket above). Only when the card
      opens out does it grow, to the Survivor Table's width, over the same time and curve as the table's blind; collapsing
      shrinks it back. The opening-out is an animation that waits for the rule to finish drawing; the card sets data-crest-intro-done
      once that has played, so later opens and closes follow the card at once. The phone keeps the compact capped rule. */
