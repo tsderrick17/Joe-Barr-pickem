@@ -293,6 +293,8 @@ export default function BoardPage() {
     ? games.find((game) => game.id === savedSurvivorPick.gameId) ?? null
     : null;
   const survivorLockGame = savedSurvivorGame ?? survivorSelectedGame;
+  // The Survivor instructions are for everyone while Survivor is part of the slate, including a player who is already out.
+  const survivorHelp = !seasonOver && survivorAvailable && week?.period_type !== "playoff";
   const survivorControlsEnabled = !seasonOver && isSurvivorSlateEditable({
     periodType: week?.period_type,
     periodStatus: week?.status,
@@ -554,7 +556,7 @@ export default function BoardPage() {
           onChooseWeek={chooseWeek}
           onToggleDisplay={toggleDisplay}
           readOnly={seasonClosedForViewer}
-          survivorControlsEnabled={survivorControlsEnabled}
+          survivorHelp={survivorHelp}
           week={week}
         />
 

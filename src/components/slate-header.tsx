@@ -10,14 +10,14 @@ type Props = {
   onChooseWeek: (event: ChangeEvent<HTMLSelectElement>) => void;
   actionOnlyActive: boolean;
   onToggleDisplay: () => void;
-  survivorControlsEnabled: boolean;
+  survivorHelp: boolean;
   hasEarlyGame: boolean;
   /** The off-season: the how-to-pick instructions are not shown. */
   readOnly?: boolean;
 };
 
 /** The Slate's masthead: title, week picker, the All Games / Pool Action switch, and the how-to panel. */
-function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorControlsEnabled, hasEarlyGame, readOnly = false }: Props) {
+function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorHelp, hasEarlyGame, readOnly = false }: Props) {
   return (
   <header className="-mx-4 border-y-4 border-(color:--themed-border-10) px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
     <div className="slate-header-grid grid gap-5 md:gap-0">
@@ -56,9 +56,9 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
       </div>
 
       <aside className="border-t border-(color:--themed-border-12) pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-        {readOnly ? null : <div className={`slate-action-instructions ${survivorControlsEnabled ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-16) px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorControlsEnabled ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        {readOnly ? null : <div className={`slate-action-instructions ${survivorHelp ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-16) px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorHelp ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
           <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
-          {survivorControlsEnabled ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to pick one outright winner. Chips show up beside the teams you are still eligible to pick.</p> : null}
+          {survivorHelp ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose a team.</p> : null}
         </div>
         }
         <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-(color:--themed-border-12) pt-3 md:gap-0">
