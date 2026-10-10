@@ -262,8 +262,15 @@ button.slate-team-side:not(:disabled)::after {
 }
 
 /* Without Survivor chips, a finished team's block (name, score and the line with its picker names) is centered in its half
-   of the row, the way an upcoming game's name is, so the middle of the line sits over the middle of the names below. */
-.slate-game-row.no-survivor-layout.is-final > .slate-team-side > .slate-final-team-stack { align-self: center; }
+   of the row, the way an upcoming game's name is, and everything in it is centered on the line. */
+.slate-game-row.no-survivor-layout.is-final > .slate-team-side > .slate-final-team-stack {
+  align-self: center;
+  /* The name, score and W/L sit together in the middle of the line, with the picker names centered beneath. */
+  grid-template-columns: minmax(0, 1fr) max-content auto auto minmax(0, 1fr);
+}
+.slate-game-row.no-survivor-layout.is-final > .slate-team-side .slate-final-team-stack .slate-team-label { grid-column: 2; }
+.slate-game-row.no-survivor-layout.is-final > .slate-team-side .slate-final-team-stack .slate-team-score { grid-column: 3; }
+.slate-game-row.no-survivor-layout.is-final > .slate-team-side .slate-final-team-stack .slate-team-result-mark { grid-column: 4; }
 .slate-game-row.no-survivor-layout.is-final .slate-team-picker-list { justify-content: center; }
 
 /* When Survivor is no longer in play, reclaim both chip lanes. Keep a compact
