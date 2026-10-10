@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -40,6 +41,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The loading football's frames start downloading with the page, so the ball is already there when a loading screen shows.
+  preload("/football-spin.webp", { as: "image", type: "image/webp", fetchPriority: "low" });
   return (
     <html lang="en">
       <body className={`${architectsDaughter.variable} ${graduate.variable} ${cormorant.variable}`}>
