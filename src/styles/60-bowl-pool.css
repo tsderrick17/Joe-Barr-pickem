@@ -364,7 +364,7 @@ html[data-theme="night"] .bowl-score-tile:not(.is-large) { --flap-bg: #232838; -
    Survivor Table, Bowl Card), the same at the top and bottom of the page. */
 .standings-stack { --standings-gap: 1.5rem; padding-bottom: var(--standings-gap); padding-top: var(--standings-gap); }
 @media (min-width: 640px) { .standings-stack { --standings-gap: 2rem; } }
-.standings-stack > section:not(.my-ticket):not(.standings-loading-ticket) { padding-block: 0; }
+.standings-stack > section:not(.my-ticket) { padding-block: 0; }
 .standings-stack > section + section { margin-top: var(--standings-gap); }
 
 /* ---- Bowl Card: one line style for the whole table. Every line (the day

@@ -32,34 +32,8 @@ const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 function SlateLoadingShell() {
   return (
-    <main aria-busy="true" className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
-      <div className="football-loading-overlay"><FootballLoader /></div>
-      <div className="mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
-        <header className="-mx-4 border-y-4 border-(color:--themed-border-10) px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
-          <div className="slate-header-grid grid gap-5 md:gap-0">
-            <div className="min-w-0 md:pr-7">
-              <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">The Slate</h1>
-              <p className="mt-4 text-xs font-bold tracking-[0.16em] text-slate-600">VIEW WEEK</p>
-              <div className="mt-1 h-9 w-28 border border-(color:--themed-border-10) bg-(color:--themed-bg-26)" />
-            </div>
-            <aside className="border-t border-(color:--themed-border-12) pt-4 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
-              <div className="h-[7.25rem] border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-16)" />
-              <div className="mt-2 h-16 border-t border-(color:--themed-border-12) pt-3" />
-            </aside>
-          </div>
-        </header>
-        <div className="slate-loading-receipt h-[6.75rem] border-y border-(color:--themed-border-12) md:h-[5.8rem]" />
-        <div className="mx-auto mt-4 w-full max-w-4xl space-y-3 pb-10 md:mt-8 md:space-y-7">
-          {Array.from({ length: 5 }, (_, index) => (
-            <section key={index} className="space-y-2">
-              <div className="mx-auto h-7 w-2/5 border-y-2 border-(color:--themed-border-10)" />
-              {Array.from({ length: index === 2 ? 8 : 2 }, (_, rowIndex) => (
-                <div key={rowIndex} className="h-14 border-y border-(color:--themed-border-12) bg-(color:--themed-bg-17)" />
-              ))}
-            </section>
-          ))}
-        </div>
-      </div>
+    <main aria-busy="true" className="grid min-h-screen place-items-center bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+      <FootballLoader />
     </main>
   );
 }

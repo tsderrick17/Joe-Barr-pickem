@@ -12,8 +12,6 @@
   height: var(--football-h);
   width: var(--football-w);
 }
-.football-loading-overlay { display: grid; inset: 0; place-items: center; pointer-events: none; position: fixed; z-index: 20; }
-.football-loading-overlay .football-loader { background: var(--asset-card-bg); border: 1px solid var(--asset-card-rule); border-radius: .5rem; box-shadow: 0 .5rem 1.5rem rgba(44, 36, 24, .18); padding: 1.1rem 1.9rem .9rem; }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
 @keyframes football-spin { to { background-position-x: calc(var(--football-w) * -48); } }
 @keyframes football-wobble {
