@@ -21,30 +21,11 @@ type DisplayPreferenceKey =
   | "hidePickemEliminatedRows"
   | "hideSurvivorEliminatedRows";
 
-/* Keep the first paint shaped like the real Standings page while its signed-in
-   data arrives. Reserve the ticket and one Pick'em surface up front, avoiding
-   duplicate pads and a visible jump without changing any pool behavior. */
+/* While the signed-in data arrives, show only the spinning football on the page's own background. */
 function StandingsLoadingShell() {
   return (
-    <main aria-busy="true" className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
-      <div className="football-loading-overlay"><FootballLoader /></div>
-      <div className="mx-auto max-w-5xl px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
-        <section className="standings-loading-ticket mx-auto w-full max-w-[30rem] border border-[#756b5b] bg-[#f3ead6] p-4 shadow-[0_4px_14px_rgba(44,36,24,.14)]">
-          <div className="mx-auto h-3 w-44 bg-[#d9ceb8]" />
-          <div className="mx-auto mt-3 h-8 w-72 max-w-full bg-[#cfc1a8]" />
-          <div className="mt-7 h-px bg-[#756b5b]" />
-          <div className="grid grid-cols-2 gap-5 py-5">
-            <div className="space-y-3"><div className="h-4 w-4/5 bg-[#dbcdb4]" /><div className="h-4 w-3/5 bg-[#e4d9c5]" /></div>
-            <div className="space-y-3"><div className="h-4 w-4/5 bg-[#dbcdb4]" /><div className="h-4 w-3/5 bg-[#e4d9c5]" /></div>
-          </div>
-          <div className="h-px bg-[#756b5b]" />
-          <div className="mt-4 grid grid-cols-3 gap-4"><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /><div className="h-4 bg-[#d7c8ae]" /></div>
-        </section>
-        <section className="mx-auto w-full max-w-[30rem]">
-          <div className="h-12 border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-20)" />
-          <div className="standings-loading-rows" />
-        </section>
-      </div>
+    <main aria-busy="true" className="grid min-h-screen place-items-center bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+      <FootballLoader />
     </main>
   );
 }

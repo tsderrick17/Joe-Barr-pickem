@@ -173,7 +173,7 @@ export default function BowlPoolPage() {
 
   return (
     <main className="bowl-pool-page mx-auto max-w-6xl px-2 pb-8 pt-0 sm:px-6 sm:pb-10">
-      {isLoading ? <div aria-busy="true" className="bowl-pool-loading-shell mt-4" aria-label="Loading Bowl Pool"><div className="football-loading-overlay"><FootballLoader /></div><div className="h-8 w-52 rounded bg-slate-200" /><div className="mt-6 h-14 rounded border border-slate-200 bg-(color:--themed-bg-26)" /><div className="mt-4 h-24 rounded border border-slate-200 bg-(color:--themed-bg-26)" /><div className="mt-4 h-72 rounded border border-slate-200 bg-(color:--themed-bg-26)" /></div> : null}
+      {isLoading ? <div aria-busy="true" aria-label="Loading Bowl Pool" className="bowl-pool-loading-shell mt-4 grid place-items-center"><FootballLoader /></div> : null}
       {!isLoading && canView ? (
         <>
           {poolLocked ? optedIn === false ? <div className="mt-4 border border-slate-300 bg-(color:--themed-bg-26) p-4 text-center text-sm font-bold text-slate-600">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-(color:--themed-bg-26) p-3 text-center text-sm font-bold text-slate-500">Loading…</div> : optedIn === false ? <BowlClaimSeat onClaim={() => void changeOptIn(true)} /> : null}
