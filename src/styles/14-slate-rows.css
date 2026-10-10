@@ -411,20 +411,13 @@ button.slate-team-side:not(:disabled)::after {
   will-change: clip-path;
   /* Reveal fresh ink from the left. Unlike scaleX, already-painted ink never
      stretches or shifts while the marker continues across the word. */
-  animation: slate-selection-sweep var(--selection-sweep-ms, 720ms) cubic-bezier(.18,.72,.18,1) var(--selection-sweep-delay, 35ms) both;
+  animation: slate-selection-sweep var(--selection-sweep-ms, 600ms) cubic-bezier(.18,.72,.18,1) var(--selection-sweep-delay, 0ms) both;
 }
 
 @keyframes slate-selection-sweep {
   0% { clip-path: polygon(3% 0, 3% 0, 0 100%, 0 100%); }
   12% { clip-path: polygon(3% 0, 8% 0, 5% 100%, 0 100%); }
   100% { clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); }
-}
-
-@media (max-width: 767px) {
-  .slate-team-label--new::before,
-  .slate-team-label--new:not(.slate-team-label--chips) > span::before {
-    animation-duration: 780ms;
-  }
 }
 
 .slate-team-selection .text-slate-200 {

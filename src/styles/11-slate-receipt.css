@@ -187,8 +187,8 @@
 }
 .slate-receipt-print:hover { filter: brightness(1.04); }
 .slate-receipt-print:active { border-style: inset; box-shadow: inset 1px 1px 0 var(--gray-45); transform: translate(1px, 1px); }
-.slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention var(--receipt-attention-cycle, 15s) ease-in-out infinite; }
-.slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam var(--receipt-attention-cycle, 15s) ease-in-out infinite; }
+.slate-receipt-print.needs-attention:not(:disabled) { animation: receipt-print-attention var(--receipt-attention-cycle, 12s) ease-in-out infinite; }
+.slate-receipt-print.needs-attention:not(:disabled)::before { animation: receipt-print-inspection-beam var(--receipt-attention-cycle, 12s) ease-in-out infinite; }
 
 /* The printer line has a fixed footprint beneath Submit, so saving feedback
    reads like a receipt being pulled through a mechanism without moving the

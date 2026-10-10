@@ -19,12 +19,12 @@ type Knob = { key: string; label: string; min: number; max: number; step: number
 
 // The live value of every knob is the one the app uses today; the page starts there.
 const KNOBS: Record<string, Knob[]> = {
-  submit: [{ key: "--receipt-attention-cycle", label: "Sheen + press every", min: 2, max: 30, step: 0.5, unit: "s", live: 15 }],
+  submit: [{ key: "--receipt-attention-cycle", label: "Sheen + press every", min: 2, max: 30, step: 0.5, unit: "s", live: 12 }],
   highlight: [
-    { key: "--selection-sweep-ms", label: "Sweep length", min: 150, max: 2000, step: 10, unit: "ms", live: 720 },
-    { key: "--selection-sweep-delay", label: "Delay", min: 0, max: 600, step: 5, unit: "ms", live: 35 },
-    { key: "jitterX", label: "Wander sideways", min: 0, max: 0.4, step: 0.005, unit: "em", live: STROKE_JITTER_DEFAULTS.x },
-    { key: "jitterY", label: "Wander up/down", min: 0, max: 0.3, step: 0.005, unit: "em", live: STROKE_JITTER_DEFAULTS.y },
+    { key: "--selection-sweep-ms", label: "Sweep length", min: 150, max: 2000, step: 10, unit: "ms", live: 600 },
+    { key: "--selection-sweep-delay", label: "Delay", min: 0, max: 600, step: 5, unit: "ms", live: 0 },
+    { key: "jitterX", label: "Wander sideways", min: 0, max: 0.5, step: 0.005, unit: "em", live: STROKE_JITTER_DEFAULTS.x },
+    { key: "jitterY", label: "Wander up/down", min: 0, max: 0.5, step: 0.005, unit: "em", live: STROKE_JITTER_DEFAULTS.y },
     { key: "jitterTurn", label: "Wander turn", min: 0, max: 5, step: 0.05, unit: "deg", live: STROKE_JITTER_DEFAULTS.turn },
   ],
   chip: [
@@ -36,15 +36,15 @@ const KNOBS: Record<string, Knob[]> = {
   pennant: [{ key: "--pennant-raise-ms", label: "Raise length", min: 150, max: 2000, step: 10, unit: "ms", live: 620 }],
   tile: [{ key: "pace", label: "Time per flip", min: 40, max: 400, step: 5, unit: "ms", live: 140 }],
   football: [
-    { key: "--football-spin-s", label: "Time per turn", min: 0.3, max: 6, step: 0.05, unit: "s", live: 3 },
-    { key: "--football-tilt", label: "Tilt", min: 0, max: 90, step: 1, unit: "deg", live: 50 },
+    { key: "--football-spin-s", label: "Time per turn", min: 0.3, max: 6, step: 0.05, unit: "s", live: 1.5 },
+    { key: "--football-tilt", label: "Tilt", min: 0, max: 90, step: 1, unit: "deg", live: 45 },
     { key: "--football-wobble", label: "Wobble size", min: 0, max: 10, step: 0.1, unit: "deg", live: 0 },
-    { key: "--football-wobble-s", label: "Wobble pace", min: 0.3, max: 5, step: 0.1, unit: "s", live: 1.9 },
+    { key: "--football-wobble-s", label: "Wobble pace", min: 0.3, max: 5, step: 0.1, unit: "s", live: 0.3 },
     { key: "--football-scale", label: "Size", min: 0.5, max: 2.5, step: 0.05, unit: "x", live: 1 },
   ],
   crest: [
-    { key: "--crest-rule-ms", label: "Rule draw length", min: 150, max: 3000, step: 10, unit: "ms", live: 720 },
-    { key: "--crest-rule-delay", label: "Delay", min: 0, max: 1000, step: 10, unit: "ms", live: 120 },
+    { key: "--crest-rule-ms", label: "Rule draw length", min: 150, max: 3000, step: 10, unit: "ms", live: 2840 },
+    { key: "--crest-rule-delay", label: "Delay", min: 0, max: 1000, step: 10, unit: "ms", live: 1000 },
   ],
 };
 type Values = Record<string, number>;

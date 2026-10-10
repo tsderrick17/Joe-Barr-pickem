@@ -50,7 +50,7 @@ const CHIP_LOGO_BOOST = 1.18;
 /** How random each toss is: the spin axis leans between leanMin and leanMax degrees, either way, and the flip lasts
  *  between msMin and msMax. */
 export type TossRange = { leanMin: number; leanMax: number; msMin: number; msMax: number };
-export const TOSS_DEFAULTS: TossRange = { leanMin: 5, leanMax: 13, msMin: 780, msMax: 1060 };
+export const TOSS_DEFAULTS: TossRange = { leanMin: 0, leanMax: 0, msMin: 900, msMax: 900 };
 
 /** Each toss is a little different, like a real one: the spin axis leans a few degrees either way and the flip runs a bit faster or slower. */
 export function randomToss(range: TossRange = TOSS_DEFAULTS) {

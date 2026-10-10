@@ -16,7 +16,7 @@
 
 .bowl-crest { text-align: center; }
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
-.bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 720ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 120ms) both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 2840ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 1000ms) both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
 @media (prefers-reduced-motion: reduce) {
   .bowl-crest-ornament span { animation: none; }
 }

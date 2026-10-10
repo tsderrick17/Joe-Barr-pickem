@@ -14,6 +14,7 @@ import SeasonClosedBanner from "@/components/season-closed-banner";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
+import FootballLoader from "@/components/football-loader";
 type DisplayPreferenceKey =
   | "showSurvivorStandings"
   | "showBowlCard"
@@ -26,6 +27,7 @@ type DisplayPreferenceKey =
 function StandingsLoadingShell() {
   return (
     <main aria-busy="true" className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+      <div className="football-loading-overlay"><FootballLoader /></div>
       <div className="mx-auto max-w-5xl px-4 pb-0 pt-5 sm:px-5 sm:pt-8 md:px-10">
         <section className="standings-loading-ticket mx-auto w-full max-w-[30rem] border border-[#756b5b] bg-[#f3ead6] p-4 shadow-[0_4px_14px_rgba(44,36,24,.14)]">
           <div className="mx-auto h-3 w-44 bg-[#d9ceb8]" />
