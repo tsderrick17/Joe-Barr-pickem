@@ -1,23 +1,25 @@
 /* ---- Football loader ----
    Tunable from the Commissioner Assets panel: spin time per turn, tilt, wobble size and pace, and scale. */
 .football-loader { align-items: center; display: inline-grid; gap: .55rem; justify-items: center; }
-.football-loader-tilt { animation: football-wobble var(--football-wobble-s, 1.9s) ease-in-out infinite alternate; display: block; transform: rotate(var(--football-tilt, 50deg)); }
+.football-loader-tilt { animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate; display: block; transform: rotate(var(--football-tilt, 45deg)); }
 .football-loader-ball {
   --football-w: calc(70px * var(--football-scale, 1));
   --football-h: calc(107px * var(--football-scale, 1));
-  animation: football-spin var(--football-spin-s, 3s) steps(48) infinite;
+  animation: football-spin var(--football-spin-s, 1.5s) steps(48) infinite reverse;
   background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 48) var(--football-h) no-repeat;
   display: block;
   filter: drop-shadow(0 .45rem .4rem rgba(44, 36, 24, .22));
   height: var(--football-h);
   width: var(--football-w);
 }
+.football-loading-overlay { display: grid; inset: 0; place-items: center; pointer-events: none; position: fixed; z-index: 20; }
+.football-loading-overlay .football-loader { background: var(--asset-card-bg); border: 1px solid var(--asset-card-rule); border-radius: .5rem; box-shadow: 0 .5rem 1.5rem rgba(44, 36, 24, .18); padding: 1.1rem 1.9rem .9rem; }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
 @keyframes football-spin { to { background-position-x: calc(var(--football-w) * -48); } }
 @keyframes football-wobble {
-  0% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 0deg))); }
-  40% { transform: rotate(calc(var(--football-tilt, 50deg) + var(--football-wobble, 0deg))); }
-  100% { transform: rotate(calc(var(--football-tilt, 50deg) - var(--football-wobble, 0deg) * .4)); }
+  0% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg))); }
+  40% { transform: rotate(calc(var(--football-tilt, 45deg) + var(--football-wobble, 0deg))); }
+  100% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg) * .4)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .football-loader-ball, .football-loader-tilt { animation: none; }
