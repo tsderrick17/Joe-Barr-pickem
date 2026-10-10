@@ -247,6 +247,10 @@ measure database requests or end-to-end route time.
   wins, or the week completes); if everyone left is eliminated in the same week,
   they share the title; if several entries survive the whole regular season, they
   share the title. Every co-champion gets a trophy and is named together.
+- On the Standings a lost Survivor entry still reads IN until it is officially
+  out: another entry must make a correct pick in the same week (`officiallyOutEntryIds`).
+  If everyone left loses together nobody is out, because they share the title. The
+  stored status is unchanged; only the Standings display waits.
 
 ## NCAA Bowl Pool
 
