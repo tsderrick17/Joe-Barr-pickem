@@ -79,6 +79,18 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   // still for the rest of that day.
   const [animateScores] = useState(() => !scoresSpunToday(viewerPlayerId));
   const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
+  // The gold rule draws in at the collapsed length; only once drawn does it open out to the table's width (and it follows the
+  // card from then on). The times match the rule's draw defaults in 60-bowl-pool.css (--crest-rule-delay, --crest-rule-ms).
+  const [crestIntroDone, setCrestIntroDone] = useState(false);
+  const hasStandings = bowlStandings !== null;
+  // A card that is (or has been) collapsed has no intro left to wait for.
+  if (minimized && !crestIntroDone) setCrestIntroDone(true);
+  const crestWide = !minimized && crestIntroDone;
+  useEffect(() => {
+    if (!hasStandings || crestIntroDone) return;
+    const timer = window.setTimeout(() => setCrestIntroDone(true), 1000 + 2840);
+    return () => window.clearTimeout(timer);
+  }, [hasStandings, crestIntroDone]);
 
   useEffect(() => {
     const loadBowlStandings = () => void fetchWithSession("/api/bowl-pool", { cache: "no-store" }).then(async (response) => {
@@ -222,7 +234,7 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
 
   return (
     <>
-      {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7"><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay || claiming} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${minimized ? "is-minimized" : ""}`} aria-label="Bowl Card">
+      {bowlStandings && bowlStandings.optedIn === false && bowlStandings.entryOpen ? <section className="bowl-card-section py-6 sm:py-7" data-crest-wide><BowlCrest seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" /><BowlClaimSeat busy={savingDisplay || claiming} onClaim={() => void claimBowlSeat()} /></section> : bowlStandings ? <section className={`pickem-ledger bowl-card-section py-6 sm:py-7 ${minimized ? "is-minimized" : ""}`} aria-label="Bowl Card" data-crest-wide={crestWide || undefined}>
           <BowlCrest action={displayLocked ? undefined : <button aria-expanded={!minimized} aria-label={minimized ? "Show Bowl Card" : "Hide Bowl Card"} className="survivor-title-toggle" disabled={savingDisplay} onClick={() => void onSetDisplay(minimized)} title={minimized ? "Show Bowl Card" : "Hide Bowl Card"} type="button">{minimized ? "+" : "−"}</button>} seasonYear={bowlStandings.season?.season_year ?? currentSeasonYear()} seasonSuffix="Special" title="BOWL CARD" />
           <Collapse open={!minimized}>
             {bowlChampion ? <div className="border-b-2 border-(color:--themed-border-10) bg-[#f8f0d8] px-3 py-3 text-center font-bold text-[#5a430c]">🏆 {bowlChampion.playerName} — Bowl Pool Champion</div> : null}
