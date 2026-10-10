@@ -76,7 +76,7 @@ export default function SurvivorPokerChip({ abbreviation, teamName, selected = f
   const [toss] = useState(() => (animate ? randomToss(tossRange) : undefined));
   const face = (
     <span className="survivor-poker-chip-face" style={{ "--chip-logo-scale": logoScale } as CSSProperties}>
-      <Image alt="" className="object-contain" height={44} src={`/team-logos/${logoAbbreviation}.png`} width={44} />
+      <Image alt="" className="object-contain" height={44} loading="eager" src={`/team-logos/${logoAbbreviation}.png`} width={44} />
     </span>
   );
 
