@@ -38,14 +38,14 @@ html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
 
 .pool-chat-dock .pool-chat {
   margin: 0 auto;
-  /* The Slate uses the broad reading rail by default. Standings overrides
-     this below so the shared chat follows the page it is attached to. */
-  max-width: 64rem;
+  /* Never wider than the Pick'em Pad (the page rail). Standings narrows it
+     further below so the shared chat follows the page it is attached to. */
+  max-width: var(--rail-width);
   width: 100%;
 }
 
 /* The compact restore control follows the same edge when chat is hidden. */
 .pool-chat-dock > div:not(.pool-chat) {
-  max-width: 64rem;
+  max-width: var(--rail-width);
   width: 100%;
 }

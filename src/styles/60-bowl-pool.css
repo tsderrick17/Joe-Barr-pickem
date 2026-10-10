@@ -453,7 +453,7 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 
 /* Final scores and W/L marks sit in fixed slots at the end of each team's lane, so every
    score lines up in a column whatever the length of the team name before it. */
-.slate-game-row.is-final .slate-team-score { text-align: right; }
+.slate-game-row.is-final .slate-team-score { text-align: center; }
 .slate-game-row.is-final .slate-team-result-mark { text-align: left; }
 /* The Bowl receipt stays in view while the schedule scrolls. It is the frame, not the
    strip inside it, that sticks, because a sticky element only travels within its parent. */
