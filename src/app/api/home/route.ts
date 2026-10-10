@@ -12,6 +12,8 @@ import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { shapePadRows } from "@/lib/home-shape";
 import { survivorChampionDisplayId } from "@/lib/inaugural-survivor-holder";
+import { championshipTitle } from "@/lib/championship-title";
+import { officiallyOutEntryIds } from "@/lib/survivor-official";
 import { survivorEntryStatus, type StandingsResponse } from "@/lib/api-contracts";
 import type { PeriodStatus } from "@/lib/db-statuses";
 
@@ -196,8 +198,7 @@ export async function GET(request: NextRequest) {
   for (const championship of (championshipRows ?? [])) { const key = `${championship.season_year}:${championship.pool}`; championshipCounts.set(key, (championshipCounts.get(key) ?? 0) + 1); }
   for (const championship of (championshipRows ?? [])) {
     const poolLabel = championship.pool === "pickem" ? "Pick'em" : championship.pool === "survivor" ? "Survivor" : "Bowl Pool";
-    const suffix = (championshipCounts.get(`${championship.season_year}:${championship.pool}`) ?? 0) > 1 ? "Co-Champion" : "Champion";
-    const title = `'${String(championship.season_year).slice(-2)} ${poolLabel} ${suffix}`;
+    const title = championshipTitle(championship.season_year, poolLabel, (championshipCounts.get(`${championship.season_year}:${championship.pool}`) ?? 0) > 1);
     const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
     titles.push(title);
     trophiesByPlayerId.set(championship.player_id, titles);
@@ -358,6 +359,8 @@ export async function GET(request: NextRequest) {
         const playerNameById = new Map(
           players.map((player) => [player.id, player.first_name]),
         );
+        // A lost entry reads IN until another entry makes a correct pick that week (everyone left losing together shares the title).
+        const officiallyOut = officiallyOutEntryIds(survivorEntries ?? [], survivorPicks ?? []);
         survivorRows = (survivorEntries ?? [])
           .map((entry) => {
             const entryPicks = (survivorPicks ?? []).filter((item) => item.survivor_entry_id === entry.id);
@@ -380,7 +383,7 @@ export async function GET(request: NextRequest) {
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
               trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
-              status: survivorEntryStatus(entry.status),
+              status: entry.status === "eliminated" && !officiallyOut.has(entry.id) ? "active" : survivorEntryStatus(entry.status),
               eliminatedAt: entry.eliminated_at,
               // An elimination applies after the current scoring period. If
               // it was recorded in this period, keep Survivor on this week's

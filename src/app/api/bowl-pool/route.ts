@@ -8,6 +8,7 @@ import { bowlPoolLaunchAt, compareBowlPoolStandings } from "@/lib/bowl-pool.js";
 import { activeBowlStandingsEntries } from "@/lib/bowl-pool-standings-entries.js";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { parseBowlSubmission } from "@/lib/selection-submission";
+import { championshipTitle } from "@/lib/championship-title";
 
 async function seasonAndGames() {
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", currentSeasonYear()).maybeSingle());
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
   for (const championship of championships ?? []) championshipCounts.set(championship.season_year, (championshipCounts.get(championship.season_year) ?? 0) + 1);
   for (const championship of championships ?? []) {
     const titles = trophiesByPlayerId.get(championship.player_id) ?? [];
-    titles.push(`'${String(championship.season_year).slice(-2)} Bowl Pool ${(championshipCounts.get(championship.season_year) ?? 0) > 1 ? "Co-Champion" : "Champion"}`);
+    titles.push(championshipTitle(championship.season_year, "Bowl Pool", (championshipCounts.get(championship.season_year) ?? 0) > 1));
     trophiesByPlayerId.set(championship.player_id, titles);
   }
   const finalGame = context.games.find((game) => game.id === context.season?.championship_game_id && game.status === "final");
