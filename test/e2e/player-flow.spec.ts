@@ -226,9 +226,12 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   // A durable session must restore the complete account strip after a reload.
   await page.reload();
   await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible({ timeout: 12_000 });
-  await expect(page.getByRole("link", { name: "Notifications" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
-  await expect(page.getByText(`Signed in as ${fixture.firstName}`)).toBeVisible();
+  // The account menu: your name opens Notifications and Sign out.
+  await expect(page.getByText("Signed in as")).toBeVisible();
+  await page.locator(".account-menu-button:visible").click();
+  await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // Reproduce a temporary profile failure during navigation. Already verified
   // controls must remain visible; only a real 401 is allowed to clear them.
@@ -247,8 +250,10 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await expect(page).toHaveURL(/\/board$/, { timeout: 12_000 });
   await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible({ timeout: 12_000 });
   await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Notifications" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await page.locator(".account-menu-button:visible").click();
+  await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "Seattle Seahawks", exact: true }).click();
   await page.getByRole("button", { name: "Los Angeles Rams", exact: true }).click();

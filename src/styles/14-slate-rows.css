@@ -749,3 +749,11 @@ html[data-theme="night"] [class*="border-slate-"] {
 html[data-theme="night"] [class*="border-[#d1c9ba]"] {
   border-color: #314651;
 }
+
+/* On a phone the team name (the Pick'em tap) and the poker chip beside it (the Survivor tap) sat almost touching. A margin
+   (not padding, so it is not part of either button) keeps a clear gap between the two targets. */
+@media (max-width: 767px) {
+  /* The button's invisible tap zone reaches .35rem past its edge, so the gap is a little wider than that. */
+  .slate-game-row.has-survivor-layout > .slate-team-side:nth-child(2) { margin-right: .5rem; width: auto; }
+  .slate-game-row.has-survivor-layout > .slate-team-side:nth-child(6) { margin-left: .5rem; width: auto; }
+}
