@@ -251,8 +251,8 @@ measure database requests or end-to-end route time.
   out: another entry must make a correct pick in the same week (`officiallyOutEntryIds`).
   If everyone left loses together nobody is out, because they share the title. The
   stored status is unchanged; only the Standings display waits.
-- The Survivor trophy beside a name belongs to the latest season's champion or co-champions;
-  a new champion takes it from the previous one (earlier titles stay in the hover text).
+- The Survivor, Pick'em and Bowl trophies beside a name belong to the latest season's champion or
+  co-champions; a new champion takes it from the previous one. The hover text lists every title.
 
 ## NCAA Bowl Pool
 

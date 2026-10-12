@@ -9,6 +9,7 @@ import { activeBowlStandingsEntries } from "@/lib/bowl-pool-standings-entries.js
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { parseBowlSubmission } from "@/lib/selection-submission";
 import { championshipTitle } from "@/lib/championship-title";
+import { reigningChampionIds } from "@/lib/reigning-champions";
 
 async function seasonAndGames() {
   const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", currentSeasonYear()).maybeSingle());
@@ -67,6 +68,8 @@ export async function GET(request: NextRequest) {
     supabaseAdmin.from("pool_championships").select("player_id, season_year").eq("pool", "bowl").order("season_year", { ascending: false }),
     supabaseAdmin.from("bowl_pool_championships").select("player_id").eq("season_id", context.season.id),
   ]);
+  // The trophy sits on the latest season's champion (or co-champions); earlier titles stay in the hover text.
+  const bowlTrophyHolderIds = reigningChampionIds((championships ?? []).map((championship) => ({ ...championship, pool: "bowl" })), "bowl");
   const trophiesByPlayerId = new Map<string, string[]>();
   const championshipCounts = new Map<number, number>();
   for (const championship of championships ?? []) championshipCounts.set(championship.season_year, (championshipCounts.get(championship.season_year) ?? 0) + 1);
@@ -86,8 +89,9 @@ export async function GET(request: NextRequest) {
     losses: (() => { const pickKeys = new Set(seasonPicks.filter((pick) => pick.entry_id === entry.id).map((pick) => `${pick.entry_id}:${pick.game_id}`)); return seasonPicks.filter((pick) => pick.entry_id === entry.id && pick.result === "loss").length + seasonAutomaticResults.filter((result) => result.entry_id === entry.id && result.result === "loss" && !pickKeys.has(`${result.entry_id}:${result.game_id}`)).length; })(),
     tiebreakerTotal: entry.championship_total_guess as number | null,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
+    holdsTrophy: bowlTrophyHolderIds.has(entry.player_id),
   })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
-    ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null as number | null, trophies: trophiesByPlayerId.get(candidate.id) ?? [] }))
+    ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null as number | null, trophies: trophiesByPlayerId.get(candidate.id) ?? [], holdsTrophy: bowlTrophyHolderIds.has(candidate.id) }))
     : []).sort((a, b) => compareBowlPoolStandings(a, b, finalCombinedPoints));
   return NextResponse.json({
     season: { ...context.season, launchAt: bowlPoolLaunchAt(currentSeasonYear()) },

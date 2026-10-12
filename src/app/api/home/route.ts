@@ -224,6 +224,7 @@ export async function GET(request: NextRequest) {
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
   // The Survivor trophy sits on the latest season's champion (or co-champions); a new champion takes it from the last one.
   const survivorTrophyHolderIds = reigningChampionIds(championshipRows ?? [], "survivor");
+  const pickemTrophyHolderIds = reigningChampionIds(championshipRows ?? [], "pickem");
   // Co-champions (a same-week finish or several survivors) are all named.
   const survivorChampionIds = ((championshipRows ?? []))
     .filter((row) => row.pool === "survivor" && row.season_year === currentSeasonYear())
@@ -264,6 +265,7 @@ export async function GET(request: NextRequest) {
     lockedLineByGameId,
     preliminaryLineByGameId,
     trophiesByPlayerId,
+    pickemTrophyHolderIds,
     playoffEliminatedPlayerIds,
     viewerPlayerId: viewer.id,
     now: currentTime,

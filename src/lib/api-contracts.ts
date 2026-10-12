@@ -79,6 +79,8 @@ export type StandingsRow = {
   wins: number;
   playoffEliminated?: boolean;
   trophies?: string[];
+  /** True only for the Pick'em champion(s) of the latest season that has one. */
+  holdsPickemTrophy?: boolean;
   picks: StandingsPick[];
 };
 

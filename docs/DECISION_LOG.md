@@ -1579,3 +1579,7 @@ A Survivor entry that loses is not out until another entry makes a correct pick 
 ## The Survivor trophy sits on the reigning champion
 
 The trophy beside a name in the Survivor table used to show for anyone who had ever won Survivor, so after a new champion was crowned the previous one kept it too. It now shows only for the champion (or co-champions) of the latest season that has one (`reigningChampionIds`); a new champion takes it from the last. Every earlier title stays in the player's hover text. The Pick'em and Bowl trophies are unchanged.
+
+## The Pick'em and Bowl trophies follow the same rule
+
+Like the Survivor trophy, the Pick'em and Bowl Pool trophies beside a name now show only for the champion (or co-champions) of the latest season that has one (`reigningChampionIds`); a new champion takes the trophy from the last. A player's hover text still lists every title they have won.
