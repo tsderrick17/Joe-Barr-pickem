@@ -25,11 +25,12 @@
   z-index: -1;
 }
 .football-loader-ball {
-  /* 90 frames in a 9 x 10 grid, played by ONE animation so the across and down moves can never drift apart (two separate animations
+  /* 90 frames in a 10 x 9 grid (the sheet is 2800 x 3852 px: an iPhone will not draw an image taller or wider than 4096 px at its true size,
+     which cut frames across their edges), played by ONE animation so the across and down moves can never drift apart (two separate animations
      did on iOS, showing slices of two frames): one new frame on every refresh of a 60 Hz screen at 1.5 s a turn, and a steady two
      refreshes each at 120 Hz. The keyframes below walk the grid backwards, last row first. */
   animation: football-spin var(--football-spin-s, 1.5s) linear infinite;
-  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 9) calc(var(--football-h) * 10) no-repeat;
+  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 10) calc(var(--football-h) * 9) no-repeat;
   display: block;
   height: var(--football-h);
   width: var(--football-w);
@@ -50,27 +51,25 @@ html.is-loading-screen body { height: 100vh; overflow: hidden; }
 }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
 @keyframes football-spin {
-  0% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -9); }
-  9.9999% { background-position: var(--football-w) calc(var(--football-h) * -9); }
-  10% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -8); }
-  19.9999% { background-position: var(--football-w) calc(var(--football-h) * -8); }
-  20% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -7); }
-  29.9999% { background-position: var(--football-w) calc(var(--football-h) * -7); }
-  30% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -6); }
-  39.9999% { background-position: var(--football-w) calc(var(--football-h) * -6); }
-  40% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -5); }
-  49.9999% { background-position: var(--football-w) calc(var(--football-h) * -5); }
-  50% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -4); }
-  59.9999% { background-position: var(--football-w) calc(var(--football-h) * -4); }
-  60% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -3); }
-  69.9999% { background-position: var(--football-w) calc(var(--football-h) * -3); }
-  70% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -2); }
-  79.9999% { background-position: var(--football-w) calc(var(--football-h) * -2); }
-  80% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -1); }
-  89.9999% { background-position: var(--football-w) calc(var(--football-h) * -1); }
-  90% { animation-timing-function: steps(9); background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -0); }
+  0% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -8); }
+  11.1110% { background-position: var(--football-w) calc(var(--football-h) * -8); }
+  11.1111% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -7); }
+  22.2221% { background-position: var(--football-w) calc(var(--football-h) * -7); }
+  22.2222% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -6); }
+  33.3332% { background-position: var(--football-w) calc(var(--football-h) * -6); }
+  33.3333% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -5); }
+  44.4443% { background-position: var(--football-w) calc(var(--football-h) * -5); }
+  44.4444% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -4); }
+  55.5555% { background-position: var(--football-w) calc(var(--football-h) * -4); }
+  55.5556% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -3); }
+  66.6666% { background-position: var(--football-w) calc(var(--football-h) * -3); }
+  66.6667% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -2); }
+  77.7777% { background-position: var(--football-w) calc(var(--football-h) * -2); }
+  77.7778% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -1); }
+  88.8888% { background-position: var(--football-w) calc(var(--football-h) * -1); }
+  88.8889% { animation-timing-function: steps(10); background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -0); }
   99.9999% { background-position: var(--football-w) calc(var(--football-h) * -0); }
-  100% { background-position: calc(var(--football-w) * -8) calc(var(--football-h) * -9); }
+  100% { background-position: calc(var(--football-w) * -9) calc(var(--football-h) * -8); }
 }
 @keyframes football-wobble {
   0% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg))); }
