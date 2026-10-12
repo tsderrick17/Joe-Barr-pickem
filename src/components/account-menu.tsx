@@ -41,7 +41,7 @@ export default function AccountMenu({ playerName, isCommissioner, showCommission
         <div className="account-menu-panel" role="menu">
           {confirming ? (
             <div className="account-menu-confirm">
-              <p>Sign out of Lead Pipe Locks?</p>
+              <p>Sign out?</p>
               <button className={`${item} is-danger`} disabled={isSigningOut} onClick={onSignOut} role="menuitem" type="button">{isSigningOut ? "Signing out..." : "Yes, sign out"}</button>
               <button className={item} onClick={() => setConfirming(false)} role="menuitem" type="button">Cancel</button>
             </div>

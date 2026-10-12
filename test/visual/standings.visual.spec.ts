@@ -111,8 +111,8 @@ test("the account menu opens from your name, and Sign out asks before signing ou
   await page.locator(".account-menu-button:visible").click();
   await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
   await page.getByRole("menuitem", { name: "Sign out" }).click();
-  await expect(page.getByText("Sign out of Lead Pipe Locks?")).toBeVisible();
+  await expect(page.getByText("Sign out?", { exact: true })).toBeVisible();
   await page.getByRole("menuitem", { name: "Cancel" }).click();
-  await expect(page.getByText("Sign out of Lead Pipe Locks?")).toHaveCount(0);
+  await expect(page.getByText("Sign out?", { exact: true })).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
 });
