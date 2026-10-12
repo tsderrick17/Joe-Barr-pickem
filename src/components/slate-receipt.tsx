@@ -32,6 +32,10 @@ type Props = {
     details: { name: string; abbreviation: string } | null;
   };
   selectionWarning: string;
+  /** The picks are full and the player tapped another team: which open pick should it replace? */
+  swapPrompt?: { newTeam: string; options: Array<{ gameId: string; label: string }> } | null;
+  onSwap?: (gameId: string) => void;
+  onCancelSwap?: () => void;
   onSubmit: () => void;
   onRemove: (gameId: string) => void;
 };
@@ -41,7 +45,7 @@ type Props = {
  * and (during the regular season) the Survivor pick. It owns the receipt's
  * wording and status rules; the page hands it plain facts.
  */
-function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, onSubmit, onRemove }: Props) {
+function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, swapPrompt = null, onSwap, onCancelSwap, onSubmit, onRemove }: Props) {
   const hasUnsavedChanges = pickemHasUnsavedChanges || survivor.hasUnsavedChanges;
   const survivorReceipt = survivor.teamName || (survivor.status === "complete" ? "COMPLETE" : survivor.status === "eliminated" ? "OUT" : "OPEN");
   // Saved selections arrive asynchronously. Keep the receipt neutral until
@@ -146,7 +150,15 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
         </div>
       ) : null}
-      {selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
+      {swapPrompt ? (
+        <div className="slate-receipt-warning slate-receipt-swap" role="alert">
+          <p>You have {swapPrompt.options.map((option) => option.label).join(" and ")}. Replace which one with {swapPrompt.newTeam}?</p>
+          <div className="slate-receipt-swap-actions">
+            {swapPrompt.options.map((option) => <button key={option.gameId} onClick={() => onSwap?.(option.gameId)} type="button">Replace {option.label}</button>)}
+            <button className="is-cancel" onClick={() => onCancelSwap?.()} type="button">Cancel</button>
+          </div>
+        </div>
+      ) : selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}
     </section>
   );
 }

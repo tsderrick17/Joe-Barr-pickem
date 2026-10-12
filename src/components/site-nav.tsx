@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AccountMenu from "@/components/account-menu";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -213,27 +214,7 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
           </button>
 
-          {playerName ? (
-            <div className="border-l border-zinc-500 pl-3 text-right text-sm sm:pl-4">
-              <div className="flex items-center justify-end gap-3">
-                <a aria-current={pathname.startsWith("/profile") ? "page" : undefined} className={linkStyle("/profile")} href="/profile">
-                  Notifications
-                </a>
-
-                <button
-                  type="button"
-                  disabled={isSigningOut}
-                  onClick={signOut}
-                  className="font-bold text-white underline disabled:opacity-50"
-                >
-                  {isSigningOut ? "Signing out..." : "Sign out"}
-                </button>
-              </div>
-              <span className="mt-1 block text-xs text-[#e4ded2]">
-                Signed in as <strong className="text-sm text-white">{playerName}</strong>
-              </span>
-            </div>
-          ) : null}
+          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink={false} /></div> : null}
         </div>
       </div>
     </nav>
@@ -244,6 +225,7 @@ export default function SiteNav() {
             <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]">Joe Barr Memorial</span>
             <span className="mt-1 block text-base font-bold">Lead Pipe Locks</span>
           </Link>
+          <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
@@ -255,17 +237,9 @@ export default function SiteNav() {
           >
             <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
           </button>
-        </div>
-        <div className="mt-1 min-h-[1rem] flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[11px] text-[#e4ded2]">
-          {playerName ? (
-            <>
-            {isCommissioner ? <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/admin">Comish</Link> : null}
-            <Link className="whitespace-nowrap underline underline-offset-2 hover:text-white" href="/profile">Notifications</Link>
-            <button className="whitespace-nowrap font-bold text-white underline underline-offset-2 disabled:opacity-50" disabled={isSigningOut} onClick={signOut} type="button">{isSigningOut ? "Signing out..." : "Sign out"}</button>
-            <span className="whitespace-nowrap text-[#f5f0e6]">{playerName}</span>
-            </>
-          ) : null}
+          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink /> : null}
           </div>
+        </div>
       </div>
     </nav>
     <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-(color:--themed-border-19) bg-[#171719] text-[#f5f0e6] md:hidden" ref={mobileNavRef}>

@@ -59,8 +59,21 @@ body {
   .site-nav-account { min-width: 12.75rem; }
 }
 
-/* Reserve the signed-in account strip before the async player lookup settles. */
-.mobile-account-nav > div { min-height: 3.375rem; }
+/* Reserve the account row's height before the async player lookup settles. */
+.mobile-account-nav > div { min-height: 3rem; }
+
+/* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
+.account-menu { position: relative; }
+.account-menu-button { align-items: center; color: var(--sand-93); display: inline-flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; min-height: 2.75rem; padding: 0 .25rem; text-align: right; }
+.account-menu-button strong { color: white; font-size: 1rem; }
+.account-menu-signed { color: var(--sand-93); font-size: .8rem; opacity: .85; }
+.account-menu-caret { color: var(--sand-93); font-size: .8rem; opacity: .85; }
+.account-menu-panel { background: var(--themed-bg-20); border: 1px solid var(--themed-border-10); border-radius: .4rem; box-shadow: 0 .6rem 1.6rem rgba(0, 0, 0, .28); display: grid; min-width: 13rem; padding: .35rem; position: absolute; right: 0; top: calc(100% + .35rem); z-index: 60; }
+.account-menu-item { border-radius: .3rem; color: var(--themed-text-18); display: block; font-size: 1rem; font-weight: 700; min-height: 2.75rem; padding: .7rem .85rem; text-align: left; }
+.account-menu-item:hover, .account-menu-item:focus-visible { background: var(--themed-bg-17); }
+.account-menu-item.is-danger { background: var(--red-39); color: white; text-align: center; }
+.account-menu-confirm { display: grid; gap: .3rem; padding: .2rem; }
+.account-menu-confirm p { color: var(--themed-text-18); font-size: .95rem; font-weight: 700; margin: .3rem .3rem .4rem; }
 
 /* Reserve the first Bowl Pool viewport while the authenticated profile and
    schedule arrive, so the real card replaces a stable shape instead of

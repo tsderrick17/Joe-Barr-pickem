@@ -45,6 +45,8 @@ export type ScoreSyncResult = {
   newFinals?: number;
   newFinalsByRung?: Record<string, number>;
   ladderRungs?: Record<string, number>;
+  /** The check (rung) that finalized each game this run: game id to rung, so the Grading page can say which window graded a game. */
+  finalGameRungs?: Record<string, number>;
   picksGraded: number;
   picksAwaitingLine: number;
   requestsRemaining: string | null;
@@ -433,6 +435,7 @@ export async function syncFinalScores({
           `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,
         );
       }
+      const finalGameRungs = Object.fromEntries(finalizedGames.map((game) => [game.id, (backoffByGameId.get(game.id)?.attempts ?? 0) + 1]));
       const newFinalsByRung = finalizedGames.reduce<Record<string, number>>((counts, game) => {
         const rung = String((backoffByGameId.get(game.id)?.attempts ?? 0) + 1);
         counts[rung] = (counts[rung] ?? 0) + 1;
@@ -446,6 +449,7 @@ export async function syncFinalScores({
         newFinals: finalizedGames.length,
         newFinalsByRung,
         ladderRungs: newFinalsByRung,
+        finalGameRungs,
         picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
         picksAwaitingLine:
           recoveredGrades.picksAwaitingLine + (pendingAfterFinalization ?? 0),
