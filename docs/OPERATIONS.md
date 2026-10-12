@@ -53,7 +53,7 @@ Commissioner grading panel aggregates those records and shows the percentage
 of new finals captured by each window; a game is counted once, at the first
 poll that safely records it as final.
 Each run also records which check finalized each game (`details.finalGameRungs`), and the Commissioner
-grading list shows it under every finished game, beside how long after kickoff it was graded ("Graded 3h 41m
+game inspector shows it for a finished game, beside how long after kickoff it was graded ("Graded: 3h 41m
 after kickoff · check 4 of 12 (10-min window)"). Games graded before this was recorded, or by hand, show only
 the time after kickoff. A "credit" on that page is one Odds API request unit: a score check costs 2, and the
 day shown is the UTC day, so Sunday-night games count toward Monday.
