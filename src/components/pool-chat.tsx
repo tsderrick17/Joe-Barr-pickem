@@ -147,7 +147,7 @@ export default function PoolChat({ onHide }: Props) {
         {!loading && !messages.length ? <p className="py-3 text-sm text-slate-600">No messages yet.</p> : null}
         {[...messages].reverse().map((message) => <article className={`pool-chat-message ${message.isDeleted ? "is-deleted" : ""} ${message.isModerator ? "is-moderator" : ""}`} key={message.id}>
           <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{message.isDeleted ? "Message removed." : message.body}</p>
-          <div className="pool-chat-message-meta"><strong className="font-serif">{message.playerName}</strong>{message.isModerator ? <span>MODERATOR</span> : null}<time dateTime={message.createdAt} title={messageDateTime(message.createdAt)}>{messageDateTime(message.createdAt)}</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
+          <div className="pool-chat-message-meta">{message.playerName === "Commissioner" ? null : <strong className="font-serif">{message.playerName}</strong>}{message.isModerator ? <span>MOD</span> : null}<time dateTime={message.createdAt} title={messageDateTime(message.createdAt)}>{messageDateTime(message.createdAt)}</time>{message.canDelete ? <button aria-label={`Delete ${message.playerName}'s message`} disabled={deletingId === message.id} onClick={() => void deleteMessage(message.id)} type="button">{deletingId === message.id ? "REMOVING" : "DELETE"}</button> : null}</div>
         </article>)}
       </div>
 
