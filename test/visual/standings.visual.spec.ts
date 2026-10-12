@@ -101,3 +101,18 @@ for (const scenario of Object.keys(SCENARIOS)) {
     }
   }
 }
+
+test("the account menu opens from your name, and Sign out asks before signing out", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await signIn(page, "day");
+  await serve(page, "regular-in");
+  await page.goto("/");
+  await page.locator(".pickem-scoreboard-ledger").waitFor({ timeout: 30000 });
+  await page.locator(".account-menu-button:visible").click();
+  await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(page.getByText("Sign out of Lead Pipe Locks?")).toBeVisible();
+  await page.getByRole("menuitem", { name: "Cancel" }).click();
+  await expect(page.getByText("Sign out of Lead Pipe Locks?")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+});
