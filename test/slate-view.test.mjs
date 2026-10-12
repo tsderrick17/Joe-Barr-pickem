@@ -27,7 +27,7 @@ test("choosing a team: add, swap, remove, limit, and sealed after kickoff", () =
   // At the kickoff instant the game seals; a second earlier it does not.
   assert.equal(decidePickChoice({ picks: [], games, gameId: "g2", teamId: "ddd", now: Date.parse("2026-10-04T20:24:59Z"), limit: 2 }).kind, "add");
   assert.equal(decidePickChoice({ picks: [], games, gameId: "g2", teamId: "ddd", now: Date.parse("2026-10-04T20:25:00Z"), limit: 2 }).kind, "sealed");
-  assert.match(decidePickChoice({ picks: [{ gameId: "g2", teamId: "ddd" }, { gameId: "g3", teamId: "fff" }], games, gameId: "g4", teamId: "hhh", now: NOW, limit: 2 }).warning, /You already have 2 selections/);
+  assert.match(decidePickChoice({ picks: [{ gameId: "g2", teamId: "ddd" }, { gameId: "g3", teamId: "fff" }], games, gameId: "g4", teamId: "hhh", now: NOW, limit: 2 }).warning, /You already have 2 picks/);
 });
 
 test("pick list updates keep one pick per game", () => {
