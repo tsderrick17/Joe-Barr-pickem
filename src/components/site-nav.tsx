@@ -246,7 +246,9 @@ export default function SiteNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
         <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>
-        {isCommissioner || isBowlPoolLaunched ? <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={linkStyle("/bowl-pool")} href="/bowl-pool">NCAA Bowls</Link> : null}
+        {/* The NCAA Bowls tab always holds its place on a phone (hidden until it applies), so the tabs never slide sideways when it
+            appears a moment after the page loads (Safari left the active tab's underline painted in the old spot). */}
+        {(() => { const showBowls = isCommissioner || isBowlPoolLaunched; return <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} aria-hidden={showBowls ? undefined : true} className={`${linkStyle("/bowl-pool")} ${showBowls ? "" : "invisible"}`} href="/bowl-pool" tabIndex={showBowls ? undefined : -1}>NCAA Bowls</Link>; })()}
       </div>
     </nav>
   </>;
