@@ -29,6 +29,7 @@ export function shapePadRows({
   lockedLineByGameId,
   preliminaryLineByGameId,
   trophiesByPlayerId,
+  pickemTrophyHolderIds = new Set<string>(),
   playoffEliminatedPlayerIds,
   viewerPlayerId,
   now,
@@ -42,6 +43,8 @@ export function shapePadRows({
   lockedLineByGameId: Map<string, PadLockedLine>;
   preliminaryLineByGameId: Map<string, PadPreliminaryLine>;
   trophiesByPlayerId: Map<string, string[]>;
+  /** Who holds the Pick'em trophy now: the latest season's champion or co-champions (earlier titles stay in `trophies`). */
+  pickemTrophyHolderIds?: Set<string>;
   playoffEliminatedPlayerIds: Set<string>;
   viewerPlayerId: string;
   now: Date;
@@ -86,6 +89,7 @@ export function shapePadRows({
         id: player.id,
         firstName: player.first_name,
         trophies: trophiesByPlayerId.get(player.id) ?? [],
+        holdsPickemTrophy: pickemTrophyHolderIds.has(player.id),
         wins,
         playoffEliminated: playoffEliminatedPlayerIds.has(player.id),
         picks: weeklyPicks,

@@ -40,6 +40,7 @@ function rows({ maxPicks, playoff }) {
       wins: 9 - playerIndex + (playoff ? 0 : 3),
       playoffEliminated: playoff && playerIndex >= 6,
       trophies: playerIndex === 0 ? ["Pick'em Champion 2025"] : [],
+      holdsPickemTrophy: playerIndex === 0,
       picks: Array.from({ length: maxPicks }, (_, slot) => pick(playerIndex * 2 + slot, { reveal: playerIndex !== 5, result: marks[slot] })),
     };
   });
@@ -173,7 +174,7 @@ export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, gr
   const own = { ...picks, ...viewerPicks };
   return {
     season: { season_year: 2026, championship_game_id: "bowl-3" }, optedIn, entryOpen, entry: optedIn ? { championship_total_guess: guess ?? (graded ? 51 : null) } : null, games,
-    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: graded ? 40 + index : null, trophies: champion && index === 0 ? ["Bowl Pool Champion 2026"] : [] })),
+    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: graded ? 40 + index : null, trophies: champion && index === 0 ? ["Bowl Pool Champion 2026"] : [], holdsTrophy: champion && index === 0 })),
     championships: champion ? [{ playerId: "p0", seasonYear: 2026, playerName: NAMES[0] }] : [],
     publicPicks, ownPicks: Object.entries(own).map(([game_id, selected_team_id]) => ({ game_id, selected_team_id })), ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
   };
