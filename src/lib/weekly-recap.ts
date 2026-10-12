@@ -1,3 +1,4 @@
+import { padRankLabels } from "@/lib/pad-rank";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calculatePlayoffEligibility } from "@/lib/playoff-math.js";
 import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
@@ -40,7 +41,8 @@ export type SundayRevealSnapshot = {
   window: "early" | "late";
   week: string;
   generatedAt: string;
-  rows: Array<{ name: string; wins: number; picks: string[] }>;
+  /** rank: the player's place in the whole pool by wins ("T3" when tied), so a receipt that shows only some players still shows true ranks. */
+  rows: Array<{ name: string; wins: number; picks: string[]; rank?: string }>;
   /** Survivor picks on the window's started games. Absent on receipts saved before Survivor was added. */
   survivor?: RevealSurvivorPick[];
 };
@@ -51,7 +53,8 @@ export type PlayoffPublicRevealSnapshot = {
   window: string;
   matchup?: string;
   generatedAt: string;
-  rows: Array<{ name: string; wins: number; picks: string[] }>;
+  /** rank: the player's place in the whole pool by wins ("T3" when tied), so a receipt that shows only some players still shows true ranks. */
+  rows: Array<{ name: string; wins: number; picks: string[]; rank?: string }>;
 };
 
 export type FeaturedWindowRevealSnapshot = {
@@ -59,7 +62,8 @@ export type FeaturedWindowRevealSnapshot = {
   week: string;
   window: string;
   generatedAt: string;
-  rows: Array<{ name: string; wins: number; picks: string[] }>;
+  /** rank: the player's place in the whole pool by wins ("T3" when tied), so a receipt that shows only some players still shows true ranks. */
+  rows: Array<{ name: string; wins: number; picks: string[]; rank?: string }>;
   survivor?: RevealSurvivorPick[];
 };
 
@@ -477,6 +481,7 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
   // player is omitted only when they cannot even tie the leader, never sooner.
   const remainingSlots = (seasonPeriods ?? []).filter((item) => item.status !== "complete").reduce((total, item) => total + item.max_picks, 0);
   const contenderIds = new Set((players ?? []).filter((player) => (playerWins.get(player.id) ?? 0) + remainingSlots >= leaderWins).map((player) => player.id));
+  const rankByPlayer = padRankLabels((players ?? []).map((player) => ({ id: player.id, wins: playerWins.get(player.id) ?? 0 })));
   const pickedRevealGameIds = new Set((picks ?? []).filter((pick) => pick.scoring_period_id === period.id).map((pick) => pick.game_id));
   const revealGameIds = new Set(revealGames.filter((game) => shouldShowPoolActionMatchup({ kickoffAt: game.kickoff_at, now, hasSelections: pickedRevealGameIds.has(game.id) })).map((game) => game.id));
   if (!revealGameIds.size) throw new Error("No selected Sunday matchup is ready for a public receipt.");
@@ -489,7 +494,7 @@ export async function ensureSundayRevealSnapshot(reminderId: string, existing: u
     window,
     week: period.display_name,
     generatedAt: now.toISOString(),
-    rows: onlyRowsWithPublicPicks((players ?? []).filter((player) => contenderIds.has(player.id)).map((player) => ({ playerId: player.id, name: player.first_name, wins: playerWins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    rows: onlyRowsWithPublicPicks((players ?? []).filter((player) => contenderIds.has(player.id)).map((player) => ({ playerId: player.id, name: player.first_name, wins: playerWins.get(player.id) ?? 0, rank: rankByPlayer.get(player.id), picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
     ...(survivor.length ? { survivor } : {}),
   };
   if (!persist) return snapshot;
@@ -583,6 +588,7 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
   const wins = new Map<string, number>();
   for (const pick of picks ?? []) if (pick.result === "win") wins.set(pick.player_id, (wins.get(pick.player_id) ?? 0) + 1);
   const picksByPlayer = revealPickLabels({ picks: picks ?? [], periodId: period.id, revealedGameIds: selectedFeaturedGameIds, abbreviationById, lineByGame });
+  const rankByPlayer = padRankLabels((players ?? []).map((player) => ({ id: player.id, wins: wins.get(player.id) ?? 0 })));
 
   const latestFeatured = selectedFeaturedGames[selectedFeaturedGames.length - 1];
   const survivor = await revealSurvivorPicks(period.id, featuredGames.map((game) => game.id), players ?? []);
@@ -591,7 +597,7 @@ export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, exi
     week: period.display_name,
     window: `${easternDayLabel(new Date(latestFeatured.kickoff_at))} featured window`,
     generatedAt: now.toISOString(),
-    rows: onlyRowsWithPublicPicks((players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0, picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
+    rows: onlyRowsWithPublicPicks((players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0, rank: rankByPlayer.get(player.id), picks: picksByPlayer.get(player.id) ?? [] }))).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
     ...(survivor.length ? { survivor } : {}),
   };
   if (!persist) return snapshot;
@@ -677,6 +683,7 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
     }
   }
 
+  const rankByPlayer = padRankLabels(eligiblePlayers.map((player) => ({ id: player.id, wins: wins.get(player.id) ?? 0 })));
   const snapshot: PlayoffPublicRevealSnapshot = {
     kind: "playoff_public_reveal",
     round: period.display_name,
@@ -686,6 +693,7 @@ export async function ensurePlayoffPublicRevealSnapshot(reminderId: string, exis
     rows: eligiblePlayers.map((player) => ({
       name: player.first_name,
       wins: wins.get(player.id) ?? 0,
+      rank: rankByPlayer.get(player.id),
       picks: selectedPublicGames.map((game) => pickByPlayerAndGame.get(`${player.id}:${game.id}`) ?? "NO PICK — LOSS"),
     })).sort((first, second) => second.wins - first.wins || first.name.localeCompare(second.name)),
   };

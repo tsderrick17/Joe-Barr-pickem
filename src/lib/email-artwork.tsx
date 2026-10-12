@@ -23,7 +23,7 @@ const WIDTH = 760;
 const ARTWORK_PNG_OPTIONS = { palette: true, quality: 90, effort: 7, compressionLevel: 9 } as const;
 const column: CSSProperties = { display: "flex", flexDirection: "column", flexShrink: 0 };
 const row: CSSProperties = { display: "flex", alignItems: "center", flexShrink: 0 };
-type PublicRow = { playerId?: string; name: string; wins: number; picks: string[] };
+type PublicRow = { playerId?: string; name: string; wins: number; picks: string[]; rank?: string };
 
 function compactSlateDay(value: string) {
   const parts = value.replace(",", "").split(" ");
@@ -34,7 +34,7 @@ function compactSlateDay(value: string) {
 
 function safePublicRows(value: unknown): PublicRow[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((item) => item && typeof item === "object").map((item) => ({ playerId: typeof item.playerId === "string" ? item.playerId : undefined, name: String(item.name ?? ""), wins: Number(item.wins) || 0, picks: Array.isArray(item.picks) ? item.picks.filter((pick: unknown): pick is string => typeof pick === "string") : [] }));
+  return value.filter((item) => item && typeof item === "object").map((item) => ({ playerId: typeof item.playerId === "string" ? item.playerId : undefined, name: String(item.name ?? ""), wins: Number(item.wins) || 0, rank: typeof item.rank === "string" ? item.rank : undefined, picks: Array.isArray(item.picks) ? item.picks.filter((pick: unknown): pick is string => typeof pick === "string") : [] }));
 }
 
 function Card({ title, subtitle, children, note, tone }: { title: string; subtitle: string; children: ReactNode; note?: string; tone?: "bowl" }) {
@@ -72,14 +72,16 @@ function PickemTable({ standings, selections, recap, minHeight, tone }: { standi
   const alignTwoPicks = Math.max(0, ...rows.map((item) => (picksByPlayer.get(identity(item))?.picks ?? item.picks).length)) === 2;
   return <div style={column}>
     <div style={{ ...row, color: MUTED, fontSize: 16, fontWeight: 700, padding: "12px 0 8px", borderBottom: `1px solid ${INK}` }}>
-      <span style={{ width: 40 }}>RK</span><span style={{ width: 180 }}>PLAYER</span><span style={{ width: 68 }}>TOTAL</span>{recap ? <span style={{ width: 64 }}>+WINS</span> : null}<span style={{ flex: 1 }}>SELECTIONS</span>
+      <span style={{ width: 52 }}>RK</span><span style={{ width: 168 }}>PLAYER</span><span style={{ width: 68 }}>TOTAL</span>{recap ? <span style={{ width: 64 }}>+WINS</span> : null}<span style={{ flex: 1 }}>SELECTIONS</span>
     </div>
     {rows.map((standing, index) => {
       const selection = picksByPlayer.get(identity(standing));
-      const rank = rows.findIndex((item) => item.wins === standing.wins) + 1;
+      // The rank saved with the receipt is the player's place in the whole pool; without one (an older receipt, a recap that
+      // lists everyone) it is their place in the rows shown, with a T when someone else has the same total.
+      const rank = standing.rank ?? `${rows.some((item) => item !== standing && item.wins === standing.wins) ? "T" : ""}${rows.findIndex((item) => item.wins === standing.wins) + 1}`;
       return <div key={`${standing.name}-${index}`} style={{ ...row, minHeight, borderBottom: `1px solid ${isBowl ? BOWL_RULE : RULE}`, background: index % 2 ? (isBowl ? BOWL_ALT : "#f5f2e9") : (isBowl ? BOWL_PAPER : PAPER) }}>
-        <span style={{ width: 40, color: MUTED, fontSize: 20 }}>{rank}</span>
-        <span style={{ width: 180, padding: "8px 10px 8px 0", fontWeight: 700, fontSize: 25 }}>{standing.name}</span>
+        <span style={{ width: 52, color: MUTED, fontSize: 20 }}>{rank}</span>
+        <span style={{ width: 168, padding: "8px 10px 8px 0", fontWeight: 700, fontSize: 25 }}>{standing.name}</span>
         <span style={{ width: 68, fontWeight: 700, fontSize: 28 }}>{standing.wins}</span>
         {recap ? <span style={{ width: 64, color: TEAL, fontWeight: 700 }}>{selection?.wins ?? 0}</span> : null}
         <PickChips alignTwo={alignTwoPicks} picks={selection?.picks ?? standing.picks} />
