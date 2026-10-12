@@ -21,7 +21,7 @@ jobs:
       PICKEM_SMOKE_ATTEMPTS: "3"
       PICKEM_SMOKE_RETRY_MS: "10000"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
