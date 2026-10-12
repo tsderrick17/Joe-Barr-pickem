@@ -23,6 +23,8 @@ test("after a champion is crowned the section stays for that week, then leaves f
   assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: "2026-12-18T01:00:00Z" }), true);
   // Every later week, including for the champion who is still active.
   assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: "2026-12-27T18:00:00Z" }), false);
+  // A player who was already out before the crowning week does not get the section back.
+  assert.equal(shouldShowSurvivorOnReceipt({ ...base, requiredThisPeriod: false, championCrownedAt: crowned, periodFirstKickoffAt: "2026-12-18T01:00:00Z" }), false);
   // Unknown schedule never guesses.
   assert.equal(shouldShowSurvivorOnReceipt({ ...base, championCrownedAt: crowned, periodFirstKickoffAt: null }), false);
 });

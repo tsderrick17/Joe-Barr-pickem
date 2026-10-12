@@ -1587,3 +1587,11 @@ Like the Survivor trophy, the Pick'em and Bowl Pool trophies beside a name now s
 ## Dependabot opens one pull request a week for minor and patch updates
 
 A Monday burst of Dependabot branches (three npm pull requests plus a workflow one, on top of normal work) made GitHub rate-limit Vercel's repository fetch, and Vercel emailed "Preview deployment failed ... GitHub fetch error 403 ... secondary rate limit". The deployment was one that `scripts/vercel-ignore-build.mjs` would have skipped anyway, so nothing was lost, but the email was noise. Dependabot now groups all npm minor and patch updates into one pull request (majors stay separate) and the actions updates into one, at 05:00 and 05:30 Eastern on Mondays, so far fewer branches appear at once.
+
+## A polish pass: the gold rule is static, the receipt stays shorter for players who are out, and the display switch
+
+- **Bowl Card gold rule.** It no longer draws or fades in when a page loads or refreshes. It starts at the right width (the ticket's while the card is collapsed, the Survivor Table's while open) and moves only when the card is opened or closed. The draw animation remains on the Assets page only, where it is tuned.
+- **Survivor on the Slate receipt after a champion.** The section still stays for the week the champion is crowned in, but only for players who were still in or were knocked out that week; a player who was already out keeps the shorter Pick'em receipt.
+- **Phone nav.** The NCAA Bowls tab keeps its place (hidden until it applies) so the tabs never slide when it appears after the page loads.
+- **All games / Pool action.** The 3D toggle became a two-option control with the chosen option filled in the page's ink color, full-size tap targets and no night-mode overrides.
+- **Slate instructions (desktop).** PICK'EM and SURVIVOR start at the same left edges as the notes columns beneath them.

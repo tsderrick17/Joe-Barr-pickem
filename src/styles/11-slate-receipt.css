@@ -563,99 +563,56 @@
     grid-template-columns: minmax(11rem, .66fr) minmax(0, 1.17fr) minmax(0, 1.17fr);
   }
 
+  /* The two instruction columns use the same halves as the notes grid beneath them, and start their text at the same left edges
+     (1rem in the left half, 1.75rem plus its rule in the right half), so PICK'EM lines up with the left notes and SURVIVOR with the
+     right ones. */
   .slate-action-instructions {
+    column-gap: 0;
     grid-template-columns: minmax(0, 1fr);
+    padding-inline: 0;
   }
-
+  .slate-action-instructions > p:first-child { padding-left: 1rem; padding-right: .75rem; }
   .slate-action-instructions.has-survivor {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+  .slate-action-instructions.has-survivor > p:nth-child(2) { padding-left: calc(1.75rem + 1px); padding-right: .75rem; }
 }
 
 @media (min-width: 1280px) {
   .slate-how-to-grid p { white-space: nowrap; }
 }
 
+.slate-view-switch-slot { align-items: center; display: flex; padding-top: .45rem; }
+
+/* All games / Pool action: one quiet two-option control. The chosen option is filled with the page's ink color (and flips in night
+   mode with the theme tokens), the other is plain text, and each half is a full-size tap target. */
 .slate-view-switch {
-  align-items: center;
-  display: inline-grid;
-  gap: .38rem;
-  grid-template-columns: 2.82rem 1.62rem 2.82rem;
-  position: relative;
+  background: var(--themed-bg-20);
+  border: 1px solid var(--themed-border-10);
+  border-radius: .35rem;
+  display: inline-flex;
+  max-width: 15rem;
+  overflow: hidden;
   user-select: none;
-  width: fit-content;
+  width: 100%;
 }
-
-.slate-view-switch-slot {
-  align-items: center;
-  display: flex;
-  min-height: 2rem;
-  padding-top: .45rem;
-}
-
-.slate-view-switch--header {
-  display: inline-grid;
-  gap: .38rem;
-  margin-top: 0;
-  width: fit-content;
-}
-
-.slate-view-switch > span {
-  color: #687179;
-  display: inline-block;
-  font-size: .57rem;
-  font-weight: 800;
-  line-height: 1.35;
-  letter-spacing: .09em;
-  text-align: center;
-  transition: color 180ms ease;
-  width: 2.82rem;
-}
-
-.slate-view-switch > span.is-active { color: var(--blue-22); }
-
 .slate-view-switch button {
-  background: linear-gradient(180deg, #7f888a 0%, #626a6c 52%, #4d5658 100%);
-  border: 1px solid #3a4244;
-  border-radius: .12rem;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, .25), inset 0 -1px 1px rgba(12, 17, 18, .5), 0 1px 0 #30383a, 0 3px 5px rgba(30, 36, 37, .2);
+  background: transparent;
+  color: var(--themed-text-18);
   cursor: pointer;
-  height: .44rem;
-  padding: 0;
-  position: relative;
-  transition: background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease;
-  width: 1.62rem;
+  flex: 1 1 0;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  min-height: 2.5rem;
+  padding: .5rem .4rem;
+  transition: background-color 160ms ease, color 160ms ease;
+  white-space: nowrap;
 }
-
-.slate-view-switch button::before {
-  background: linear-gradient(180deg, rgba(19, 26, 28, .30), rgba(255, 255, 255, .12));
-  border-radius: .04rem;
-  content: "";
-  inset: .14rem .2rem;
-  position: absolute;
-}
-
-.slate-view-switch button > span {
-  background: linear-gradient(180deg, var(--gray-100) 0%, #e7e6de 42%, #bcc0ba 100%);
-  border: 1px solid #3e4749;
-  border-radius: .1rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .92), inset 0 -1px 1px rgba(55, 62, 63, .24), 0 2px 0 #252d2f, 0 4px 6px rgba(14, 19, 20, .46);
-  height: .64rem;
-  left: .05rem;
-  position: absolute;
-  top: -.12rem;
-  transform: translateX(0);
-  transition: transform 220ms cubic-bezier(.2, 1.15, .35, 1);
-  width: .62rem;
-  z-index: 1;
-}
-
-.slate-view-switch.is-action-only button { background: linear-gradient(180deg, #596365, #444d50 55%, #303a3d); }
-.slate-view-switch.is-action-only button > span { transform: translateX(.9rem); }
-
-.slate-view-switch button:hover { background: linear-gradient(180deg, #929c9e, #626b6d 55%, #454e50); }
-.slate-view-switch button:active { box-shadow: inset 0 1px 2px rgba(12, 17, 18, .48), 0 1px 0 #30383a; transform: translateY(1px); }
-.slate-view-switch button:focus-visible { outline: 2px solid #1b7771; outline-offset: 2px; }
+.slate-view-switch button + button { border-left: 1px solid var(--themed-border-10); }
+.slate-view-switch button:hover { background: var(--themed-bg-17); }
+.slate-view-switch button.is-active, .slate-view-switch button.is-active:hover { background: var(--themed-text-18); color: var(--themed-bg-20); }
+.slate-view-switch button:focus-visible { outline: 2px solid var(--pool-teal); outline-offset: -3px; }
 
 .slate-action-empty {
   border-block: 1px solid #c8c1b5;

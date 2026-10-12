@@ -3,8 +3,10 @@
  *
  * It stays while the player is still in the pool, and through the week they
  * are knocked out. Once a champion is crowned it stays for the week the
- * crowning happens in, then leaves for everyone. In every other case the
- * receipt is the shorter, centered Pick'em ticket until the next season.
+ * crowning happens in, for players who were still in (or were knocked out that
+ * week), then leaves for everyone. A player who was already out never sees it
+ * come back. In every other case the receipt is the shorter, centered Pick'em
+ * ticket until the next season.
  */
 export function shouldShowSurvivorOnReceipt({
   periodType,
@@ -18,5 +20,5 @@ export function shouldShowSurvivorOnReceipt({
   const crowned = Date.parse(championCrownedAt);
   const firstKickoff = Date.parse(periodFirstKickoffAt ?? "");
   if (!Number.isFinite(crowned) || !Number.isFinite(firstKickoff)) return false;
-  return crowned >= firstKickoff;
+  return crowned >= firstKickoff && Boolean(requiredThisPeriod);
 }

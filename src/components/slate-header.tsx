@@ -47,10 +47,9 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
         </select>
 
         <div className="slate-view-switch-slot">
-          <div className={`slate-view-switch slate-view-switch--header ${actionOnlyActive ? "is-action-only" : ""}`} aria-label="Slate display" role="group">
-            <span className={!actionOnlyActive ? "is-active" : ""}>ALL GAMES</span>
-            <button aria-checked={actionOnlyActive} aria-label={actionOnlyActive ? "Show all games" : "Show pool action"} onClick={onToggleDisplay} role="switch" type="button"><span /></button>
-            <span className={actionOnlyActive ? "is-active" : ""}>POOL ACTION</span>
+          <div aria-label="Slate display" className="slate-view-switch" role="group">
+            <button aria-pressed={!actionOnlyActive} className={!actionOnlyActive ? "is-active" : ""} onClick={() => { if (actionOnlyActive) onToggleDisplay(); }} type="button">All games</button>
+            <button aria-pressed={actionOnlyActive} className={actionOnlyActive ? "is-active" : ""} onClick={() => { if (!actionOnlyActive) onToggleDisplay(); }} type="button">Pool action</button>
           </div>
         </div>
       </div>

@@ -16,9 +16,11 @@
 
 .bowl-crest { text-align: center; }
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
-.bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 2840ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 1000ms) both; background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+.bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
+/* The gold rules sit in place when a page loads; only the Assets page draws them out (to tune the motion). */
+.asset-card .bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 2840ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 1000ms) both; }
 @media (prefers-reduced-motion: reduce) {
-  .bowl-crest-ornament span { animation: none; }
+  .asset-card .bowl-crest-ornament span { animation: none; }
 }
 .bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
 .bowl-crest-title {
