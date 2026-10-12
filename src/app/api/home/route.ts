@@ -14,6 +14,7 @@ import { shapePadRows } from "@/lib/home-shape";
 import { survivorChampionDisplayId } from "@/lib/inaugural-survivor-holder";
 import { championshipTitle } from "@/lib/championship-title";
 import { officiallyOutEntryIds } from "@/lib/survivor-official";
+import { reigningChampionIds } from "@/lib/reigning-champions";
 import { survivorEntryStatus, type StandingsResponse } from "@/lib/api-contracts";
 import type { PeriodStatus } from "@/lib/db-statuses";
 
@@ -221,6 +222,8 @@ export async function GET(request: NextRequest) {
     activePlayers: players,
   });
   const survivorComplete = Boolean(championSeason?.survivor_champion_player_id);
+  // The Survivor trophy sits on the latest season's champion (or co-champions); a new champion takes it from the last one.
+  const survivorTrophyHolderIds = reigningChampionIds(championshipRows ?? [], "survivor");
   // Co-champions (a same-week finish or several survivors) are all named.
   const survivorChampionIds = ((championshipRows ?? []))
     .filter((row) => row.pool === "survivor" && row.season_year === currentSeasonYear())
@@ -383,6 +386,7 @@ export async function GET(request: NextRequest) {
               firstName:
                 playerNameById.get(entry.player_id) ?? "Unknown player",
               trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
+              holdsSurvivorTrophy: survivorTrophyHolderIds.has(entry.player_id),
               status: entry.status === "eliminated" && !officiallyOut.has(entry.id) ? "active" : survivorEntryStatus(entry.status),
               eliminatedAt: entry.eliminated_at,
               // An elimination applies after the current scoring period. If

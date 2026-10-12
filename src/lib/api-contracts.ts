@@ -109,6 +109,8 @@ export type StandingsResponse = {
     playerId: string;
     firstName: string;
     trophies?: string[];
+    /** True only for the reigning Survivor champion(s); earlier titles stay in `trophies` (the hover text). */
+    holdsSurvivorTrophy?: boolean;
     status: "active" | "eliminated" | "complete";
     requiredThisPeriod: boolean;
     pick: (StandingsPick & { abbreviation?: string | null }) | null;
