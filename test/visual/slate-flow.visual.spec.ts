@@ -64,3 +64,26 @@ test("a save whose answer is lost is confirmed from the server, so nothing is le
   await expect(receipt).not.toContainText(/READY TO SAVE/, { timeout: 15000 });
   await expect(page.getByText(/taking too long to save/)).toHaveCount(0);
 });
+
+test("a third team with full picks asks which pick to replace, and replacing swaps it in", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page);
+  await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
+  await page.goto("/board");
+  const receipt = page.locator("[aria-label='Your weekly receipt']");
+  await expect(receipt).toBeVisible({ timeout: 30000 });
+  const sides = page.locator(".slate-game-row:not(.is-final) button.slate-team-side");
+  await sides.nth(2).click();
+  await sides.nth(4).click();
+  await sides.nth(6).click();
+  await expect(receipt.getByText(/Replace which one with/)).toBeVisible();
+  const replaceButtons = receipt.getByRole("button", { name: /^Replace / });
+  await expect(replaceButtons).toHaveCount(2);
+  await replaceButtons.first().click();
+  await expect(receipt.getByText(/Replace which one with/)).toHaveCount(0);
+  await expect(receipt.locator(".slate-receipt-selection-chip")).toHaveCount(2);
+  await sides.nth(8).click();
+  await receipt.getByRole("button", { name: "Cancel" }).click();
+  await expect(receipt.getByText(/Replace which one with/)).toHaveCount(0);
+  await expect(receipt.locator(".slate-receipt-selection-chip")).toHaveCount(2);
+});

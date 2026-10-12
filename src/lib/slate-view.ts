@@ -45,7 +45,7 @@ export function decidePickChoice({ picks, games, gameId, teamId, now, limit }: {
   const existing = picks.find((pick) => pick.gameId === gameId);
   if (existing?.teamId === teamId) return { kind: "remove" };
   if (existing) return { kind: "swap" };
-  if (picks.length >= limit) return { kind: "limit", warning: `You already have ${limit} selections. Click one again to remove it first.` };
+  if (picks.length >= limit) return { kind: "limit", warning: `You already have ${limit} picks, and they can no longer be changed.` };
   return { kind: "add" };
 }
 

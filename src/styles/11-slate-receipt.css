@@ -439,6 +439,12 @@
 /* Same die-cut corners as the sections above it. The paper layer's own rule is the
    only line where it meets the Pick'em section, so there is no second dashed edge. */
 .slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: var(--red-39); }
+/* The picks are full and another team was tapped: ask, in plain words with large buttons, which pick it replaces. */
+.slate-receipt-swap { font-size: .82rem; line-height: 1.3; padding: .5rem .7rem .6rem; }
+.slate-receipt-swap p { margin: 0 0 .45rem; }
+.slate-receipt-swap-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.slate-receipt-swap-actions button { background: var(--red-39); border: 1px solid var(--red-39); border-radius: .25rem; color: white; font-size: .82rem; font-weight: 800; min-height: 2.5rem; padding: .3rem .75rem; }
+.slate-receipt-swap-actions button.is-cancel { background: transparent; color: var(--red-39); }
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
