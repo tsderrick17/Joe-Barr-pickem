@@ -1,15 +1,35 @@
 /* ---- Football loader ----
    Tunable from the Commissioner Assets panel: spin time per turn, tilt, wobble size and pace, and scale. */
 .football-loader { align-items: center; display: inline-grid; gap: .55rem; justify-items: center; }
-.football-loader-tilt { animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate; display: block; transform: rotate(var(--football-tilt, 45deg)); }
-.football-loader-ball {
+.football-loader-tilt {
   --football-w: calc(70px * var(--football-scale, 1));
   --football-h: calc(107px * var(--football-scale, 1));
-  /* 72 frames in a 9 x 8 grid: the across step runs once per row, the down step once per turn. */
-  animation: football-spin-x calc(var(--football-spin-s, 1.5s) / 8) steps(9) infinite reverse, football-spin-y var(--football-spin-s, 1.5s) steps(8) infinite reverse;
-  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 9) calc(var(--football-h) * 8) no-repeat;
+  animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate;
   display: block;
-  filter: drop-shadow(0 .45rem .4rem rgba(44, 36, 24, .22));
+  isolation: isolate;
+  position: relative;
+  transform: rotate(var(--football-tilt, 45deg));
+}
+/* The ball's soft shadow is one static blurred shape under it, not a filter on the ball: a filter would be recalculated on every
+   frame of the spin, which is costly and makes the spin stutter on a phone. */
+.football-loader-tilt::before {
+  background: rgba(44, 36, 24, .3);
+  border-radius: 50%;
+  content: "";
+  filter: blur(.4rem);
+  height: calc(var(--football-h) * .9);
+  left: 8%;
+  position: absolute;
+  top: 16%;
+  width: calc(var(--football-w) * .9);
+  z-index: -1;
+}
+.football-loader-ball {
+  /* 90 frames in a 9 x 10 grid, one new frame on every refresh of a 60 Hz screen at 1.5 s a turn (and a steady two refreshes each at
+     120 Hz): the across step runs once per row, the down step once per turn. */
+  animation: football-spin-x calc(var(--football-spin-s, 1.5s) / 10) steps(9) infinite reverse, football-spin-y var(--football-spin-s, 1.5s) steps(10) infinite reverse;
+  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 9) calc(var(--football-h) * 10) no-repeat;
+  display: block;
   height: var(--football-h);
   width: var(--football-w);
 }
@@ -25,7 +45,7 @@ html.is-loading-screen body { height: 100vh; overflow: hidden; }
 }
 .football-loader-label { color: var(--pool-muted); font: 700 .7rem/1 Arial, Helvetica, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
 @keyframes football-spin-x { to { background-position-x: calc(var(--football-w) * -9); } }
-@keyframes football-spin-y { to { background-position-y: calc(var(--football-h) * -8); } }
+@keyframes football-spin-y { to { background-position-y: calc(var(--football-h) * -10); } }
 @keyframes football-wobble {
   0% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg))); }
   40% { transform: rotate(calc(var(--football-tilt, 45deg) + var(--football-wobble, 0deg))); }
