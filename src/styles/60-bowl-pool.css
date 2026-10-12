@@ -257,7 +257,8 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-
 /* Your row: the name area stays quiet, and your score sits in a small navy tile. */
 /* Bowl names wrap only between words, never mid-word. */
 .bowl-pool-page .bowl-game-name { hyphens: none; overflow-wrap: normal; word-break: normal; }
-@media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-size: .68rem; letter-spacing: .02em; } }
+/* On a phone the bowl name is set in the plain bold face at a readable size; the varsity lettering stays for wider screens. */
+@media (max-width: 639px) { .bowl-pool-page .bowl-game-name { font-family: inherit; font-size: .8rem; font-weight: 700; letter-spacing: 0; } }
 @media (max-width: 639px) { .bowl-pool-page .bowl-selection-game-row small { overflow: visible; text-overflow: clip; white-space: normal; } }
 /* The Bowl receipt's text and metrics box sit a touch further in from both edges. */
 .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .9rem; }
