@@ -147,6 +147,18 @@ export async function GET(request: NextRequest) {
       survivorByGame.set(pick.game_id, current);
     }
     const teams = new Map((teamsResult.data ?? []).map((team) => [team.id, team]));
+    // Which check (rung) of the polling ladder finalized each game, as recorded by the score worker (games graded before this
+    // was recorded, or by hand, have none).
+    const rungByGame = new Map<string, number>();
+    const weekFirstKickoff = games[0]?.kickoff_at;
+    if (weekFirstKickoff) {
+      const { data: rungRuns } = await supabaseAdmin.from("sync_runs").select("rungs:details->finalGameRungs").eq("job_type", "scores").not("details->finalGameRungs", "is", null).gte("started_at", weekFirstKickoff).order("started_at", { ascending: true }).limit(1000);
+      for (const run of rungRuns ?? []) {
+        const rungs = run.rungs;
+        if (!rungs || typeof rungs !== "object" || Array.isArray(rungs)) continue;
+        for (const [gameId, rung] of Object.entries(rungs as Record<string, unknown>)) if (Number.isInteger(rung) && !rungByGame.has(gameId)) rungByGame.set(gameId, rung as number);
+      }
+    }
     const gameRows = games.map((game) => {
       const pickCounts = picksByGame.get(game.id) ?? { pending: 0, total: 0, graded: 0 };
       const survivorCounts = survivorByGame.get(game.id) ?? { pending: 0, total: 0 };
@@ -165,6 +177,7 @@ export async function GET(request: NextRequest) {
         state,
         score: game.away_score !== null && game.home_score !== null ? `${game.away_score}–${game.home_score}` : null,
         finalizedAt: game.finalized_at,
+        gradedWindow: rungByGame.has(game.id) ? { rung: rungByGame.get(game.id)!, windowMinutes: SCORE_POLLING_RETRY_MINUTES[Math.min(rungByGame.get(game.id)!, SCORE_POLLING_RETRY_MINUTES.length) - 1] } : null,
         line: lineByGame.get(game.id) ? { spread: lineByGame.get(game.id)!.locked_spread, lockedAt: lineByGame.get(game.id)!.locked_at, manual: lineByGame.get(game.id)!.manual_override } : null,
         picks: { total: picksVisible ? pickCounts.total : 0, pending: picksVisible ? pickCounts.pending : 0, graded: picksVisible ? pickCounts.graded : 0, visible: picksVisible },
         survivor: picksVisible ? survivorCounts : { total: 0, pending: 0 },
