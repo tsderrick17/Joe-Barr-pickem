@@ -183,21 +183,15 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
 
 /* From a tablet width up the heading rule follows the card: it comes in at the collapsed length and opens out only with the card. */
 @media (min-width: 768px) {
-  /* The gold heading rule always comes in at the collapsed length (as wide as the ticket above). Only when the card
-     opens out does it grow, to the Survivor Table's width, over the same time and curve as the table's blind; collapsing
-     shrinks it back. The opening-out is an animation that waits for the rule to finish drawing; the card sets data-crest-intro-done
-     once that has played, so later opens and closes follow the card at once. The phone keeps the compact capped rule. */
+  /* The gold heading rule is in its right place from the first paint: the ticket's width while the card is collapsed, the Survivor
+     Table's width while it is open. It moves only when the card is opened or closed, over the same time and curve as the table's blind.
+     The phone keeps the compact capped rule. */
   .bowl-card-section .bowl-crest-ornament {
     margin-inline: auto;
     max-width: var(--pad-width);
     transition: max-width var(--section-glide);
   }
-  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament {
-    animation: bowl-crest-widen var(--section-glide) calc(var(--crest-rule-delay, 1000ms) + var(--crest-rule-ms, 2840ms)) both;
-    max-width: var(--rail-width);
-  }
-  .bowl-card-section[data-crest-intro-done] .bowl-crest-ornament { animation: none; }
-  @keyframes bowl-crest-widen { from { max-width: var(--pad-width); } }
+  .bowl-card-section:not(.is-minimized) .bowl-crest-ornament { max-width: var(--rail-width); }
   .bowl-card-section .bowl-crest-ornament span { max-width: none; }
 }
 
