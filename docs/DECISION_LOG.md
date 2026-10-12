@@ -1583,3 +1583,7 @@ The trophy beside a name in the Survivor table used to show for anyone who had e
 ## The Pick'em and Bowl trophies follow the same rule
 
 Like the Survivor trophy, the Pick'em and Bowl Pool trophies beside a name now show only for the champion (or co-champions) of the latest season that has one (`reigningChampionIds`); a new champion takes the trophy from the last. A player's hover text still lists every title they have won.
+
+## Dependabot opens one pull request a week for minor and patch updates
+
+A Monday burst of Dependabot branches (three npm pull requests plus a workflow one, on top of normal work) made GitHub rate-limit Vercel's repository fetch, and Vercel emailed "Preview deployment failed ... GitHub fetch error 403 ... secondary rate limit". The deployment was one that `scripts/vercel-ignore-build.mjs` would have skipped anyway, so nothing was lost, but the email was noise. Dependabot now groups all npm minor and patch updates into one pull request (majors stay separate) and the actions updates into one, at 05:00 and 05:30 Eastern on Mondays, so far fewer branches appear at once.
