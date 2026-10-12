@@ -19,6 +19,7 @@ export type SurvivorTableData = {
     playerId: string;
     firstName: string;
     trophies?: string[];
+    holdsSurvivorTrophy?: boolean;
     status: "active" | "eliminated" | "complete";
     picks: Array<Pick | null>;
   }[];
@@ -35,7 +36,7 @@ const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer }: { row
   return (
       <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-(color:--themed-border-11) last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`}>
         <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
-        <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={row.trophies?.some((title) => title.includes("Survivor Champion"))} titles={row.trophies} /></span>
+        <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={Boolean(row.holdsSurvivorTrophy)} titles={row.trophies} /></span>
         {Array.from({ length: 18 }, (_, index) => {
           const pick = row.picks[index];
           return <span className="flex h-[2.3rem] items-center justify-center" key={index}>{pick?.abbreviation ? <MiniLogo abbreviation={pick.abbreviation} muted={row.status !== "active" && pick.resultMark !== "L"} resultMark={pick.resultMark} /> : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="text-xs" title="Selection submitted — revealed at kickoff">🔒</span> : <span className="text-slate-400">·</span>}</span>;

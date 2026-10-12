@@ -1575,3 +1575,7 @@ After the stylesheet and screenshot work, 952 assertions in about 190 tests stil
 ## A lost Survivor entry reads IN until it is officially out; trophy titles name the season as played
 
 A Survivor entry that loses is not out until another entry makes a correct pick in the same week: if everyone left loses together they share the title (the 2026-10-02 co-champion rule). The Standings therefore show a lost entry as IN until `officiallyOutEntryIds` finds another entry's winning pick in the week it was eliminated; the database status is unchanged and every other surface keeps its wording. Trophy hover titles now name the season as it is played, `'25-26 Bowl Pool Champion`, instead of `'25`, since the NFL season runs into the next year (`championshipTitle`).
+
+## The Survivor trophy sits on the reigning champion
+
+The trophy beside a name in the Survivor table used to show for anyone who had ever won Survivor, so after a new champion was crowned the previous one kept it too. It now shows only for the champion (or co-champions) of the latest season that has one (`reigningChampionIds`); a new champion takes it from the last. Every earlier title stays in the player's hover text. The Pick'em and Bowl trophies are unchanged.
