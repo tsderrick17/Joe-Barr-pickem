@@ -1595,3 +1595,7 @@ A Monday burst of Dependabot branches (three npm pull requests plus a workflow o
 - **Phone nav.** The NCAA Bowls tab keeps its place (hidden until it applies) so the tabs never slide when it appears after the page loads.
 - **All games / Pool action.** The 3D toggle became a two-option control with the chosen option filled in the page's ink color, full-size tap targets and no night-mode overrides.
 - **Slate instructions (desktop).** PICK'EM and SURVIVOR start at the same left edges as the notes columns beneath them.
+
+## Survivor trophy titles name one year
+
+Pick'em and Bowl Pool trophy titles name the season as it is played across two calendar years (`'25-26 Bowl Pool Champion`). Survivor is decided within a single calendar year, so its titles read `'25 Survivor Champion` (`championshipTitle`).
