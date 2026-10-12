@@ -19,7 +19,11 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
     let raf = 0, shown = -1, turns = 0, last = performance.now(), turnSeconds = 1.5;
     const readTurn = () => { turnSeconds = Math.max(0.1, parseFloat(getComputedStyle(el).getPropertyValue("--football-spin-s")) || 1.5); };
     readTurn();
+    // An empty, endless animation that marks the spin as running: anything that stops page animations (a screenshot tool,
+    // for one) stops it, and the ball then rests on the sheet's first frame, as it would with a CSS animation.
+    const running = el.animate([], { duration: 1000, iterations: Infinity });
     const tick = (now: number) => {
+      if (running.playState !== "running") { el.style.backgroundPosition = ""; return; }
       // Count progress in turns, not time, so a new turn length takes over smoothly; and never jump after the tab was hidden.
       turns += Math.min(now - last, 100) / 1000 / turnSeconds;
       last = now;
@@ -32,7 +36,7 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); running.cancel(); };
   }, []);
   return (
     <div aria-live="polite" className="football-loader" role="status">
