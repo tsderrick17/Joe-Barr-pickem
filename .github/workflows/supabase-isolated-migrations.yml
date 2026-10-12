@@ -26,8 +26,8 @@ jobs:
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
-      - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v2
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
@@ -62,8 +62,8 @@ jobs:
       PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
       SUPABASE_PROJECT_ID: lrimviwfflrisshmgnsh
     steps:
-      - uses: actions/checkout@v5
-      - uses: supabase/setup-cli@v2
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
