@@ -50,6 +50,8 @@ export default function BoardPage() {
   } = state;
   const { draftPicks: selectedPicks, draftSurvivor: survivorPick, savedPicks, savedSurvivor: savedSurvivorPick, warning: selectionWarning, feedback: selectionFeedback } = state;
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  // A team tapped while the picks are full, waiting for the player to say which pick it replaces.
+  const [pendingSwap, setPendingSwap] = useState<SelectedPick | null>(null);
   const activeBoardRequest = useRef<AbortController | null>(null);
   const boardRequestId = useRef(0);
   const serverClockOffset = useRef(0);
@@ -262,6 +264,11 @@ export default function BoardPage() {
     [currentTime, games, savedPicks, selectedPicks],
   );
 
+  const teamAbbreviationFor = (pick: SelectedPick) => {
+    const game = games.find((item) => item.id === pick.gameId);
+    return (pick.teamId === game?.homeTeamId ? game?.homeTeamAbbreviation : game?.awayTeamAbbreviation)?.toUpperCase() ?? "this team";
+  };
+
   const pickemHasUnsavedChanges = useMemo(() => picksDiffer(selectedPicks, savedPicks), [savedPicks, selectedPicks]);
 
   const survivorHasUnsavedChanges = survivorAvailable &&
@@ -369,12 +376,17 @@ export default function BoardPage() {
     if (isReadOnly) return;
 
     dispatch({ type: "warning-cleared" });
+    setPendingSwap(null);
 
     const choice = decidePickChoice({ picks: selectedPicks, games, gameId, teamId, now: currentTime, limit: selectionLimit });
     switch (choice.kind) {
       case "sealed":
-      case "limit":
         dispatch({ type: "warned", message: choice.warning });
+        return;
+      case "limit":
+        // Full: ask which open pick to replace, rather than making the player remove one first.
+        if (selectedTeams.some((team) => team.canRemove)) setPendingSwap({ gameId, teamId });
+        else dispatch({ type: "warned", message: choice.warning });
         return;
       case "remove":
         dispatch({ type: "pick-removed", gameId, clearFeedback: true });
@@ -397,6 +409,21 @@ export default function BoardPage() {
     }
 
     dispatch({ type: "survivor-chosen", pick: { gameId, teamId } });
+  }
+
+  // Replace one open pick with the team the player just tapped.
+  function swapPick(oldGameId: string) {
+    const next = pendingSwap;
+    setPendingSwap(null);
+    if (!next) return;
+    const removal = decideRemoval({ games, gameId: oldGameId, now: currentTime });
+    const choice = decidePickChoice({ picks: selectedPicks.filter((pick) => pick.gameId !== oldGameId), games, gameId: next.gameId, teamId: next.teamId, now: currentTime, limit: selectionLimit });
+    if (!removal.allowed || choice.kind === "sealed") {
+      dispatch({ type: "warned", message: !removal.allowed ? removal.warning : choice.kind === "sealed" ? choice.warning : "" });
+      return;
+    }
+    dispatch({ type: "pick-removed", gameId: oldGameId, clearFeedback: false });
+    dispatch({ type: "pick-added", gameId: next.gameId, teamId: next.teamId });
   }
 
   function removeSelection(gameId: string) {
@@ -571,6 +598,12 @@ export default function BoardPage() {
           selectedTeams={selectedTeams}
           selectionLimit={selectionLimit}
           selectionWarning={selectionWarning}
+          swapPrompt={pendingSwap ? {
+            newTeam: teamAbbreviationFor(pendingSwap),
+            options: selectedTeams.filter((team) => team.canRemove).map((team) => ({ gameId: team.gameId, label: team.abbreviation.toUpperCase() })),
+          } : null}
+          onSwap={swapPick}
+          onCancelSwap={() => setPendingSwap(null)}
           survivor={{
             controlsEnabled: survivorControlsEnabled,
             details: survivorPickDetails,
