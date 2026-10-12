@@ -28,7 +28,9 @@
   /* 90 frames in a 10 x 9 grid (2800 x 3852 px, under the 4096 px an iPhone will draw at full size). The frame is picked by the
      component (football-loader.tsx), not by a CSS animation: iPhone Safari glided a stepped background between frames, showing
      pieces of four at once. */
-  background: url("/football-spin.webp") 0 0 / calc(var(--football-w) * 10) calc(var(--football-h) * 9) no-repeat;
+  /* Sized and placed in plain percentages of the ball (10 columns = 1000%): iPhone Safari ignored a size built from calc() and
+     custom properties and drew the sheet at full size, so each frame showed pieces of four. */
+  background: url("/football-spin.webp") 0 0 / 1000% 900% no-repeat;
   display: block;
   height: var(--football-h);
   width: var(--football-w);

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 
-const FRAMES = 90, COLUMNS = 10;
+const FRAMES = 90, COLUMNS = 10, ROWS = 9;
 
 /**
  * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v15.html), pre-rendered as 90 full-size
@@ -31,7 +31,8 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
       const frame = FRAMES - 1 - Math.floor(turns * FRAMES); // the sheet is played backwards, as rendered
       if (frame !== shown) {
         shown = frame;
-        el.style.backgroundPosition = `calc(var(--football-w) * -${frame % COLUMNS}) calc(var(--football-h) * -${Math.floor(frame / COLUMNS)})`;
+        // Percentages place a cell exactly: 0% is the first column or row, 100% the last.
+        el.style.backgroundPosition = `${((frame % COLUMNS) / (COLUMNS - 1)) * 100}% ${(Math.floor(frame / COLUMNS) / (ROWS - 1)) * 100}%`;
       }
       raf = requestAnimationFrame(tick);
     };
