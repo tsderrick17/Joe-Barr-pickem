@@ -73,6 +73,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Assets (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
 | Players | one roster: commissioner, active, inactive, never signed in |
 | Reminders | scheduled, sent, cancelled-with-reason |
+| Name menu: Add to Home Screen steps (commissioners only, for now) | `iphone` (Share, then Add to Home Screen), `other` (browser menu, Install app) |
 
 The test coin (`ChipPlayground`) appears in the desk header at rest and again on the Assets panel,
 where it can be tossed or turned by hand.

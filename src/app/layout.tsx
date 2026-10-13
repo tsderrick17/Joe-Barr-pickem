@@ -34,6 +34,8 @@ const cormorant = localFont({
 export const metadata: Metadata = {
   title: "Lead Pipe Locks",
   description: "Joe Barr Memorial Pick'em",
+  // Added to an iPhone's home screen it opens full-screen; a solid black status bar keeps the page clear of the notch.
+  appleWebApp: { capable: true, title: "Lead Pipe Locks", statusBarStyle: "black" },
 };
 
 export default function RootLayout({
