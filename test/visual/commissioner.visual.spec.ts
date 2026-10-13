@@ -78,6 +78,8 @@ for (const panel of PANELS) {
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
           await page.waitForLoadState("networkidle");
+          // The loading football is stepped by script, which a screenshot cannot pause: hold it on its first frame.
+          if (panel.id === "assets") await page.addStyleTag({ content: ".football-loader-ball { background-position: 0 0 !important; }" });
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }
