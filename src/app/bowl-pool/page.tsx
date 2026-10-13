@@ -8,7 +8,7 @@ import { bowlSpreadLabel } from "@/components/bowl-card";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
-import FootballLoader from "@/components/football-loader";
+import { FootballLoadingScreen } from "@/components/football-loader";
 
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
@@ -37,6 +37,7 @@ export default function BowlPoolPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasLaunched, setHasLaunched] = useState(false);
   const [optedIn, setOptedIn] = useState<boolean | null>(null);
+  const [bowlLoaded, setBowlLoaded] = useState(false);
   const [selections, setSelections] = useState<Record<string, "favorite" | "underdog">>({});
   const [savedSelections, setSavedSelections] = useState<Record<string, "favorite" | "underdog">>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,7 +84,7 @@ export default function BowlPoolPage() {
         setSelections(next);
         setSavedSelections(next);
       }
-    }).catch(() => setOptedIn(false));
+    }).catch(() => setOptedIn(false)).finally(() => setBowlLoaded(true));
   }, [hasLaunched]);
 
   useEffect(() => {
@@ -170,11 +171,12 @@ export default function BowlPoolPage() {
   }
 
   if (!isLoading && !canView) return null;
+  // The spinning football holds the page until both the viewer and the Bowl Pool itself have arrived, like Standings and the Slate.
+  if (isLoading || !bowlLoaded) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
 
   return (
     <main className="bowl-pool-page mx-auto max-w-6xl px-2 pb-8 pt-0 sm:px-6 sm:pb-10">
-      {isLoading ? <div aria-busy="true" aria-label="Loading Bowl Pool" className="bowl-pool-loading-shell football-loading-screen mt-4"><FootballLoader /></div> : null}
-      {!isLoading && canView ? (
+      {canView ? (
         <>
           {poolLocked ? optedIn === false ? <div className="mt-4 border border-slate-300 bg-(color:--themed-bg-26) p-4 text-center text-sm font-bold text-slate-600">Bowl Pool entry is closed for this year. Check back next year.</div> : null : optedIn === null ? <div aria-busy="true" className="mt-4 flex items-center justify-center gap-3 border border-slate-300 bg-(color:--themed-bg-26) p-3 text-center text-sm font-bold text-slate-500">Loading…</div> : optedIn === false ? <BowlClaimSeat onClaim={() => void changeOptIn(true)} /> : null}
           {optedIn === true ? <div className="bowl-receipt-frame"><div className="bowl-receipt-frame-inner"><section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
