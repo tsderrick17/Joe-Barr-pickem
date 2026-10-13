@@ -98,8 +98,8 @@ test("the sign-in page offers password managers a username without showing one",
   await expect(page.locator("#pin")).toBeFocused();
 });
 
-// The loading screen before anything has answered (what a phone shows on its way to the PIN page): the site heading, with the tabs
-// held unseen until the account answers (so they appear once, in place, and never slide), and the football.
+// The loading screen before anything has answered (what a phone shows on its way to the PIN page): the site heading, its tabs
+// already in their final places (decided before the first paint, so they never slide), and the football.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Account loading screen before sign-in is known at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -116,24 +116,33 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
-// The tabs appear once, already in their final places: a commissioner's NCAA Bowls tab never arrives late and slides the others.
-test("the phone tabs never move once they are shown", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 800 });
-  await signIn(page, "day");
-  let answer: () => void = () => {};
-  const answered = new Promise<void>((resolve) => { answer = resolve; });
-  await page.route("**/api/profile**", async (route) => { await answered; await route.fulfill({ json: { ...PROFILE(false), isCommissioner: true } }); });
-  await page.route("**/api/**", (route) => route.request().url().includes("/api/profile") ? route.fallback() : undefined);
-  await page.route("https://placeholder.invalid/**", (route) => route.abort());
-  await page.goto("/");
-  const tabs = page.locator(".mobile-primary-nav > div");
-  await expect(tabs).toBeAttached({ timeout: 30_000 });
-  await expect(tabs).toHaveCSS("visibility", "hidden");
-  answer();
-  await expect(tabs).toHaveCSS("visibility", "visible");
-  const first = await page.getByRole("link", { name: "Standings" }).last().boundingBox();
-  await page.waitForTimeout(800);
-  const later = await page.getByRole("link", { name: "Standings" }).last().boundingBox();
-  expect(later?.x).toBe(first?.x);
-  await expect(page.locator(".mobile-primary-nav").getByRole("link", { name: "NCAA Bowls" })).toBeVisible();
-});
+// The tabs are there and usable at once, already in their final places: they never wait for the account, and a commissioner's
+// NCAA Bowls tab (remembered from the last visit) never arrives late and slides the others.
+for (const remembered of [false, true]) {
+  test(`the phone tabs are usable at once and never move${remembered ? " (commissioner, remembered)" : " (first visit)"}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await signIn(page, "day");
+    if (remembered) await page.addInitScript(() => window.localStorage.setItem("pickem-nav-tabs", JSON.stringify({ bowls: true, commissioner: true })));
+    let answer: () => void = () => {};
+    const answered = new Promise<void>((resolve) => { answer = resolve; });
+    await page.route("**/api/**", async (route) => {
+      if (!route.request().url().includes("/api/profile")) return;
+      await answered;
+      await route.fulfill({ json: { ...PROFILE(false), isCommissioner: remembered } });
+    });
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(NOW) });
+    await page.goto("/");
+    const nav = page.locator(".mobile-primary-nav");
+    const slate = nav.getByRole("link", { name: "The Slate" });
+    await expect(slate).toBeVisible({ timeout: 30_000 });
+    await expect(nav.getByRole("link", { name: "NCAA Bowls" })).toBeVisible({ visible: remembered });
+    const before = await slate.boundingBox();
+    answer();
+    await page.waitForTimeout(800);
+    expect((await slate.boundingBox())?.x).toBe(before?.x);
+    // Usable before anything has loaded: the tab takes you straight there.
+    await slate.click();
+    await expect(page).toHaveURL(/\/board$/);
+  });
+}

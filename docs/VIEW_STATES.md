@@ -82,7 +82,7 @@ where it can be tossed or turned by hand.
 
 | View | States |
 | --- | --- |
-| Loading screen before sign-in is known (site heading; the tabs wait unseen until the account answers, so they never slide; football) | phone and desktop |
+| Loading screen before sign-in is known (site heading with the tabs already in place and usable, centered; football) | phone and desktop |
 | Login | signed out |
 | Notifications (`/profile`) | `profile-default`, `profile-custom` (fine-tune open) |
 | Week Archive | `archive` (four weeks), `archive-empty` |
