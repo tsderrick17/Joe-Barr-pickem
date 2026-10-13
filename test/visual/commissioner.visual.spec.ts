@@ -111,3 +111,23 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
     }
   }
 }
+
+// Commissioners (a trial before players) get Add to Home Screen in their name menu; without Chrome's install dialog it shows the steps.
+for (const [label, userAgent] of [["iphone", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"], ["other", undefined]] as const) {
+  test(`Commissioner Add to Home Screen steps on ${label}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 700 }, ...(userAgent ? { userAgent } : {}) });
+    const page = await context.newPage();
+    // Hold back Chrome's own install dialog so the steps are shown the same everywhere.
+    await page.addInitScript(() => window.addEventListener("beforeinstallprompt", (event) => event.stopImmediatePropagation()));
+    await signIn(page, "day");
+    await serve(page, "healthy");
+    await settle(page, ".commissioner-panel-tab");
+    await page.locator(".account-menu-button:visible").click();
+    await page.getByRole("menuitem", { name: "Add to Home Screen" }).click();
+    await expect(page.getByRole("menuitem", { name: "Done" })).toBeVisible();
+    await expect(page.locator(".account-menu-panel")).toHaveScreenshot(`commissioner-add-to-home-screen-${label}.png`);
+    await page.getByRole("menuitem", { name: "Done" }).click();
+    await expect(page.locator(".account-menu-panel")).toHaveCount(0);
+    await context.close();
+  });
+}
