@@ -75,10 +75,3 @@ body {
 .account-menu-confirm { display: grid; gap: .3rem; padding: .2rem; }
 .account-menu-confirm p { color: var(--themed-text-18); font-size: .95rem; font-weight: 700; margin: .3rem .3rem .4rem; }
 
-/* Reserve the first Bowl Pool viewport while the authenticated profile and
-   schedule arrive, so the real card replaces a stable shape instead of
-   pushing the page down after first paint. */
-.bowl-pool-loading-shell {
-  min-height: 42rem;
-}
-
