@@ -6,8 +6,8 @@ import { leftDomain, rightDomain } from "@/lib/chart-axis";
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
 export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string; stack?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
-export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, rightAxis }: {
-  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean;
+export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, percentYAxis = false, rightAxis }: {
+  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean; percentYAxis?: boolean;
   rightAxis?: { label: string; suffix: string; scale?: "zero" | "tight" };
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -27,7 +27,7 @@ export default function ProviderChart({ points, series, label, histogram = false
   const plotWidth = width - left - edge, height = bottom - top;
   const highest = Math.max(0, ...points.map((point) => activeSeries.filter((item) => !item.axis).reduce((sum, item) => item.stack ? sum + (point.values[item.key] ?? 0) : Math.max(sum, point.values[item.key] ?? 0), 0)));
   const observed = points.flatMap((point) => activeSeries.filter((item) => !item.axis).map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
-  const { minimum, maximum } = leftDomain({ observed, highest, scale: yScale, histogram, integer: integerYAxis });
+  const { minimum, maximum } = leftDomain({ observed, highest, scale: yScale, histogram, integer: integerYAxis, histogramStep: percentYAxis ? 20 : 4 });
   const rightValues = points.flatMap((point) => activeSeries.filter((item) => item.axis === "right").map((item) => point.values[item.key]).filter((value): value is number => value !== null && value !== undefined));
   const { minimum: rightMinimum, maximum: rightMaximum } = rightDomain({ values: rightValues, scale: rightAxis?.scale, present: Boolean(rightAxis) });
   const domain = Math.max(1, ...points.map((point) => point.end ?? 0));
@@ -73,7 +73,7 @@ export default function ProviderChart({ points, series, label, histogram = false
         </linearGradient>)}</defs>
         {[0, .25, .5, .75, 1].map((fraction) => <g key={fraction}>
           <line x1={left} x2={width - edge} y1={bottom - fraction * height} y2={bottom - fraction * height} stroke="#e9eaef" strokeDasharray={fraction ? "3 4" : undefined} />
-          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}</text>
+          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}{percentYAxis ? "%" : ""}</text>
           {right ? <text x={width - edge + 8} y={bottom - fraction * height + 4} fill="#047857" fontSize="10">{number(rightMinimum + (rightMaximum - rightMinimum) * fraction)}{rightAxis?.suffix ?? "%"}</text> : null}
         </g>)}
         {yAxisLabel ? <text x="11" y={(top + bottom) / 2} fill="#71717a" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(-90 11 ${(top + bottom) / 2})`}>{yAxisLabel}</text> : null}

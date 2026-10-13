@@ -1,16 +1,17 @@
 "use client";
 
 import ProviderChart from "@/components/provider-chart";
+import { ladderChartData } from "@/lib/ladder-chart.js";
 
 export type PollingLadderItem = { rung: number; windowMinutes: number; newFinals: number; pickedUp: number; percentage: number; newFinalsPercentage: number };
 
 export function LadderHistogram({ items }: { items: PollingLadderItem[] }) {
-  const points = items.map((item, index) => {
-    const start = items.slice(0, index).reduce((sum, previous) => sum + previous.windowMinutes, 0);
-    return { label: `Window ${item.rung} · ${item.windowMinutes}-minute polling gap`, shortLabel: `#${item.rung}`,
-      start, end: start + item.windowMinutes, values: { finals: item.newFinals },
-      note: `${item.newFinalsPercentage}% of recorded fresh finals · ${start}–${start + item.windowMinutes} minutes along the retry ladder` };
-  });
-  return <ProviderChart histogram points={points} label="Histogram of new fresh final scores by polling interval"
-    series={[{ key: "finals", label: "Fresh finals", kind: "bar", color: "#4f46e5" }]} />;
+  const { points, emergencyFinals, emergencyMinutes } = ladderChartData(items);
+  return <>
+    <ProviderChart histogram percentYAxis points={points} label="Histogram of the share of new fresh final scores found in each polling window"
+      series={[{ key: "finals", label: "of all fresh finals", kind: "bar", color: "#4f46e5", suffix: "%" }]} />
+    {emergencyMinutes.length ? <p className="mt-2 text-xs text-(color:--themed-text-27)">
+      Emergency windows ({emergencyMinutes.join(" and ")}-minute gaps, not charted): <strong className="font-bold tabular-nums">{emergencyFinals}</strong> fresh final{emergencyFinals === 1 ? "" : "s"} all time
+    </p> : null}
+  </>;
 }

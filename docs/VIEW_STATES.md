@@ -67,6 +67,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Overview | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
 | Grading (Activity log open) | `healthy`, `attention`, `quiet` |
 | Game day (checks open) | `healthy` |
+| Polling chart (Grading → Provider performance → New game finals by polling rung: percentages, first ten windows, emergency-window count) | `healthy`, phone and desktop |
 | Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
 | Season | `healthy` |
 | System (health and alerts open) | `healthy`, `attention` |

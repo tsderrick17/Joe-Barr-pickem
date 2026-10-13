@@ -49,7 +49,7 @@ function dashboard(state) {
   const games = quiet ? GAMES.map((game) => ({ ...game, status: "final", state: "final", finalizedAt: T(30), score: "21-17", picks: { total: 8, pending: 0, graded: 8, visible: true }, survivor: { total: 4, pending: 0 } })) : GAMES.map((game, index) => (attention && index === 0 ? { ...game, needsAttention: true, status: "final", state: "awaiting grade" } : game));
   return {
     checkedAt: NOW, creditUsage: CREDIT_USAGE, ladderCoverage: { since: T(200), runs: 40 },
-    ladderSummary: [1, 2, 3, 4].map((rung) => ({ rung, windowMinutes: rung * 10, newFinals: 8 - rung, pickedUp: 8 - rung, percentage: 100 - rung * 5, newFinalsPercentage: 100 - rung * 8 })),
+    ladderSummary: [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 0, 0, 0, 1, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
     status: attention ? "attention" : "healthy",
     periods: [{ id: "p5", displayName: "Week 5", status: quiet ? "complete" : "active", type: "regular" }, { id: "p4", displayName: "Week 4", status: "complete", type: "regular" }],
     period: { id: "p5", displayName: "Week 5", type: "regular", status: quiet ? "complete" : "active" },
