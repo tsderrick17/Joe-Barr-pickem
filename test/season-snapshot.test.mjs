@@ -121,9 +121,9 @@ test("snapshot is commissioner-only, previews before week six, and loads on expa
   // Sign-in is verified before anything is read.
   assert.ok(route.indexOf("authenticateActivePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
   assert.match(route, /status: access\.status/);
-  // Players are refused until Week 6; commissioners always get it.
+  // Players are refused until Week 6 settles; commissioners always get it.
   assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };"));
-  assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens in Week 6\." \}, \{ status: 403 \}\);/);
+  assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens once every Week 6 pick has settled\." \}, \{ status: 403 \}\);/);
   assert.ok(loader.indexOf("if (!isCommissioner && !released)") < loader.indexOf("loadPicks(visibleIds)"), "no pick data is read before the release check");
   // A cached chart is never handed to a player before the release.
   assert.match(loader, /if \(payload && \(isCommissioner \|\| released\)\) return \{ ok: true, released, payload, freshForMs \};/);
@@ -170,14 +170,23 @@ test("the stacking order puts the most recent leader in the upper lane of a shar
   assert.ok(top("B") < top("A"), "the player ahead most recently occupies the upper lane");
 });
 
-test("players see the Season Snapshot from Week 6 until the next season starts", async () => {
-  const { seasonSnapshotReleased } = await import("../src/lib/season-snapshot.js");
+test("players see the Season Snapshot once Week 6 has settled, until the next season starts", async () => {
+  const { seasonSnapshotReleased, snapshotReleaseWeek } = await import("../src/lib/season-snapshot.js");
   const week = (order, status) => ({ id: String(order), display_order: order, period_type: "regular", status });
   assert.equal(seasonSnapshotReleased([week(4, "complete"), week(5, "active"), week(6, "upcoming")]), false);
-  assert.equal(seasonSnapshotReleased([week(5, "complete"), week(6, "active")]), true);
+  // During Week 6 it waits for every Week 6 pick to settle.
+  const duringWeek6 = [week(5, "complete"), week(6, "active"), week(7, "upcoming")];
+  assert.equal(seasonSnapshotReleased(duringWeek6), false);
+  assert.equal(snapshotReleaseWeek(duringWeek6)?.id, "6");
+  assert.equal(seasonSnapshotReleased(duringWeek6, true), true);
+  // Once Week 6 is finished or a later week has started, it stays open.
+  assert.equal(seasonSnapshotReleased([week(6, "complete"), week(7, "upcoming")]), true);
+  assert.equal(seasonSnapshotReleased([week(6, "complete"), week(7, "active")]), true);
+  assert.equal(snapshotReleaseWeek([week(6, "complete"), week(7, "active")]), null);
   assert.equal(seasonSnapshotReleased([{ id: "wc", display_order: 19, period_type: "playoff", status: "active" }]), true);
   // After the Aug 1 rollover every period of the new season is upcoming.
   assert.equal(seasonSnapshotReleased([week(1, "upcoming"), week(6, "upcoming")]), false);
+  assert.equal(snapshotReleaseWeek([week(1, "upcoming"), week(6, "upcoming")]), null);
 });
 
 test("each week is one straight band, so lines bend only at week boundaries", () => {

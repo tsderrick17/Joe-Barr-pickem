@@ -1,4 +1,5 @@
-import { seasonSnapshotReleased } from "@/lib/season-snapshot.js";
+import { seasonSnapshotReleased, snapshotReleaseWeek } from "@/lib/season-snapshot.js";
+import { activeWeekState } from "@/lib/season-snapshot-freshness.js";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { playerAccessErrorMessage } from "@/lib/player-access-result";
@@ -437,6 +438,26 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // During Week 6 the snapshot opens once every Week 6 Pick'em pick has settled. This one extra read happens only then.
+  let snapshotReleased = seasonSnapshotReleased(periods);
+  const releaseWeek = snapshotReleaseWeek(periods);
+  if (releaseWeek) {
+    const [weekGames, weekPicks] = await Promise.all([
+      supabaseAdmin.from("games").select("id, kickoff_at").eq("scoring_period_id", releaseWeek.id),
+      releaseWeek.id === currentWeek.id
+        ? Promise.resolve({ data: currentWeekPicks, error: null })
+        : readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, result").eq("scoring_period_id", releaseWeek.id).neq("result", "void").order("id").range(from, to)),
+    ]);
+    // Unknown is closed: a failed read keeps the snapshot hidden, never takes down the Standings.
+    snapshotReleased = !weekGames.error && !weekPicks.error && activeWeekState({
+      now: currentTime.getTime(),
+      maxPicks: releaseWeek.max_picks,
+      games: weekGames.data ?? [],
+      picks: weekPicks.data ?? [],
+      playerIds: players.map((player) => player.id),
+    }).settled;
+  }
+
   return NextResponse.json({
     // Player-facing privacy refreshes must use the same authoritative clock as
     // the reveal decision above. A device with the wrong time must never make
@@ -445,7 +466,7 @@ export async function GET(request: NextRequest) {
     viewerPlayerId: viewer.id,
     isCommissioner: viewer.is_commissioner,
     seasonPhase: seasonPhaseFromRows(season, periods),
-    seasonSnapshotReleased: seasonSnapshotReleased(periods),
+    seasonSnapshotReleased: snapshotReleased,
     showSurvivorStandings: viewer.show_survivor_standings,
     showBowlCard: viewer.show_bowl_card,
     showPoolChat: viewer.show_pool_chat,

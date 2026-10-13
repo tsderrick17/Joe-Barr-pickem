@@ -17,6 +17,6 @@ export async function GET(request: NextRequest) {
 
   const result = await loadSeasonSnapshot(access.player.is_commissioner);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
-  if (!result.payload) return NextResponse.json({ error: "The Season Snapshot opens in Week 6." }, { status: 403 });
+  if (!result.payload) return NextResponse.json({ error: "The Season Snapshot opens once every Week 6 pick has settled." }, { status: 403 });
   return NextResponse.json(result.payload, { headers: { "Cache-Control": "private, no-store" } });
 }

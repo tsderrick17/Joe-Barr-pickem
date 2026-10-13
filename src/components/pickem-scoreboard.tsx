@@ -72,7 +72,7 @@ export default function PickemScoreboard({
   const eliminatedHidden = useBlindTable(hideEliminatedRows, tableBox);
   const displayedRows = eliminatedHidden ? rows.filter((row) => !row.playoffEliminated) : rows;
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
-  // Commissioners always; players from Week 6 until the Aug 1 season reset.
+  // Commissioners always; players once Week 6 has settled, until the Aug 1 season reset.
   const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;
   const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
   // Commissioners can turn the pad over to see the season chart on its back.
