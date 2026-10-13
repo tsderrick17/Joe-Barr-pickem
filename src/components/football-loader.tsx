@@ -64,6 +64,8 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
 export function FootballLoadingScreen({ background }: { background: string }) {
   useLayoutEffect(() => {
     document.documentElement.classList.add("is-loading-screen");
+    // Start at the top, header in view, even if the browser restored a scrolled position.
+    window.scrollTo(0, 0);
     return () => document.documentElement.classList.remove("is-loading-screen");
   }, []);
   return (
