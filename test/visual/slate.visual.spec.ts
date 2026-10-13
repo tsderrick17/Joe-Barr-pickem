@@ -77,3 +77,35 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await expect(page).toHaveScreenshot(`receipt-warning-${label}.png`, { clip: { x: Math.max(0, box.x - 8), y: box.y - 8, width: Math.min(width, box.width + 16), height: box.height + 70 } });
   });
 }
+
+// An early-lock note is one line under the spread: the spread stays level with the team names, and the note stays inside its row
+// and clear of the poker chips, at every width.
+for (const width of [360, 390, 700, 1280]) {
+  for (const scenario of ["upcoming-unpicked", "upcoming-no-survivor"]) {
+    test(`Slate early-lock note keeps the line level and tidy (${scenario}, ${width})`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page);
+      await serve(page, scenario);
+      await page.goto("/board");
+      const note = page.locator(".slate-lock-note").first();
+      await note.waitFor({ timeout: 30_000 });
+      const layout = await note.evaluate((element) => {
+        const row = element.closest(".slate-game-row")!;
+        const box = element.getBoundingClientRect(), rowBox = row.getBoundingClientRect();
+        const spread = row.querySelector(".slate-spread-cell span")!.getBoundingClientRect();
+        const name = row.querySelector(".slate-team-label")!.getBoundingClientRect();
+        const chips = [...row.querySelectorAll("button")].map((chip) => chip.getBoundingClientRect()).filter((chip) => chip.width > 20 && chip.width < 80);
+        return {
+          lines: Math.round(box.height / parseFloat(getComputedStyle(element).lineHeight)),
+          insideRow: box.top >= rowBox.top && box.bottom <= rowBox.bottom,
+          clearOfChips: chips.every((chip) => box.right <= chip.left || box.left >= chip.right || box.bottom <= chip.top + 6 || box.top >= chip.bottom - 6),
+          offset: Math.abs((spread.top + spread.bottom) / 2 - (name.top + name.bottom) / 2),
+        };
+      });
+      expect(layout.lines).toBe(1);
+      expect(layout.insideRow).toBe(true);
+      expect(layout.clearOfChips).toBe(true);
+      expect(layout.offset).toBeLessThanOrEqual(1);
+    });
+  }
+}
