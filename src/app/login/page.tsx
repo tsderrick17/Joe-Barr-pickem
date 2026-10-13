@@ -131,6 +131,10 @@ export default function LoginPage() {
             FOUR-DIGIT PIN
           </label>
 
+          {/* Players sign in with a PIN alone, but Apple Passwords and other password managers insist on a username to save one.
+              This unseen field gives them the same one for everybody, so nothing is asked and the PIN is offered at the next sign-in. */}
+          <input aria-hidden="true" autoComplete="username" className="absolute h-px w-px overflow-hidden opacity-0" name="username" readOnly tabIndex={-1} type="text" value="Lead Pipe Locks" />
+
           <input
             id="pin"
             name="password"
