@@ -25,12 +25,12 @@
   z-index: -1;
 }
 .football-loader-ball {
-  /* 90 frames in a 10 x 9 grid (2800 x 3852 px, under the 4096 px an iPhone will draw at full size). The frame is picked by the
-     component (football-loader.tsx), not by a CSS animation: iPhone Safari glided a stepped background between frames, showing
-     pieces of four at once. */
-  /* Sized and placed in plain percentages of the ball (10 columns = 1000%): iPhone Safari ignored a size built from calc() and
-     custom properties and drew the sheet at full size, so each frame showed pieces of four. */
-  background: url("/football-spin.webp") 0 0 / 1000% 900% no-repeat;
+  /* 108 motion-blurred frames in a 12 x 9 grid (3360 x 3852 px, under the 4096 px an iPhone will draw at full size), played by
+     ONE animation so the across and down moves can never drift apart: one new frame on every refresh of a 60 Hz screen at
+     1.8 s a turn, and a steady two refreshes each at 120 Hz. Sized and placed in plain percentages of the ball (12 columns =
+     1200%): iPhone Safari ignored a size built from calc() and custom properties. The keyframes walk the grid backwards. */
+  animation: football-spin var(--football-spin-s, 1.8s) linear infinite;
+  background: url("/football-spin.webp") 0 0 / 1200% 900% no-repeat;
   display: block;
   height: var(--football-h);
   width: var(--football-w);
@@ -57,8 +57,29 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
   40% { transform: rotate(calc(var(--football-tilt, 45deg) + var(--football-wobble, 0deg))); }
   100% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg) * .4)); }
 }
+@keyframes football-spin {
+  0% { animation-timing-function: steps(12); background-position: 100% 100%; }
+  11.1110% { background-position: -9.0909% 100%; }
+  11.1111% { animation-timing-function: steps(12); background-position: 100% 87.5%; }
+  22.2221% { background-position: -9.0909% 87.5%; }
+  22.2222% { animation-timing-function: steps(12); background-position: 100% 75%; }
+  33.3332% { background-position: -9.0909% 75%; }
+  33.3333% { animation-timing-function: steps(12); background-position: 100% 62.5%; }
+  44.4443% { background-position: -9.0909% 62.5%; }
+  44.4444% { animation-timing-function: steps(12); background-position: 100% 50%; }
+  55.5555% { background-position: -9.0909% 50%; }
+  55.5556% { animation-timing-function: steps(12); background-position: 100% 37.5%; }
+  66.6666% { background-position: -9.0909% 37.5%; }
+  66.6667% { animation-timing-function: steps(12); background-position: 100% 25%; }
+  77.7777% { background-position: -9.0909% 25%; }
+  77.7778% { animation-timing-function: steps(12); background-position: 100% 12.5%; }
+  88.8888% { background-position: -9.0909% 12.5%; }
+  88.8889% { animation-timing-function: steps(12); background-position: 100% 0%; }
+  99.9999% { background-position: -9.0909% 0%; }
+  100% { background-position: 100% 100%; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .football-loader-tilt { animation: none; }
+  .football-loader-ball, .football-loader-tilt { animation: none; }
 }
 
 /* ---- Commissioner assets gallery ---- */
