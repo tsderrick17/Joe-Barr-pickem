@@ -91,3 +91,21 @@ for (const width of [390, 1280]) {
     expect(box!.y).toBeLessThan(200);
   });
 }
+
+// While the Bowl Pool is still arriving, the page is the spinning football on its own, like Standings and the Slate.
+test("Bowl Pool loading screen at phone-390", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }));
+  await page.route("**/api/bowl-pool**", () => { /* never answers: the page stays on its loading screen */ });
+  await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+  await page.route("https://placeholder.invalid/**", (route) => route.abort());
+  await page.clock.install({ time: new Date(NOW) });
+  await page.goto("/bowl-pool");
+  await expect(page.locator(".football-loader").first()).toBeVisible({ timeout: 30_000 });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(600);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await expect(page).toHaveScreenshot("bowl-loading-phone-390.png");
+});

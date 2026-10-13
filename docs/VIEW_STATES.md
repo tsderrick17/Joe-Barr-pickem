@@ -53,6 +53,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 
 | State | Scenario |
 | --- | --- |
+| Loading (the Bowl Pool still arriving: spinning football alone) | phone |
 | Entry open, not joined | `not-joined` |
 | Some picks made | `picked` |
 | Two games kicked off (locked buttons) | `games-started` |
