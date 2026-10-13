@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
-import { buildSeasonSnapshot, seasonSnapshotReleased } from "@/lib/season-snapshot.js";
+import { buildSeasonSnapshot, seasonSnapshotReleased, snapshotReleaseWeek } from "@/lib/season-snapshot.js";
 import { CLOSED_CHART_MS, activeWeekState, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
 import { readAllPages } from "@/lib/read-all-pages";
 
@@ -41,12 +41,22 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
   }
 
   const periods = periodsResult.data ?? [];
-  const released = seasonSnapshotReleased(periods);
-  // Commissioners can always preview; players see it from Week 6 of this season.
-  // No pick data is read for a viewer who is not allowed to see the chart.
+  const everyone = playersResult.data ?? [];
+  const activePlayerIds = everyone.filter((player) => player.active).map((player) => player.id);
+  // Commissioners can always preview; players see it once Week 6 has settled.
+  // Before then a player's request reads only Week 6 itself, never earlier picks.
+  const releaseWeek = snapshotReleaseWeek(periods);
+  let released = seasonSnapshotReleased(periods);
+  if (releaseWeek && !isCommissioner) {
+    const [weekPicks, weekGames] = await Promise.all([
+      loadPicks([releaseWeek.id]),
+      supabaseAdmin.from("games").select("id, kickoff_at").eq("scoring_period_id", releaseWeek.id),
+    ]);
+    if (weekPicks.error || weekGames.error) return { ok: false, status: 503, error: "Graded picks could not be loaded." };
+    released = activeWeekState({ now: Date.now(), maxPicks: releaseWeek.max_picks, games: weekGames.data ?? [], picks: weekPicks.data ?? [], playerIds: activePlayerIds }).settled;
+  }
   if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };
 
-  const everyone = playersResult.data ?? [];
   const visibleIds = periods.filter((period) => period.status === "complete" || period.status === "active").map((period) => period.id);
   const activeIds = periods.filter((period) => period.status === "active").map((period) => period.id);
   const [picksResult, activeGamesResult] = await Promise.all([
@@ -63,7 +73,6 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
   // Pick'em pick has settled (see season-snapshot-freshness.js).
   const now = Date.now();
   const picks = picksResult.data ?? [];
-  const activePlayerIds = everyone.filter((player) => player.active).map((player) => player.id);
   const weekStates = activeIds.map((periodId) => ({
     periodId,
     ...activeWeekState({
@@ -75,6 +84,7 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
     }),
   }));
   const activeWeekSettled = new Set(weekStates.filter((week) => week.settled).map((week) => week.periodId));
+  if (releaseWeek && isCommissioner) released = activeWeekSettled.has(releaseWeek.id);
   const snapshot = buildSeasonSnapshot(periods, everyone.filter((player) => player.active), picks, activeWeekSettled);
   const freshForMs = snapshotFreshForMs(now, weekStates);
   return { ok: true, released, payload: { ...snapshot, colorOrder: everyone.map((player) => player.id) }, freshForMs };

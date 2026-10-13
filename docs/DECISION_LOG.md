@@ -4,6 +4,20 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-12 - Season Snapshot opens to players once Week 6 has settled
+
+**Status:** Accepted
+
+Players now get the flip button and the snapshot data once every Week 6 Pick'em
+pick has settled (the same test the chart uses to plot the active week), rather
+than as soon as Week 6 begins. It then stays open through the playoffs until the
+August 1 rollover. Commissioners still always have it. Home and the data route
+read Week 6's games and picks for this check only while Week 6 is in play.
+
+**Reason:** The commissioner wants the reveal to land with six full weeks on the
+chart. Supersedes the Week 6 start in "Season Snapshot opens to players at Week
+6; weeks plot together".
+
 ## 2026-10-06 - AUTH-002 - Extend request-scoped access to Pick'em saves
 
 **Status:** Accepted for the Pick'em save route

@@ -25,8 +25,9 @@ record in a safe read; do not relabel the state in the browser or edit a
 player's history to make the page render.
 
 The Season Snapshot is the reverse of the Pick'em Pad on Standings, opened by
-its flip button. Commissioners can inspect it before Week 6; players receive
-the same button and data from Week 6 onward. The regular-season chart starts
+its flip button. Commissioners can inspect it at any time; players receive
+the same button and data once every Week 6 Pick'em pick has settled, and from
+then on. The regular-season chart starts
 everyone at zero. It adds the active week for everyone together only when no
 Pick'em pick is pending and each active player has a full card or every game
 has kicked off. The playoff view carries forward regular-season totals. The

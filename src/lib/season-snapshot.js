@@ -1,10 +1,24 @@
-/** Players see the Season Snapshot from Week 6 on. A new season (Aug 1) starts
- * with every period upcoming, so it disappears again until that season's Week 6. */
+/** Players see the Season Snapshot once every Week 6 Pick'em pick has settled (see
+ * season-snapshot-freshness.js), and from then on, including the playoffs. A new
+ * season (Aug 1) starts with every period upcoming, so it disappears again until
+ * that season's Week 6 settles. */
 export const SNAPSHOT_RELEASE_WEEK = 6;
-export function seasonSnapshotReleased(periods) {
-  return periods.some((period) =>
-    ["active", "complete"].includes(period.status)
-    && (period.period_type === "playoff" || (period.period_type === "regular" && period.display_order >= SNAPSHOT_RELEASE_WEEK)));
+const isOpen = (period) => ["active", "complete"].includes(period.status);
+const isReleaseWeek = (period) => period.period_type === "regular" && period.display_order === SNAPSHOT_RELEASE_WEEK;
+
+/** Week 6 while it is still being played and nothing later has started: the one
+ * week whose settling decides the release. Null otherwise. */
+export function snapshotReleaseWeek(periods) {
+  if (seasonSnapshotReleased(periods)) return null;
+  return periods.find((period) => isReleaseWeek(period) && period.status === "active") ?? null;
+}
+
+/** @param releaseWeekSettled whether every Pick'em pick of an active Week 6 has settled */
+export function seasonSnapshotReleased(periods, releaseWeekSettled = false) {
+  return periods.some((period) => isOpen(period) && (
+    period.period_type === "playoff"
+    || (period.period_type === "regular" && period.display_order > SNAPSHOT_RELEASE_WEEK)
+    || (isReleaseWeek(period) && (period.status === "complete" || releaseWeekSettled))));
 }
 
 /** Build weekly positions. Everyone is plotted together for a week, and the

@@ -180,10 +180,12 @@ measure database requests or end-to-end route time.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
 - The Season Snapshot is the back of the Pick'em Pad; a round button at the pad's
-  top right turns it over. Commissioners always have it. Players get it from
-  Week 6 (or any playoff round) until the August 1 season rollover, when the new
-  season's periods are all upcoming and it disappears until that season's
-  Week 6. The same rule gates the data route. The route shares one finished
+  top right turns it over. Commissioners always have it. Players get it once
+  every Week 6 Pick'em pick has settled (every player has a full card or every
+  game has kicked off, and no pick is pending), and keep it through the playoffs
+  until the August 1 season rollover, when the new season's periods are all
+  upcoming and it disappears until that season's Week 6 settles. The same rule
+  gates the data route. The route shares one finished
   chart in memory for as long as it can be trusted (checked per viewer, never
   before the release gate): until the active week's last kickoff, then every two
   minutes while grades land, then an hour once the week has settled. It reads
