@@ -97,3 +97,21 @@ test("the sign-in page offers password managers a username without showing one",
   await page.keyboard.press("Tab");
   await expect(page.locator("#pin")).toBeFocused();
 });
+
+// The loading screen before anything has answered (what a phone shows on its way to the PIN page): the site heading with only the
+// tabs that apply, evenly centered, and the football.
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Account loading screen before sign-in is known at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day");
+    await page.route("**/api/**", () => { /* never answers: the page stays on its loading screen */ });
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(NOW) });
+    await page.goto("/");
+    await expect(page.locator(".football-loader").first()).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(600);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await expect(page).toHaveScreenshot(`account-loading-before-sign-in-${label}.png`);
+  });
+}

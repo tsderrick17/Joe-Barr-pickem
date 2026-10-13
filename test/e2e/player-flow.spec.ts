@@ -213,7 +213,7 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
 
   await page.goto("/login");
   await page.getByLabel("FOUR-DIGIT PIN").fill(fixture.pin);
-  await page.getByRole("button", { name: "Enter Pick'em" }).click();
+  await page.getByRole("button", { name: "Enter Lead Pipe Locks" }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 12_000 });
 
   // Supabase persists the browser session asynchronously. Wait for that
