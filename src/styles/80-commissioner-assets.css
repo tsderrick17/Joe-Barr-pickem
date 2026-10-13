@@ -42,9 +42,10 @@
 .football-loading-screen--page { min-height: 100vh; }
 /* Hold the page still while a loading screen is up: the page is exactly the window tall (so nothing underneath can resize it)
    and its scrollbar track stays in place, so the scrollbar neither changes size nor adds or removes width when the page is revealed. */
-/* No dragging either: an iPhone otherwise lets the page (header and all) be pulled around while it loads. */
-html.is-loading-screen { overflow-y: scroll; overscroll-behavior: none; touch-action: none; }
-html.is-loading-screen body { height: 100vh; overflow: hidden; }
+/* The page is the visible window's height (100dvh: on an iPhone 100vh is taller than the window, which left room to slide the
+   header out of sight), and it does not bounce. Touch is never blocked, so nobody can be trapped on a loading screen. */
+html.is-loading-screen { overflow-y: scroll; overscroll-behavior: none; }
+html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 /* On a phone the football sits high on the page (where the eye is) and twice as large. */
 @media (max-width: 767px) {
   .football-loading-screen { --football-scale: 2; }
