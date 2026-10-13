@@ -63,6 +63,8 @@ body {
 .mobile-account-nav > div { min-height: 3rem; }
 
 /* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
+/* Optional header tabs: in the page from the start, shown by flags set before the first paint (nav-tabs.ts), so they never slide in. */
+html:not([data-nav-bowls]) .nav-bowls-tab, html:not([data-nav-commissioner]) .nav-commissioner-tab { display: none; }
 .account-menu { position: relative; }
 .account-menu-button { align-items: center; color: var(--sand-93); display: inline-flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; min-height: 2.75rem; padding: 0 .25rem; text-align: right; }
 .account-menu-button strong { color: white; font-size: 1rem; }

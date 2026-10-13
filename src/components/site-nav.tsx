@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
-import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
-import { currentSeasonYear } from "@/lib/season";
+import { forgetTabs, rememberTabs } from "@/lib/nav-tabs";
 
 const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
 
@@ -21,7 +20,6 @@ export default function SiteNav() {
   const [isCommissioner, setIsCommissioner] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
-  const [isBowlPoolLaunched, setIsBowlPoolLaunched] = useState(false);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("pickem-theme");
@@ -49,6 +47,7 @@ export default function SiteNav() {
         if (active) {
           setPlayerName(player.firstName ?? "");
           setIsCommissioner(player.isCommissioner ?? false);
+          rememberTabs(Boolean(player.isCommissioner));
         }
       } catch (error) {
         if (error instanceof SessionUnavailableError) {
@@ -118,13 +117,6 @@ export default function SiteNav() {
     };
   }, [pathname]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsBowlPoolLaunched(Date.now() >= Date.parse(bowlPoolLaunchAt(currentSeasonYear())));
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   if (pathname === "/login") {
     return null;
   }
@@ -151,6 +143,7 @@ export default function SiteNav() {
     } finally {
       setPlayerName("");
       setIsCommissioner(false);
+      forgetTabs();
       setIsSigningOut(false);
       router.replace("/login");
     }
@@ -187,17 +180,13 @@ export default function SiteNav() {
             The Slate
           </Link>
 
-          {isCommissioner || isBowlPoolLaunched ? (
-            <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={linkStyle("/bowl-pool")} href="/bowl-pool">
-              NCAA Bowls
-            </Link>
-          ) : null}
+          <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={`nav-bowls-tab ${linkStyle("/bowl-pool")}`} href="/bowl-pool">
+            NCAA Bowls
+          </Link>
 
-          {isCommissioner ? (
-            <Link aria-current={pathname.startsWith("/admin") ? "page" : undefined} className={linkStyle("/admin")} href="/admin">
-              Commissioner
-            </Link>
-          ) : null}
+          <Link aria-current={pathname.startsWith("/admin") ? "page" : undefined} className={`nav-commissioner-tab ${linkStyle("/admin")}`} href="/admin">
+            Commissioner
+          </Link>
 
         </div>
 
@@ -246,8 +235,8 @@ export default function SiteNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
         <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>
-        {/* The NCAA Bowls tab is only there when it applies; otherwise it takes no room, so the tabs shown are always evenly centered. */}
-        {isCommissioner || isBowlPoolLaunched ? <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={linkStyle("/bowl-pool")} href="/bowl-pool">NCAA Bowls</Link> : null}
+        {/* The NCAA Bowls tab takes no room when it does not apply, so the tabs shown are always evenly centered (see nav-tabs.js). */}
+        <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={`nav-bowls-tab ${linkStyle("/bowl-pool")}`} href="/bowl-pool">NCAA Bowls</Link>
       </div>
     </nav>
   </>;
