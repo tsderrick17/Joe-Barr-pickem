@@ -82,3 +82,18 @@ for (const { name, path, ready, auth, profile, periods, after } of CASES) {
     }
   }
 }
+
+// Players sign in with a PIN alone; a password manager still needs a username to save it, so the page carries an unseen one.
+// It must never be seen or reached: the PIN box is the first thing Tab lands on, and the field takes up no room.
+test("the sign-in page offers password managers a username without showing one", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await signedOut(page, "day");
+  await serve(page, {});
+  await page.goto("/login");
+  await expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 });
+  const username = page.locator("input[autocomplete='username']");
+  await expect(username).toHaveCount(1);
+  expect(await username.evaluate((el) => { const box = el.getBoundingClientRect(); return box.width <= 1 && box.height <= 1 && getComputedStyle(el).opacity === "0"; })).toBe(true);
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#pin")).toBeFocused();
+});
