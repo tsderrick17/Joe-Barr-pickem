@@ -98,8 +98,8 @@ test("the sign-in page offers password managers a username without showing one",
   await expect(page.locator("#pin")).toBeFocused();
 });
 
-// The loading screen before anything has answered (what a phone shows on its way to the PIN page): the site heading with only the
-// tabs that apply, evenly centered, and the football.
+// The loading screen before anything has answered (what a phone shows on its way to the PIN page): the site heading, with the tabs
+// held unseen until the account answers (so they appear once, in place, and never slide), and the football.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Account loading screen before sign-in is known at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -115,3 +115,25 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await expect(page).toHaveScreenshot(`account-loading-before-sign-in-${label}.png`);
   });
 }
+
+// The tabs appear once, already in their final places: a commissioner's NCAA Bowls tab never arrives late and slides the others.
+test("the phone tabs never move once they are shown", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await signIn(page, "day");
+  let answer: () => void = () => {};
+  const answered = new Promise<void>((resolve) => { answer = resolve; });
+  await page.route("**/api/profile**", async (route) => { await answered; await route.fulfill({ json: { ...PROFILE(false), isCommissioner: true } }); });
+  await page.route("**/api/**", (route) => route.request().url().includes("/api/profile") ? route.fallback() : undefined);
+  await page.route("https://placeholder.invalid/**", (route) => route.abort());
+  await page.goto("/");
+  const tabs = page.locator(".mobile-primary-nav > div");
+  await expect(tabs).toBeAttached({ timeout: 30_000 });
+  await expect(tabs).toHaveCSS("visibility", "hidden");
+  answer();
+  await expect(tabs).toHaveCSS("visibility", "visible");
+  const first = await page.getByRole("link", { name: "Standings" }).last().boundingBox();
+  await page.waitForTimeout(800);
+  const later = await page.getByRole("link", { name: "Standings" }).last().boundingBox();
+  expect(later?.x).toBe(first?.x);
+  await expect(page.locator(".mobile-primary-nav").getByRole("link", { name: "NCAA Bowls" })).toBeVisible();
+});
