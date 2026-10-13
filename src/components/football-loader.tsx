@@ -16,7 +16,7 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
   useEffect(() => {
     const el = ball.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0, shown = -1, turns = 0, last = performance.now(), turnSeconds = 1.5;
+    let raf = 0, shown = -1, turns = 0, last = -1, turnSeconds = 1.5;
     const readTurn = () => { turnSeconds = Math.max(0.1, parseFloat(getComputedStyle(el).getPropertyValue("--football-spin-s")) || 1.5); };
     readTurn();
     // An empty, endless animation that marks the spin as running: anything that stops page animations (a screenshot tool,
@@ -25,7 +25,17 @@ export default function FootballLoader({ label = "Loading" }: { label?: string }
     const tick = (now: number) => {
       if (running.playState !== "running") { el.style.backgroundPosition = ""; return; }
       // Count progress in turns, not time, so a new turn length takes over smoothly; and never jump after the tab was hidden.
-      turns += Math.min(now - last, 100) / 1000 / turnSeconds;
+      // The first refresh starts a quarter of a frame in, so refreshes land well inside a frame, never on the line between two:
+      // at 60 Hz each refresh then shows the next frame, at 120 Hz each frame holds for exactly two, with no skips or repeats.
+      // A refresh that is almost exactly one frame (60 Hz) or half a frame (120 Hz) counts as exactly that, so small wobbles in
+      // the screen's timing never let the count drift onto a line.
+      if (last < 0) turns = 0.25 / FRAMES;
+      else {
+        let frames = (Math.min(now - last, 100) / 1000 / turnSeconds) * FRAMES;
+        const nearest = Math.round(frames * 2) / 2;
+        if (nearest > 0 && Math.abs(frames - nearest) < 0.15) frames = nearest;
+        turns += frames / FRAMES;
+      }
       last = now;
       if (turns >= 1) { turns %= 1; readTurn(); }
       const frame = FRAMES - 1 - Math.floor(turns * FRAMES); // the sheet is played backwards, as rendered
