@@ -19,8 +19,8 @@ export function scaleMax(value: number) {
   return Math.max(4, Math.ceil((value * 1.15) / 10) * 10);
 }
 
-/** The left axis. `observed` are the plotted values, `highest` the tallest bar or stack. */
-export function leftDomain({ observed, highest, scale = "zero", histogram = false, integer = false }: { observed: number[]; highest: number; scale?: AxisScale; histogram?: boolean; integer?: boolean }) {
+/** The left axis. `observed` are the plotted values, `highest` the tallest bar or stack. A histogram tops out at a multiple of `histogramStep` (20 for percentages: 0, 5, 10, ... gridlines). */
+export function leftDomain({ observed, highest, scale = "zero", histogram = false, integer = false, histogramStep = 4 }: { observed: number[]; highest: number; scale?: AxisScale; histogram?: boolean; integer?: boolean; histogramStep?: number }) {
   const observedMin = observed.length ? Math.min(...observed) : 0;
   const observedMax = observed.length ? Math.max(...observed) : 0;
   const rawRange = Math.max(observedMax - observedMin, Math.abs(observedMax) * .08, 1);
@@ -28,7 +28,7 @@ export function leftDomain({ observed, highest, scale = "zero", histogram = fals
   const tight = scale === "tight" && observed.length > 0;
   const minimum = tight ? Math.max(0, Math.floor((observedMin - step) / step) * step) : 0;
   const maximum = histogram
-    ? Math.max(4, Math.ceil(highest / 4) * 4)
+    ? Math.max(histogramStep, Math.ceil(highest / histogramStep) * histogramStep)
     : tight
       ? Math.max(minimum + step, Math.ceil((observedMax + step) / step) * step)
       : integer ? Math.ceil(scaleMax(highest) / 4) * 4 : scaleMax(highest);

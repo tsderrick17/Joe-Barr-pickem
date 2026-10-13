@@ -26,6 +26,10 @@ test("zero, integer and histogram axes", () => {
   assert.deepEqual(leftDomain({ observed: [10, 20], highest: 20, integer: true }), { minimum: 0, maximum: 32 }, "an integer axis tops out on a multiple of 4");
   assert.deepEqual(leftDomain({ observed: [], highest: 9, histogram: true }), { minimum: 0, maximum: 12 });
   assert.deepEqual(leftDomain({ observed: [], highest: 0, histogram: true }), { minimum: 0, maximum: 4 }, "a histogram has at least 4 gridlines of room");
+  // A percentage histogram tops out on a multiple of 20, so its gridlines read 0, 5, 10, 15, 20 (or 0, 10, 20, 30, 40).
+  assert.deepEqual(leftDomain({ observed: [], highest: 12, histogram: true, histogramStep: 20 }), { minimum: 0, maximum: 20 });
+  assert.deepEqual(leftDomain({ observed: [], highest: 38.4, histogram: true, histogramStep: 20 }), { minimum: 0, maximum: 40 });
+  assert.deepEqual(leftDomain({ observed: [], highest: 0, histogram: true, histogramStep: 20 }), { minimum: 0, maximum: 20 });
 });
 
 test("a tight axis hugs the data on rounded steps, never below zero, and falls back to zero-based with no data", () => {
@@ -40,4 +44,19 @@ test("the right axis is independent of the left one", () => {
   assert.deepEqual(rightDomain({ values: [5], present: true }), { minimum: 0, maximum: 10 });
   assert.deepEqual(rightDomain({ values: [40, 60], scale: "tight", present: true }), { minimum: 35, maximum: 65 });
   assert.deepEqual(rightDomain({ values: [], scale: "tight", present: true }), { minimum: 0, maximum: 4 });
+});
+
+test("the polling ladder charts the first ten windows as shares of every final, with the emergency windows as one count", async () => {
+  const { ladderChartData } = await import("../src/lib/ladder-chart.js");
+  const minutes = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
+  const counts = [16, 17, 12, 2, 1, 0, 0, 0, 0, 0, 1, 1];
+  const { points, total, emergencyFinals, emergencyMinutes } = ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: counts[index] })));
+  assert.equal(points.length, 10, "windows 11 and 12 are not charted");
+  assert.equal(total, 50, "shares are of every final, emergency windows included");
+  assert.equal(points[0].values.finals, 32, "16 of 50 finals");
+  assert.equal(points[2].values.finals, 24);
+  assert.deepEqual([points[0].start, points[0].end, points[9].start, points[9].end], [0, 10, 120, 180], "bar width is the retry gap");
+  assert.equal(emergencyFinals, 2);
+  assert.deepEqual(emergencyMinutes, [120, 240]);
+  assert.deepEqual(ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: 0 }))).points.map((point) => point.values.finals), Array(10).fill(0), "no finals yet means empty bars, not a divide by zero");
 });
