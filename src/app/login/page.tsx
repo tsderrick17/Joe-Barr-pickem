@@ -117,7 +117,7 @@ export default function LoginPage() {
         </h1>
 
         <p className="mt-3 text-(color:--themed-text-29)">
-          Enter your four-digit PIN to make picks and check the Standings.
+          Enter your private PIN to log in and make selections.
         </p>
 
         <form
@@ -167,7 +167,7 @@ export default function LoginPage() {
             disabled={pin.length !== 4 || isSubmitting}
             className="mt-6 min-h-12 w-full bg-(color:--themed-bg-27) px-4 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isSubmitting ? "Signing in..." : "Enter Pick'em"}
+            {isSubmitting ? "Signing in..." : "Enter Lead Pipe Locks"}
           </button>
         </form>
 

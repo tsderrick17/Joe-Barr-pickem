@@ -114,7 +114,7 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
   }
 }
 
-// The score-polling chart (Grading, Provider performance): the first ten windows in percentages, with the emergency windows as one count.
+// The score-polling chart (Grading, Provider performance): the first nine windows in percentages, with the emergency windows as one count.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner polling chart day at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

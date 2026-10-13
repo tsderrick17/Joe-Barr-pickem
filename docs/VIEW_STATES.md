@@ -67,7 +67,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Overview | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
 | Grading (Activity log open) | `healthy`, `attention`, `quiet` |
 | Game day (checks open) | `healthy` |
-| Polling chart (Grading → Provider performance → New game finals by polling rung: percentages, first ten windows, emergency-window count) | `healthy`, phone and desktop |
+| Polling chart (Grading → Provider performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
 | Season | `healthy` |
 | System (health and alerts open) | `healthy`, `attention` |
@@ -82,6 +82,7 @@ where it can be tossed or turned by hand.
 
 | View | States |
 | --- | --- |
+| Loading screen before sign-in is known (site heading with only the tabs that apply, centered; football) | phone and desktop |
 | Login | signed out |
 | Notifications (`/profile`) | `profile-default`, `profile-custom` (fine-tune open) |
 | Week Archive | `archive` (four weeks), `archive-empty` |
