@@ -118,9 +118,9 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
 
 // The tabs are there and usable at once, already in their final places: they never wait for the account, and a commissioner's
 // NCAA Bowls tab (remembered from the last visit) never arrives late and slides the others.
-for (const remembered of [false, true]) {
-  test(`the phone tabs are usable at once and never move${remembered ? " (commissioner, remembered)" : " (first visit)"}`, async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 800 });
+for (const [device, width] of [["phone", 390], ["desktop", 1280]] as const) for (const remembered of [false, true]) {
+  test(`the ${device} tabs are usable at once and never move${remembered ? " (commissioner, remembered)" : device === "desktop" ? " (commissioner, first visit)" : " (first visit)"}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
     await signIn(page, "day");
     if (remembered) await page.addInitScript(() => window.localStorage.setItem("pickem-nav-tabs", JSON.stringify({ bowls: true, commissioner: true })));
     let answer: () => void = () => {};
@@ -128,12 +128,14 @@ for (const remembered of [false, true]) {
     await page.route("**/api/**", async (route) => {
       if (!route.request().url().includes("/api/profile")) return;
       await answered;
-      await route.fulfill({ json: { ...PROFILE(false), isCommissioner: remembered } });
+      // On a desktop even a commissioner's first visit never moves the tabs (they are set from the left); on a phone the centered
+      // tabs can shift once for a commissioner's first visit on a new device, so the phone case covers a player.
+      await route.fulfill({ json: { ...PROFILE(false), isCommissioner: remembered || device === "desktop" } });
     });
     await page.route("https://placeholder.invalid/**", (route) => route.abort());
     await page.clock.install({ time: new Date(NOW) });
     await page.goto("/");
-    const nav = page.locator(".mobile-primary-nav");
+    const nav = page.locator(device === "phone" ? ".mobile-primary-nav" : "nav.site-nav");
     const slate = nav.getByRole("link", { name: "The Slate" });
     await expect(slate).toBeVisible({ timeout: 30_000 });
     await expect(nav.getByRole("link", { name: "NCAA Bowls" })).toBeVisible({ visible: remembered });
