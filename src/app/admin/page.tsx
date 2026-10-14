@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import ChipPlayground from "@/components/chip-playground";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -249,20 +248,23 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="commissioner-desk min-h-screen bg-[#f7f3e8] px-4 py-5 text-(color:--themed-text-31) sm:px-6 sm:py-8">
+    <main className="commissioner-desk min-h-screen px-4 py-5 text-(color:--themed-text-31) sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl">
         <header className="commissioner-command-bar">
           <div className="commissioner-command-title">
-            <p className="text-[11px] font-black tracking-[0.22em] text-emerald-200">JOE BARR PICK’EM · COMMISSIONER</p>
-            <h1 className="mt-2 font-serif text-4xl font-bold sm:text-5xl">Operations desk</h1>
+            <span aria-hidden="true" className="club-monogram">JB</span>
+            <div>
+              <p className="club-eyebrow">Joe Barr Pick’em · Commissioner</p>
+              <h1>Operations desk</h1>
+            </div>
           </div>
 
           <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
             <Link href="/admin/players"><span>Roster</span><strong>Players</strong></Link>
             <Link href="/admin/reminders"><span>Delivery</span><strong>Email center</strong></Link>
-            <ChipPlayground />
           </div>
         </header>
+        <div aria-hidden="true" className="club-band" />
 
         <nav aria-label="Commissioner sections" className="commissioner-panel-nav">
           <div className="commissioner-panel-tabs">

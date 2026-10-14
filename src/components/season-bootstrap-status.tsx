@@ -60,7 +60,7 @@ export default function SeasonBootstrapStatus() {
           <h2 className="mt-1 font-serif text-2xl font-bold">Full schedule bootstrap</h2>
           <p className="mt-1 max-w-2xl text-sm text-(color:--themed-text-29)">Beginning August 1, automation checks daily for the full regular-season schedule. A partial or malformed feed changes nothing. Once complete, the schedule is pinned and further provider calls stop.</p>
         </div>
-        <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={runNow} type="button">{busy ? "Running…" : "Run automatic check now"}</button>
+        <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={runNow} type="button">{busy ? "Running…" : "Run automatic check now"}</button>
       </div>
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
       {status ? <div className={`mt-4 border p-4 ${status.complete ? "border-(color:--themed-border-21) bg-(color:--themed-bg-23)" : "border-(color:--themed-border-17) bg-(color:--themed-bg-21)"}`}>

@@ -137,7 +137,7 @@ export default function GameExceptions() {
         </div>
 
         <button
-          className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+          className="desk-button px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
           disabled={isLoading}
           onClick={loadExceptions}
           type="button"
@@ -155,7 +155,7 @@ export default function GameExceptions() {
         <div className="mt-5 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
           <p className="text-sm font-bold uppercase tracking-wide text-(color:--themed-text-29)">Record verified disruption</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <select className="min-w-64 border border-zinc-900 bg-(color:--themed-bg-26) px-3 py-2" value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)}>
+            <select className="min-w-64 desk-button px-3 py-2" value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)}>
               <option value="">Choose a scheduled or live game</option>
               {recordableGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
             </select>

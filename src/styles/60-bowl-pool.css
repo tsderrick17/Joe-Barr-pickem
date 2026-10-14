@@ -267,8 +267,6 @@ html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-
 @media (max-width: 767px) { .bowl-receipt-strip > .slate-receipt-pool { padding-inline: .6rem; } }
 /* The test chip is drawn at nearly twice the size of a Slate chip, scaled as a
    whole so every proportion holds. */
-.chip-playground { touch-action: none; height: 6.2rem; width: 6.2rem; }
-.chip-playground .survivor-poker-chip-wrap { transform: scale(1.9); }
 /* "YOUR RECEIPT" stays on one line, even on the narrowest phones. */
 @media (max-width: 767px) { .slate-receipt-ticket > span { white-space: nowrap; } }
 @media (max-width: 379px) { .slate-receipt-ticket > span { letter-spacing: .08em; } }

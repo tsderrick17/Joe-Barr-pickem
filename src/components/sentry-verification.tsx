@@ -36,7 +36,7 @@ export default function SentryVerification() {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3">
       <button
-        className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+        className="desk-button px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
         disabled={sending}
         onClick={sendTest}
         type="button"

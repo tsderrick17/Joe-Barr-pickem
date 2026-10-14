@@ -153,7 +153,7 @@ export default function ScoreSyncChecker() {
         {isChecking ? "Checking final scores..." : "Check final scores now"}
       </button>
       <button
-        className="ml-3 mt-5 border border-zinc-900 bg-(color:--themed-bg-26) px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
+        className="ml-3 mt-5 desk-button px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isLoadingLatest}
         onClick={loadLatestCheck}
         type="button"
