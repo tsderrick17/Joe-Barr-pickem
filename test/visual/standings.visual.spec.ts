@@ -143,3 +143,25 @@ for (const scenario of ["commissioner", "commissioner-playoff"]) {
     });
   }
 }
+
+// Standings reads the Bowl Card's data alongside its own when this device showed the card last time (one request either way): the
+// card no longer waits for the main read to finish before starting its own.
+for (const returning of [false, true]) {
+  test(`Standings starts the Bowl Card's read ${returning ? "alongside the main read on a returning visit" : "after the main read on a first visit"}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await signIn(page, "day");
+    if (returning) await page.addInitScript(() => window.localStorage.setItem("pickem-bowl-card-shown", "1"));
+    await serve(page, "regular-in");
+    const started: Record<string, number> = {};
+    const bowlReads: number[] = [];
+    const t0 = Date.now();
+    await page.route("**/api/home**", async (route) => { started.home ??= Date.now() - t0; await new Promise((resolve) => setTimeout(resolve, 600)); await route.fallback(); });
+    await page.route("**/api/bowl-pool**", async (route) => { if (route.request().method() === "GET") { bowlReads.push(Date.now() - t0); started.bowl ??= Date.now() - t0; } await route.fallback(); });
+    await page.goto("/");
+    await page.locator(".pickem-scoreboard-ledger").waitFor({ timeout: 30_000 });
+    expect(bowlReads.length, "one Bowl Card read, early or not").toBe(1);
+    const gap = started.bowl - started.home;
+    if (returning) expect(gap).toBeLessThan(300);
+    else expect(gap).toBeGreaterThanOrEqual(500);
+  });
+}

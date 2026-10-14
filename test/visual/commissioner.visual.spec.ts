@@ -86,6 +86,8 @@ for (const panel of PANELS) {
           await page.waitForLoadState("networkidle");
           // The loading football is stepped by script, which a screenshot cannot pause: hold it on its first frame.
           if (panel.id === "workshop") await page.addStyleTag({ content: ".football-loader-ball { background-position: 0 0 !important; }" });
+          // The split-flap tiles are driven by timers, which a screenshot cannot pause: wait until they have landed.
+          if (panel.id === "workshop") await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 15_000 });
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }

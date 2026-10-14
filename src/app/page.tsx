@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import SurvivorTable from "@/components/survivor-table";
+import { rememberBowlCard, startBowlPrefetch } from "@/lib/bowl-prefetch";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -93,6 +94,8 @@ export default function HomePage() {
       try {
         activeRequest?.abort();
         activeRequest = request;
+        // First load only: the Bowl Card's read starts alongside this one (see bowl-prefetch.ts).
+        if (!hasLoaded) startBowlPrefetch(() => fetchWithSession("/api/bowl-pool", { cache: "no-store" }));
 
         const response = await fetchWithSession("/api/home", {
           signal: request.signal,
@@ -118,6 +121,7 @@ export default function HomePage() {
           ...result,
           ...displayPreferenceOverrides.current,
         };
+        rememberBowlCard(result.seasonPhase === "off_season" || effectiveResult.showBowlCard);
         setData(effectiveResult);
         setBowlPoolMinimized(!effectiveResult.showBowlCard);
         hasLoaded = true;
