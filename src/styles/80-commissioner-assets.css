@@ -4,7 +4,6 @@
 .football-loader-tilt {
   --football-w: calc(70px * var(--football-scale, 1));
   --football-h: calc(107px * var(--football-scale, 1));
-  animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate;
   display: block;
   isolation: isolate;
   position: relative;
@@ -25,15 +24,28 @@
   z-index: -1;
 }
 .football-loader-ball {
-  /* 108 motion-blurred frames in a 12 x 9 grid (3360 x 3852 px, under the 4096 px an iPhone will draw at full size), played by
-     ONE animation, one keyframe per frame held until the next (step-end), so nothing is ever drawn between two frames or rows: one new frame on every refresh of a 60 Hz screen at
-     1.8 s a turn, and a steady two refreshes each at 120 Hz. Sized and placed in plain percentages of the ball (12 columns =
-     1200%): iPhone Safari ignored a size built from calc() and custom properties. The keyframes walk the grid backwards. */
-  animation: football-spin var(--football-spin-s, 1.8s) step-end infinite;
-  background: url("/football-spin.webp") 0 0 / 1200% 900% no-repeat;
+  /* The ball is a window (70 x 107 px) onto a sheet of 108 motion-blurred frames in a 12 x 9 grid (3360 x 3852 px, under the 4096 px
+     an iPhone will draw at full size). The sheet inside it is the only thing that moves: ONE animation, one transform per frame,
+     held until the next (step-end), so nothing is ever drawn between two frames or rows. A transform animation runs on the phone's
+     compositor, so it keeps its beat while the page is busy loading; stepping background-position (what this did before) was
+     repainted on the busy main thread and stuttered. One new frame on every refresh of a 60 Hz screen at 1.8 s a turn, and a steady
+     two refreshes each at 120 Hz. Sized and placed in plain percentages of the window (12 columns = 1200%): iPhone Safari ignored a
+     size built from calc() and custom properties. The keyframes walk the grid backwards. */
   display: block;
   height: var(--football-h);
+  overflow: hidden;
+  position: relative;
   width: var(--football-w);
+}
+.football-loader-sheet {
+  animation: football-spin var(--football-spin-s, 1.8s) step-end infinite;
+  background: url("/football-spin.webp") 0 0 / 100% 100% no-repeat;
+  height: 900%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1200%;
+  will-change: transform;
 }
 .football-loading-screen { display: grid; place-items: center; }
 /* The football is pinned to the screen itself, not laid out under the page header: the header grows a few pixels as it finishes
@@ -58,117 +70,117 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
   100% { transform: rotate(calc(var(--football-tilt, 45deg) - var(--football-wobble, 0deg) * .4)); }
 }
 @keyframes football-spin {
-  0% { background-position: 100% 100%; }
-  0.9259% { background-position: 90.9091% 100%; }
-  1.8519% { background-position: 81.8182% 100%; }
-  2.7778% { background-position: 72.7273% 100%; }
-  3.7037% { background-position: 63.6364% 100%; }
-  4.6296% { background-position: 54.5455% 100%; }
-  5.5556% { background-position: 45.4545% 100%; }
-  6.4815% { background-position: 36.3636% 100%; }
-  7.4074% { background-position: 27.2727% 100%; }
-  8.3333% { background-position: 18.1818% 100%; }
-  9.2593% { background-position: 9.0909% 100%; }
-  10.1852% { background-position: 0% 100%; }
-  11.1111% { background-position: 100% 87.5%; }
-  12.037% { background-position: 90.9091% 87.5%; }
-  12.963% { background-position: 81.8182% 87.5%; }
-  13.8889% { background-position: 72.7273% 87.5%; }
-  14.8148% { background-position: 63.6364% 87.5%; }
-  15.7407% { background-position: 54.5455% 87.5%; }
-  16.6667% { background-position: 45.4545% 87.5%; }
-  17.5926% { background-position: 36.3636% 87.5%; }
-  18.5185% { background-position: 27.2727% 87.5%; }
-  19.4444% { background-position: 18.1818% 87.5%; }
-  20.3704% { background-position: 9.0909% 87.5%; }
-  21.2963% { background-position: 0% 87.5%; }
-  22.2222% { background-position: 100% 75%; }
-  23.1481% { background-position: 90.9091% 75%; }
-  24.0741% { background-position: 81.8182% 75%; }
-  25% { background-position: 72.7273% 75%; }
-  25.9259% { background-position: 63.6364% 75%; }
-  26.8519% { background-position: 54.5455% 75%; }
-  27.7778% { background-position: 45.4545% 75%; }
-  28.7037% { background-position: 36.3636% 75%; }
-  29.6296% { background-position: 27.2727% 75%; }
-  30.5556% { background-position: 18.1818% 75%; }
-  31.4815% { background-position: 9.0909% 75%; }
-  32.4074% { background-position: 0% 75%; }
-  33.3333% { background-position: 100% 62.5%; }
-  34.2593% { background-position: 90.9091% 62.5%; }
-  35.1852% { background-position: 81.8182% 62.5%; }
-  36.1111% { background-position: 72.7273% 62.5%; }
-  37.037% { background-position: 63.6364% 62.5%; }
-  37.963% { background-position: 54.5455% 62.5%; }
-  38.8889% { background-position: 45.4545% 62.5%; }
-  39.8148% { background-position: 36.3636% 62.5%; }
-  40.7407% { background-position: 27.2727% 62.5%; }
-  41.6667% { background-position: 18.1818% 62.5%; }
-  42.5926% { background-position: 9.0909% 62.5%; }
-  43.5185% { background-position: 0% 62.5%; }
-  44.4444% { background-position: 100% 50%; }
-  45.3704% { background-position: 90.9091% 50%; }
-  46.2963% { background-position: 81.8182% 50%; }
-  47.2222% { background-position: 72.7273% 50%; }
-  48.1481% { background-position: 63.6364% 50%; }
-  49.0741% { background-position: 54.5455% 50%; }
-  50% { background-position: 45.4545% 50%; }
-  50.9259% { background-position: 36.3636% 50%; }
-  51.8519% { background-position: 27.2727% 50%; }
-  52.7778% { background-position: 18.1818% 50%; }
-  53.7037% { background-position: 9.0909% 50%; }
-  54.6296% { background-position: 0% 50%; }
-  55.5556% { background-position: 100% 37.5%; }
-  56.4815% { background-position: 90.9091% 37.5%; }
-  57.4074% { background-position: 81.8182% 37.5%; }
-  58.3333% { background-position: 72.7273% 37.5%; }
-  59.2593% { background-position: 63.6364% 37.5%; }
-  60.1852% { background-position: 54.5455% 37.5%; }
-  61.1111% { background-position: 45.4545% 37.5%; }
-  62.037% { background-position: 36.3636% 37.5%; }
-  62.963% { background-position: 27.2727% 37.5%; }
-  63.8889% { background-position: 18.1818% 37.5%; }
-  64.8148% { background-position: 9.0909% 37.5%; }
-  65.7407% { background-position: 0% 37.5%; }
-  66.6667% { background-position: 100% 25%; }
-  67.5926% { background-position: 90.9091% 25%; }
-  68.5185% { background-position: 81.8182% 25%; }
-  69.4444% { background-position: 72.7273% 25%; }
-  70.3704% { background-position: 63.6364% 25%; }
-  71.2963% { background-position: 54.5455% 25%; }
-  72.2222% { background-position: 45.4545% 25%; }
-  73.1481% { background-position: 36.3636% 25%; }
-  74.0741% { background-position: 27.2727% 25%; }
-  75% { background-position: 18.1818% 25%; }
-  75.9259% { background-position: 9.0909% 25%; }
-  76.8519% { background-position: 0% 25%; }
-  77.7778% { background-position: 100% 12.5%; }
-  78.7037% { background-position: 90.9091% 12.5%; }
-  79.6296% { background-position: 81.8182% 12.5%; }
-  80.5556% { background-position: 72.7273% 12.5%; }
-  81.4815% { background-position: 63.6364% 12.5%; }
-  82.4074% { background-position: 54.5455% 12.5%; }
-  83.3333% { background-position: 45.4545% 12.5%; }
-  84.2593% { background-position: 36.3636% 12.5%; }
-  85.1852% { background-position: 27.2727% 12.5%; }
-  86.1111% { background-position: 18.1818% 12.5%; }
-  87.037% { background-position: 9.0909% 12.5%; }
-  87.963% { background-position: 0% 12.5%; }
-  88.8889% { background-position: 100% 0%; }
-  89.8148% { background-position: 90.9091% 0%; }
-  90.7407% { background-position: 81.8182% 0%; }
-  91.6667% { background-position: 72.7273% 0%; }
-  92.5926% { background-position: 63.6364% 0%; }
-  93.5185% { background-position: 54.5455% 0%; }
-  94.4444% { background-position: 45.4545% 0%; }
-  95.3704% { background-position: 36.3636% 0%; }
-  96.2963% { background-position: 27.2727% 0%; }
-  97.2222% { background-position: 18.1818% 0%; }
-  98.1481% { background-position: 9.0909% 0%; }
-  99.0741% { background-position: 0% 0%; }
+  0% { transform: translate3d(-91.6667%, -88.8889%, 0); }
+  0.9259% { transform: translate3d(-83.3333%, -88.8889%, 0); }
+  1.8519% { transform: translate3d(-75%, -88.8889%, 0); }
+  2.7778% { transform: translate3d(-66.6667%, -88.8889%, 0); }
+  3.7037% { transform: translate3d(-58.3333%, -88.8889%, 0); }
+  4.6296% { transform: translate3d(-50%, -88.8889%, 0); }
+  5.5556% { transform: translate3d(-41.6667%, -88.8889%, 0); }
+  6.4815% { transform: translate3d(-33.3333%, -88.8889%, 0); }
+  7.4074% { transform: translate3d(-25%, -88.8889%, 0); }
+  8.3333% { transform: translate3d(-16.6667%, -88.8889%, 0); }
+  9.2593% { transform: translate3d(-8.3333%, -88.8889%, 0); }
+  10.1852% { transform: translate3d(0%, -88.8889%, 0); }
+  11.1111% { transform: translate3d(-91.6667%, -77.7778%, 0); }
+  12.037% { transform: translate3d(-83.3333%, -77.7778%, 0); }
+  12.963% { transform: translate3d(-75%, -77.7778%, 0); }
+  13.8889% { transform: translate3d(-66.6667%, -77.7778%, 0); }
+  14.8148% { transform: translate3d(-58.3333%, -77.7778%, 0); }
+  15.7407% { transform: translate3d(-50%, -77.7778%, 0); }
+  16.6667% { transform: translate3d(-41.6667%, -77.7778%, 0); }
+  17.5926% { transform: translate3d(-33.3333%, -77.7778%, 0); }
+  18.5185% { transform: translate3d(-25%, -77.7778%, 0); }
+  19.4444% { transform: translate3d(-16.6667%, -77.7778%, 0); }
+  20.3704% { transform: translate3d(-8.3333%, -77.7778%, 0); }
+  21.2963% { transform: translate3d(0%, -77.7778%, 0); }
+  22.2222% { transform: translate3d(-91.6667%, -66.6667%, 0); }
+  23.1481% { transform: translate3d(-83.3333%, -66.6667%, 0); }
+  24.0741% { transform: translate3d(-75%, -66.6667%, 0); }
+  25% { transform: translate3d(-66.6667%, -66.6667%, 0); }
+  25.9259% { transform: translate3d(-58.3333%, -66.6667%, 0); }
+  26.8519% { transform: translate3d(-50%, -66.6667%, 0); }
+  27.7778% { transform: translate3d(-41.6667%, -66.6667%, 0); }
+  28.7037% { transform: translate3d(-33.3333%, -66.6667%, 0); }
+  29.6296% { transform: translate3d(-25%, -66.6667%, 0); }
+  30.5556% { transform: translate3d(-16.6667%, -66.6667%, 0); }
+  31.4815% { transform: translate3d(-8.3333%, -66.6667%, 0); }
+  32.4074% { transform: translate3d(0%, -66.6667%, 0); }
+  33.3333% { transform: translate3d(-91.6667%, -55.5556%, 0); }
+  34.2593% { transform: translate3d(-83.3333%, -55.5556%, 0); }
+  35.1852% { transform: translate3d(-75%, -55.5556%, 0); }
+  36.1111% { transform: translate3d(-66.6667%, -55.5556%, 0); }
+  37.037% { transform: translate3d(-58.3333%, -55.5556%, 0); }
+  37.963% { transform: translate3d(-50%, -55.5556%, 0); }
+  38.8889% { transform: translate3d(-41.6667%, -55.5556%, 0); }
+  39.8148% { transform: translate3d(-33.3333%, -55.5556%, 0); }
+  40.7407% { transform: translate3d(-25%, -55.5556%, 0); }
+  41.6667% { transform: translate3d(-16.6667%, -55.5556%, 0); }
+  42.5926% { transform: translate3d(-8.3333%, -55.5556%, 0); }
+  43.5185% { transform: translate3d(0%, -55.5556%, 0); }
+  44.4444% { transform: translate3d(-91.6667%, -44.4444%, 0); }
+  45.3704% { transform: translate3d(-83.3333%, -44.4444%, 0); }
+  46.2963% { transform: translate3d(-75%, -44.4444%, 0); }
+  47.2222% { transform: translate3d(-66.6667%, -44.4444%, 0); }
+  48.1481% { transform: translate3d(-58.3333%, -44.4444%, 0); }
+  49.0741% { transform: translate3d(-50%, -44.4444%, 0); }
+  50% { transform: translate3d(-41.6667%, -44.4444%, 0); }
+  50.9259% { transform: translate3d(-33.3333%, -44.4444%, 0); }
+  51.8519% { transform: translate3d(-25%, -44.4444%, 0); }
+  52.7778% { transform: translate3d(-16.6667%, -44.4444%, 0); }
+  53.7037% { transform: translate3d(-8.3333%, -44.4444%, 0); }
+  54.6296% { transform: translate3d(0%, -44.4444%, 0); }
+  55.5556% { transform: translate3d(-91.6667%, -33.3333%, 0); }
+  56.4815% { transform: translate3d(-83.3333%, -33.3333%, 0); }
+  57.4074% { transform: translate3d(-75%, -33.3333%, 0); }
+  58.3333% { transform: translate3d(-66.6667%, -33.3333%, 0); }
+  59.2593% { transform: translate3d(-58.3333%, -33.3333%, 0); }
+  60.1852% { transform: translate3d(-50%, -33.3333%, 0); }
+  61.1111% { transform: translate3d(-41.6667%, -33.3333%, 0); }
+  62.037% { transform: translate3d(-33.3333%, -33.3333%, 0); }
+  62.963% { transform: translate3d(-25%, -33.3333%, 0); }
+  63.8889% { transform: translate3d(-16.6667%, -33.3333%, 0); }
+  64.8148% { transform: translate3d(-8.3333%, -33.3333%, 0); }
+  65.7407% { transform: translate3d(0%, -33.3333%, 0); }
+  66.6667% { transform: translate3d(-91.6667%, -22.2222%, 0); }
+  67.5926% { transform: translate3d(-83.3333%, -22.2222%, 0); }
+  68.5185% { transform: translate3d(-75%, -22.2222%, 0); }
+  69.4444% { transform: translate3d(-66.6667%, -22.2222%, 0); }
+  70.3704% { transform: translate3d(-58.3333%, -22.2222%, 0); }
+  71.2963% { transform: translate3d(-50%, -22.2222%, 0); }
+  72.2222% { transform: translate3d(-41.6667%, -22.2222%, 0); }
+  73.1481% { transform: translate3d(-33.3333%, -22.2222%, 0); }
+  74.0741% { transform: translate3d(-25%, -22.2222%, 0); }
+  75% { transform: translate3d(-16.6667%, -22.2222%, 0); }
+  75.9259% { transform: translate3d(-8.3333%, -22.2222%, 0); }
+  76.8519% { transform: translate3d(0%, -22.2222%, 0); }
+  77.7778% { transform: translate3d(-91.6667%, -11.1111%, 0); }
+  78.7037% { transform: translate3d(-83.3333%, -11.1111%, 0); }
+  79.6296% { transform: translate3d(-75%, -11.1111%, 0); }
+  80.5556% { transform: translate3d(-66.6667%, -11.1111%, 0); }
+  81.4815% { transform: translate3d(-58.3333%, -11.1111%, 0); }
+  82.4074% { transform: translate3d(-50%, -11.1111%, 0); }
+  83.3333% { transform: translate3d(-41.6667%, -11.1111%, 0); }
+  84.2593% { transform: translate3d(-33.3333%, -11.1111%, 0); }
+  85.1852% { transform: translate3d(-25%, -11.1111%, 0); }
+  86.1111% { transform: translate3d(-16.6667%, -11.1111%, 0); }
+  87.037% { transform: translate3d(-8.3333%, -11.1111%, 0); }
+  87.963% { transform: translate3d(0%, -11.1111%, 0); }
+  88.8889% { transform: translate3d(-91.6667%, 0%, 0); }
+  89.8148% { transform: translate3d(-83.3333%, 0%, 0); }
+  90.7407% { transform: translate3d(-75%, 0%, 0); }
+  91.6667% { transform: translate3d(-66.6667%, 0%, 0); }
+  92.5926% { transform: translate3d(-58.3333%, 0%, 0); }
+  93.5185% { transform: translate3d(-50%, 0%, 0); }
+  94.4444% { transform: translate3d(-41.6667%, 0%, 0); }
+  95.3704% { transform: translate3d(-33.3333%, 0%, 0); }
+  96.2963% { transform: translate3d(-25%, 0%, 0); }
+  97.2222% { transform: translate3d(-16.6667%, 0%, 0); }
+  98.1481% { transform: translate3d(-8.3333%, 0%, 0); }
+  99.0741% { transform: translate3d(0%, 0%, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .football-loader-ball, .football-loader-tilt { animation: none; }
+  .football-loader-sheet, .football-loader-tilt { animation: none; }
 }
 
 /* ---- Commissioner assets gallery ---- */
@@ -210,9 +222,10 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .workshop-heading h2 { font: 400 clamp(1.9rem, 3vw, 2.5rem)/1.1 Georgia, serif; margin: .3rem 0 .5rem; }
 .workshop-heading p:last-child { color: var(--club-muted); font-size: .9rem; line-height: 1.5; margin: 0; }
 /* The football card: drag it to turn it by hand; paused, the ball sits on the frame chosen with the slider or the step buttons. */
+.asset-football.has-wobble .football-loader-tilt { animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate; }
 .asset-football { cursor: grab; touch-action: none; user-select: none; }
 .asset-football:active { cursor: grabbing; }
-.asset-football.is-scrubbing .football-loader-ball { animation-delay: calc((var(--scrub-i) / -108) * var(--football-spin-s, 1.8s)); animation-play-state: paused; }
+.asset-football.is-scrubbing .football-loader-sheet { animation-delay: calc((var(--scrub-i) / -108) * var(--football-spin-s, 1.8s)); animation-play-state: paused; }
 .asset-chip-button { background: none; border: 0; cursor: pointer; display: inline-flex; padding: 0; }
 .asset-chip-button.is-slate { height: 3.4rem; width: 3.4rem; }
 .asset-stamp { font-size: 2.4rem; }

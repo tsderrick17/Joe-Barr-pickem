@@ -3,15 +3,16 @@
 import { useLayoutEffect } from "react";
 
 /**
- * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v17.html), pre-rendered as 108
+ * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v21.html), pre-rendered as 108
  * motion-blurred frames of one turn (public/football-spin.webp, a 12 x 9 grid kept under the 4096 px an iPhone will draw at
- * full size), stepped through by CSS and tipped nose-up (no wobble by default). Nothing runs in JavaScript while it spins.
+ * full size). The ball is a window onto that sheet and CSS slides the sheet one frame at a time (a transform, which the phone
+ * runs off the busy page thread), tipped nose-up with no wobble. Nothing runs in JavaScript while it spins.
  * With reduced motion it is a still ball.
  */
 export default function FootballLoader({ label = "Loading" }: { label?: string }) {
   return (
     <div aria-live="polite" className="football-loader" role="status">
-      <span aria-hidden="true" className="football-loader-tilt"><span className="football-loader-ball" /></span>
+      <span aria-hidden="true" className="football-loader-tilt"><span className="football-loader-ball"><span className="football-loader-sheet" /></span></span>
       <span className="football-loader-label">{label}</span>
     </div>
   );

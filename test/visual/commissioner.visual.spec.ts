@@ -85,7 +85,7 @@ for (const panel of PANELS) {
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
           await page.waitForLoadState("networkidle");
           // The loading football is stepped by script, which a screenshot cannot pause: hold it on its first frame.
-          if (panel.id === "workshop") await page.addStyleTag({ content: ".football-loader-ball { background-position: 0 0 !important; }" });
+          if (panel.id === "workshop") await page.addStyleTag({ content: ".football-loader-sheet { animation: none !important; transform: none !important; }" });
           // The split-flap tiles are driven by timers, which a screenshot cannot pause: wait until they have landed.
           if (panel.id === "workshop") await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 15_000 });
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
@@ -183,7 +183,7 @@ test("Workshop pieces respond to hands: scrub the football, reset and copy setti
   await football.getByRole("button", { name: "Pause" }).click();
   await football.getByLabel("Football frame").fill("10");
   await expect(football.locator("output").first()).toHaveText("10/108");
-  const delay = await football.locator(".football-loader-ball").evaluate((ball) => parseFloat(getComputedStyle(ball).animationDelay));
+  const delay = await football.locator(".football-loader-sheet").evaluate((sheet) => parseFloat(getComputedStyle(sheet).animationDelay));
   expect(delay).toBeCloseTo(-((108 - 10 + 0.5) / 108) * 1.8, 1);
   await football.getByRole("button", { name: "Step on" }).click();
   await expect(football.locator("output").first()).toHaveText("11/108");
