@@ -4,6 +4,21 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-14 - The Assets page becomes the Workshop
+
+**Status:** Accepted
+
+The Assets page is the **Workshop**: the same real pool pieces with sample data,
+now fully hands-on. The loading football can be dragged, paused on any of its 108
+frames, stepped, or played; the chip has all 32 NFL teams; the pick highlight, the
+split-flap counters and the Bowl crest take typed names and numbers; the Submit
+button can be shown unsaved or saved; the pennant has more schools. Every card
+keeps "Live values", and "Your settings" copies whatever differs from live. It
+reads and writes no pool data.
+
+**Reason:** The commissioner wanted a place that is fun to spend time in, with
+every piece fully interactive, instead of a list of sliders.
+
 ## 2026-10-14 - Commissioner desk: five tabs, with repair and health in drawers
 
 **Status:** Accepted
