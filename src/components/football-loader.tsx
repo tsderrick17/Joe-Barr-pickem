@@ -3,7 +3,7 @@
 import { useLayoutEffect } from "react";
 
 /**
- * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v16.html), pre-rendered as 108
+ * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v17.html), pre-rendered as 108
  * motion-blurred frames of one turn (public/football-spin.webp, a 12 x 9 grid kept under the 4096 px an iPhone will draw at
  * full size), stepped through by CSS and tipped nose-up (no wobble by default). Nothing runs in JavaScript while it spins.
  * With reduced motion it is a still ball.
