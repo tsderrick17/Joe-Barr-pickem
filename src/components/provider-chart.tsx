@@ -6,8 +6,8 @@ import { leftDomain, rightDomain } from "@/lib/chart-axis";
 export type ChartPoint = { label: string; shortLabel: string; values: Record<string, number | null>; start?: number; end?: number; note?: string };
 export type ChartSeries = { key: string; label: string; color: string; axis?: "right"; kind?: "bar" | "area"; suffix?: string; dash?: string; stack?: string };
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
-export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, percentYAxis = false, rightAxis }: {
-  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean; percentYAxis?: boolean;
+export default function ProviderChart({ points, series, label, histogram = false, yScale = "zero", yAxisLabel, integerYAxis = false, percentYAxis = false, histogramTicks, histogramTickPrefix = "", rightAxis }: {
+  points: ChartPoint[]; series: ChartSeries[]; label: string; histogram?: boolean; yScale?: "zero" | "tight"; yAxisLabel?: string; integerYAxis?: boolean; percentYAxis?: boolean; histogramTicks?: number[]; histogramTickPrefix?: string;
   rightAxis?: { label: string; suffix: string; scale?: "zero" | "tight" };
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -107,7 +107,7 @@ export default function ProviderChart({ points, series, label, histogram = false
           </g>;
         })}
         {point ? <line x1={x(index)} x2={x(index)} y1={top} y2={bottom} stroke="#a1a1aa" strokeDasharray="3 4" pointerEvents="none" /> : null}
-        {histogram ? [0, domain / 3, domain * 2 / 3, domain].map((value) => <text key={value} x={left + value / domain * plotWidth} y="259" textAnchor={value === 0 ? "start" : value === domain ? "end" : "middle"} fill="#71717a" fontSize="10">{Math.round(value)}m</text>)
+        {histogram ? (histogramTicks ?? [0, domain / 3, domain * 2 / 3, domain]).map((value) => <text key={value} x={left + value / domain * plotWidth} y="259" textAnchor={value === 0 ? "start" : value === domain ? "end" : "middle"} fill="#71717a" fontSize="10">{histogramTickPrefix}{Math.round(value)}m</text>)
           : ticks.map((i) => <text key={i} x={x(i)} y="257" textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} fill="#71717a" fontSize="10">
             {points[i].shortLabel.split(", ").map((part, row) => <tspan key={row} x={x(i)} dy={row ? 13 : 0}>{part}</tspan>)}
           </text>)}

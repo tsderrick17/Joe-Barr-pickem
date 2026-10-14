@@ -18,5 +18,8 @@ export function ladderChartData(items) {
       note: `${item.newFinals} fresh final${item.newFinals === 1 ? "" : "s"} · ${start}–${start + item.windowMinutes} minutes along the retry ladder`,
     };
   });
-  return { points, total, emergencyFinals: emergency.reduce((sum, item) => sum + item.newFinals, 0), emergencyMinutes: emergency.map((item) => item.windowMinutes) };
+  // Axis labels every half hour from the first check, as minutes after it (+0m, +30m, ...).
+  const end = points.at(-1)?.end ?? 0;
+  const ticks = Array.from({ length: Math.floor(end / 30) + 1 }, (_, index) => index * 30);
+  return { points, ticks, total, emergencyFinals: emergency.reduce((sum, item) => sum + item.newFinals, 0), emergencyMinutes: emergency.map((item) => item.windowMinutes) };
 }
