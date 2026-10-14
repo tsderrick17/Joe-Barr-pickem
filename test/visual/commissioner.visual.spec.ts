@@ -71,6 +71,14 @@ for (const panel of PANELS) {
             const target = page.locator("summary, details > summary").filter({ hasText: summary }).first();
             if (await target.count()) await target.click();
           }
+          if (panel.id === "today" && state === "attention") {
+            // Something needs the commissioner, so the repair and health drawers open by themselves. Their tools load at their own pace,
+            // so prove they are open, then fold them shut: the capture is the page as it first appears.
+            const drawers = page.locator(".commissioner-diagnostics > details");
+            await expect(drawers.filter({ hasText: "Fix something" })).toHaveAttribute("open", "");
+            await expect(drawers.filter({ hasText: "Health and safety" })).toHaveAttribute("open", "");
+            await page.evaluate(() => document.querySelectorAll(".commissioner-diagnostics > details").forEach((drawer) => { (drawer as HTMLDetailsElement).open = false; }));
+          }
           await page.waitForTimeout(600);
           await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
