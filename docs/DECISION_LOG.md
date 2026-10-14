@@ -4,6 +4,25 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-14 - Commissioner desk: five tabs, with repair and health in drawers
+
+**Status:** Accepted
+
+The desk's seven tabs (Overview, Grading, Game day, Bowl Pool, Season, System,
+Assets) become five: **Today** (the live map, the game pipeline and key counts,
+up next), **Performance** (provider cost, the polling chart, account capacity),
+**Season**, **Bowl Pool**, and **Workshop** (the old Assets page). Repair and
+health tools are drawers at the bottom of Today (Game-day guide, Fix something,
+Checks and manual runs, Health and safety); Fix something and Health and safety
+open by themselves when the live map reports attention. No control was removed
+or rewired; each keeps its own server route, authentication, and safeguards. The
+three manual checkers stay separate because two of them can write; a combined
+"run all" button was considered and not built.
+
+**Reason:** The commissioner found the desk to hold too much information, poorly
+presented. One page for the day, one for performance, and drawers for the rare
+tools show less by default without hiding anything.
+
 ## 2026-10-14 - Provider cost chart: 15- and 30-day averages only
 
 **Status:** Accepted

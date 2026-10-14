@@ -81,7 +81,7 @@ function gradedLine(game: { kickoffAt: string; finalizedAt: string | null; grade
   return `${elapsed} after kickoff${game.gradedWindow ? ` · check ${game.gradedWindow.rung} of 12 (${game.gradedWindow.windowMinutes}-min window)` : ""}`;
 }
 
-export default function GradingDashboard() {
+export default function GradingDashboard({ view = "today" }: { view?: "today" | "performance" | "log" }) {
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,10 +90,6 @@ export default function GradingDashboard() {
   const [periodId, setPeriodId] = useState("");
   const [selectedGameId, setSelectedGameId] = useState("");
   const [copied, setCopied] = useState(false);
-  // Charts are long on a phone; they start folded there and open on desktop.
-  // The charts only render after data loads on the client, so reading the
-  // viewport here cannot cause a server/client mismatch.
-  const [chartsOpen, setChartsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 767px)").matches);
   const periodIdRef = useRef("");
   const requestSequenceRef = useRef(0);
   const inFlightRequestsRef = useRef(0);
@@ -159,9 +155,10 @@ export default function GradingDashboard() {
   return <section className="grading-desk" aria-labelledby="grading-dashboard-title">
     {/* Compact sticky rail on a wider screen: the period picker stays in reach while scrolling. On a phone it scrolls with the page,
         since sticking under the site's own sticky tabs left a strip where the page showed through. */}
-    <div className="grading-rail z-20 md:sticky md:top-2 px-5 py-6 sm:px-7"><div className="flex flex-wrap items-end justify-between gap-5"><div><h2 className="font-serif text-3xl sm:text-4xl" id="grading-dashboard-title">Grading</h2></div><div className="flex flex-wrap items-center gap-2"><label className="grading-rail-note text-xs font-bold" htmlFor="grading-period">PERIOD</label><select className="grading-rail-control px-3 py-2 text-sm font-semibold" id="grading-period" onChange={(event) => { setPeriodId(event.target.value); void refresh(event.target.value); }} value={periodId}>{data?.periods.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.status}</option>)}</select><span className="grading-rail-note text-xs">Updated {local(data?.checkedAt ?? null)}</span><button className="grading-rail-control px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={!data} onClick={() => void copySnapshot()} type="button">{copied ? "Copied" : "Copy snapshot"}</button><button className="grading-rail-primary px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">{loading ? "Checking." : "Refresh now"}</button></div></div></div>
+    {view !== "log" ? <div className="grading-rail z-20 md:sticky md:top-2 px-5 py-6 sm:px-7"><div className="flex flex-wrap items-end justify-between gap-5"><div><h2 className="font-serif text-3xl sm:text-4xl" id="grading-dashboard-title">{view === "performance" ? "Performance" : "Game day"}</h2></div><div className="flex flex-wrap items-center gap-2">{view === "today" ? <><label className="grading-rail-note text-xs font-bold" htmlFor="grading-period">PERIOD</label><select className="grading-rail-control px-3 py-2 text-sm font-semibold" id="grading-period" onChange={(event) => { setPeriodId(event.target.value); void refresh(event.target.value); }} value={periodId}>{data?.periods.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.status}</option>)}</select><span className="grading-rail-note text-xs">Updated {local(data?.checkedAt ?? null)}</span><button className="grading-rail-control px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={!data} onClick={() => void copySnapshot()} type="button">{copied ? "Copied" : "Copy snapshot"}</button></> : null}<button className="grading-rail-primary px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">{loading ? "Checking." : "Refresh now"}</button></div></div></div> : null}
     {error ? <p className="mt-5 border-l-4 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 font-semibold text-red-900">{error}</p> : null}
     {data?.period && metric ? <>
+{view === "today" ? <>
       {/* One status row replaces the old banner, six tiles, and progress bars. */}
       <div className={`grading-status ${data.status === "attention" ? "is-attention" : "is-clear"}`} role="status">
         <div className="grading-status-headline">
@@ -188,8 +185,11 @@ export default function GradingDashboard() {
         <div className="space-y-4">
           <div className="hidden lg:block">{selectedGame ? <GameInspector game={selectedGame} /> : <div className="desk-card text-sm text-(color:--themed-text-28)">Select a game to inspect it.</div>}</div>
 
-          <div className="desk-card">
-            <h3 className="font-serif text-xl font-bold">Up next</h3>
+        </div>
+      </div>
+
+      <div className="desk-card at-glance mt-4">
+        <div className="at-glance-col"><h3>Up next</h3>
             <dl className="grading-facts mt-3">
               <div><dt>Next kickoff</dt><dd>{local(metric.readiness.nextKickoffAt)}</dd></div>
               <div><dt>Next line lock</dt><dd>{local(metric.readiness.nextLineLockAt)}</dd></div>
@@ -197,27 +197,22 @@ export default function GradingDashboard() {
               <div><dt>Last score sync</dt><dd>{metric.latestScoreSyncStatus} · {local(metric.lastScoreSyncAt)}</dd></div>
               <div><dt>Schedule</dt><dd>{metric.readiness.scheduleLoaded ? `${metric.games} games loaded` : "No games loaded"}</dd></div>
               <div><dt>Provider allowance</dt><dd>{metric.providerAllowance ?? "Not reported"}</dd></div>
-            </dl>
-          </div>
-        </div>
+            </dl></div>
+        <div className="at-glance-col"><h3>Participant impact</h3><dl className="grading-facts mt-3"><div><dt>Pick&apos;em</dt><dd>{metric.pickOutcomes.win} wins · {metric.pickOutcomes.loss} losses · {metric.pickOutcomes.pending} pending · {metric.pickOutcomes.void} void</dd></div><div><dt>Survivor</dt><dd>{metric.survivorEntries.active} active · {metric.survivorEntries.eliminated} eliminated · {metric.survivorEntries.complete} complete</dd></div><div><dt>Active players</dt><dd>{metric.activePlayers}</dd></div></dl></div>
+        <div className="at-glance-col"><h3>Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
       </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div className="desk-card"><h3 className="font-serif text-xl font-bold">Participant impact</h3><dl className="grading-facts mt-3"><div><dt>Pick&apos;em</dt><dd>{metric.pickOutcomes.win} wins · {metric.pickOutcomes.loss} losses · {metric.pickOutcomes.pending} pending · {metric.pickOutcomes.void} void</dd></div><div><dt>Survivor</dt><dd>{metric.survivorEntries.active} active · {metric.survivorEntries.eliminated} eliminated · {metric.survivorEntries.complete} complete</dd></div><div><dt>Active players</dt><dd>{metric.activePlayers}</dd></div></dl></div>
-        <div className="desk-card"><h3 className="font-serif text-xl font-bold">Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
-      </div>
-
-      <details className="grading-log" onToggle={(event) => setChartsOpen(event.currentTarget.open)} open={chartsOpen}>
-        <summary>Provider performance <span>Score-polling cost and settlement by kickoff slate</span></summary>
-      <EfficiencyTrendPanel history={metric.efficiency.history} creditUsage={data.creditUsage} checkedAt={data.checkedAt} summary={metric.efficiency} />
+      </> : null}
+      {view === "performance" ? <>
+            <EfficiencyTrendPanel history={metric.efficiency.history} creditUsage={data.creditUsage} checkedAt={data.checkedAt} summary={metric.efficiency} />
       <section className="desk-card mt-4" aria-label="Fresh finals picked up by polling ladder">
         <div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-serif text-xl font-bold">New game finals by polling rung</h3><span className="text-xs font-bold text-(color:--themed-text-27)">Bar width = retry gap · height = share of all finals</span></div>
         <p className="mt-1 text-xs text-(color:--themed-text-27)">Polling starts {FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after kickoff; the bottom axis counts minutes from that first check.</p>
         {data.ladderCoverage?.since ? <p className="mt-1 text-xs text-(color:--themed-text-27)">Every fresh final recorded this season · since {new Date(data.ladderCoverage.since).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })} · found across {formatAdminNumber(data.ladderCoverage.runs)} score checks. Finals before that were not recorded by rung.</p> : null}
         {data.ladderSummary.length ? <div className="mt-3"><LadderHistogram items={data.ladderSummary} /></div> : <p className="mt-3 text-sm text-(color:--themed-text-28)">Fills in as score polls record their retry rung.</p>}
       </section>
-      </details>
 
+      </> : null}
+      {view === "log" ? <>
       {/* Logs stay one tap away; they open by themselves when something failed. */}
       <details className="grading-log" open={openIncidents.length > 0 || failedRuns > 0}>
         <summary>Activity log <span>{data.workerRuns.length} worker runs · {data.audit.length} events · {openIncidents.length} open incident{openIncidents.length === 1 ? "" : "s"}</span></summary>
@@ -225,6 +220,7 @@ export default function GradingDashboard() {
         <div className="mt-4"><div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-serif text-lg font-bold">Recent operational history</h3>{data.audit.length > 3 ? <button aria-expanded={showAllAudit} className="text-xs font-bold text-indigo-700 underline decoration-indigo-300 underline-offset-4 hover:text-indigo-900" onClick={() => setShowAllAudit((current) => !current)} type="button">{showAllAudit ? "Show latest 3" : `Show all ${data.audit.length}`}</button> : null}</div>{data.audit.length ? <ol className="mt-2 divide-y divide-zinc-200">{data.audit.slice(0, showAllAudit ? data.audit.length : 3).map((entry) => <li className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2 text-sm" key={entry.id}><span><strong>{entry.action.replaceAll("_", " ")}</strong><span className="ml-2 text-(color:--themed-text-27)">{entry.entityType}</span></span><time className="text-xs text-(color:--themed-text-27)" dateTime={entry.createdAt}>{local(entry.createdAt)}</time></li>)}</ol> : <p className="mt-2 text-sm text-(color:--themed-text-28)">No recent grading events.</p>}</div>
         <section className="mt-4" aria-label="Incident posture"><h3 className="font-serif text-lg font-bold">Incident posture</h3>{openIncidents.length ? <ul className="mt-2 divide-y divide-red-100 border-l-2 border-(color:--themed-border-24) bg-(color:--themed-bg-24)">{openIncidents.map((incident) => <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-sm" key={incident.id}><span className="font-semibold">{incident.title} <span className="ml-2 text-xs font-black uppercase tracking-wide text-red-800">{incident.severity}</span></span><span className="text-xs text-(color:--themed-text-28)">Detected {local(incident.detectedAt)} · last seen {local(incident.lastSeenAt)}</span></li>)}</ul> : <p className="mt-2 rounded-sm bg-emerald-50 px-3 py-2 text-sm text-emerald-900">No open watchdog incidents.</p>}{resolvedIncidents.length ? <details className="mt-2 border-t border-zinc-200 pt-2"><summary className="cursor-pointer text-xs font-bold text-(color:--themed-text-28) hover:text-(color:--themed-text-31)">Show {resolvedIncidents.length} resolved incidents</summary><ul className="mt-2 divide-y divide-zinc-100">{resolvedIncidents.map((incident) => <li className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2 text-sm" key={incident.id}><span className="font-semibold">{incident.title} <span className="ml-2 text-[10px] font-black uppercase tracking-wide text-(color:--themed-text-27)">Resolved</span></span><span className="text-xs text-(color:--themed-text-27)">Detected {local(incident.detectedAt)} · cleared {local(incident.resolvedAt)}</span></li>)}</ul></details> : null}</section>
       </details>
+      </> : null}
     </> : loading ? <div className="mt-6 h-48 animate-pulse bg-zinc-200" aria-label="Loading grading dashboard" /> : null}
   </section>;
 }

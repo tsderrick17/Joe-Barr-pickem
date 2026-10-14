@@ -87,20 +87,20 @@ type FullSchedulePreview = {
 };
 
 const commissionerPanels = [
-  ["overview", "Overview", "Live pool status, priorities, and the next safe move.", "01"],
-  ["grading", "Grading", "Settlement, freshness, provider efficiency, and exceptions.", "02"],
-  ["game-day", "Game day", "The focused checklist for locks, finals, and integrity holds.", "03"],
+  ["today", "Today", "What needs you now, the games, and the safe next move.", "01"],
+  ["performance", "Performance", "Provider cost, polling, and account capacity.", "02"],
+  ["season", "Season", "Preseason setup, schedule changes, and the season's checks.", "03"],
   ["bowl-pool", "Bowl Pool", "Bowl schedule, lines, entries, and settlement exceptions.", "04"],
-  ["season-setup", "Season", "Schedule preparation and change control.", "05"],
-  ["system", "System", "Capacity, automation health, and carefully contained recovery tools.", "06"],
-  ["assets", "Assets", "Every custom piece of the pool, live: buttons, chips, pennants, tiles, the football.", "07"],
+  ["workshop", "Workshop", "Every custom piece of the pool, live and adjustable.", "05"],
 ] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
 
 export default function AdminPage() {
-  const [activePanel, setActivePanel] = useState<CommissionerPanel>("overview");
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [activePanel, setActivePanel] = useState<CommissionerPanel>("today");
+  // Opens the repair and health drawers by themselves when the live map says something needs the commissioner.
+  const [needsAttention, setNeedsAttention] = useState(false);
+  const [showHealth, setShowHealth] = useState(false);
   // On phones the tab strip scrolls sideways; keep the chosen tab in view.
   useEffect(() => {
     document.querySelector(".commissioner-panel-tab.is-active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -283,56 +283,52 @@ export default function AdminPage() {
           </div>
         </nav>
 
-        {activePanel === "overview" ? <>
-        <CommissionerOperationsMap onOpenWorkspace={setActivePanel} />
-        </> : null}
-
-        {activePanel === "grading" ? <GradingDashboard /> : null}
-
-        {activePanel === "assets" ? <CommissionerAssets /> : null}
-
-        {activePanel === "game-day" ? <>
-          <GameDayPlaybook />
+        {activePanel === "today" ? <>
+          <CommissionerOperationsMap onOpenWorkspace={setActivePanel} onStatus={(overall) => setNeedsAttention(overall === "attention")} />
+          <GradingDashboard view="today" />
           <section className="commissioner-diagnostics">
             <details>
-              <summary>Automation checks and manual runs <span>Use when a scheduled lock or score sync needs verification</span></summary>
+              <summary>Game-day guide <span>The safe path: ready, lock, grade, verify, resolve</span></summary>
+              <GameDayPlaybook />
+            </details>
+            <details key={needsAttention ? "repair-open" : "repair"} open={needsAttention}>
+              <summary>Fix something <span>Postponements, no contests, and verified score corrections</span></summary>
+              <FinalScoreReconciliation />
+              <GameExceptions />
+            </details>
+            <details>
+              <summary>Checks and manual runs <span>When a scheduled lock or score sync needs verification</span></summary>
               <AutomationPreflight />
               <LineLockChecker />
               <ScoreSyncChecker />
             </details>
-            <details>
-              <summary>Exceptions and score corrections <span>Use for postponements, no contests, or a verified mismatch</span></summary>
-              <FinalScoreReconciliation />
-              <GameExceptions />
+            <details key={needsAttention ? "health-open" : "health"} onToggle={(event) => setShowHealth(event.currentTarget.open)} open={needsAttention}>
+              <summary>Health and safety <span>Automation, alerts, sign-in, the activity log, and the handbook</span></summary>
+              {showHealth || needsAttention ? <>
+                <AutomationWatchdog />
+                <AutomationHealth />
+                <SentryVerification />
+                <PlayerSignInHardening />
+                <GradingDashboard view="log" />
+                <CommissionerHandbook />
+              </> : null}
             </details>
           </section>
         </> : null}
+
+        {activePanel === "performance" ? <>
+          <GradingDashboard view="performance" />
+          <AccountCapacityPanel />
+        </> : null}
+
+        {activePanel === "workshop" ? <CommissionerAssets /> : null}
 
         {activePanel === "bowl-pool" ? <>
           <BowlPoolReadiness />
           <BowlPoolExceptions />
         </> : null}
 
-        {activePanel === "system" ? <>
-          <AccountCapacityPanel />
-          <SentryVerification />
-          <section className="commissioner-diagnostics">
-            <details onToggle={(event) => setShowDiagnostics(event.currentTarget.open)}>
-              <summary>Automation health and alerts <span>Open when the overview flags a hold</span></summary>
-              {showDiagnostics ? <>
-                <AutomationWatchdog />
-                <AutomationHealth />
-              </> : null}
-            </details>
-            <details>
-              <summary>Commissioner handbook <span>Runbook, pool rules, and rare controls</span></summary>
-              <CommissionerHandbook />
-              <PlayerSignInHardening />
-            </details>
-          </section>
-        </> : null}
-
-        {activePanel === "season-setup" ? <>
+        {activePanel === "season" ? <>
         <SeasonBootstrapStatus />
         <section className="commissioner-diagnostics">
           <details>

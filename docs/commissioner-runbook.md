@@ -47,11 +47,16 @@ This is a pilot contract for this read route, not yet a guarantee for every
 player route. Do not change player records or issue a new PIN to work around
 an outage.
 
-Start at **Commissioner → Overview**. The live operations map is the first
-place to check schedule, selections, line locks, scoring, recap readiness, and
-week/round handoff. Its at-a-glance cards show the current stage, watchdog
-incidents, and provider allowance; select a stage for the exact hold and next
-safe action. Use the specialist panels only after the map identifies a need.
+The desk has five tabs: **Today**, **Performance**, **Season**, **Bowl Pool**, and
+**Workshop**. Start at **Today**. The live operations map is the first place to
+check schedule, selections, line locks, scoring, recap readiness, and week/round
+handoff; select a stage for the exact hold and next safe action. Below it are the
+game pipeline, the key counts, and what is up next. The repair and health tools
+are drawers at the bottom of Today: **Game-day guide**, **Fix something**
+(postponements, no contests, score corrections), **Checks and manual runs**, and
+**Health and safety** (automation, alerts, sign-in, activity log, handbook). Fix
+something and Health and safety open by themselves when the map says something
+needs the commissioner. Use the specialist tools only after the map identifies a need.
 
 Use this page only after the [SOP index](SOP_INDEX.md) identifies an abnormal
 condition. Scheduled automation is the normal operator. Recovery controls must
@@ -203,7 +208,7 @@ one day; investigate only missing, failed, or duplicate receipts.
 
 After the credential-hardening release, the production bulk operation completed
 successfully for all 11 player accounts. The control remains under
-**Commissioner → System → Commissioner handbook** for an intentional pepper
+**Commissioner → Today → Health and safety → Commissioner handbook** for an intentional pepper
 rotation: create a stable, random `PLAYER_AUTH_PEPPER` of at least 32
 characters in every Vercel environment, then run the audited operation while a
 Commissioner session is still valid. It preserves every four-digit player PIN,
@@ -221,7 +226,7 @@ production recovery. Detailed retention and backup behavior lives in
 
 ## Grading control center
 
-The Commissioner Desk's **Grading** panel is the operational view for live
+The Commissioner Desk's **Today** tab (game pipeline and key counts) is the operational view for live
 settlement. It shows the active scoring period, game-by-game state, pending
 Pick'em and Survivor grades, score-sync freshness, provider allowance, and a
 prioritized attention queue. Use the queue as the starting point when a final

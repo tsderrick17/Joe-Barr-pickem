@@ -511,6 +511,12 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .desk-list button { background: transparent; color: var(--club-ink); }
 .desk-list button:hover, .desk-list button.is-selected { background: var(--club-paper-2); }
 .desk-faint { color: var(--club-muted); }
+.club-eyebrow-dark { color: var(--club-muted); font-size: .65rem; font-weight: 700; letter-spacing: .28em; margin: 0; text-transform: uppercase; }
+.commissioner-map h2, .game-day-playbook h2 { font-weight: 400; }
+/* Up next, participant impact and notification readiness: three short fact lists in one card instead of three cards. */
+.at-glance { display: grid; gap: 1.5rem 2.25rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.at-glance-col h3 { color: var(--club-muted); font: 700 .66rem Arial, sans-serif; letter-spacing: .24em; text-transform: uppercase; }
+@media (max-width: 900px) { .at-glance { grid-template-columns: minmax(0, 1fr); } }
 .desk-button { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); transition: background .18s ease, border-color .18s ease; }
 .desk-button:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
 .desk-card.is-awaiting { box-shadow: 0 0 0 1px var(--club-gold-dk); opacity: .85; }
