@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotX } from "@/lib/season-snapshot-chart.js";
 
@@ -230,7 +230,7 @@ export function SnapshotView({ standings, snapshot, isPlayoff, range = "all", vi
 }
 
 /** The back of the Pick'em Pad. Loads the first time it is turned over. */
-export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, flipButton }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; flipButton: ReactNode }) {
+export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -301,7 +301,6 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
         <button aria-pressed={range === "all"} onClick={() => chooseRange("all")} type="button">All</button>
         <button aria-pressed={range === "six"} onClick={() => chooseRange("six")} type="button">6 Wk</button>
       </div> : null}
-      {flipButton}
     </div>
     <div className="season-snapshot-body">
       {error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}

@@ -116,3 +116,30 @@ test("the account menu opens from your name, and Sign out asks before signing ou
   await expect(page.getByText("Sign out?", { exact: true })).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
 });
+
+// The flip button is in the same physical spot on both faces of the Pick'em Pad, so it can be tapped back and forth without moving a
+// thumb, and the other toggles on the back sit out to its left.
+for (const scenario of ["commissioner", "commissioner-playoff"]) {
+  for (const width of [360, 390, 700, 900, 1280]) {
+    test(`Standings ${scenario} flip button stays put at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, "day");
+      await serve(page, scenario);
+      await settle(page);
+      const spots = () => page.evaluate(() => {
+        const showing = (element: Element) => element.getBoundingClientRect().width > 0 && getComputedStyle(element).visibility !== "hidden";
+        const button = document.querySelector(".pad-flip-button")!.getBoundingClientRect();
+        const toggles = [...document.querySelectorAll(".season-snapshot-range")].filter(showing).map((element) => element.getBoundingClientRect().right);
+        return { x: button.left, y: button.top + window.scrollY, toggles };
+      });
+      const front = await spots();
+      await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+      await page.waitForTimeout(1500);
+      const back = await spots();
+      expect(Math.abs(back.x - front.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(back.y - front.y)).toBeLessThanOrEqual(1);
+      expect(back.toggles.length).toBeGreaterThan(0);
+      for (const right of back.toggles) expect(right).toBeLessThan(back.x);
+    });
+  }
+}
