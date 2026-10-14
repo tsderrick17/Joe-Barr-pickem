@@ -171,7 +171,9 @@ export default function SiteNav() {
           </span>
         </Link>
 
-        <div className="site-nav-links flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:gap-x-6 md:text-base">
+        {/* The same tabs as on a phone (Commissioner is in the name menu), set from the left so a tab that appears later only extends
+            the row and never moves the others. */}
+        <div className="site-nav-links flex flex-wrap items-center justify-start gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:ml-6 md:gap-x-8 md:text-base">
           <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">
             Standings
           </Link>
@@ -182,10 +184,6 @@ export default function SiteNav() {
 
           <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={`nav-bowls-tab ${linkStyle("/bowl-pool")}`} href="/bowl-pool">
             NCAA Bowls
-          </Link>
-
-          <Link aria-current={pathname.startsWith("/admin") ? "page" : undefined} className={`nav-commissioner-tab ${linkStyle("/admin")}`} href="/admin">
-            Commissioner
           </Link>
 
         </div>
@@ -203,7 +201,7 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
           </button>
 
-          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink={false} /></div> : null}
+          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink /></div> : null}
         </div>
       </div>
     </nav>

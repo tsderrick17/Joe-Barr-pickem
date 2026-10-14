@@ -225,10 +225,10 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
 
   // A durable session must restore the complete account strip after a reload.
   await page.reload();
-  await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible({ timeout: 12_000 });
-  // The account menu: your name opens Notifications and Sign out.
-  await expect(page.getByText("Signed in as")).toBeVisible();
+  // The account menu: your name opens Notifications, the Commissioner desk, and Sign out.
+  await expect(page.getByText("Signed in as")).toBeVisible({ timeout: 12_000 });
   await page.locator(".account-menu-button:visible").click();
+  await expect(page.getByRole("menuitem", { name: "Commissioner" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
   await page.keyboard.press("Escape");
@@ -249,8 +249,8 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await page.waitForTimeout(750);
   await expect(page).toHaveURL(/\/board$/, { timeout: 12_000 });
   await expect(page.getByRole("heading", { name: "The Slate" })).toBeVisible({ timeout: 12_000 });
-  await expect(page.getByRole("link", { name: "Commissioner" })).toBeVisible();
   await page.locator(".account-menu-button:visible").click();
+  await expect(page.getByRole("menuitem", { name: "Commissioner" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
   await page.keyboard.press("Escape");
