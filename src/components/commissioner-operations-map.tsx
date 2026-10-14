@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
@@ -19,15 +19,11 @@ type OperationsMap = {
   stages: Stage[];
 };
 
-type OperationsWorkspace = "grading" | "game-day" | "season-setup" | "system";
+type OperationsWorkspace = "season";
 
 const workspaceForStage: Record<string, { panel?: OperationsWorkspace; href?: string; label: string }> = {
-  schedule: { panel: "season-setup", label: "Open season workspace" },
+  schedule: { panel: "season", label: "Open the season tab" },
   selections: { href: "/", label: "Open pool standings" },
-  lines: { panel: "game-day", label: "Open game-day workspace" },
-  scores: { panel: "game-day", label: "Open game-day workspace" },
-  results: { panel: "grading", label: "Open grading workspace" },
-  handoff: { panel: "grading", label: "Open grading workspace" },
 };
 
 const stateLabel: Record<StageState, string> = {
@@ -44,11 +40,13 @@ async function loadOperationsMap() {
   return payload as OperationsMap;
 }
 
-export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenWorkspace?: (panel: OperationsWorkspace) => void }) {
+export default function CommissionerOperationsMap({ onOpenWorkspace, onStatus }: { onOpenWorkspace?: (panel: OperationsWorkspace) => void; onStatus?: (overall: "healthy" | "attention") => void }) {
   const [map, setMap] = useState<OperationsMap | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const statusCallback = useRef(onStatus);
+  useEffect(() => { statusCallback.current = onStatus; });
 
   async function refresh() {
     setLoading(true);
@@ -56,6 +54,7 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
     try {
       const result = await loadOperationsMap();
       setMap(result);
+      statusCallback.current?.(result.overall);
       setSelectedId((current) => current && result.stages.some((stage) => stage.id === current) ? current : result.currentStageId);
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -76,11 +75,11 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
   );
 
   return (
-    <section className="commissioner-map border-b-2 border-zinc-900 py-8" aria-labelledby="operations-map-title">
+    <section className="commissioner-map pb-6" aria-labelledby="operations-map-title">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">LIVE OPERATIONS MAP</p>
-          <h2 className="mt-1 font-serif text-3xl font-bold" id="operations-map-title">Where the pool stands</h2>
+          <p className="club-eyebrow-dark">Live operations</p>
+          <h2 className="mt-1 font-serif text-3xl" id="operations-map-title">Where the pool stands</h2>
         </div>
         <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">
           {loading ? "Checking…" : "Refresh map"}
@@ -100,12 +99,6 @@ export default function CommissionerOperationsMap({ onOpenWorkspace }: { onOpenW
           <div className="commissioner-map-pulse" aria-hidden="true"><span /></div>
         </div>
 
-        <div className="commissioner-map-metrics mt-4" aria-label="Operations at a glance">
-          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">CURRENT STAGE</span><strong>{selected?.label ?? "—"}</strong><span>{selected ? stateLabel[selected.state] : "Waiting for status"}</span></div>
-          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">WATCHDOG</span><strong>{map.openIncidentCount ? map.openIncidentCount : "Quiet"}</strong><span>{map.openIncidentCount ? `Open incident${map.openIncidentCount === 1 ? "" : "s"}` : "No open incidents"}</span></div>
-          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">PROVIDER BALANCE</span><strong>{map.providerCreditSnapshot?.remaining ?? map.providerAllowance ?? "—"}</strong><span>{map.providerCreditSnapshot ? `${map.providerCreditSnapshot.used} of ${map.providerCreditSnapshot.limit} used` : map.providerAllowance === null || map.providerAllowance === undefined ? "Not reported" : "Remaining this month"}</span></div>
-          <div className="commissioner-map-metric"><span className="commissioner-map-metric-label">DEPLOYED RELEASE</span><strong className="commissioner-map-release">{map.release ? map.release.slice(0, 7) : "Local"}</strong><span>{map.release ? "Vercel commit" : "Release not reported"}</span></div>
-        </div>
 
         <ol className="commissioner-flow mt-8" aria-label="Current pool operations flow" style={{ "--commissioner-step-count": map.stages.length } as CSSProperties}>
           {map.stages.map((stage, index) => {

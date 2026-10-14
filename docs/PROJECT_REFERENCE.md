@@ -145,7 +145,7 @@ measure database requests or end-to-end route time.
   dedicated `PLAYER_AUTH_PEPPER`. Launch preflight fails when that protected
   value is missing or too short. All active accounts use the protected
   credential; the Commissioner can re-run the audited bulk rotation from
-  System → Commissioner handbook after an intentional pepper rotation.
+  Today → Health and safety → Commissioner handbook after an intentional pepper rotation.
 - A player can always see their own selections.
 - Another player's selection remains hidden until that selected game's kickoff.
   Reveal is per game, not all-at-once for the week.

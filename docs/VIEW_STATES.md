@@ -65,15 +65,14 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 
 | View | States |
 | --- | --- |
-| Overview | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
-| Grading (Activity log open) | `healthy`, `attention`, `quiet` |
-| Game day (checks open) | `healthy` |
-| Provider cost chart (Grading → Provider performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
-| Polling chart (Grading → Provider performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
-| Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
+| Today (map, game pipeline, key counts, and the repair/health drawers, closed) | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
+| Performance (provider cost, polling, capacity) | `healthy` |
+| Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
+| Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
-| System (health and alerts open) | `healthy`, `attention` |
-| Assets (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
+| Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
+| Workshop (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
+| Five tabs, with the repair and health drawers on Today (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in |
 | Reminders | scheduled, sent, cancelled-with-reason |
 

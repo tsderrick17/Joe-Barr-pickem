@@ -49,13 +49,11 @@ async function settle(page: Page, ready: string) {
 
 // Panels are shown in every state that changes them; the rest use the healthy day.
 const PANELS: Array<{ id: string; tab: number; states: string[]; open?: string[] }> = [
-  { id: "overview", tab: 0, states: ["healthy", "attention", "quiet"] },
-  { id: "grading", tab: 1, states: ["healthy", "attention", "quiet"], open: ["Activity log"] },
-  { id: "game-day", tab: 2, states: ["healthy"], open: ["Automation checks and manual runs"] },
+  { id: "today", tab: 0, states: ["healthy", "attention", "quiet"] },
+  { id: "performance", tab: 1, states: ["healthy"] },
+  { id: "season", tab: 2, states: ["healthy"] },
   { id: "bowl-pool", tab: 3, states: ["healthy", "attention"] },
-  { id: "season-setup", tab: 4, states: ["healthy"] },
-  { id: "system", tab: 5, states: ["healthy", "attention"], open: ["Automation health and alerts"] },
-  { id: "assets", tab: 6, states: ["healthy"] },
+  { id: "workshop", tab: 4, states: ["healthy"] },
 ];
 
 for (const panel of PANELS) {
@@ -79,7 +77,7 @@ for (const panel of PANELS) {
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
           await page.waitForLoadState("networkidle");
           // The loading football is stepped by script, which a screenshot cannot pause: hold it on its first frame.
-          if (panel.id === "assets") await page.addStyleTag({ content: ".football-loader-ball { background-position: 0 0 !important; }" });
+          if (panel.id === "workshop") await page.addStyleTag({ content: ".football-loader-ball { background-position: 0 0 !important; }" });
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }
@@ -114,7 +112,7 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
   }
 }
 
-// The score-polling chart (Grading, Provider performance): the first nine windows in percentages, with the emergency windows as one count.
+// The score-polling chart (Performance tab): the first nine windows in percentages, with the emergency windows as one count.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner polling chart day at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -122,19 +120,14 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await serve(page, "healthy");
     await settle(page, ".commissioner-panel-tab");
     await page.locator(".commissioner-panel-tab").nth(1).click();
-    const summary = page.locator("summary").filter({ hasText: "Provider performance" });
     const section = page.locator("section[aria-label='Fresh finals picked up by polling ladder']");
-    // The desk refreshes itself as data arrives, which can close the section again: open it until the chart is showing.
-    await expect(async () => {
-      if (!(await summary.evaluate((element) => (element.parentElement as HTMLDetailsElement).open))) await summary.click();
-      await expect(section.locator("svg")).toBeVisible({ timeout: 2000 });
-    }).toPass({ timeout: 30_000 });
+    await expect(section.locator("svg")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(600);
     await expect(section).toHaveScreenshot(`commissioner-polling-chart-day-${label}.png`);
   });
 }
 
-// The provider cost chart (Grading, Provider performance): credits per game as 15- and 30-day moving averages.
+// The provider cost chart (Performance tab): credits per game as 15- and 30-day moving averages.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner provider cost chart day at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -142,15 +135,25 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await serve(page, "healthy");
     await settle(page, ".commissioner-panel-tab");
     await page.locator(".commissioner-panel-tab").nth(1).click();
-    const summary = page.locator("summary").filter({ hasText: "Provider performance" });
     const section = page.locator("section[aria-label^='Provider cost']");
-    await expect(async () => {
-      if (!(await summary.evaluate((element) => (element.parentElement as HTMLDetailsElement).open))) await summary.click();
-      await expect(section.locator("svg")).toBeVisible({ timeout: 2000 });
-    }).toPass({ timeout: 30_000 });
+    await expect(section.locator("svg")).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
     await page.waitForTimeout(600);
     await expect(section).toHaveScreenshot(`commissioner-provider-cost-day-${label}.png`);
   });
 }
+
+// The desk has five tabs, each with one job; repair and health tools sit in drawers on Today, and the season's checks live on Season.
+test("Commissioner desk has five tabs, with repair and health in drawers on Today", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await settle(page, ".commissioner-panel-tab");
+  const tabs = page.locator(".commissioner-panel-tab");
+  await expect(tabs).toHaveCount(5);
+  expect((await tabs.allInnerTexts()).map((text) => text.replace(/\d+\s*/, "").trim())).toEqual(["Today", "Performance", "Season", "Bowl Pool", "Workshop"]);
+  for (const drawer of ["Fix something", "Checks and manual runs", "Health and safety"]) await expect(page.locator("summary").filter({ hasText: drawer })).toBeVisible();
+  await tabs.nth(2).click();
+  await expect(page.locator("summary").filter({ hasText: "Season readiness checks" })).toBeVisible();
+});
 
