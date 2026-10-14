@@ -245,7 +245,7 @@ export default function CommissionerAssets() {
           </label>
           {knobs("football")}
         </>} note="The loading screen: the ball turning slowly and smoothly on its long axis, tipped nose-up. Drag the ball to turn it by hand, pause it on any of its 108 frames, or step through them. With reduced motion it holds still." style={{ ...cssVars("football", values), "--scrub-i": FOOTBALL_FRAMES - football.frame + .5 } as CSSProperties} title="Loading football" zoom={1.3}>
-          <div className={`asset-football ${football.paused ? "is-scrubbing" : ""}`} onPointerMove={dragFootball}>
+          <div className={`asset-football ${football.paused ? "is-scrubbing" : ""} ${values["--football-wobble"] > 0 ? "has-wobble" : ""}`} onPointerMove={dragFootball}>
             <FootballLoader />
           </div>
         </AssetCard>

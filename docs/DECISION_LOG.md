@@ -1680,3 +1680,12 @@ A Monday burst of Dependabot branches (three npm pull requests plus a workflow o
 ## Survivor trophy titles name one year
 
 Pick'em and Bowl Pool trophy titles name the season as it is played across two calendar years (`'25-26 Bowl Pool Champion`). Survivor is decided within a single calendar year, so its titles read `'25 Survivor Champion` (`championshipTitle`).
+
+## The loading football turns on the compositor, with visible seams
+
+A recording of the live football showed two separate problems, so the fix has two parts.
+
+- **The spin hitched while the page loaded.** It stepped `background-position`, which Safari repaints on the main thread, and that thread is busy while a page loads (8 skipped beats in the first turn, a freeze just before the page appeared). The ball is now a clipping window and the 108-frame sheet slides inside it by `transform` (one held keyframe per frame), which the phone runs off the main thread. A phone test page ran both side by side: on the same recording the old method showed 42 doubled steps in 218 refreshes against about 20 for the transform method.
+- **The motion read as a pulse.** The stripes wrap the whole ball, so only the laces moved, and the ball looked still for most of each turn. Thin dark seams between the four leather panels now give every frame something to move. The panels stay one colour (a version with shaded panels read as "a bunch of browns"), the seams are toned down to keep the ball's shape, and measured evenness of the motion went from 4.6 to 3.1 (about 1-2 reads as steady) at the same brightness.
+- **Wobble.** The wobble animation no longer runs by default (its size was already 0). The Workshop turns it on only when its Wobble size slider is above 0.
+
