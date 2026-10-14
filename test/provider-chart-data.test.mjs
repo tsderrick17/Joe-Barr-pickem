@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
+import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
 
 test("monthly credits include charged failures, zero days and only the current month through now", () => {
@@ -129,6 +129,22 @@ test("15-day credits per game averages by Eastern calendar date and weights game
   assert.equal(rollingCreditsPerGame15Days(history, 1), 10 / 3);
   assert.equal(rollingCreditsPerGame15Days(history, 2), 14 / 3);
   assert.equal(rollingCreditsPerGame15Days([...history, { ...point("2026-10-17T17:00:00Z", 0, 1), creditsPerGame: null }], 3), null);
+});
+
+test("30-day credits per game reaches back 30 Eastern dates and weights games", () => {
+  const point = (slateStartedAt, credits, settledGames) => ({ slateStartedAt, credits, settledGames, creditsPerGame: credits / settledGames });
+  const history = [
+    point("2026-09-01T17:00:00Z", 30, 3),
+    point("2026-09-20T17:00:00Z", 4, 1),
+    point("2026-10-15T17:00:00Z", 6, 2),
+  ];
+  // Oct 15 looks back to Sep 16 (30 dates): the Sep 20 slate counts, the Sep 1 slate does not.
+  assert.equal(rollingCreditsPerGame30Days(history, 2), 10 / 3);
+  // The 15-day line, on the same day, reaches back only to Oct 1: just the Oct 15 slate.
+  assert.equal(rollingCreditsPerGame15Days(history, 2), 3);
+  // The first slate has nothing earlier to average with.
+  assert.equal(rollingCreditsPerGame30Days(history, 0), 10);
+  assert.equal(rollingCreditsPerGame30Days([{ ...history[0], creditsPerGame: null }], 0), null);
 });
 
 test("score checks follow the retry ladder and the measured first-hour share", () => {

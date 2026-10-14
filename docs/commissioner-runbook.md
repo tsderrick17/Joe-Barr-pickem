@@ -291,8 +291,10 @@ The fixed retry ladder below is the only score-polling policy. There is no polli
 
 The live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
 
-Provider efficiency uses one point per exact kickoff slate in the selected period,
-with credits per settled game on the left axis and settlement latency on the right.
+Provider cost plots credits per settled game as a 15-day and a 30-day moving
+average (one point per exact kickoff slate; each average covers the games in the
+last 15 or 30 Eastern calendar dates). Settlement latency and the per-slate
+credits line are no longer drawn.
 Historical receipts have no slate IDs: non-overlapping polling windows are
 estimated, while overlapping windows remain unplotted. A gap is not a zero.
 Use hover, touch, or the Explore slider for exact values, and View chart data

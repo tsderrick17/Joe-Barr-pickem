@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
-import { rollingCreditsPerGame15Days } from "@/lib/provider-chart-data.js";
+import { rollingCreditsPerGame15Days, rollingCreditsPerGame30Days } from "@/lib/provider-chart-data.js";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
 import type { EfficiencyPoint, EfficiencySummary } from "@/components/efficiency-trend-panel";
 
@@ -22,48 +22,41 @@ export default function SlatePerformancePanel({ history, summary }: {
   const attributed = history.filter((point) => point.creditsPerGame !== null && point.settledGames > 0);
   const attributedGames = attributed.reduce((total, point) => total + point.settledGames, 0);
   const creditsPerGame = attributedGames ? attributed.reduce((total, point) => total + point.credits, 0) / attributedGames : null;
-  const settled = history.filter((point) => point.latencyMinutes !== null && point.settledGames > 0);
-  const settledGames = settled.reduce((total, point) => total + point.settledGames, 0);
-  const averageLatency = settledGames ? Math.round(settled.reduce((total, point) => total + point.latencyMinutes! * point.settledGames, 0) / settledGames) : null;
 
-  return <section className="min-w-0 rounded-2xl border border-zinc-200 bg-(color:--themed-bg-26) p-4 shadow-sm sm:p-6" aria-label="Provider cost and settlement by kickoff slate">
+  return <section className="min-w-0 rounded-2xl border border-zinc-200 bg-(color:--themed-bg-26) p-4 shadow-sm sm:p-6" aria-label="Provider cost: credits per game, 15- and 30-day averages">
     <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400">Score polling · Season to date</p>
-        <h3 className="mt-1 text-xl font-semibold tracking-tight text-(color:--themed-text-31)">Provider cost &amp; settlement</h3>
-        <p className="mt-2 text-xs text-(color:--themed-text-27)">One point per game-time slate · Eastern time</p>
+        <h3 className="mt-1 text-xl font-semibold tracking-tight text-(color:--themed-text-31)">Provider cost</h3>
+        <p className="mt-2 text-xs text-(color:--themed-text-27)">Credits spent per game, smoothed over 15 and 30 days · Eastern time</p>
       </div>
       <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "14"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-(color:--themed-bg-26) text-(color:--themed-text-31) shadow-sm" : "text-(color:--themed-text-27)"}`}>{value === "all" ? "All slates" : "Last 14"}</button>)}</div>
     </div>
-    <div className="provider-efficiency-summary provider-performance-summary" aria-label="Provider cost and settlement summary">
+    <div className="provider-efficiency-summary provider-performance-summary" aria-label="Provider cost summary">
       <div><span>Score credits</span><strong>{number(summary.scoreCredits)}</strong><small>Season-to-date polling</small></div>
       <div><span>Credits / game</span><strong>{number(creditsPerGame)}</strong><small>{attributedGames} games in attributed slates</small></div>
-      <div><span>Settlement average</span><strong>{averageLatency === null ? "-" : `${averageLatency}m`}</strong><small>{settledGames} settled games</small></div>
     </div>
     <ProviderChart
       key={range}
-      label="Credits per settled game and minutes to accepted final by kickoff slate"
+      label="Credits per game: 15-day and 30-day moving averages"
       yAxisLabel="Credits / game"
-      rightAxis={{ label: "Minutes to final", suffix: "m", scale: "tight" }}
       points={observed.map((point, index) => ({
         label: `${date(point.slateStartedAt, true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
         shortLabel: date(point.slateStartedAt),
         values: {
-          credits: point.creditsPerGame,
           average15: rollingCreditsPerGame15Days(history, first + index),
-          latency: point.latencyMinutes,
+          average30: rollingCreditsPerGame30Days(history, first + index),
         },
-        note: point.latencyMinutes === null ? "Slate is not fully settled yet."
-          : point.attribution === "unavailable" ? "Polling attribution overlaps another slate; credits/game is withheld."
-          : point.attribution === "no-data" ? "No attributable polling receipt for this slate."
+        note: point.attribution === "unavailable" ? "Polling attribution overlaps another slate; this slate is left out of the averages."
+          : point.attribution === "no-data" ? "No attributable polling receipt for this slate; it is left out of the averages."
+          : point.settledGames === 0 ? "Slate is not fully settled yet; it joins the averages once it is."
           : `${point.settledGames} settled games · ${point.calls} score checks · polling credits attributed by run time`,
       }))}
       series={[
-        { key: "credits", label: "Credits / game", color: "#4f46e5" },
-        { key: "average15", label: "15-day avg · credits/game", color: "#a855f7", dash: "5 4" },
-        { key: "latency", label: "Settlement latency", color: "#059669", axis: "right", suffix: "m" },
+        { key: "average15", label: "15-day average", color: "#4f46e5" },
+        { key: "average30", label: "30-day average", color: "#d97706", dash: "6 5" },
       ]}
     />
-    <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Left axis: score-polling credits per settled game. Right axis: average minutes from the pooled kickoff to accepted final. The 15-day line is a game-weighted average over the current and previous 14 Eastern calendar dates; slates with missing or ambiguous credits are excluded. Credit attribution is estimated from polling times.</p>
+    <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Credits spent on score checks per settled game. Each line averages the games in the last 15 or 30 Eastern calendar dates, so a big Sunday counts for more than a single Thursday game; slates whose credits cannot be attributed are left out. Credits are attributed to a slate by the time each check ran, so they are an estimate.</p>
   </section>;
 }

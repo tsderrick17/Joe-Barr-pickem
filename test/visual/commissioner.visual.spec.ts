@@ -134,3 +134,23 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
+// The provider cost chart (Grading, Provider performance): credits per game as 15- and 30-day moving averages.
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Commissioner provider cost chart day at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day");
+    await serve(page, "healthy");
+    await settle(page, ".commissioner-panel-tab");
+    await page.locator(".commissioner-panel-tab").nth(1).click();
+    const summary = page.locator("summary").filter({ hasText: "Provider performance" });
+    const section = page.locator("section[aria-label^='Provider cost']");
+    await expect(async () => {
+      if (!(await summary.evaluate((element) => (element.parentElement as HTMLDetailsElement).open))) await summary.click();
+      await expect(section.locator("svg")).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 30_000 });
+    await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
+    await page.waitForTimeout(600);
+    await expect(section).toHaveScreenshot(`commissioner-provider-cost-day-${label}.png`);
+  });
+}
+

@@ -276,10 +276,10 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
   }));
 }
 
-// Fifteen Eastern calendar dates, including the point's date. Weight by games,
+// The last `days` Eastern calendar dates, including the point's date. Weight by games,
 // not by slate, so a single-game Thursday does not count like a Sunday slate.
 const easternDayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
-export function rollingCreditsPerGame15Days(points, index) {
+export function rollingCreditsPerGame(points, index, days) {
   if (points[index]?.creditsPerGame == null) return null;
   const day = (value) => {
     const parts = easternDayFormatter.formatToParts(new Date(value));
@@ -289,8 +289,11 @@ export function rollingCreditsPerGame15Days(points, index) {
   const lastDay = day(points[index].slateStartedAt);
   const eligible = points.slice(0, index + 1).filter((point) => {
     const age = lastDay - day(point.slateStartedAt);
-    return age >= 0 && age < 15 && point.creditsPerGame !== null && point.creditsPerGame !== undefined && point.settledGames > 0;
+    return age >= 0 && age < days && point.creditsPerGame !== null && point.creditsPerGame !== undefined && point.settledGames > 0;
   });
   const games = eligible.reduce((sum, point) => sum + point.settledGames, 0);
   return games ? eligible.reduce((sum, point) => sum + point.credits, 0) / games : null;
 }
+
+export const rollingCreditsPerGame15Days = (points, index) => rollingCreditsPerGame(points, index, 15);
+export const rollingCreditsPerGame30Days = (points, index) => rollingCreditsPerGame(points, index, 30);
