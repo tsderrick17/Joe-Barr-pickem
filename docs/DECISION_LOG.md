@@ -4,6 +4,21 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-14 - Provider cost chart: 15- and 30-day averages only
+
+**Status:** Accepted
+
+The Provider performance chart in Grading plots credits per settled game as a
+15-day and a 30-day moving average, both game-weighted over the last 15 or 30
+Eastern calendar dates. The per-slate credits line, the settlement-latency line
+and its right axis, and the "Settlement average" tile are removed. "Games on
+time" and a budget-pace line were considered and deferred.
+
+**Reason:** The commissioner wants the chart to tell one story: is polling getting
+cheaper or dearer over time. Per-slate points and latency were noisy and did not
+answer it. The 15-day line is unchanged in definition; the 30-day line uses the
+same rule over a longer window.
+
 ## 2026-10-12 - Season Snapshot opens to players once Week 6 has settled
 
 **Status:** Accepted
