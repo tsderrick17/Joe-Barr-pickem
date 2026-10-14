@@ -4,6 +4,24 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-14 - Standings starts the Bowl Card's read with its own
+
+**Status:** Accepted
+
+On Standings the Bowl Card is drawn only after the main Standings data arrives,
+and the card then fetched its own: two reads in a row before the loading football
+goes. A device that showed the Bowl Card on its last visit now starts the card's
+read at the same time as the main one (on the first load of the page only) and the
+card takes that same response. The number of requests is unchanged (one Bowl Card
+read per page load); the wait becomes the longer of the two reads instead of their
+sum. A first visit, or a device that hid the card, behaves as before. The early
+read is dropped after 15 seconds and shared only for the first moment after it is
+taken, so a refresh always reads fresh.
+
+**Reason:** The commissioner asked whether loading can be faster. This removes a
+real serial wait without adding server work (the Vercel Hobby CPU budget is
+unchanged) and without changing what any player can see.
+
 ## 2026-10-14 - The Assets page becomes the Workshop
 
 **Status:** Accepted

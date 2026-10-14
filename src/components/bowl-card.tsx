@@ -5,6 +5,7 @@ import Collapse from "@/components/collapse";
 import { BowlClaimSeat, BowlCrest } from "@/components/bowl-pool-marks";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import PlayerTrophyName from "@/components/player-trophy-name";
+import { takeBowlPrefetch } from "@/lib/bowl-prefetch";
 import { fetchWithSession } from "@/lib/auth-session";
 import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
@@ -81,7 +82,7 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
 
   useEffect(() => {
-    const loadBowlStandings = () => void fetchWithSession("/api/bowl-pool", { cache: "no-store" }).then(async (response) => {
+    const loadBowlStandings = () => void (takeBowlPrefetch() ?? fetchWithSession("/api/bowl-pool", { cache: "no-store" })).then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
     }).catch(() => undefined).finally(() => onReady?.());
     loadBowlStandings();
