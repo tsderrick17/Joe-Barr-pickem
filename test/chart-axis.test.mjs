@@ -50,12 +50,13 @@ test("the polling ladder charts the first nine windows as shares of every final,
   const { ladderChartData } = await import("../src/lib/ladder-chart.js");
   const minutes = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
   const counts = [16, 17, 12, 2, 1, 0, 0, 0, 0, 1, 0, 1];
-  const { points, total, emergencyFinals, emergencyMinutes } = ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: counts[index] })));
+  const { points, ticks, total, emergencyFinals, emergencyMinutes } = ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: counts[index] })));
   assert.equal(points.length, 9, "windows 10, 11 and 12 are not charted");
   assert.equal(total, 50, "shares are of every final, emergency windows included");
   assert.equal(points[0].values.finals, 32, "16 of 50 finals");
   assert.equal(points[2].values.finals, 24);
   assert.deepEqual([points[0].start, points[0].end, points[8].start, points[8].end], [0, 10, 100, 120], "bar width is the retry gap");
+  assert.deepEqual(ticks, [0, 30, 60, 90, 120], "the bottom axis counts minutes from the first check, every half hour");
   assert.equal(emergencyFinals, 2);
   assert.deepEqual(emergencyMinutes, [60, 120, 240]);
   assert.deepEqual(ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: 0 }))).points.map((point) => point.values.finals), Array(9).fill(0), "no finals yet means empty bars, not a divide by zero");
