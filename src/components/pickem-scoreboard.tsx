@@ -82,6 +82,7 @@ export default function PickemScoreboard({
 
   return (
     <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""}`}>
+      {flipButton}
       <div className="pad-flip-inner">
       <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
       <div className="pickem-ledger-masthead">
@@ -95,7 +96,6 @@ export default function PickemScoreboard({
             type="button"
           >{hideEliminatedRows ? "+ OUT" : "− OUT"}</button> : null}
         </div>
-        {flipButton}
       </div>
       <div ref={tableBox} className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
         <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`} data-picks={maxPicks}>
@@ -140,7 +140,7 @@ export default function PickemScoreboard({
         </table>
       </div>
       </div>
-      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} flipButton={flipButton} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
+      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
       </div>
     </section>
   );

@@ -397,9 +397,23 @@
 .pickem-scoreboard-ledger.has-pad-flip {
   perspective: 1600px;
   transition: --pad-turn .9s cubic-bezier(.45, .05, .55, .95);
+  /* The pad is as wide as the page allows, so it does not change width when it turns; a playoff pad is capped at one fixed width. */
+  --pad-card: 30rem;
+  --pad-gap: .2rem;
+  --pad-inset: max(0px, calc((100% - var(--pad-card)) / 2));
+  --pad-masthead: 3.4rem;
+  --pad-section: 0px;
+  position: relative;
+  width: 100%;
 }
+.has-pad-flip.playoff-scoreboard { --pad-card: 45rem; --pad-inset: 0px; --pad-section: .5rem; margin-inline: auto; width: min(100%, calc(var(--pad-card) + 2 * var(--pad-section))); }
 .has-pad-flip.is-flipped { --pad-turn: 180deg; }
-.has-pad-flip .pickem-ledger-masthead { align-items: center; }
+.has-pad-flip .pickem-ledger-masthead {
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--pad-masthead);
+  padding: .56rem calc(var(--pad-inset) + var(--pad-gap) + 2.5rem) .56rem calc(var(--pad-inset) + var(--pad-gap));
+}
 .has-pad-flip .pad-front { background: var(--ledger-paper); }
 
 /* The card lifts toward the reader and tips slightly as it turns, like a sheet
@@ -420,7 +434,7 @@
      which shows as a small stutter in the W and L marks once everything has stopped. */
   will-change: transform;
 }
-.playoff-scoreboard .pad-flip-inner { max-width: none; }
+.playoff-scoreboard .pad-flip-inner { max-width: none; width: 100%; }
 .has-pad-flip.is-flipped .pad-flip-inner { max-width: 100%; }
 
 /* Each face switches off exactly at the halfway point of the turn, so the
@@ -458,9 +472,17 @@
   flex: 0 0 auto;
   height: 1.9rem;
   justify-content: center;
-  margin-left: auto;
   transition: background .15s ease, transform .35s ease;
   width: 1.9rem;
+}
+/* The flip button is drawn once, fixed to the pad, so it is in the same physical spot on the front and the back; the other toggles sit
+   to its left. Both faces' headers are the same height and keep the same room on the right for it. On the regular-season pad the front
+   is a 30 rem card in the middle of the page while the back runs wider, so the back's header is inset to line up with the front's. */
+.has-pad-flip > .pad-flip-button {
+  position: absolute;
+  right: calc(var(--pad-inset) + var(--pad-gap) + var(--pad-section));
+  top: calc(3px + (var(--pad-masthead) - 4px - 1.9rem) / 2);
+  z-index: 5;
 }
 .pad-flip-button:hover,
 .pad-flip-button:focus-visible { background: var(--gray-100); }

@@ -149,6 +149,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
     linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
     #fbf8ef;
   border-left: 1px solid rgba(167, 62, 55, .3);
+  --pad-section: .5rem;
   padding-left: .5rem;
   padding-right: .5rem;
 }
@@ -176,7 +177,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   white-space: nowrap;
 }
 @media (max-width: 639px) {
-  .playoff-scoreboard { padding-left: .2rem; padding-right: .2rem; }
+  .playoff-scoreboard { --pad-section: .2rem; padding-left: .2rem; padding-right: .2rem; }
   .playoff-scoreboard-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
   .playoff-scoreboard-pick { font-size: .86rem; }
   /* Four, five, or six picks do not fit across a phone, so each player's picks
@@ -302,17 +303,14 @@ html[data-theme="night"] .playoff-scoreboard {
 .season-snapshot-range button + button { border-left: 1px solid var(--sand-60); }
 .season-snapshot-range button[aria-pressed="true"] { background: var(--blue-22); color: var(--sand-95); }
 .season-snapshot-range button:focus-visible { outline: 2px solid var(--blue-50); outline-offset: -2px; }
-.season-snapshot-range + .pad-flip-button { margin-left: .5rem; }
 /* Once the playoffs begin: Regular | Playoffs sits right after the title; the week range follows it. */
 .season-snapshot-view { margin-left: .75rem; }
 .season-snapshot-view + .season-snapshot-range { margin-left: auto; }
-.season-snapshot-view + .pad-flip-button { margin-left: auto; }
 @media (max-width: 639px) {
-  /* On a phone the week range drops to its own line under the switch, flush right, and the flip button stays up top. */
+  /* On a phone the week range drops to its own line under the switch, flush right (the flip button never moves: see .has-pad-flip). */
   .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) { flex-wrap: wrap; row-gap: .4rem; }
   .season-snapshot .pickem-ledger-masthead:has(.season-snapshot-view) h2 { flex: 1 1 0; min-width: 5.5rem; }
-  .season-snapshot-view ~ .pad-flip-button { margin-left: auto; order: 2; }
-  .season-snapshot-view ~ .season-snapshot-range { margin-left: auto; order: 3; }
+  .season-snapshot-view ~ .season-snapshot-range { margin-left: auto; }
 }
 
 .season-snapshot-charts { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 11rem; min-width: 0; }
