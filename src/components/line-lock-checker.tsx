@@ -154,7 +154,7 @@ export default function LineLockChecker() {
           : "Check official spread locks"}
       </button>
       <button
-        className="ml-3 mt-6 border border-zinc-900 bg-(color:--themed-bg-26) px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        className="ml-3 mt-6 desk-button px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isLoadingLatest}
         onClick={loadLatestLock}
         type="button"

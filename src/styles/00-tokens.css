@@ -156,9 +156,42 @@
   --asset-card-bg: var(--pool-surface);
   --asset-card-rule: var(--pool-rule);
   --asset-stage-bg: var(--pool-paper);
+  /* The Clubhouse: the Commissioner desk's own palette. Forest felt and cream paper, gold hairlines, one cognac accent.
+     Night mode is a deliberate set of its own (deep felt for paper), set in the night block below. */
+  --club-forest: #14302a;
+  --club-forest-2: #1d4038;
+  --club-felt-hi: #21503f;
+  --club-cognac: #8a4b2a;
+  --club-cognac-2: #a35d36;
+  --club-gold: #b39662;
+  --club-gold-lt: #e2cf9f;
+  --club-gold-dk: #7d6538;
+  --club-page: #f3ede1;
+  --club-paper: #fcf9f3;
+  --club-paper-2: #f7f1e4;
+  --club-line: #e3dac8;
+  --club-ink: #1f1b16;
+  --club-muted: #73695a;
+  --club-ok: #2f6b57;
+  --club-warn: #a8620f;
+  --club-alert: #a33c29;
 }
 
 html[data-theme="night"] {
+  --club-forest: #0f241f;
+  --club-forest-2: #6fb59b;
+  --club-felt-hi: #1a4036;
+  --club-cognac: #a35d36;
+  --club-cognac-2: #d08a5c;
+  --club-page: #0b1613;
+  --club-paper: #13221e;
+  --club-paper-2: #182a25;
+  --club-line: #2c453d;
+  --club-ink: #efe6d2;
+  --club-muted: #a8b4ab;
+  --club-ok: #7fcaa6;
+  --club-warn: #e2a94f;
+  --club-alert: #f08c7a;
   --themed-bg-1: #37322e;
   --themed-text-1: #c2b7aa;
   --themed-text-2: #e7e2d6;

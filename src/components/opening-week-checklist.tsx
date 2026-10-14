@@ -36,7 +36,7 @@ export default function OpeningWeekChecklist() {
   return <section className="commissioner-tool" id="opening-week-checklist">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><h2 className="font-serif text-2xl font-bold">Opening Week checklist</h2><p className="mt-2 text-(color:--themed-text-29)">A read-only launch rehearsal that also verifies schedules, authorization, Odds API, Brevo, sender settings, and Commissioner alerts. It never activates a period, changes a pick, imports games, or sends email.</p></div>
-      <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={run} type="button">{loading ? "Checking..." : "Refresh checklist"}</button>
+      <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={run} type="button">{loading ? "Checking..." : "Refresh checklist"}</button>
     </div>
     {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
     {result ? <div className={`mt-5 border p-4 ${result.status === "attention" ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24)" : result.status === "setup" ? "border-(color:--themed-border-16) bg-(color:--themed-bg-21)" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23)"}`}>

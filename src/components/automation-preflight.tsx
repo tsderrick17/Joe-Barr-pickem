@@ -72,7 +72,7 @@ export default function AutomationPreflight() {
         <h2 className="mt-1 font-serif text-2xl font-bold">Launch preflight</h2>
         <p className="mt-2 text-(color:--themed-text-29)">Actively verifies every schedule, the watchdog heartbeat, cron authorization, the zero-credit NFL provider check, Brevo, the PickemJB sender, and a Commissioner alert address. It sends no email and changes no pool records.</p>
       </div>
-      <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void run()} type="button">{loading ? "Checking launch systems…" : "Run launch preflight"}</button>
+      <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void run()} type="button">{loading ? "Checking launch systems…" : "Run launch preflight"}</button>
     </div>
     {error ? <p className="mt-4 border-l-4 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 font-semibold text-red-900">{error}</p> : null}
     {result ? <div className={`mt-5 border-2 p-4 ${result.status === "healthy" ? "border-(color:--themed-border-21) bg-(color:--themed-bg-23)" : "border-(color:--themed-border-24) bg-(color:--themed-bg-24)"}`}>

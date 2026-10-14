@@ -23,7 +23,7 @@ export default function SlatePerformancePanel({ history, summary }: {
   const attributedGames = attributed.reduce((total, point) => total + point.settledGames, 0);
   const creditsPerGame = attributedGames ? attributed.reduce((total, point) => total + point.credits, 0) / attributedGames : null;
 
-  return <section className="min-w-0 rounded-2xl border border-zinc-200 bg-(color:--themed-bg-26) p-4 shadow-sm sm:p-6" aria-label="Provider cost: credits per game, 15- and 30-day averages">
+  return <section className="desk-card min-w-0" aria-label="Provider cost: credits per game, 15- and 30-day averages">
     <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400">Score polling · Season to date</p>
@@ -53,8 +53,8 @@ export default function SlatePerformancePanel({ history, summary }: {
           : `${point.settledGames} settled games · ${point.calls} score checks · polling credits attributed by run time`,
       }))}
       series={[
-        { key: "average15", label: "15-day average", color: "#4f46e5" },
-        { key: "average30", label: "30-day average", color: "#d97706", dash: "6 5" },
+        { key: "average15", label: "15-day average", color: "var(--club-forest-2)" },
+        { key: "average30", label: "30-day average", color: "var(--club-cognac-2)", dash: "6 5" },
       ]}
     />
     <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Credits spent on score checks per settled game. Each line averages the games in the last 15 or 30 Eastern calendar dates, so a big Sunday counts for more than a single Thursday game; slates whose credits cannot be attributed are left out. Credits are attributed to a slate by the time each check ran, so they are an estimate.</p>

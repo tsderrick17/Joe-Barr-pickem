@@ -58,7 +58,7 @@ export default function ProviderChart({ points, series, label, histogram = false
         <span>{item.label}</span>{right ? <span className="provider-chart-axis-label" aria-label={item.axis ? "right axis" : "left axis"}>{item.axis ? "R" : "L"}</span> : null}
       </button>)}
     </div>
-    <div className="provider-chart-tooltip min-h-20 rounded-lg border border-zinc-100 bg-zinc-50/70 px-4 py-3">
+    <div className="provider-chart-tooltip min-h-20 px-4 py-3">
       <p className="text-xs font-medium text-(color:--themed-text-27)">{point?.label ?? "No observations yet"}</p>
       <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1">{activeSeries.map((item) => <p key={item.key} className="text-xs text-(color:--themed-text-27)">
         <strong className="mr-1.5 text-lg font-semibold tabular-nums" style={{ color: item.color }}>{point?.values[item.key] == null ? "—" : number(point.values[item.key]!)}{point?.values[item.key] == null ? "" : item.suffix}</strong>{item.label}
@@ -72,11 +72,11 @@ export default function ProviderChart({ points, series, label, histogram = false
           <stop offset="0%" stopColor={item.color} stopOpacity=".17" /><stop offset="100%" stopColor={item.color} stopOpacity=".015" />
         </linearGradient>)}</defs>
         {[0, .25, .5, .75, 1].map((fraction) => <g key={fraction}>
-          <line x1={left} x2={width - edge} y1={bottom - fraction * height} y2={bottom - fraction * height} stroke="#e9eaef" strokeDasharray={fraction ? "3 4" : undefined} />
-          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="#71717a" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}{percentYAxis ? "%" : ""}</text>
+          <line x1={left} x2={width - edge} y1={bottom - fraction * height} y2={bottom - fraction * height} stroke="var(--club-line)" strokeDasharray={fraction ? "3 4" : undefined} />
+          <text x={left - 9} y={bottom - fraction * height + 4} textAnchor="end" fill="var(--club-muted)" fontSize="10">{number(minimum + (maximum - minimum) * fraction)}{percentYAxis ? "%" : ""}</text>
           {right ? <text x={width - edge + 8} y={bottom - fraction * height + 4} fill="#047857" fontSize="10">{number(rightMinimum + (rightMaximum - rightMinimum) * fraction)}{rightAxis?.suffix ?? "%"}</text> : null}
         </g>)}
-        {yAxisLabel ? <text x="11" y={(top + bottom) / 2} fill="#71717a" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(-90 11 ${(top + bottom) / 2})`}>{yAxisLabel}</text> : null}
+        {yAxisLabel ? <text x="11" y={(top + bottom) / 2} fill="var(--club-muted)" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(-90 11 ${(top + bottom) / 2})`}>{yAxisLabel}</text> : null}
         {right && rightAxis?.label ? <text x={width - 8} y={(top + bottom) / 2} fill="#047857" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" textAnchor="middle" transform={`rotate(90 ${width - 8} ${(top + bottom) / 2})`}>{rightAxis.label}</text> : null}
         {activeSeries.map((item) => {
           if (item.kind === "bar") return <g key={item.key}>{points.map((entry, i) => {
@@ -85,7 +85,7 @@ export default function ProviderChart({ points, series, label, histogram = false
             const value = entry.values[item.key];
             const base = item.stack ? activeSeries.slice(0, activeSeries.indexOf(item)).filter((previous) => previous.stack === item.stack).reduce((sum, previous) => sum + (entry.values[previous.key] ?? 0), 0) : 0;
             return value == null ? null : <rect key={i} x={barX} y={y(base + value, item)} width={barWidth} height={y(base, item) - y(base + value, item)}
-              fill={item.color} fillOpacity={selected === null || index === i ? .85 : .35} stroke="white" strokeWidth={histogram ? 1 : 0} />;
+              fill={item.color} fillOpacity={selected === null || index === i ? .85 : .35} stroke="var(--club-paper)" strokeWidth={histogram ? 1 : 0} />;
           })}</g>;
           const segments: string[] = [];
           const firstForecastIndex = item.key === "forecast" ? points.findIndex((entry) => entry.values[item.key] != null) : -1;
@@ -103,12 +103,12 @@ export default function ProviderChart({ points, series, label, histogram = false
           return <g key={item.key}>
             {item.kind === "area" && segments.length === 1 && points.every((entry) => entry.values[item.key] != null) ? <path d={`${segments[0]} L${x(points.length - 1)},${bottom} L${x(0)},${bottom} Z`} fill={`url(#${gradient}-${item.key})`} /> : null}
             {segments.map((path, i) => <path key={i} d={path} fill="none" stroke={item.color} strokeWidth="2.3" strokeLinejoin="round" strokeLinecap="round" strokeDasharray={item.dash} />)}
-            {points.map((entry, i) => entry.values[item.key] == null ? null : <circle key={i} cx={x(i)} cy={y(entry.values[item.key]!, item)} r={index === i ? 4 : 2.5} fill={item.color} stroke="white" strokeWidth="1.5" />)}
+            {points.map((entry, i) => entry.values[item.key] == null ? null : <circle key={i} cx={x(i)} cy={y(entry.values[item.key]!, item)} r={index === i ? 4 : 2.5} fill={item.color} stroke="var(--club-paper)" strokeWidth="1.5" />)}
           </g>;
         })}
-        {point ? <line x1={x(index)} x2={x(index)} y1={top} y2={bottom} stroke="#a1a1aa" strokeDasharray="3 4" pointerEvents="none" /> : null}
-        {histogram ? (histogramTicks ?? [0, domain / 3, domain * 2 / 3, domain]).map((value) => <text key={value} x={left + value / domain * plotWidth} y="259" textAnchor={value === 0 ? "start" : value === domain ? "end" : "middle"} fill="#71717a" fontSize="10">{histogramTickPrefix}{Math.round(value)}m</text>)
-          : ticks.map((i) => <text key={i} x={x(i)} y="257" textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} fill="#71717a" fontSize="10">
+        {point ? <line x1={x(index)} x2={x(index)} y1={top} y2={bottom} stroke="var(--club-gold-dk)" strokeDasharray="3 4" pointerEvents="none" /> : null}
+        {histogram ? (histogramTicks ?? [0, domain / 3, domain * 2 / 3, domain]).map((value) => <text key={value} x={left + value / domain * plotWidth} y="259" textAnchor={value === 0 ? "start" : value === domain ? "end" : "middle"} fill="var(--club-muted)" fontSize="10">{histogramTickPrefix}{Math.round(value)}m</text>)
+          : ticks.map((i) => <text key={i} x={x(i)} y="257" textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} fill="var(--club-muted)" fontSize="10">
             {points[i].shortLabel.split(", ").map((part, row) => <tspan key={row} x={x(i)} dy={row ? 13 : 0}>{part}</tspan>)}
           </text>)}
       </svg>

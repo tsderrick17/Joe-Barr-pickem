@@ -49,7 +49,7 @@ export default function AutomationWatchdog() {
           <h2 className="mt-1 font-serif text-2xl font-bold">Action-only alerts</h2>
           <p className="mt-1 max-w-2xl text-sm text-(color:--themed-text-29)">Checks every five minutes. It ignores harmless retries and individual bad email addresses, and sends one commissioner email only when a new actionable incident opens.</p>
         </div>
-        <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={run} type="button">{busy ? "Checking…" : "Run watchdog now"}</button>
+        <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={run} type="button">{busy ? "Checking…" : "Run watchdog now"}</button>
       </div>
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
       {status ? <div className={`mt-4 border p-4 ${status.openAlerts.length ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24)" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23)"}`}>

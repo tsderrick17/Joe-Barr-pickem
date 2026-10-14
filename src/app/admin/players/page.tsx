@@ -130,7 +130,7 @@ export default function PlayerManagementPage() {
   }
 
   return (
-    <main className="commissioner-subpage min-h-screen bg-[#f7f3e8] px-5 py-8 text-(color:--themed-text-31) md:px-10">
+    <main className="commissioner-subpage min-h-screen px-5 py-8 text-(color:--themed-text-31) md:px-10">
       <div className="mx-auto max-w-5xl">
         <header className="border-b-2 border-zinc-900 pb-7">
           <div className="flex items-start justify-between gap-6">

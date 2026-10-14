@@ -148,7 +148,7 @@ export default function AutomationHealth() {
           <h2 className="mt-1 font-serif text-2xl font-bold">The pool at a glance</h2>
           <p className="mt-2 max-w-2xl text-(color:--themed-text-29)">Provider usage, cooldowns, and the last successful runs. Routine recovery is automatic; the override buttons are for a verified emergency.</p>
         </div>
-        <button className="border border-zinc-900 bg-(color:--themed-bg-26) px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading || action !== null} onClick={refresh} type="button">
+        <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading || action !== null} onClick={refresh} type="button">
           {loading ? "Checking..." : "Refresh status"}
         </button>
       </div>
@@ -194,8 +194,8 @@ export default function AutomationHealth() {
           <summary className="cursor-pointer font-bold">Emergency manual controls</summary>
           <p className="mt-2 text-sm text-(color:--themed-text-29)">These runs bypass provider cooldown timing only. Authentication, overlap leases, quota reserve, line locks, week pins, and atomic database checks remain enforced.</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="border border-zinc-900 px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("scores")} type="button">{action === "scores" ? "Checking scores..." : "Run score check now"}</button>
-            <button className="border border-zinc-900 px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("schedule")} type="button">{action === "schedule" ? "Refreshing schedule..." : "Override schedule cooldown"}</button>
+            <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("scores")} type="button">{action === "scores" ? "Checking scores..." : "Run score check now"}</button>
+            <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("schedule")} type="button">{action === "schedule" ? "Refreshing schedule..." : "Override schedule cooldown"}</button>
           </div>
         </details>
       </> : null}
