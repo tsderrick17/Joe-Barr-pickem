@@ -1693,3 +1693,9 @@ Wobble no longer runs by default (its size was already 0). The Workshop turns it
 
 "Click a poker chip to choose a team." (the SURVIVOR line in the Slate's instructions) now shows only for a player who is still in Survivor that week. A player who is out, or whose Survivor section has left the receipt, no longer sees it. This replaces the earlier rule that the line showed for everyone while Survivor was part of the slate.
 
+## The Slate ticket sits first, and its notices cover the board
+
+- **Position.** The Slate's receipt now starts flush under the menu, the same place the Bowl Pool's does (104 px down on a phone, 82 px on desktop), so switching tabs never moves it. The week picker and instructions follow it. It stays pinned as before.
+- **Notices cover, never push.** The "picks are full" question and the plain selection warnings hang off the bottom of the ticket over the board instead of adding height to it, so nothing below jumps. The swap question is a second stub across the ticket's width: a small "PICKS ARE FULL" eyebrow, "Replace which one with NYG?", the two picks it could replace as chips in the same style as the picks above, and Cancel as a quiet link.
+- **One-line status.** The Pick'em line at the foot of the ticket is one line at every phone width. "CHANGED - HIT SUBMIT" became "CHANGED" (the stub already says READY TO SAVE) and "EDITABLE" became "OPEN"; a test checks the longest states at 360, 390 and 700 px.
+

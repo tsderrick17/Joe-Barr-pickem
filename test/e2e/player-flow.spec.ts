@@ -268,7 +268,7 @@ test("isolated player can sign in, save ATS picks, and revise a Survivor selecti
   await expect(receipt.locator(".slate-receipt-survivor > em")).toContainText("SUBMITTED");
 
   await page.getByRole("button", { name: "Choose Los Angeles Rams as your Survivor winner" }).click();
-  await expect(receipt.getByText(/CHANGED.*HIT SUBMIT/)).toBeVisible();
+  await expect(receipt.getByText(/CHANGED/)).toBeVisible();
   const replacementSave = page.waitForResponse((response) => response.url().endsWith("/api/picks") && response.request().method() === "POST");
   await page.getByRole("button", { name: "SUBMIT" }).click();
   expect((await replacementSave).status()).toBe(200);

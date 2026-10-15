@@ -573,19 +573,8 @@ export default function BoardPage() {
 
   return (
     <main className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
-      <div className="mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-8 md:px-10">
+      <div className={`mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 sm:px-5 sm:pb-0 md:px-10 ${seasonClosedForViewer ? "pt-5 sm:pt-8" : "pt-0"}`}>
         {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} /></div> : null}
-
-        <SlateHeader
-          actionOnlyActive={actionOnlyActive}
-          availableWeeks={availableWeeks}
-          hasEarlyGame={hasEarlyGame}
-          onChooseWeek={chooseWeek}
-          onToggleDisplay={toggleDisplay}
-          readOnly={seasonClosedForViewer}
-          survivorHelp={survivorHelp}
-          week={week}
-        />
 
         {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
@@ -614,6 +603,19 @@ export default function BoardPage() {
             teamName: survivorTeamName(survivorPick),
           }}
         />}
+
+        <div className={seasonClosedForViewer ? "" : "pt-5 sm:pt-8"}>
+          <SlateHeader
+            actionOnlyActive={actionOnlyActive}
+            availableWeeks={availableWeeks}
+            hasEarlyGame={hasEarlyGame}
+            onChooseWeek={chooseWeek}
+            onToggleDisplay={toggleDisplay}
+            readOnly={seasonClosedForViewer}
+            survivorHelp={survivorHelp}
+            week={week}
+          />
+        </div>
 
         {errorMessage ? (
           <div className="mt-8">

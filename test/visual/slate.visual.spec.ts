@@ -71,10 +71,17 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await page.evaluate(() => document.fonts.ready);
     await page.locator(".slate-game-row button.slate-team-side:not([disabled])").nth(8).click();
     await expect(page.locator(".slate-receipt-warning")).toBeVisible();
+    // The notice covers the board; it never adds height to the ticket.
+    const heights = await page.evaluate(() => {
+      const strip = document.querySelector(".slate-receipt-strip")!.getBoundingClientRect(), note = document.querySelector(".slate-receipt-warning")!.getBoundingClientRect();
+      return { strip: strip.height, gap: Math.abs(note.top - strip.bottom) };
+    });
+    expect(heights.gap).toBeLessThanOrEqual(2);
+    expect(heights.strip).toBeLessThan(140);
     await page.waitForTimeout(600);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     const box = (await page.locator(".slate-receipt-strip").boundingBox())!;
-    await expect(page).toHaveScreenshot(`receipt-warning-${label}.png`, { clip: { x: Math.max(0, box.x - 8), y: box.y - 8, width: Math.min(width, box.width + 16), height: box.height + 70 } });
+    await expect(page).toHaveScreenshot(`receipt-warning-${label}.png`, { clip: { x: Math.max(0, box.x - 8), y: box.y - 8, width: Math.min(width, box.width + 16), height: box.height + 140 } });
   });
 }
 
@@ -127,5 +134,47 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
     await expect(page.getByText("Click a poker chip to choose a team.")).toHaveCount(shown ? 1 : 0);
+  });
+}
+
+// The Pick'em line at the foot of the ticket ("1/2 · CHANGED · 1 DUE") stays on one line and inside its section at every width, in the
+// longest states: one team picked and unsaved, and a live week with locked picks.
+for (const width of [360, 390, 700]) {
+  for (const [scenario, pick] of [["upcoming-unpicked", true], ["upcoming-picked", false], ["live-survivor", false]] as const) {
+    test(`Slate ticket status line is one line (${scenario}${pick ? ", one team picked" : ""}, ${width})`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page);
+      await serve(page, scenario);
+      await page.goto("/board");
+      await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
+      if (pick) await page.locator(".slate-game-row button.slate-team-side:not([disabled])").first().click();
+      const line = page.locator(".slate-receipt-pickem > em");
+      await expect(line).toBeVisible();
+      const fit = await line.evaluate((element) => {
+        const box = element.getBoundingClientRect(), section = element.parentElement!.getBoundingClientRect();
+        return { lines: Math.round(box.height / parseFloat(getComputedStyle(element).lineHeight)), inside: element.scrollWidth <= element.clientWidth + 1 && box.right <= section.right + 1, text: element.textContent };
+      });
+      expect(fit.lines, fit.text ?? "").toBe(1);
+      expect(fit.inside, fit.text ?? "").toBe(true);
+    });
+  }
+}
+
+// The ticket starts in the same place as the Bowl Pool's: flush under the menu, with the week picker and instructions below it.
+for (const width of [390, 1280]) {
+  test(`Slate ticket starts flush under the menu (${width})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await serve(page, "upcoming-unpicked");
+    await page.goto("/board");
+    await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
+    const tops = await page.evaluate(() => ({
+      ticket: document.querySelector(".slate-receipt-strip")!.getBoundingClientRect().top,
+      page: document.querySelector("main")!.getBoundingClientRect().top,
+      header: document.querySelector(".slate-action-instructions")!.getBoundingClientRect().top,
+      ticketBottom: document.querySelector(".slate-receipt-strip")!.getBoundingClientRect().bottom,
+    }));
+    expect(Math.abs(tops.ticket - tops.page)).toBeLessThanOrEqual(1);
+    expect(tops.header).toBeGreaterThan(tops.ticketBottom);
   });
 }
