@@ -100,12 +100,20 @@ for (const width of [360, 390, 700, 1280]) {
           insideRow: box.top >= rowBox.top && box.bottom <= rowBox.bottom,
           clearOfChips: chips.every((chip) => box.right <= chip.left || box.left >= chip.right || box.bottom <= chip.top + 6 || box.top >= chip.bottom - 6),
           offset: Math.abs((spread.top + spread.bottom) / 2 - (name.top + name.bottom) / 2),
+          // Room above the teams, in this row and in the first row without a note.
+          topGap: name.top - rowBox.top,
+          plainTopGap: (() => {
+            const plain = [...document.querySelectorAll(".slate-game-row:not(.has-lock-note)")][0];
+            return plain ? plain.querySelector(".slate-team-label")!.getBoundingClientRect().top - plain.getBoundingClientRect().top : null;
+          })(),
         };
       });
       expect(layout.lines).toBe(1);
       expect(layout.insideRow).toBe(true);
       expect(layout.clearOfChips).toBe(true);
       expect(layout.offset).toBeLessThanOrEqual(1);
+      // The note's row does not get extra room above the teams.
+      if (layout.plainTopGap !== null) expect(Math.abs(layout.topGap - layout.plainTopGap)).toBeLessThanOrEqual(2);
     });
   }
 }
