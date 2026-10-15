@@ -207,3 +207,21 @@ test("Workshop pieces respond to hands: scrub the football, reset and copy setti
   // The chip has every team.
   await expect(page.locator(".asset-card", { hasText: "Survivor poker chip" }).locator("select option")).toHaveCount(32);
 });
+
+// On a phone the five tabs wrap into two even rows: none sits off screen or is clipped, at the narrowest and a usual width.
+for (const width of [360, 390]) {
+  test(`Commissioner tabs all fit on screen (${width})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day");
+    await serve(page, "healthy");
+    await settle(page, ".commissioner-panel-tab");
+    const fit = await page.locator(".commissioner-panel-tabs").evaluate((rail) => {
+      const box = rail.getBoundingClientRect();
+      const tabs = [...rail.querySelectorAll(".commissioner-panel-tab")].map((tab) => tab.getBoundingClientRect());
+      return { sideways: rail.scrollWidth - rail.clientWidth, inside: tabs.every((tab) => tab.left >= box.left - 1 && tab.right <= box.right + 1 && tab.right <= window.innerWidth), rows: new Set(tabs.map((tab) => Math.round(tab.top))).size };
+    });
+    expect(fit.sideways).toBeLessThanOrEqual(1);
+    expect(fit.inside).toBe(true);
+    expect(fit.rows).toBe(2);
+  });
+}
