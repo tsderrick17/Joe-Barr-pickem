@@ -55,6 +55,9 @@ test("successful production deployments receive an independent smoke gate", asyn
   assert.match(workflow, /node scripts\/production-smoke\.mjs/);
   assert.deepEqual(PRODUCTION_SMOKE_PATHS, [
     "/",
+    "/board",
+    "/bowl-pool",
+    "/football-spin.webp",
     "/api/health",
     "/api/health/automation",
     "/api/health/workers",
