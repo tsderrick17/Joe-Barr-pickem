@@ -72,7 +72,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           : "FILLED";
   const receiptStatusLabel = (status: string) => {
     if (status === "FILLED") return "SUBMITTED";
-    if (status === "CHANGED") return "CHANGED - HIT SUBMIT";
+    if (status === "CHANGED") return "CHANGED";
     return status;
   };
   const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
@@ -80,7 +80,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
   const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
   const pickemReceiptStateDetail = [
     sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
-    openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} EDITABLE` : "",
+    openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} OPEN` : "",
     duePickCount > 0 ? `${duePickCount} DUE` : "",
   ].filter(Boolean).join(" · ");
   const submitHint = receiptIsLoading
@@ -152,10 +152,11 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
       ) : null}
       {swapPrompt ? (
         <div className="slate-receipt-warning slate-receipt-swap" role="alert">
-          <p>You have {swapPrompt.options.map((option) => option.label).join(" and ")}. Replace which one with {swapPrompt.newTeam}?</p>
+          <span className="slate-receipt-swap-eyebrow">PICKS ARE FULL</span>
+          <button className="slate-receipt-swap-cancel" onClick={() => onCancelSwap?.()} type="button">Cancel</button>
+          <p>Replace which one with {swapPrompt.newTeam}?</p>
           <div className="slate-receipt-swap-actions">
-            {swapPrompt.options.map((option) => <button key={option.gameId} onClick={() => onSwap?.(option.gameId)} type="button">Replace {option.label}</button>)}
-            <button className="is-cancel" onClick={() => onCancelSwap?.()} type="button">Cancel</button>
+            {swapPrompt.options.map((option) => <button className="slate-receipt-selection-chip slate-receipt-swap-choice" key={option.gameId} onClick={() => onSwap?.(option.gameId)} type="button">Replace {option.label}</button>)}
           </div>
         </div>
       ) : selectionWarning ? <p className="slate-receipt-warning" role="alert">{selectionWarning}</p> : null}

@@ -359,8 +359,7 @@
   font-weight: 900;
   letter-spacing: .1em;
   line-height: 1.25;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  white-space: nowrap;
 }
 .slate-receipt-pool > em small { font-size: inherit; font-weight: inherit; }
 .slate-receipt-pool > em.is-complete { color: var(--green-25); }
@@ -438,13 +437,20 @@
    sits under that column only, and the strip's outline follows its edges. */
 /* Same die-cut corners as the sections above it. The paper layer's own rule is the
    only line where it meets the Pick'em section, so there is no second dashed edge. */
-.slate-receipt-warning { background: transparent; font-size: .62rem; font-weight: 700; grid-column: 2; isolation: isolate; margin: 0; padding: .28rem .7rem; position: relative; color: var(--red-39); }
-/* The picks are full and another team was tapped: ask, in plain words with large buttons, which pick it replaces. */
-.slate-receipt-swap { font-size: .82rem; line-height: 1.3; padding: .5rem .7rem .6rem; }
-.slate-receipt-swap p { margin: 0 0 .45rem; }
-.slate-receipt-swap-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
-.slate-receipt-swap-actions button { background: var(--red-39); border: 1px solid var(--red-39); border-radius: .25rem; color: white; font-size: .82rem; font-weight: 800; min-height: 2.5rem; padding: .3rem .75rem; }
-.slate-receipt-swap-actions button.is-cancel { background: transparent; color: var(--red-39); }
+/* A notice never adds height to the ticket: it hangs off the bottom edge and covers the board, so nothing below it jumps. */
+.slate-receipt-warning { background: transparent; color: var(--red-39); font-size: .62rem; font-weight: 700; grid-column: 2; inset-inline: 0; isolation: isolate; margin: 0; padding: .28rem .7rem; position: absolute; top: 100%; z-index: 2; }
+/* The picks are full and another team was tapped: a second ticket stub hangs under the receipt, across its whole width, in the
+   receipt's own ink. An eyebrow names the situation, one question follows, and the two picks it could replace are chips like the
+   ones above, with Cancel as a quiet link beside the eyebrow. */
+.slate-receipt-swap { color: var(--receipt-ink); display: grid; gap: .3rem .6rem; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; padding: .5rem .7rem .7rem; }
+.slate-receipt-swap-eyebrow { font-size: .46rem; font-weight: 900; letter-spacing: .14em; opacity: .75; }
+.slate-receipt-swap p { font-size: .78rem; font-weight: 800; grid-column: 1 / -1; line-height: 1.25; margin: 0; }
+.slate-receipt-swap-actions { display: grid; gap: .4rem; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: .15rem; }
+@media (min-width: 768px) { .slate-receipt-swap-actions { grid-template-columns: repeat(2, minmax(0, 13rem)); } }
+.slate-receipt-swap .slate-receipt-swap-choice { cursor: pointer; font-family: inherit; font-size: .74rem; justify-content: center; min-height: 2.4rem; text-align: center; }
+.slate-receipt-swap .slate-receipt-swap-choice:active { filter: brightness(.95); }
+.slate-receipt-swap-cancel { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; font-size: .46rem; font-weight: 900; justify-self: end; letter-spacing: .14em; margin: -.3rem -.3rem 0 0; padding: .3rem; text-decoration: underline; text-underline-offset: .2em; }
+.slate-receipt-swap .slate-receipt-swap-choice:focus-visible, .slate-receipt-swap-cancel:focus-visible { outline: 2px solid var(--receipt-ink); outline-offset: 2px; }
 
 @media (max-width: 767px) {
   .slate-receipt-strip { --receipt-notch: .34rem; --receipt-scallop: .13rem; }
