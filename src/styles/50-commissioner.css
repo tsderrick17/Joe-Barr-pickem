@@ -27,27 +27,6 @@
   .commissioner-email-list { max-height: 28rem; }
 }
 
-.commissioner-map-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.commissioner-map-metric {
-  background: var(--club-paper);
-  box-shadow: 0 0 0 1px var(--club-line);
-  color: var(--club-ink);
-  display: grid;
-  min-width: 0;
-}
-.commissioner-map-metric-label { color: var(--club-muted); font-size: .62rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
-.commissioner-map-metric strong {
-  color: var(--club-ink);
-  font-family: Georgia, serif;
-  font-weight: 400;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-}
-.commissioner-map-metric > span:last-child { color: var(--club-muted); font-size: .78rem; }
-
 .commissioner-map-pulse {
   align-items: center;
   border: 1px solid currentColor;
@@ -152,9 +131,7 @@
 .commissioner-map-detail.is-attention { border-left-color: var(--club-alert); }
 .commissioner-map-next { border-left: 1px solid var(--club-line); min-width: 0; padding-left: 1.25rem; }
 
-
 @media (max-width: 639px) {
-  .commissioner-map-metrics { grid-template-columns: minmax(0, 1fr); }
   .commissioner-map-banner { align-items: flex-start; }
   .commissioner-map-pulse { flex-basis: 2.25rem; height: 2.25rem; width: 2.25rem; }
   .commissioner-flow { gap: 0; grid-template-columns: minmax(0, 1fr); }
@@ -279,7 +256,6 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6; }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca; }
-
 
 /* Commissioner desk: the Clubhouse. Forest felt, a gilt hairline frame, cream paper cards, one cognac leather band. Colors come from
    the --club-* tokens, which carry their own night values, so nothing here needs a night rule. */
@@ -579,7 +555,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 }
 @media (max-width: 900px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
-  [aria-labelledby="grading-dashboard-title"] .grid.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1100px) and (min-width: 640px) {
   /* Give the two operational panels a full reading rail before their inner
@@ -609,7 +584,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .commissioner-subpage .commissioner-email-list > article > div { min-width: 0; }
 .commissioner-subpage > div > section.grid { padding-top: 1.15rem; padding-bottom: 1.15rem; }
 .commissioner-subpage > div > section.grid > div.border { padding: .75rem; }
-
 
 @media (max-width: 639px) {
   [aria-labelledby="grading-dashboard-title"] .grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr); }
@@ -652,9 +626,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
    size, while repeated decoration and vertical gaps give space back. */
 .commissioner-map { padding-block: 1rem; }
 .commissioner-map-banner { margin-top: 1rem; padding: .75rem .9rem; }
-.commissioner-map-metrics { gap: .45rem; margin-top: .7rem; }
-.commissioner-map-metric { gap: .2rem; padding: .55rem .65rem; }
-.commissioner-map-metric strong { font-size: 1.08rem; }
 .commissioner-flow { list-style: none; margin-top: 1.25rem; }
 .commissioner-flow-button { min-height: 5.25rem; }
 .commissioner-flow-node { flex-basis: 2.35rem; height: 2.35rem; width: 2.35rem; }
@@ -664,7 +635,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .commissioner-tool-card { margin-bottom: .65rem; padding: clamp(.7rem, 1.5vw, 1rem); }
 
 @media (max-width: 900px) {
-  .commissioner-map-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 639px) {
