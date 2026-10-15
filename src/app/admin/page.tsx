@@ -262,6 +262,7 @@ export default function AdminPage() {
           <div className="commissioner-command-links" aria-label="Commissioner shortcuts">
             <Link href="/admin/players"><span>Roster</span><strong>Players</strong></Link>
             <Link href="/admin/reminders"><span>Delivery</span><strong>Email center</strong></Link>
+            <Link href="/admin/trophy-room"><span>History</span><strong>Trophies</strong></Link>
           </div>
         </header>
         <div aria-hidden="true" className="club-band" />

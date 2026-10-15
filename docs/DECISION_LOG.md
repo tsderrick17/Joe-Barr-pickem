@@ -1719,3 +1719,13 @@ A scan of every custom property the stylesheet defines against everything that r
 
 A scan for rules whose classes appear nowhere in the app any more found 12 (the Commissioner map's old metric tiles, a release tile, a grading-dashboard grid override), and one block in the Bowl card stylesheet that sat inside a comment that never closed until the next comment, so about 38 lines of rules were switched off by accident and had never applied. All of it is removed; no screenshot changes (the Bowl, Standings and Slate suites compare identical). The duplicate-selector budget is lowered to 89.
 
+## The Trophy Room (Commissioner only)
+
+A Commissioner-only page (`/admin/trophy-room`, linked from the desk's header as "Trophies") lists every season's champions (Pick'em, Survivor, Bowl Pool; co-champions kept; a pool with no crown shows "Not crowned") and an all-time table scored like a batting average. It is read-only and built from existing records (`pool_championships`, `bowl_pool_championships`, and graded Pick'em picks).
+
+- **At bats (AB)** are graded Pick'em picks. A push is a loss; voided and pending picks never count, so it follows the pool's own scoring rules.
+- **Hits (H)** are covers; **AVG** is H / AB; **SLG** counts a cover on the favorite as a single and on the underdog as a double.
+- **Best season** is the highest average over a season of at least 20 picks; **streak** is the longest run of covers in kickoff order across seasons.
+- A player is ranked once they reach 50 at bats; everyone else follows in an "Under 50 at bats" group. A champion from a season with no pick history on file (the inaugural year) still appears, with no at bats.
+- The numbers come from one pure function (`src/lib/all-time-stats.js`) with its own tests; the route only reads and hands rows to it. Players do not see this page yet.
+

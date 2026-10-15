@@ -135,3 +135,23 @@ export const REMINDERS = {
     ["r5", "featured_window_reveal", "Featured game picks", "cancelled", "Nobody selected a represented game", 0, 0, 0, T(30)],
   ].map(([id, category, title, status, suppressionReason, emailDelivered, emailFailed, emailSuppressed, scheduledFor]) => ({ id, category, audience: "weekly", title, body: `${title}: sample body.`, scheduledFor, status, suppressionReason, emailDelivered, emailFailed, emailSuppressed })),
 };
+
+/** The Trophy Room: two crowned seasons (one with co-champions and one pool not crowned yet), and an all-time table with qualified and unqualified players. */
+const champion = (playerId, name) => ({ playerId, name });
+const row = (playerId, name, seasons, ab, h, avg, slg, best, streak, titles) => ({ playerId, name, seasons, ab, h, avg, slg, bestSeason: best, longestStreak: streak, titles, qualified: ab >= 50 });
+export const TROPHY_ROOM = {
+  trophies: [
+    { seasonYear: 2026, pickem: [champion("p1", "Gary"), champion("p4", "Rick")], survivor: null, bowl: [champion("p2", "Connor")] },
+    { seasonYear: 2025, pickem: [champion("p3", "Tyler")], survivor: [champion("p5", "Zac")], bowl: null },
+  ],
+  players: [
+    row("p3", "Tyler", 2, 212, 127, 127 / 212, 171 / 212, { year: 2025, avg: 0.634, ab: 118 }, 11, { pickem: 1, survivor: 0, bowl: 0 }),
+    row("p1", "Gary", 2, 205, 118, 118 / 205, 160 / 205, { year: 2026, avg: 0.598, ab: 87 }, 9, { pickem: 1, survivor: 0, bowl: 0 }),
+    row("p4", "Rick", 2, 198, 111, 111 / 198, 149 / 198, { year: 2026, avg: 0.571, ab: 82 }, 8, { pickem: 1, survivor: 0, bowl: 0 }),
+    row("p2", "Connor", 2, 190, 102, 102 / 190, 140 / 190, { year: 2025, avg: 0.559, ab: 104 }, 7, { pickem: 0, survivor: 0, bowl: 1 }),
+    row("p6", "Ron", 2, 176, 91, 91 / 176, 118 / 176, { year: 2025, avg: 0.531, ab: 96 }, 6, { pickem: 0, survivor: 0, bowl: 0 }),
+    row("p7", "Al", 1, 34, 20, 20 / 34, 27 / 34, null, 5, { pickem: 0, survivor: 0, bowl: 0 }),
+    row("p8", "Dana", 1, 12, 5, 5 / 12, 7 / 12, null, 3, { pickem: 0, survivor: 0, bowl: 0 }),
+    row("p5", "Zac", 0, 0, 0, null, null, null, 0, { pickem: 0, survivor: 1, bowl: 0 }),
+  ],
+};

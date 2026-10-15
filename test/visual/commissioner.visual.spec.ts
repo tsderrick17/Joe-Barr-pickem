@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { commissionerApi, NOW, PLAYERS, REMINDERS } from "./commissioner-fixtures.mjs";
+import { commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 
@@ -25,6 +25,7 @@ async function serve(page: Page, state: string) {
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "admin/players") return route.fulfill({ json: PLAYERS });
     if (path === "admin/reminders") return route.fulfill({ json: REMINDERS });
+    if (path === "admin/trophy-room") return route.fulfill({ json: TROPHY_ROOM });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     if (path in api) return route.fulfill({ json: api[path] });
     return route.fulfill({ status: 204, body: "" });
@@ -95,8 +96,8 @@ for (const panel of PANELS) {
   }
 }
 
-// The Players and Reminders pages.
-for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"]] as const) {
+// The Players, Email center (reminders) and Trophy room pages.
+for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/admin/trophy-room", "table"]] as const) {
   for (const theme of ["day", "night"]) {
     for (const [label, width] of Object.entries(WIDTHS)) {
       if (theme === "night" && width !== 390 && width !== 1280) continue;
