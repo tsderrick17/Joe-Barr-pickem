@@ -61,7 +61,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | A team chosen, not yet submitted | `unsaved-change` |
 | Not a participant, first kickoff passed | `entry-closed` |
 
-## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
+## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`, `/admin/trophy-room`) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
 
 | View | States |
 | --- | --- |
@@ -76,6 +76,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in |
 | Reminders | scheduled, sent, cancelled-with-reason |
+| Trophy room (past champions by season; all-time batting table with qualified players, an under-50-at-bats group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
 
 ## Account pages — `account.visual.spec.ts`
 
