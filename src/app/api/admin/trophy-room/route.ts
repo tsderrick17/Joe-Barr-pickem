@@ -10,10 +10,11 @@ export async function GET(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
   if (!commissionerResult.ok) return accessDenied(commissionerResult);
 
-  const [players, seasons, periods, championships, bowlSeasons, bowlChampionships, games, lines, picks] = await Promise.all([
+  const [players, seasons, periods, survivorEntries, championships, bowlSeasons, bowlChampionships, games, lines, picks] = await Promise.all([
     supabaseAdmin.from("players").select("id, first_name"),
     supabaseAdmin.from("seasons").select("id, year"),
-    supabaseAdmin.from("scoring_periods").select("id, season_id"),
+    supabaseAdmin.from("scoring_periods").select("id, season_id, display_order, period_type"),
+    supabaseAdmin.from("survivor_entries").select("player_id, eliminated_scoring_period_id"),
     supabaseAdmin.from("pool_championships").select("season_year, pool, player_id"),
     supabaseAdmin.from("bowl_pool_seasons").select("id, season_year"),
     supabaseAdmin.from("bowl_pool_championships").select("season_id, player_id"),
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     readAllPages((from, to) => supabaseAdmin.from("picks").select("id, player_id, game_id, scoring_period_id, selected_team_id, result").in("result", ["win", "loss"]).order("id").range(from, to)),
   ]);
 
-  const failed = [players, seasons, periods, championships, bowlSeasons, bowlChampionships, games, lines, picks].some((read) => read.error);
+  const failed = [players, seasons, periods, survivorEntries, championships, bowlSeasons, bowlChampionships, games, lines, picks].some((read) => read.error);
   if (failed) return NextResponse.json({ error: "The Trophy Room could not be loaded." }, { status: 500 });
 
   const bowlYearBySeason = new Map((bowlSeasons.data ?? []).map((season) => [season.id, season.season_year]));
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
     games: games.data ?? [],
     lines: lines.data ?? [],
     picks: picks.data ?? [],
+    survivorEntries: survivorEntries.data ?? [],
     championships: championships.data ?? [],
     bowlChampionships: (bowlChampionships.data ?? []).flatMap((record) => {
       const year = bowlYearBySeason.get(record.season_id);

@@ -10,7 +10,8 @@ type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champio
 type Row = {
   playerId: string; name: string; seasons: number; ab: number; h: number; avg: number | null; slg: number | null;
   bestSeason: { year: number; avg: number; ab: number } | null; longestStreak: number;
-  titles: { pickem: number; survivor: number; bowl: number }; qualified: boolean;
+  survivorExit: { averageWeek: number; exits: number } | null;
+  titles: { pickem: number; survivor: number }; qualified: boolean;
 };
 
 const pools: Array<{ key: "pickem" | "survivor" | "bowl"; label: string }> = [
@@ -24,9 +25,12 @@ function names(champions: Champion[] | null) {
 }
 
 function titleCount(titles: Row["titles"]) {
-  const total = titles.pickem + titles.survivor + titles.bowl;
-  if (!total) return "—";
-  return [titles.pickem ? `${titles.pickem} Pick’em` : "", titles.survivor ? `${titles.survivor} Survivor` : "", titles.bowl ? `${titles.bowl} Bowl` : ""].filter(Boolean).join(" · ");
+  if (!titles.pickem && !titles.survivor) return "—";
+  return [titles.pickem ? `${titles.pickem} Pick’em` : "", titles.survivor ? `${titles.survivor} Survivor` : ""].filter(Boolean).join(" · ");
+}
+
+function survivorExit(exit: Row["survivorExit"]) {
+  return exit ? `Wk ${exit.averageWeek.toFixed(1)} (${exit.exits}×)` : "—";
 }
 
 export default function TrophyRoomPage() {
@@ -64,6 +68,7 @@ export default function TrophyRoomPage() {
         <td>{formatAverage(row.slg)}</td>
         <td>{row.bestSeason ? `${formatAverage(row.bestSeason.avg)} (${row.bestSeason.year})` : "—"}</td>
         <td>{row.longestStreak || "—"}</td>
+        <td>{survivorExit(row.survivorExit)}</td>
         <td className="trophy-titles">{titleCount(row.titles)}</td>
       </tr>
     );
@@ -110,11 +115,11 @@ export default function TrophyRoomPage() {
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table">
                 <thead>
-                  <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th><th scope="col">AB</th><th scope="col">H</th><th scope="col">AVG</th><th scope="col">SLG</th><th scope="col">Best season</th><th scope="col">Streak</th><th scope="col">Titles</th></tr>
+                  <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th><th scope="col">AB</th><th scope="col">H</th><th scope="col">AVG</th><th scope="col">SLG</th><th scope="col">Best season</th><th scope="col">Streak</th><th scope="col">Survivor exit</th><th scope="col">Titles</th></tr>
                 </thead>
                 <tbody>
                   {qualified.map((row, index) => line(row, index + 1))}
-                  {others.length ? <tr className="trophy-divider"><td colSpan={9}>Under {QUALIFYING_AB} at bats</td></tr> : null}
+                  {others.length ? <tr className="trophy-divider"><td colSpan={10}>Under {QUALIFYING_AB} at bats</td></tr> : null}
                   {others.map((row) => line(row, null))}
                 </tbody>
               </table>
@@ -127,7 +132,8 @@ export default function TrophyRoomPage() {
                 <li><b>SLG</b> (slugging): a cover on the favorite is a single, a cover on the underdog is a double. SLG is total bases divided by AB.</li>
                 <li><b>Best season</b>: highest average in one season of at least 20 picks.</li>
                 <li><b>Streak</b>: the longest run of covers in a row, in the order the games kicked off.</li>
-                <li><b>Titles</b>: Pick’em, Survivor and Bowl Pool championships. Co-champions each get one.</li>
+                <li><b>Survivor exit</b>: the average week a player was knocked out of Survivor, and how many times (Wk 7.0 (3×) means three exits averaging Week 7). A season still alive or won is not an exit.</li>
+                <li><b>Titles</b>: Pick’em and Survivor championships; co-champions each get one. The Bowl Pool is a separate game: its champions appear in the season plaques only.</li>
               </ul>
             </details>
           </section>

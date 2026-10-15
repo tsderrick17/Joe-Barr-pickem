@@ -4,7 +4,13 @@ import { BEST_SEASON_MIN_AB, QUALIFYING_AB, buildAllTimeStats, formatAverage } f
 
 const players = [{ id: "ann", first_name: "Ann" }, { id: "bob", first_name: "Bob" }, { id: "cy", first_name: "Cy" }];
 const seasons = [{ id: "s25", year: 2025 }, { id: "s26", year: 2026 }];
-const periods = [{ id: "p25", season_id: "s25" }, { id: "p26", season_id: "s26" }];
+const periods = [
+  { id: "p25", season_id: "s25", display_order: 1, period_type: "regular" },
+  { id: "p26", season_id: "s26", display_order: 1, period_type: "regular" },
+  { id: "w4", season_id: "s26", display_order: 4, period_type: "regular" },
+  { id: "w9", season_id: "s26", display_order: 9, period_type: "regular" },
+  { id: "wild", season_id: "s26", display_order: 19, period_type: "playoff" },
+];
 
 /** n games, one per day from a start date, with a given favorite on every game ("fav"). */
 const makeGames = (count, prefix = "g", start = Date.parse("2026-09-01T17:00:00Z")) =>
@@ -95,7 +101,29 @@ test("the trophy room lists seasons newest first with co-champions kept and a mi
   assert.equal(result.trophies[0].survivor, null, "no Survivor champion crowned yet in 2026");
   assert.deepEqual(result.trophies[0].bowl.map((entry) => entry.name), ["Bob"]);
   const ann = result.players.find((row) => row.name === "Ann");
-  assert.deepEqual(ann.titles, { pickem: 2, survivor: 0, bowl: 0 });
+  assert.deepEqual(ann.titles, { pickem: 2, survivor: 0 });
+  assert.equal(result.players.find((row) => row.name === "Cy").titles.pickem, 1);
   assert.equal(ann.ab, 0, "a champion with no pick history on file still has a row");
   assert.equal(ann.avg, null);
+});
+
+test("the Bowl Pool is not part of the batting table: a Bowl-only champion has no row and no title count", () => {
+  const result = buildAllTimeStats({ players, seasons, periods, games: [], lines: [], picks: [], bowlChampionships: [{ season_year: 2026, player_id: "bob" }] });
+  assert.equal(result.players.length, 0, "a Bowl champion with no Pick'em or Survivor history is not a batter");
+  assert.deepEqual(result.trophies[0].bowl.map((entry) => entry.name), ["Bob"], "but the season plaque still names the Bowl champion");
+});
+
+test("Survivor exit is the average regular-season week of each elimination, ignoring seasons still alive and playoff periods", () => {
+  const survivorEntries = [
+    { player_id: "ann", eliminated_scoring_period_id: "w4" },
+    { player_id: "ann", eliminated_scoring_period_id: "w9" },
+    { player_id: "ann", eliminated_scoring_period_id: null },    // a season she won or is still alive in: not an exit
+    { player_id: "bob", eliminated_scoring_period_id: "wild" },  // not a regular week: ignored
+  ];
+  const games = makeGames(1);
+  const picks = [pick("ann", games[0], "win"), pick("bob", games[0], "loss")];
+  const rows = buildAllTimeStats({ players, seasons, periods, games, lines: lines(games), picks, survivorEntries }).players;
+  const ann = rows.find((row) => row.name === "Ann");
+  assert.deepEqual(ann.survivorExit, { averageWeek: 6.5, exits: 2 });
+  assert.equal(rows.find((row) => row.name === "Bob").survivorExit, null);
 });

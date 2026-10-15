@@ -1726,6 +1726,8 @@ A Commissioner-only page (`/admin/trophy-room`, linked from the desk's header as
 - **At bats (AB)** are graded Pick'em picks. A push is a loss; voided and pending picks never count, so it follows the pool's own scoring rules.
 - **Hits (H)** are covers; **AVG** is H / AB; **SLG** counts a cover on the favorite as a single and on the underdog as a double.
 - **Best season** is the highest average over a season of at least 20 picks; **streak** is the longest run of covers in kickoff order across seasons.
+- **Survivor exit** is the average regular-season week a player was knocked out of Survivor, with the number of exits (a season still alive, or won, is not an exit and is not averaged in).
+- The Bowl Pool is a separate game and is not part of the batting table: its champions appear only in the season plaques.
 - A player is ranked once they reach 50 at bats; everyone else follows in an "Under 50 at bats" group. A champion from a season with no pick history on file (the inaugural year) still appears, with no at bats.
 - The numbers come from one pure function (`src/lib/all-time-stats.js`) with its own tests; the route only reads and hands rows to it. Players do not see this page yet.
 
