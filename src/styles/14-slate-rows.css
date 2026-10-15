@@ -264,12 +264,6 @@ button.slate-team-side:not(:disabled)::after {
   box-shadow: var(--pool-focus-ring);
 }
 
-.commissioner-map-release {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 1rem !important;
-  letter-spacing: .04em;
-}
-
 /* Without Survivor chips, a finished team's block (name, score and the line with its picker names) is centered in its half
    of the row, the way an upcoming game's name is, and everything in it is centered on the line. */
 .slate-game-row.no-survivor-layout.is-final > .slate-team-side > .slate-final-team-stack {

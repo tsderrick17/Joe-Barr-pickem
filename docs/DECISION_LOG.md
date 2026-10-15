@@ -1715,3 +1715,7 @@ After each production deploy the smoke gate already checked the health endpoints
 
 A scan of every custom property the stylesheet defines against everything that reads one (CSS, components, Tailwind classes) found 36 that nothing reads, 62 declarations in all (old theme slots, asset-card and snapshot colours, unused spacing steps). They are removed; nothing renders differently. The hex-colour budget is lowered to 252.
 
+## Stylesheet: dead rules removed
+
+A scan for rules whose classes appear nowhere in the app any more found 12 (the Commissioner map's old metric tiles, a release tile, a grading-dashboard grid override), and one block in the Bowl card stylesheet that sat inside a comment that never closed until the next comment, so about 38 lines of rules were switched off by accident and had never applied. All of it is removed; no screenshot changes (the Bowl, Standings and Slate suites compare identical). The duplicate-selector budget is lowered to 89.
+
