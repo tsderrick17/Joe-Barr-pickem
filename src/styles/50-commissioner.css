@@ -614,6 +614,10 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
   .commissioner-command-links a { flex: 1; min-width: 0; padding: .65rem .8rem .7rem; }
   .commissioner-command-links strong { font-size: .92rem; }
   .commissioner-panel-tab { font-size: .9rem; padding: .62rem .7rem; }
+  /* Five tabs never fit in one row on a phone, so the rail wraps into two even rows (three, then two) and nothing sits off screen. */
+  .commissioner-panel-tabs { flex-wrap: wrap; overflow-x: visible; }
+  .commissioner-panel-tab { flex: 1 1 calc(33.333% - .3rem); min-width: 0; padding-inline: .4rem; }
+  .commissioner-panel-tab > span { display: none; }
 
   /* Charts are a primary mobile surface: keep the legend compact, give the
      selected observation a clean reading order, and preserve plot height. */
