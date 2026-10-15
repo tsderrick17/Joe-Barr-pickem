@@ -201,7 +201,7 @@ export default function BowlPoolPage() {
           {optedIn === true ? <section className="bowl-pool-board mt-3 border border-slate-300 bg-(color:--themed-bg-26) p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
             <BowlCrest seasonYear={currentSeasonYear()} title="BOWL POOL" />
-            <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Pick every bowl, including playoffs, against the spread. Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul>
+            <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul>
             {!poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
           </div>
           <div className="mt-4 overflow-hidden border border-slate-300 sm:mt-5">

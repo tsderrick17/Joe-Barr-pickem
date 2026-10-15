@@ -1422,7 +1422,7 @@ On a finished or live row the spread's middle is level with the middle of the te
 
 The receipt now sits right under the menu (the page had a large blank band above it), and Opt out is a small link at the foot of the board instead of its own line between the receipt and the board. Each team is a large boxed button (at least 3.1 rem tall, with margin on every side) so a tap can never land on the wrong team; the chosen team's pennant fills its box, and names wrap only between words. On a phone the line has its own lane between the two boxes, wide enough for a spread like -10.5.
 Pennants keep their normal size inside the boxes rather than stretching to the box width. The instructions read: "Pick every game." / "A game with no pick counts as a loss." / "Selections lock and are revealed to others at kickoff." / "Tiebreaker is total points in Championship game." (Submit is no longer mentioned; the receipt carries it.)
-Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Pick every bowl, including playoffs, against the spread. Participation is optional."
+Opt out returns to the top of the board, as a small link right under the instructions, and the first instruction reads "Participation is optional." on its own line, followed by "Pick every bowl, including playoffs, against the spread."
 
 ## Screenshot safety net
 
@@ -1688,3 +1688,8 @@ A recording of the live football showed it hitching while the page loaded: the s
 The ball itself is Monday's (the half-wrap stripes sheet from #506). Two attempts to change its look were tried and dropped: stripes wrapping the whole ball (#523) and thin dark panel seams (#524) both made the motion steadier on paper, but the owner preferred Monday's ball. Do not re-chase the "pulse" by redrawing the ball without asking first.
 
 Wobble no longer runs by default (its size was already 0). The Workshop turns it on only when its Wobble size slider is above 0.
+
+## The Survivor instruction goes away for a player who is out
+
+"Click a poker chip to choose a team." (the SURVIVOR line in the Slate's instructions) now shows only for a player who is still in Survivor that week. A player who is out, or whose Survivor section has left the receipt, no longer sees it. This replaces the earlier rule that the line showed for everyone while Survivor was part of the slate.
+
