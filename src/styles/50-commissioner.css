@@ -376,6 +376,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*
   transition: background .18s ease, color .18s ease;
 }
 .commissioner-panel-tab > span { color: var(--club-gold); font: 700 .56rem Arial, sans-serif; letter-spacing: .2em; }
+@media (max-width: 639px) { .commissioner-panel-tab > span { display: none; } }
 .commissioner-panel-tab:hover { background: rgba(255, 255, 255, .07); color: var(--sand-93); }
 .commissioner-panel-tab.is-active { background: linear-gradient(180deg, var(--club-paper), var(--club-paper-2)); box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 3px 8px rgba(0, 0, 0, .3); color: var(--club-ink); }
 .commissioner-panel-tab.is-active::after { background: var(--club-gold); bottom: .3rem; content: ""; height: 1px; left: 24%; position: absolute; right: 24%; }
@@ -613,11 +614,9 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
   .commissioner-command-links { width: 100%; }
   .commissioner-command-links a { flex: 1; min-width: 0; padding: .65rem .8rem .7rem; }
   .commissioner-command-links strong { font-size: .92rem; }
-  .commissioner-panel-tab { font-size: .9rem; padding: .62rem .7rem; }
   /* Five tabs never fit in one row on a phone, so the rail wraps into two even rows (three, then two) and nothing sits off screen. */
   .commissioner-panel-tabs { flex-wrap: wrap; overflow-x: visible; }
-  .commissioner-panel-tab { flex: 1 1 calc(33.333% - .3rem); min-width: 0; padding-inline: .4rem; }
-  .commissioner-panel-tab > span { display: none; }
+  .commissioner-panel-tab { flex: 1 1 calc(33.333% - .3rem); font-size: .9rem; min-width: 0; padding: .62rem .4rem; }
 
   /* Charts are a primary mobile surface: keep the legend compact, give the
      selected observation a clean reading order, and preserve plot height. */
