@@ -1681,11 +1681,10 @@ A Monday burst of Dependabot branches (three npm pull requests plus a workflow o
 
 Pick'em and Bowl Pool trophy titles name the season as it is played across two calendar years (`'25-26 Bowl Pool Champion`). Survivor is decided within a single calendar year, so its titles read `'25 Survivor Champion` (`championshipTitle`).
 
-## The loading football turns on the compositor, with visible seams
+## The loading football turns on the compositor; the look stays Monday's
 
-A recording of the live football showed two separate problems, so the fix has two parts.
+A recording of the live football showed it hitching while the page loaded: the spin stepped `background-position`, which Safari repaints on the busy main thread (8 skipped beats in the first turn, a freeze just before the page appeared). The ball is now a clipping window and the 108-frame sheet slides inside it by `transform` (one held keyframe per frame), which the phone runs off the main thread. A phone test page ran both side by side on the same recording: the old method showed 42 doubled steps in 218 refreshes against about 20 for the transform method.
 
-- **The spin hitched while the page loaded.** It stepped `background-position`, which Safari repaints on the main thread, and that thread is busy while a page loads (8 skipped beats in the first turn, a freeze just before the page appeared). The ball is now a clipping window and the 108-frame sheet slides inside it by `transform` (one held keyframe per frame), which the phone runs off the main thread. A phone test page ran both side by side: on the same recording the old method showed 42 doubled steps in 218 refreshes against about 20 for the transform method.
-- **The motion read as a pulse.** The stripes wrap the whole ball, so only the laces moved, and the ball looked still for most of each turn. Thin dark seams between the four leather panels now give every frame something to move. The panels stay one colour (a version with shaded panels read as "a bunch of browns"), the seams are toned down to keep the ball's shape, and measured evenness of the motion went from 4.6 to 3.1 (about 1-2 reads as steady) at the same brightness.
-- **Wobble.** The wobble animation no longer runs by default (its size was already 0). The Workshop turns it on only when its Wobble size slider is above 0.
+The ball itself is Monday's (the half-wrap stripes sheet from #506). Two attempts to change its look were tried and dropped: stripes wrapping the whole ball (#523) and thin dark panel seams (#524) both made the motion steadier on paper, but the owner preferred Monday's ball. Do not re-chase the "pulse" by redrawing the ball without asking first.
 
+Wobble no longer runs by default (its size was already 0). The Workshop turns it on only when its Wobble size slider is above 0.
