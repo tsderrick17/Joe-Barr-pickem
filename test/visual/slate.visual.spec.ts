@@ -109,3 +109,15 @@ for (const width of [360, 390, 700, 1280]) {
     });
   }
 }
+
+// The Survivor instruction is only for a player who can still pick that week: shown while they are in, gone once they are out.
+for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-survivor", false]] as const) {
+  test(`Slate Survivor instruction ${shown ? "shows" : "is gone"} (${scenario})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await signIn(page);
+    await serve(page, scenario);
+    await page.goto("/board");
+    await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
+    await expect(page.getByText("Click a poker chip to choose a team.")).toHaveCount(shown ? 1 : 0);
+  });
+}
