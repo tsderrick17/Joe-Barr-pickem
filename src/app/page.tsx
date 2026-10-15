@@ -1,7 +1,7 @@
 "use client";
 
 import AtsResultStamp from "@/components/ats-result-stamp";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import SurvivorTable from "@/components/survivor-table";
@@ -122,8 +122,11 @@ export default function HomePage() {
           ...displayPreferenceOverrides.current,
         };
         rememberBowlCard(result.seasonPhase === "off_season" || effectiveResult.showBowlCard);
-        setData(effectiveResult);
-        setBowlPoolMinimized(!effectiveResult.showBowlCard);
+        // As a transition, React paints the full Standings in slices and yields between them, so the loading football stays live.
+        startTransition(() => {
+          setData(effectiveResult);
+          setBowlPoolMinimized(!effectiveResult.showBowlCard);
+        });
         hasLoaded = true;
 
         if (revealTimer !== null) {
