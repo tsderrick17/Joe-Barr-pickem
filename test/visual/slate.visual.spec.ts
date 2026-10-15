@@ -126,6 +126,8 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
     await expect(page.getByText("Click a poker chip to choose a team.")).toHaveCount(shown ? 1 : 0);
+  });
+}
 
 // The Pick'em line at the foot of the ticket ("1/2 · CHANGED · 1 DUE") stays on one line and inside its section at every width, in the
 // longest states: one team picked and unsaved, and a live week with locked picks.
