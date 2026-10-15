@@ -146,9 +146,10 @@ button.slate-team-side:not(:disabled)::after {
 .slate-lock-note { left: 50%; position: absolute; top: calc(100% + 2px); transform: translateX(-50%); white-space: nowrap; }
 /* With poker chips beside the line, the note hangs below the chips rather than running under their edges. */
 .slate-game-row.has-survivor-layout .slate-lock-note { top: calc(100% + 1rem); }
-/* A row with a note gets a little more room, the same above and below, so the spread stays centered and the note stays inside. */
-.slate-game-row.has-lock-note { padding-block: 1rem; }
-.slate-game-row.has-survivor-layout.has-lock-note { padding-block: .6rem; }
+/* A row with a note keeps the same room above as any other row and gets the extra room only below, where the note hangs, so it
+   stays close to the other rows' heights. */
+.slate-game-row.has-lock-note { padding-bottom: 1rem; }
+.slate-game-row.has-survivor-layout.has-lock-note { padding-bottom: .6rem; }
 .slate-preview-spread { display: block; transform: translateX(-2.4rem); }
 /* Survivor rows already reserve symmetric chip lanes around the spread. Do
    not apply the no-chip centering adjustment here; it pulls the line into the
