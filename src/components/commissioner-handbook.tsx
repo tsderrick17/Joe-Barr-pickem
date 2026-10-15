@@ -34,14 +34,14 @@ export default function CommissionerHandbook() {
         <div>
           <h3 className="font-serif text-2xl font-bold">Gameday runbook</h3>
           <ol className="mt-3 space-y-2">
-            {runbook.map(([title, detail]) => <li className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={title}><p className="font-bold">{title}</p><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</p></li>)}
+            {runbook.map(([title, detail]) => <li className="desk-panel p-3" key={title}><p className="font-bold">{title}</p><p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</p></li>)}
           </ol>
         </div>
         <div>
           <h3 className="font-serif text-2xl font-bold">Published pool constitution</h3>
           <p className="mt-2 text-sm leading-5 text-(color:--themed-text-29)">The public reference for what is submitted, when it becomes visible, how it is graded, and how the season is preserved.</p>
           <dl className="mt-3 space-y-2">
-            {constitution.map(([term, detail]) => <div className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</dd></div>)}
+            {constitution.map(([term, detail]) => <div className="desk-panel p-3" key={term}><dt className="font-bold">{term}</dt><dd className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{detail}</dd></div>)}
           </dl>
         </div>
       </div>

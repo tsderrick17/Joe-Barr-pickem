@@ -39,9 +39,9 @@ export default function OpeningWeekChecklist() {
       <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={run} type="button">{loading ? "Checking..." : "Refresh checklist"}</button>
     </div>
     {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
-    {result ? <div className={`mt-5 border p-4 ${result.status === "attention" ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24)" : result.status === "setup" ? "border-(color:--themed-border-16) bg-(color:--themed-bg-21)" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23)"}`}>
+    {result ? <div className={`mt-5 desk-status p-4 ${result.status === "attention" ? "is-alert" : result.status === "setup" ? "is-warn" : "is-ok"}`}>
       <p className="font-bold">{heading[result.status][0]}</p><p className="mt-1 text-sm">{heading[result.status][1]}</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">{result.checks.map((check) => <article className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={check.id}>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">{result.checks.map((check) => <article className="desk-status p-3" key={check.id}>
         <p className={`text-sm font-bold ${check.state === "attention" ? "text-red-800" : check.state === "setup" ? "text-(color:--themed-text-21)" : check.state === "manual" ? "text-sky-800" : "text-green-800"}`}>{check.state === "attention" ? "REVIEW" : check.state === "setup" ? "SETUP" : check.state === "manual" ? "ONE-MINUTE CHECK" : "READY"} · {check.label}</p>
         <p className="mt-1 text-sm leading-5 text-(color:--themed-text-30)">{check.detail}</p>
       </article>)}</div>

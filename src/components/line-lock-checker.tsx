@@ -147,7 +147,7 @@ export default function LineLockChecker() {
         type="button"
         disabled={isChecking}
         onClick={checkOfficialLines}
-        className="mt-6 bg-(color:--themed-bg-27) px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-6 desk-button-solid px-5 py-4 font-bold disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isChecking
           ? "Checking official spreads..."

@@ -132,7 +132,7 @@ export default function PlayerManagementPage() {
   return (
     <main className="commissioner-subpage min-h-screen px-5 py-8 text-(color:--themed-text-31) md:px-10">
       <div className="mx-auto max-w-5xl">
-        <header className="border-b-2 border-zinc-900 pb-7">
+        <header className="desk-rule-bottom pb-7">
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-sm font-bold tracking-[0.24em] text-slate-600">
@@ -170,7 +170,7 @@ export default function PlayerManagementPage() {
             </p>
 
             <form
-              className="mt-6 border-y-2 border-zinc-900 py-6"
+              className="mt-6 desk-rule-y py-6"
               onSubmit={addPlayer}
             >
               <label
@@ -187,7 +187,7 @@ export default function PlayerManagementPage() {
                 maxLength={40}
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
-                className="mt-2 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-4 py-3 text-lg outline-none focus:border-zinc-900"
+                className="mt-2 w-full desk-input px-4 py-3 text-lg outline-none"
                 placeholder="Mike"
               />
 
@@ -212,7 +212,7 @@ export default function PlayerManagementPage() {
                     event.target.value.replace(/\D/g, "").slice(0, 4),
                   )
                 }
-                className="mt-2 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-4 py-3 text-center text-2xl tracking-[0.45em] outline-none focus:border-zinc-900"
+                className="mt-2 w-full desk-input px-4 py-3 text-center text-2xl tracking-[0.45em] outline-none"
                 placeholder="0000"
               />
 
@@ -223,7 +223,7 @@ export default function PlayerManagementPage() {
               ) : null}
 
               {successMessage ? (
-                <p className="mt-4 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) px-4 py-3 font-semibold text-green-900">
+                <p className="mt-4 desk-status is-ok px-4 py-3 font-semibold">
                   {successMessage}
                 </p>
               ) : null}
@@ -235,7 +235,7 @@ export default function PlayerManagementPage() {
                   pin.length !== 4 ||
                   isSubmitting
                 }
-                className="mt-6 w-full bg-(color:--themed-bg-27) px-5 py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-6 w-full desk-button-solid px-5 py-4 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? "Adding player..." : "Add Player"}
               </button>
@@ -258,7 +258,7 @@ PINs are unique login identifiers and may be viewed here at any time.
             </div>
 
             {errorMessage && !isLoading ? (
-              <div className="mt-6 flex items-center justify-between gap-4 border border-(color:--themed-border-23) bg-(color:--themed-bg-24) px-4 py-3 text-sm text-red-800">
+              <div className="mt-6 flex items-center justify-between gap-4 desk-status is-alert px-4 py-3 text-sm">
                 <span>{errorMessage}</span>
                 <button
                   type="button"
@@ -270,7 +270,7 @@ PINs are unique login identifiers and may be viewed here at any time.
               </div>
             ) : null}
 
-            <div className="mt-4 border-y-2 border-zinc-900">
+            <div className="mt-4 desk-rule-y">
               {isLoading ? (
                 <p className="py-5 text-(color:--themed-text-28)">
                   Loading players...

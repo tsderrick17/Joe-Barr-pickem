@@ -520,8 +520,21 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 @media (max-width: 900px) { .at-glance { grid-template-columns: minmax(0, 1fr); } }
 .desk-button { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); transition: background .18s ease, border-color .18s ease; }
 .desk-button:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
+/* The desk's own controls and notices, used by every tool on the Season, Bowl Pool, Players and Email screens: a forest button, a quiet
+   paper panel, and status boxes that mark ok / warning / alert with a left bar in the desk's three signal colours. */
+.desk-button-solid { background: var(--club-forest); border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--sand-93); letter-spacing: .02em; transition: background .18s ease, border-color .18s ease; }
+.desk-button-solid:hover:not(:disabled) { background: var(--club-forest-2); border-color: var(--club-gold); }
+.desk-panel { background: var(--club-paper-2); border: 1px solid var(--club-line); border-radius: 2px; border-top-color: var(--club-gold-dk); }
+.desk-status { background: var(--club-paper-2); border: 1px solid var(--club-line); border-left: 3px solid var(--club-line); border-radius: 2px; color: var(--club-ink); }
+.desk-status.is-ok { border-left-color: var(--club-ok); }
+.desk-status.is-warn { border-left-color: var(--club-warn); }
+.desk-status.is-alert { border-left-color: var(--club-alert); }
 .desk-card.is-awaiting { box-shadow: 0 0 0 1px var(--club-gold-dk); opacity: .85; }
 .desk-rule-top { border-top: 1px solid var(--club-line); }
+.desk-rule-bottom { border-bottom: 1px solid var(--club-gold-dk); }
+.desk-rule-y { border-block: 1px solid var(--club-gold-dk); }
+.desk-input { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); }
+.desk-input:focus { border-color: var(--club-forest-2); box-shadow: 0 0 0 1px var(--club-forest-2); }
 .grading-status { align-items: center; border: 1px solid; border-radius: .75rem; display: grid; gap: .9rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin-top: 1rem; padding: .9rem 1rem; }
 .grading-status { background: var(--club-paper-2); border-color: var(--club-line); border-left-width: 3px; }
 .grading-status.is-clear { border-left-color: var(--club-ok); }

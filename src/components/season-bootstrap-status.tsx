@@ -63,12 +63,12 @@ export default function SeasonBootstrapStatus() {
         <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={runNow} type="button">{busy ? "Running…" : "Run automatic check now"}</button>
       </div>
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
-      {status ? <div className={`mt-4 border p-4 ${status.complete ? "border-(color:--themed-border-21) bg-(color:--themed-bg-23)" : "border-(color:--themed-border-17) bg-(color:--themed-bg-21)"}`}>
+      {status ? <div className={`mt-4 desk-status p-4 ${status.complete ? "is-ok" : "is-warn"}`}>
         <p className="font-bold">{status.complete ? `${status.seasonYear} schedule is fully loaded` : `${status.seasonYear} is waiting safely`}</p>
         <p className="mt-1 text-sm">{status.loadedGames} games pinned · {status.regularPeriods} regular weeks ready · season state: {status.seasonState ?? "not created yet"}</p>
         <p className="mt-2 text-xs text-(color:--themed-text-28)">Last automatic attempt: {status.lastRun?.completed_at ? new Date(status.lastRun.completed_at).toLocaleString() : "not run yet"}{status.lastRun?.details?.outcome ? ` · ${status.lastRun.details.outcome.replaceAll("_", " ")}` : ""}</p>
       </div> : null}
-      {status?.turnover ? <div className={`mt-3 border p-4 ${status.turnover.status === "completed" ? "border-(color:--themed-border-21) bg-(color:--themed-bg-23)" : "border-(color:--themed-border-25) bg-(color:--themed-bg-24)"}`}>
+      {status?.turnover ? <div className={`mt-3 desk-status p-4 ${status.turnover.status === "completed" ? "is-ok" : "is-alert"}`}>
         <p className="font-bold">{status.turnover.status === "completed" ? `${status.seasonYear} season turnover is certified` : "Season turnover needs Commissioner review"}</p>
         {status.turnover.status === "completed" ? <>
           <p className="mt-1 text-sm">Official games, lines, picks, championships, and message receipts were preserved. {countValues(status.turnover.deleted_counts).toLocaleString()} disposable record{countValues(status.turnover.deleted_counts) === 1 ? "" : "s"} were cleared.</p>

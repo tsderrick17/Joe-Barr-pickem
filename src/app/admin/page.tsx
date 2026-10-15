@@ -346,7 +346,7 @@ export default function AdminPage() {
           </p>
 
           <button
-            className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-5 desk-button-solid px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
             disabled={isLoading}
             onClick={previewOdds}
           >
@@ -427,10 +427,10 @@ export default function AdminPage() {
           <p className="commissioner-tool-eyebrow">VALIDATE BEFORE WRITING</p>
           <h2 className="font-serif text-2xl font-bold">Import games</h2>
 
-          <div className="mt-5 border-2 border-zinc-900 bg-(color:--themed-bg-26) p-5">
+          <div className="desk-panel mt-5 p-5">
             <h3 className="font-serif text-xl font-bold">Preseason full-schedule bootstrap</h3>
             <p className="mt-2 text-sm text-(color:--themed-text-29)">Run once during preseason. It validates every regular-season game and week (272 games over 18 weeks today; a longer season is read from the feed) before saving anything, then permanently pins every matchup to its pool week.</p>
-            <button className="mt-4 bg-(color:--themed-bg-27) px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={previewFullSchedule}>{fullScheduleBusy ? "Checking..." : "Validate full season"}</button>
+            <button className="mt-4 desk-button-solid px-4 py-2 font-bold disabled:opacity-40" disabled={fullScheduleBusy} onClick={previewFullSchedule}>{fullScheduleBusy ? "Checking..." : "Validate full season"}</button>
             {fullSchedulePreview ? <div className="mt-4"><p className="font-semibold">{fullSchedulePreview.games} games across {fullSchedulePreview.weeks} weeks passed provider validation. {fullSchedulePreview.note}</p><button className="mt-3 bg-red-800 px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={importFullSchedule}>Load and pin full season</button></div> : null}
             {fullScheduleMessage ? <p className="mt-4 font-semibold text-green-800">{fullScheduleMessage}</p> : null}
             {fullScheduleError ? <p className="mt-4 font-semibold text-red-700">{fullScheduleError}</p> : null}
@@ -441,7 +441,7 @@ export default function AdminPage() {
           </p>
 
           <button
-            className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-5 desk-button-solid px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
             disabled={isImportLoading || isImporting}
             onClick={previewImport}
           >
@@ -483,7 +483,7 @@ export default function AdminPage() {
               </button>
 
               {importResult ? (
-                <div className="mt-5 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) p-4 text-green-950">
+                <div className="mt-5 desk-status is-ok p-4">
                   <p className="font-bold">{importResult.message}</p>
                   <p className="mt-1 text-sm">
                     Games saved: {importResult.importedGames}

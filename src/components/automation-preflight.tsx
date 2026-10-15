@@ -53,7 +53,7 @@ export default function AutomationPreflight() {
     {(Object.keys(groupLabels) as Group[]).map((group) => {
       const checks = result.checks.filter((item) => item.group === group);
       if (!checks.length) return null;
-      return <section className="border border-zinc-300 bg-(color:--themed-bg-26) p-4" key={group}>
+      return <section className="desk-panel p-4" key={group}>
         <h3 className="text-xs font-black tracking-[0.14em] text-(color:--themed-text-28)">{groupLabels[group].toUpperCase()}</h3>
         <ul className="mt-3 divide-y divide-zinc-200">
           {checks.map((item) => <li className="py-3 first:pt-0 last:pb-0" key={item.check_id}>
