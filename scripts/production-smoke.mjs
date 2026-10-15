@@ -2,6 +2,9 @@ import { pathToFileURL } from "node:url";
 
 export const PRODUCTION_SMOKE_PATHS = [
   "/",
+  "/board",
+  "/bowl-pool",
+  "/football-spin.webp",
   "/api/health",
   "/api/health/automation",
   "/api/health/workers",
@@ -18,6 +21,13 @@ function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+/** The kind of content a path must return: pages are HTML, the loading football is an image, health checks are only judged by status. */
+function expectedContentType(path) {
+  if (path.endsWith(".webp")) return "image/webp";
+  if (!path.startsWith("/api/")) return "text/html";
+  return null;
+}
+
 async function check(path) {
   try {
     const response = await fetch(`${baseUrl}${path}`, {
@@ -25,7 +35,9 @@ async function check(path) {
       redirect: "follow",
       signal: AbortSignal.timeout(8_000),
     });
-    return { path, status: response.status, healthy: response.status === 200 };
+    const expected = expectedContentType(path);
+    const contentType = response.headers.get("content-type") ?? "";
+    return { path, status: response.status, healthy: response.status === 200 && (!expected || contentType.startsWith(expected)) };
   } catch {
     return { path, status: null, healthy: false };
   }

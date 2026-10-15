@@ -1699,3 +1699,7 @@ Wobble no longer runs by default (its size was already 0). The Workshop turns it
 - **Notices cover, never push.** The "picks are full" question and the plain selection warnings hang off the bottom of the ticket over the board instead of adding height to it, so nothing below jumps. The swap question is a second stub across the ticket's width: a small "PICKS ARE FULL" eyebrow, "Replace which one with NYG?", the two picks it could replace as chips in the same style as the picks above, and Cancel as a quiet link.
 - **One-line status.** The Pick'em line at the foot of the ticket is one line at every phone width. "CHANGED - HIT SUBMIT" became "CHANGED" (the stub already says READY TO SAVE) and "EDITABLE" became "OPEN"; a test checks the longest states at 360, 390 and 700 px.
 
+## The post-deploy smoke gate also loads the pages
+
+After each production deploy the smoke gate already checked the health endpoints. It now also loads the home page, the Slate (`/board`) and the Bowl Pool (`/bowl-pool`) and requires each to return HTML with status 200, and fetches the loading football's picture (`/football-spin.webp`), which must be an image. A deploy that serves a broken page or loses the football now fails the gate within minutes, before a player finds it. The checks are read-only GETs; the pages are the signed-out shell, so they prove the app and its assets are being served, not that data is right (the health endpoints cover that).
+
