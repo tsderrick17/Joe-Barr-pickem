@@ -1711,3 +1711,7 @@ When a page's data arrives, the whole Slate (or Standings) used to render in one
 
 After each production deploy the smoke gate already checked the health endpoints. It now also loads the home page, the Slate (`/board`) and the Bowl Pool (`/bowl-pool`) and requires each to return HTML with status 200, and fetches the loading football's picture (`/football-spin.webp`), which must be an image. A deploy that serves a broken page or loses the football now fails the gate within minutes, before a player finds it. The checks are read-only GETs; the pages are the signed-out shell, so they prove the app and its assets are being served, not that data is right (the health endpoints cover that).
 
+## Stylesheet: 36 unused colour and spacing variables removed
+
+A scan of every custom property the stylesheet defines against everything that reads one (CSS, components, Tailwind classes) found 36 that nothing reads, 62 declarations in all (old theme slots, asset-card and snapshot colours, unused spacing steps). They are removed; nothing renders differently. The hex-colour budget is lowered to 252.
+

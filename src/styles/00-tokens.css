@@ -5,19 +5,12 @@
   /* Shared visual system primitives used by pool surfaces and email artwork. */
   --pool-paper: #f7f3e8;
   --pool-surface: #fffdf8;
-  --pool-ink: #171717;
   --pool-muted: #6b655d;
   --pool-teal: #16806a;
   --pool-alert: #a33c29;
   --pool-rule: #c7c0b5;
   --pool-display-font: Georgia, "Times New Roman", serif;
-  --pool-body-font: Arial, Helvetica, sans-serif;
-  --pool-radius-sm: .125rem;
   --pool-focus-ring: 0 0 0 3px rgba(22, 128, 106, .24);
-  --pool-control-height: 2.75rem;
-  --pool-space-1: .35rem;
-  --pool-space-2: .7rem;
-  --pool-space-3: 1.05rem;
   /* Palette: every color used in four or more places, named by hue family and lightness
      (--sand-93 is a sand with 93% lightness), so the names sort light to dark and say what a
      color is rather than where it happens to be used. */
@@ -49,9 +42,7 @@
   --teal-26: #0f766e;
   --sand-60: #a59b8d;
   --blue-50: #2a78d6;
-  --sand-90: #f8edcf;
   --teal-20: #075f58;
-  --sand-75: #c8c2b7;
   --blue-14: #1b1f2b;
   /* Theme pairs: each token is the light value here and the night value below; the name says
      whether it is a background, text or border color. */
@@ -69,14 +60,6 @@
   --themed-border-2: #bdb3a3;
   --themed-bg-4: #716b61;
   --themed-bg-5: #dff0eb;
-  --themed-bg-6: #f7f3e8;
-  --themed-bg-7: var(--pool-teal);
-  --themed-border-3: var(--pool-teal);
-  --themed-bg-8: #dceee9;
-  --themed-border-4: var(--green-25);
-  --themed-text-8: var(--teal-20);
-  --themed-bg-9: var(--pool-alert);
-  --themed-border-5: var(--pool-alert);
   --themed-text-9: var(--pool-muted);
   --themed-text-10: var(--teal-20);
   --themed-text-11: #9b2e1d;
@@ -85,12 +68,6 @@
   --themed-bg-10: var(--gray-100);
   --themed-text-14: #52525b;
   --themed-bg-11: #fafafa;
-  --themed-bg-12: #ecfdf5;
-  --themed-border-6: #a7f3d0;
-  --themed-bg-13: #fef2f2;
-  --themed-border-7: #fecaca;
-  --themed-border-8: #173c35;
-  --themed-text-15: #716c63;
   --themed-text-16: var(--sand-91);
   --themed-bg-14: #e9e2d3;
   --themed-bg-15: #edf7ef;
@@ -100,7 +77,6 @@
   --themed-bg-19: #fffaf0;
   --themed-bg-20: #fffdf8;
   --themed-bg-21: oklch(98.7% 0.022 95.277);
-  --themed-bg-22: oklch(76.9% 0.188 70.08);
   --themed-bg-23: oklch(98.2% 0.018 155.826);
   --themed-bg-24: oklch(97.1% 0.013 17.38);
   --themed-bg-25: oklch(96.8% 0.007 247.896);
@@ -113,14 +89,11 @@
   --themed-border-13: #b9b09d;
   --themed-border-14: #c8c1b5;
   --themed-border-15: oklch(92.4% 0.12 95.746);
-  --themed-border-16: oklch(66.6% 0.179 58.318);
   --themed-border-17: oklch(55.5% 0.163 48.998);
   --themed-border-18: oklch(47.3% 0.137 46.201);
   --themed-border-19: #000;
-  --themed-border-20: oklch(52.7% 0.154 150.069);
   --themed-border-21: oklch(44.8% 0.119 151.328);
   --themed-border-22: oklch(88.5% 0.062 18.334);
-  --themed-border-23: oklch(80.8% 0.114 19.571);
   --themed-border-24: oklch(50.5% 0.213 27.518);
   --themed-border-25: oklch(44.4% 0.177 26.899);
   --themed-text-17: #171717;
@@ -132,7 +105,6 @@
   --themed-text-23: oklch(27.9% 0.077 45.635);
   --themed-text-24: oklch(20.8% 0.042 265.755);
   --themed-text-25: oklch(51.1% 0.096 186.391);
-  --themed-text-26: oklch(87.1% 0.006 286.286);
   --themed-text-27: oklch(55.2% 0.016 285.938);
   --themed-text-28: oklch(44.2% 0.017 285.786);
   --themed-text-29: oklch(37% 0.013 285.805);
@@ -148,14 +120,8 @@
   --themed-text-38: #a86008;
   --themed-text-39: var(--gray-40);
   --themed-bg-29: #fffaf3;
-  --themed-bg-30: var(--gray-100);
-  --themed-text-40: #3f3f46;
-  --themed-text-41: #52525b;
   --themed-border-26: #e7dfcb;
   /* The Commissioner assets gallery. */
-  --asset-card-bg: var(--pool-surface);
-  --asset-card-rule: var(--pool-rule);
-  --asset-stage-bg: var(--pool-paper);
   /* The Clubhouse: the Commissioner desk's own palette. Forest felt and cream paper, gold hairlines, one cognac accent.
      Night mode is a deliberate set of its own (deep felt for paper), set in the night block below. */
   --club-forest: #14302a;
@@ -206,14 +172,6 @@ html[data-theme="night"] {
   --themed-border-2: #7a6a3a;
   --themed-bg-4: #9aaabd;
   --themed-bg-5: var(--teal-16);
-  --themed-bg-6: #202725;
-  --themed-bg-7: var(--pool-teal);
-  --themed-border-3: #67c9b6;
-  --themed-bg-8: #274a45;
-  --themed-border-4: #80d4ca;
-  --themed-text-8: #dffbf5;
-  --themed-bg-9: #9f4737;
-  --themed-border-5: #ef9b89;
   --themed-text-9: #b7c1bd;
   --themed-text-10: #80d4ca;
   --themed-text-11: #ef9b89;
@@ -222,12 +180,6 @@ html[data-theme="night"] {
   --themed-bg-10: #18181b;
   --themed-text-14: #a1a1aa;
   --themed-bg-11: #1f1f23;
-  --themed-bg-12: #12302a;
-  --themed-border-6: #2b685d;
-  --themed-bg-13: #3a1616;
-  --themed-border-7: #7f1d1d;
-  --themed-border-8: #2b685d;
-  --themed-text-15: #c0c9c5;
   --themed-text-16: #16223a;
   --themed-bg-14: #18252d;
   --themed-bg-15: #102a27;
@@ -237,7 +189,6 @@ html[data-theme="night"] {
   --themed-bg-19: #121b22;
   --themed-bg-20: #121b22;
   --themed-bg-21: var(--blue-15);
-  --themed-bg-22: var(--blue-15);
   --themed-bg-23: var(--blue-15);
   --themed-bg-24: #3b2029;
   --themed-bg-25: oklch(96.8% 0.007 247.896);
@@ -250,14 +201,11 @@ html[data-theme="night"] {
   --themed-border-13: #314651;
   --themed-border-14: #314651;
   --themed-border-15: #d2a35a;
-  --themed-border-16: #d2a35a;
   --themed-border-17: #d2a35a;
   --themed-border-18: #d2a35a;
   --themed-border-19: #6ed7ca;
-  --themed-border-20: #61c998;
   --themed-border-21: #61c998;
   --themed-border-22: #d87b89;
-  --themed-border-23: #d87b89;
   --themed-border-24: #d87b89;
   --themed-border-25: #d87b89;
   --themed-text-17: #edf1eb;
@@ -269,7 +217,6 @@ html[data-theme="night"] {
   --themed-text-23: #ffd28a;
   --themed-text-24: #b7c3cb;
   --themed-text-25: #78d8cb;
-  --themed-text-26: #b7c3cb;
   --themed-text-27: #b7c3cb;
   --themed-text-28: #b7c3cb;
   --themed-text-29: #b7c3cb;
@@ -285,13 +232,7 @@ html[data-theme="night"] {
   --themed-text-38: #ffd28b;
   --themed-text-39: #c3d1ce;
   --themed-bg-29: #1b3038;
-  --themed-bg-30: #172522;
-  --themed-text-40: #b9c1bd;
-  --themed-text-41: #b9c1bd;
   --themed-border-26: #2e3346;
-  --asset-card-bg: var(--blue-15);
-  --asset-card-rule: var(--blue-40);
-  --asset-stage-bg: var(--background);
 }
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {

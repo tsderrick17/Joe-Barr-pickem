@@ -2,7 +2,6 @@
 
 /* Thermal race ticket: intentionally compact, ink-heavy, and lightweight. */
 .my-ticket {
-  --ticket-paper: #f3ead6;
   background:
     repeating-linear-gradient(0deg, rgba(46, 39, 30, .025) 0 1px, transparent 1px 4px),
     #f3ead6;
@@ -300,7 +299,6 @@
   width: 4.1rem;
 }
 html[data-theme="night"] .my-ticket {
-  --ticket-paper: #29251f;
   background:
     repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
     #29251f;

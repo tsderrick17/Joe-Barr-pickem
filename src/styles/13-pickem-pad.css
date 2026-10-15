@@ -247,7 +247,6 @@ html[data-theme="night"] .playoff-scoreboard {
 @keyframes pad-flip-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .season-snapshot {
-  --snapshot-paper: var(--sand-95);
   color: var(--blue-22);
   display: flex;
   flex: 1 1 auto;
