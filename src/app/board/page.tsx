@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
+import { startTransition, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -100,7 +100,9 @@ export default function BoardPage() {
           .map((game) => game.id),
       );
 
-      dispatch({ type: "board-loaded", loadId: requestId, board: data });
+      // The first paint of a full Slate is the heaviest work on the page. As a transition, React renders it in slices and yields between
+      // them, so the loading football and the page stay live while the games appear.
+      startTransition(() => dispatch({ type: "board-loaded", loadId: requestId, board: data }));
     } catch (error) {
       if (requestId === boardRequestId.current) {
         if (error instanceof SessionUnavailableError) {
@@ -113,7 +115,7 @@ export default function BoardPage() {
     } finally {
       window.clearTimeout(requestTimer);
       if (requestId === boardRequestId.current) activeBoardRequest.current = null;
-      dispatch({ type: "load-finished", loadId: requestId });
+      startTransition(() => dispatch({ type: "load-finished", loadId: requestId }));
     }
   }
 
@@ -160,7 +162,8 @@ export default function BoardPage() {
             .filter((game) => Date.parse(game.kickoffAt) <= Date.parse(data.serverTime))
             .map((game) => game.id),
         );
-        dispatch({ type: "bootstrap-loaded", loadId: boardRequestId.current, weeks: loadedWeeks, nextWeekAvailableAt: manualAccessAt, week: initialWeek, board: data });
+        const loadId = boardRequestId.current;
+        startTransition(() => dispatch({ type: "bootstrap-loaded", loadId, weeks: loadedWeeks, nextWeekAvailableAt: manualAccessAt, week: initialWeek, board: data }));
       } catch (error) {
         if (error instanceof SessionUnavailableError) {
           window.location.replace("/login");
@@ -168,7 +171,7 @@ export default function BoardPage() {
         }
         dispatch({ type: "load-failed", loadId: boardRequestId.current, message: "The Slate is taking too long to load. Please try again." });
       } finally {
-        if (!disposed) dispatch({ type: "load-finished", loadId: boardRequestId.current });
+        if (!disposed) { const loadId = boardRequestId.current; startTransition(() => dispatch({ type: "load-finished", loadId })); }
       }
     }
 
