@@ -145,7 +145,7 @@ export default function ScoreSyncChecker() {
         kickoff are checked, and only final scores are saved.
       </p>
       <button
-        className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-5 desk-button-solid px-5 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isChecking}
         onClick={checkFinalScores}
         type="button"

@@ -70,7 +70,7 @@ function StatusCard({
   attention?: boolean;
 }) {
   return (
-    <article className={`border p-3 ${attention ? "border-(color:--themed-border-17) bg-(color:--themed-bg-21)" : "border-zinc-300 bg-(color:--themed-bg-26)"}`}>
+    <article className={`desk-status p-3 ${attention ? "is-warn" : ""}`}>
       <p className="text-[11px] font-black tracking-[0.14em] text-(color:--themed-text-28)">{label}</p>
       <p className="mt-1 font-bold">{value}</p>
       <p className="mt-1 text-xs leading-5 text-(color:--themed-text-28)">{detail}</p>

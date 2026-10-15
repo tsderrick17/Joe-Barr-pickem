@@ -173,7 +173,7 @@ export default function GameExceptions() {
       {exceptions?.length ? (
         <ul className="mt-5 space-y-3">
           {exceptions.map((game) => (
-            <li className="border border-(color:--themed-border-18) bg-(color:--themed-bg-21) p-4" key={game.id}>
+            <li className="desk-status is-warn p-4" key={game.id}>
               <p className="font-bold uppercase tracking-wide text-(color:--themed-text-23)">
                 {game.status === "pending_grade"
                   ? "FINAL PICK AWAITING LINE OR GRADE"

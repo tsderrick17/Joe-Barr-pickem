@@ -46,11 +46,11 @@ export default function SeasonReadiness() {
       <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={run} type="button">{loading ? "Checking..." : "Refresh readiness"}</button>
     </div>
     {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
-    {result ? <div className={`mt-5 border p-4 ${result.status === "attention" ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24)" : result.status === "setup" ? "border-(color:--themed-border-16) bg-(color:--themed-bg-21)" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23)"}`}>
+    {result ? <div className={`mt-5 desk-status p-4 ${result.status === "attention" ? "is-alert" : result.status === "setup" ? "is-warn" : "is-ok"}`}>
       <p className="font-bold">{copy[result.status].heading}</p>
       <p className="mt-1 text-sm">{copy[result.status].detail}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {result.checks.map((item) => <article className="border border-zinc-300 bg-(color:--themed-bg-26) p-3" key={item.id}>
+        {result.checks.map((item) => <article className="desk-status p-3" key={item.id}>
           <p className={`text-sm font-bold ${item.state === "attention" ? "text-red-800" : item.state === "setup" ? "text-(color:--themed-text-21)" : "text-green-800"}`}>{item.state === "attention" ? "REVIEW" : item.state === "setup" ? "LATER" : "READY"} · {item.label}</p>
           <p className="mt-1 text-sm leading-5 text-(color:--themed-text-30)">{item.detail}</p>
         </article>)}

@@ -43,7 +43,7 @@ export default function FinalScoreReconciliation() {
     <section className="commissioner-tool" id="final-score-reconciliation">
       <h2 className="font-serif text-2xl font-bold">Final Score Reconciliation</h2>
       <p className="mt-2 text-(color:--themed-text-29)">Read-only comparison of recently saved finals against the score provider. It never alters scores, grades, or Survivor entries.</p>
-      <button className="mt-5 bg-(color:--themed-bg-27) px-5 py-3 font-bold text-white disabled:opacity-40" disabled={isChecking} onClick={check} type="button">{isChecking ? "Reconciling finals..." : "Reconcile recent finals"}</button>
+      <button className="mt-5 desk-button-solid px-5 py-3 font-bold disabled:opacity-40" disabled={isChecking} onClick={check} type="button">{isChecking ? "Reconciling finals..." : "Reconcile recent finals"}</button>
       {errorMessage ? <p className="mt-4 font-semibold text-red-700">{errorMessage}</p> : null}
       {result ? (
         <div className={`mt-5 border p-4 ${result.mismatches ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24) text-red-950" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23) text-green-950"}`}>

@@ -1699,3 +1699,7 @@ Wobble no longer runs by default (its size was already 0). The Workshop turns it
 - **Notices cover, never push.** The "picks are full" question and the plain selection warnings hang off the bottom of the ticket over the board instead of adding height to it, so nothing below jumps. The swap question is a second stub across the ticket's width: a small "PICKS ARE FULL" eyebrow, "Replace which one with NYG?", the two picks it could replace as chips in the same style as the picks above, and Cancel as a quiet link.
 - **One-line status.** The Pick'em line at the foot of the ticket is one line at every phone width. "CHANGED - HIT SUBMIT" became "CHANGED" (the stub already says READY TO SAVE) and "EDITABLE" became "OPEN"; a test checks the longest states at 360, 390 and 700 px.
 
+## The Season, Bowl Pool, Players and Email screens use the desk's own controls
+
+The tools inside the Commissioner desk (and the Players and Email center pages) now share the Clubhouse look instead of the old plain boxes: forest buttons (`desk-button-solid`) in place of black ones, status boxes with a left bar in the desk's green / amber / red (`desk-status` with `is-ok`, `is-warn`, `is-alert`) in place of the pale tinted boxes, a quiet paper panel (`desk-panel`) for nested blocks, gold hairline rules (`desk-rule-bottom`, `desk-rule-y`) in place of the heavy black ones, and paper inputs (`desk-input`). Wording, order and function are unchanged. The sign-in page keeps its own black button.
+
