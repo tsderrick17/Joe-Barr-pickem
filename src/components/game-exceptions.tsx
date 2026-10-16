@@ -160,7 +160,7 @@ export default function GameExceptions() {
               {recordableGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
             </select>
             <button className="border border-(color:--themed-border-18) px-3 py-2 text-sm font-bold text-(color:--themed-text-23) disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("postponed")} type="button">Mark postponed</button>
-            <button className="bg-red-800 px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
+            <button className="bg-(color:--fill-danger-solid) px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
             <button className="border border-(color:--themed-border-25) px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>
           </div>
         </div>
