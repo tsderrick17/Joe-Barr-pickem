@@ -27,15 +27,7 @@
   background-color: var(--pool-surface);
   background-image: none;
 }
-.bowl-pool-page #bowl-selections > div:first-of-type {
-  border-bottom-color: #e6dbb8;
-}
-.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child {
-  background: #f7efd9;
-  color: #6b4f0f;
-  border-bottom: 1px solid #e0d2a8;
-}
-.bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) {
+.bowl-pool-page #bowl-selections .bowl-schedule > :not(.bowl-legend-row) {
   border-color: #ece3c8;
 }
 /* The Bowl Card's heading line matches the other standings headings (the
@@ -44,10 +36,10 @@
   border-bottom-color: var(--themed-border-2);
 }
 
-.bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-game-cell {
+.bowl-card-section .bowl-standings-games-row .bowl-standings-game-cell {
   background: linear-gradient(180deg, #f8f0da, #fcf8ec);
 }
-.bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child,
+.bowl-card-section .bowl-standings-head-row > .bowl-standings-head-end,
 .bowl-card-section .bowl-standings-tiebreaker-header {
   background: var(--sand-93);
 }
