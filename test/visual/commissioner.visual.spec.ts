@@ -226,3 +226,28 @@ for (const width of [360, 390]) {
     expect(fit.rows).toBe(2);
   });
 }
+
+// The all-time table has just wins and hit rate, and each sorts on its own: Connor has the best hit rate, Tyler the most wins. Hit rate
+// ranks players with enough picks first, so a young player with a high rate sits under them.
+test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin/trophy-room");
+  const table = page.locator(".trophy-table");
+  await expect(table).toBeVisible({ timeout: 30_000 });
+  const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼"]);
+  expect(await firstName()).toBe("Connor");
+  await table.getByRole("button", { name: /^Wins/ }).click();
+  expect(await firstName()).toBe("Tyler");
+  await expect(table.locator("thead th").nth(2)).toHaveAttribute("aria-sort", "descending");
+  await expect(table.locator("thead th").nth(3)).toHaveAttribute("aria-sort", "none");
+  await table.getByRole("button", { name: /^Wins/ }).click();
+  expect(await firstName()).not.toBe("Tyler");
+  await table.getByRole("button", { name: /^Hit rate/ }).click();
+  expect(await firstName()).toBe("Connor");
+  // Al (20 wins, .588 on 34 picks) is under the pick minimum, so a hit-rate sort puts him after the qualified players.
+  const names = await table.locator("tbody th[scope=row]").allInnerTexts();
+  expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
+});

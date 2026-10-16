@@ -1731,3 +1731,7 @@ A Commissioner-only page (`/admin/trophy-room`, linked from the desk's header as
 - A player is ranked once they reach 50 at bats; everyone else follows in an "Under 50 at bats" group. A champion from a season with no pick history on file (the inaugural year) still appears, with no at bats.
 - The numbers come from one pure function (`src/lib/all-time-stats.js`) with its own tests; the route only reads and hands rows to it. Players do not see this page yet.
 
+## The Trophy Room's all-time table is just wins and hit rate
+
+The all-time table is now three things per player: **Wins** (picks that covered, across every season on record) and **Hit rate** (wins divided by graded picks, written like a batting average), and each sorts on its own (tap a heading; a second tap reverses). Hit rate ranks players with at least 50 picks first so a young player's one lucky week cannot top the table; Wins ranks everyone. The earlier columns (at bats, slugging, best season, streak, Survivor exit, titles) are gone from the table; titles live in the season plaques. A season with no recorded champion for a pool reads "Not recorded" rather than "Not crowned", because the database cannot tell a pool nobody won from one that was never entered (the Bowl Pool, for example, started after the 2025 season).
+
