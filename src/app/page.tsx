@@ -318,7 +318,7 @@ export default function HomePage() {
           <div className="mb-5 flex flex-col gap-3 border-2 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
             <p className="font-semibold">{errorMessage}</p>
             <button
-              className="min-h-11 bg-red-800 px-4 py-2 font-bold text-white"
+              className="min-h-11 bg-(color:--fill-danger-solid) px-4 py-2 font-bold text-white"
               onClick={() => setRetryNonce((value) => value + 1)}
               type="button"
             >

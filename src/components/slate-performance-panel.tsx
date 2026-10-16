@@ -26,11 +26,11 @@ export default function SlatePerformancePanel({ history, summary }: {
   return <section className="desk-card min-w-0" aria-label="Provider cost: credits per game, 15- and 30-day averages">
     <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-400">Score polling · Season to date</p>
+        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-(color:--ink-faint-zinc)">Score polling · Season to date</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight text-(color:--themed-text-31)">Provider cost</h3>
         <p className="mt-2 text-xs text-(color:--themed-text-27)">Credits spent per game, smoothed over 15 and 30 days · Eastern time</p>
       </div>
-      <div className="flex rounded-lg bg-zinc-100 p-1">{(["all", "14"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-(color:--themed-bg-26) text-(color:--themed-text-31) shadow-sm" : "text-(color:--themed-text-27)"}`}>{value === "all" ? "All slates" : "Last 14"}</button>)}</div>
+      <div className="flex rounded-lg bg-(color:--fill-track) p-1">{(["all", "14"] as const).map((value) => <button key={value} type="button" aria-pressed={range === value} onClick={() => setRange(value)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === value ? "bg-(color:--themed-bg-26) text-(color:--themed-text-31) shadow-sm" : "text-(color:--themed-text-27)"}`}>{value === "all" ? "All slates" : "Last 14"}</button>)}</div>
     </div>
     <div className="provider-efficiency-summary provider-performance-summary" aria-label="Provider cost summary">
       <div><span>Score credits</span><strong>{number(summary.scoreCredits)}</strong><small>Season-to-date polling</small></div>

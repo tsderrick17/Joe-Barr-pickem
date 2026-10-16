@@ -87,7 +87,7 @@ export default function CommissionerOperationsMap({ onOpenWorkspace, onStatus }:
       </div>
 
       {error ? <p className="mt-5 border-l-4 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 font-semibold text-red-900">{error}</p> : null}
-      {!map && loading ? <div className="mt-6 h-40 animate-pulse bg-zinc-200" aria-label="Loading live operations map" /> : null}
+      {!map && loading ? <div className="mt-6 h-40 animate-pulse bg-(color:--fill-track-strong)" aria-label="Loading live operations map" /> : null}
 
       {map ? <>
         <div className={`commissioner-map-banner mt-6 ${map.overall === "attention" ? "is-attention" : "is-healthy"}`}>

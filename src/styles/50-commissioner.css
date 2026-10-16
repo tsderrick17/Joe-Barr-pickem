@@ -252,10 +252,10 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-sta
   color: #f4f7f6;
 }
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-green-"] { color: #80e4ac; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-red-"] { color: #ffaaa6; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-400"],
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > [class*="text-slate-500"] { color: #aebfca; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-win { color: #80e4ac; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-loss { color: #ffaaa6; }
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-open,
+html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-locked { color: #aebfca; }
 
 /* Commissioner desk: the Clubhouse. Forest felt, a gilt hairline frame, cream paper cards, one cognac leather band. Colors come from
    the --club-* tokens, which carry their own night values, so nothing here needs a night rule. */
@@ -676,3 +676,11 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-table thead th:nth-child(2) { left: 2.2rem; position: sticky; text-align: left; }
 .trophy-avg { font-weight: 700; }
 .trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; text-align: left; text-transform: uppercase; }
+
+/* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
+   recoloured by the Bowl Card rules.) */
+.bowl-cell-win { color: var(--color-green-800); }
+.bowl-cell-loss { color: var(--color-red-700); }
+.bowl-cell-locked { color: var(--color-slate-500); }
+.bowl-cell-open { color: oklch(70.4% .04 256.788); }
+.bowl-cell-pick { color: var(--color-slate-950); }

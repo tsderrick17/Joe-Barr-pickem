@@ -146,8 +146,8 @@
 .bowl-pool-page #bowl-selections .bowl-selection-game-row { background-color: var(--bowl-paper); border-color: #e7dfcb; }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) { background-color: var(--bowl-paper-alt); }
 .bowl-pool-page .bowl-game-name { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .04em; }
-.bowl-pool-page .bowl-game-line { font-family: var(--font-graduate), Georgia, serif; font-size: 1rem; letter-spacing: .03em; }
-.bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: var(--bowl-navy); }
+.bowl-pool-page .bowl-game-line { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-size: 1rem; letter-spacing: .03em; }
+.bowl-pool-page .bowl-game-line.is-official { color: var(--official-teal); }
 .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child ~ div:not(.bowl-selection-game-row) { border-color: #e7dfcb; }
 
 /* ---- Standings: the Bowl Card */
@@ -174,7 +174,6 @@
 .bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-size: .8rem; font-weight: 400; letter-spacing: .06em; line-height: 1.1rem; }
 .bowl-card-section .bowl-standings-team { color: var(--sand-91) !important; }
 .bowl-card-section .bowl-standings-scroll > div > .grid:nth-child(2) .bowl-standings-line { color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
-.bowl-card-section .bowl-standings-game-cell .text-\[\#007e72\] { color: #8fd8cc; }
 .bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-gold-soft); }
 .bowl-card-section .bowl-standings-scroll > div > .grid:first-child > span:last-child { background: transparent; }
 .bowl-card-section .bowl-standings-tiebreaker-header { background: var(--bowl-navy-lift); border-color: var(--bowl-navy); color: var(--bowl-gold-soft); font-family: var(--font-graduate), Georgia, serif; font-size: .7rem; font-weight: 400; letter-spacing: .12em; }
@@ -191,11 +190,14 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--
 html[data-theme="night"] .bowl-claim-main h3,
 html[data-theme="night"] .bowl-pool-page .bowl-game-name { color: var(--sand-91); }
 html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold); }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
-html[data-theme="night"] .bowl-pool-page .bowl-game-line:not([class*="007e72"]) { color: var(--sand-91); }
+html[data-theme="night"] .bowl-pool-page .bowl-game-line { color: var(--sand-91); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:first-child { background: var(--bowl-navy); border-color: var(--bowl-navy-lift); color: var(--bowl-gold-soft); }
+/* The day rules draw the schedule's row lines in a pale cream; at night they are the theme's rule colour. */
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-selection-game-row,
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div.overflow-hidden > div:first-child ~ div:not(.bowl-selection-game-row),
+html[data-theme="night"] .bowl-pool-page #bowl-selections > div:nth-of-type(2) > div:not(:first-child) { border-color: var(--blue-40); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: var(--bowl-rule); }
-html[data-theme="night"] .bowl-pool-page .bowl-game-line[class*="007e72"] { color: #8fd8cc; }
+html[data-theme="night"] .bowl-pool-page .bowl-game-line.is-official { color: var(--official-teal); }
 html[data-theme="night"] .bowl-pennant { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
 @media (max-width: 639px) {
   .bowl-pool-page .bowl-game-name {
@@ -229,8 +231,7 @@ html[data-theme="night"] .bowl-optout button:hover { color: var(--sand-91); }
 .bowl-card-section .bowl-standings-player-row > span:nth-child(1) { color: var(--bowl-navy); font-size: 1rem; }
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky,
 .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky * { color: var(--bowl-navy); }
-.bowl-card-section .bowl-standings-player-row > span.text-slate-400,
-.bowl-card-section .bowl-standings-player-row > span[class*="text-slate-4"] { color: var(--bowl-rule); }
+.bowl-card-section .bowl-standings-player-row > span.bowl-cell-open { color: var(--bowl-rule); }
 .bowl-card-section .bowl-standings-player-row > span:last-child { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; }
 /* Your row: a soft gold wash and a gold edge, not a bright band. */
 html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span:nth-child(1),

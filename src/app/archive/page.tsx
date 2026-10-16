@@ -31,7 +31,7 @@ export default function ArchivePage() {
     return () => { active = false; };
   }, []);
 
-  return <main className="min-h-screen bg-[#f7f3e8] px-6 py-10 text-(color:--themed-text-31)"><div className="mx-auto max-w-4xl">
+  return <main className="min-h-screen bg-(color:--page-cream) px-6 py-10 text-(color:--themed-text-31)"><div className="mx-auto max-w-4xl">
     <header className="border-b-2 border-zinc-900 pb-6"><p className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">PERMANENT RECEIPTS</p><h1 className="mt-2 font-serif text-4xl font-bold">Week Archive</h1><p className="mt-2 max-w-2xl text-(color:--themed-text-29)">Every completed week retains its final slate, official lines, public pick receipts, results, and standings. Nothing here can be edited.</p></header>
     {error ? <p className="mt-6 font-semibold text-red-700">{error}</p> : null}
     {!error && periods.length === 0 ? <p className="mt-8 text-(color:--themed-text-29)">Completed weeks will appear here once the first slate is fully settled.</p> : null}

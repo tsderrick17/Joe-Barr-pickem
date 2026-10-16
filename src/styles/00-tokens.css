@@ -4,6 +4,18 @@
   --official-line-color: #008c82;
   /* Shared visual system primitives used by pool surfaces and email artwork. */
   --pool-paper: #f7f3e8;
+  --page-cream: #f7f3e8;
+  /* Role colours for the few places a Tailwind grey, green or red is used for something other than text or a rule, or in a shade a theme must
+     treat differently. Day values are Tailwind's own; night values follow in the night block. */
+  --ink-faint: oklch(70.4% .04 256.788);
+  --ink-faint-zinc: oklch(70.5% .015 286.067);
+  --fill-muted-solid: oklch(70.4% .04 256.788);
+  --fill-ok-solid: oklch(52.7% .154 150.069);
+  --fill-danger-solid: oklch(44.4% .177 26.899);
+  --fill-track: oklch(96.7% .001 286.375);
+  --fill-track-strong: oklch(92% .004 286.32);
+  --official-teal: #007e72;
+  --official-on-navy: #8fd8cc;
   --pool-surface: #fffdf8;
   --pool-muted: #6b655d;
   --pool-teal: #16806a;
@@ -144,6 +156,32 @@
 }
 
 html[data-theme="night"] {
+  --page-cream: #0b1117;
+  --ink-faint: #b7c3cb;
+  --ink-faint-zinc: #b7c3cb;
+  --official-teal: #8fd8cc;
+  /* Tailwind's own greys, greens and reds as night sees them: text in these shades is one soft colour, a border in them one rule colour. */
+  --color-slate-500: #b7c3cb;
+  --color-slate-600: #b7c3cb;
+  --color-slate-700: #b7c3cb;
+  --color-slate-950: #b7c3cb;
+  --color-green-700: #a7edc9;
+  --color-green-800: #a7edc9;
+  --color-green-950: #a7edc9;
+  --color-red-700: #ffbdc4;
+  --color-red-800: #ffbdc4;
+  --color-red-900: #ffbdc4;
+  --color-red-950: #ffbdc4;
+  --color-slate-200: var(--blue-40);
+  --color-slate-300: var(--blue-40);
+  --color-slate-400: var(--blue-40);
+  --color-zinc-100: var(--blue-40);
+  --color-zinc-200: var(--blue-40);
+  --color-zinc-300: var(--blue-40);
+  --color-zinc-400: var(--blue-40);
+  --color-zinc-500: var(--blue-40);
+  --color-zinc-700: var(--blue-40);
+  --color-zinc-900: var(--blue-40);
   --club-forest: #0f241f;
   --club-forest-2: #6fb59b;
   --club-felt-hi: #1a4036;
