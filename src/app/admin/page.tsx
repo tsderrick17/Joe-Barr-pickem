@@ -432,7 +432,7 @@ export default function AdminPage() {
             <h3 className="font-serif text-xl font-bold">Preseason full-schedule bootstrap</h3>
             <p className="mt-2 text-sm text-(color:--themed-text-29)">Run once during preseason. It validates every regular-season game and week (272 games over 18 weeks today; a longer season is read from the feed) before saving anything, then permanently pins every matchup to its pool week.</p>
             <button className="mt-4 desk-button-solid px-4 py-2 font-bold disabled:opacity-40" disabled={fullScheduleBusy} onClick={previewFullSchedule}>{fullScheduleBusy ? "Checking..." : "Validate full season"}</button>
-            {fullSchedulePreview ? <div className="mt-4"><p className="font-semibold">{fullSchedulePreview.games} games across {fullSchedulePreview.weeks} weeks passed provider validation. {fullSchedulePreview.note}</p><button className="mt-3 bg-red-800 px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={importFullSchedule}>Load and pin full season</button></div> : null}
+            {fullSchedulePreview ? <div className="mt-4"><p className="font-semibold">{fullSchedulePreview.games} games across {fullSchedulePreview.weeks} weeks passed provider validation. {fullSchedulePreview.note}</p><button className="mt-3 bg-(color:--fill-danger-solid) px-4 py-2 font-bold text-white disabled:opacity-40" disabled={fullScheduleBusy} onClick={importFullSchedule}>Load and pin full season</button></div> : null}
             {fullScheduleMessage ? <p className="mt-4 font-semibold text-green-800">{fullScheduleMessage}</p> : null}
             {fullScheduleError ? <p className="mt-4 font-semibold text-red-700">{fullScheduleError}</p> : null}
           </div>
@@ -474,7 +474,7 @@ export default function AdminPage() {
               </p>
 
               <button
-                className="mt-5 bg-red-800 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-5 bg-(color:--fill-danger-solid) px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={isImporting}
                 onClick={importGames}
               >
