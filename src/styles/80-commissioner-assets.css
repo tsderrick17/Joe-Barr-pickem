@@ -231,21 +231,27 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-stamp { font-size: 2.4rem; }
 
 /* ---- Pull down to refresh (the app added to a home screen) ----
-   Subtle: just the small football, fading in as the page is pulled, with one soft pop when it is far enough to let go. The words
-   are there for screen readers only. */
+   A drop of bright water swells from the top edge of the header as the page is pulled, lets go and falls when the pull is far
+   enough, and a ripple spreads where it lands. The colour is used for nothing else. The words are for screen readers only. */
 html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: contain; }
-.pull-refresh {
+.pull-drip {
+  --drip: oklch(0.84 0.16 205);
   left: 0;
-  margin-top: -3.6rem;
+  overflow: hidden;
   pointer-events: none;
   position: fixed;
   right: 0;
-  text-align: center;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   z-index: 60;
 }
-.pull-refresh .football-loader { --football-scale: .34; background: var(--page-cream); border-radius: 50%; box-shadow: 0 1px 5px rgba(0, 0, 0, .22); gap: 0; padding: .55rem .6rem; }
-.pull-refresh .football-loader-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
-.pull-refresh[data-ready="true"] .football-loader-tilt { animation: pull-refresh-pop .3s ease-out; }
-@keyframes pull-refresh-pop { 0% { scale: 1; } 45% { scale: 1.22; } 100% { scale: 1; } }
-@media (prefers-reduced-motion: reduce) { .pull-refresh[data-ready="true"] .football-loader-tilt { animation: none; } }
+.pull-drip svg { display: block; left: 50%; position: absolute; top: 0; transform: translateX(-50%); }
+.pull-drip-line { background: var(--drip); box-shadow: 0 0 8px var(--drip); display: block; height: 2px; left: 0; position: absolute; right: 0; top: 0; }
+.pull-drip-water { fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); }
+.pull-drip-ripple { animation: pull-drip-ripple .5s ease-out .3s forwards; fill: none; opacity: 0; stroke: var(--drip); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; }
+.pull-drip-fall { animation: pull-drip-fall .34s cubic-bezier(.5, 0, 1, .6) forwards; fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); transform-box: fill-box; transform-origin: center; }
+.pull-drip[data-phase="refreshing"] .pull-drip-fall { animation: pull-drip-fall .55s cubic-bezier(.5, 0, 1, .6) infinite; }
+.pull-drip[data-phase="refreshing"] .pull-drip-ripple { animation: pull-drip-ripple .55s ease-out .27s infinite; }
+@keyframes pull-drip-fall { 0% { transform: translateY(0) scale(.3, .3); } 12% { transform: translateY(0) scale(1, 1.15); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(var(--drip-fall)) scale(.85, 1.25); } }
+@keyframes pull-drip-ripple { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(5, 3); } }
+.pull-drip-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+@media (prefers-reduced-motion: reduce) { .pull-drip-fall, .pull-drip-ripple { animation: none; opacity: 1; } }
