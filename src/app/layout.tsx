@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SiteNav from "@/components/site-nav";
 import PoolChatDock from "@/components/pool-chat-dock";
+import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
@@ -53,6 +54,7 @@ export default function RootLayout({
       {/* Decides the optional header tabs before the first paint, so they never slide in later (see nav-tabs.ts). */}
       <head><script dangerouslySetInnerHTML={{ __html: navTabsScript(Date.parse(bowlPoolLaunchAt(currentSeasonYear()))) }} /></head>
       <body className={`${architectsDaughter.variable} ${graduate.variable} ${cormorant.variable}`}>
+        <PullToRefresh />
         <SiteNav />
         {children}
         <PoolChatDock />

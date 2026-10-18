@@ -23,12 +23,12 @@ test("pulling down far enough shows the football and then reloads the page", asy
   await page.setViewportSize({ width: 390, height: 800 });
   await installedApp(page);
   await page.goto("/login");
-  await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);   // the pull is wired up only after the page has hydrated
   await drag(page, 100, 160, false);
-  await expect(page.getByRole("status").filter({ hasText: "Pull to refresh" })).toBeVisible();
+  await expect(page.locator(".pull-refresh")).toContainText("Pull to refresh");
   await drag(page, 100, 260, false);
-  await expect(page.getByRole("status").filter({ hasText: "Release to refresh" })).toBeVisible();
-  await expect(page.locator(".pull-refresh")).toHaveScreenshot("pull-to-refresh-ready.png");
+  await expect(page.locator(".pull-refresh")).toContainText("Release to refresh");
+  await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", { clip: { x: 95, y: 0, width: 200, height: 140 } });
   await page.evaluate(() => { (window as unknown as { marker: string }).marker = "before"; });
   await Promise.all([page.waitForEvent("load"), page.evaluate(() => document.body.dispatchEvent(new TouchEvent("touchend", { bubbles: true, cancelable: true })))]);
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBeUndefined();
@@ -38,6 +38,7 @@ test("a short pull springs back without reloading", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await installedApp(page);
   await page.goto("/login");
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
   await page.evaluate(() => { (window as unknown as { marker: string }).marker = "kept"; });
   await drag(page, 100, 150, true);
   await expect(page.locator(".pull-refresh")).toHaveCount(0);
