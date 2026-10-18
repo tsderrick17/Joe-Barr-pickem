@@ -10,6 +10,13 @@ Bowl Pool health contracts. A failure means the corresponding contract needs
 investigation; it does not authorize manual scoring, reminder, or schedule
 work. The post-deployment smoke gate remains the faster release check.
 
+When two pull requests are merged within a minute of each other, Vercel can
+build the first and never start a build for the second (it happened with the
+trophy pictures and pull-to-refresh: the site served the first for hours). After
+a quick pair of merges, confirm the newest commit has a `Vercel` status and a
+Production deployment (`gh api repos/<owner>/<repo>/deployments`); if it does
+not, merge one small commit to `main` to trigger the build.
+
 ## Backup and retention
 
 The weekly GitHub Action **Encrypted database backup** creates a complete
