@@ -666,10 +666,18 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-season dd.is-open { color: var(--club-muted); font-style: italic; }
 .trophy-case { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
 .trophy-case figure { margin: 0; }
-.trophy-case img { background: black; border: 1px solid var(--club-gold-dk); display: block; height: auto; width: 100%; }
+.trophy-picture { background: black; border: 1px solid var(--club-gold-dk); position: relative; }
+.trophy-picture img { display: block; height: auto; width: 100%; }
+.trophy-plaque { background: none; border: 0; cursor: zoom-in; display: block; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55)); padding: 0; position: absolute; transform: translate(-50%, -50%); }
+.trophy-plaque svg { display: block; height: 100%; width: 100%; }
 .trophy-case figcaption { display: grid; gap: 0.15rem; padding-top: 0.55rem; }
 .trophy-case figcaption b { font-family: Georgia, serif; letter-spacing: 0.08em; text-transform: uppercase; }
-.trophy-case figcaption span { font-size: 0.85rem; opacity: 0.8; }
+.trophy-case figcaption > span { font-size: 0.85rem; opacity: 0.8; }
+.trophy-roll { font-size: 0.9rem; list-style: none; margin: 0.2rem 0 0; padding: 0; }
+.trophy-roll li span { font-weight: 700; margin-right: 0.35rem; }
+.trophy-zoom { align-items: center; background: rgba(0, 0, 0, 0.78); cursor: zoom-out; display: flex; inset: 0; justify-content: center; padding: 1rem; position: fixed; z-index: 80; }
+.trophy-zoom > div { max-width: 30rem; width: 100%; }
+.trophy-zoom svg { display: block; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6)); height: auto; width: 100%; }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
 .trophy-table th, .trophy-table td { padding: .6rem .8rem; text-align: right; white-space: nowrap; }
