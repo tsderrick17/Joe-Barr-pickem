@@ -131,7 +131,7 @@ test("Survivor exit is the average regular-season week of each elimination, igno
 test("a Bowl Pool champion recorded only in the shared ledger is named, and never twice", () => {
   const ledgerOnly = buildAllTimeStats({ players, seasons, periods, games: [], lines: [], picks: [], championships: [{ season_year: 2025, pool: "bowl", player_id: "ann" }] });
   assert.deepEqual(ledgerOnly.trophies[0].bowl.map((entry) => entry.name), ["Ann"]);
-  assert.equal(ledgerOnly.players.find((row) => row.name === "Ann").titles.pickem, 0, "the Bowl Pool is not a Pick'em title");
+  assert.ok(ledgerOnly.players.every((row) => row.titles.pickem === 0 && row.titles.survivor === 0), "the Bowl Pool crown is not a Pick'em or Survivor title");
   const both = buildAllTimeStats({
     players, seasons, periods, games: [], lines: [], picks: [],
     championships: [{ season_year: 2026, pool: "bowl", player_id: "bob" }],
