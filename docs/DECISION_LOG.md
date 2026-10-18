@@ -1749,3 +1749,7 @@ The app added to a phone's home screen runs in its own window with no browser ba
 
 The Bowl Card (standings table) and the Bowl picks schedule used selectors like `.grid:first-child > span:nth-child(2)` and `> div:nth-of-type(2) > div:first-child`, so moving a wrapper div or reordering a cell silently restyled them. Each row and cell now carries a name for its job (`bowl-standings-head-row`, `-games-row`, `-head-gutter`, `-head-end`, `-date`, `-score-cell`, `-tiebreaker-cell`, `bowl-edge`, `bowl-first-game`, `bowl-legend-row`, `bowl-schedule`, ...) and the rules use those. Only the zebra striping (`:nth-child(odd)`) stays positional, because striping is positional by nature. Every screenshot (day and night, all widths) compares identical before and after. Budgets: duplicates 86, hex 239, night rules 152.
 
+## The Trophy Room reads Bowl Pool champions from the shared ledger too
+
+Last year's Bowl Pool winner (Al, 2025) was already recorded in the shared championship ledger (`pool_championships`, pool `bowl`, by an earlier migration) but not in the Bowl Pool's own tables, because that pool only started in 2026. The Trophy Room read only the Bowl Pool's own table, so it showed "Not recorded" for 2025. It now takes Bowl champions from both places and lists a player once per year however many places record them. No migration was needed; nothing in the database changed.
+

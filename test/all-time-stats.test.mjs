@@ -127,3 +127,15 @@ test("Survivor exit is the average regular-season week of each elimination, igno
   assert.deepEqual(ann.survivorExit, { averageWeek: 6.5, exits: 2 });
   assert.equal(rows.find((row) => row.name === "Bob").survivorExit, null);
 });
+
+test("a Bowl Pool champion recorded only in the shared ledger is named, and never twice", () => {
+  const ledgerOnly = buildAllTimeStats({ players, seasons, periods, games: [], lines: [], picks: [], championships: [{ season_year: 2025, pool: "bowl", player_id: "ann" }] });
+  assert.deepEqual(ledgerOnly.trophies[0].bowl.map((entry) => entry.name), ["Ann"]);
+  assert.equal(ledgerOnly.players.find((row) => row.name === "Ann").titles.pickem, 0, "the Bowl Pool is not a Pick'em title");
+  const both = buildAllTimeStats({
+    players, seasons, periods, games: [], lines: [], picks: [],
+    championships: [{ season_year: 2026, pool: "bowl", player_id: "bob" }],
+    bowlChampionships: [{ season_year: 2026, player_id: "bob" }, { season_year: 2026, player_id: "cy" }],
+  });
+  assert.deepEqual(both.trophies[0].bowl.map((entry) => entry.name), ["Bob", "Cy"], "recorded in both places: listed once; a co-champion still appears");
+});
