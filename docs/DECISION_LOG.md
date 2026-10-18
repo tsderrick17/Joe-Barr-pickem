@@ -1749,3 +1749,7 @@ The app added to a phone's home screen runs in its own window with no browser ba
 
 The Bowl Card (standings table) and the Bowl picks schedule used selectors like `.grid:first-child > span:nth-child(2)` and `> div:nth-of-type(2) > div:first-child`, so moving a wrapper div or reordering a cell silently restyled them. Each row and cell now carries a name for its job (`bowl-standings-head-row`, `-games-row`, `-head-gutter`, `-head-end`, `-date`, `-score-cell`, `-tiebreaker-cell`, `bowl-edge`, `bowl-first-game`, `bowl-legend-row`, `bowl-schedule`, ...) and the rules use those. Only the zebra striping (`:nth-child(odd)`) stays positional, because striping is positional by nature. Every screenshot (day and night, all widths) compares identical before and after. Budgets: duplicates 86, hex 239, night rules 152.
 
+## The Survivor chip is easier to read
+
+The chip on the Survivor trophy picture was redrawn for legibility: one large, plain face in dark navy on ivory (all four suits across the top, SURVIVOR, a gold rule, then LAST MAN STANDING on two lines), a narrower edge, and gold beads set on the chip's own bezel instead of floating loose around it. The chip is slightly smaller and centred in the heart so the heart's outline frames it. The picture is `public/trophies/survivor.jpg`; the other two trophies are unchanged.
+
