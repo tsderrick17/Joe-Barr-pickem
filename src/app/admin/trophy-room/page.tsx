@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import TrophyDisplay from "@/components/trophy-display";
+import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage, QUALIFYING_AB } from "@/lib/all-time-stats.js";
 
 type Champion = { playerId: string; name: string };
@@ -88,7 +88,7 @@ export default function TrophyRoomPage() {
 
         <section aria-labelledby="trophy-display" className="desk-rule-bottom py-8">
           <h2 className="font-serif text-2xl font-bold" id="trophy-display">The trophies</h2>
-          <TrophyDisplay seasons={data?.trophies ?? []} />
+          <div className="mt-4"><TrophyTurntable seasons={data?.trophies ?? []} /></div>
         </section>
 
         {data ? <>

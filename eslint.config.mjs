@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The trophy-picture renderer is a standalone tool (browser code, its own dependency), not part of the app.
+    "tools/**",
   ]),
 ]);
 
