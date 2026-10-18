@@ -1,21 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage, QUALIFYING_AB } from "@/lib/all-time-stats.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean };
-
-// The three trophies, rendered once as pictures. Each plaque row is baked into the picture, so a new season needs a new render.
-const display = [
-  { src: "/trophies/pickem.jpg", name: "Pick’em", note: "The pillar and its gold exoskeleton. Twelve plates, two on each face of the hexagon." },
-  { src: "/trophies/bowl.jpg", name: "Bowl Pool", note: "The pennant cup. Ten plates around the drum." },
-  { src: "/trophies/survivor.jpg", name: "Survivor", note: "The crystal spade and its chip. Five plates." },
-];
 
 const pools: Array<{ key: "pickem" | "survivor" | "bowl"; label: string }> = [
   { key: "pickem", label: "Pick’em" },
@@ -95,14 +88,7 @@ export default function TrophyRoomPage() {
 
         <section aria-labelledby="trophy-display" className="desk-rule-bottom py-8">
           <h2 className="font-serif text-2xl font-bold" id="trophy-display">The trophies</h2>
-          <div className="trophy-case mt-4">
-            {display.map((trophy) => (
-              <figure key={trophy.name}>
-                <Image alt={`${trophy.name} trophy on its mantle`} height={1120} priority src={trophy.src} width={880} />
-                <figcaption><b>{trophy.name}</b><span>{trophy.note}</span></figcaption>
-              </figure>
-            ))}
-          </div>
+          <div className="mt-4"><TrophyTurntable seasons={data?.trophies ?? []} /></div>
         </section>
 
         {data ? <>
