@@ -665,15 +665,15 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-season dd { font: 400 1.05rem Georgia, serif; margin: 0; }
 .trophy-season dd.is-open { color: var(--club-muted); font-style: italic; }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
-.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 46rem; width: 100%; }
-.trophy-table th, .trophy-table td { padding: .55rem .65rem; text-align: right; white-space: nowrap; }
+.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
+.trophy-table th, .trophy-table td { padding: .6rem .8rem; text-align: right; white-space: nowrap; }
 .trophy-table tbody tr { border-top: 1px solid var(--club-line); }
 .trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .62rem Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; }
-.trophy-table .trophy-titles { text-align: left; }
-.trophy-table th[scope="row"] { background: var(--club-paper); font: 400 1.05rem Georgia, serif; left: 2.2rem; position: sticky; text-align: left; }
-.trophy-table .trophy-rank { background: var(--club-paper); color: var(--club-muted); left: 0; position: sticky; text-align: center; width: 2.2rem; }
-.trophy-table thead th:nth-child(1) { left: 0; position: sticky; }
-.trophy-table thead th:nth-child(2) { left: 2.2rem; position: sticky; text-align: left; }
+.trophy-table thead th:nth-child(2) { text-align: left; }
+.trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; text-align: left; width: 100%; }
+.trophy-table .trophy-rank { color: var(--club-muted); text-align: center; width: 2.2rem; }
+.trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
+.trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }
 .trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; text-align: left; text-transform: uppercase; }
 
