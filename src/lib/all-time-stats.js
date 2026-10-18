@@ -57,17 +57,22 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
     return row;
   };
   const champion = (playerId) => ({ playerId, name: nameById.get(playerId) ?? "Former player" });
+  // A Bowl Pool crown can come from the shared ledger (pool_championships, where last year's winner is recorded) or from the Bowl Pool's own
+  // table; a player is listed once for a year however many places record it.
+  const addBowl = (year, playerId) => {
+    const row = trophyRow(year);
+    if (row.bowl?.some((existing) => existing.playerId === playerId)) return;
+    row.bowl = [...(row.bowl ?? []), champion(playerId)];
+  };
   for (const record of championships) {
+    if (record.pool === "bowl") { addBowl(record.season_year, record.player_id); continue; }
     if (record.pool !== "pickem" && record.pool !== "survivor") continue;
     // A tied Pick'em season has co-champions: keep every name.
     const row = trophyRow(record.season_year);
     row[record.pool] = [...(row[record.pool] ?? []), champion(record.player_id)];
     addTitle(record.player_id, record.pool);
   }
-  for (const record of bowlChampionships) {
-    const row = trophyRow(record.season_year);
-    row.bowl = [...(row.bowl ?? []), champion(record.player_id)];
-  }
+  for (const record of bowlChampionships) addBowl(record.season_year, record.player_id);
   const trophies = [...trophyBySeason.values()].sort((a, b) => b.seasonYear - a.seasonYear);
 
   // Survivor exits: the regular-season week number of each elimination.
