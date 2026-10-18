@@ -106,3 +106,7 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
    it, `gh run download <id> -n linux-baselines`, and commit the `*-linux.png`
    files and `test/email-artwork-baselines/linux/`.
 3. Never re-record to make an unexpected diff go away.
+
+## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
+
+Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the football with "Release to refresh" (screenshot of the indicator) and letting go reloads the page; a short pull springs back and nothing reloads.

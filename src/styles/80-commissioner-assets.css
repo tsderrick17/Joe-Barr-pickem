@@ -229,3 +229,23 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-chip-button { background: none; border: 0; cursor: pointer; display: inline-flex; padding: 0; }
 .asset-chip-button.is-slate { height: 3.4rem; width: 3.4rem; }
 .asset-stamp { font-size: 2.4rem; }
+
+/* ---- Pull down to refresh (the app added to a home screen) ----
+   Subtle: just the small football, fading in as the page is pulled, with one soft pop when it is far enough to let go. The words
+   are there for screen readers only. */
+html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: contain; }
+.pull-refresh {
+  left: 0;
+  margin-top: -3.6rem;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  text-align: center;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 60;
+}
+.pull-refresh .football-loader { --football-scale: .34; background: var(--page-cream); border-radius: 50%; box-shadow: 0 1px 5px rgba(0, 0, 0, .22); gap: 0; padding: .55rem .6rem; }
+.pull-refresh .football-loader-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+.pull-refresh[data-ready="true"] .football-loader-tilt { animation: pull-refresh-pop .3s ease-out; }
+@keyframes pull-refresh-pop { 0% { scale: 1; } 45% { scale: 1.22; } 100% { scale: 1; } }
+@media (prefers-reduced-motion: reduce) { .pull-refresh[data-ready="true"] .football-loader-tilt { animation: none; } }
