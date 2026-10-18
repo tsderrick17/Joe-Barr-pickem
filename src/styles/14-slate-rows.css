@@ -435,7 +435,7 @@ button.slate-team-side:not(:disabled)::after {
   100% { clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); }
 }
 
-.slate-team-selection .text-slate-200 {
+.slate-team-selection .is-picked {
   color: #3f6867;
 }
 
@@ -526,22 +526,6 @@ html[data-theme="night"] {
   --background: #0b1117;
   --foreground: #e8ece7;
   color-scheme: dark;
-}
-
-html[data-theme="night"] [class*="bg-[#f7f3e8]"] {
-  background-color: #0b1117;
-}
-
-html[data-theme="night"] [class*="bg-[#fbfaf7]"] {
-  background-color: #121b22;
-}
-
-html[data-theme="night"] [class*="bg-[#e9e0cd]"],
-html[data-theme="night"] [class*="bg-[#e8e0d0]"],
-html[data-theme="night"] [class*="bg-[#e7e1d5]"],
-html[data-theme="night"] [class*="bg-[#f0eadc]"],
-html[data-theme="night"] [class*="bg-[#f2eee6]"] {
-  background-color: #18252d;
 }
 
 /* Commissioner cards and form controls should not retain their light-mode
@@ -702,44 +686,8 @@ html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   color: var(--teal-95);
 }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-200"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="border-slate-300"] { border-color: var(--blue-40); }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-400"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-600"],
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-700"] { color: #a8c1c4; }
-html[data-theme="night"] .bowl-pool-page #bowl-selections [class*="text-slate-950"],
+html[data-theme="night"] .bowl-pool-page #bowl-selections { --color-slate-600: #a8c1c4; --color-slate-700: #a8c1c4; --color-slate-950: var(--teal-95); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--teal-95); }
-
-html[data-theme="night"] [class*="text-[#29251d]"] {
-  color: #edf1eb;
-}
-
-html[data-theme="night"] [class*="text-slate-"],
-html[data-theme="night"] [class*="text-zinc-"] {
-  color: #b7c3cb;
-}
-
-html[data-theme="night"] [class*="text-green-950"],
-html[data-theme="night"] [class*="text-green-800"],
-html[data-theme="night"] [class*="text-green-700"] {
-  color: #a7edc9;
-}
-
-html[data-theme="night"] [class*="text-red-950"],
-html[data-theme="night"] [class*="text-red-900"],
-html[data-theme="night"] [class*="text-red-800"],
-html[data-theme="night"] [class*="text-red-700"] {
-  color: #ffbdc4;
-}
-
-html[data-theme="night"] [class*="border-zinc-"],
-html[data-theme="night"] [class*="border-slate-"] {
-  border-color: var(--blue-40) !important;
-}
-
-html[data-theme="night"] [class*="border-[#d1c9ba]"] {
-  border-color: #314651;
-}
 
 /* On a phone the team name (the Pick'em tap) and the poker chip beside it (the Survivor tap) sat almost touching. A margin
    (not padding, so it is not part of either button) keeps a clear gap between the two targets. */
