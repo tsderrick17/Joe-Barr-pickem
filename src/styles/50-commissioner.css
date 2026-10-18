@@ -664,6 +664,12 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-season dt { color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; text-transform: uppercase; }
 .trophy-season dd { font: 400 1.05rem Georgia, serif; margin: 0; }
 .trophy-season dd.is-open { color: var(--club-muted); font-style: italic; }
+.trophy-case { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.trophy-case figure { margin: 0; }
+.trophy-case img { background: black; border: 1px solid var(--club-gold-dk); display: block; height: auto; width: 100%; }
+.trophy-case figcaption { display: grid; gap: 0.15rem; padding-top: 0.55rem; }
+.trophy-case figcaption b { font-family: Georgia, serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.trophy-case figcaption span { font-size: 0.85rem; opacity: 0.8; }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
 .trophy-table th, .trophy-table td { padding: .6rem .8rem; text-align: right; white-space: nowrap; }
