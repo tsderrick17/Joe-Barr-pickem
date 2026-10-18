@@ -106,7 +106,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3e8] px-4 py-8 text-(color:--themed-text-31) sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-(color:--page-cream) px-4 py-8 text-(color:--themed-text-31) sm:px-6 sm:py-12">
       <div className="mx-auto max-w-sm">
         <p className="text-sm font-semibold tracking-[0.2em] text-(color:--themed-text-28)">
           JOE BARR MEMORIAL
