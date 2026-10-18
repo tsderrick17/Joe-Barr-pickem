@@ -10,11 +10,11 @@ type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean };
 
-// The three trophies, rendered once as pictures. Each champion's name is inlaid in the picture, so a new season needs a new render.
+// The three trophies, rendered once as pictures. Each champion's plaque is part of the picture, so a new season needs a new render.
 const display = [
-  { src: "/trophies/pickem.jpg", name: "Pick’em", note: "The marble pillar in its gold exoskeleton. Twelve name panels, two on each face of the hexagon." },
-  { src: "/trophies/bowl.jpg", name: "Bowl Pool", note: "The pennant cup. Ten name panels around the drum." },
-  { src: "/trophies/survivor.jpg", name: "Survivor", note: "The crystal spade and its chip. Five name panels." },
+  { src: "/trophies/pickem.jpg", name: "Pick’em", note: "The marble pillar in its gold exoskeleton. A brass plaque for each champion." },
+  { src: "/trophies/bowl.jpg", name: "Bowl Pool", note: "The pennant cup. A brass plaque for each champion, round the drum." },
+  { src: "/trophies/survivor.jpg", name: "Survivor", note: "The crystal spade and its chip. A brass plaque for each champion." },
 ];
 
 const pools: Array<{ key: "pickem" | "survivor" | "bowl"; label: string }> = [
