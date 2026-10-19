@@ -10,7 +10,7 @@ test("the favicon carries the tab sizes, and the large icon is a 256 px PNG", as
   assert.equal(ico.readUInt16LE(2), 1, "of type icon");
   const count = ico.readUInt16LE(4);
   const sizes = Array.from({ length: count }, (_, index) => ico[6 + index * 16] || 256).sort((a, b) => a - b);
-  assert.deepEqual(sizes, [16, 32, 48, 256]);
+  assert.deepEqual(sizes, [16, 32, 64, 256]);
   const png = await readFile(new URL("../src/app/icon.png", import.meta.url));
   assert.equal(png.subarray(1, 4).toString(), "PNG");
   assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [256, 256]);
