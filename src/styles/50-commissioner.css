@@ -68,7 +68,7 @@
   z-index: 0;
 }
 
-.commissioner-flow-step.is-complete:not(:last-child)::after { background: var(--club-forest-2); }
+.commissioner-flow-step:is(.is-complete, .is-active):has(+ .commissioner-flow-step:is(.is-complete, .is-active))::after { background: var(--club-forest-2); }
 
 .commissioner-flow-button {
   align-items: center;

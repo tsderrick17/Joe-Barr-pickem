@@ -1850,3 +1850,11 @@ The first-down chain was improved after a first look. It now spans the whole wid
 The all-time Wins and Hit rate table uses fixed column widths (rank, player, wins, hit rate and two streak columns share the width in set proportions, with the player's name trimmed with an ellipsis if it is too long) so the columns line up and nothing runs off the edge of a phone. The streaks sit under one "Regular Season Streaks" heading with two columns, "Weeks with a win" and "2-0 weeks". Each cell shows the current streak as the big number, the all-time best under it ("best 23"), and a thin bar showing how close the current streak is to that best; when the player is at their best the cell turns gold with a star, and the cell's spoken label says so.
 
 The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 win, never a 0-2) and **2-0 Sweeps** (2-0 weeks in a row), in the Trophy Room's table and on the Performance tab. They sit under "Regular Season Streaks".
+
+## Performance tab cleanup: ties, no neutral site, no league streak boards, Survivor over, and a steadier pool map
+
+- **Most picked team:** when teams tie for the most picks the tile says "3 teams tied" with how many picks each, instead of naming whichever sorts first. The top-five table still lists them.
+- **No neutral-site row:** the home / road split is just home and road. International games are not treated as neutral, and the Super Bowl has a designated home team, so a pick is always on the home or the road team. (A game flagged neutral in the data is still counted as the home or the road team.)
+- **No league streak boards:** the two Player / Longest / Now tables are gone from the Performance tab; the streaks are in the Trophy Room's table (and a player's own view here keeps their two streaks).
+- **Survivor over:** once a Survivor champion is recorded for the season, Participant impact counts the last player standing as complete and says "Over · 1 winner · 10 eliminated", not "1 active".
+- **The pool map:** the line between two stages was dark only when the stage on its left was complete, so it broke between an in-progress stage and a completed one. It is now dark between any two stages that have been reached (complete or in progress), so the progress line is unbroken.
