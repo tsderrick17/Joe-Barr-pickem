@@ -688,9 +688,9 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-banner::before { background: oklch(0.8 0.1 85); content: ""; height: 0.5rem; left: 50%; margin-top: -0.3rem; position: absolute; top: 0; width: 0.14rem; }
 .trophy-banner::after { border: 1px solid var(--trim); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); content: ""; inset: 0.3rem; pointer-events: none; position: absolute; }
 .trophy-banner-tag { color: var(--trim); font: 700 0.58rem/1.2 var(--font-graduate), Georgia, serif; letter-spacing: 0.14em; text-transform: uppercase; }
-.trophy-banner-year { font: 400 2.1rem/1 var(--font-graduate), Georgia, serif; letter-spacing: 0.04em; margin-top: 0.35rem; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.trophy-banner-years { font: 400 1.5rem/1.2 var(--font-graduate), Georgia, serif; letter-spacing: 0.04em; list-style: none; margin: 0; padding: 0; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
 .trophy-banner-star { color: var(--trim); font-size: 0.8rem; margin: 0.25rem 0; }
-.trophy-banner-name { font: 700 1.05rem/1.15 var(--font-cormorant), Georgia, serif; overflow-wrap: anywhere; }
+.trophy-banner-name { font: 700 1.3rem/1.1 var(--font-cormorant), Georgia, serif; margin-top: 0.35rem; overflow-wrap: anywhere; }
 .trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
 @keyframes trophy-banner-drop {
   0% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.7); opacity: 0; transform: translateY(-140%) rotate(-5deg); }

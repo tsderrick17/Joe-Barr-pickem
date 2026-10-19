@@ -28,14 +28,15 @@ test("the arrows bring the next trophy to the front, and its champions hang from
   await openTrophyRoom(page);
   await expect(front(page)).toHaveText("Pick’em is at the front");
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "pickem");
-  await expect(page.locator(".trophy-banner")).toHaveText([/2026[\s\S]*Gary & Rick/, /2025[\s\S]*Tyler/]);
+  // One banner per person, oldest first: Tyler has won twice, so his one banner carries both years; the 2026 co-champions each have their own.
+  await expect(page.locator(".trophy-banner")).toHaveText([/Tyler[\s\S]*2024[\s\S]*2025/, /Gary[\s\S]*2026/, /Rick[\s\S]*2026/]);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(front(page)).toHaveText("Bowl Pool is at the front");
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "bowl");
-  await expect(page.locator(".trophy-banner")).toHaveText([/2026[\s\S]*Connor/]);
+  await expect(page.locator(".trophy-banner")).toHaveText([/Connor[\s\S]*2026/]);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(front(page)).toHaveText("Survivor is at the front");
-  await expect(page.locator(".trophy-banner")).toHaveText([/2025[\s\S]*Zac/]);
+  await expect(page.locator(".trophy-banner")).toHaveText([/Zac[\s\S]*2025/]);
   await page.getByRole("button", { name: "Bring the previous trophy forward" }).click();
   await expect(front(page)).toHaveText("Bowl Pool is at the front");
 });
