@@ -724,7 +724,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-streak-bar > span { background: var(--club-forest); display: block; height: 100%; }
 .trophy-streak.is-best .trophy-streak-now, .trophy-streak.is-best .trophy-streak-best { color: var(--club-gold-dk); }
 .trophy-streak.is-best .trophy-streak-bar > span { background: var(--club-gold-dk); }
-.trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; padding-left: .5rem; text-align: left; text-transform: uppercase; }
 
 /* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
    recoloured by the Bowl Card rules.) */
