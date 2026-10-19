@@ -716,6 +716,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
 .trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }
+.trophy-table td small { color: var(--club-muted); font: 400 0.75rem Arial, sans-serif; margin-left: 0.15rem; }
+.trophy-table thead th[colspan] { border-bottom: 1px solid var(--club-gold-dk); text-align: center; }
 .trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; text-align: left; text-transform: uppercase; }
 
 /* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
@@ -764,6 +766,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-alive { color: var(--club-ok); font-weight: 700; }
 .pool-strong { font-weight: 700; }
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
-.pool-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.pool-picker button { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); cursor: pointer; font: 700 0.95rem Georgia, serif; min-height: 2.5rem; padding: 0.35rem 0.9rem; }
-.pool-picker button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-forest); color: var(--sand-93); }
+.pool-select { align-items: center; display: flex; gap: 0.7rem; }
+.pool-select span { color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+.pool-select select { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); font: 700 1rem Georgia, serif; min-height: 2.75rem; min-width: 12rem; padding: 0.35rem 0.9rem; }

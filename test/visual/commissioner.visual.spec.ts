@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Streaks", "1+ win", "2-0"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -252,18 +252,34 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
 });
 
-// Player stats: each player has their own full set. The first player shows by default; choosing another swaps every figure.
-test("Trophy room: choosing a player shows that player's own stats", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 900 });
+// The Trophy Room's table carries each player's streaks, as now / best: Tyler has gone 9 weeks in a row with a win (best 23) and none 2-0 right now (best 5).
+test("Trophy room: the table shows each player's streaks", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
   await page.goto("/admin/trophy-room");
-  const section = page.locator("[aria-labelledby=player-stats-title]");
-  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
-  await expect(section.locator(".pool-stats-tiles").first()).toContainText("612–498");
-  await section.getByRole("button", { name: "Connor" }).click();
-  await expect(section.getByRole("button", { name: "Connor" })).toHaveAttribute("aria-pressed", "true");
-  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "false");
+  const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
+  await expect(row.getByLabel("Weeks with at least 1 win: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("2-0 weeks: 0 now, 5 best")).toBeVisible();
+  const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
+  await expect(noPicks.getByLabel("Weeks with at least 1 win: none yet")).toBeVisible();
+});
+
+// Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
+test("Performance: the dropdown shows the league or one player's own stats", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin");
+  await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
+  await page.locator(".commissioner-panel-tab").nth(1).click();
+  const section = page.locator("[aria-labelledby=pool-stats-title]");
+  await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
+  await expect(section.getByRole("heading", { name: "Weeks with at least 1 win" })).toBeVisible();
+  await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
 });
