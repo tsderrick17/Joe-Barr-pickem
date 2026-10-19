@@ -145,6 +145,7 @@ export const TROPHY_ROOM = {
   trophies: [
     { seasonYear: 2026, pickem: [champion("p1", "Gary"), champion("p4", "Rick")], survivor: null, bowl: [champion("p2", "Connor")] },
     { seasonYear: 2025, pickem: [champion("p3", "Tyler")], survivor: [champion("p5", "Zac")], bowl: null },
+    { seasonYear: 2024, pickem: [champion("p3", "Tyler")], survivor: null, bowl: null },
   ],
   players: [
     row("p3", "Tyler", 2, 212, 127, 127 / 212, 171 / 212, { year: 2025, avg: 0.634, ab: 118 }, 11, exit(9.5, 2), { pickem: 1, survivor: 0 }),

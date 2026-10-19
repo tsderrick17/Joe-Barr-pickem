@@ -151,12 +151,12 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
         <div aria-hidden="true" className="trophy-beam" />
         {roll.length ? (
           <ul className="trophy-banners">
-            {roll.map((entry, index) => (
-              <li className="trophy-banner" key={entry.year} style={{ "--i": index } as React.CSSProperties}>
+            {roll.map((banner, index) => (
+              <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>
                 <span className="trophy-banner-tag">{TROPHIES[front].tag}</span>
-                <b className="trophy-banner-year">{entry.year}</b>
+                <b className="trophy-banner-name">{banner.name}</b>
                 <span className="trophy-banner-star" aria-hidden="true">★</span>
-                <span className="trophy-banner-name">{entry.names}</span>
+                <ul className="trophy-banner-years">{banner.years.map((year) => <li key={year}>{year}</li>)}</ul>
               </li>
             ))}
           </ul>

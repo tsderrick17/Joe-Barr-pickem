@@ -1802,3 +1802,7 @@ The Performance panel now opens with "The group", a read-only, Commissioner-only
 It sits in the Performance panel at the Commissioner's request, although that panel is otherwise technical (provider cost, polling, account capacity). Players do not see it.
 
 Each player's own full set lives in the Trophy Room, under the all-time record ("Player stats", a row of names to choose from): the same record and hit rate, 0-2 / 1-1 / 2-0 histogram, longest and current streaks, favorite/underdog and home/road splits, plus their record season by season. The group's totals and the two streak boards stay in the Performance panel. Both come from the same function (`buildGroupStats`) and the same Commissioner-only read, so a player's numbers always add up to the group's.
+
+## Championship banners are per person, not per year
+
+The banners under the front trophy used to be one per season. They are now one per person who has won that pool, and each carries every year that person won (oldest first), so a repeat winner adds a year to the banner they already have. A new winner gets a new banner, hung after the others, and banners stay in the order they were first earned, so the one that has hung longest is always at the left and nothing already flying moves. Co-champions of one season each get their own banner. A banner is matched to its person by player id (by name only when a record has no id), and shows the latest name on record. The banners still drop and bounce in when a trophy comes to the front.
