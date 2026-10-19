@@ -21,29 +21,9 @@ const half = (x: number) => 4.2 + ((x - 14) / 78) * 16.8;
 const across = (x: number) => ({ top: 23.5 - half(x), bottom: 23.5 + half(x), rx: half(x) * 0.31, ry: half(x) });
 const BAND = (() => { const a = across(77), b = across(83.5); return `M77 ${a.top}A${a.rx} ${a.ry} 0 0 0 77 ${a.bottom}L83.5 ${b.bottom}A${b.rx} ${b.ry} 0 0 1 83.5 ${b.top}Z`; })();
 
-/**
- * The school's name as if printed on the cone. Each line runs along a line of the cone, so a line off the axis tilts to follow the cone's edge (lines
- * converge toward the mouthpiece), and the letters grow toward the bell as the cone widens. Each letter is placed and rotated on its own.
- */
-const APEX = -5.5;            // where the cone's edges would meet, left of the mouthpiece
-const REF = 50;               // the lettering is centred on this x
-const WIDTH: Record<string, number> = { I: 0.55, J: 0.75, L: 0.92, T: 0.96, F: 0.94, E: 0.96, M: 1.32, W: 1.42, "'": 0.4, ".": 0.4, "-": 0.7, "&": 1.1 };
-function printedLetters(lines: string[]) {
-  const reach = REF - APEX, limit = lines.length > 1 ? 29 : 34, damp = 0.7, unit = 6;
-  return lines.flatMap((line, row) => {
-    const offset = lines.length > 1 ? (row ? 4.7 : -4.7) : 0, angle = Math.atan2(offset, reach), r0 = reach / Math.cos(angle);
-    const chars = [...line], grow = (r: number) => 1 + damp * (r / r0 - 1), weight = (char: string) => WIDTH[char] ?? 1;
-    const natural = chars.reduce((sum, char) => sum + unit * weight(char), 0), target = Math.min(limit, natural);
-    let k = 1, centers: number[] = [];
-    for (let pass = 0; pass < 5; pass++) {          // k shrinks letters and their spacing together until the word fits the span (a short word is never stretched)
-      centers = []; let r = r0 - target / 2;
-      for (const char of chars) { const step = unit * weight(char) * k * grow(r + (unit * weight(char) * k) / 2); centers.push(r + step / 2); r += step; }
-      k *= target / (r - (r0 - target / 2));
-    }
-    const shift = r0 - (centers[0] + centers[centers.length - 1]) / 2;
-    return chars.map((char, i) => { const r = centers[i] + shift; return { char, key: `${row}-${i}`, x: APEX + r * Math.cos(angle), y: 24 + r * Math.sin(angle), degrees: (angle * 180) / Math.PI, scale: Math.min(1.2, grow(r) * k) }; });
-  });
-}
+/** Rough width of a line of the lettering at font size 1 (Graduate capitals), so only a name that would overrun the cone is condensed to fit. */
+const WIDTH: Record<string, number> = { I: 0.36, J: 0.5, L: 0.6, T: 0.62, F: 0.6, E: 0.62, M: 0.9, W: 0.95, " ": 0.3, "'": 0.25, ".": 0.25, "-": 0.4 };
+const lineWidth = (line: string, size: number) => [...line].reduce((sum, char) => sum + (WIDTH[char] ?? 0.68), 0) * size;
 
 /** The cone's outline: a short narrow tube that flares in a gentle curve to a wide bell (its top edge, then the bell's far edge, then the bottom edge back). */
 const CONE = "M9 19.3H14L92 2.5V44.5L14 27.7H9Z";
@@ -78,7 +58,10 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <path className="bowl-megaphone-handle" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
           <path className="bowl-megaphone-body" d={CONE} />
           <g className="bowl-megaphone-print">
-            {printedLetters(lines).map((letter) => <text className="bowl-megaphone-name" key={letter.key} transform={`translate(${letter.x.toFixed(2)} ${letter.y.toFixed(2)}) rotate(${letter.degrees.toFixed(2)}) scale(${letter.scale.toFixed(3)})`}>{letter.char}</text>)}
+            {lines.map((line, index) => {
+              const size = lines.length > 1 ? 7.4 : 8.6, room = lines.length > 1 ? 30 : 36, fits = lineWidth(line, size) <= room;
+              return <text className="bowl-megaphone-name" fontSize={size} key={index} x={lines.length > 1 ? 54 : 51} y={lines.length > 1 ? 20.4 + index * 8.4 : 24.4} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room })}>{line}</text>;
+            })}
           </g>
           <g clipPath={`url(#${cone})`}>
             <rect fill={`url(#${cone}-shade)`} height="47" width="100" x="6" y="0" />

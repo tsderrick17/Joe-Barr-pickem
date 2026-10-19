@@ -104,7 +104,7 @@
 .bowl-megaphone-rim { fill: none; stroke: var(--megaphone-secondary); stroke-width: 2.4; }
 .bowl-megaphone-handle { fill: none; stroke: var(--megaphone-secondary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.6; }
 .bowl-megaphone-handle-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.2; }
-.bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; font-size: 8.6px; text-anchor: middle; }
+.bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .06em; paint-order: stroke; stroke: rgba(0, 0, 0, .25); stroke-width: .5px; text-anchor: middle; }
 .bowl-megaphone-waves path { fill: none; opacity: 0; stroke: var(--megaphone-primary); stroke-linecap: round; stroke-width: 2.2; }
 .bowl-team-pick { display: inline-block; max-width: 100%; }
 .bowl-team-pick.is-new .bowl-megaphone-art { animation: bowl-megaphone-raise var(--megaphone-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; }
