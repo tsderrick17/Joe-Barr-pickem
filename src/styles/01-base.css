@@ -55,11 +55,12 @@ body {
 
 /* The account details arrive after the session check. Reserve their desktop footprint so nothing in the bar moves when they do. */
 @media (min-width: 768px) {
-  .site-nav-account { min-width: 12.75rem; }
+  .site-nav-account { min-height: 2.75rem; min-width: 12.75rem; }
 }
 
-/* Reserve the account row's height before the async player lookup settles. */
-.mobile-account-nav > div { min-height: 3rem; }
+/* Reserve the account row's height before the async player lookup settles: the name button is 2.75rem tall and the row has .5rem of padding
+   above and below, so the bar is this tall with or without the name. */
+.mobile-account-nav > div { min-height: 3.75rem; }
 
 /* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
 /* Optional header tabs: in the page from the start, shown by flags set before the first paint (nav-tabs.ts), so they never slide in. */
