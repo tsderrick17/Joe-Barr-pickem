@@ -56,8 +56,8 @@ test("account capacity gauges use existing provider records and database details
 
 test("the Vercel estimates reproduce the observed 30-day figures", async () => {
   const { estimateFluidCpu, estimateFunctionsStorageBytes } = await import("../src/lib/vercel-usage-estimate.js");
-  // Calibration points from Vercel's Usage page: about 4h of CPU with 11 active players, 10.4 GB over 730 deployments.
-  assert.ok(Math.abs(estimateFluidCpu({ activePlayers: 11 }).seconds / 3600 - 4) < 0.1);
+  // Calibration points from Vercel's Usage page: 3h 16m of CPU with 11 active players (2026-10-19), 10.4 GB over 730 deployments.
+  assert.ok(Math.abs(estimateFluidCpu({ activePlayers: 11 }).seconds / 3600 - (3 + 16 / 60)) < 0.05);
   assert.ok(Math.abs(estimateFunctionsStorageBytes(730) / 1024 ** 3 - 10.4) < 0.05);
   assert.ok(estimateFluidCpu({ activePlayers: 5 }).seconds < estimateFluidCpu({ activePlayers: 11 }).seconds);
 });
