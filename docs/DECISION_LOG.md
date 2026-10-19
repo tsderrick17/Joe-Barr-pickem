@@ -1845,6 +1845,26 @@ It is built only from graded picks, so even when opened it can never show anyone
 
 The first-down chain was improved after a first look. It now spans the whole width of the page (the rods end up a chain, ten yards, apart, at 10% and 90% of the width), and its strip of turf is a football field: a sideline, yard lines every five yards and hash marks on the yards between. The chain stretches more believably: it pays out of a heap lying on the turf by the rear rod (tight humps that shrink as the slack is used up), then lifts off the turf behind the lead rod and runs straight up to its ring, coming taut as the rod plants; the rod leans against the strain for a moment and settles. A football is spotted at the end being measured, lying on the field with its nose a couple of inches past the lead rod's near edge: it is a first down by inches.
 
+## The Trophy Room's hit rate table is evenly spaced, and shows each streak against its best
+
+The all-time Wins and Hit rate table uses fixed column widths (rank, player, wins, hit rate and two streak columns share the width in set proportions, with the player's name trimmed with an ellipsis if it is too long) so the columns line up and nothing runs off the edge of a phone. The streaks sit under one "Regular Season Streaks" heading with two columns, "Weeks with a win" and "2-0 weeks". Each cell shows the current streak as the big number, the all-time best under it ("best 23"), and a thin bar showing how close the current streak is to that best; when the player is at their best the cell turns gold with a star, and the cell's spoken label says so.
+
+The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 win, never a 0-2) and **2-0 Sweeps** (2-0 weeks in a row), in the Trophy Room's table and on the Performance tab. They sit under "Regular Season Streaks".
+
+## Performance tab cleanup: ties, no neutral site, no league streak boards, Survivor over, and a steadier pool map
+
+- **Most picked team:** when teams tie for the most picks the tile says "3 teams tied" with how many picks each, instead of naming whichever sorts first. The top-five table still lists them.
+- **No neutral-site row:** the home / road split is just home and road. International games are not treated as neutral, and the Super Bowl has a designated home team, so a pick is always on the home or the road team. (A game flagged neutral in the data is still counted as the home or the road team.)
+- **No league streak boards:** the two Player / Longest / Now tables are gone from the Performance tab; the streaks are in the Trophy Room's table (and a player's own view here keeps their two streaks).
+- **Survivor over:** once a Survivor champion is recorded for the season, Participant impact counts the last player standing as complete and says "Over · 1 winner · 10 eliminated", not "1 active".
+- **The pool map:** the line between two stages was dark only when the stage on its left was complete, so it broke between an in-progress stage and a completed one. It is now dark between any two stages that have been reached (complete or in progress), so the progress line is unbroken.
+
+The Today panel's three boxes were tidied: "Up next" no longer lists the Schedule (games loaded) or Provider allowance lines (the allowance is still shown in Automation health and in the operations map's footer), and "Next message" moved under the "Notification readiness" heading, where the rest of the message queue is.
+
+The Trophy Room page is plainer: "Trophy Room" (capital R) with no line of subtext under it, and the all-time record is now called "All-Time Table" with no subtext under its title, no "Under 50 picks" divider and no "How these are figured" section. The ordering is unchanged (Hit rate still ranks players with at least 50 picks first); it is just no longer explained on the page.
+
+The Trophy Room page is plainer: "Trophy Room" (capital R) with no line of subtext under it, and the all-time record is now called "All-Time Table" with no subtext under its title, no "Under 50 picks" divider and no "How these are figured" section. The ordering is unchanged (Hit rate still ranks players with at least 50 picks first); it is just no longer explained on the page.
+
 The first-down chain is now zoomed in on its last three yards. Still inside the header (nothing is drawn below it): the whole scene is three yards across the page, so the chain runs in from the left edge (its rear end, the rear pole and the heap of slack are ten yards off to the left, out of view) and is dragged across the turf toward the lead pole, which is drawn three times larger than before so that only its bottom third shows (the target disc and most of the banner are above the header), ending in a big rubber foot. The football is spotted at the right, behind the pole, with its tip poking out a couple of inches (2.5, measured against the yard) past the pole's foot: a first down. The field is a deep strip of turf with hash marks every yard and a yard line every five. Chain links, the ball and the marks are drawn larger to match; the pole planting, the squash, the dust, the twang and the lean are unchanged.
 
 ## The chain plants once, the football is redrawn, and the loading football appears at once
