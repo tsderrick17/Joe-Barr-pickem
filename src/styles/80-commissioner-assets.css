@@ -257,9 +257,16 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-sideline { fill: var(--chalk); }
 .pull-chain-yardline { fill: var(--chalk); opacity: 0.85; }
 .pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 2.2; }
-.pull-chain-ball { fill: var(--leather); stroke: var(--gray-00); stroke-width: 1; }
-.pull-chain-ball-stripe { fill: none; stroke: var(--chalk); stroke-width: 2; }
-.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 1.6; }
+.pull-chain-ball { fill: url(#pull-chain-leather); }
+.pull-chain-leather-hi { stop-color: oklch(0.55 0.11 50); }
+.pull-chain-leather-mid { stop-color: oklch(0.42 0.1 45); }
+.pull-chain-leather-lo { stop-color: oklch(0.28 0.07 40); }
+.pull-chain-ball-shadow { fill: var(--gray-00); opacity: 0.35; }
+.pull-chain-ball-stripe { fill: var(--chalk); }
+.pull-chain-ball-gloss { fill: var(--chalk); opacity: 0.2; }
+.pull-chain-ball-seam { fill: none; stroke: var(--gray-00); stroke-linecap: round; stroke-width: 1.3; }
+.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 1.5; }
+.pull-chain-ball-outline { fill: none; stroke: var(--gray-00); stroke-linejoin: round; stroke-width: 1.2; }
 .pull-chain-rod { fill: var(--marker); }
 .pull-chain-ring { fill: none; stroke: var(--gray-00); stroke-width: 2.6; }
 .pull-chain-strap { fill: none; stroke: var(--gray-00); stroke-width: 0.5; }
@@ -270,4 +277,5 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-link-edge { fill: var(--steel); }
 .pull-chain-clip { fill: var(--clip); }
 .pull-chain-dust { fill: var(--chalk); }
+.pull-refresh-cover { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 55; }
 .pull-chain-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }

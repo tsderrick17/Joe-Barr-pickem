@@ -37,7 +37,14 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   const header = await page.locator("nav").count() ? await page.locator("nav").first().boundingBox() : null;
   expect(drop && drop.y + drop.height <= Math.max(96, header ? header.y + header.height : 0) + 1).toBe(true);
   await page.evaluate(() => { (window as unknown as { marker: string }).marker = "before"; });
+  // Letting go covers the page with the spinning loading football at once (the page reloads right behind it, so remember that it appeared).
+  await page.evaluate(() => new MutationObserver((_records, observer) => {
+    if (document.querySelector(".pull-refresh-cover .football-loader")) { sessionStorage.setItem("coverSeen", String(performance.now())); observer.disconnect(); }
+  }).observe(document.body, { childList: true, subtree: true }));
+  const released = Date.now();
   await Promise.all([page.waitForEvent("load"), page.evaluate(() => document.body.dispatchEvent(new TouchEvent("touchend", { bubbles: true, cancelable: true })))]);
+  expect(await page.evaluate(() => sessionStorage.getItem("coverSeen")), "the football covered the page before it reloaded").not.toBeNull();
+  expect(Date.now() - released, "and the reload followed right behind it, not seconds later").toBeLessThan(2500);
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBeUndefined();
 });
 

@@ -76,16 +76,23 @@ test("a twang bows the taut chain and dies away, struck again every 700 ms", () 
   assert.ok(Math.abs(chainTwang(700 + 40) - chainTwang(40)) < 1e-9, "and repeats");
 });
 
-test("the planted pole leans against the strain and settles upright", () => {
-  assert.ok(Math.abs(strainLean(0) - 4) < 1e-9);
-  assert.ok(Math.abs(strainLean(2000)) < 0.01);
-});
-
-test("the rubber foot compresses, rebounds a little past its resting height, and settles uncompressed", () => {
-  assert.ok(Math.abs(footSquash(0) - 0.6) < 1e-9);
-  assert.ok(footSquash(20) < 1, "squashed at first");
-  assert.ok(footSquash(90) > 1, "then it rebounds past its resting height");
-  assert.ok(Math.abs(footSquash(1500) - 1) < 1e-3);
+test("the pole touches down once: the foot is squashed at contact and eases back up, never rebounding past its resting height, and the lean eases out in one movement", () => {
+  assert.ok(Math.abs(footSquash(0) - 0.6) < 1e-9, "squashed at contact");
+  assert.ok(Math.abs(footSquash(3000) - 1) < 1e-3, "and settled");
+  let before = footSquash(0);
+  for (let since = 5; since <= 1500; since += 5) {
+    const now = footSquash(since);
+    assert.ok(now >= before - 1e-12, `the foot only ever rises after contact (${since} ms)`);
+    assert.ok(now <= 1, `and never goes past its resting height (${since} ms)`);
+    before = now;
+  }
+  let lean = strainLean(0);
+  assert.ok(Math.abs(lean - 4) < 1e-9);
+  for (let since = 5; since <= 1500; since += 5) {
+    const now = strainLean(since);
+    assert.ok(now <= lean + 1e-12 && now >= 0, `the lean only ever eases toward upright, never swaying back (${since} ms)`);
+    lean = now;
+  }
 });
 
 test("the football is spotted at the lead pole and its tip pokes out a couple of inches past the pole's foot: a first down", () => {
