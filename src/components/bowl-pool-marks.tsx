@@ -16,6 +16,11 @@ function nameLines(name: string) {
   return best;
 }
 
+/** The cone's half-height at x (it widens in a straight line from the mouthpiece to the bell) and an arc across it that bows toward the mouthpiece. */
+const half = (x: number) => 4.2 + ((x - 14) / 78) * 16.8;
+const across = (x: number) => ({ top: 23.5 - half(x), bottom: 23.5 + half(x), rx: half(x) * 0.31, ry: half(x) });
+const BAND = (() => { const a = across(77), b = across(83.5); return `M77 ${a.top}A${a.rx} ${a.ry} 0 0 0 77 ${a.bottom}L83.5 ${b.bottom}A${b.rx} ${b.ry} 0 0 1 83.5 ${b.top}Z`; })();
+
 /** The cone's outline: a short narrow tube that flares in a gentle curve to a wide bell (its top edge, then the bell's far edge, then the bottom edge back). */
 const CONE = "M9 19.3H14L92 2.5V44.5L14 27.7H9Z";
 
@@ -50,15 +55,16 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <path className="bowl-megaphone-body" d={CONE} />
           <g clipPath={`url(#${cone})`}>
             <rect fill={`url(#${cone}-shade)`} height="47" width="100" x="6" y="0" />
-            <rect className="bowl-megaphone-trim" height="50" width="6.5" x="78" y="0" />
+            <path className="bowl-megaphone-trim" d={BAND} />
           </g>
           <path className="bowl-megaphone-edge" d={CONE} />
           <ellipse className="bowl-megaphone-body" cx="92" cy="23.5" rx="6.5" ry="21" />
           <ellipse fill={`url(#${cone}-inside)`} cx="92" cy="23.5" rx="6.5" ry="21" />
+          <ellipse className="bowl-megaphone-hole" cx="90.4" cy="23.5" rx="4.5" ry="18" />
           <ellipse className="bowl-megaphone-rim" cx="92" cy="23.5" rx="6.5" ry="21" />
           <rect className="bowl-megaphone-lip" height="15.6" rx="3.5" width="7" x="3" y="15.7" />
-          <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 34 : Math.min(38, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="54" y={lines.length > 1 ? 21 : 25.8}>{lines[0]}</text>
-          {lines[1] ? <text className="bowl-megaphone-name" textLength={Math.min(34, 5 * lines[1].length)} lengthAdjust="spacingAndGlyphs" x="54" y="30.8">{lines[1]}</text> : null}
+          <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 30 : Math.min(34, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="50" y={lines.length > 1 ? 21 : 25.8}>{lines[0]}</text>
+          {lines[1] ? <text className="bowl-megaphone-name" textLength={Math.min(30, 5 * lines[1].length)} lengthAdjust="spacingAndGlyphs" x="50" y="30.8">{lines[1]}</text> : null}
         </g>
       </svg>
     </span>
