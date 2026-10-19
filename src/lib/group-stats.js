@@ -13,7 +13,8 @@
  * Streaks run in order of play across seasons with no reset between them, so a streak still alive at the end of a season carries into the
  * next one. "Longest" is the best run ever; "Now" is the run the player is on at their latest counted week.
  *
- * Most picked team: of the graded picks, which teams were taken most often (top five, with how often and how they did).
+ * Most picked team: of the graded picks, which teams were taken most often (top five, with how often and how they did). The five teams with the
+ * best hit rate come with them (ties go to the team picked more often), so the Performance panel can sort either way.
  *
  * Splits: of the picks that were graded, how often the group took the favorite or the underdog, and the home or the road team (the Super Bowl has a designated home team, and international games are not treated as neutral), and how each did.
  */
@@ -73,10 +74,12 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
     .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
   const teams = everyTeam.slice(0, 5);
+  const teamsByHitRate = [...everyTeam].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
   const tiedForMost = everyTeam.length ? everyTeam.filter((team) => team.picks === everyTeam[0].picks).length : 0;   // how many teams share the top spot
   return {
     record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
     teams,
+    teamsByHitRate,
     mostPicked: teams[0] ?? null,
     mostPickedTied: tiedForMost,   // 1 when one team leads; more when teams tie for the most picks
     bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),

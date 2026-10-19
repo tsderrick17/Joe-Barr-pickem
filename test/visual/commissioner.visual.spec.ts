@@ -279,11 +279,19 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
   await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
   await expect(section.getByText("Neutral site")).toHaveCount(0);
+  await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();   // the league has its seasons too
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
+  await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Picked/ }).click();
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
+  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Home, Away
+  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Home", "Away"]);
   await section.getByLabel("Show").selectOption({ label: "Rick" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });
