@@ -28,7 +28,7 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   await expect(page.locator(".pull-chain")).toContainText("Pull to refresh");
   await drag(page, 100, 260, false);
   await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
-  await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", { clip: { x: 95, y: 0, width: 200, height: 110 } });
+  await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", { clip: { x: 0, y: 0, width: 390, height: 110 } });
   // The chain is drawn inside the header's height and never below it (a page without a header keeps to the 96 px cap).
   const drop = await page.locator(".pull-chain").boundingBox();
   const header = await page.locator("nav").count() ? await page.locator("nav").first().boundingBox() : null;

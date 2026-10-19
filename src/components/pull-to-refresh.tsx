@@ -41,6 +41,7 @@ export default function PullToRefresh() {
   const [pull, setPull] = useState(0);
   const [phase, setPhase] = useState<Phase>("pulling");
   const [height, setHeight] = useState(56);
+  const [width, setWidth] = useState(390);
   const [plantedAt, setPlantedAt] = useState(0);
   const [now, setNow] = useState(0);
   const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase });
@@ -53,7 +54,7 @@ export default function PullToRefresh() {
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
       state.startY = event.touches[0]?.clientY ?? 0;
       state.pull = 0;
-      if (state.active) { state.phase = "pulling"; setPhase("pulling"); setHeight(headerHeight()); }
+      if (state.active) { state.phase = "pulling"; setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); }
     };
     const onMove = (event: TouchEvent) => {
       if (!state.active) return;
@@ -113,7 +114,7 @@ export default function PullToRefresh() {
   const label = phase === "refreshing" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
   return (
     <div aria-live="polite" className="pull-chain" data-phase={phase} role="status" style={{ height }}>
-      <PullChainScene height={height} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} />
+      <PullChainScene height={height} width={width} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} />
       <span className="pull-chain-label">{label}</span>
     </div>
   );
