@@ -15,10 +15,11 @@ function scrollHandle(m, side) {
   const s = side;
   // two parallel ribbons sweep out from the band and return to the bowl in one long, unbroken curve
   const path = [[7.7, 20.6], [9.0, 22.2], [11.1, 22.3], [12.3, 20.6], [12.2, 18.0], [11.0, 15.7], [9.2, 14.3], [7.6, 13.9]];
-  for (const z of [-0.42, 0.42]) g.add(tube(path.map(([x, y]) => [s * x, y, z]), 0.3, m.gold, false, 160));
+  // set well apart and joined by beads, so the handle reads as a solid loop even when the cup is seen from the side
+  for (const z of [-0.85, 0.85]) g.add(tube(path.map(([x, y]) => [s * x, y, z]), 0.34, m.gold, false, 160));
   // fine beads spaced along the ribbon gap
   const curve = new THREE.CatmullRomCurve3(path.map(([x, y]) => new THREE.Vector3(s * x, y, 0)), false, "catmullrom", 0.5);
-  for (let i = 1; i < 12; i++) { const p = curve.getPoint(i / 12); const b = mesh(new THREE.SphereGeometry(0.26, 18, 12), m.gold); b.position.copy(p); g.add(b); }
+  for (let i = 1; i < 16; i++) { const p = curve.getPoint(i / 16); const b = mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.7, 12), m.gold); b.rotation.x = Math.PI / 2; b.position.copy(p); g.add(b); const k = mesh(new THREE.SphereGeometry(0.3, 14, 10), m.gold); k.position.copy(p); g.add(k); }
   // acanthus leaves where the handle meets the cup, top and bottom
   const leaf = leafGeometry(2.4, 0.85);
   for (const [y, dir] of [[20.7, 1], [14.0, -1]]) {

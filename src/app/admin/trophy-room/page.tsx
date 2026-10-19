@@ -10,16 +10,6 @@ type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean };
 
-const pools: Array<{ key: "pickem" | "survivor" | "bowl"; label: string }> = [
-  { key: "pickem", label: "Pick’em" },
-  { key: "survivor", label: "Survivor" },
-  { key: "bowl", label: "Bowl Pool" },
-];
-
-function names(champions: Champion[] | null) {
-  return champions?.length ? champions.map((champion) => champion.name).join(", ") : null;
-}
-
 export default function TrophyRoomPage() {
   const [data, setData] = useState<{ trophies: Season[]; players: Row[] } | null>(null);
   const [error, setError] = useState("");
@@ -92,25 +82,6 @@ export default function TrophyRoomPage() {
         </section>
 
         {data ? <>
-          <section aria-labelledby="past-champions" className="desk-rule-bottom py-8">
-            <h2 className="font-serif text-2xl font-bold" id="past-champions">Past champions</h2>
-            {data.trophies.length ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {data.trophies.map((season) => (
-                  <article className="trophy-season desk-panel p-4" key={season.seasonYear}>
-                    <h3>{season.seasonYear}</h3>
-                    <dl>
-                      {pools.map((pool) => {
-                        const winners = names(season[pool.key]);
-                        return <div key={pool.key}><dt>{pool.label}</dt><dd className={winners ? "" : "is-open"}>{winners ?? "Not recorded"}</dd></div>;
-                      })}
-                    </dl>
-                  </article>
-                ))}
-              </div>
-            ) : <p className="mt-3 text-(color:--themed-text-29)">No champions have been crowned yet.</p>}
-          </section>
-
           <section aria-labelledby="all-time" className="py-8">
             <h2 className="font-serif text-2xl font-bold" id="all-time">All-time record</h2>
             <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first.</p>

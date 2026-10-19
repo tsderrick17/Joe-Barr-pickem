@@ -1,14 +1,14 @@
-// Renders the turntable: the three trophies on their triangular table, one picture for every 6 degrees of a full turn.
+// Renders the turntable: the three trophies on their triangular table, one picture for every 3 degrees of a full turn.
 // Usage: node turntable.mjs [champions.json] [outDir]
 // champions.json is { "pickem": [{ "year": "2025", "name": "STEVE" }], "bowl": [...], "survivor": [...] }, newest first in each pool;
-// it decides which plaques are engraved. The pictures are written as frame-000.webp ... frame-059.webp (rest positions: 000, 020, 040).
+// it decides which plaques are engraved. The pictures are written as frame-000.webp ... frame-119.webp (rest positions: 000, 040, 080).
 import { chromium } from "@playwright/test";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { startServer } from "./serve.mjs";
 
 const [championsFile, outDir = "out/turntable"] = process.argv.slice(2);
 const champions = championsFile ? readFileSync(championsFile, "utf8").trim() : "";
-const STEP = 6, FRAMES = 360 / STEP, WIDTH = 1100, HEIGHT = 825;
+const STEP = 3, FRAMES = 360 / STEP, WIDTH = 1100, HEIGHT = 825;
 mkdirSync(outDir, { recursive: true });
 // FRAME_PART="k/n" renders only every n-th frame starting at k, so several runs can share the work (each needs its own PORT)
 const [partIndex, partCount] = (process.env.FRAME_PART ?? "0/1").split("/").map(Number);

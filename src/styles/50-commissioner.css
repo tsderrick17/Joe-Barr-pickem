@@ -664,21 +664,44 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-season dt { color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; text-transform: uppercase; }
 .trophy-season dd { font: 400 1.05rem Georgia, serif; margin: 0; }
 .trophy-season dd.is-open { color: var(--club-muted); font-style: italic; }
-.trophy-turn-stage { background: black; border: 1px solid var(--club-gold-dk); cursor: grab; position: relative; touch-action: pan-y; user-select: none; }
+.trophy-display { background: oklch(0.13 0.01 20); border: 1px solid var(--club-gold-dk); }
+.trophy-turn-stage { cursor: grab; position: relative; touch-action: pan-y; user-select: none; }
 .trophy-turn-stage:active { cursor: grabbing; }
-.trophy-turn-stage:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: 3px; }
-.trophy-turn-stage img { display: block; height: auto; pointer-events: none; width: 100%; }
+.trophy-turn-stage:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -4px; }
+.trophy-turn-poster { display: block; height: auto; pointer-events: none; width: 100%; }
+.trophy-turn-canvas { height: 100%; inset: 0; pointer-events: none; position: absolute; width: 100%; }
 .trophy-turn-arrow { align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; color: rgba(255, 255, 255, 0.78); cursor: pointer; display: flex; font-size: 1.7rem; height: 2.5rem; justify-content: center; line-height: 1; opacity: 0.55; padding: 0 0 0.2rem; position: absolute; top: 50%; transform: translateY(-50%); transition: opacity 0.2s; width: 2.5rem; }
 .trophy-turn-arrow:hover, .trophy-turn-arrow:focus-visible { opacity: 1; }
 .trophy-turn-arrow[data-side="left"] { left: 0.6rem; }
 .trophy-turn-arrow[data-side="right"] { right: 0.6rem; }
-.trophy-rolls { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); margin-top: 0.9rem; }
-.trophy-rolls section { border-top: 2px solid transparent; opacity: 0.65; padding-top: 0.45rem; transition: opacity 0.2s; }
-.trophy-rolls section[data-front="true"] { border-top-color: var(--club-gold-dk); opacity: 1; }
-.trophy-rolls h3 { font-family: Georgia, serif; letter-spacing: 0.08em; text-transform: uppercase; }
-.trophy-rolls ul { font-size: 0.9rem; list-style: none; margin: 0.2rem 0 0; padding: 0; }
-.trophy-rolls li span { font-weight: 700; margin-right: 0.35rem; }
-.trophy-rolls p { font-size: 0.85rem; margin: 0.2rem 0 0; }
+
+/* The rafters: a dark beam across the top, and the champions of the trophy at the front hanging from it as stadium banners. When a trophy
+   settles at the front its banners drop in from above, one after another, and bounce into place; while the table turns they lift away. */
+.trophy-rafters { --banner: oklch(0.3 0.07 265); --banner-dark: oklch(0.2 0.05 265); --trim: oklch(0.8 0.12 85); --ink: oklch(0.95 0.03 90); border-top: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 0 1rem 1.4rem; position: relative; }
+.trophy-rafters[data-pool="bowl"] { --banner: oklch(0.38 0.15 25); --banner-dark: oklch(0.26 0.1 25); }
+.trophy-rafters[data-pool="survivor"] { --banner: oklch(0.36 0.1 160); --banner-dark: oklch(0.24 0.07 160); }
+.trophy-beam { background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
+.trophy-banners { display: flex; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.6)); flex-wrap: wrap; gap: 0 1.2rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
+.trophy-rafters[data-moving="true"] .trophy-banners { opacity: 0; transform: translateY(-110%); }
+.trophy-banner { align-items: center; animation: trophy-banner-drop 0.95s both; animation-delay: calc(var(--i) * 110ms); background: linear-gradient(180deg, var(--banner), var(--banner-dark)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); display: grid; justify-items: center; margin-top: 0.3rem; min-height: 12rem; padding: 0.7rem 0.55rem 2.2rem; position: relative; transform-origin: 50% 0; width: 7.6rem; }
+.trophy-banner > * { color: var(--ink); display: block; position: relative; text-align: center; z-index: 1; }
+.trophy-banner::before { background: oklch(0.8 0.1 85); content: ""; height: 0.5rem; left: 50%; margin-top: -0.3rem; position: absolute; top: 0; width: 0.14rem; }
+.trophy-banner::after { border: 1px solid var(--trim); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); content: ""; inset: 0.3rem; pointer-events: none; position: absolute; }
+.trophy-banner-tag { color: var(--trim); font: 700 0.58rem/1.2 var(--font-graduate), Georgia, serif; letter-spacing: 0.14em; text-transform: uppercase; }
+.trophy-banner-year { font: 400 2.1rem/1 var(--font-graduate), Georgia, serif; letter-spacing: 0.04em; margin-top: 0.35rem; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.trophy-banner-star { color: var(--trim); font-size: 0.8rem; margin: 0.25rem 0; }
+.trophy-banner-name { font: 700 1.05rem/1.15 var(--font-cormorant), Georgia, serif; overflow-wrap: anywhere; }
+.trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
+@keyframes trophy-banner-drop {
+  0% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.7); opacity: 0; transform: translateY(-140%) rotate(-5deg); }
+  8% { opacity: 1; }
+  52% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(3deg); }
+  68% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); transform: translateY(-9%) rotate(-2deg); }
+  80% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(1.2deg); }
+  90% { transform: translateY(-2.5%) rotate(-0.5deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) { .trophy-banner { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
 .trophy-table th, .trophy-table td { padding: .6rem .8rem; text-align: right; white-space: nowrap; }

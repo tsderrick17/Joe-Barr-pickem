@@ -1774,3 +1774,14 @@ Requested so a player who is out of it in spirit can end their season instead of
 Forfeiting is final for the player and is handled like an elimination: picks on games that have not started are voided and excluded from totals (not graded as losses), picks on games already under way stay and grade, so the score is final after the last started game grades. It is one database function (atomic, idempotent, audited), the database refuses later saves itself, and the Standings show the final score with a FORFEITED stamp. Only the Commissioner can reverse it (Players page, two-step Reinstate); a reversal does not restore voided picks.
 
 The Forfeit link is not offered to a player who is already eliminated (nothing left to give up) or who has already forfeited. The season-long Survivor game and the Bowl Pool are separate games and are not affected.
+
+## The Trophy Room table is mahogany and tailor-made, the spin is smooth, and the champions hang as stadium banners
+
+The table was rebuilt for this display: a hand-made mahogany table (ribbon-figured grain, satinwood and ebony stringing, a marquetry compass star in the middle, a carved apron, an urn pedestal on three cabriole legs with brass claw-and-ball feet) whose top is cut tight around three landing pads. Each pad is the outline of its trophy's own base (the Pick'em hexagon, the Bowl Pool drum, the Survivor steps) as a raised moulded step with a velvet inset a thin, even margin wide, and the top flows around them in deep, smooth curves. The table is larger in the picture so the trophy at the front is framed on its own with the other two pushed to the sides.
+
+The spin was slow, choppy and flashed black. The cause was swapping one image's source for the next: the browser shows nothing while the new picture decodes. The 120 pictures (one per 3 degrees) are now fetched in the background (the three resting views first, then outward from them), decoded, and drawn onto one canvas, so a frame is always on screen; dragging follows the finger directly, a flick carries on a little, and it settles on the nearest trophy in well under a second.
+
+The "Past champions" cards are gone. In their place, below the table, the champions of the trophy at the front hang from the rafters as stadium banners (the year in varsity lettering, the name beneath, trimmed in gold, colour by pool: navy for Pick'em, crimson for the Bowl Pool, emerald for Survivor). While the table turns the banners lift away; when it settles the new trophy's banners drop in from above one after another and bounce into place. The banners are real text from the records, so they stay correct between a crowning and the next set of pictures, and screen readers read them.
+
+Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, so they are now spaced well apart and joined by cross-pins; the Survivor plaques are wider and more evenly spaced.
+

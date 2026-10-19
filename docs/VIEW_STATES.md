@@ -79,7 +79,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
-| Trophy room (the three trophies on the turning table, with a plain-text roll of champions under it; past champions by season; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
+| Trophy room (the three trophies on the turning table with the front trophy's champions as banners under it; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
 ## Account pages — `account.visual.spec.ts`
@@ -116,4 +116,4 @@ Only runs when the page is opened from the home screen (the test marks the page 
 
 ## Trophy Room turntable (`/admin/trophy-room`) — `trophy-turntable.visual.spec.ts`
 
-Behavior tests: the arrows bring the next or previous trophy to the front (the screen-reader status and the highlighted roll follow), and dragging turns the table and settles on the nearest trophy while a short drag springs back. One screenshot: the table at rest with the Bowl Pool at the front.
+Behavior tests: the arrows bring the next or previous trophy to the front and its champions hang from the rafters as banners (the screen-reader status and the banners' pool follow); the banners lift away while the table turns and drop in (the `trophy-banner-drop` animation) when it settles; dragging turns the table, a short slow drag springs back, and a long drag settles on the next trophy. One screenshot: the table and banners at rest with the Bowl Pool at the front.
