@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import TrophyTurntable from "@/components/trophy-turntable";
-import { formatAverage, QUALIFYING_AB } from "@/lib/all-time-stats.js";
+import { formatAverage } from "@/lib/all-time-stats.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -45,7 +45,6 @@ export default function TrophyRoomPage() {
     if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
     return direction * ((b.avg ?? 0) - (a.avg ?? 0)) || direction * (b.h - a.h) || byName(a, b);
   });
-  const firstUnqualified = sort.key === "rate" ? sorted.findIndex((row) => !row.qualified) : -1;
   const choose = (key: "wins" | "rate") => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
   const header = (key: "wins" | "rate", label: string) => (
     <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={2} scope="col">
@@ -53,9 +52,18 @@ export default function TrophyRoomPage() {
     </th>
   );
 
-  const streakCell = (run: Run | undefined, label: string) => (
-    <td aria-label={run ? `${label}: ${run.current} now, ${run.longest} best` : `${label}: none yet`}>{run ? <>{run.current}<small>/{run.longest}</small></> : "—"}</td>
-  );
+  /** A streak cell: the current streak big, the all-time best under it, and a bar showing how close the current streak is to that best. */
+  const streakCell = (run: Run | undefined, label: string) => {
+    if (!run) return <td aria-label={`${label}: none yet`} className="trophy-streak"><span className="trophy-streak-now">—</span></td>;
+    const atBest = run.current > 0 && run.current >= run.longest;
+    return (
+      <td aria-label={`${label}: ${run.current} now, ${run.longest} best${atBest ? ", at their best" : ""}`} className={`trophy-streak ${atBest ? "is-best" : ""}`}>
+        <span className="trophy-streak-now">{run.current}</span>
+        <span className="trophy-streak-best">best {run.longest}{atBest ? " ★" : ""}</span>
+        <span aria-hidden="true" className="trophy-streak-bar"><span style={{ width: `${run.longest ? Math.round((run.current / run.longest) * 100) : 0}%` }} /></span>
+      </td>
+    );
+  };
 
   function line(row: Row, rank: number) {
     const own = row.streaks ?? undefined;
@@ -65,8 +73,8 @@ export default function TrophyRoomPage() {
         <th scope="row">{row.name}</th>
         <td>{row.ab ? row.h : "—"}</td>
         <td className="trophy-avg">{formatAverage(row.avg)}</td>
-        {streakCell(own?.noDonut, "Weeks with at least 1 win")}
-        {streakCell(own?.sweeps, "2-0 weeks")}
+        {streakCell(own?.noDonut, "Donut Free Weeks")}
+        {streakCell(own?.sweeps, "2-0 Sweeps")}
       </tr>
     );
   }
@@ -77,8 +85,7 @@ export default function TrophyRoomPage() {
         <header className="flex flex-wrap items-start justify-between gap-4 desk-rule-bottom pb-6">
           <div>
             <p className="text-sm font-semibold tracking-[0.2em] text-(color:--themed-text-28)">LEAD PIPE LOCKS</p>
-            <h1 className="mt-2 font-serif text-4xl font-bold">Trophy room</h1>
-            <p className="mt-2 max-w-xl text-(color:--themed-text-29)">Every season’s champions, and every player’s all-time record.</p>
+            <h1 className="mt-2 font-serif text-4xl font-bold">Trophy Room</h1>
           </div>
           <Link className="font-bold underline underline-offset-4" href="/">Back to Standings</Link>
         </header>
@@ -94,32 +101,19 @@ export default function TrophyRoomPage() {
 
         {data ? <>
           <section aria-labelledby="all-time" className="py-8">
-            <h2 className="font-serif text-2xl font-bold" id="all-time">All-time record</h2>
-            <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first. Streaks are consecutive regular-season weeks, shown as now / best.</p>
+            <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table">
+                <colgroup><col style={{ width: "9%" }} /><col style={{ width: "25%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "18.5%" }} /><col style={{ width: "18.5%" }} /></colgroup>
                 <thead>
-                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Streaks</th></tr>
-                  <tr><th scope="col" title="Weeks in a row with at least 1 win: now / best">1+ win</th><th scope="col" title="2-0 weeks in a row: now / best">2-0</th></tr>
+                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
+                  <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">2-0 Sweeps</th></tr>
                 </thead>
                 <tbody>
-                  {sorted.map((row, index) => (
-                    firstUnqualified === index
-                      ? [<tr className="trophy-divider" key="divider"><td colSpan={6}>Under {QUALIFYING_AB} picks</td></tr>, line(row, index + 1)]
-                      : line(row, index + 1)
-                  ))}
+                  {sorted.map((row, index) => line(row, index + 1))}
                 </tbody>
               </table>
             </div>
-            <details className="desk-card mt-5 p-4 text-sm">
-              <summary className="cursor-pointer font-bold">How these are figured</summary>
-              <ul className="mt-3 space-y-1 text-(color:--themed-text-29)">
-                <li><b>Wins</b>: Pick’em picks that covered the spread, across every season on record.</li>
-                <li><b>Hit rate</b>: wins divided by graded picks, written like a batting average (.599 is 59.9%). A push counts as a loss; voided picks never count.</li>
-                <li><b>Streaks</b>: weeks in a row with at least 1 win (never a 0-2), and 2-0 weeks in a row, regular season only. A streak still alive at the end of a season carries into the next. A pick not made counts as a loss; a week with a voided pick is left out.</li>
-                <li>A champion from a season with no pick history on file still appears, with dashes.</li>
-              </ul>
-            </details>
           </section>
         </> : null}
 
