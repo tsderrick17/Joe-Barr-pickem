@@ -1767,3 +1767,13 @@ The Pick'em trophy was redesigned: a white marble pillar with a graceful flare a
 
 Zac's 2026 Survivor win is engraved on a brass plaque beside John's 2025 plaque (`tools/trophy-render/champions.json`, newest first), and the 60 turntable pictures were re-rendered. The camera is closer and the plaque lettering larger, so every year and name reads at the page's normal size; a small diamond divider that read as an accent over a name's middle letter was removed. The plain-text champion roll under the table comes from the records, so it lists Zac only once his Survivor crown is recorded in the database.
 
+## The Trophy Room table is mahogany and tailor-made, the spin is smooth, and the champions hang as stadium banners
+
+The table was rebuilt for this display: a hand-made mahogany table (ribbon-figured grain, satinwood and ebony stringing, a marquetry compass star in the middle, a carved apron, an urn pedestal on three cabriole legs with brass claw-and-ball feet) whose top is cut tight around three landing pads. Each pad is the outline of its trophy's own base (the Pick'em hexagon, the Bowl Pool drum, the Survivor steps) as a raised moulded step with a velvet inset a thin, even margin wide, and the top flows around them in deep, smooth curves. The table is larger in the picture so the trophy at the front is framed on its own with the other two pushed to the sides.
+
+The spin was slow, choppy and flashed black. The cause was swapping one image's source for the next: the browser shows nothing while the new picture decodes. The 120 pictures (one per 3 degrees) are now fetched in the background (the three resting views first, then outward from them), decoded, and drawn onto one canvas, so a frame is always on screen; dragging follows the finger directly, a flick carries on a little, and it settles on the nearest trophy in well under a second.
+
+The "Past champions" cards are gone. In their place, below the table, the champions of the trophy at the front hang from the rafters as stadium banners (the year in varsity lettering, the name beneath, trimmed in gold, colour by pool: navy for Pick'em, crimson for the Bowl Pool, emerald for Survivor). While the table turns the banners lift away; when it settles the new trophy's banners drop in from above one after another and bounce into place. The banners are real text from the records, so they stay correct between a crowning and the next set of pictures, and screen readers read them.
+
+Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, so they are now spaced well apart and joined by cross-pins; the Survivor plaques are wider and more evenly spaced.
+

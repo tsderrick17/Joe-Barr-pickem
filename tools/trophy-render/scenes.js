@@ -1,5 +1,6 @@
 import { THREE, makeStage, materials, mantleTop, lightBeam, mesh, profile, revolveMod } from "/lib.js";
 import { pennantCup } from "/trophies.js";
+import { mahoganyTable, RADIUS, PAD_TOP } from "/table.js";
 import { hexBase, ivorySpire, lockSpire, armillary, crystalSpade, bowlBase, onyxBase, emeraldBase } from "/trophies2.js";
 
 const shots = {
@@ -21,53 +22,32 @@ const shots = {
   cagetop: { cushion: [1.55, 1.95], build: ivorySpire, base: hexBase, cam: [0, 40, 52], look: [0, 31, 0] },
   plaqueclose: { cushion: [1.35, 1.85], build: pennantCup, base: bowlBase, cam: [0, 8, 34], look: [0, 4.6, 0] },
   survivorzoom: { cushion: [1.35, 1.2], build: crystalSpade, base: emeraldBase, cam: [0, 26, 82], look: [0, 10.5, 0] },
+  bowlturn: { cushion: [1.35, 1.85], turn: 2.1, build: pennantCup, base: bowlBase, cam: [0, 42, 172], look: [0, 21, 0] },
   test: { build: null, cam: [0, 24, 96], look: [0, 12, 0] },
 };
 
-/** Three trophies on a triangular marble table, 120 degrees apart, each facing outward; the table turns by `degrees` so the next one comes to the front. */
+/** Three trophies on the mahogany table, one on each landing pad, 120 degrees apart and facing outward; the table turns by `degrees`
+ *  so the next one comes to the front. The camera frames the front trophy; the other two sit back at the edges of the picture. */
 function buildTurntable(width, height, degrees) {
-  const stage = makeStage({ width, height, fov: 20 });
+  const stage = makeStage({ width, height, fov: 22 });
   const m = materials();
-  const table = new THREE.Group();
-  // the top: an equilateral triangle with softly rounded corners, thick and bevelled, edged with a gold bead line
-  const R = 54, corner = 9, tangent = corner * Math.sqrt(3), pts = [0, 1, 2].map((i) => new THREE.Vector2(Math.sin(i * 2 * Math.PI / 3) * R, Math.cos(i * 2 * Math.PI / 3) * R));
-  const shape = new THREE.Shape();
-  pts.forEach((v, i) => {
-    const prev = pts[(i + 2) % 3], next = pts[(i + 1) % 3], toPrev = prev.clone().sub(v).normalize(), toNext = next.clone().sub(v).normalize();
-    const a = v.clone().addScaledVector(toPrev, tangent), b = v.clone().addScaledVector(toNext, tangent);
-    if (i === 0) shape.moveTo(a.x, a.y); else shape.lineTo(a.x, a.y);
-    shape.quadraticCurveTo(v.x, v.y, b.x, b.y);
-  });
-  shape.closePath();
-  const slab = new THREE.ExtrudeGeometry(shape, { depth: 3.4, bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.5, bevelSegments: 4, curveSegments: 18 });
-  slab.rotateX(Math.PI / 2);
-  const edgeMat = new THREE.MeshPhysicalMaterial({ color: 0xe9e1d2, roughness: 0.22, clearcoat: 0.7, clearcoatRoughness: 0.12, envMapIntensity: 0.7 });
-  const topMat = m.marble.clone(); topMat.map = m.marble.map.clone(); topMat.map.repeat.set(0.019, 0.019); topMat.map.needsUpdate = true;   // the extruded shape is in table units, so the texture is stretched across the whole top
-  const top = mesh(slab, [topMat, edgeMat]); table.add(top);
-  const outline = new THREE.CatmullRomCurve3(shape.getPoints(30).map((p) => new THREE.Vector3(p.x, 0.08, p.y)), true);
-  table.add(mesh(new THREE.TubeGeometry(outline, 400, 0.28, 8, true), m.gold));
-  // a stout central column and a round foot, in the same marble and gold
-  table.add(mesh(revolveMod(profile([[10, -3.4], [8.2, -6], [6, -16], [6.4, -30], [8, -32]], 40), 80, null), m.marble));
-  for (const y of [-6.4, -29]) { const ring = mesh(new THREE.TorusGeometry(y === -6.4 ? 8.4 : 7.2, 0.5, 14, 80), m.gold); ring.rotation.x = Math.PI / 2; ring.position.y = y; table.add(ring); }
-  table.add(mesh(revolveMod(profile([[24, -36], [24.6, -35], [22, -33], [10, -31.6], [7, -31.5]], 40), 100, null), m.gold));
-  // each trophy on its own round velvet cushion, set at a corner of the table
+  // the footprint of each trophy's base, so its velvet is cut to fit: the Pick'em hexagon, the Bowl Pool drum, the Survivor steps
+  const table = mahoganyTable(m, [{ type: "hex", r: 11.875, turn: Math.PI / 6 }, { type: "circle", r: 10.15 }, { type: "rect", w: 20.6, d: 12.2 }]);
   const order = [[ivorySpire, hexBase, { fin: "coil" }], [pennantCup, bowlBase, {}], [crystalSpade, emeraldBase, {}]];
   order.forEach(([build, base, opts], k) => {
-    const phi = k * 2 * Math.PI / 3, place = new THREE.Group(), r = 26;
-    place.position.set(Math.sin(phi) * r, 0, Math.cos(phi) * r); place.rotation.y = phi;
-    place.add(mesh(revolveMod(profile([[0.01, 0], [13.2, 0], [13.9, 0.5], [13.9, 1.5], [12.9, 2.5], [0.01, 2.7]], 30), 100, null), m.velvet));
-    const piping = mesh(new THREE.TorusGeometry(13.6, 0.2, 10, 100), m.gold); piping.rotation.x = Math.PI / 2; piping.position.y = 1.0; place.add(piping);
-    const baseGroup = base(m); baseGroup.position.y = 2.65; place.add(baseGroup);
-    const trophy = build(m, { material: "white", ...opts }); trophy.position.y = 2.65 + baseGroup.userData.height; place.add(trophy);
+    const phi = k * 2 * Math.PI / 3, place = new THREE.Group();
+    place.position.set(Math.sin(phi) * RADIUS, PAD_TOP, Math.cos(phi) * RADIUS); place.rotation.y = phi;
+    const baseGroup = base(m); place.add(baseGroup);
+    const trophy = build(m, { material: "white", ...opts }); trophy.position.y = baseGroup.userData.height; place.add(trophy);
     table.add(place);
   });
   table.rotation.y = -degrees * Math.PI / 180;
   stage.scene.add(table);
   stage.renderer.transmissionResolutionScale = 1;
-  stage.camera.position.set(0, 48, 182); stage.camera.lookAt(0, 21, 0);
-  // a wide, soft key from above-left so every corner of the table is lit and the front trophy casts a gentle shadow
-  stage.key.position.set(-34, 130, 90); stage.key.target.position.set(0, 8, 0); stage.key.angle = 0.62; stage.key.penumbra = 0.7; stage.key.intensity = 5200; stage.key.distance = 330;
-  stage.key.shadow.mapSize.set(4096, 4096); stage.key.shadow.camera.near = 60; stage.key.shadow.camera.far = 260; stage.key.shadow.radius = 6; stage.key.shadow.bias = -0.0002;
+  stage.camera.position.set(0, 44, RADIUS + 128); stage.camera.lookAt(0, 21, RADIUS - 2);
+  // a wide, soft key from above the front pad, so the front trophy is lit best and the two behind fall off into the dark
+  stage.key.position.set(-26, 120, RADIUS + 60); stage.key.target.position.set(0, 10, RADIUS); stage.key.angle = 0.42; stage.key.penumbra = 0.8; stage.key.intensity = 5200; stage.key.distance = 320;
+  stage.key.shadow.mapSize.set(4096, 4096); stage.key.shadow.camera.near = 50; stage.key.shadow.camera.far = 260; stage.key.shadow.radius = 6; stage.key.shadow.bias = -0.0002;
   return stage;
 }
 

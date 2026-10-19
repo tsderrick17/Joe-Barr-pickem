@@ -157,8 +157,8 @@ export function emeraldBase(m) {
   { const mat = new THREE.Matrix4(); let k = 0; const row = (w, d, y) => { const nx = Math.round(w / 0.55), nz = Math.round(d / 0.55); for (let i = 0; i <= nx; i++) { const x = -w / 2 + (i / nx) * w; for (const z of [-d / 2, d / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } for (let i = 1; i < nz; i++) { const z = -d / 2 + (i / nz) * d; for (const x of [-w / 2, w / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } }; row(19.9, 11.5, 3.17); row(16.4, 9.0, 3.34 + t2 + 0.15); beads.count = k; beads.castShadow = true; g.add(beads); }
   // five plates on the front: the newest champion goes bottom left, moves one place right each year, then up to the top row, then round the back
   const sv = championsFor("survivor");
-  for (const [x, i] of [[-6.1, 0], [0, 1], [6.1, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 5.4, 2.3, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
-  [-3.6, 3.6].forEach((x, j) => g.add(flatPlate(sv[3 + j] ? sv[3 + j].year : "", 4.8, 2.3, 8.8 / 2 - 0.03, 3.34 + t2 / 2, x, sv[3 + j] ? sv[3 + j].name : "", 3 + j)));
+  for (const [x, i] of [[-6.6, 0], [0, 1], [6.6, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 5.0, 2.2, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
+  [-3.8, 3.8].forEach((x, j) => g.add(flatPlate(sv[3 + j] ? sv[3 + j].year : "", 4.4, 2.1, 8.8 / 2 - 0.03, 3.34 + t2 / 2, x, sv[3 + j] ? sv[3 + j].name : "", 3 + j)));
   g.userData.height = 3.34 + t2 + 0.3;
   return g;
 }
