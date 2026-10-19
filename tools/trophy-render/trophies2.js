@@ -71,13 +71,9 @@ function plaqueTexture(year, name, aspect, tall = 640) {
     g.beginPath(); g.arc(cx, cy, height * 0.009, 0, Math.PI * 2); g.fill();
   }
   g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = `700 ${Math.round(height * 0.16)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(height * 0.04)}px`; g.fillText(year, width / 2, height * 0.33);
-  const size = Math.min(height * 0.3, (width * 0.7) / Math.max(4, name.length * 0.8));
-  g.font = `700 ${Math.round(size)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(size * 0.08)}px`; g.fillText(name, width / 2, height * 0.64);
-  // a small diamond between year and name, flanked by fine rules
-  const dy = height * 0.465, dw = height * 0.022;
-  g.beginPath(); g.moveTo(width / 2, dy - dw); g.lineTo(width / 2 + dw, dy); g.lineTo(width / 2, dy + dw); g.lineTo(width / 2 - dw, dy); g.closePath(); g.fill();
-  g.fillRect(width * 0.3, dy - height * 0.004, width * 0.17, height * 0.008); g.fillRect(width * 0.53, dy - height * 0.004, width * 0.17, height * 0.008);
+  g.font = `700 ${Math.round(height * 0.21)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(height * 0.035)}px`; g.fillText(year, width / 2, height * 0.28);
+  const size = Math.min(height * 0.36, (width * 0.74) / Math.max(4, name.length * 0.8));
+  g.font = `700 ${Math.round(size)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(size * 0.08)}px`; g.fillText(name, width / 2, height * 0.7);
   const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8; return tex;
 }
 const BRASS = new THREE.MeshPhysicalMaterial({ color: 0xd9a93f, metalness: 1, roughness: 0.22, clearcoat: 0.3, clearcoatRoughness: 0.18, envMapIntensity: 1.4 });
