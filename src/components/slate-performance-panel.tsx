@@ -40,6 +40,7 @@ export default function SlatePerformancePanel({ history, summary }: {
       key={range}
       label="Credits per game: 15-day and 30-day moving averages"
       yAxisLabel="Credits / game"
+      yScale="tight"
       points={observed.map((point, index) => ({
         label: `${date(point.slateStartedAt, true)} ET · ${point.games} game${point.games === 1 ? "" : "s"}`,
         shortLabel: date(point.slateStartedAt),
