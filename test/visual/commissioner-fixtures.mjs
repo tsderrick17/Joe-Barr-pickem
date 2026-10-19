@@ -113,6 +113,7 @@ export function commissionerApi(state) {
     "admin/automation-health": HEALTH(state),
     "admin/automation-preflight": PREFLIGHT(state),
     "admin/account-capacity": CAPACITY,
+    "admin/pool-stats": POOL_STATS,
     "admin/bowl-pool-readiness": BOWL_READINESS(state),
     "admin/bowl-pool/exceptions": BOWL_EXCEPTIONS(state),
     "admin/season-bootstrap-status": BOOTSTRAP,
@@ -155,4 +156,32 @@ export const TROPHY_ROOM = {
     row("p8", "Dana", 1, 12, 5, 5 / 12, 7 / 12, null, 3, null, { pickem: 0, survivor: 0 }),
     row("p5", "Zac", 0, 0, 0, null, null, null, 0, null, { pickem: 0, survivor: 1 }),
   ],
+};
+
+/** The group's stats: a pool of eight over two seasons. */
+const bucket = (wins, losses) => ({ wins, losses, picks: wins + losses, hitRate: wins / (wins + losses) });
+const split = (wins, losses, share) => ({ ...bucket(wins, losses), share });
+export const POOL_STATS = {
+  record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
+  bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
+  weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
+  streaks: {
+    sweeps: [
+      { playerId: "p3", name: "Connor", longest: 6, current: 2, endedAt: { seasonYear: 2025, week: 11 } },
+      { playerId: "p2", name: "Tyler", longest: 5, current: 0, endedAt: { seasonYear: 2026, week: 8 } },
+      { playerId: "p1", name: "Gary", longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 9 } },
+      { playerId: "p4", name: "Rick", longest: 3, current: 0, endedAt: { seasonYear: 2025, week: 4 } },
+    ],
+    noDonut: [
+      { playerId: "p2", name: "Tyler", longest: 23, current: 9, endedAt: { seasonYear: 2026, week: 9 } },
+      { playerId: "p3", name: "Connor", longest: 17, current: 17, endedAt: { seasonYear: 2026, week: 9 } },
+      { playerId: "p1", name: "Gary", longest: 12, current: 0, endedAt: { seasonYear: 2025, week: 14 } },
+      { playerId: "p4", name: "Rick", longest: 8, current: 3, endedAt: { seasonYear: 2025, week: 6 } },
+    ],
+  },
+  splits: {
+    side: { favorite: split(1310, 1086, 0.532), underdog: split(1108, 991, 0.468) },
+    venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469), neutral: split(100, 26, 0.028) },
+  },
+  graded: 4495,
 };
