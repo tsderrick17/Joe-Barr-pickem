@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import TrophyBanner from "@/components/trophy-banner";
 import { championRoll } from "@/lib/trophy-roll.js";
 import { loadOrder } from "@/lib/trophy-turn.js";
 
@@ -10,7 +11,7 @@ import { loadOrder } from "@/lib/trophy-turn.js";
  * (rendered once, see tools/trophy-render). They are all fetched and decoded in the background and drawn onto one canvas, so a
  * spin never waits on an image (swapping an <img> source flashes black while the next picture decodes). Dragging or swiping turns
  * the table, a flick carries on and settles the nearest trophy at the front, and the arrows at the sides bring the next one forward.
- * When a trophy settles, its champions hang from the rafters below as stadium banners, dropping in and bouncing into place.
+ * When a trophy settles, its champions hang from the rafters below as cloth banners that drop in, bounce into place and then ripple and sway freely.
  */
 type Champion = { name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -94,16 +95,18 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
 
   const set = useCallback((next: number) => { angle.current = next; draw(); }, [draw]);
 
-  /** Turn smoothly to an angle by the short way round, then report which trophy is at the front. */
-  const turnTo = useCallback((target: number) => {
+  /** Turn smoothly to an angle by the short way round, then report which trophy is at the front. The arrow buttons turn it slowly and evenly, easing
+   *  in and out like a heavy table; a settle after a drag or flick keeps the quicker, ease-out turn. Neither may go faster than about 10 degrees a
+   *  frame: the pictures are 3 degrees apart and the fluted pedestal repeats every 22.5, so a faster turn makes its flutes appear to roll backwards. */
+  const turnTo = useCallback((target: number, slow = false) => {
     if (frame.current !== null) cancelAnimationFrame(frame.current);
     const from = angle.current, delta = ((target - from + 540) % 360) - 180;
     const finish = () => { frame.current = null; setFront(frontOf(angle.current)); setMoving(false); };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || delta === 0) { set(from + delta); finish(); return; }
     setMoving(true);
-    const start = performance.now(), duration = Math.min(650, 220 + Math.abs(delta) * 2.4);
+    const start = performance.now(), duration = slow ? Math.min(1500, 400 + Math.abs(delta) * 9) : Math.min(900, 220 + Math.abs(delta) * 4);
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration), eased = 1 - Math.pow(1 - t, 3);
+      const t = Math.min(1, (now - start) / duration), eased = slow ? 0.5 - Math.cos(Math.PI * t) / 2 : 1 - Math.pow(1 - t, 3);
       set(from + delta * eased);
       if (t < 1) frame.current = requestAnimationFrame(tick); else finish();
     };
@@ -117,7 +120,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     turnTo(nearestRest(angle.current));
   }, [turnTo]);
 
-  const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST), [turnTo]);
+  const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST, true), [turnTo]);
 
   const roll = championRoll(seasons, TROPHIES[front].pool);
 
@@ -167,31 +170,13 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
         <p aria-live="polite" className="sr-only" role="status">{moving ? "Turning" : `${TROPHIES[front].label} is at the front`}</p>
       </div>
       <section aria-label={`${TROPHIES[front].label} champions`} className="trophy-rafters" data-moving={moving ? "true" : "false"} data-pool={TROPHIES[front].pool} key={front}>
-        <svg aria-hidden="true" className="trophy-cloth-defs" focusable="false" height="0" width="0">
-          {/* Cloth: a slow, streaky height map (long vertical folds) lit from one side, multiplied into the banner's colour. */}
-          <filter colorInterpolationFilters="sRGB" height="100%" id="trophy-cloth" width="100%" x="0" y="0">
-            <feTurbulence baseFrequency="0.05 0.005" numOctaves="3" result="drape" seed="7" type="fractalNoise" />
-            <feColorMatrix in="drape" result="height" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.4 0 0 0 -0.2" />
-            <feDiffuseLighting diffuseConstant="1.25" in="height" lightingColor="#ffffff" result="lit" surfaceScale="6">
-              <feDistantLight azimuth="205" elevation="48" />
-            </feDiffuseLighting>
-            <feTurbulence baseFrequency="1.1 1.1" numOctaves="2" result="grain" seed="2" type="fractalNoise" />
-            <feColorMatrix in="grain" result="weave" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 -0.04" />
-            <feComposite in="SourceGraphic" in2="lit" k1="1.5" k2="0" k3="0" k4="0.03" operator="arithmetic" result="shaded" />
-            <feBlend in="weave" in2="shaded" mode="soft-light" result="woven" />
-            <feComposite in="woven" in2="SourceAlpha" operator="in" />
-          </filter>
-        </svg>
         <div aria-hidden="true" className="trophy-beam" />
         {roll.length ? (
           <ul className="trophy-banners">
             {roll.map((banner, index) => (
               <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>
-                <span aria-hidden="true" className="trophy-banner-cloth" />
-                <span className="trophy-banner-tag">{TROPHIES[front].tag}</span>
-                <b className="trophy-banner-name">{banner.name}</b>
-                <span className="trophy-banner-star" aria-hidden="true">★</span>
-                <ul className="trophy-banner-years">{banner.years.map((year) => <li key={year}>{year}</li>)}</ul>
+                <TrophyBanner index={index} name={banner.name} tag={TROPHIES[front].tag} years={banner.years} />
+                <span className="sr-only">{banner.name}, {TROPHIES[front].tag}, {banner.years.join(", ")}</span>
               </li>
             ))}
           </ul>

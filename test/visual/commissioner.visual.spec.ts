@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Regular Season Streaks", "Donut Free Weeks", "2-0 Sweeps"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Regular Season Streaks", "Consecutive Donut Free Weeks", "Consecutive 2-0 Sweeps"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -259,10 +259,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await serve(page, "healthy");
   await page.goto("/trophy-room");
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
-  await expect(row.getByLabel("2-0 Sweeps: 0 now, 5 best")).toBeVisible();
+  await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Consecutive 2-0 Sweeps: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Donut Free Weeks: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
 });
 
 // Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
