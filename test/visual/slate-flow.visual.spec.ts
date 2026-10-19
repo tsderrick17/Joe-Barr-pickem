@@ -206,5 +206,5 @@ test("the Trophy Room says it is not open yet to a player", async ({ page }) => 
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/trophy-room");
   await expect(page.getByText("The Trophy Room is not open yet.")).toBeVisible({ timeout: 30000 });
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator("main [role=alert]")).toHaveCount(0);   // the page's own error line (the framework has its own, empty one outside <main>)
 });
