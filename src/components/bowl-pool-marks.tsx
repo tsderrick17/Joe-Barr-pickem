@@ -36,7 +36,10 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
       style={{ "--megaphone-primary": colors.primary, "--megaphone-secondary": colors.secondary, "--megaphone-ink": colors.ink } as CSSProperties}
     >
       <svg focusable="false" viewBox="0 0 120 47">
-        <defs><clipPath id={cone}><path d={CONE} /></clipPath></defs>
+        <defs>
+          <clipPath id={cone}><path d={CONE} /></clipPath>
+          <linearGradient id={`${cone}-shade`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".26" /><stop offset=".5" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".24" /></linearGradient>
+        </defs>
         <g className="bowl-megaphone-waves">
           <path d="M101.5 13Q107.5 23.5 101.5 34" /><path d="M105.5 8.5Q113.5 23.5 105.5 38.5" /><path d="M109.5 4Q119.5 23.5 109.5 43" />
         </g>
@@ -45,8 +48,7 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <path className="bowl-megaphone-handle" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
           <path className="bowl-megaphone-body" d={CONE} />
           <g clipPath={`url(#${cone})`}>
-            <rect className="bowl-megaphone-light" height="14" width="100" x="6" y="2" />
-            <rect className="bowl-megaphone-dim" height="14" width="100" x="6" y="33" />
+            <rect fill={`url(#${cone}-shade)`} height="47" width="100" x="6" y="0" />
             <rect className="bowl-megaphone-trim" height="50" width="6.5" x="78" y="0" />
           </g>
           <path className="bowl-megaphone-edge" d={CONE} />
