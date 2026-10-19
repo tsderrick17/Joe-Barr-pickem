@@ -68,7 +68,7 @@
   z-index: 0;
 }
 
-.commissioner-flow-step.is-complete:not(:last-child)::after { background: var(--club-forest-2); }
+.commissioner-flow-step:is(.is-complete, .is-active):has(+ .commissioner-flow-step:is(.is-complete, .is-active))::after { background: var(--club-forest-2); }
 
 .commissioner-flow-button {
   align-items: center;
@@ -709,19 +709,24 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 @keyframes trophy-banner-sway { 0%, 100% { transform: rotate(0.45deg) skewX(0.4deg); } 50% { transform: rotate(-0.45deg) skewX(-0.4deg); } }
 @media (prefers-reduced-motion: reduce) { .trophy-banner { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
-.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
-.trophy-table th, .trophy-table td { padding: .6rem clamp(.4rem, 2vw, .8rem); text-align: right; white-space: nowrap; }
+.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: fixed; width: 100%; }
+.trophy-table th, .trophy-table td { padding: .65rem .25rem; text-align: center; vertical-align: middle; }
 .trophy-table tbody tr { border-top: 1px solid var(--club-line); }
-.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .62rem Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
-.trophy-table thead th:nth-child(2) { text-align: left; }
-.trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; text-align: left; width: 100%; }
-.trophy-table .trophy-rank { color: var(--club-muted); text-align: center; width: 1.8rem; }
+.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .6rem/1.25 Arial, sans-serif; letter-spacing: .08em; padding-block: .6rem; text-transform: uppercase; }
+.trophy-table thead th:nth-child(2) { padding-left: .5rem; text-align: left; }
+.trophy-table thead th[colspan] { border-bottom: 1px solid var(--club-gold-dk); }
+.trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; overflow: hidden; padding-left: .5rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.trophy-table .trophy-rank { color: var(--club-muted); }
 .trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
 .trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }
-.trophy-table td small { color: var(--club-muted); font: 400 0.75rem Arial, sans-serif; margin-left: 0.15rem; }
-.trophy-table thead th[colspan] { border-bottom: 1px solid var(--club-gold-dk); text-align: center; }
-.trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; text-align: left; text-transform: uppercase; }
+.trophy-streak { padding-block: .5rem; }
+.trophy-streak-now { display: block; font: 700 1.2rem/1.1 Georgia, serif; }
+.trophy-streak-best { color: var(--club-muted); display: block; font: 400 .7rem/1.2 Arial, sans-serif; margin-top: .15rem; }
+.trophy-streak-bar { background: var(--club-line); display: block; height: 3px; margin: .3rem auto 0; max-width: 3.2rem; }
+.trophy-streak-bar > span { background: var(--club-forest); display: block; height: 100%; }
+.trophy-streak.is-best .trophy-streak-now, .trophy-streak.is-best .trophy-streak-best { color: var(--club-gold-dk); }
+.trophy-streak.is-best .trophy-streak-bar > span { background: var(--club-gold-dk); }
 
 /* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
    recoloured by the Bowl Card rules.) */

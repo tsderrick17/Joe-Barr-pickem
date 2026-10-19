@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Streaks", "1+ win", "2-0"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Regular Season Streaks", "Donut Free Weeks", "2-0 Sweeps"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -259,10 +259,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await serve(page, "healthy");
   await page.goto("/trophy-room");
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Weeks with at least 1 win: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
-  await expect(row.getByLabel("2-0 weeks: 0 now, 5 best")).toBeVisible();
+  await expect(row.getByLabel("Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("2-0 Sweeps: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Weeks with at least 1 win: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Donut Free Weeks: none yet")).toBeVisible();
 });
 
 // Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
@@ -277,9 +277,13 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
-  await expect(section.getByRole("heading", { name: "Weeks with at least 1 win" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
+  await expect(section.getByText("Neutral site")).toHaveCount(0);
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
+  await section.getByLabel("Show").selectOption({ label: "Rick" });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });

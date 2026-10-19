@@ -7,41 +7,15 @@ import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type
 
 /**
  * Pick'em performance for the Performance panel: the league's numbers, or any one player's, chosen from a dropdown. Each view has the
- * record and hit rate, the most picked team, the weekly 0-2 / 1-1 / 2-0 histogram, the two streaks, the teams picked most and the
- * favorite/underdog and home/road splits. Private to the Commissioner.
+ * record and hit rate, the most picked team (or how many teams tie for it), the weekly 0-2 / 1-1 / 2-0 histogram, the teams picked most and the
+ * favorite/underdog and home/road splits; a player's view adds their regular season streaks and season by season record. Private to the Commissioner.
  */
 type Run = { longest: number; current: number; endedAt: { seasonYear: number; week: number } | null };
-type Leader = Run & { playerId: string; name: string };
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; teams: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
+type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
 type PlayerView = View & { playerId: string; name: string; streaks: { sweeps: Run; noDonut: Run } };
-type Stats = View & { streaks: { sweeps: Leader[]; noDonut: Leader[] }; players: PlayerView[] };
+type Stats = View & { players: PlayerView[] };
 
 const LEAGUE = "league";
-
-function Streaks({ title, note, leaders }: { title: string; note: string; leaders: Leader[] }) {
-  return (
-    <div className="pool-stats-block">
-      <h3>{title}</h3>
-      <p>{note}</p>
-      {leaders.length ? (
-        <div className="pool-table-wrap">
-          <table className="pool-table">
-            <thead><tr><th scope="col">Player</th><th scope="col">Longest</th><th scope="col">Now</th></tr></thead>
-            <tbody>
-              {leaders.slice(0, 8).map((leader) => (
-                <tr key={leader.playerId}>
-                  <th scope="row">{leader.name}{leader.endedAt ? <small> {leader.endedAt.seasonYear} wk {leader.endedAt.week}</small> : null}</th>
-                  <td>{leader.longest}</td>
-                  <td>{leader.current > 0 ? <span className="pool-alive">{leader.current} · alive</span> : "0"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : <p className="pool-empty">No completed weeks yet.</p>}
-    </div>
-  );
-}
 
 function RunTile({ label, run }: { label: string; run: Run }) {
   return (
@@ -94,7 +68,7 @@ export default function PoolStats() {
           </select>
         </label>
 
-        <RecordTiles mostPicked={view.mostPicked} record={view.record} />
+        <RecordTiles mostPicked={view.mostPicked} mostPickedTied={view.mostPickedTied} record={view.record} />
 
         <div className="pool-stats-block">
           <h3>Weekly records</h3>
@@ -104,19 +78,14 @@ export default function PoolStats() {
 
         {player ? (
           <div className="pool-stats-block">
-            <h3>Streaks</h3>
-            <p>Regular season only. A streak alive at the end of a season carries into the next.</p>
+            <h3>Regular season streaks</h3>
+            <p>A streak alive at the end of a season carries into the next. The whole league&rsquo;s streaks are in the Trophy Room.</p>
             <dl className="pool-stats-tiles">
-              <RunTile label="Weeks with at least 1 win" run={player.streaks.noDonut} />
-              <RunTile label="2-0 weeks in a row" run={player.streaks.sweeps} />
+              <RunTile label="Donut Free Weeks" run={player.streaks.noDonut} />
+              <RunTile label="2-0 Sweeps" run={player.streaks.sweeps} />
             </dl>
           </div>
-        ) : (
-          <div className="pool-stats-pair">
-            <Streaks leaders={stats.streaks.noDonut} note="Consecutive weeks with at least 1 win (no 0-2), regular season. A streak alive at the end of a season carries into the next." title="Weeks with at least 1 win" />
-            <Streaks leaders={stats.streaks.sweeps} note="Consecutive 2-0 weeks, regular season. Carries across seasons the same way." title="2-0 weeks in a row" />
-          </div>
-        )}
+        ) : null}
 
         {view.teams.length ? (
           <div className="pool-stats-block">

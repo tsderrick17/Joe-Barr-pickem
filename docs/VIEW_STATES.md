@@ -68,8 +68,8 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 
 | View | States |
 | --- | --- |
-| Today (map, game pipeline, key counts, and the repair/health drawers, closed) | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
-| Performance (Pick'em performance with a League / player dropdown, provider cost, polling, capacity) | `healthy` |
+| Today (map, game pipeline, key counts, and the repair/health drawers, closed; the map's connecting lines are dark between stages that have been reached (complete or in progress); Participant impact says Survivor is over with its winner once a Survivor champion is recorded; "Up next" has kickoff, line lock and score sync only, and "Next message" sits under "Notification readiness") | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week; Survivor over) |
+| Performance (Pick'em performance with a League / player dropdown: no league streak boards, no neutral-site row, and a tie for the most picked team says how many teams tie; provider cost, polling, capacity) | `healthy` |
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
@@ -79,10 +79,10 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
-| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
+| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
 | Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
 | Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |
-| Trophy room table: each player's streaks as now / best, under a Streaks heading (1+ win, 2-0), dashes for a player with none (behavior test) | `healthy` |
+| Trophy room table: fixed, evenly spaced columns; each player's regular season streaks under a "Regular Season Streaks" heading (Donut Free Weeks, 2-0 Sweeps), each cell the current streak big, the all-time best under it and a bar showing how close the current streak is to it (gold, with a star, when it is the best); dashes for a player with none (behavior test) | `healthy` |
 | Performance dropdown: the league first, then choosing a player swaps every figure, the most picked team and the Season by season table (behavior test) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
@@ -116,7 +116,7 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 
-Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain across the whole page width (turf with yard lines and hash marks, a spotted football, the lead rod planted beside it, the chain taut) and "Release to refresh" (screenshot of the full-width indicator) and letting go reloads the page (the drawing's geometry is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
+Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain zoomed in on its last three yards across the whole page width (deep turf with hash marks, the chain running in from the left edge, the bottom third of the lead pole planted at a spotted football whose tip pokes out a couple of inches past its foot, the chain taut) and "Release to refresh" (screenshot of the full-width indicator) and letting go reloads the page (the drawing's geometry is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
 
 ## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 

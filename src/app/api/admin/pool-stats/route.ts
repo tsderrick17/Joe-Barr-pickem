@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin.from("players").select("id, first_name"),
     supabaseAdmin.from("seasons").select("id, year"),
     supabaseAdmin.from("scoring_periods").select("id, season_id, display_order, period_type, status, max_picks"),
-    readAllPages((from, to) => supabaseAdmin.from("games").select("id, home_team_id, away_team_id, home_score, away_score, is_neutral_site").order("id").range(from, to)),
+    readAllPages((from, to) => supabaseAdmin.from("games").select("id, home_team_id, away_team_id, home_score, away_score").order("id").range(from, to)),
     readAllPages((from, to) => supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").order("game_id").range(from, to)),
     readAllPages((from, to) => supabaseAdmin.from("picks").select("id, player_id, game_id, scoring_period_id, selected_team_id, result").order("id").range(from, to)),
     supabaseAdmin.from("teams").select("id, full_name, abbreviation"),

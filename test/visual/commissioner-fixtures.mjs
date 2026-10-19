@@ -56,7 +56,7 @@ function dashboard(state) {
     metrics: {
       games: 5, live: quiet ? 0 : 2, settled: quiet ? 5 : 1, awaitingGrade: attention ? 1 : 0, gradeEligibleGames: quiet ? 5 : 1, gradeCompleteGames: quiet ? 5 : attention ? 0 : 1, pendingGradeGames: attention ? 1 : 0, attention: attention ? 2 : 0, activePlayers: 8,
       lastScoreSyncAt: attention ? T(3) : T(0.1), lastScoreSyncAgeMinutes: attention ? 180 : 6, latestScoreSyncStatus: attention ? "failed" : "success", providerAllowance: 455,
-      pickOutcomes: { win: 14, loss: 10, void: 0, pending: quiet ? 0 : 16 }, survivorEntries: { active: 5, eliminated: 3, complete: 0 },
+      pickOutcomes: { win: 14, loss: 10, void: 0, pending: quiet ? 0 : 16 }, survivorEntries: quiet ? { active: 0, eliminated: 10, complete: 1 } : { active: 5, eliminated: 3, complete: 0 },
       reminders: { scheduled: quiet ? 2 : 4, sending: 0, sent: 12, cancelled: 1, test: 0 },
       efficiency: { totalCredits: 88, scoreCredits: 52, spreadCredits: 36, finalizedGames: 40, creditsPerFinal: 2.2, productiveRate: 0.74, trend: "improving", history: [3, 2.6, 2.4, 2.2].map((value, index) => ({ slateStartedAt: T(24 * 7 * (4 - index)), creditsPerFinal: value, creditsPerGame: value - 0.3, latencyMinutes: 12 - index, settledGames: [14, 15, 14, 15][index], productiveRate: 0.7 + index * 0.02, credits: [44, 38, 31, 27][index], finals: 14, games: [14, 15, 14, 15][index], calls: 20, attribution: "sample" })) },
       settlementLatency: { averageMinutes: 11, slowestMinutes: 24, samples: 14, history: [14, 12, 11, 9].map((minutes, index) => ({ label: `Week ${index + 1}`, shortLabel: `W${index + 1}`, minutes })) },
@@ -181,25 +181,12 @@ export const POOL_STATS = {
   record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
   teams: leagueTeams,
   mostPicked: leagueTeams[0],
+  mostPickedTied: 1,
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
   weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
-  streaks: {
-    sweeps: [
-      { playerId: "p2", name: "Connor", longest: 6, current: 2, endedAt: { seasonYear: 2025, week: 11 } },
-      { playerId: "p3", name: "Tyler", longest: 5, current: 0, endedAt: { seasonYear: 2026, week: 8 } },
-      { playerId: "p1", name: "Gary", longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 9 } },
-      { playerId: "p4", name: "Rick", longest: 3, current: 0, endedAt: { seasonYear: 2025, week: 4 } },
-    ],
-    noDonut: [
-      { playerId: "p3", name: "Tyler", longest: 23, current: 9, endedAt: { seasonYear: 2026, week: 9 } },
-      { playerId: "p2", name: "Connor", longest: 17, current: 17, endedAt: { seasonYear: 2026, week: 9 } },
-      { playerId: "p1", name: "Gary", longest: 12, current: 0, endedAt: { seasonYear: 2025, week: 14 } },
-      { playerId: "p4", name: "Rick", longest: 8, current: 3, endedAt: { seasonYear: 2025, week: 6 } },
-    ],
-  },
   splits: {
     side: { favorite: split(1310, 1086, 0.532), underdog: split(1108, 991, 0.468) },
-    venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469), neutral: split(100, 26, 0.028) },
+    venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469) },
   },
   graded: 4495,
   players: [
@@ -214,12 +201,13 @@ export const POOL_STATS = {
       record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
       teams,
       mostPicked: teams[0],
+      mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
       bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
       weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
       streaks: { sweeps: { longest: sweeps[0], current: sweeps[1], endedAt: sweeps[2] }, noDonut: { longest: noDonut[0], current: noDonut[1], endedAt: noDonut[2] } },
       splits: {
         side: { favorite: split(Math.round(record.wins * 0.55), Math.round(record.losses * 0.45), favoriteShare), underdog: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.55), 1 - favoriteShare) },
-        venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare), neutral: split(Math.round(record.wins * 0.05), Math.round(record.losses * 0.05), 0.05) },
+        venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare) },
       },
       graded: record.picks,
     };

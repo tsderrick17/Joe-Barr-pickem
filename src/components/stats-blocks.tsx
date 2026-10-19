@@ -9,17 +9,19 @@ export type Split = Bucket & { share: number | null };
 export type Weeks = { total: number; donut: number; split: number; sweep: number };
 export type RecordSummary = Bucket & { pushes: number; pushedGames: number; pushShare: number | null };
 export type TeamPicked = Bucket & { teamId: string; name: string; abbreviation: string; share: number | null };
-export type Splits = { side: { favorite: Split; underdog: Split }; venue: { home: Split; away: Split; neutral: Split } };
+export type Splits = { side: { favorite: Split; underdog: Split }; venue: { home: Split; away: Split } };
 
 export const percent = (value: number | null) => (value === null ? "—" : `${Math.round(value * 100)}%`);
 
-export function RecordTiles({ record, mostPicked }: { record: RecordSummary; mostPicked?: TeamPicked | null }) {
+export function RecordTiles({ record, mostPicked, mostPickedTied = 1 }: { record: RecordSummary; mostPicked?: TeamPicked | null; mostPickedTied?: number }) {
   return (
     <dl className="pool-stats-tiles">
       <div><dt>Record</dt><dd>{record.wins.toLocaleString()}–{record.losses.toLocaleString()}</dd></div>
       <div><dt>Hit rate</dt><dd>{formatAverage(record.hitRate)}</dd></div>
       <div><dt>Pushes</dt><dd>{record.pushedGames}<small> {record.pushedGames === 1 ? "game" : "games"} · {percent(record.pushShare)}</small></dd></div>
-      {mostPicked ? <div><dt>Most picked team</dt><dd>{mostPicked.abbreviation || mostPicked.name}<small> {mostPicked.picks} {mostPicked.picks === 1 ? "pick" : "picks"}</small></dd><small>{mostPicked.name} · {mostPicked.wins}–{mostPicked.losses}</small></div> : null}
+      {mostPicked && mostPickedTied > 1
+        ? <div><dt>Most picked team</dt><dd>{mostPickedTied}<small> teams tied</small></dd><small>{mostPicked.picks} {mostPicked.picks === 1 ? "pick" : "picks"} each</small></div>
+        : mostPicked ? <div><dt>Most picked team</dt><dd>{mostPicked.abbreviation || mostPicked.name}<small> {mostPicked.picks} {mostPicked.picks === 1 ? "pick" : "picks"}</small></dd><small>{mostPicked.name} · {mostPicked.wins}–{mostPicked.losses}</small></div> : null}
     </dl>
   );
 }
@@ -75,7 +77,7 @@ export function SplitsTable({ splits }: { splits: Splits }) {
         <thead><tr><th scope="col">Pick</th><th scope="col">Picked</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
         <tbody>
           <SplitRows label="Side of the spread" rows={[["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog]]} />
-          <SplitRows label="Where the game is played" rows={[["Home team", splits.venue.home], ["Road team", splits.venue.away], ["Neutral site", splits.venue.neutral]]} />
+          <SplitRows label="Where the game is played" rows={[["Home team", splits.venue.home], ["Road team", splits.venue.away]]} />
         </tbody>
       </table>
     </div>
