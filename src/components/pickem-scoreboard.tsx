@@ -19,6 +19,7 @@ export type PickemScoreboardRow = {
   firstName: string;
   wins: number;
   playoffEliminated?: boolean;
+  forfeited?: boolean;
   trophies?: string[];
   holdsPickemTrophy?: boolean;
   picks: PickemScoreboardPick[];
@@ -110,10 +111,14 @@ export default function PickemScoreboard({
           <tbody>
             {displayedRows.map((row) => {
               return (
-                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated ? "is-eliminated" : ""}`} data-blind-row={row.playoffEliminated ? "" : undefined} key={row.id}>
+                <tr className={`pickem-standings-row pickem-ledger-row ${row.playoffEliminated || row.forfeited ? "is-eliminated" : ""}`} data-blind-row={row.playoffEliminated ? "" : undefined} key={row.id}>
                   <td className="pickem-standings-wins pickem-ledger-wins">{row.wins}</td>
                   <td className="pickem-standings-name pickem-ledger-player"><span><PlayerTrophyName name={row.firstName} showTrophy={Boolean(row.holdsPickemTrophy)} titles={row.trophies} /></span></td>
-                  {row.playoffEliminated ? (
+                  {row.forfeited ? (
+                    <td className="pickem-ledger-pick" colSpan={maxPicks}>
+                      <span aria-label="Forfeited the Pick'em playoffs; the score is final" className="pickem-eliminated-stamp" title="Forfeited the Pick'em playoffs; the score is final">FORFEITED</span>
+                    </td>
+                  ) : row.playoffEliminated ? (
                     <td className="pickem-ledger-pick" colSpan={maxPicks}>
                       <span aria-label="Mathematically eliminated from the Pick'em playoff race" className="pickem-eliminated-stamp" title="Mathematically eliminated from the Pick'em playoff race">ELIMINATED</span>
                     </td>

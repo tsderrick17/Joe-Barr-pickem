@@ -27,6 +27,8 @@ export type SlateState = {
   showActionOnly: boolean;
   seasonOver: boolean;
   playoffEliminated: boolean;
+  forfeitAvailable: boolean;
+  forfeited: boolean;
   survivorUsedTeamIds: string[];
   survivorAvailable: boolean;
   survivorChipsVisible: boolean;
@@ -51,7 +53,7 @@ export type SlateState = {
 };
 
 export const initialSlateState: SlateState = {
-  weeks: [], week: null, nextWeekAvailableAt: null, games: [], showActionOnly: false, seasonOver: false, playoffEliminated: false,
+  weeks: [], week: null, nextWeekAvailableAt: null, games: [], showActionOnly: false, seasonOver: false, playoffEliminated: false, forfeitAvailable: false, forfeited: false,
   survivorUsedTeamIds: [], survivorAvailable: true, survivorChipsVisible: true, survivorOnReceipt: true, survivorStatus: "active", clockSynchronized: false,
   draftPicks: [], draftSurvivor: null, savedPicks: [], savedSurvivor: null,
   latestLoadId: 0, isLoading: true, errorMessage: "",
@@ -87,6 +89,8 @@ function fromBoard(state: SlateState, data: BoardResponse): SlateState {
     games: data.games,
     showActionOnly: Boolean(data.showPoolAction),
     playoffEliminated: data.pickem.playoffEliminated,
+    forfeitAvailable: Boolean(data.pickem.forfeit?.available),
+    forfeited: Boolean(data.pickem.forfeit?.forfeited),
     draftPicks: data.myPicks,
     savedPicks: data.myPicks,
     draftSurvivor: pick,
@@ -103,7 +107,7 @@ function fromBoard(state: SlateState, data: BoardResponse): SlateState {
 export function slateReducer(state: SlateState, action: SlateAction): SlateState {
   switch (action.type) {
     case "load-started":
-      return { ...state, latestLoadId: action.loadId, week: action.week, isLoading: true, errorMessage: "", warning: "", playoffEliminated: false, clockSynchronized: false };
+      return { ...state, latestLoadId: action.loadId, week: action.week, isLoading: true, errorMessage: "", warning: "", playoffEliminated: false, forfeitAvailable: false, forfeited: false, clockSynchronized: false };
     case "bootstrap-loaded":
       return { ...fromBoard({ ...state, latestLoadId: action.loadId }, action.board), weeks: action.weeks, nextWeekAvailableAt: action.nextWeekAvailableAt, week: action.week };
     case "board-loaded":
@@ -115,7 +119,7 @@ export function slateReducer(state: SlateState, action: SlateAction): SlateState
       return action.loadId === state.latestLoadId ? { ...state, isLoading: false } : state;
     case "kickoff-refreshed":
       // Public picks appear at kickoff: replace the games and the playoff flag, never the player's draft.
-      return action.loadId === state.latestLoadId ? { ...state, games: action.board.games, playoffEliminated: action.board.pickem.playoffEliminated } : state;
+      return action.loadId === state.latestLoadId ? { ...state, games: action.board.games, playoffEliminated: action.board.pickem.playoffEliminated, forfeitAvailable: Boolean(action.board.pickem.forfeit?.available), forfeited: Boolean(action.board.pickem.forfeit?.forfeited) } : state;
     case "saved-state-read": {
       // After an uncertain save: take what the server holds as the saved picks, leave the draft alone.
       if (action.loadId !== state.latestLoadId) return state;

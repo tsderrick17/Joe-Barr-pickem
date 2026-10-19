@@ -352,6 +352,32 @@ playoff wins.
   future pending picks are atomically changed to `void`. They are excluded from
   totals rather than left as losses.
 
+### Forfeiting
+
+- A player who is still in the race may forfeit the Pick'em from the bottom of
+  the Slate, as soon as the first playoff round is open for picks. It takes
+  three separate clicks on three different questions ("Forfeit?", "Don't give
+  up, you still have a chance! Still want to forfeit?", "I understand this
+  can't be undone and my Pick'em season would end."); only the third sends
+  anything, and a "Never mind" link backs out at any point.
+- `forfeit_pickem_season` records one forfeit per player and season
+  (`pickem_forfeits`) and, in the same transaction, voids the player's pending
+  picks on playoff games that have not started (excluded from totals, never
+  graded as losses, the same treatment as a player who can no longer catch the
+  leader). Picks on games that already kicked off stay on the card and grade
+  when those games finalize, so the score is final once the last of them has
+  graded. It is idempotent and audited (`pickem_forfeited`, and
+  `ats_pick_voided` with reason `forfeited`).
+- From then on `replace_unlocked_picks` refuses the player's saves in the
+  database itself, and `/api/picks` answers 403. The Slate and Standings show
+  the same quiet "You forfeited, thanks for playing." banner an eliminated
+  player sees, and the Standings row carries a FORFEITED stamp over the final
+  score.
+- Only the Commissioner can reverse a forfeit (Players page: a "Forfeited the
+  Pick'em playoffs" tag with a two-step Reinstate). A reversal lets the player
+  pick again for games that have not started; picks voided by the forfeit are
+  not restored. It is audited (`pickem_forfeit_reversed`).
+
 ## NFL schedule agility and gameweek integrity
 
 ### Preseason bootstrap

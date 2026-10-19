@@ -305,7 +305,8 @@ export default function HomePage() {
   const offSeason = data.seasonPhase === "off_season";
   // A player out of the playoff race gets the same quiet page as the off-season: no ticket, a banner, until August 1.
   const viewerEliminated = Boolean(viewerRow?.playoffEliminated);
-  const seasonClosedForViewer = offSeason || viewerEliminated;
+  const viewerForfeited = Boolean(viewerRow?.forfeited);
+  const seasonClosedForViewer = offSeason || viewerEliminated || viewerForfeited;
   const shown = offSeason ? { ...data, showSurvivorStandings: true, hidePickemEliminatedRows: false, hideSurvivorEliminatedRows: false, showBowlCard: true } : data;
 
   return (
@@ -327,7 +328,7 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} /> : <MyTicket
+        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} forfeited={viewerForfeited && !offSeason} /> : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}

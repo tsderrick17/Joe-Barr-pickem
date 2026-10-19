@@ -8,7 +8,7 @@ import { selectDefaultScoringPeriod } from "@/lib/scoring-period";
 import { currentSeasonYear } from "@/lib/season";
 import { seasonPhaseFromRows } from "@/lib/season-phase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { loadPlayoffEligibility } from "@/lib/playoff-eligibility";
+import { loadForfeitedPlayerIds, loadPlayoffEligibility } from "@/lib/playoff-eligibility";
 import { championNames } from "@/lib/champion-names.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { shapePadRows } from "@/lib/home-shape";
@@ -207,6 +207,10 @@ export async function GET(request: NextRequest) {
   }
 
   let playoffEliminatedPlayerIds = new Set<string>();
+  let forfeitedPlayerIds = new Set<string>();
+  if (currentWeek.period_type === "playoff") {
+    try { forfeitedPlayerIds = await loadForfeitedPlayerIds(season.id); } catch { return NextResponse.json({ error: "Playoff forfeits could not be loaded safely." }, { status: 503 }); }
+  }
   if (currentWeek.period_type === "playoff" && currentWeek.status === "active") {
     try {
       const eligibility = await loadPlayoffEligibility(season.id, currentWeek.id, players);
@@ -268,6 +272,7 @@ export async function GET(request: NextRequest) {
     trophiesByPlayerId,
     pickemTrophyHolderIds,
     playoffEliminatedPlayerIds,
+    forfeitedPlayerIds,
     viewerPlayerId: viewer.id,
     now: currentTime,
   });

@@ -86,10 +86,10 @@ test("the player pages treat a missing season phase as in season, and lock the d
   assert.match(standings, /displayLocked=\{offSeason\}/);
   const slateState = await readFile(new URL("../src/lib/slate-state.ts", import.meta.url), "utf8");
   assert.match(slateState, /seasonOver: data\.seasonPhase \? data\.seasonPhase === "off_season" : state\.seasonOver/);
-  assert.match(slate, /const isReadOnly = week\?\.status === "complete" \|\| playoffEliminated \|\| seasonOver;/);
-  assert.match(slate, /const seasonClosedForViewer = seasonOver \|\| playoffEliminated;/);
+  assert.match(slate, /const isReadOnly = week\?\.status === "complete" \|\| playoffEliminated \|\| forfeited \|\| seasonOver;/);
+  assert.match(slate, /const seasonClosedForViewer = seasonOver \|\| playoffEliminated \|\| forfeited;/);
   assert.match(slate, /\{seasonClosedForViewer \? null : <SlateReceipt/);
   // The ticket and the receipt are gone, for the off-season and for a player out of the playoff race.
-  assert.match(standings, /const seasonClosedForViewer = offSeason \|\| viewerEliminated;/);
-  assert.match(standings, /\{seasonClosedForViewer \? <SeasonClosedBanner eliminated=\{!offSeason\} \/> : <MyTicket/);
+  assert.match(standings, /const seasonClosedForViewer = offSeason \|\| viewerEliminated \|\| viewerForfeited;/);
+  assert.match(standings, /\{seasonClosedForViewer \? <SeasonClosedBanner eliminated=\{!offSeason\} forfeited=\{viewerForfeited \&\& !offSeason\} \/> : <MyTicket/);
 });

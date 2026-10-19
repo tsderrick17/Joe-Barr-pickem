@@ -6,6 +6,8 @@ import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { derivePlayerAuthPassword, PLAYER_AUTH_CREDENTIAL_VERSION, playerAuthEmail } from "@/lib/player-auth-credential";
 import { playerAuthPepper } from "@/lib/player-auth-config";
+import { loadForfeitedPlayerIds } from "@/lib/playoff-eligibility";
+import { currentSeasonYear } from "@/lib/season";
 
 export async function GET(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
@@ -25,6 +27,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { data: season, error: seasonError } = await supabaseAdmin.from("seasons").select("id").eq("year", currentSeasonYear()).maybeSingle();
+  let forfeited = new Set<string>();
+  if (season) {
+    try { forfeited = await loadForfeitedPlayerIds(season.id); } catch { return NextResponse.json({ error: "The player list could not be loaded." }, { status: 500 }); }
+  } else if (seasonError) {
+    return NextResponse.json({ error: "The player list could not be loaded." }, { status: 500 });
+  }
+
   return NextResponse.json({
     players: (players ?? []).map((player) => ({
       id: player.id,
@@ -32,6 +42,7 @@ export async function GET(request: NextRequest) {
       loginPin: player.login_pin,
       active: player.active,
       isCommissioner: player.is_commissioner,
+      forfeited: forfeited.has(player.id),
       emailNotificationsEnabled: Boolean(player.email_notifications_enabled && player.notification_email?.trim()),
       createdAt: player.created_at,
       lastActiveAt: player.last_active_at,

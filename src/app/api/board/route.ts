@@ -247,10 +247,15 @@ export async function GET(request: NextRequest) {
   });
 
   let playoffEliminated = false;
+  let playoffForfeited = false;
+  let forfeitAvailable = false;
   if (period.period_type === "playoff" && period.status === "active") {
     try {
       const eligibility = await loadPlayoffEligibility(period.season_id, scoringPeriodId, players);
       playoffEliminated = eligibility.eliminatedPlayerIds.has(player.id);
+      playoffForfeited = eligibility.forfeitedPlayerIds.has(player.id);
+      // The Forfeit link is there once the playoffs are open for picks, for a player still in the race who has not already forfeited.
+      forfeitAvailable = !playoffEliminated && !playoffForfeited;
     } catch (error) {
       console.error("Playoff eligibility check failed on The Slate.", {
         message: error instanceof Error ? error.message : String(error),
@@ -418,6 +423,7 @@ export async function GET(request: NextRequest) {
     })),
     pickem: {
       playoffEliminated,
+      forfeit: { available: forfeitAvailable, forfeited: playoffForfeited },
     },
     survivor,
     bootstrap,

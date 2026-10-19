@@ -1002,6 +1002,58 @@ export type Database = {
           },
         ]
       }
+      pickem_forfeits: {
+        Row: {
+          forfeited_at: string
+          id: string
+          picks_voided: number
+          player_id: string
+          reversed_at: string | null
+          reversed_by_player_id: string | null
+          season_id: string
+        }
+        Insert: {
+          forfeited_at?: string
+          id?: string
+          picks_voided?: number
+          player_id: string
+          reversed_at?: string | null
+          reversed_by_player_id?: string | null
+          season_id: string
+        }
+        Update: {
+          forfeited_at?: string
+          id?: string
+          picks_voided?: number
+          player_id?: string
+          reversed_at?: string | null
+          reversed_by_player_id?: string | null
+          season_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickem_forfeits_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickem_forfeits_reversed_by_player_id_fkey"
+            columns: ["reversed_by_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickem_forfeits_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       picks: {
         Row: {
           game_id: string
@@ -2234,6 +2286,14 @@ export type Database = {
           survivor_picks_graded: number
         }[]
       }
+      forfeit_pickem_season: {
+        Args: { evaluated_at?: string; target_player_id: string }
+        Returns: {
+          forfeited_season_id: string
+          voided_picks: number
+          was_already_forfeited: boolean
+        }[]
+      }
       grade_bowl_pool_final_picks: {
         Args: { evaluated_at?: string }
         Returns: number
@@ -2451,6 +2511,14 @@ export type Database = {
           new_kickoff_at: string
           old_kickoff_at: string
         }[]
+      }
+      reverse_pickem_forfeit: {
+        Args: {
+          acting_player_id: string
+          target_player_id: string
+          target_season_id?: string
+        }
+        Returns: boolean
       }
       save_bowl_pool_submission: {
         Args: {

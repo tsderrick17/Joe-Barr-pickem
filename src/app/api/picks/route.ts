@@ -72,6 +72,9 @@ export async function POST(request: NextRequest) {
     if (activePlayersError || !activePlayers) return NextResponse.json({ error: "Playoff eligibility could not be verified safely." }, { status: 503 });
     try {
       const eligibility = await loadPlayoffEligibility(period.season_id, scoringPeriodId, activePlayers);
+      if (eligibility.forfeitedPlayerIds.has(player.id)) {
+        return NextResponse.json({ error: "You forfeited this season's Pick'em, so your picks are final." }, { status: 403 });
+      }
       if (eligibility.eliminatedPlayerIds.has(player.id)) {
         return NextResponse.json({ error: "You are mathematically eliminated from the playoff race. Your existing selections remain available for audit." }, { status: 403 });
       }

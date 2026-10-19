@@ -129,3 +129,12 @@
   box-shadow: none;
 }
 
+
+/* Forfeit: a quiet link at the very bottom of the Slate once the playoffs are open. Each of its three questions replaces the last. */
+.forfeit-panel { align-items: center; display: grid; gap: .5rem; justify-items: center; margin: 2.2rem auto 0.5rem; max-width: 26rem; padding: 0 1rem; text-align: center; }
+.forfeit-button { background: none; border: 0; color: var(--themed-text-28); cursor: pointer; font: inherit; font-size: .88rem; padding: .6rem .5rem; text-decoration: underline; text-underline-offset: .2em; }
+.forfeit-panel[data-step="1"] .forfeit-button { font-weight: 700; }
+.forfeit-panel[data-step="2"] .forfeit-button { border: 2px solid var(--red-40); color: var(--red-40); font-weight: 800; padding: .7rem 1rem; text-decoration: none; }
+.forfeit-button:disabled { cursor: wait; opacity: .6; }
+.forfeit-cancel { background: none; border: 0; color: var(--themed-text-28); cursor: pointer; font: inherit; font-size: .82rem; padding: .4rem; text-decoration: underline; }
+.forfeit-message { color: var(--red-40); font-size: .85rem; margin: 0; }

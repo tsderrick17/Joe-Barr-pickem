@@ -126,6 +126,15 @@ period and gameweek. Changes involving a locked or settled game, different
 teams, or a different scoring period are quarantined for commissioner review;
 the rest of the schedule continues reconciling normally.
 
+## A player forfeited by mistake
+
+Players can forfeit the Pick'em from the bottom of the Slate once the playoffs are open (three clicks, final for them).
+Only the Commissioner can undo it: **Players** page, the player's row shows "Forfeited the Pick'em playoffs", press
+**Reinstate** and confirm. The player can pick again for games that have not started; picks the forfeit already voided
+are not restored (re-enter them with the player if the pool agrees). Every forfeit and reversal is in `audit_logs`
+(`pickem_forfeited`, `pickem_forfeit_reversed`). To see who has forfeited:
+`select p.first_name, f.forfeited_at, f.picks_voided, f.reversed_at from pickem_forfeits f join players p on p.id = f.player_id order by f.forfeited_at;`
+
 ## Off-season mode
 
 From the moment the Super Bowl is final and graded until 12:00 AM Eastern on August 1 the pool is in the

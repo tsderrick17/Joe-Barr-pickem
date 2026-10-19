@@ -1767,6 +1767,14 @@ The Pick'em trophy was redesigned: a white marble pillar with a graceful flare a
 
 Zac's 2026 Survivor win is engraved on a brass plaque beside John's 2025 plaque (`tools/trophy-render/champions.json`, newest first), and the 60 turntable pictures were re-rendered. The camera is closer and the plaque lettering larger, so every year and name reads at the page's normal size; a small diamond divider that read as an accent over a name's middle letter was removed. The plain-text champion roll under the table comes from the records, so it lists Zac only once his Survivor crown is recorded in the database.
 
+## Players can forfeit the Pick'em playoffs
+
+Requested so a player who is out of it in spirit can end their season instead of letting it run. It appears at the bottom of the Slate as soon as the first playoff round is open for picks, and takes three separate clicks on three different questions (the wording is the player's own: "Forfeit?", "Don't give up, you still have a chance! Still want to forfeit?", "I understand this can't be undone and my Pick'em season would end."). A "Never mind" link backs out at any step.
+
+Forfeiting is final for the player and is handled like an elimination: picks on games that have not started are voided and excluded from totals (not graded as losses), picks on games already under way stay and grade, so the score is final after the last started game grades. It is one database function (atomic, idempotent, audited), the database refuses later saves itself, and the Standings show the final score with a FORFEITED stamp. Only the Commissioner can reverse it (Players page, two-step Reinstate); a reversal does not restore voided picks.
+
+The Forfeit link is not offered to a player who is already eliminated (nothing left to give up) or who has already forfeited. The season-long Survivor game and the Bowl Pool are separate games and are not affected.
+
 ## The Trophy Room table is mahogany and tailor-made, the spin is smooth, and the champions hang as stadium banners
 
 The table was rebuilt for this display: a hand-made mahogany table (ribbon-figured grain, satinwood and ebony stringing, a marquetry compass star in the middle, a carved apron, an urn pedestal on three cabriole legs with brass claw-and-ball feet) whose top is cut tight around three landing pads. Each pad is the outline of its trophy's own base (the Pick'em hexagon, the Bowl Pool drum, the Survivor steps) as a raised moulded step with a velvet inset a thin, even margin wide, and the top flows around them in deep, smooth curves. The table is larger in the picture so the trophy at the front is framed on its own with the other two pushed to the sides.

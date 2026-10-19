@@ -39,6 +39,7 @@ function rows({ maxPicks, playoff }) {
       firstName,
       wins: 9 - playerIndex + (playoff ? 0 : 3),
       playoffEliminated: playoff && playerIndex >= 6,
+      forfeited: playoff && playerIndex === 4,
       trophies: playerIndex === 0 ? ["Pick'em Champion 2025"] : [],
       holdsPickemTrophy: playerIndex === 0,
       picks: Array.from({ length: maxPicks }, (_, slot) => pick(playerIndex * 2 + slot, { reveal: playerIndex !== 5, result: marks[slot] })),
@@ -105,6 +106,8 @@ export const SCENARIOS = {
   // hide and "− OUT" buttons are gone, and a closed banner leads the page.
   "off-season": { ...base, seasonPhase: "off_season", isPlayoff: true, week: "Super Bowl", weekStatus: "complete", maxPicks: 1, serverTime: "2027-02-20T18:00:00Z", showSurvivorStandings: false, showBowlCard: false, hidePickemEliminatedRows: true, hideSurvivorEliminatedRows: true, survivorAvailable: false, rows: rows({ maxPicks: 1, playoff: true }), survivorRows: [] },
   // A player out of the playoff race mid-playoffs gets the same quiet page: banner, no ticket.
+  // The viewer forfeited the playoffs: the same quiet page, and their own row wears the FORFEITED stamp.
+  "playoff-viewer-forfeited": { ...base, viewerPlayerId: "p4", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   "playoff-viewer-out": { ...base, viewerPlayerId: "p7", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   // The Bowl Card in its other states (the Bowl data for each is BOWL_BY_SCENARIO).
   "bowl-results": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },

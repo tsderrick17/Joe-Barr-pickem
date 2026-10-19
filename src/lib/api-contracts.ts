@@ -43,7 +43,7 @@ export type SlateResponse = {
   serverTime: string;
   games: SlateGame[];
   myPicks: Array<{ gameId: string; teamId: string }>;
-  pickem: { playoffEliminated: boolean };
+  pickem: { playoffEliminated: boolean; forfeit?: { available: boolean; forfeited: boolean } };
   survivor: {
     available: boolean;
     chipsVisible: boolean;
@@ -78,6 +78,8 @@ export type StandingsRow = {
   firstName: string;
   wins: number;
   playoffEliminated?: boolean;
+  /** Forfeited the Pick'em playoffs: the score stands, and the row says so. */
+  forfeited?: boolean;
   trophies?: string[];
   /** True only for the Pick'em champion(s) of the latest season that has one. */
   holdsPickemTrophy?: boolean;
