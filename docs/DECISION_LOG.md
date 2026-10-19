@@ -1888,3 +1888,8 @@ The "Wins" axis label on the Season Snapshot chart sits 2px further from the car
 The Commissioner dashboard estimated 4 h+ of Fluid Active CPU while Vercel's own meter read 3 h 16 m. The per-active-player cost in `src/lib/vercel-usage-estimate.js` drops from 30 to 22 seconds a day (the slower chat, home and grading polling since the 2026-10-02 calibration costs each player less), so 11 active players plus the scheduled jobs and uptime probes now come to 3 h 16 m. It is still an estimate (Vercel does not expose Hobby usage to an app): compare it with the Usage page now and then and adjust that one constant.
 
 The Provider cost chart (credits per game, 15- and 30-day averages) no longer starts its axis at zero: it now fits the axis to the range the two lines actually move in (the existing "tight" scale, with one step of room above and below), so the story of the lines is not flattened into the top of a tall chart.
+
+## 2026-10-19 - A picked Bowl Pool team shows a megaphone, not a pennant
+
+When a team is picked on the Bowl Pool page, the mark that swings into its box is a cheerleader's megaphone in the school's own colors (body, mouthpiece bulge, band, rim and handle), lettered with its name, instead of a felt pennant: a narrow mouthpiece with a distinct bulge, a cone flaring to a wide bell with a dark inside, a band near the bell and a small handle underneath. A newly picked team's megaphone swings up from the mouthpiece with a little overshoot and gives a cheer (three sound arcs by the bell). It is used for the selection only; the Bowl Pool trophy keeps its pennants. The school colors and their fallback (the pool's navy and gold) are unchanged (`src/lib/bowl-pennant.js`). Reduced motion shows the megaphone still.
+

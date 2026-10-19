@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
-import { BowlCrest, BowlPennant } from "@/components/bowl-pool-marks";
+import { BowlCrest, BowlMegaphone } from "@/components/bowl-pool-marks";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import FootballLoader from "@/components/football-loader";
 import SeasonClosedBanner from "@/components/season-closed-banner";
@@ -33,7 +33,7 @@ const KNOBS: Record<string, Knob[]> = {
     { key: "msMin", label: "Toss length min", min: 200, max: 3000, step: 10, unit: "ms", live: TOSS_DEFAULTS.msMin },
     { key: "msMax", label: "Toss length max", min: 200, max: 3000, step: 10, unit: "ms", live: TOSS_DEFAULTS.msMax },
   ],
-  pennant: [{ key: "--pennant-raise-ms", label: "Raise length", min: 150, max: 2000, step: 10, unit: "ms", live: 620 }],
+  pennant: [{ key: "--megaphone-raise-ms", label: "Raise length", min: 150, max: 2000, step: 10, unit: "ms", live: 620 }],
   tile: [{ key: "pace", label: "Time per flip", min: 40, max: 400, step: 5, unit: "ms", live: 140 }],
   football: [
     { key: "--football-spin-s", label: "Time per turn", min: 0.3, max: 6, step: 0.05, unit: "s", live: 1.8 },
@@ -221,8 +221,8 @@ export default function CommissionerAssets() {
         </AssetCard>
 
 
-        <AssetCard actions={actions("pennant")} knobs={<><label className="asset-choice"><span>School</span><select className="asset-select" onChange={(event) => setPennantTeam(event.target.value as keyof typeof PENNANT_TEAMS)} value={pennantTeam}>{Object.values(PENNANT_TEAMS).map((team) => <option key={team.abbreviation} value={team.abbreviation}>{team.short_name}</option>)}</select></label>{knobs("pennant")}</>} note="A felt pennant in the school's colors, raised beside a Bowl Pool pick. Click it to raise it again." onPlay={replay("pennant")} style={cssVars("pennant", values)} title="Bowl Pool pennant" zoom={2}>
-          <span className="bowl-team-pick is-new" key={`${keys.pennant}-${pennantTeam}`}><BowlPennant side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>
+        <AssetCard actions={actions("pennant")} knobs={<><label className="asset-choice"><span>School</span><select className="asset-select" onChange={(event) => setPennantTeam(event.target.value as keyof typeof PENNANT_TEAMS)} value={pennantTeam}>{Object.values(PENNANT_TEAMS).map((team) => <option key={team.abbreviation} value={team.abbreviation}>{team.short_name}</option>)}</select></label>{knobs("pennant")}</>} note="A cheerleader's megaphone in the school's colors, raised when a Bowl Pool team is picked. Click it to raise it again." onPlay={replay("pennant")} style={cssVars("pennant", values)} title="Bowl Pool megaphone" zoom={2}>
+          <span className="bowl-team-pick is-new" key={`${keys.pennant}-${pennantTeam}`}><BowlMegaphone side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>
         </AssetCard>
 
         <AssetCard actions={actions("tile")} knobs={<><TextField label="Games left" maxLength={2} numeric onChange={(remaining) => setTiles((current) => ({ ...current, remaining }))} value={tiles.remaining} /><TextField label="Player wins" maxLength={2} numeric onChange={(wins) => setTiles((current) => ({ ...current, wins }))} value={tiles.wins} />{knobs("tile")}</>} note="The split-flap counter on the Bowl Card: the large Games Remaining tile and a player's wins. Live, each tile picks a pace between 120 and 160 ms. Click them to flip again." onPlay={replay("tile")} title="Split-flap tiles" zoom={1.6}>
