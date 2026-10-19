@@ -60,7 +60,7 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <g className="bowl-megaphone-print">
             {lines.map((line, index) => {
               const size = lines.length > 1 ? 7.4 : 8.6, room = lines.length > 1 ? 30 : 36, fits = lineWidth(line, size) <= room;
-              return <text className="bowl-megaphone-name" fontSize={size} key={index} x={lines.length > 1 ? 54 : 51} y={lines.length > 1 ? 20.4 + index * 8.4 : 24.4} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room })}>{line}</text>;
+              return <text className="bowl-megaphone-name" fontSize={size} key={index} x={lines.length > 1 ? 54 : 51} y={lines.length > 1 ? 18.6 + index * 8.4 : 22.6} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room })}>{line}</text>;
             })}
           </g>
           <g clipPath={`url(#${cone})`}>
