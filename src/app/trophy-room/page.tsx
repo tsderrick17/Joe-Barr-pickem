@@ -74,8 +74,8 @@ export default function TrophyRoomPage() {
         <th scope="row">{row.name}</th>
         <td>{row.ab ? row.h : "—"}</td>
         <td className="trophy-avg">{formatAverage(row.avg)}</td>
-        {streakCell(own?.noDonut, "Weeks with at least 1 win")}
-        {streakCell(own?.sweeps, "2-0 weeks")}
+        {streakCell(own?.noDonut, "Donut Free Weeks")}
+        {streakCell(own?.sweeps, "2-0 Sweeps")}
       </tr>
     );
   }
@@ -110,7 +110,7 @@ export default function TrophyRoomPage() {
                 <colgroup><col style={{ width: "9%" }} /><col style={{ width: "25%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "18.5%" }} /><col style={{ width: "18.5%" }} /></colgroup>
                 <thead>
                   <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
-                  <tr><th scope="col" title="Weeks in a row with at least 1 win">Weeks with a win</th><th scope="col" title="2-0 weeks in a row">2-0 weeks</th></tr>
+                  <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">2-0 Sweeps</th></tr>
                 </thead>
                 <tbody>
                   {sorted.map((row, index) => (
@@ -126,7 +126,7 @@ export default function TrophyRoomPage() {
               <ul className="mt-3 space-y-1 text-(color:--themed-text-29)">
                 <li><b>Wins</b>: Pick’em picks that covered the spread, across every season on record.</li>
                 <li><b>Hit rate</b>: wins divided by graded picks, written like a batting average (.599 is 59.9%). A push counts as a loss; voided picks never count.</li>
-                <li><b>Streaks</b>: weeks in a row with at least 1 win (never a 0-2), and 2-0 weeks in a row, regular season only. A streak still alive at the end of a season carries into the next. A pick not made counts as a loss; a week with a voided pick is left out.</li>
+                <li><b>Streaks</b>: Donut Free Weeks (weeks in a row with at least 1 win, never a 0-2) and 2-0 Sweeps (2-0 weeks in a row), regular season only. A streak still alive at the end of a season carries into the next. A pick not made counts as a loss; a week with a voided pick is left out.</li>
                 <li>A champion from a season with no pick history on file still appears, with dashes.</li>
               </ul>
             </details>

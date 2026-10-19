@@ -107,14 +107,14 @@ export default function PoolStats() {
             <h3>Streaks</h3>
             <p>Regular season only. A streak alive at the end of a season carries into the next.</p>
             <dl className="pool-stats-tiles">
-              <RunTile label="Weeks with at least 1 win" run={player.streaks.noDonut} />
-              <RunTile label="2-0 weeks in a row" run={player.streaks.sweeps} />
+              <RunTile label="Donut Free Weeks" run={player.streaks.noDonut} />
+              <RunTile label="2-0 Sweeps" run={player.streaks.sweeps} />
             </dl>
           </div>
         ) : (
           <div className="pool-stats-pair">
-            <Streaks leaders={stats.streaks.noDonut} note="Consecutive weeks with at least 1 win (no 0-2), regular season. A streak alive at the end of a season carries into the next." title="Weeks with at least 1 win" />
-            <Streaks leaders={stats.streaks.sweeps} note="Consecutive 2-0 weeks, regular season. Carries across seasons the same way." title="2-0 weeks in a row" />
+            <Streaks leaders={stats.streaks.noDonut} note="Consecutive weeks with at least 1 win (no 0-2), regular season. A streak alive at the end of a season carries into the next." title="Donut Free Weeks" />
+            <Streaks leaders={stats.streaks.sweeps} note="Consecutive 2-0 weeks, regular season. Carries across seasons the same way." title="2-0 Sweeps" />
           </div>
         )}
 
