@@ -1822,3 +1822,7 @@ The all-time Wins and Hit rate table in the Trophy Room has a Streaks section: w
 All the other performance numbers live in one place, the Performance tab, behind a dropdown: The league (record and hit rate, the weekly 0-2 / 1-1 / 2-0 histogram, the two streak boards, most picked teams, favorite/underdog and home/road splits) or any one player (the same set from just their picks, with streak tiles in place of the boards, plus a season-by-season record). The separate Player stats section in the Trophy Room is gone.
 
 New in both views: the most picked team, which is the team taken most often among graded picks, shown as a tile and as a top-five table with each team's share of the picking and how those picks did. Everything here is private to the Commissioner.
+
+## The browser tab shows the site's own football icon
+
+The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` (16, 32, 48 and 256 px) and `src/app/icon.png` (256 px) are now a football on the header's charcoal, in a gold-edged rounded square, drawn with chunky shapes so it reads at tab size. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
