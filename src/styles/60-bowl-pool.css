@@ -1,6 +1,6 @@
 /* ==== Bowl Pool ==== */
 /* The Bowl Pool is its own event: navy and old gold on cream, varsity
-   lettering for names and lines, and felt pennants in each school's colors.
+   lettering for names and lines, and megaphones in each school's colors.
    Pick'em keeps its newsprint and Survivor its poker felt. */
 .bowl-pool-page,
 .bowl-card-section {
@@ -91,37 +91,38 @@
   .bowl-claim-stub { border-left: 0; border-top: 1px dashed var(--bowl-rule); }
 }
 
-/* A picked team rises on a pennant in the school's colors. Every pennant is
-   the same size; a long name wraps to a second line inside it. */
-.bowl-pennant { display: inline-flex; height: 2.3rem; position: relative; vertical-align: middle; width: 6.1rem; }
-.bowl-pennant-pole { background: #8a7a5a; border-radius: 1px; bottom: -.25rem; left: 0; position: absolute; top: -.2rem; width: 2px; }
-.bowl-pennant-flag {
-  align-items: center;
-  background: var(--pennant-primary);
-  border-left: 4px solid var(--pennant-secondary);
-  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
-  color: var(--pennant-ink);
-  display: flex;
-  font-family: var(--font-graduate), Georgia, serif;
-  font-size: .62rem;
-  font-weight: 400;
-  height: 2.1rem;
-  letter-spacing: .05em;
-  line-height: 1.05;
-  margin-left: 2px;
-  padding: 0 .7rem 0 .4rem;
-  text-align: left;
-  text-transform: uppercase;
-  width: 100%;
-}
-.bowl-pennant-flag > span { display: block; overflow-wrap: anywhere; }
+/* A picked team's box shows a cheerleader's megaphone in the school's colors, lettered with its name. Every megaphone is the same size; when a
+   team is newly picked it swings up from the mouthpiece and gives a cheer (three sound arcs by the bell). */
+.bowl-megaphone { display: inline-flex; height: 2.3rem; position: relative; vertical-align: middle; width: 6.1rem; }
+.bowl-megaphone svg { display: block; height: 100%; overflow: visible; width: 100%; }
+.bowl-megaphone-art { transform: rotate(-7deg); transform-origin: 10% 55%; }
+.bowl-megaphone-body { fill: var(--megaphone-primary); }
+.bowl-megaphone-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linejoin: round; stroke-width: .9; }
+.bowl-megaphone-trim { fill: var(--megaphone-secondary); }
+.bowl-megaphone-lip { fill: var(--megaphone-secondary); stroke: rgba(0, 0, 0, .38); stroke-width: .9; }
+.bowl-megaphone-hole { fill: rgba(0, 0, 0, .5); }
+.bowl-megaphone-rim { fill: none; stroke: var(--megaphone-secondary); stroke-width: 2.4; }
+.bowl-megaphone-handle { fill: none; stroke: var(--megaphone-secondary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.6; }
+.bowl-megaphone-handle-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.2; }
+.bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .06em; paint-order: stroke; stroke: rgba(0, 0, 0, .25); stroke-width: .5px; text-anchor: middle; }
+.bowl-megaphone-waves path { fill: none; opacity: 0; stroke: var(--megaphone-primary); stroke-linecap: round; stroke-width: 2.2; }
 .bowl-team-pick { display: inline-block; max-width: 100%; }
-.bowl-team-pick.is-new .bowl-pennant-flag { animation: bowl-pennant-raise var(--pennant-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; transform-origin: left center; }
-@keyframes bowl-pennant-raise {
-  from { opacity: 0; transform: translateY(.6rem) scaleX(.55); }
-  to { opacity: 1; transform: none; }
+.bowl-team-pick.is-new .bowl-megaphone-art { animation: bowl-megaphone-raise var(--megaphone-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; }
+.bowl-team-pick.is-new .bowl-megaphone-waves path { animation: bowl-megaphone-cheer 700ms ease-out both; animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55); }
+.bowl-team-pick.is-new .bowl-megaphone-waves path:nth-child(2) { animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55 + 110ms); }
+.bowl-team-pick.is-new .bowl-megaphone-waves path:nth-child(3) { animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55 + 220ms); }
+@keyframes bowl-megaphone-raise {
+  from { opacity: 0; transform: translateY(.55rem) rotate(-36deg) scale(.45); }
+  55% { opacity: 1; transform: rotate(-1deg) scale(1.1); }
+  78% { transform: rotate(-9deg) scale(.97); }
+  to { opacity: 1; transform: rotate(-7deg); }
 }
-@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-pennant-flag { animation: none; } }
+@keyframes bowl-megaphone-cheer {
+  from { opacity: 0; transform: translateX(-4px); }
+  35% { opacity: .85; }
+  to { opacity: 0; transform: translateX(4px); }
+}
+@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-megaphone-art, .bowl-team-pick.is-new .bowl-megaphone-waves path { animation: none; } }
 
 /* ---- Picks page */
 .bowl-pool-page #bowl-selections {
@@ -197,7 +198,7 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-selection-game-r
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-schedule-note { border-color: var(--blue-40); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: var(--bowl-rule); }
 html[data-theme="night"] .bowl-pool-page .bowl-game-line.is-official { color: var(--official-teal); }
-html[data-theme="night"] .bowl-pennant { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
+html[data-theme="night"] .bowl-megaphone { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
 @media (max-width: 639px) {
   .bowl-pool-page .bowl-game-name {
   line-height: 1.15;
@@ -245,8 +246,7 @@ html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { 
   .bowl-pool-page .bowl-game-name { hyphens: auto; }
 }
 @media (max-width: 639px) {
-  .bowl-pennant { width: 4.6rem; }
-  .bowl-pennant-flag { font-size: .5rem; padding-right: .5rem; }
+  .bowl-megaphone { width: 4.6rem; }
 }
 .bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-navy); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
 html[data-theme="night"] .bowl-claim-main p.bowl-claim-note { color: var(--sand-91); }
@@ -433,11 +433,8 @@ html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings
 .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: #fbf4e4; border: 2px solid var(--bowl-gold); padding: calc(.3rem - 1px) calc(.35rem - 1px); }
 .bowl-pool-page #bowl-selections .bowl-pick-box:disabled { cursor: not-allowed; }
 .bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; max-width: 100%; }
-/* Pennants keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
-.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant { max-width: 100%; }
-/* Names wrap between words only, never mid-word, inside the boxed pennant. */
-.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag { font-size: .56rem; letter-spacing: .03em; padding: 0 .55rem 0 .35rem; }
-.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-pennant-flag > span { overflow-wrap: normal; word-break: keep-all; }
+/* Megaphones keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
+.bowl-pool-page #bowl-selections .bowl-pick-box .bowl-megaphone { max-width: 100%; }
 @media (max-width: 639px) {
   /* The line gets its own lane between the two boxes, wide enough for -10.5. */
   .bowl-pool-page #bowl-selections .bowl-legend-row,

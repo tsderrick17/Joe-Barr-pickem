@@ -58,7 +58,7 @@ for (const [scenario, { build, now, click }] of Object.entries(SCENARIOS)) {
         await page.waitForLoadState("networkidle");
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (click) {
-          // Choose the first game's favorite, then let the pennant finish rising.
+          // Choose the first game's favorite, then let the megaphone finish its swing.
           await page.locator("#bowl-selections button[aria-label^='Select favorite team']").first().click();
           await page.waitForTimeout(900);
         }
