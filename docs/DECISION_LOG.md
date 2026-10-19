@@ -1858,3 +1858,5 @@ The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 w
 - **No league streak boards:** the two Player / Longest / Now tables are gone from the Performance tab; the streaks are in the Trophy Room's table (and a player's own view here keeps their two streaks).
 - **Survivor over:** once a Survivor champion is recorded for the season, Participant impact counts the last player standing as complete and says "Over · 1 winner · 10 eliminated", not "1 active".
 - **The pool map:** the line between two stages was dark only when the stage on its left was complete, so it broke between an in-progress stage and a completed one. It is now dark between any two stages that have been reached (complete or in progress), so the progress line is unbroken.
+
+The Today panel's three boxes were tidied: "Up next" no longer lists the Schedule (games loaded) or Provider allowance lines (the allowance is still shown in Automation health and in the operations map's footer), and "Next message" moved under the "Notification readiness" heading, where the rest of the message queue is.

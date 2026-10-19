@@ -193,13 +193,10 @@ export default function GradingDashboard({ view = "today" }: { view?: "today" | 
             <dl className="grading-facts mt-3">
               <div><dt>Next kickoff</dt><dd>{local(metric.readiness.nextKickoffAt)}</dd></div>
               <div><dt>Next line lock</dt><dd>{local(metric.readiness.nextLineLockAt)}</dd></div>
-              <div><dt>Next message</dt><dd>{nextMessage ? `${nextMessage.title} · ${local(nextMessage.scheduledFor)}` : "None scheduled"}</dd></div>
               <div><dt>Last score sync</dt><dd>{metric.latestScoreSyncStatus} · {local(metric.lastScoreSyncAt)}</dd></div>
-              <div><dt>Schedule</dt><dd>{metric.readiness.scheduleLoaded ? `${metric.games} games loaded` : "No games loaded"}</dd></div>
-              <div><dt>Provider allowance</dt><dd>{metric.providerAllowance ?? "Not reported"}</dd></div>
             </dl></div>
         <div className="at-glance-col"><h3>Participant impact</h3><dl className="grading-facts mt-3"><div><dt>Pick&apos;em</dt><dd>{metric.pickOutcomes.win} wins · {metric.pickOutcomes.loss} losses · {metric.pickOutcomes.pending} pending · {metric.pickOutcomes.void} void</dd></div><div><dt>Survivor</dt><dd>{metric.survivorEntries.active === 0 && metric.survivorEntries.complete > 0 ? `Over · ${metric.survivorEntries.complete} ${metric.survivorEntries.complete === 1 ? "winner" : "winners"} · ${metric.survivorEntries.eliminated} eliminated` : `${metric.survivorEntries.active} active · ${metric.survivorEntries.eliminated} eliminated · ${metric.survivorEntries.complete} complete`}</dd></div><div><dt>Active players</dt><dd>{metric.activePlayers}</dd></div></dl></div>
-        <div className="at-glance-col"><h3>Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
+        <div className="at-glance-col"><h3>Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Next message</dt><dd>{nextMessage ? `${nextMessage.title} · ${local(nextMessage.scheduledFor)}` : "None scheduled"}</dd></div><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
       </div>
       </> : null}
       {view === "performance" ? <>
