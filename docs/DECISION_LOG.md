@@ -1881,6 +1881,8 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 - **A better football:** the spotted ball is drawn properly: a pointed body shaded like leather (lighter on top), a soft gloss, a white stripe near each end clipped to the outline, laces along the top, a dark outline and a shadow on the turf, slightly larger.
 - **No wait after letting go:** the page used to sit there for 1.2 seconds with the chain humming before it reloaded, and only then did the page's own loading football appear. Letting go now covers the page (below the header) with the same spinning loading football at once and reloads 120 ms later, right behind it, so the football is on screen immediately and the reloaded page's own loading screen takes over in the same place.
 
+The "Wins" axis label on the Season Snapshot chart sits 2px further from the card border (translate x 8 → 10), clear of the numbers beside it; nothing else in the chart moved.
+
 ## 2026-10-19 - Fluid CPU estimate recalibrated
 
 The Commissioner dashboard estimated 4 h+ of Fluid Active CPU while Vercel's own meter read 3 h 16 m. The per-active-player cost in `src/lib/vercel-usage-estimate.js` drops from 30 to 22 seconds a day (the slower chat, home and grading polling since the 2026-10-02 calibration costs each player less), so 11 active players plus the scheduled jobs and uptime probes now come to 3 h 16 m. It is still an estimate (Vercel does not expose Hobby usage to an app): compare it with the Usage page now and then and adjust that one constant.

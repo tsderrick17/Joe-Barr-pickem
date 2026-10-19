@@ -139,7 +139,7 @@ function SnapshotChart({
     <div className="season-snapshot-row" ref={rowRef}>
       <svg aria-hidden="true" className="season-snapshot-yaxis" height={height} width={AXIS_WIDTH}>
         {ticks.map((tick) => <text fill="#536077" fontFamily="Arial, sans-serif" fontSize="11" key={tick} textAnchor="end" x={AXIS_WIDTH - 4} y={y(tick) + 4}>{tick}</text>)}
-        <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(8 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
+        <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(10 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
       <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>
