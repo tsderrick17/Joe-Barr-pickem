@@ -1853,6 +1853,10 @@ The brass plaques on the trophies themselves were hard to read in the pictures: 
 
 The names on the trophies' plaques were still blurry on a phone because the 1100 px pictures are enlarged to the width of the screen. The three resting views (one for each trophy at the front) are therefore also kept at twice the size (2200 px, higher quality, `rest-0.webp` to `rest-2.webp`, about 360 KB each) and the page draws them whenever the table is exactly at rest, which is when the names are read; the 120 ordinary pictures are still used for the spin, so it costs little extra to load. The sharp pictures arrive after the spin's own, one at a time.
 
+## 2026-10-19 - Survivor is off once it has a champion: the ticket and the reminders agree
+
+Zac's ticket said he owed three selections. He had been crowned Survivor champion, but a champion's entry stays "active" in the database (the crowning does not change it), and the ticket counted any active entry as a required Survivor pick while its Survivor section had already been torn off. The crowned champion is the "Survivor is over" switch the app already has (`seasons.survivor_champion_player_id`, set automatically when one entry is left), so it now ends the competition everywhere the same way: `ticketCompletion` never counts Survivor once the pool is complete (so the champion owes just the two Pick'em selections), and the Survivor reminders (`survivor_due`, and the courteous check that covers both) are not sent once a champion is crowned. Playoff rounds were already Pick'em only.
+
 ## The Trophy Room's hit rate table is evenly spaced, and shows each streak against its best
 
 The all-time Wins and Hit rate table uses fixed column widths (rank, player, wins, hit rate and two streak columns share the width in set proportions, with the player's name trimmed with an ellipsis if it is too long) so the columns line up and nothing runs off the edge of a phone. The streaks sit under one "Regular Season Streaks" heading with two columns, "Weeks with a win" and "2-0 weeks". Each cell shows the current streak as the big number, the all-time best under it ("best 23"), and a thin bar showing how close the current streak is to that best; when the player is at their best the cell turns gold with a star, and the cell's spoken label says so.
@@ -1880,11 +1884,6 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 - **One touchdown:** the lead pole bounced a couple of times on landing because the rubber foot's squash was a spring (it rebounded past its resting height and swayed). The foot is now fully squashed at contact and eases back up in one smooth movement, never going past its resting height, and the pole's lean eases out the same way, so the pole touches the ground once. (The chain still twangs, since a taut chain does vibrate.)
 - **A better football:** the spotted ball is drawn properly: a pointed body shaded like leather (lighter on top), a soft gloss, a white stripe near each end clipped to the outline, laces along the top, a dark outline and a shadow on the turf, slightly larger.
 - **No wait after letting go:** the page used to sit there for 1.2 seconds with the chain humming before it reloaded, and only then did the page's own loading football appear. Letting go now covers the page (below the header) with the same spinning loading football at once and reloads 120 ms later, right behind it, so the football is on screen immediately and the reloaded page's own loading screen takes over in the same place.
-
-## 2026-10-19 - Survivor is off once it has a champion: the ticket and the reminders agree
-
-Zac's ticket said he owed three selections. He had been crowned Survivor champion, but a champion's entry stays "active" in the database (the crowning does not change it), and the ticket counted any active entry as a required Survivor pick while its Survivor section had already been torn off. The crowned champion is the "Survivor is over" switch the app already has (`seasons.survivor_champion_player_id`, set automatically when one entry is left), so it now ends the competition everywhere the same way: `ticketCompletion` never counts Survivor once the pool is complete (so the champion owes just the two Pick'em selections), and the Survivor reminders (`survivor_due`, and the courteous check that covers both) are not sent once a champion is crowned. Playoff rounds were already Pick'em only.
-
 
 ## 2026-10-19 - Fluid CPU estimate recalibrated
 
