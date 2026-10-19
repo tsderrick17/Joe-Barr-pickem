@@ -240,6 +240,7 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
   --steel: oklch(0.84 0.01 250);
   --rubber: oklch(0.36 0 0);
   --turf: oklch(0.5 0.12 150);
+  --leather: oklch(0.42 0.1 45);
   --chalk: oklch(0.95 0.01 90);
   --clip: oklch(0.6 0.2 25);
   background: oklch(0.2 0.004 286);
@@ -251,9 +252,14 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
   top: 0;
   z-index: 60;
 }
-.pull-chain svg { display: block; left: 50%; position: absolute; top: 0; transform: translateX(-50%); }
+.pull-chain svg { display: block; left: 0; position: absolute; top: 0; }
 .pull-chain-ground { fill: var(--turf); }
-.pull-chain-yard { opacity: 0.5; stroke: var(--chalk); stroke-width: 0.5; }
+.pull-chain-sideline { fill: var(--chalk); }
+.pull-chain-yardline { fill: var(--chalk); opacity: 0.85; }
+.pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 0.9; }
+.pull-chain-ball { fill: var(--leather); stroke: var(--gray-00); stroke-width: 0.5; }
+.pull-chain-ball-stripe { fill: none; stroke: var(--chalk); stroke-width: 1; }
+.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 0.8; }
 .pull-chain-rod { fill: var(--marker); }
 .pull-chain-ring { fill: none; stroke: var(--gray-00); stroke-width: 2.6; }
 .pull-chain-strap { fill: none; stroke: var(--gray-00); stroke-width: 0.5; }

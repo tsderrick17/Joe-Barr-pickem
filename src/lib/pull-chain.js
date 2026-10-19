@@ -1,31 +1,40 @@
 /**
- * The drawing math for the pull-down-to-refresh first-down chain. The two rods stand on the ground with a chain between their feet:
- * the rear rod is planted at the left, and the lead rod is carried out of the top of the header at an angle, swinging upright and
- * dragging the chain taut until its rubber foot plants (that is the signal to release). Kept as plain functions so the picture can be
- * checked without a browser.
+ * The drawing math for the pull-down-to-refresh first-down chain. The scene is as wide as the page: a strip of turf along the foot of the
+ * header with yard lines and hash marks, the rear rod planted at the left, and a football spotted at the right, which is what is being
+ * measured. Pulling carries the lead rod in from above the top edge at an angle; the chain pays out of a heap on the ground by the rear rod,
+ * lifts off the turf behind the lead rod, and comes taut as the rod swings upright and plants its rubber foot beside the ball. The ball's
+ * nose is a couple of inches past the rod: a first down. Kept as plain functions so the picture can be checked without a browser.
  */
-export const WIDTH = 220;
-export const REAR_X = 26;           // where the rear rod stands
-export const LEAD_FROM = 64;        // where the lead rod enters, and where it ends up planted (LEAD_TO)
-export const LEAD_TO = 188;
-export const CHAIN_LENGTH = LEAD_TO - REAR_X;   // exactly the gap once the lead rod has planted, so the chain is taut then
-export const FOOT = 6;              // the rubber stopper at the bottom of a rod
-const RING = 3.5;                   // the chain is fastened this far above the bottom of the rod
+export const FOOT = 6;               // the rubber stopper at the bottom of a rod
+export const TURF = 14;              // the strip of turf along the foot of the header: the field, with the sideline where the rods stand at its near edge
+const RING = 3.5;                    // the chain is fastened this far above the bottom of a rod
 const LINK_PITCH = 4.4;
-const HEAP = 5;                     // how many humps the slack chain lies in
+const FLOOR = 2.2;                   // how high a link lying on the turf sits above the ground line
+const HEAP_CAP = 4.6;                // the tallest hump of slack chain lying on the turf
+const BALL = { length: 15, height: 7.5 };
+const NOSE_PAST = 2.5;               // how far the ball's nose is past the rod's near edge (a couple of inches at this scale): a first down
 
 const lerp = (from, to, amount) => from + (to - from) * amount;
 
-/** The rod's height for a header of this height: as tall as fits, standing on a 4px strip of turf. */
-export function rodHeight(headerHeight) {
-  return Math.min(44, headerHeight - 10);
+/** Where everything stands for a page this wide: the rods are a chain's length (ten yards) apart once the lead rod has planted. */
+export function layout(width) {
+  const rear = Math.round(width * 0.1), leadTo = Math.round(width * 0.9);
+  return { width, rear, leadFrom: Math.round(rear + (leadTo - rear) * 0.23), leadTo, chainLength: leadTo - rear, yard: (leadTo - rear) / 10 };
 }
 
+/** The rod's height for a header of this height: as tall as fits above the turf. */
+export function rodHeight(headerHeight) {
+  return Math.min(44, headerHeight - TURF - 6);
+}
+
+/** The y of the ground line the rods' feet stand on. */
+export const groundOf = (headerHeight) => headerHeight - 3;
+
 /** Where the lead rod's top is, and how far it leans, for a pull of `progress` (0 to 1; 1 is planted). */
-export function leadPose(progress, groundY, rod) {
+export function leadPose(progress, groundY, rod, lay) {
   const amount = Math.min(1, Math.max(0, progress));
   return {
-    x: lerp(LEAD_FROM, LEAD_TO, amount),
+    x: lerp(lay.leadFrom, lay.leadTo, amount),
     y: lerp(-(rod + FOOT + 4), groundY - rod - FOOT, Math.pow(amount, 0.85)),
     tilt: Math.pow(1 - amount, 1.6) * 30,   // degrees: carried at an angle, swinging upright as it comes down
   };
@@ -39,28 +48,79 @@ export function ringPoint(x, y, tilt, rod) {
 }
 
 /**
- * The chain from `from` to `to` as small links laid along its length, alternating face-on and edge-on like a real chain, plus the spot
- * for the clip that marks its middle. When the rods are closer than the chain is long, the extra length lies in humps along the way
- * (more slack, taller humps); when they are exactly a chain apart it is straight. `twang` (px) bows the taut chain like a plucked string.
+ * The chain as a line of links, plus the spot for the clip at its middle. It pays out of a heap lying on the turf by the rear rod: the
+ * part still on the ground lies in tight humps (more slack, more humps, never taller than a few pixels), and the rest runs straight from
+ * where it leaves the turf up to the lead rod's ring. As the rod moves out the heap shrinks and the lifted part grows until the chain is a
+ * straight, taut line. `twang` (px) bows the taut chain like a plucked string.
+ * @returns {{ links: { x: number, y: number, angle: number, edge: boolean }[], clip: { x: number, y: number, angle: number }, slack: number, taut: boolean }}
  */
-export function chainLinks(from, to, twang = 0) {
-  const dx = to.x - from.x, dy = to.y - from.y;
-  const gap = Math.hypot(dx, dy);
-  const extra = Math.max(0, CHAIN_LENGTH - gap);
-  const amplitude = ((2 / (Math.PI * HEAP)) * Math.sqrt(gap * extra));   // humps whose extra length is the slack
-  const pointAt = (along) => {
-    const hump = amplitude * (1 - Math.cos(2 * Math.PI * HEAP * along)) / 2;
-    return { x: lerp(from.x, to.x, along), y: lerp(from.y, to.y, along) - hump + twang * Math.sin(Math.PI * along) };
-  };
-  const count = Math.round(CHAIN_LENGTH / LINK_PITCH);   // a chain has the same number of links however it lies
-  const links = [];
-  for (let index = 0; index < count; index += 1) {
-    const along = (index + 0.5) / count;
-    const before = pointAt(Math.max(0, along - 0.01)), after = pointAt(Math.min(1, along + 0.01));
-    links.push({ ...pointAt(along), angle: (Math.atan2(after.y - before.y, after.x - before.x) * 180) / Math.PI, edge: index % 2 === 1 });
+export function chainLinks(from, to, { chainLength, groundY, twang = 0 }) {
+  const floorY = groundY - FLOOR;
+  const height = Math.max(0, floorY - to.y);
+  const through = (leaves) => (leaves - from.x) + Math.hypot(to.x - leaves, height);   // chain used if it leaves the turf at x = leaves
+  const straight = Math.hypot(to.x - from.x, to.y - from.y);
+  const taut = straight >= chainLength - 1e-6;
+  let leaves = from.x;
+  if (!taut) {
+    const most = through(to.x);
+    const wanted = Math.min(chainLength, most);
+    let low = from.x, high = to.x;
+    for (let step = 0; step < 40; step += 1) { const mid = (low + high) / 2; if (through(mid) < wanted) low = mid; else high = mid; }
+    leaves = (low + high) / 2;
   }
-  const middle = pointAt(0.5), a = pointAt(0.49), b = pointAt(0.51);
-  return { links, clip: { ...middle, angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI } };
+  const points = [];
+  const run = leaves - from.x;
+  const slack = taut ? 0 : Math.max(0, chainLength - through(leaves));
+  if (taut) {
+    for (let i = 0; i <= 60; i += 1) { const along = i / 60; points.push({ x: lerp(from.x, to.x, along), y: lerp(from.y, to.y, along) + twang * Math.sin(Math.PI * along) }); }
+  } else {
+    // the heap: arches resting on the turf, enough of them that none is taller than HEAP_CAP
+    const arches = run > 0.5 && slack > 0.05 ? Math.max(3, Math.ceil((2 / (Math.PI * HEAP_CAP)) * Math.sqrt(run * slack))) : 1;
+    const amplitude = run > 0.5 && slack > 0.05 ? (2 / (Math.PI * arches)) * Math.sqrt(run * slack) : 0;
+    const samples = Math.max(8, Math.ceil(run / 1.2));
+    for (let i = 0; i <= samples; i += 1) {
+      const along = i / samples;
+      points.push({ x: from.x + run * along, y: lerp(from.y, floorY, Math.min(1, along * 6)) - amplitude * (1 - Math.cos(2 * Math.PI * arches * along)) / 2 });
+    }
+    const lift = 40;
+    for (let i = 1; i <= lift; i += 1) { const along = i / lift; points.push({ x: lerp(leaves, to.x, along), y: lerp(floorY, to.y, along) }); }
+  }
+  // links at equal steps along the whole length, so a heap is dense and a stretched run is even
+  const lengths = [0];
+  for (let i = 1; i < points.length; i += 1) lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+  const total = lengths[lengths.length - 1];
+  const at = (distance) => {
+    let index = 1;
+    while (index < points.length - 1 && lengths[index] < distance) index += 1;
+    const span = lengths[index] - lengths[index - 1] || 1, t = (distance - lengths[index - 1]) / span;
+    const a = points[index - 1], b = points[index];
+    return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI };
+  };
+  const count = Math.max(2, Math.round(chainLength / LINK_PITCH));
+  const links = Array.from({ length: count }, (_, index) => ({ ...at(((index + 0.5) / count) * total), edge: index % 2 === 1 }));
+  return { links, clip: at(total / 2), slack, taut };
+}
+
+/**
+ * The spotted football, lying on the field a little behind the sideline the rods stand on, pointing at the lead rod: its nose is a couple of
+ * inches past the rod's near (rear) edge, which is what makes it a first down.
+ */
+export function ballSpot(lay, headerHeight) {
+  const footHalf = 3.1;
+  const nose = lay.leadTo - footHalf + NOSE_PAST;
+  return { x: nose - BALL.length / 2, y: headerHeight - TURF + 4.6, length: BALL.length, height: BALL.height, nose };
+}
+
+/** The yard lines (every five yards, full height of the turf) and hash marks (every yard, short ticks top and bottom) across the page. */
+export function fieldMarks(lay) {
+  const offset = lay.yard * 0.35;   // the rear rod is not on a line
+  const lines = [], hashes = [];
+  for (let k = -1; k <= Math.ceil(lay.width / (lay.yard * 5)) + 1; k += 1) lines.push(lay.rear - offset + k * lay.yard * 5);
+  for (let k = -5; k <= Math.ceil(lay.width / lay.yard) + 5; k += 1) {
+    const x = lay.rear - offset + k * lay.yard;
+    if (k % 5 !== 0) hashes.push(x);
+  }
+  return { lines: lines.filter((x) => x > -1 && x < lay.width + 1), hashes: hashes.filter((x) => x > -1 && x < lay.width + 1) };
 }
 
 /** How the rubber foot looks `since` ms after it planted: it compresses and rebounds (1 is uncompressed). */
@@ -72,4 +132,9 @@ export function footSquash(since) {
 export function chainTwang(since) {
   const cycle = since % 700;
   return 5 * Math.exp(-cycle / 130) * Math.sin(cycle / 11);
+}
+
+/** How far (degrees) the planted lead rod leans away from the strain of the chain, settling upright. */
+export function strainLean(since) {
+  return 5 * Math.exp(-since / 170) * Math.cos(since / 60);
 }
