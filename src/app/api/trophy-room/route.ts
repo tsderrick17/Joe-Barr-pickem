@@ -9,8 +9,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
  * The Trophy Room: every season's champions, and every player's all-time batting-average record with their streaks. Read-only, and built
- * only from graded picks, so it can never show anyone's unstarted pick. It opens to every player when the Bowl Pool first launches; the
- * Commissioner can open it earlier. Before that it does not exist for a player (404).
+ * only from graded picks, so it can never show anyone's unstarted pick. For now it is the Commissioner's alone; a player gets 404 until an
+ * opening for players is scheduled (see src/lib/trophy-room-access.js).
  */
 export async function GET(request: NextRequest) {
   const access = await authenticateActivePlayer(request);

@@ -84,7 +84,7 @@ export default function TrophyRoomPage() {
         </header>
 
         {error ? <p className="mt-6 font-semibold text-red-700" role="alert">{error}</p> : null}
-        {notYet ? <p className="mt-6 text-lg">The Trophy Room opens with the Bowl Pool on December 7.</p> : null}
+        {notYet ? <p className="mt-6 text-lg">The Trophy Room is not open yet.</p> : null}
         {!data && !error && !notYet ? <p className="mt-6 text-sm text-(color:--themed-text-28)">Loading the Trophy Room…</p> : null}
 
         <section aria-labelledby="trophy-display" className="desk-rule-bottom py-8">

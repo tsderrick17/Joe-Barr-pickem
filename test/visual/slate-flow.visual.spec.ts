@@ -195,8 +195,8 @@ for (const [open, label] of [[true, "is in"], [false, "is not in"]] as const) {
   });
 }
 
-// A player who opens the Trophy Room's address before it launches is told when it opens, not shown an error.
-test("the Trophy Room before launch says when it opens", async ({ page }) => {
+// A player who opens the Trophy Room's address while it is the Commissioner's alone is told it is not open, not shown an error.
+test("the Trophy Room says it is not open yet to a player", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page);
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
@@ -205,6 +205,6 @@ test("the Trophy Room before launch says when it opens", async ({ page }) => {
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/trophy-room");
-  await expect(page.getByText("The Trophy Room opens with the Bowl Pool on December 7.")).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText("The Trophy Room is not open yet.")).toBeVisible({ timeout: 30000 });
   await expect(page.getByRole("alert")).toHaveCount(0);
 });

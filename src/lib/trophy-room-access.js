@@ -1,13 +1,16 @@
-import { bowlPoolLaunchAt } from "./bowl-pool.js";
+/**
+ * When the Trophy Room opens to every player, as an ISO time. It is null while the Trophy Room is the Commissioner's alone, which is how it
+ * is now. To open it to players later, set this (for example to bowlPoolLaunchAt(2026), the moment the Bowl Pool first launches); it then
+ * stays open for good.
+ * @type {string | null}
+ */
+export const TROPHY_ROOM_PLAYER_OPENS_AT = null;
 
-/** The Trophy Room opens to every player at the same moment the Bowl Pool first does, and then stays open for good (unlike the Bowl Pool, which closes between seasons). */
-export const TROPHY_ROOM_FIRST_YEAR = 2026;
-
-export function trophyRoomOpensAt() {
-  return bowlPoolLaunchAt(TROPHY_ROOM_FIRST_YEAR);
-}
-
-/** @param {number} now milliseconds since the epoch */
-export function trophyRoomOpen(now, isCommissioner) {
-  return isCommissioner || now >= Date.parse(trophyRoomOpensAt());
+/**
+ * @param {number} now milliseconds since the epoch
+ * @param {boolean} isCommissioner
+ * @param {string | null} opensAt when it opens to players, or null if it has not been scheduled
+ */
+export function trophyRoomOpen(now, isCommissioner, opensAt = TROPHY_ROOM_PLAYER_OPENS_AT) {
+  return isCommissioner || (opensAt !== null && now >= Date.parse(opensAt));
 }
