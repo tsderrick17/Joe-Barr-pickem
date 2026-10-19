@@ -53,9 +53,18 @@ export default function TrophyRoomPage() {
     </th>
   );
 
-  const streakCell = (run: Run | undefined, label: string) => (
-    <td aria-label={run ? `${label}: ${run.current} now, ${run.longest} best` : `${label}: none yet`}>{run ? <>{run.current}<small>/{run.longest}</small></> : "—"}</td>
-  );
+  /** A streak cell: the current streak big, the all-time best under it, and a bar showing how close the current streak is to that best. */
+  const streakCell = (run: Run | undefined, label: string) => {
+    if (!run) return <td aria-label={`${label}: none yet`} className="trophy-streak"><span className="trophy-streak-now">—</span></td>;
+    const atBest = run.current > 0 && run.current >= run.longest;
+    return (
+      <td aria-label={`${label}: ${run.current} now, ${run.longest} best${atBest ? ", at their best" : ""}`} className={`trophy-streak ${atBest ? "is-best" : ""}`}>
+        <span className="trophy-streak-now">{run.current}</span>
+        <span className="trophy-streak-best">best {run.longest}{atBest ? " ★" : ""}</span>
+        <span aria-hidden="true" className="trophy-streak-bar"><span style={{ width: `${run.longest ? Math.round((run.current / run.longest) * 100) : 0}%` }} /></span>
+      </td>
+    );
+  };
 
   function line(row: Row, rank: number) {
     const own = row.streaks ?? undefined;
@@ -95,12 +104,13 @@ export default function TrophyRoomPage() {
         {data ? <>
           <section aria-labelledby="all-time" className="py-8">
             <h2 className="font-serif text-2xl font-bold" id="all-time">All-time record</h2>
-            <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first. Streaks are consecutive regular-season weeks, shown as now / best.</p>
+            <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first. Regular season streaks are weeks in a row: the big number is the current streak, “best” is the longest ever, and the bar shows how close the current streak is to it.</p>
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table">
+                <colgroup><col style={{ width: "9%" }} /><col style={{ width: "25%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "18.5%" }} /><col style={{ width: "18.5%" }} /></colgroup>
                 <thead>
-                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Streaks</th></tr>
-                  <tr><th scope="col" title="Weeks in a row with at least 1 win: now / best">1+ win</th><th scope="col" title="2-0 weeks in a row: now / best">2-0</th></tr>
+                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
+                  <tr><th scope="col" title="Weeks in a row with at least 1 win">Weeks with a win</th><th scope="col" title="2-0 weeks in a row">2-0 weeks</th></tr>
                 </thead>
                 <tbody>
                   {sorted.map((row, index) => (
