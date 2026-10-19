@@ -39,8 +39,8 @@ const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a
 
 // ---------- the inscription plate: a title and ruled lines left blank for the winners' names
 /**
- * A champion's plaque: a small gold cartouche (concave corners, a rounded boss at each end), edged with a rope moulding, rivetted
- * at the corners, with the year and name engraved in dark brass inside a double keyline and corner flourishes.
+ * A champion's plaque: a small gold cartouche (concave corners, a rounded boss at each end), edged with a rope moulding,
+ * with the year and name engraved in dark brass inside a double keyline that follows the concave corners.
  * Only champions get a plaque; the next winner's plaque is added beside the last.
  */
 function cartoucheShape(w, h) {
@@ -60,18 +60,37 @@ function plaqueTexture(year, name, aspect, tall = 768) {
   const g = c.getContext("2d");
   g.fillStyle = "#000"; g.fillRect(0, 0, width, height);
   g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineCap = "round"; g.lineJoin = "round";
-  // one slim keyline close to the edge, so the lettering can have the whole face
-  const m = height * 0.075;
-  g.lineWidth = height * 0.03; g.beginPath(); g.roundRect(m, m, width - 2 * m, height - 2 * m, height * 0.09); g.stroke();
-  g.textAlign = "center"; g.textBaseline = "middle";
-  // heavy lettering: filled and stroked, so thin letter strokes do not wash out at the size the picture shows them
-  const write = (text, size, y, spacing, maxWidth) => {
-    g.font = `900 ${Math.round(size)}px Cinzel, "Times New Roman", Georgia, serif`; g.letterSpacing = `${Math.round(size * spacing)}px`;
-    while (g.measureText(text).width > maxWidth && size > 12) { size *= 0.96; g.font = `900 ${Math.round(size)}px Cinzel, "Times New Roman", Georgia, serif`; g.letterSpacing = `${Math.round(size * spacing)}px`; }
-    g.lineWidth = size * 0.05; g.strokeText(text, width / 2, y); g.fillText(text, width / 2, y);
+  // a fine double keyline, the way an engraver frames a name plate: a firm outer line and a hairline inside it. Both keep a steady distance
+  // `d` (a fraction of the plate's height) from the edge and go round the concave corner cut-outs instead of across them, so no line
+  // ever leaves the gold.
+  const A = aspect / 2, cut = Math.min(0.26, 0.1 * aspect);
+  const keyline = (d, lineWidth) => {
+    const R = cut + d, s = Math.sqrt(R * R - d * d), phi = Math.atan2(d, s), u = height, cx = width / 2, cy = height / 2;
+    const P = (x, y) => [cx + x * u, cy + y * u];
+    g.lineWidth = lineWidth; g.beginPath();
+    g.moveTo(...P(-A + s, -0.5 + d)); g.lineTo(...P(A - s, -0.5 + d));
+    g.arc(...P(A, -0.5), R * u, Math.PI - phi, Math.PI / 2 + phi, true); g.lineTo(...P(A - d, 0.5 - s));
+    g.arc(...P(A, 0.5), R * u, -Math.PI / 2 - phi, -Math.PI + phi, true); g.lineTo(...P(-A + s, 0.5 - d));
+    g.arc(...P(-A, 0.5), R * u, -phi, -Math.PI / 2 + phi, true); g.lineTo(...P(-A + d, -0.5 + s));
+    g.arc(...P(-A, -0.5), R * u, Math.PI / 2 - phi, phi, true); g.closePath(); g.stroke();
   };
-  write(year, height * 0.34, height * 0.28, 0.1, width * 0.72);
-  write(name, height * 0.46, height * 0.7, 0.04, width * 0.86);
+  keyline(0.085, height * 0.022); keyline(0.15, height * 0.008);
+  g.textAlign = "center"; g.textBaseline = "middle";
+  // capitals with wide tracking and a light touch: smaller than the plate allows, so there is air round every letter
+  const write = (text, size, y, spacing, maxWidth, weight) => {
+    const set = () => { g.font = `${weight} ${Math.round(size)}px Cinzel, "Times New Roman", Georgia, serif`; g.letterSpacing = `${Math.round(size * spacing)}px`; };
+    set();
+    while (g.measureText(text).width - size * spacing > maxWidth && size > 12) { size *= 0.96; set(); }
+    // letterSpacing adds space after the last letter too, so shift left by half of it to keep the word centred
+    g.lineWidth = size * 0.012; g.strokeText(text, width / 2 + size * spacing / 2, y); g.fillText(text, width / 2 + size * spacing / 2, y);
+  };
+  write(year, height * 0.2, height * 0.265, 0.3, width * 0.5, 700);
+  // a hairline either side of a small diamond between the year and the name
+  const rule = height * 0.45, half = width * 0.2, gap = height * 0.05;
+  g.lineWidth = height * 0.008;
+  g.beginPath(); g.moveTo(width / 2 - half, rule); g.lineTo(width / 2 - gap * 1.6, rule); g.moveTo(width / 2 + gap * 1.6, rule); g.lineTo(width / 2 + half, rule); g.stroke();
+  g.beginPath(); g.moveTo(width / 2, rule - gap * 0.8); g.lineTo(width / 2 + gap * 0.8, rule); g.lineTo(width / 2, rule + gap * 0.8); g.lineTo(width / 2 - gap * 0.8, rule); g.closePath(); g.fill();
+  write(name, height * 0.34, height * 0.71, 0.14, width * 0.74, 700);
   const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8; return tex;
 }
 const BRASS = new THREE.MeshPhysicalMaterial({ color: 0xe6b84a, metalness: 1, roughness: 0.3, clearcoat: 0.3, clearcoatRoughness: 0.18, envMapIntensity: 1.2 });
@@ -91,8 +110,7 @@ function plaque(year, name, w = 4.6, h = 2.1, order = null) {
   const edge = []; const shape = cartoucheShape(w, h); for (const p of shape.getPoints(24)) edge.push(new THREE.Vector3(p.x, p.y, depth + 0.045));
   const rope = new THREE.CatmullRomCurve3(edge, true);
   group.add(mesh(new THREE.TubeGeometry(rope, 360, 0.045, 8, true), BRASS));
-  // rivets at the four notched corners and a domed boss in each end
-  for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { const rivet = mesh(new THREE.SphereGeometry(0.085, 14, 10), BRASS); rivet.position.set(sx * (w / 2 - h * 0.1), sy * (h / 2 - h * 0.1), depth + 0.07); rivet.scale.z = 0.6; group.add(rivet); }
+  // a domed boss in each end
   for (const sx of [1, -1]) { const boss = mesh(new THREE.SphereGeometry(h * 0.1, 18, 12), BRASS); boss.position.set(sx * (w / 2), 0, depth + 0.05); boss.scale.z = 0.5; group.add(boss); }
   return group;
 }
@@ -155,8 +173,8 @@ export function emeraldBase(m) {
   { const mat = new THREE.Matrix4(); let k = 0; const row = (w, d, y) => { const nx = Math.round(w / 0.55), nz = Math.round(d / 0.55); for (let i = 0; i <= nx; i++) { const x = -w / 2 + (i / nx) * w; for (const z of [-d / 2, d / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } for (let i = 1; i < nz; i++) { const z = -d / 2 + (i / nz) * d; for (const x of [-w / 2, w / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } }; row(19.9, 11.5, 3.17); row(16.4, 9.0, 3.34 + t2 + 0.15); beads.count = k; beads.castShadow = true; g.add(beads); }
   // five plates on the front: the newest champion goes bottom left, moves one place right each year, then up to the top row, then round the back
   const sv = championsFor("survivor");
-  for (const [x, i] of [[-6.6, 0], [0, 1], [6.6, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 6.2, 2.45, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
-  [-3.8, 3.8].forEach((x, j) => g.add(flatPlate(sv[3 + j] ? sv[3 + j].year : "", 4.4, 2.1, 8.8 / 2 - 0.03, 3.34 + t2 / 2, x, sv[3 + j] ? sv[3 + j].name : "", 3 + j)));
+  for (const [x, i] of [[-6.6, 0], [0, 1], [6.6, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 5.4, 1.95, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
+  [-3.8, 3.8].forEach((x, j) => g.add(flatPlate(sv[3 + j] ? sv[3 + j].year : "", 4.8, 1.95, 8.8 / 2 - 0.03, 3.34 + t2 / 2, x, sv[3 + j] ? sv[3 + j].name : "", 3 + j)));
   g.userData.height = 3.34 + t2 + 0.3;
   return g;
 }
