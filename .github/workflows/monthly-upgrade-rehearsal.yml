@@ -50,7 +50,7 @@ jobs:
             "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
             | jq --arg name "$artifact_name" 'any(.artifacts[]; .name == $name and (.expired | not))')
           echo "completed=$completed" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         if: steps.month.outputs.completed != 'true'
       - name: Select the first available non-gameday or a manual run
         id: calendar

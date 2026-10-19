@@ -76,14 +76,14 @@ jobs:
             *) echo "Refusing a browser-test URL that is not the isolated test project." >&2; exit 1 ;;
           esac
           echo "Using the explicitly confirmed isolated test environment."
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
