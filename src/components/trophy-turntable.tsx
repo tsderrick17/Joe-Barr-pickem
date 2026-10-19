@@ -5,63 +5,110 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { championRoll } from "@/lib/trophy-roll.js";
 
 /**
- * The three trophies on a triangular table that turns. The table is a set of 60 pictures, one for every 6 degrees of a full turn
- * (rendered once, see tools/trophy-render); dragging or swiping moves through them, letting go settles the nearest trophy at the
- * front, and the arrows at the sides bring the next one forward. Each trophy's brass plaques are part of the pictures, so the
- * champions are also listed in plain text below, straight from the records.
+ * The three trophies on a mahogany table that turns. The table is a set of 120 pictures, one for every 3 degrees of a full turn
+ * (rendered once, see tools/trophy-render). They are all fetched and decoded in the background and drawn onto one canvas, so a
+ * spin never waits on an image (swapping an <img> source flashes black while the next picture decodes). Dragging or swiping turns
+ * the table, a flick carries on and settles the nearest trophy at the front, and the arrows at the sides bring the next one forward.
+ * When a trophy settles, its champions hang from the rafters below as stadium banners, dropping in and bouncing into place.
  */
 type Champion = { name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 
-const FRAMES = 60;
+const FRAMES = 120;
 const STEP = 360 / FRAMES;      // degrees between pictures
 const REST = 120;               // degrees between one trophy at the front and the next
-const TROPHIES = [{ pool: "pickem", label: "Pick’em" }, { pool: "bowl", label: "Bowl Pool" }, { pool: "survivor", label: "Survivor" }] as const;
-const DRAG_DEGREES_PER_PIXEL = 0.3;
+const WIDTH = 1100, HEIGHT = 825;
+const TROPHIES = [
+  { pool: "pickem", label: "Pick’em", tag: "Pick’em champion" },
+  { pool: "bowl", label: "Bowl Pool", tag: "Bowl Pool champion" },
+  { pool: "survivor", label: "Survivor", tag: "Survivor champion" },
+] as const;
 
 const wrap = (angle: number) => ((angle % 360) + 360) % 360;
 const frameSrc = (index: number) => `/trophies/turntable/frame-${String(index).padStart(3, "0")}.webp`;
-const frontIndex = (angle: number) => Math.round(wrap(angle) / REST) % TROPHIES.length;
+const frontOf = (angle: number) => Math.round(wrap(angle) / REST) % TROPHIES.length;
+const nearestRest = (angle: number) => Math.round(angle / REST) * REST;
+
+/** The order to fetch the pictures in: the three resting views first, then outward from them, so a spin is smooth as early as possible. */
+function loadOrder() {
+  const rests = Array.from({ length: 3 }, (_, k) => (k * REST) / STEP), order: number[] = [...rests], seen = new Set(order);
+  for (let distance = 1; distance <= REST / STEP / 2; distance += 1) {
+    for (const rest of rests) for (const sign of [1, -1]) { const index = (rest + sign * distance + FRAMES) % FRAMES; if (!seen.has(index)) { seen.add(index); order.push(index); } }
+  }
+  return order;
+}
 
 export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
-  const [angle, setAngle] = useState(0);
-  const angleRef = useRef(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bitmaps = useRef<Array<ImageBitmap | null>>(Array.from({ length: FRAMES }, () => null));
+  const angle = useRef(0);
   const frame = useRef<number | null>(null);
-  const drag = useRef<{ startX: number; startAngle: number } | null>(null);
+  const drag = useRef<{ startX: number; startAngle: number; samples: Array<{ t: number; x: number }> } | null>(null);
+  const [front, setFront] = useState(0);        // the trophy at the front once the table has settled
+  const [moving, setMoving] = useState(false);  // true while the table is being turned (the banners lift away)
+  const loaded = useRef(0);
+  const [ready, setReady] = useState(false);       // every picture has arrived
 
-  const show = useCallback((next: number) => { angleRef.current = next; setAngle(next); }, []);
-
-  /** Turn smoothly to an angle by the short way round. */
-  const turnTo = useCallback((target: number) => {
-    if (frame.current !== null) cancelAnimationFrame(frame.current);
-    const from = angleRef.current, delta = ((target - from + 540) % 360) - 180;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || delta === 0) { show(from + delta); return; }
-    const start = performance.now(), duration = 260 + Math.abs(delta) * 3.2;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration), eased = 1 - Math.pow(1 - t, 3);
-      show(from + delta * eased);
-      frame.current = t < 1 ? requestAnimationFrame(tick) : null;
-    };
-    frame.current = requestAnimationFrame(tick);
-  }, [show]);
-
-  const turnBy = useCallback((steps: number) => turnTo(Math.round(angleRef.current / REST) * REST + steps * REST), [turnTo]);
-
-  useEffect(() => {
-    // fetch the rest of the turn in the background so a drag never waits for a picture
-    const loaders: HTMLImageElement[] = [];
-    for (let index = 0; index < FRAMES; index += 1) { const image = new window.Image(); image.src = frameSrc(index); loaders.push(image); }
-    return () => { if (frame.current !== null) cancelAnimationFrame(frame.current); };
+  const draw = useCallback(() => {
+    const context = canvasRef.current?.getContext("2d");
+    if (!context) return;
+    const wanted = Math.round(wrap(angle.current) / STEP) % FRAMES;
+    for (let reach = 0; reach < FRAMES / 2; reach += 1) {     // the nearest picture that has arrived, if the wanted one is still on its way
+      const bitmap = bitmaps.current[(wanted + reach) % FRAMES] ?? bitmaps.current[(wanted - reach + FRAMES) % FRAMES];
+      if (bitmap) { context.drawImage(bitmap, 0, 0, WIDTH, HEIGHT); return; }
+    }
   }, []);
 
-  const front = frontIndex(angle);
-  const index = Math.round(wrap(angle) / STEP) % FRAMES;
+  useEffect(() => {
+    let cancelled = false;
+    const queue = loadOrder();
+    const worker = async () => {
+      while (!cancelled) {
+        const index = queue.shift();
+        if (index === undefined) return;
+        try {
+          const blob = await (await fetch(frameSrc(index))).blob();
+          const bitmap = await createImageBitmap(blob);
+          if (cancelled) return;
+          bitmaps.current[index] = bitmap;
+          loaded.current += 1;
+          if (loaded.current === FRAMES) setReady(true);
+          if (Math.round(wrap(angle.current) / STEP) % FRAMES === index) draw();
+        } catch { /* a missing picture leaves its neighbour on screen */ }
+      }
+    };
+    void Promise.all(Array.from({ length: 6 }, worker));
+    return () => { cancelled = true; if (frame.current !== null) cancelAnimationFrame(frame.current); };
+  }, [draw]);
+
+  const set = useCallback((next: number) => { angle.current = next; draw(); }, [draw]);
+
+  /** Turn smoothly to an angle by the short way round, then report which trophy is at the front. */
+  const turnTo = useCallback((target: number) => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    const from = angle.current, delta = ((target - from + 540) % 360) - 180;
+    const finish = () => { frame.current = null; setFront(frontOf(angle.current)); setMoving(false); };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || delta === 0) { set(from + delta); finish(); return; }
+    setMoving(true);
+    const start = performance.now(), duration = Math.min(650, 220 + Math.abs(delta) * 2.4);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration), eased = 1 - Math.pow(1 - t, 3);
+      set(from + delta * eased);
+      if (t < 1) frame.current = requestAnimationFrame(tick); else finish();
+    };
+    frame.current = requestAnimationFrame(tick);
+  }, [set]);
+
+  const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST), [turnTo]);
+
+  const roll = championRoll(seasons, TROPHIES[front].pool);
 
   return (
-    <div>
+    <div className="trophy-display">
       <div
         aria-label="The trophies on their table. Drag, or use the arrow keys, to turn it."
         className="trophy-turn-stage"
+        data-ready={ready ? "true" : "false"}
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft") { event.preventDefault(); turnBy(-1); }
           if (event.key === "ArrowRight") { event.preventDefault(); turnBy(1); }
@@ -70,37 +117,51 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
         onPointerDown={(event) => {
           if ((event.target as HTMLElement).closest("button")) return;
           if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
-          drag.current = { startX: event.clientX, startAngle: angleRef.current };
+          drag.current = { startX: event.clientX, startAngle: angle.current, samples: [{ t: performance.now(), x: event.clientX }] };
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={(event) => {
-          if (!drag.current) return;
-          show(drag.current.startAngle - (event.clientX - drag.current.startX) * DRAG_DEGREES_PER_PIXEL);   // dragging left brings the trophy on the right forward
+          const current = drag.current;
+          if (!current) return;
+          const width = event.currentTarget.getBoundingClientRect().width || 1;
+          if (!moving && Math.abs(event.clientX - current.startX) > 4) setMoving(true);
+          set(current.startAngle - ((event.clientX - current.startX) / width) * 200);   // a swipe across the picture is about 200 degrees
+          current.samples.push({ t: performance.now(), x: event.clientX });
+          if (current.samples.length > 6) current.samples.shift();
         }}
-        onPointerUp={() => {
-          if (!drag.current) return;
+        onPointerUp={(event) => {
+          const current = drag.current;
+          if (!current) return;
           drag.current = null;
-          turnTo(Math.round(angleRef.current / REST) * REST);
+          const width = event.currentTarget.getBoundingClientRect().width || 1, now = performance.now(), recent = current.samples.filter((sample) => now - sample.t < 90);   // only the last instant counts: a pause before letting go is no flick
+          const first = recent[0], last = recent[recent.length - 1];
+          const velocity = first && last && last.t > first.t ? ((-(last.x - first.x) / width) * 200) / (last.t - first.t) : 0;   // degrees per millisecond
+          turnTo(nearestRest(angle.current + velocity * 180));                                                   // a flick carries on a little
         }}
         role="group"
         tabIndex={0}
       >
-        <Image alt={`The ${TROPHIES[front].label} trophy at the front of the table`} draggable={false} height={825} priority src={frameSrc(index)} unoptimized width={1100} />
+        <Image alt="" className="trophy-turn-poster" draggable={false} height={HEIGHT} priority src={frameSrc(0)} unoptimized width={WIDTH} />
+        <canvas aria-hidden="true" className="trophy-turn-canvas" height={HEIGHT} ref={canvasRef} width={WIDTH} />
         <button aria-label="Bring the previous trophy forward" className="trophy-turn-arrow" data-side="left" onClick={() => turnBy(-1)} type="button">‹</button>
         <button aria-label="Bring the next trophy forward" className="trophy-turn-arrow" data-side="right" onClick={() => turnBy(1)} type="button">›</button>
-        <p aria-live="polite" className="sr-only" role="status">{TROPHIES[front].label} is at the front</p>
+        <p aria-live="polite" className="sr-only" role="status">{moving ? "Turning" : `${TROPHIES[front].label} is at the front`}</p>
       </div>
-      <div className="trophy-rolls">
-        {TROPHIES.map((trophy, position) => {
-          const roll = championRoll(seasons, trophy.pool);
-          return (
-            <section data-front={position === front ? "true" : "false"} key={trophy.pool}>
-              <h3>{trophy.label}</h3>
-              {roll.length ? <ul>{roll.map((entry) => <li key={entry.year}><span>{entry.year}</span> {entry.names}</li>)}</ul> : <p>No champion yet.</p>}
-            </section>
-          );
-        })}
-      </div>
+      <section aria-label={`${TROPHIES[front].label} champions`} className="trophy-rafters" data-moving={moving ? "true" : "false"} data-pool={TROPHIES[front].pool} key={front}>
+        <div aria-hidden="true" className="trophy-beam" />
+        {roll.length ? (
+          <ul className="trophy-banners">
+            {roll.map((entry, index) => (
+              <li className="trophy-banner" key={entry.year} style={{ "--i": index } as React.CSSProperties}>
+                <span className="trophy-banner-tag">{TROPHIES[front].tag}</span>
+                <b className="trophy-banner-year">{entry.year}</b>
+                <span className="trophy-banner-star" aria-hidden="true">★</span>
+                <span className="trophy-banner-name">{entry.names}</span>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="trophy-banners-empty">No {TROPHIES[front].label} champion yet.</p>}
+      </section>
     </div>
   );
 }

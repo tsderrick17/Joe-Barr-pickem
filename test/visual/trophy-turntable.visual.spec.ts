@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
-// The Trophy Room's turntable: three trophies on a triangular table that turns by drag, swipe or arrow.
+// The Trophy Room's turntable: three trophies on a mahogany table that turns by drag, swipe or arrow, and the banners of the trophy at the front.
 
 async function openTrophyRoom(page: Page) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -19,44 +19,57 @@ async function openTrophyRoom(page: Page) {
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.setViewportSize({ width: 900, height: 900 });
   await page.goto("/admin/trophy-room");
-  await expect(page.locator(".trophy-turn-stage img")).toBeVisible({ timeout: 30_000 });
-  await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+  await expect(page.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
 }
 
-test("the arrows bring the next trophy to the front, and back again", async ({ page }) => {
+const front = (page: Page) => page.getByRole("status").filter({ hasText: "at the front" });
+
+test("the arrows bring the next trophy to the front, and its champions hang from the rafters", async ({ page }) => {
   await openTrophyRoom(page);
-  const status = page.getByRole("status").filter({ hasText: "at the front" });
-  await expect(status).toHaveText("Pick’em is at the front");
+  await expect(front(page)).toHaveText("Pick’em is at the front");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "pickem");
+  await expect(page.locator(".trophy-banner")).toHaveText([/2026[\s\S]*Gary & Rick/, /2025[\s\S]*Tyler/]);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
-  await expect(status).toHaveText("Bowl Pool is at the front");
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "bowl");
+  await expect(page.locator(".trophy-banner")).toHaveText([/2026[\s\S]*Connor/]);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
-  await expect(status).toHaveText("Survivor is at the front");
+  await expect(front(page)).toHaveText("Survivor is at the front");
+  await expect(page.locator(".trophy-banner")).toHaveText([/2025[\s\S]*Zac/]);
   await page.getByRole("button", { name: "Bring the previous trophy forward" }).click();
-  await expect(status).toHaveText("Bowl Pool is at the front");
-  await expect(page.locator(".trophy-rolls section[data-front='true'] h3")).toHaveText("Bowl Pool");
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+});
+
+test("the banners lift away while the table turns and drop in when it settles", async ({ page }) => {
+  await openTrophyRoom(page);
+  await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Turning" })).toBeVisible();
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "true");
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "false");
+  expect(await page.locator(".trophy-banner").first().evaluate((banner) => getComputedStyle(banner).animationName)).toBe("trophy-banner-drop");
 });
 
 test("dragging turns the table and it settles on the nearest trophy", async ({ page }) => {
   await openTrophyRoom(page);
-  const status = page.getByRole("status").filter({ hasText: "at the front" });
   const stage = page.locator(".trophy-turn-stage");
   const box = (await stage.boundingBox())!;
   const y = box.y + box.height * 0.6;
-  // a short drag is not enough to change trophy: it springs back
+  // a short, slow drag is not enough to change trophy: it springs back
   await page.mouse.move(box.x + box.width * 0.5, y); await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.5 - 60, y, { steps: 6 }); await page.mouse.up();
-  await expect(status).toHaveText("Pick’em is at the front");
+  await page.mouse.move(box.x + box.width * 0.5 - 40, y, { steps: 6 }); await page.waitForTimeout(250); await page.mouse.up();
+  await expect(front(page)).toHaveText("Pick’em is at the front");
   // dragging left far enough brings the trophy on the right forward
   await page.mouse.move(box.x + box.width * 0.8, y); await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.8 - 430, y, { steps: 12 }); await page.mouse.up();
-  await expect(status).toHaveText("Bowl Pool is at the front");
+  await page.mouse.move(box.x + box.width * 0.8 - box.width * 0.6, y, { steps: 12 }); await page.waitForTimeout(250); await page.mouse.up();
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
 });
 
-test("the table at rest with the Bowl Pool at the front", async ({ page }) => {
+test("the table and banners at rest with the Bowl Pool at the front", async ({ page }) => {
   await openTrophyRoom(page);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "at the front" })).toHaveText("Bowl Pool is at the front");
-  await page.waitForTimeout(900);
-  await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-  await expect(page.locator(".trophy-turn-stage")).toHaveScreenshot("trophy-turntable-bowl-front.png");
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.waitForTimeout(1600);
+  await expect(page.locator(".trophy-display")).toHaveScreenshot("trophy-turntable-bowl-front.png");
 });
