@@ -1,11 +1,12 @@
-// The display table: a hand-made mahogany table whose top is cut tight around three landing pads, one per trophy. Each pad is the
-// outline of its trophy's base (a raised moulded step with a velvet inset), and the top flows round them in smooth curves, with
+// The display table: a hand-made mahogany table whose top is cut tight around three identical landing pads, one per trophy, 120 degrees
+// apart, so the whole table is exactly three-fold symmetric. Each pad is a raised moulded step with a velvet inset, and the top flows round them in smooth curves, with
 // satinwood stringing, a marquetry compass star in the middle, a carved apron, a carved urn pedestal and three cabriole legs ending
 // in brass claw-and-ball feet. Table units: the top surface is y = 0.
 import { THREE, mesh, profile, revolveMod, fbm } from "/lib.js";
 
 export const RADIUS = 48;        // distance from the centre to each landing pad
 export const PAD_TOP = 1.8;      // height of a pad's velvet above the table top
+export const PAD_RADIUS = 12.2;  // every pad is this round velvet disc: just big enough for the widest trophy base (the Survivor and Pick'em corners)
 const STEP_H = 1.45;             // height of the pad's raised moulded step
 
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
@@ -81,13 +82,18 @@ export function mahoganyTable(m, footprints = []) {
 
   // world-plane outline of each pad's table-top edge: the trophy base grown by 6.5
   const pads = [0, 1, 2].map((k) => {
-    const phi = (k / 3) * Math.PI * 2, cx = Math.sin(phi) * RADIUS, cz = Math.cos(phi) * RADIUS, fp = footprints[k] ?? { type: "circle", r: 11 };
+    const phi = (k / 3) * Math.PI * 2, cx = Math.sin(phi) * RADIUS, cz = Math.cos(phi) * RADIUS, fp = footprints[k] ?? { type: "circle", r: PAD_RADIUS };
     const toWorld = (p) => new THREE.Vector2(cx + p.x * Math.cos(phi) + p.y * Math.sin(phi), cz - p.x * Math.sin(phi) + p.y * Math.cos(phi));
     return { phi, cx, cz, fp, world: (offset) => footprintPoints(fp, offset).map(toWorld) };
   });
   const topPolys = pads.map((p) => p.world(6.5));
   // the table top is the smooth union of a central disc and the three pad outlines; a blend distance of 16 gives deep, flowing curves between them
-  const field = (x, y) => topPolys.reduce((d, poly) => smin(d, polygonSdf(poly, x, y), 16), Math.hypot(x, y) - 24);
+  // The blend is not associative (joining A then B differs slightly from B then A), so it is averaged over every order the three pads can be
+  // joined in: the outline then comes out exactly the same at every pad.
+  const field = (x, y) => {
+    const disc = Math.hypot(x, y) - 24, [a, b, c] = topPolys.map((poly) => polygonSdf(poly, x, y));
+    return [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]].reduce((sum, order) => sum + order.reduce((d, v) => smin(d, v, 16), disc), 0) / 6;
+  };
   const outline = (inset = 0) => Array.from({ length: 1440 }, (_, i) => {
     const a = (i / 1440) * Math.PI * 2, sx = Math.sin(a), sy = Math.cos(a);
     let r = 110; while (r > 0 && field(sx * r, sy * r) > -inset) r -= 0.7;   // walk in from outside until the edge (offset by `inset`) is crossed
