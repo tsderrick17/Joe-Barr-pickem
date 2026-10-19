@@ -1830,3 +1830,11 @@ The pull-down refresh used to be a drop of water, which belonged to nothing else
 ## The browser tab shows the site's own goalpost icon
 
 The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` and `src/app/icon.png` are now an 8-bit goalpost under a night sky: yellow uprights lit on one edge and shaded on the other, small red streamers on top, crimson padding on the stem, mowed turf below, and "JB" between the uprights in white varsity letters with a crimson drop shadow. It is two hand-placed pixel pictures rather than one shrunk image: a detailed 32 by 32 (used at 32, 64 and 256 px, enlarged without smoothing so it stays crisp) and a simplified 16 by 16 for an ordinary tab. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
+
+## The Trophy Room is for every player, and opens with the Bowl Pool
+
+The Trophy Room (the three trophies on the turning table, the champion banners, and the all-time Wins and Hit rate table with each player's Streaks) is no longer a Commissioner page. It lives at `/trophy-room`, with a "Trophy Room" link in the drop-down menu under your name (between your name and Notifications). The Commissioner's old `/admin/trophy-room` address forwards to it.
+
+It opens to every player at the same moment the Bowl Pool first launches, December 7, 2026 at 3:00 AM Eastern, and then stays open for good (unlike the Bowl Pool, which closes between seasons). Before that, a player has no link and the page and its data answer "not found" (the page says when it opens); the Commissioner can see it at any time to preview. The gate is `trophyRoomOpen` in `src/lib/trophy-room-access.js`, and `/api/profile` tells the menu whether to show the link.
+
+What players see is only what is already public once graded: champions, and all-time hits, hit rates and streaks built from graded picks, so it can never show anyone's unstarted pick. The Commissioner's Performance tab (the league / player dropdown with splits, histograms and most picked team) stays private.

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildGroupStats } from "../src/lib/group-stats.js";
+import { buildGroupStats, weeklyStreaks } from "../src/lib/group-stats.js";
 
 const players = [{ id: "ann", first_name: "Ann" }, { id: "bob", first_name: "Bob" }];
 const seasons = [{ id: "s25", year: 2025 }, { id: "s26", year: 2026 }];
@@ -129,4 +129,11 @@ test("a team missing from the list still counts, under a plain name, and nobody 
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });
   assert.equal(empty.mostPicked, null);
   assert.deepEqual(empty.teams, []);
+});
+
+test("weekly streaks alone (what the Trophy Room sends) match the ones inside the full stats", () => {
+  const streaks = weeklyStreaks({ seasons, periods, picks });
+  for (const player of stats.players) assert.deepEqual(streaks.get(player.playerId), player.streaks, player.name);
+  assert.deepEqual(streaks.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 } });
+  assert.equal(streaks.has("nobody"), false);
 });

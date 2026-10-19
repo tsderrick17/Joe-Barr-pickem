@@ -18,6 +18,7 @@ export default function SiteNav() {
 
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
+  const [trophyRoomOpen, setTrophyRoomOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
 
@@ -42,11 +43,12 @@ export default function SiteNav() {
         const response = await fetchWithSession("/api/profile");
         if (response.status === 401) throw new SessionUnavailableError();
         if (!response.ok) throw new Error("Account navigation could not be loaded.");
-        const player = await response.json() as { firstName?: string; isCommissioner?: boolean };
+        const player = await response.json() as { firstName?: string; isCommissioner?: boolean; trophyRoomOpen?: boolean };
 
         if (active) {
           setPlayerName(player.firstName ?? "");
           setIsCommissioner(player.isCommissioner ?? false);
+          setTrophyRoomOpen(player.trophyRoomOpen ?? false);
           rememberTabs(Boolean(player.isCommissioner));
         }
       } catch (error) {
@@ -201,7 +203,7 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
           </button>
 
-          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink /></div> : null}
+          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /></div> : null}
         </div>
       </div>
     </nav>
@@ -224,7 +226,7 @@ export default function SiteNav() {
           >
             <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
           </button>
-          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink /> : null}
+          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /> : null}
           </div>
         </div>
       </div>

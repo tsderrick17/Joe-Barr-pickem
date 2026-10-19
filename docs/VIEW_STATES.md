@@ -64,7 +64,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | A team chosen, not yet submitted | `unsaved-change` |
 | Not a participant, first kickoff passed | `entry-closed` |
 
-## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`, `/admin/trophy-room`) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
+## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`; the Trophy Room at `/trophy-room` is shot here too) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
 
 | View | States |
 | --- | --- |
@@ -80,6 +80,8 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
 | Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
+| Name menu: a Trophy Room link between the name and Notifications once the Trophy Room is open for the player; absent before (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
+| Trophy Room before it opens: a player who goes to its address is told it opens with the Bowl Pool on December 7 (behavior test) | `/trophy-room` |
 | Trophy room table: each player's streaks as now / best, under a Streaks heading (1+ win, 2-0), dashes for a player with none (behavior test) | `healthy` |
 | Performance dropdown: the league first, then choosing a player swaps every figure, the most picked team and the Season by season table (behavior test) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
@@ -116,6 +118,6 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain with its lead rod planted and "Release to refresh" (screenshot of the indicator) and letting go reloads the page (the drawing's geometry is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
 
-## Trophy Room turntable (`/admin/trophy-room`) — `trophy-turntable.visual.spec.ts`
+## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 
 Behavior tests: the arrows bring the next or previous trophy to the front and its champions hang from the rafters as banners (the screen-reader status and the banners' pool follow); the banners lift away while the table turns and drop in (the `trophy-banner-unfurl` animation) when it settles; dragging turns the table, a short slow drag springs back, and a long drag settles on the next trophy. One screenshot: the table and banners at rest with the Bowl Pool at the front.
