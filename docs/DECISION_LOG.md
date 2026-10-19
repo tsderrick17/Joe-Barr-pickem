@@ -1882,3 +1882,5 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 - **No wait after letting go:** the page used to sit there for 1.2 seconds with the chain humming before it reloaded, and only then did the page's own loading football appear. Letting go now covers the page (below the header) with the same spinning loading football at once and reloads 120 ms later, right behind it, so the football is on screen immediately and the reloaded page's own loading screen takes over in the same place.
 
 The "Wins" axis label on the Season Snapshot chart sits 2px further from the card border (translate x 8 → 10), clear of the numbers beside it; nothing else in the chart moved.
+
+The Provider cost chart (credits per game, 15- and 30-day averages) no longer starts its axis at zero: it now fits the axis to the range the two lines actually move in (the existing "tight" scale, with one step of room above and below), so the story of the lines is not flattened into the top of a tall chart.
