@@ -15,7 +15,7 @@ const LINK_ZOOM = 2.4;               // the same for chain links
 const LINK_PITCH = 4.4;              // link spacing, in link units
 const FLOOR = 2.2;                   // how high a link lying on the turf sits above the ground line (link units)
 const HEAP_CAP = 4.6;                // the tallest hump of slack chain lying on the turf (link units)
-const BALL = { length: 36, height: 17 };   // px
+const BALL = { length: 42, height: 18 };   // px
 const NOSE_INCHES = 2.5;             // how far the ball's nose is past the pole's far edge: a couple of inches
 
 const lerp = (from, to, amount) => from + (to - from) * amount;
@@ -112,7 +112,7 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
 export function ballSpot(lay, headerHeight) {
   const footHalf = 3.1 * lay.zoom;
   const nose = lay.leadTo + footHalf + NOSE_INCHES * lay.inch;
-  return { x: nose - BALL.length / 2, y: headerHeight - TURF + 8.5, length: BALL.length, height: BALL.height, nose };
+  return { x: nose - BALL.length / 2, y: headerHeight - TURF + 9.5, length: BALL.length, height: BALL.height, nose };
 }
 
 /** The yard lines (every five yards) and hash marks (every yard in between) across the page. */
@@ -127,9 +127,10 @@ export function fieldMarks(lay) {
   return { lines: lines.filter(inView), hashes: hashes.filter(inView) };
 }
 
-/** How the rubber foot looks `since` ms after it planted: it compresses and rebounds (1 is uncompressed). */
+/** How the rubber foot looks `since` ms after it planted (1 is uncompressed): fully squashed at contact, then easing back up. It touches down once and
+ *  never bounces, so it never goes past its resting height. */
 export function footSquash(since) {
-  return 1 - 0.4 * Math.exp(-since / 90) * Math.cos(since / 38);
+  return 1 - 0.4 * Math.exp(-since / 120);
 }
 
 /** How far (px) the taut chain bows `since` ms after the foot planted: a twang that dies away, struck again every 700 ms. */
@@ -138,7 +139,7 @@ export function chainTwang(since) {
   return 14 * Math.exp(-cycle / 130) * Math.sin(cycle / 11);
 }
 
-/** How far (degrees) the planted lead pole leans away from the strain of the chain, settling upright. */
+/** How far (degrees) the planted lead pole leans away from the strain of the chain, easing upright in one smooth movement (no sway back and forth). */
 export function strainLean(since) {
-  return 4 * Math.exp(-since / 170) * Math.cos(since / 60);
+  return 4 * Math.exp(-since / 170);
 }
