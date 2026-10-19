@@ -18,7 +18,7 @@ const lerp = (from, to, amount) => from + (to - from) * amount;
 
 /** The rod's height for a header of this height: as tall as fits, standing on a 4px strip of turf. */
 export function rodHeight(headerHeight) {
-  return Math.min(40, headerHeight - 12);
+  return Math.min(44, headerHeight - 10);
 }
 
 /** Where the lead rod's top is, and how far it leans, for a pull of `progress` (0 to 1; 1 is planted). */
@@ -52,7 +52,7 @@ export function chainLinks(from, to, twang = 0) {
     const hump = amplitude * (1 - Math.cos(2 * Math.PI * HEAP * along)) / 2;
     return { x: lerp(from.x, to.x, along), y: lerp(from.y, to.y, along) - hump + twang * Math.sin(Math.PI * along) };
   };
-  const count = Math.max(2, Math.round(Math.max(gap, CHAIN_LENGTH * 0.4) / LINK_PITCH));
+  const count = Math.round(CHAIN_LENGTH / LINK_PITCH);   // a chain has the same number of links however it lies
   const links = [];
   for (let index = 0; index < count; index += 1) {
     const along = (index + 0.5) / count;
