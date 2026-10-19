@@ -22,6 +22,9 @@ async function drag(page: Page, from: number, to: number, release: boolean) {
 test("pulling down far enough shows the chain planted and then reloads the page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await installedApp(page);
+  // The chain twangs and the planted rod leans for a moment after the foot lands, so the picture depends on the instant it is taken. Reduced motion
+  // holds the first frame after planting, which makes the screenshot the same every time.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
   await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);   // the pull is wired up only after the page has hydrated
   await drag(page, 100, 160, false);
