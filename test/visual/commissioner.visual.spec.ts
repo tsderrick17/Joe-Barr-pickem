@@ -251,3 +251,19 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const names = await table.locator("tbody th[scope=row]").allInnerTexts();
   expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
 });
+
+// Player stats: each player has their own full set. The first player shows by default; choosing another swaps every figure.
+test("Trophy room: choosing a player shows that player's own stats", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin/trophy-room");
+  const section = page.locator("[aria-labelledby=player-stats-title]");
+  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("612–498");
+  await section.getByRole("button", { name: "Connor" }).click();
+  await expect(section.getByRole("button", { name: "Connor" })).toHaveAttribute("aria-pressed", "true");
+  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "false");
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
+  await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
+});

@@ -1789,3 +1789,16 @@ Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, 
 ## The header keeps its height while the player's name loads
 
 The top bar grew when the name ("Tyler ▾") arrived after the session check, pushing the whole page down. The name button is taller than the theme button, and the reserved height was smaller than the name's. The bar now reserves the name's full height from the first paint (3.75rem on a phone including its padding, 2.75rem for the account area on a desktop), so the name can take a second to appear and nothing moves. A screenshot-suite test measures the header before and after the name loads, on a phone and a desktop.
+
+## The group's stats in the Commissioner's Performance panel
+
+The Performance panel now opens with "The group", a read-only, Commissioner-only view of how the whole pool does against the spread (`/api/admin/pool-stats`, computed by `src/lib/group-stats.js`, with unit tests). It shows:
+
+- **Record and hit rate** across every graded Pick'em pick on record (regular season and playoffs; a push is a loss under the pool rule), plus how many games landed exactly on the number and what share of picked games that is.
+- **A weekly-records histogram** of 0-2 (a donut), 1-1 and 2-0 weeks across every player's completed regular-season weeks, with the 25/50/25 a coin flip would give drawn over the bars. A regular week has two picks, and a pick not made is a loss (one pick that wins is a 1-1 week; no picks is a donut). A player's weeks begin at their first pick of a season, so nobody is charged for weeks before they joined. A week with a voided or unsettled pick is left out and neither counts nor breaks a streak.
+- **Two streak boards, regular season only:** the most consecutive 2-0 weeks, and the most weeks in a row without a donut, each player's longest run and the run they are on now. Runs follow the order of play across seasons with no reset, so a streak still alive when a season ends carries into the next one.
+- **What the group picks:** the share of picks on favorites and underdogs, on home and road teams (neutral-site games are their own row), and each side's record and hit rate.
+
+It sits in the Performance panel at the Commissioner's request, although that panel is otherwise technical (provider cost, polling, account capacity). Players do not see it.
+
+Each player's own full set lives in the Trophy Room, under the all-time record ("Player stats", a row of names to choose from): the same record and hit rate, 0-2 / 1-1 / 2-0 histogram, longest and current streaks, favorite/underdog and home/road splits, plus their record season by season. The group's totals and the two streak boards stay in the Performance panel. Both come from the same function (`buildGroupStats`) and the same Commissioner-only read, so a player's numbers always add up to the group's.

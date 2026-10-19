@@ -69,7 +69,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | View | States |
 | --- | --- |
 | Today (map, game pipeline, key counts, and the repair/health drawers, closed) | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
-| Performance (provider cost, polling, capacity) | `healthy` |
+| Performance (the group's stats, provider cost, polling, capacity) | `healthy` |
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
@@ -79,7 +79,8 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
-| Trophy room (the three trophies on the turning table with the front trophy's champions as banners under it; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
+| Trophy room (the three trophies on the turning table with the front trophy's champions as banners under it; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history; then Player stats for the first player) | `healthy`, phone, tablet and desktop, day and night |
+| Trophy room, Player stats: a name picker, then that player's own record, weekly histogram, streaks, pick splits and seasons (behavior test: choosing another player swaps every figure) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
 ## Account pages — `account.visual.spec.ts`

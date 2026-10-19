@@ -22,6 +22,7 @@ const AutomationWatchdog = dynamic(() => import("@/components/automation-watchdo
 const SeasonBootstrapStatus = dynamic(() => import("@/components/season-bootstrap-status"));
 const CommissionerOperationsMap = dynamic(() => import("@/components/commissioner-operations-map"));
 const AccountCapacityPanel = dynamic(() => import("@/components/account-capacity"));
+import PoolStats from "@/components/pool-stats";
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
 const PlayerSignInHardening = dynamic(() => import("@/components/player-sign-in-hardening"));
@@ -319,6 +320,7 @@ export default function AdminPage() {
 
         {activePanel === "performance" ? <>
           <GradingDashboard view="performance" />
+          <PoolStats />
           <AccountCapacityPanel />
         </> : null}
 

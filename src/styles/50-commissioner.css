@@ -727,3 +727,40 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .player-forfeit { align-items: center; display: flex; flex-wrap: wrap; gap: .3rem .7rem; margin: .35rem 0 0; }
 .player-forfeit-tag { color: var(--club-alert); font: 700 .68rem Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
 .player-forfeit-button { background: none; border: 0; color: var(--club-ink); cursor: pointer; font: 700 .8rem Arial, sans-serif; padding: .3rem 0; text-decoration: underline; }
+
+/* ---- The group's stats (Performance panel) ---- */
+.pool-stats { display: grid; gap: 1.4rem; }
+.pool-stats-lede { color: var(--club-muted); margin: -0.9rem 0 0; }
+.pool-stats-tiles { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin: 0; }
+.pool-stats-tiles > div { background: var(--club-paper); border: 1px solid var(--club-line); border-top: 3px solid var(--club-gold-dk); padding: 0.7rem 0.9rem; }
+.pool-stats-tiles dt { color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+.pool-stats-tiles dd { font: 400 1.9rem/1.1 Georgia, serif; font-variant-numeric: tabular-nums; margin: 0.2rem 0 0; }
+.pool-stats-tiles small { color: var(--club-muted); display: block; font: 400 0.8rem Arial, sans-serif; }
+.pool-stats-tiles dd small { display: inline; }
+.pool-stats-block h3 { font: 700 1.15rem Georgia, serif; margin: 0; }
+.pool-stats-block > p { color: var(--club-muted); font-size: 0.88rem; margin: 0.15rem 0 0.7rem; max-width: 46rem; }
+.pool-stats-pair { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+.pool-histogram { align-items: end; background: var(--club-paper); border: 1px solid var(--club-line); display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); padding: 1rem 1.2rem 0.7rem; }
+.pool-bar { align-items: center; display: grid; gap: 0.3rem; justify-items: center; }
+.pool-bar-value { font: 700 1.05rem Georgia, serif; font-variant-numeric: tabular-nums; }
+.pool-bar-value small { color: var(--club-muted); font: 400 0.8rem Arial, sans-serif; }
+.pool-bar-track { align-items: end; display: flex; height: 8.5rem; justify-content: center; position: relative; width: 100%; }
+.pool-bar-fill { background: var(--club-forest); display: block; max-width: 4.5rem; width: 62%; }
+.pool-bar-expected { border-top: 2px dashed var(--club-gold-dk); left: 12%; position: absolute; right: 12%; }
+.pool-bar-label { font: 700 0.95rem Georgia, serif; text-align: center; }
+.pool-bar-label small { color: var(--club-muted); display: block; font: 400 0.7rem Arial, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
+.pool-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
+.pool-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
+.pool-table th, .pool-table td { padding: 0.5rem 0.8rem; text-align: right; white-space: nowrap; }
+.pool-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+.pool-table tbody tr { border-top: 1px solid var(--club-line); }
+.pool-table thead th:first-child { text-align: left; }
+.pool-table th[scope="row"] { font: 400 1.02rem Georgia, serif; text-align: left; width: 100%; }
+.pool-table small { color: var(--club-muted); font: 400 0.72rem Arial, sans-serif; margin-left: 0.4rem; }
+.pool-table .pool-table-group th { background: var(--club-paper-2); color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.2em; padding-block: 0.35rem; text-transform: uppercase; }
+.pool-alive { color: var(--club-ok); font-weight: 700; }
+.pool-strong { font-weight: 700; }
+.pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
+.pool-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pool-picker button { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); cursor: pointer; font: 700 0.95rem Georgia, serif; min-height: 2.5rem; padding: 0.35rem 0.9rem; }
+.pool-picker button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-forest); color: var(--sand-93); }
