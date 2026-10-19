@@ -44,6 +44,7 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
         <defs>
           <clipPath id={cone}><path d={CONE} /></clipPath>
           <linearGradient id={`${cone}-shade`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".26" /><stop offset=".5" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".24" /></linearGradient>
+          {lines.map((line, index) => { const y = lines.length > 1 ? 21 + index * 9.8 : 25.8, width = lines.length > 1 ? 30 : 34; return <path d={`M${50 - width / 2} ${y}Q50 ${y - 3.4} ${50 + width / 2} ${y}`} id={`${cone}-line${index}`} key={line} />; })}
           <linearGradient id={`${cone}-inside`} x1="0" x2="1" y1="0" y2="0"><stop offset="0" stopColor="#000" stopOpacity=".72" /><stop offset=".6" stopColor="#000" stopOpacity=".5" /><stop offset="1" stopColor="#000" stopOpacity=".3" /></linearGradient>
         </defs>
         <g className="bowl-megaphone-waves">
@@ -63,8 +64,11 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <ellipse className="bowl-megaphone-hole" cx="90.4" cy="23.5" rx="4.5" ry="18" />
           <ellipse className="bowl-megaphone-rim" cx="92" cy="23.5" rx="6.5" ry="21" />
           <rect className="bowl-megaphone-lip" height="15.6" rx="3.5" width="7" x="3" y="15.7" />
-          <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 30 : Math.min(34, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="50" y={lines.length > 1 ? 21 : 25.8}>{lines[0]}</text>
-          {lines[1] ? <text className="bowl-megaphone-name" textLength={Math.min(30, 5 * lines[1].length)} lengthAdjust="spacingAndGlyphs" x="50" y="30.8">{lines[1]}</text> : null}
+          {lines.map((line, index) => (
+            <text className="bowl-megaphone-name" key={index}>
+              <textPath href={`#${cone}-line${index}`} lengthAdjust="spacingAndGlyphs" startOffset="50%" textLength={Math.min(lines.length > 1 ? 30 : 34, 5 * line.length)}>{line}</textPath>
+            </text>
+          ))}
         </g>
       </svg>
     </span>
