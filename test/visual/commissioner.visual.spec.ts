@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Regular Season Streaks", "Donut Free Weeks", "2-0 Sweeps"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Regular Season Streaks", "Consecutive Donut Free Weeks", "Consecutive 2-0 Sweeps"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -259,10 +259,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await serve(page, "healthy");
   await page.goto("/trophy-room");
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
-  await expect(row.getByLabel("2-0 Sweeps: 0 now, 5 best")).toBeVisible();
+  await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Consecutive 2-0 Sweeps: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Donut Free Weeks: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
 });
 
 // Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
@@ -279,11 +279,19 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
   await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
   await expect(section.getByText("Neutral site")).toHaveCount(0);
+  await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();   // the league has its seasons too
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
+  await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Picked/ }).click();
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
+  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Home, Away
+  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Home", "Away"]);
   await section.getByLabel("Show").selectOption({ label: "Rick" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });

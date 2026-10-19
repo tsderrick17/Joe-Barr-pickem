@@ -37,6 +37,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer eliminated (one-column ticket) | `regular-out` |
 | Eliminated rows hidden, Bowl Card open | `regular-hidden-rows` |
 | Survivor has a champion | `regular-complete` |
+| Survivor has a champion and the viewer is that champion (entry still active): Pick'em-only ticket owing two selections, not three (behavior test and screenshot) | `regular-complete-champion` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
@@ -69,7 +70,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | View | States |
 | --- | --- |
 | Today (map, game pipeline, key counts, and the repair/health drawers, closed; the map's connecting lines are dark between stages that have been reached (complete or in progress); Participant impact says Survivor is over with its winner once a Survivor champion is recorded; "Up next" has kickoff, line lock and score sync only, and "Next message" sits under "Notification readiness") | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week; Survivor over) |
-| Performance (Pick'em performance with a League / player dropdown: no league streak boards, no neutral-site row, and a tie for the most picked team says how many teams tie; provider cost, polling, capacity) | `healthy` |
+| Performance (Pick'em performance with a League / player dropdown: no league streak boards, no neutral-site row, and a tie for the most picked team says how many teams tie; teams, splits and seasons side by side at one height, the splits one plain list (Favorites, Underdogs, Home, Away); provider cost, polling, capacity) | `healthy` |
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
@@ -82,8 +83,8 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
 | Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
 | Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |
-| Trophy room table: fixed, evenly spaced columns; each player's regular season streaks under a "Regular Season Streaks" heading (Donut Free Weeks, 2-0 Sweeps), each cell the current streak big, the all-time best under it and a bar showing how close the current streak is to it (gold, with a star, when it is the best); dashes for a player with none (behavior test) | `healthy` |
-| Performance dropdown: the league first, then choosing a player swaps every figure, the most picked team and the Season by season table (behavior test) | `healthy` |
+| Trophy room table: fixed, evenly spaced columns; each player's regular season streaks under a "Regular Season Streaks" heading (Consecutive Donut Free Weeks, Consecutive 2-0 Sweeps, each heading centred over its column), each cell the all-time best streak big, the current streak small under it ("now N") and a bar showing how close the current streak is to the best (gold, with a star, when it is the best); dashes for a player with none (behavior test) | `healthy` |
+| Performance dropdown: the league first (with its own Season by season table), then choosing a player swaps every figure, the most picked team and the Season by season table; the Picked and Hit rate headers of the teams table switch it between the five most picked and the five best hit rate (behavior test) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
 ## Account pages — `account.visual.spec.ts`

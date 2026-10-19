@@ -87,7 +87,14 @@ export async function eligiblePlayerIds(audience: ReminderAudience, selectableGa
 
   if (audience === "ats_due") return atsPlayersDue();
 
-  if (!isSurvivorReminderApplicable(period.period_type as "regular" | "playoff")) {
+  const { data: season, error: seasonError } = await supabaseAdmin
+    .from("seasons")
+    .select("survivor_champion_player_id")
+    .eq("id", period.season_id)
+    .maybeSingle();
+  if (seasonError) throw new Error("The season could not be read.");
+
+  if (!isSurvivorReminderApplicable(period.period_type as "regular" | "playoff", Boolean(season?.survivor_champion_player_id))) {
     return audience === "survivor_due" ? [] : atsPlayersDue();
   }
 
