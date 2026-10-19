@@ -44,7 +44,7 @@ function buildTurntable(width, height, degrees) {
   table.rotation.y = -degrees * Math.PI / 180;
   stage.scene.add(table);
   stage.renderer.transmissionResolutionScale = 1;
-  stage.camera.position.set(0, 44, RADIUS + 128); stage.camera.lookAt(0, 21, RADIUS - 2);
+  stage.camera.position.set(0, 46, RADIUS + 134); stage.camera.lookAt(0, 24.5, RADIUS - 2);   // framed with room above the tallest trophy's tip
   if (new URLSearchParams(location.search).get("view") === "top") { stage.camera.position.set(0, 230, 0.01); stage.camera.lookAt(0, 0, 0); stage.key.position.set(0, 160, 0.01); stage.key.target.position.set(0, 0, 0); }   // looking straight down, to check the table is symmetric
   // a wide, soft key from above the front pad, so the front trophy is lit best and the two behind fall off into the dark
   stage.key.position.set(-26, 120, RADIUS + 60); stage.key.target.position.set(0, 10, RADIUS); stage.key.angle = 0.42; stage.key.penumbra = 0.8; stage.key.intensity = 5200; stage.key.distance = 320;

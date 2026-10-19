@@ -74,3 +74,18 @@ test("the table and banners at rest with the Bowl Pool at the front", async ({ p
   await page.waitForTimeout(1600);
   await expect(page.locator(".trophy-display")).toHaveScreenshot("trophy-turntable-bowl-front.png");
 });
+
+// A touch the browser takes over (to scroll the page, say) ends in a pointer cancel, not a release. The table must not be left between two trophies.
+test("a cancelled drag settles on a trophy instead of sticking between two", async ({ page }) => {
+  await openTrophyRoom(page);
+  const stage = page.locator(".trophy-turn-stage");
+  const box = (await stage.boundingBox())!;
+  const y = box.y + box.height * 0.6;
+  await page.mouse.move(box.x + box.width * 0.7, y); await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.7 - box.width * 0.18, y, { steps: 8 });
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "true");
+  await stage.dispatchEvent("pointercancel");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "false");
+  await expect(front(page)).toHaveText(/is at the front/);
+  await page.mouse.up();
+});

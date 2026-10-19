@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { championRoll } from "@/lib/trophy-roll.js";
+import { loadOrder } from "@/lib/trophy-turn.js";
 
 /**
  * The three trophies on a mahogany table that turns. The table is a set of 120 pictures, one for every 3 degrees of a full turn
@@ -29,15 +30,6 @@ const frameSrc = (index: number) => `/trophies/turntable/frame-${String(index).p
 const frontOf = (angle: number) => Math.round(wrap(angle) / REST) % TROPHIES.length;
 const nearestRest = (angle: number) => Math.round(angle / REST) * REST;
 
-/** The order to fetch the pictures in: the three resting views first, then outward from them, so a spin is smooth as early as possible. */
-function loadOrder() {
-  const rests = Array.from({ length: 3 }, (_, k) => (k * REST) / STEP), order: number[] = [...rests], seen = new Set(order);
-  for (let distance = 1; distance <= REST / STEP / 2; distance += 1) {
-    for (const rest of rests) for (const sign of [1, -1]) { const index = (rest + sign * distance + FRAMES) % FRAMES; if (!seen.has(index)) { seen.add(index); order.push(index); } }
-  }
-  return order;
-}
-
 export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bitmaps = useRef<Array<ImageBitmap | null>>(Array.from({ length: FRAMES }, () => null));
@@ -61,7 +53,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
 
   useEffect(() => {
     let cancelled = false;
-    const queue = loadOrder();
+    const queue = loadOrder(FRAMES, REST / STEP);
     const worker = async () => {
       while (!cancelled) {
         const index = queue.shift();
@@ -99,6 +91,13 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     frame.current = requestAnimationFrame(tick);
   }, [set]);
 
+  /** A touch that ends without a release (the browser took it to scroll the page, say) must not leave the table between two trophies. */
+  const settle = useCallback(() => {
+    if (!drag.current) return;
+    drag.current = null;
+    turnTo(nearestRest(angle.current));
+  }, [turnTo]);
+
   const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST), [turnTo]);
 
   const roll = championRoll(seasons, TROPHIES[front].pool);
@@ -113,7 +112,8 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
           if (event.key === "ArrowLeft") { event.preventDefault(); turnBy(-1); }
           if (event.key === "ArrowRight") { event.preventDefault(); turnBy(1); }
         }}
-        onPointerCancel={() => { drag.current = null; }}
+        onPointerCancel={() => settle()}
+        onLostPointerCapture={() => settle()}
         onPointerDown={(event) => {
           if ((event.target as HTMLElement).closest("button")) return;
           if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
