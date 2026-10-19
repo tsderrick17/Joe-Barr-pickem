@@ -1859,6 +1859,10 @@ The all-time Wins and Hit rate table uses fixed column widths (rank, player, win
 
 The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 win, never a 0-2) and **2-0 Sweeps** (2-0 weeks in a row), in the Trophy Room's table and on the Performance tab. They sit under "Regular Season Streaks".
 
+## 2026-10-19 - Performance: three tables side by side
+
+The Performance panel's teams, splits and season tables sit side by side (one column on a phone), each as tall as the five-team table (a header and five rows; the season list scrolls inside that height past five seasons). The small pick count beside each team's Picked percentage is gone. The teams table can show either the five most picked teams or the five with the best hit rate (ties go to the team picked more often): the Picked and Hit rate headers are the buttons. The splits table is one plain list (Favorites, Underdogs, Home, Away) with no sub-headings, and says Away, not Road team. The league now has a Season by season table too, from the same per-season records the players use. The stats route sends `teamsByHitRate` beside `teams` for the league and for each player.
+
 ## Performance tab cleanup: ties, no neutral site, no league streak boards, Survivor over, and a steadier pool map
 
 - **Most picked team:** when teams tie for the most picks the tile says "3 teams tied" with how many picks each, instead of naming whichever sorts first. The top-five table still lists them.
@@ -1880,11 +1884,6 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 - **One touchdown:** the lead pole bounced a couple of times on landing because the rubber foot's squash was a spring (it rebounded past its resting height and swayed). The foot is now fully squashed at contact and eases back up in one smooth movement, never going past its resting height, and the pole's lean eases out the same way, so the pole touches the ground once. (The chain still twangs, since a taut chain does vibrate.)
 - **A better football:** the spotted ball is drawn properly: a pointed body shaded like leather (lighter on top), a soft gloss, a white stripe near each end clipped to the outline, laces along the top, a dark outline and a shadow on the turf, slightly larger.
 - **No wait after letting go:** the page used to sit there for 1.2 seconds with the chain humming before it reloaded, and only then did the page's own loading football appear. Letting go now covers the page (below the header) with the same spinning loading football at once and reloads 120 ms later, right behind it, so the football is on screen immediately and the reloaded page's own loading screen takes over in the same place.
-
-## 2026-10-19 - Performance: three tables side by side
-
-The Performance panel's teams, splits and season tables sit side by side (one column on a phone), each as tall as the five-team table (a header and five rows; the season list scrolls inside that height past five seasons). The small pick count beside each team's Picked percentage is gone. The teams table can show either the five most picked teams or the five with the best hit rate (ties go to the team picked more often): the Picked and Hit rate headers are the buttons. The splits table is one plain list (Favorites, Underdogs, Home, Away) with no sub-headings, and says Away, not Road team. The league now has a Season by season table too, from the same per-season records the players use. The stats route sends `teamsByHitRate` beside `teams` for the league and for each player.
-
 
 ## 2026-10-19 - Fluid CPU estimate recalibrated
 
