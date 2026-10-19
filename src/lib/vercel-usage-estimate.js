@@ -18,8 +18,9 @@ const SCHEDULED_JOBS_PER_DAY = [
 ];
 // Uptime probes after CDN caching, measured the same day (about 60 seconds a day).
 const HEALTH_PROBE_SECONDS_PER_DAY = 60;
-// Calibrated so the model matched Vercel's 4h 0m30s for the 30 days ending 2026-10-02.
-const PLAYER_SECONDS_PER_ACTIVE_DAY = 30;
+// Calibrated so the model matches Vercel's meter: 3h 16m for the 30 days ending 2026-10-19 with 11 active players. (It was 30 seconds when the
+// meter read 4h 0m30s on 2026-10-02; the slower polling since then costs each active player less.)
+const PLAYER_SECONDS_PER_ACTIVE_DAY = 22;
 // 10.4 GB of Functions Storage over about 730 Vercel deployments (production and previews).
 const FUNCTION_BYTES_PER_DEPLOYMENT = (10.4 * 1024 ** 3) / 730;
 
