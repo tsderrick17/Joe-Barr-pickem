@@ -37,6 +37,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer eliminated (one-column ticket) | `regular-out` |
 | Eliminated rows hidden, Bowl Card open | `regular-hidden-rows` |
 | Survivor has a champion | `regular-complete` |
+| Survivor has a champion and the viewer is that champion (entry still active): Pick'em-only ticket owing two selections, not three (behavior test and screenshot) | `regular-complete-champion` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |

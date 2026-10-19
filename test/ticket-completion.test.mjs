@@ -43,6 +43,20 @@ test("removes Survivor from the ticket requirement once a player is out or the p
   }
 });
 
+test("once the pool has a champion Survivor is off the ticket for the champion too, though their entry is still active", () => {
+  assert.deepEqual(
+    ticketCompletion({
+      maxPicks: 2,
+      pickemSelections: 2,
+      survivorAvailable: true,
+      survivorPickMade: false,
+      survivorStatus: "complete",
+      survivorRequired: true,
+    }),
+    { requiredSelections: 2, selectionsMade: 2, isFilled: true },
+  );
+});
+
 test("keeps Survivor required for the period in which the player was eliminated", () => {
   assert.deepEqual(
     ticketCompletion({
