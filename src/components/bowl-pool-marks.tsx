@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import { bowlPennantColors, bowlSeasonLabel } from "@/lib/bowl-pennant.js";
 import { bowlTeamName } from "@/lib/bowl-pool.js";
 
@@ -16,37 +16,45 @@ function nameLines(name: string) {
   return best;
 }
 
+/** The cone's outline: a short narrow tube that flares in a gentle curve to a wide bell (its top edge, then the bell's far edge, then the bottom edge back). */
+const CONE = "M9 19.3H14L92 2.5V44.5L14 27.7H9Z";
+
 /**
- * A cheerleader's megaphone in a school's own colors, lettered with its name: a narrow mouthpiece with a bulge, a cone flaring to a wide bell
- * with a dark inside, a band near the bell and a small handle underneath. When a team is picked it swings up and gives a cheer (three little
- * sound arcs by the bell). The same size for every school. Decorative: the pick itself is announced by the button's pressed state.
+ * A cheerleader's megaphone in a school's own colors, lettered with its name: a short narrow mouthpiece ending in a rounded, swollen lip, a
+ * stout cone that flares to a wide bell with a dark inside, a band near the bell and a small handle underneath. When a team is picked it
+ * swings up and gives a cheer (three little sound arcs by the bell). The same size for every school. Decorative: the pick itself is announced by
+ * the button's pressed state.
  */
 export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" | "right" }) {
   const colors = bowlPennantColors(team);
   const lines = nameLines(bowlTeamName(team).toUpperCase());
+  const cone = useId().replaceAll(":", "");
   return (
     <span
       aria-hidden="true"
       className={`bowl-megaphone is-${side}`}
       style={{ "--megaphone-primary": colors.primary, "--megaphone-secondary": colors.secondary, "--megaphone-ink": colors.ink } as CSSProperties}
     >
-      <svg focusable="false" viewBox="0 0 124 47">
+      <svg focusable="false" viewBox="0 0 120 47">
+        <defs><clipPath id={cone}><path d={CONE} /></clipPath></defs>
         <g className="bowl-megaphone-waves">
-          <path d="M105 13Q111 23.5 105 34" /><path d="M109.5 9Q117.5 23.5 109.5 38" /><path d="M114 5Q124 23.5 114 42" />
+          <path d="M101.5 13Q107.5 23.5 101.5 34" /><path d="M105.5 8.5Q113.5 23.5 105.5 38.5" /><path d="M109.5 4Q119.5 23.5 109.5 43" />
         </g>
         <g className="bowl-megaphone-art">
-          <rect className="bowl-megaphone-trim" height="8" rx="2" width="16" x="3" y="19.5" />
-          <path className="bowl-megaphone-body" d="M20 19.5L96 3V44L20 27.5Z" />
-          <path className="bowl-megaphone-trim" d="M82 5.4L88.6 4V43L82 41.6Z" />
-          <path className="bowl-megaphone-light" d="M20 19.5L96 3V14L20 22.4Z" />
-          <path className="bowl-megaphone-dim" d="M20 25L96 33V44L20 27.5Z" />
-          <ellipse className="bowl-megaphone-body" cx="96" cy="23.5" rx="6.5" ry="20.5" />
-          <ellipse className="bowl-megaphone-inside" cx="96" cy="23.5" rx="6.5" ry="20.5" />
-          <ellipse className="bowl-megaphone-rim" cx="96" cy="23.5" rx="6.5" ry="20.5" />
-          <ellipse className="bowl-megaphone-trim" cx="15" cy="23.5" rx="5.6" ry="7.6" />
-          <path className="bowl-megaphone-handle" d="M41 31.6C41 42 57 43.5 56 35.6" />
-          <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 32 : Math.min(36, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="60" y={lines.length > 1 ? 21.5 : 26}>{lines[0]}</text>
-          {lines[1] ? <text className="bowl-megaphone-name" textLength={Math.min(32, 5 * lines[1].length)} lengthAdjust="spacingAndGlyphs" x="60" y="31">{lines[1]}</text> : null}
+          <path className="bowl-megaphone-handle-edge" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
+          <path className="bowl-megaphone-handle" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
+          <path className="bowl-megaphone-body" d={CONE} />
+          <g clipPath={`url(#${cone})`}>
+            <rect className="bowl-megaphone-light" height="14" width="100" x="6" y="2" />
+            <rect className="bowl-megaphone-dim" height="14" width="100" x="6" y="33" />
+            <rect className="bowl-megaphone-trim" height="50" width="6.5" x="78" y="0" />
+          </g>
+          <path className="bowl-megaphone-edge" d={CONE} />
+          <ellipse className="bowl-megaphone-inside" cx="92" cy="23.5" rx="6.5" ry="21" />
+          <ellipse className="bowl-megaphone-rim" cx="92" cy="23.5" rx="6.5" ry="21" />
+          <rect className="bowl-megaphone-lip" height="15.6" rx="3.5" width="7" x="3" y="15.7" />
+          <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 34 : Math.min(38, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="54" y={lines.length > 1 ? 21 : 25.8}>{lines[0]}</text>
+          {lines[1] ? <text className="bowl-megaphone-name" textLength={Math.min(34, 5 * lines[1].length)} lengthAdjust="spacingAndGlyphs" x="54" y="30.8">{lines[1]}</text> : null}
         </g>
       </svg>
     </span>
