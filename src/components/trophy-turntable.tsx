@@ -19,6 +19,7 @@ const FRAMES = 120;
 const STEP = 360 / FRAMES;      // degrees between pictures
 const REST = 120;               // degrees between one trophy at the front and the next
 const WIDTH = 1100, HEIGHT = 825;
+const SHARP = 2;               // the three resting views are also kept at twice the size, so the names on the plaques are sharp when the table is at rest
 const TROPHIES = [
   { pool: "pickem", label: "Pick’em", tag: "Pick’em champion" },
   { pool: "bowl", label: "Bowl Pool", tag: "Bowl Pool champion" },
@@ -27,12 +28,14 @@ const TROPHIES = [
 
 const wrap = (angle: number) => ((angle % 360) + 360) % 360;
 const frameSrc = (index: number) => `/trophies/turntable/frame-${String(index).padStart(3, "0")}.webp`;
+const sharpSrc = (trophy: number) => `/trophies/turntable/rest-${trophy}.webp`;
 const frontOf = (angle: number) => Math.round(wrap(angle) / REST) % TROPHIES.length;
 const nearestRest = (angle: number) => Math.round(angle / REST) * REST;
 
 export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bitmaps = useRef<Array<ImageBitmap | null>>(Array.from({ length: FRAMES }, () => null));
+  const sharp = useRef<Array<ImageBitmap | null>>([null, null, null]);   // the resting views at twice the size
   const angle = useRef(0);
   const frame = useRef<number | null>(null);
   const drag = useRef<{ startX: number; startAngle: number; samples: Array<{ t: number; x: number }> } | null>(null);
@@ -44,10 +47,15 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const draw = useCallback(() => {
     const context = canvasRef.current?.getContext("2d");
     if (!context) return;
-    const wanted = Math.round(wrap(angle.current) / STEP) % FRAMES;
+    // exactly at rest, the sharp picture of that trophy (if it has arrived)
+    const turned = wrap(angle.current), atRest = Math.round(turned / REST) % TROPHIES.length;
+    const offRest = Math.min(Math.abs(turned - atRest * REST), Math.abs(turned - atRest * REST - 360));
+    const crisp = offRest < 0.05 ? sharp.current[atRest] : null;
+    if (crisp) { context.drawImage(crisp, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); return; }
+    const wanted = Math.round(turned / STEP) % FRAMES;
     for (let reach = 0; reach < FRAMES / 2; reach += 1) {     // the nearest picture that has arrived, if the wanted one is still on its way
       const bitmap = bitmaps.current[(wanted + reach) % FRAMES] ?? bitmaps.current[(wanted - reach + FRAMES) % FRAMES];
-      if (bitmap) { context.drawImage(bitmap, 0, 0, WIDTH, HEIGHT); return; }
+      if (bitmap) { context.drawImage(bitmap, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); return; }
     }
   }, []);
 
@@ -70,6 +78,17 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
       }
     };
     void Promise.all(Array.from({ length: 6 }, worker));
+    // then the sharp resting views, one at a time, once the spin's own pictures are on their way
+    void (async () => {
+      for (let trophy = 0; trophy < TROPHIES.length && !cancelled; trophy += 1) {
+        try {
+          const bitmap = await createImageBitmap(await (await fetch(sharpSrc(trophy))).blob());
+          if (cancelled) return;
+          sharp.current[trophy] = bitmap;
+          draw();
+        } catch { /* the ordinary picture stays */ }
+      }
+    })();
     return () => { cancelled = true; if (frame.current !== null) cancelAnimationFrame(frame.current); };
   }, [draw]);
 
@@ -142,17 +161,33 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
         tabIndex={0}
       >
         <Image alt="" className="trophy-turn-poster" draggable={false} height={HEIGHT} priority src={frameSrc(0)} unoptimized width={WIDTH} />
-        <canvas aria-hidden="true" className="trophy-turn-canvas" height={HEIGHT} ref={canvasRef} width={WIDTH} />
+        <canvas aria-hidden="true" className="trophy-turn-canvas" height={HEIGHT * SHARP} ref={canvasRef} width={WIDTH * SHARP} />
         <button aria-label="Bring the previous trophy forward" className="trophy-turn-arrow" data-side="left" onClick={() => turnBy(-1)} type="button">‹</button>
         <button aria-label="Bring the next trophy forward" className="trophy-turn-arrow" data-side="right" onClick={() => turnBy(1)} type="button">›</button>
         <p aria-live="polite" className="sr-only" role="status">{moving ? "Turning" : `${TROPHIES[front].label} is at the front`}</p>
       </div>
       <section aria-label={`${TROPHIES[front].label} champions`} className="trophy-rafters" data-moving={moving ? "true" : "false"} data-pool={TROPHIES[front].pool} key={front}>
+        <svg aria-hidden="true" className="trophy-cloth-defs" focusable="false" height="0" width="0">
+          {/* Cloth: a slow, streaky height map (long vertical folds) lit from one side, multiplied into the banner's colour. */}
+          <filter colorInterpolationFilters="sRGB" height="100%" id="trophy-cloth" width="100%" x="0" y="0">
+            <feTurbulence baseFrequency="0.05 0.005" numOctaves="3" result="drape" seed="7" type="fractalNoise" />
+            <feColorMatrix in="drape" result="height" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.4 0 0 0 -0.2" />
+            <feDiffuseLighting diffuseConstant="1.25" in="height" lightingColor="#ffffff" result="lit" surfaceScale="6">
+              <feDistantLight azimuth="205" elevation="48" />
+            </feDiffuseLighting>
+            <feTurbulence baseFrequency="1.1 1.1" numOctaves="2" result="grain" seed="2" type="fractalNoise" />
+            <feColorMatrix in="grain" result="weave" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 -0.04" />
+            <feComposite in="SourceGraphic" in2="lit" k1="1.5" k2="0" k3="0" k4="0.03" operator="arithmetic" result="shaded" />
+            <feBlend in="weave" in2="shaded" mode="soft-light" result="woven" />
+            <feComposite in="woven" in2="SourceAlpha" operator="in" />
+          </filter>
+        </svg>
         <div aria-hidden="true" className="trophy-beam" />
         {roll.length ? (
           <ul className="trophy-banners">
             {roll.map((banner, index) => (
               <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>
+                <span aria-hidden="true" className="trophy-banner-cloth" />
                 <span className="trophy-banner-tag">{TROPHIES[front].tag}</span>
                 <b className="trophy-banner-name">{banner.name}</b>
                 <span className="trophy-banner-star" aria-hidden="true">★</span>

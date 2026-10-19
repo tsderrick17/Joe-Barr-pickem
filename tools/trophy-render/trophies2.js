@@ -54,30 +54,28 @@ function cartoucheShape(w, h) {
   s.lineTo(-hw, -hh + c); s.absarc(-hw, -hh, c, Math.PI / 2, 0, true);
   return s;
 }
-function plaqueTexture(year, name, aspect, tall = 640) {
+function plaqueTexture(year, name, aspect, tall = 768) {
   const height = tall, width = Math.round(tall * aspect);
   const c = document.createElement("canvas"); c.width = width; c.height = height;
   const g = c.getContext("2d");
   g.fillStyle = "#000"; g.fillRect(0, 0, width, height);
-  g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineCap = "round";
-  const m1 = height * 0.14, m2 = height * 0.2, r = height * 0.1;
-  g.lineWidth = height * 0.028; g.beginPath(); g.roundRect(m1, m1, width - 2 * m1, height - 2 * m1, r); g.stroke();
-  g.lineWidth = height * 0.011; g.beginPath(); g.roundRect(m2, m2, width - 2 * m2, height - 2 * m2, r * 0.6); g.stroke();
-  // corner flourishes: a small scroll curling into each corner of the inner keyline
-  g.lineWidth = height * 0.014;
-  for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
-    const cx = width / 2 + sx * (width / 2 - m2 - height * 0.075), cy = height / 2 + sy * (height / 2 - m2 - height * 0.075);
-    g.beginPath(); g.arc(cx, cy, height * 0.04, 0, Math.PI * 1.6); g.stroke();
-    g.beginPath(); g.arc(cx, cy, height * 0.009, 0, Math.PI * 2); g.fill();
-  }
+  g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineCap = "round"; g.lineJoin = "round";
+  // one slim keyline close to the edge, so the lettering can have the whole face
+  const m = height * 0.075;
+  g.lineWidth = height * 0.03; g.beginPath(); g.roundRect(m, m, width - 2 * m, height - 2 * m, height * 0.09); g.stroke();
   g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = `700 ${Math.round(height * 0.21)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(height * 0.035)}px`; g.fillText(year, width / 2, height * 0.28);
-  const size = Math.min(height * 0.36, (width * 0.74) / Math.max(4, name.length * 0.8));
-  g.font = `700 ${Math.round(size)}px Cinzel, Georgia, serif`; g.letterSpacing = `${Math.round(size * 0.08)}px`; g.fillText(name, width / 2, height * 0.7);
+  // heavy lettering: filled and stroked, so thin letter strokes do not wash out at the size the picture shows them
+  const write = (text, size, y, spacing, maxWidth) => {
+    g.font = `900 ${Math.round(size)}px Cinzel, "Times New Roman", Georgia, serif`; g.letterSpacing = `${Math.round(size * spacing)}px`;
+    while (g.measureText(text).width > maxWidth && size > 12) { size *= 0.96; g.font = `900 ${Math.round(size)}px Cinzel, "Times New Roman", Georgia, serif`; g.letterSpacing = `${Math.round(size * spacing)}px`; }
+    g.lineWidth = size * 0.05; g.strokeText(text, width / 2, y); g.fillText(text, width / 2, y);
+  };
+  write(year, height * 0.34, height * 0.28, 0.1, width * 0.72);
+  write(name, height * 0.46, height * 0.7, 0.04, width * 0.86);
   const tex = new THREE.CanvasTexture(c); tex.anisotropy = 8; return tex;
 }
-const BRASS = new THREE.MeshPhysicalMaterial({ color: 0xd9a93f, metalness: 1, roughness: 0.22, clearcoat: 0.3, clearcoatRoughness: 0.18, envMapIntensity: 1.4 });
-const ENGRAVED = new THREE.MeshPhysicalMaterial({ color: 0x2a1b08, metalness: 0.4, roughness: 0.55, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+const BRASS = new THREE.MeshPhysicalMaterial({ color: 0xe6b84a, metalness: 1, roughness: 0.3, clearcoat: 0.3, clearcoatRoughness: 0.18, envMapIntensity: 1.2 });
+const ENGRAVED = new THREE.MeshPhysicalMaterial({ color: 0x0d0702, metalness: 0.1, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
 function plaque(year, name, w = 4.6, h = 2.1, order = null) {
   const group = new THREE.Group();
   group.userData.slot = { w, h, order };
@@ -87,7 +85,7 @@ function plaque(year, name, w = 4.6, h = 2.1, order = null) {
   group.add(body);
   // the engraving: dark lettering and keylines on the face
   const tex = plaqueTexture(year, name, w / h);
-  const engraving = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshPhysicalMaterial({ ...ENGRAVED, alphaMap: tex, alphaTest: 0.5, side: THREE.DoubleSide, color: 0x2a1b08, metalness: 0.4, roughness: 0.55, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+  const engraving = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshPhysicalMaterial({ ...ENGRAVED, alphaMap: tex, alphaTest: 0.5, side: THREE.DoubleSide, color: 0x0d0702, metalness: 0.1, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
   engraving.position.z = depth + 0.056; group.add(engraving);
   // a rope moulding round the edge
   const edge = []; const shape = cartoucheShape(w, h); for (const p of shape.getPoints(24)) edge.push(new THREE.Vector3(p.x, p.y, depth + 0.045));
@@ -117,7 +115,7 @@ export function bowlBase(m) {
   const cap = mesh(revolveMod(profile([[8.55, 4.85], [8.5, 5.0], [8.0, 5.15]], 20), 160, lobes(36, 0.008, 4.85, 5.15)), m.gold); g.add(cap);
   // the reigning champion's plaque faces front on the drum; each new winner's plaque is added in the next place round
   championsFor("bowl").slice(0, 10).forEach((c, k) => {
-    const a = (k / 10) * Math.PI * 2, p = plaque(c.year, c.name, 5.2, 2.3, k);
+    const a = (k / 10) * Math.PI * 2, p = plaque(c.year, c.name, 5.3, 2.55, k);
     p.position.set(Math.sin(a) * (R - 0.08), 2.3, Math.cos(a) * (R - 0.08)); p.rotation.y = a; g.add(p);
   });
   g.userData.height = 5.15;
@@ -157,7 +155,7 @@ export function emeraldBase(m) {
   { const mat = new THREE.Matrix4(); let k = 0; const row = (w, d, y) => { const nx = Math.round(w / 0.55), nz = Math.round(d / 0.55); for (let i = 0; i <= nx; i++) { const x = -w / 2 + (i / nx) * w; for (const z of [-d / 2, d / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } for (let i = 1; i < nz; i++) { const z = -d / 2 + (i / nz) * d; for (const x of [-w / 2, w / 2]) { mat.makeTranslation(x, y, z); beads.setMatrixAt(k++, mat); } } }; row(19.9, 11.5, 3.17); row(16.4, 9.0, 3.34 + t2 + 0.15); beads.count = k; beads.castShadow = true; g.add(beads); }
   // five plates on the front: the newest champion goes bottom left, moves one place right each year, then up to the top row, then round the back
   const sv = championsFor("survivor");
-  for (const [x, i] of [[-6.6, 0], [0, 1], [6.6, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 5.0, 2.2, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
+  for (const [x, i] of [[-6.6, 0], [0, 1], [6.6, 2]]) g.add(flatPlate(sv[i] ? sv[i].year : "", 6.2, 2.45, 11.2 / 2 - 0.03, 1.75, x, sv[i] ? sv[i].name : "", i));
   [-3.8, 3.8].forEach((x, j) => g.add(flatPlate(sv[3 + j] ? sv[3 + j].year : "", 4.4, 2.1, 8.8 / 2 - 0.03, 3.34 + t2 / 2, x, sv[3 + j] ? sv[3 + j].name : "", 3 + j)));
   g.userData.height = 3.34 + t2 + 0.3;
   return g;
@@ -190,7 +188,7 @@ export function hexBase(m) {
   for (let k = 0; k < 6; k++) {
     const phi = k * Math.PI / 3;
     const champs = championsFor("pickem");
-    for (const [r, y, w, h, tier] of [[r2, y2 + h2 / 2, 7.0, 3.0, 0], [r1, y1 + h1 / 2, 7.4, 2.5, 1]]) {
+    for (const [r, y, w, h, tier] of [[r2, y2 + h2 / 2, 8.4, 3.05, 0], [r1, y1 + h1 / 2, 8.6, 2.6, 1]]) {
       const order = k * 2 + tier, c = champs[order], year = c ? c.year : "", name = c ? c.name : "";
       const p = flatPlate(year, w, h, 0, y, 0, name, order); p.position.set(Math.sin(phi) * (A(r) - 0.03), y, Math.cos(phi) * (A(r) - 0.03)); p.rotation.y = phi; g.add(p);
     }

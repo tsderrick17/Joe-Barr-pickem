@@ -30,9 +30,18 @@ test("the arrows bring the next trophy to the front, and its champions hang from
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "pickem");
   // One banner per person, oldest first: Tyler has won twice, so his one banner carries both years; the 2026 co-champions each have their own.
   await expect(page.locator(".trophy-banner")).toHaveText([/Tyler[\s\S]*2024[\s\S]*2025/, /Gary[\s\S]*2026/, /Rick[\s\S]*2026/]);
+  // Pick'em hangs red banners, the college Bowl Pool blue ones, Survivor green.
+  const banner = async () => {   // the browser reports the colour in the Lab space: a is red-green (positive is red), b is yellow-blue (negative is blue)
+    const text = await page.locator(".trophy-rafters").evaluate((rafters) => getComputedStyle(rafters).getPropertyValue("--banner").trim());
+    const [, a, b] = (text.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+    return { a, b };
+  };
+  expect((await banner()).a).toBeGreaterThan(30);
+  expect((await banner()).b).toBeGreaterThan(0);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(front(page)).toHaveText("Bowl Pool is at the front");
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "bowl");
+  expect((await banner()).b).toBeLessThan(-30);
   await expect(page.locator(".trophy-banner")).toHaveText([/Connor[\s\S]*2026/]);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(front(page)).toHaveText("Survivor is at the front");
