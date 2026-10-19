@@ -231,11 +231,19 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-stamp { font-size: 2.4rem; }
 
 /* ---- Pull down to refresh (the app added to a home screen) ----
-   A drop of bright water swells from the top edge of the header as the page is pulled, lets go and falls when the pull is far
-   enough, and a ripple spreads where it lands. The colour is used for nothing else. The words are for screen readers only. */
+   A first-down chain along the foot of the header: the lead rod is carried in from above and drags the chain taut as the page is pulled,
+   and its rubber foot plants on the turf when the pull is far enough (release). The strip behind it matches the header, so on a page with no
+   header it is a dark bar and on every other page it is invisible. The words are for screen readers only. */
 html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: contain; }
-.pull-drip {
-  --drip: oklch(0.84 0.16 205);
+.pull-chain {
+  --marker: oklch(0.72 0.17 55);
+  --steel: oklch(0.84 0.01 250);
+  --rubber: oklch(0.36 0 0);
+  --turf: oklch(0.5 0.12 150);
+  --chalk: oklch(0.95 0.01 90);
+  --topper: oklch(0.86 0.15 95);
+  --clip: oklch(0.6 0.2 25);
+  background: oklch(0.2 0.004 286);
   left: 0;
   overflow: hidden;
   pointer-events: none;
@@ -244,14 +252,15 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
   top: 0;
   z-index: 60;
 }
-.pull-drip svg { display: block; left: 50%; position: absolute; top: 0; transform: translateX(-50%); }
-.pull-drip-line { background: var(--drip); box-shadow: 0 0 8px var(--drip); display: block; height: 2px; left: 0; position: absolute; right: 0; top: 0; }
-.pull-drip-water { fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); }
-.pull-drip-ripple { animation: pull-drip-ripple .5s ease-out .3s forwards; fill: none; opacity: 0; stroke: var(--drip); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; }
-.pull-drip-fall { animation: pull-drip-fall .34s cubic-bezier(.5, 0, 1, .6) forwards; fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); transform-box: fill-box; transform-origin: center; }
-.pull-drip[data-phase="refreshing"] .pull-drip-fall { animation: pull-drip-fall .55s cubic-bezier(.5, 0, 1, .6) infinite; }
-.pull-drip[data-phase="refreshing"] .pull-drip-ripple { animation: pull-drip-ripple .55s ease-out .27s infinite; }
-@keyframes pull-drip-fall { 0% { transform: translateY(0) scale(.3, .3); } 12% { transform: translateY(0) scale(1, 1.15); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(var(--drip-fall)) scale(.85, 1.25); } }
-@keyframes pull-drip-ripple { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(5, 3); } }
-.pull-drip-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
-@media (prefers-reduced-motion: reduce) { .pull-drip-fall, .pull-drip-ripple { animation: none; opacity: 1; } }
+.pull-chain svg { display: block; left: 50%; position: absolute; top: 0; transform: translateX(-50%); }
+.pull-chain-ground { fill: var(--turf); }
+.pull-chain-yard { opacity: 0.5; stroke: var(--chalk); stroke-width: 0.5; }
+.pull-chain-rod { fill: var(--marker); }
+.pull-chain-band { fill: var(--chalk); }
+.pull-chain-knob { fill: var(--topper); }
+.pull-chain-foot { fill: var(--rubber); }
+.pull-chain-link { fill: none; stroke: var(--steel); stroke-width: 1.1; }
+.pull-chain-link-edge { fill: var(--steel); }
+.pull-chain-clip { fill: var(--clip); }
+.pull-chain-dust { fill: var(--chalk); }
+.pull-chain-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }

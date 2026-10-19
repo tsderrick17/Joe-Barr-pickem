@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import PullChainScene from "@/components/pull-chain-scene";
 
 /**
  * Pull down to refresh, for the app added to a phone's home screen (a standalone window has no browser bar, so no refresh
  * button and no built-in pull). In a normal browser tab this does nothing and the browser keeps its own behavior.
  *
- * The page is pulled down from the very top and a drop of water swells from the top edge of the header, stretching on a thin
- * neck. Far enough, and the drop lets go and falls: that is the signal to release. Letting go reloads the page; letting go
- * early lets the water draw back up. The drop never leaves the header.
+ * The page is pulled down from the very top and the lead pole of a first-down chain is dragged out of the top edge of the header,
+ * swinging down and stretching the chain as it comes. Far enough, and its rubber foot plants on the ground with a thud and the chain
+ * snaps taut: that is the signal to release. Letting go reloads the page while the chain hums; letting go early lets the pole draw
+ * back up. Everything is drawn inside the header and never below it.
  */
 const THRESHOLD = 60;
 const MAX = 84;
 const RESISTANCE = 0.6;
-const WIDTH = 120;
 
 function isInstalledApp() {
   return (navigator as { standalone?: boolean }).standalone === true || window.matchMedia("(display-mode: standalone)").matches;
@@ -27,19 +28,21 @@ function insideScrolledBox(target: EventTarget | null) {
   return false;
 }
 
-/** How tall the header at the very top is: the drop is drawn inside it and never below it. */
+/** How tall the header at the very top is: the chain is drawn inside it and never below it. */
 function headerHeight() {
   const nav = Array.from(document.querySelectorAll("nav")).find((element) => element.getBoundingClientRect().height > 0);
   const bottom = nav ? nav.getBoundingClientRect().bottom : 56;
   return Math.round(Math.min(96, Math.max(44, bottom)));
 }
 
-type Phase = "pulling" | "dropped" | "refreshing";
+type Phase = "pulling" | "planted" | "refreshing";
 
 export default function PullToRefresh() {
   const [pull, setPull] = useState(0);
   const [phase, setPhase] = useState<Phase>("pulling");
   const [height, setHeight] = useState(56);
+  const [plantedAt, setPlantedAt] = useState(0);
+  const [now, setNow] = useState(0);
   const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase });
 
   useEffect(() => {
@@ -60,10 +63,11 @@ export default function PullToRefresh() {
       if (event.cancelable) event.preventDefault();
       state.pull = Math.min(MAX, distance * RESISTANCE);
       if (state.pull >= THRESHOLD && state.phase === "pulling") {
-        state.phase = "dropped";
-        setPhase("dropped");
-        navigator.vibrate?.(12);   // one light tick where the phone supports it
-      } else if (state.pull < THRESHOLD - 8 && state.phase === "dropped") {
+        state.phase = "planted";
+        setPhase("planted");
+        setPlantedAt(performance.now());
+        navigator.vibrate?.(12);   // one light thud where the phone supports it
+      } else if (state.pull < THRESHOLD - 8 && state.phase === "planted") {
         state.phase = "pulling";
         setPhase("pulling");
       }
@@ -72,10 +76,10 @@ export default function PullToRefresh() {
     const onEnd = () => {
       if (!state.active) return;
       state.active = false;
-      if (state.phase === "dropped") {
+      if (state.phase === "planted") {
         state.phase = "refreshing";
         setPhase("refreshing");
-        window.setTimeout(() => window.location.reload(), 900);
+        window.setTimeout(() => window.location.reload(), 1200);
       } else {
         state.pull = 0;
         setPull(0);
@@ -94,27 +98,23 @@ export default function PullToRefresh() {
     };
   }, []);
 
+  // Once the foot has planted the chain keeps moving (the thud, then a hum), so the clock runs until the pole lifts or the page reloads.
+  useEffect(() => {
+    if (phase === "pulling") return;
+    let frame = 0;
+    const tick = (time: number) => { setNow(time); frame = requestAnimationFrame(tick); };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [phase]);
+
   if (pull <= 0 && phase !== "refreshing") return null;
-  // The drop is a bulb on a neck. As the pull grows the bulb sinks and swells and the neck thins; once it lets go the neck
-  // is a short stub at the top edge and a separate drop falls to the foot of the header.
-  const progress = Math.min(1, pull / THRESHOLD);
-  const cx = WIDTH / 2;
-  const radius = 4 + 7 * progress;
-  const bulbY = phase === "pulling" ? 4 + (height - 16 - radius) * progress : 0;
-  const neck = 13 - 9 * progress;
-  const hanging = phase === "pulling"
-    ? `M ${cx - neck} 0 C ${cx - neck} ${bulbY * 0.55}, ${cx - radius} ${bulbY * 0.5}, ${cx - radius} ${bulbY} A ${radius} ${radius} 0 0 0 ${cx + radius} ${bulbY} C ${cx + radius} ${bulbY * 0.5}, ${cx + neck} ${bulbY * 0.55}, ${cx + neck} 0 Z`
-    : `M ${cx - 9} 0 C ${cx - 7} 5, ${cx - 6} 8, ${cx} 9 C ${cx + 6} 8, ${cx + 7} 5, ${cx + 9} 0 Z`;
-  const label = phase === "refreshing" ? "Refreshing" : phase === "dropped" ? "Release to refresh" : "Pull to refresh";
+  const calm = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const since = phase === "pulling" || calm ? 0 : Math.max(0, now - plantedAt);   // ms since the foot planted
+  const label = phase === "refreshing" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
   return (
-    <div aria-live="polite" className="pull-drip" data-phase={phase} role="status" style={{ height }}>
-      <span className="pull-drip-line" style={{ opacity: progress }} />
-      <svg aria-hidden="true" height={height} viewBox={`0 0 ${WIDTH} ${height}`} width={WIDTH}>
-        <path className="pull-drip-water" d={hanging} />
-        {phase !== "pulling" ? <circle className="pull-drip-fall" cx={cx} cy={9} r={6} style={{ "--drip-fall": `${height - 24}px` } as React.CSSProperties} /> : null}
-        {phase !== "pulling" ? <ellipse className="pull-drip-ripple" cx={cx} cy={height - 4} rx={4} ry={1.4} /> : null}
-      </svg>
-      <span className="pull-drip-label">{label}</span>
+    <div aria-live="polite" className="pull-chain" data-phase={phase} role="status" style={{ height }}>
+      <PullChainScene height={height} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} />
+      <span className="pull-chain-label">{label}</span>
     </div>
   );
 }
