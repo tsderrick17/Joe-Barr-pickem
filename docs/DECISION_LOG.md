@@ -1886,4 +1886,8 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 The Performance panel's teams, splits and season tables sit side by side (one column on a phone), each as tall as the five-team table (a header and five rows; the season list scrolls inside that height past five seasons). The small pick count beside each team's Picked percentage is gone. The teams table can show either the five most picked teams or the five with the best hit rate (ties go to the team picked more often): the Picked and Hit rate headers are the buttons. The splits table is one plain list (Favorites, Underdogs, Home, Away) with no sub-headings, and says Away, not Road team. The league now has a Season by season table too, from the same per-season records the players use. The stats route sends `teamsByHitRate` beside `teams` for the league and for each player.
 
 
+## 2026-10-19 - Fluid CPU estimate recalibrated
+
+The Commissioner dashboard estimated 4 h+ of Fluid Active CPU while Vercel's own meter read 3 h 16 m. The per-active-player cost in `src/lib/vercel-usage-estimate.js` drops from 30 to 22 seconds a day (the slower chat, home and grading polling since the 2026-10-02 calibration costs each player less), so 11 active players plus the scheduled jobs and uptime probes now come to 3 h 16 m. It is still an estimate (Vercel does not expose Hobby usage to an app): compare it with the Usage page now and then and adjust that one constant.
+
 The Provider cost chart (credits per game, 15- and 30-day averages) no longer starts its axis at zero: it now fits the axis to the range the two lines actually move in (the existing "tight" scale, with one step of room above and below), so the story of the lines is not flattened into the top of a tall chart.
