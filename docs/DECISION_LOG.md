@@ -1885,3 +1885,9 @@ The first-down chain is now zoomed in on its last three yards. Still inside the 
 
 Zac's ticket said he owed three selections. He had been crowned Survivor champion, but a champion's entry stays "active" in the database (the crowning does not change it), and the ticket counted any active entry as a required Survivor pick while its Survivor section had already been torn off. The crowned champion is the "Survivor is over" switch the app already has (`seasons.survivor_champion_player_id`, set automatically when one entry is left), so it now ends the competition everywhere the same way: `ticketCompletion` never counts Survivor once the pool is complete (so the champion owes just the two Pick'em selections), and the Survivor reminders (`survivor_due`, and the courteous check that covers both) are not sent once a champion is crowned. Playoff rounds were already Pick'em only.
 
+
+## 2026-10-19 - Fluid CPU estimate recalibrated
+
+The Commissioner dashboard estimated 4 h+ of Fluid Active CPU while Vercel's own meter read 3 h 16 m. The per-active-player cost in `src/lib/vercel-usage-estimate.js` drops from 30 to 22 seconds a day (the slower chat, home and grading polling since the 2026-10-02 calibration costs each player less), so 11 active players plus the scheduled jobs and uptime probes now come to 3 h 16 m. It is still an estimate (Vercel does not expose Hobby usage to an app): compare it with the Usage page now and then and adjust that one constant.
+
+The Provider cost chart (credits per game, 15- and 30-day averages) no longer starts its axis at zero: it now fits the axis to the range the two lines actually move in (the existing "tight" scale, with one step of room above and below), so the story of the lines is not flattened into the top of a tall chart.
