@@ -1762,3 +1762,8 @@ It is a pre-rendered turntable, 60 pictures (one per 6 degrees of a full turn, `
 Pick'em has room for 12 plaques, Bowl Pool for 10, Survivor for 5. Al's 2025 Bowl win comes from the shared ledger (see the previous entry).
 
 The Pick'em trophy was redesigned: a white marble pillar with a graceful flare at its foot and deeper scalloped flutes, wound by a gentle metal helix (two gold lattice strands, the same rope-twisted rails and zig-zag web as the earlier exoskeleton, about one turn, bowing out in the middle, anchored in engraved rings and tied back to the pillar by small struts), topped by the sculpted gold flame. The collars are cut to the pillar's taper and carry four rubies each, 90 degrees apart. The marble texture was rebuilt (veins that branch and fade, hairline cracks, a soft grain; it tiles with no seam). The Survivor chip was redrawn for legibility (a large, plain navy-on-ivory face with the four suits spade, heart, club, diamond across the top, SURVIVOR, then LAST MAN STANDING), and the gold beads that floated loose around it now sit on its own bezel.
+
+## Zac is on the Survivor trophy, and the table is zoomed to read the plaques
+
+Zac's 2026 Survivor win is engraved on a brass plaque beside John's 2025 plaque (`tools/trophy-render/champions.json`, newest first), and the 60 turntable pictures were re-rendered. The camera is closer and the plaque lettering larger, so every year and name reads at the page's normal size; a small diamond divider that read as an accent over a name's middle letter was removed. The plain-text champion roll under the table comes from the records, so it lists Zac only once his Survivor crown is recorded in the database.
+

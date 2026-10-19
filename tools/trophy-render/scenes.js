@@ -20,6 +20,7 @@ const shots = {
   cageanchor: { cushion: [1.55, 1.95], build: ivorySpire, base: hexBase, cam: [0, 20, 48], look: [0, 17, 0] },
   cagetop: { cushion: [1.55, 1.95], build: ivorySpire, base: hexBase, cam: [0, 40, 52], look: [0, 31, 0] },
   plaqueclose: { cushion: [1.35, 1.85], build: pennantCup, base: bowlBase, cam: [0, 8, 34], look: [0, 4.6, 0] },
+  survivorzoom: { cushion: [1.35, 1.2], build: crystalSpade, base: emeraldBase, cam: [0, 26, 82], look: [0, 10.5, 0] },
   test: { build: null, cam: [0, 24, 96], look: [0, 12, 0] },
 };
 
@@ -63,7 +64,7 @@ function buildTurntable(width, height, degrees) {
   table.rotation.y = -degrees * Math.PI / 180;
   stage.scene.add(table);
   stage.renderer.transmissionResolutionScale = 1;
-  stage.camera.position.set(0, 52, 206); stage.camera.lookAt(0, 21, 0);
+  stage.camera.position.set(0, 48, 182); stage.camera.lookAt(0, 21, 0);
   // a wide, soft key from above-left so every corner of the table is lit and the front trophy casts a gentle shadow
   stage.key.position.set(-34, 130, 90); stage.key.target.position.set(0, 8, 0); stage.key.angle = 0.62; stage.key.penumbra = 0.7; stage.key.intensity = 5200; stage.key.distance = 330;
   stage.key.shadow.mapSize.set(4096, 4096); stage.key.shadow.camera.near = 60; stage.key.shadow.camera.far = 260; stage.key.shadow.radius = 6; stage.key.shadow.bias = -0.0002;
@@ -71,9 +72,9 @@ function buildTurntable(width, height, degrees) {
 }
 
 export async function build(fullName, width, height) {
+  { const q = new URLSearchParams(location.search); window.__champions = q.get("champions") ? JSON.parse(q.get("champions")) : undefined; }
   if (fullName.startsWith("turntable")) {
     const q = new URLSearchParams(location.search);
-    window.__champions = q.get("champions") ? JSON.parse(q.get("champions")) : undefined;
     return buildTurntable(width, height, Number(q.get("rot") ?? 0));
   }
   const [name, material, fin] = fullName.split("_");
