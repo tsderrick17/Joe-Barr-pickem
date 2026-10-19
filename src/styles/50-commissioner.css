@@ -683,7 +683,7 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-beam { background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
 .trophy-banners { display: flex; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.6)); flex-wrap: wrap; gap: 0 1.2rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
 .trophy-rafters[data-moving="true"] .trophy-banners { opacity: 0; transform: translateY(-110%); }
-.trophy-banner { align-items: center; animation: trophy-banner-drop 0.95s both; animation-delay: calc(var(--i) * 110ms); background: linear-gradient(180deg, var(--banner), var(--banner-dark)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); display: grid; justify-items: center; margin-top: 0.3rem; min-height: 12rem; padding: 0.7rem 0.55rem 2.2rem; position: relative; transform-origin: 50% 0; width: 7.6rem; }
+.trophy-banner { align-items: center; animation: trophy-banner-unfurl 1.9s both, trophy-banner-sheen 2.4s ease-out both, trophy-banner-sway 7s ease-in-out infinite; animation-delay: calc(var(--i) * 150ms), calc(var(--i) * 150ms), calc(var(--i) * 150ms + 1.9s); background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.1) 50%, transparent 62%) 100% 0 / 300% 100% no-repeat, linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent 20%, rgba(255, 255, 255, 0.05) 38%, transparent 52%, rgba(0, 0, 0, 0.16) 76%, transparent 92%), linear-gradient(180deg, var(--banner), var(--banner-dark)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); display: grid; justify-items: center; margin-top: 0.3rem; min-height: 12rem; padding: 0.7rem 0.55rem 2.2rem; position: relative; transform-origin: 50% 0; width: 7.6rem; }
 .trophy-banner > * { color: var(--ink); display: block; position: relative; text-align: center; z-index: 1; }
 .trophy-banner::before { background: oklch(0.8 0.1 85); content: ""; height: 0.5rem; left: 50%; margin-top: -0.3rem; position: absolute; top: 0; width: 0.14rem; }
 .trophy-banner::after { border: 1px solid var(--trim); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); content: ""; inset: 0.3rem; pointer-events: none; position: absolute; }
@@ -692,15 +692,18 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-banner-star { color: var(--trim); font-size: 0.8rem; margin: 0.25rem 0; }
 .trophy-banner-name { font: 700 1.3rem/1.1 var(--font-cormorant), Georgia, serif; margin-top: 0.35rem; overflow-wrap: anywhere; }
 .trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
-@keyframes trophy-banner-drop {
-  0% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.7); opacity: 0; transform: translateY(-140%) rotate(-5deg); }
-  8% { opacity: 1; }
-  52% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(3deg); }
-  68% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); transform: translateY(-9%) rotate(-2deg); }
-  80% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(1.2deg); }
-  90% { transform: translateY(-2.5%) rotate(-0.5deg); }
-  100% { transform: translateY(0) rotate(0); }
+/* Hung from the rafters rolled up, a banner unrolls under its own weight: the cloth drops faster and faster, stretches a little as it comes
+   taut, then swings and settles in a few slow, heavy sways. The reveal is a clip that opens downward, so the swallowtail forms at the very end. */
+@keyframes trophy-banner-unfurl {
+  0% { animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.55); clip-path: polygon(0 0, 100% 0, 100% 3%, 50% 3%, 0 3%); transform: none; }
+  56% { animation-timing-function: cubic-bezier(0.25, 0.55, 0.4, 1); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); transform: scaleY(1.05) skewX(2deg); }
+  68% { transform: scaleY(0.975) skewX(-3.5deg) rotate(1.1deg); }
+  80% { transform: scaleY(1.012) skewX(2.2deg) rotate(-0.8deg); }
+  91% { transform: scaleY(0.996) skewX(-0.9deg) rotate(0.35deg); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); transform: none; }
 }
+@keyframes trophy-banner-sheen { from { background-position: 100% 0, 0 0, 0 0; } to { background-position: 0% 0, 0 0, 0 0; } }
+@keyframes trophy-banner-sway { 0%, 100% { transform: rotate(0.45deg) skewX(0.4deg); } 50% { transform: rotate(-0.45deg) skewX(-0.4deg); } }
 @media (prefers-reduced-motion: reduce) { .trophy-banner { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }

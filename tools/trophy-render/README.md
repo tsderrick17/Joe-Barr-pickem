@@ -21,5 +21,5 @@ new pictures; only the brass plaques on the trophies themselves are part of the 
 
 - `turntable.mjs`: renders the 60 frames (`FRAME_PART="k/n"` and `PORT` let several runs share the work).
 - `render.mjs`: renders a single named view for design work, for example `node render.mjs pickem_white_coil 880 1400`.
-- `table.js`: the mahogany table (its pads are cut to the outline of each trophy base). `scenes.js`, `trophies.js`, `trophies2.js`, `lib.js`: the scene, the three trophies and the shared materials and textures (three.js).
+- `table.js`: the mahogany table (three identical round pads 120 degrees apart, so the table is exactly symmetric). `scenes.js`, `trophies.js`, `trophies2.js`, `lib.js`: the scene, the three trophies and the shared materials and textures (three.js).
 - `scene.html`, `serve.mjs`: a tiny page and static server the renderer drives in headless Chromium.
