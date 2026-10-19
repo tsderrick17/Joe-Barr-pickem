@@ -26,6 +26,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff games live | `playoff-live` |
 | Off-season: "See you next season!" banner instead of the receipt, read-only, no how-to copy | `off-season` |
 | Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
+| Forfeited the playoffs: "You forfeited, thanks for playing." banner, no receipt | `playoff-forfeited` |
+| The Forfeit link at the foot of every playoff Slate (`playoff-upcoming`, `playoff-six-picks`, `playoff-live`), and its three questions, one at a time | `forfeit-step-1/2/3-phone-390` (behavior test in `slate-flow.visual.spec.ts`; the link is absent from regular weeks, forfeited, eliminated and off-season Slates) |
 
 ## Standings (`/`) — `standings.visual.spec.ts`, fixtures `standings-fixtures.mjs`
 
@@ -39,6 +41,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
 | Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
+| Viewer forfeited the playoffs: banner instead of the ticket, FORFEITED stamp on their row (every playoff state also shows one other player's stamp) | `playoff-viewer-forfeited` |
 | Season Snapshot in the playoffs: a Season / Playoffs switch beside the title (opens on Playoffs); Season shows the 6 Wk / All range | `commissioner-playoff` (flipped, both halves) |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
@@ -74,7 +77,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
 | Five tabs, with the repair and health drawers on Today (behavior test) | `healthy` |
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
-| Players | one roster: commissioner, active, inactive, never signed in |
+| Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
 | Trophy room (the three trophies on the turning table, with a plain-text roll of champions under it; past champions by season; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |

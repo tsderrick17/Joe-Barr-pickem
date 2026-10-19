@@ -699,3 +699,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .bowl-cell-locked { color: var(--color-slate-500); }
 .bowl-cell-open { color: oklch(70.4% .04 256.788); }
 .bowl-cell-pick { color: var(--color-slate-950); }
+
+/* ---- A forfeited player on the Players page ---- */
+.player-forfeit { align-items: center; display: flex; flex-wrap: wrap; gap: .3rem .7rem; margin: .35rem 0 0; }
+.player-forfeit-tag { color: var(--club-alert); font: 700 .68rem Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.player-forfeit-button { background: none; border: 0; color: var(--club-ink); cursor: pointer; font: 700 .8rem Arial, sans-serif; padding: .3rem 0; text-decoration: underline; }

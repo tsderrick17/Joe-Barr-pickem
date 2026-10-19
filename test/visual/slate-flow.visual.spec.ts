@@ -87,3 +87,61 @@ test("a third team with full picks asks which pick to replace, and replacing swa
   await expect(receipt.getByText(/Replace which one with/)).toHaveCount(0);
   await expect(receipt.locator(".slate-receipt-selection-chip")).toHaveCount(2);
 });
+
+// Forfeit: three separate clicks on three different questions; only the third sends anything, and "never mind" backs out at any point.
+test("forfeit takes three clicks and only the last one sends", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page);
+  const board = boardResponse("playoff-upcoming");
+  const sent: unknown[] = [];
+  await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+  await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+  await page.route("**/api/pickem/forfeit", (route) => { sent.push(route.request().postDataJSON()); return route.fulfill({ status: 500, json: { error: "Your forfeit could not be saved. Nothing changed; please try again in a minute." } }); });
+  await page.route("https://placeholder.invalid/**", (route) => route.abort());
+  await page.clock.install({ time: new Date(board.serverTime) });
+  await page.goto("/board");
+  const panel = page.locator(".forfeit-panel");
+  await panel.scrollIntoViewIfNeeded();
+  await expect(panel.getByRole("button", { name: "Forfeit?" })).toBeVisible({ timeout: 30000 });
+  await expect(panel).toHaveScreenshot("forfeit-step-1-phone-390.png");
+
+  await panel.getByRole("button", { name: "Forfeit?" }).click();
+  await expect(panel.getByRole("button", { name: "Don’t give up, you still have a chance! Still want to forfeit?" })).toBeVisible();
+  await expect(panel).toHaveScreenshot("forfeit-step-2-phone-390.png");
+  expect(sent).toHaveLength(0);
+
+  await panel.getByRole("button", { name: "Never mind, I’m staying in" }).click();
+  await expect(panel.getByRole("button", { name: "Forfeit?" })).toBeVisible();
+
+  await panel.getByRole("button", { name: "Forfeit?" }).click();
+  await panel.getByRole("button", { name: /Still want to forfeit/ }).click();
+  await expect(panel.getByRole("button", { name: "I understand this can’t be undone and my Pick’em season would end." })).toBeVisible();
+  await expect(panel).toHaveScreenshot("forfeit-step-3-phone-390.png");
+  expect(sent).toHaveLength(0);
+
+  // The save fails: nothing changed, the reason is shown, and the player is still in.
+  await panel.getByRole("button", { name: /I understand this can’t be undone/ }).click();
+  await expect(panel.getByRole("alert")).toContainText("Nothing changed");
+  expect(sent).toEqual([{ understood: true }]);
+});
+
+// The Forfeit link belongs to the playoffs: it is not on a regular-season Slate, and it is gone once the player has forfeited or been eliminated.
+for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcoming", true], ["playoff-forfeited", false], ["playoff-eliminated", false], ["off-season", false]] as const) {
+  test(`the Forfeit link ${shown ? "is" : "is not"} on the Slate (${scenario})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await signIn(page);
+    const board = boardResponse(scenario);
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
+    await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+    await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(board.serverTime) });
+    await page.goto("/board");
+    await expect(page.locator("main")).toBeVisible({ timeout: 30000 });
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator(".forfeit-panel")).toHaveCount(shown ? 1 : 0);
+  });
+}

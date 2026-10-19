@@ -21,6 +21,7 @@ import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelected
 import SlateHeader from "@/components/slate-header";
 import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
+import ForfeitPanel from "@/components/forfeit-panel";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 import { initialSlateState, slateReducer, type SelectedPick } from "@/lib/slate-state";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -45,7 +46,7 @@ export default function BoardPage() {
   // last saved, which load is current, and the save in flight. The clock ticks on its own.
   const [state, dispatch] = useReducer(slateReducer, initialSlateState);
   const {
-    weeks, week, nextWeekAvailableAt, games, showActionOnly, seasonOver, playoffEliminated, survivorUsedTeamIds, survivorAvailable,
+    weeks, week, nextWeekAvailableAt, games, showActionOnly, seasonOver, playoffEliminated, forfeitAvailable, forfeited, survivorUsedTeamIds, survivorAvailable,
     survivorChipsVisible, survivorOnReceipt, survivorStatus, clockSynchronized, isLoading, errorMessage, isSubmitting,
   } = state;
   const { draftPicks: selectedPicks, draftSurvivor: survivorPick, savedPicks, savedSurvivor: savedSurvivorPick, warning: selectionWarning, feedback: selectionFeedback } = state;
@@ -293,9 +294,9 @@ export default function BoardPage() {
 
   const selectionLimit = week?.max_picks ?? 2;
 
-  const isReadOnly = week?.status === "complete" || playoffEliminated || seasonOver;
+  const isReadOnly = week?.status === "complete" || playoffEliminated || forfeited || seasonOver;
   // The off-season, and a player out of the playoff race, get a quiet page: a banner instead of the receipt.
-  const seasonClosedForViewer = seasonOver || playoffEliminated;
+  const seasonClosedForViewer = seasonOver || playoffEliminated || forfeited;
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
     : null;
@@ -577,7 +578,7 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
       <div className={`mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 sm:px-5 sm:pb-0 md:px-10 ${seasonClosedForViewer ? "pt-5 sm:pt-8" : "pt-0"}`}>
-        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} /></div> : null}
+        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} forfeited={forfeited && !seasonOver} /></div> : null}
 
         {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
@@ -667,6 +668,7 @@ export default function BoardPage() {
             })}
           </div>
         )}
+        {forfeitAvailable && !isReadOnly ? <ForfeitPanel /> : null}
       </div>
 
     </main>

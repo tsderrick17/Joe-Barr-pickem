@@ -9,6 +9,13 @@ type SnapshotRow = {
   remaining_possible_wins: number;
 };
 
+/** Players who have forfeited this season's Pick'em playoffs (and not been reinstated by the Commissioner). */
+export async function loadForfeitedPlayerIds(seasonId: string) {
+  const { data, error } = await supabaseAdmin.from("pickem_forfeits").select("player_id").eq("season_id", seasonId).is("reversed_at", null);
+  if (error) throw new Error("Playoff forfeits could not be loaded safely.");
+  return new Set((data ?? []).map((row) => row.player_id));
+}
+
 export async function loadPlayoffEligibility(seasonId: string, targetPeriodId: string, players: Player[]) {
   const { data: periods, error: periodsError } = await supabaseAdmin
     .from("scoring_periods")
@@ -19,7 +26,9 @@ export async function loadPlayoffEligibility(seasonId: string, targetPeriodId: s
 
   const target = periods.find((period) => period.id === targetPeriodId);
   const applies = target?.period_type === "playoff" && target.status === "active";
-  if (!applies) return calculatePlayoffEligibility({ players, periods, games: [], picks: [], targetPeriodId });
+  // A forfeit can only exist once the playoffs have opened, so earlier weeks never ask.
+  const forfeitedPlayerIds = target?.period_type === "playoff" ? await loadForfeitedPlayerIds(seasonId) : new Set<string>();
+  if (!applies) return { ...calculatePlayoffEligibility({ players, periods, games: [], picks: [], targetPeriodId }), forfeitedPlayerIds };
 
   // The database creates an immutable, Eastern-game-day snapshot before it
   // answers the page or pick-save request. Every request during that day then
@@ -47,5 +56,6 @@ export async function loadPlayoffEligibility(seasonId: string, targetPeriodId: s
     leaderWinsAtDayStart: rows[0]?.leader_wins_at_day_start ?? 0,
     remainingPossibleWins: rows[0]?.remaining_possible_wins ?? 0,
     eliminatedPlayerIds: new Set(rows.filter((row) => !row.is_eligible).map((row) => row.player_id)),
+    forfeitedPlayerIds,
   };
 }

@@ -24,6 +24,7 @@ type Player = {
   loginPin: string | null;
   active: boolean;
   isCommissioner: boolean;
+  forfeited?: boolean;
   emailNotificationsEnabled: boolean;
   createdAt?: string;
   lastActiveAt?: string | null;
@@ -47,6 +48,7 @@ export default function PlayerManagementPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reinstating, setReinstating] = useState<string | null>(null);
 
   const loadPlayers = useCallback(async () => {
     setErrorMessage("");
@@ -79,6 +81,28 @@ export default function PlayerManagementPage() {
   useEffect(() => {
     window.queueMicrotask(() => void loadPlayers());
   }, [loadPlayers]);
+
+  /** Reverse a player's Pick'em forfeit. The button asks twice, because the player cannot un-reverse it. */
+  async function reinstate(player: Player) {
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const response = await fetchWithSession("/api/admin/pickem-forfeits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: player.id }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { setErrorMessage(data.error ?? "The forfeit could not be reversed."); return; }
+      setReinstating(null);
+      setSuccessMessage(`${player.firstName} is back in the Pick’em.`);
+      await loadPlayers();
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) { setErrorMessage("Please sign in before reinstating a player."); return; }
+      reportNetworkError(reason instanceof Error ? reason : new Error("Reinstate request failed."), "/api/admin/pickem-forfeits", "POST");
+      setErrorMessage("The forfeit could not be reversed. Check your connection and try again.");
+    }
+  }
 
   async function addPlayer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -297,6 +321,19 @@ PINs are unique login identifiers and may be viewed here at any time.
                           {player.emailNotificationsEnabled ? "Emails on" : "Emails off"}
                         </span>
                       </div>
+                      {player.forfeited ? (
+                        <p className="player-forfeit">
+                          <span className="player-forfeit-tag">Forfeited the Pick’em playoffs</span>
+                          {reinstating === player.id ? (
+                            <>
+                              <button className="player-forfeit-button" onClick={() => void reinstate(player)} type="button">Yes, reinstate {player.firstName}</button>
+                              <button className="player-forfeit-button" onClick={() => setReinstating(null)} type="button">Cancel</button>
+                            </>
+                          ) : (
+                            <button className="player-forfeit-button" onClick={() => setReinstating(player.id)} type="button">Reinstate</button>
+                          )}
+                        </p>
+                      ) : null}
                     </div>
 
 <div className="text-right">

@@ -75,7 +75,7 @@ export function buildPool({ seasonYear, now = new Date(), scenario, playerCount 
     players,
     tables: {
       seasons, scoring_periods: periods, players, picks, games, teams: teams.map((team) => ({ ...team, name: team.full_name })),
-      spread_history: history, game_lines: lines, pool_championships: championships, survivor_entries: entries, survivor_picks: survivorPicks, playoff_day_eligibility: eligibility,
+      spread_history: history, game_lines: lines, pool_championships: championships, survivor_entries: entries, survivor_picks: survivorPicks, playoff_day_eligibility: eligibility, pickem_forfeits: [],
     },
   };
 }
