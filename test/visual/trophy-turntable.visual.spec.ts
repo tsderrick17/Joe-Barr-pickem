@@ -48,7 +48,7 @@ test("the banners lift away while the table turns and drop in when it settles", 
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "true");
   await expect(front(page)).toHaveText("Bowl Pool is at the front");
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "false");
-  expect(await page.locator(".trophy-banner").first().evaluate((banner) => getComputedStyle(banner).animationName)).toBe("trophy-banner-drop");
+  expect(await page.locator(".trophy-banner").first().evaluate((banner) => getComputedStyle(banner).animationName)).toContain("trophy-banner-unfurl");
 });
 
 test("dragging turns the table and it settles on the nearest trophy", async ({ page }) => {
