@@ -256,10 +256,10 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-ground { fill: var(--turf); }
 .pull-chain-sideline { fill: var(--chalk); }
 .pull-chain-yardline { fill: var(--chalk); opacity: 0.85; }
-.pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 0.9; }
-.pull-chain-ball { fill: var(--leather); stroke: var(--gray-00); stroke-width: 0.5; }
-.pull-chain-ball-stripe { fill: none; stroke: var(--chalk); stroke-width: 1; }
-.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 0.8; }
+.pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 2.2; }
+.pull-chain-ball { fill: var(--leather); stroke: var(--gray-00); stroke-width: 1; }
+.pull-chain-ball-stripe { fill: none; stroke: var(--chalk); stroke-width: 2; }
+.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 1.6; }
 .pull-chain-rod { fill: var(--marker); }
 .pull-chain-ring { fill: none; stroke: var(--gray-00); stroke-width: 2.6; }
 .pull-chain-strap { fill: none; stroke: var(--gray-00); stroke-width: 0.5; }
