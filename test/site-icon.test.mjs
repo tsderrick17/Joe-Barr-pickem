@@ -15,3 +15,16 @@ test("the favicon carries the tab sizes, and the large icon is a 256 px PNG", as
   assert.equal(png.subarray(1, 4).toString(), "PNG");
   assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [256, 256]);
 });
+
+// The home-screen ("app thumbnail") icons are the same goalpost as the tab icon: a full square with no transparent corners (the phone applies its
+// own rounded mask), at the sizes the manifest declares.
+test("the home-screen icons are opaque squares at the sizes the manifest declares", async () => {
+  const manifest = (await readFile(new URL("../src/app/manifest.ts", import.meta.url), "utf8"));
+  for (const [file, size] of [["../public/icons/icon-192.png", 192], ["../public/icons/icon-512.png", 512], ["../public/icons/icon-maskable-512.png", 512], ["../src/app/apple-icon.png", 192]]) {
+    const png = await readFile(new URL(file, import.meta.url));
+    assert.equal(png.subarray(1, 4).toString(), "PNG", file);
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [size, size], file);
+    assert.equal(png[25], 2, `${file} is plain RGB, so no corner is transparent`);
+    if (file.includes("/icons/")) assert.ok(manifest.includes(`/icons/${file.split("/icons/")[1]}`), `${file} is in the manifest`);
+  }
+});
