@@ -54,47 +54,46 @@ export function WeeksHistogram({ weeks, label }: { weeks: Weeks; label: string }
   );
 }
 
-function SplitRows({ label, rows }: { label: string; rows: Array<[string, Split]> }) {
-  return (
-    <>
-      <tr className="pool-table-group"><th colSpan={4} scope="colgroup">{label}</th></tr>
-      {rows.map(([name, split]) => (
-        <tr key={name}>
-          <th scope="row">{name}</th>
-          <td>{percent(split.share)}</td>
-          <td>{split.wins}–{split.losses}</td>
-          <td className="pool-strong">{formatAverage(split.hitRate)}</td>
-        </tr>
-      ))}
-    </>
-  );
-}
-
+/** Favorites and underdogs, then home and away, one list; a heavier line sits between the two pairs. */
 export function SplitsTable({ splits }: { splits: Splits }) {
+  const rows: Array<[string, Split]> = [["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog], ["Home", splits.venue.home], ["Away", splits.venue.away]];
   return (
     <div className="pool-table-wrap">
       <table className="pool-table">
         <thead><tr><th scope="col">Pick</th><th scope="col">Picked</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
         <tbody>
-          <SplitRows label="Side of the spread" rows={[["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog]]} />
-          <SplitRows label="Where the game is played" rows={[["Home team", splits.venue.home], ["Road team", splits.venue.away]]} />
+          {rows.map(([name, split], index) => (
+            <tr className={index === 2 ? "pool-table-break" : undefined} key={name}>
+              <th scope="row">{name}</th>
+              <td>{percent(split.share)}</td>
+              <td>{split.wins}–{split.losses}</td>
+              <td className="pool-strong">{formatAverage(split.hitRate)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
 }
 
-/** The teams picked most often, with how much of the picking each took and how it did. */
-export function TeamsTable({ teams }: { teams: TeamPicked[] }) {
+export type TeamSort = "picked" | "rate";
+
+/** Five teams, with how much of the picking each took and how it did. Picked and Hit rate are buttons: they choose which five (most picked, or best hit rate). */
+export function TeamsTable({ teams, sort, onSort }: { teams: TeamPicked[]; sort: TeamSort; onSort: (sort: TeamSort) => void }) {
+  const head = (key: TeamSort, label: string) => (
+    <th aria-sort={sort === key ? "descending" : "none"} scope="col">
+      <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? " ▼" : ""}</span></button>
+    </th>
+  );
   return (
     <div className="pool-table-wrap">
       <table className="pool-table">
-        <thead><tr><th scope="col">Team</th><th scope="col">Picked</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
+        <thead><tr><th scope="col">Team</th>{head("picked", "Picked")}<th scope="col">Record</th>{head("rate", "Hit rate")}</tr></thead>
         <tbody>
           {teams.map((team) => (
             <tr key={team.teamId}>
               <th scope="row">{team.name}</th>
-              <td>{percent(team.share)}<small>{team.picks}</small></td>
+              <td>{percent(team.share)}</td>
               <td>{team.wins}–{team.losses}</td>
               <td className="pool-strong">{formatAverage(team.hitRate)}</td>
             </tr>

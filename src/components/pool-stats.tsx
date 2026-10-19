@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { formatAverage } from "@/lib/all-time-stats.js";
-import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type RecordSummary, type Splits, type TeamPicked, type Weeks } from "@/components/stats-blocks";
+import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type RecordSummary, type Splits, type TeamPicked, type TeamSort, type Weeks } from "@/components/stats-blocks";
 
 /**
  * Pick'em performance for the Performance panel: the league's numbers, or any one player's, chosen from a dropdown. Each view has the
- * record and hit rate, the most picked team (or how many teams tie for it), the weekly 0-2 / 1-1 / 2-0 histogram, the teams picked most and the
- * favorite/underdog and home/road splits; a player's view adds their regular season streaks and season by season record. Private to the Commissioner.
+ * record and hit rate, the most picked team (or how many teams tie for it), the weekly 0-2 / 1-1 / 2-0 histogram, then three tables side by side at
+ * the same height: five teams (the most picked, or the best hit rate), the favorite/underdog and home/away splits, and season by season;
+ * a player's view adds their regular season streaks. Private to the Commissioner.
  */
 type Run = { longest: number; current: number; endedAt: { seasonYear: number; week: number } | null };
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
+type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
 type PlayerView = View & { playerId: string; name: string; streaks: { sweeps: Run; noDonut: Run } };
 type Stats = View & { players: PlayerView[] };
 
@@ -31,6 +32,7 @@ export default function PoolStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState("");
   const [chosen, setChosen] = useState(LEAGUE);
+  const [teamSort, setTeamSort] = useState<TeamSort>("picked");
 
   useEffect(() => {
     let disposed = false;
@@ -87,39 +89,42 @@ export default function PoolStats() {
           </div>
         ) : null}
 
-        {view.teams.length ? (
-          <div className="pool-stats-block">
-            <h3>Most picked teams</h3>
-            <p>The teams {who} took most often, and how those picks did.</p>
-            <TeamsTable teams={view.teams} />
-          </div>
-        ) : null}
-
-        <div className="pool-stats-block">
-          <h3>What {who} picks</h3>
-          <p>Share of {player ? `${player.name}’s` : "all"} graded picks and how each side hit. A push counts as a loss.</p>
-          <SplitsTable splits={view.splits} />
-        </div>
-
-        {player && player.bySeason.length ? (
-          <div className="pool-stats-block">
-            <h3>Season by season</h3>
-            <div className="pool-table-wrap">
-              <table className="pool-table">
-                <thead><tr><th scope="col">Season</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
-                <tbody>
-                  {player.bySeason.map((season) => (
-                    <tr key={season.seasonYear}>
-                      <th scope="row">{season.seasonYear}</th>
-                      <td>{season.wins}–{season.losses}</td>
-                      <td className="pool-strong">{formatAverage(season.hitRate)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="pool-stats-trio">
+          {view.teams.length ? (
+            <div className="pool-stats-block">
+              <h3>{teamSort === "picked" ? "Most picked teams" : "Best hit rate teams"}</h3>
+              <p>{teamSort === "picked" ? `The five teams ${who} took most often.` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit most often.`}</p>
+              <TeamsTable onSort={setTeamSort} sort={teamSort} teams={teamSort === "picked" ? view.teams : view.teamsByHitRate} />
             </div>
+          ) : null}
+
+          <div className="pool-stats-block">
+            <h3>What {who} picks</h3>
+            <p>Share of graded picks, and how each side hit.</p>
+            <SplitsTable splits={view.splits} />
           </div>
-        ) : null}
+
+          {view.bySeason.length ? (
+            <div className="pool-stats-block">
+              <h3>Season by season</h3>
+              <p>{player ? `${player.name}’s` : "The league’s"} record in each season.</p>
+              <div className="pool-table-wrap">
+                <table className="pool-table">
+                  <thead><tr><th scope="col">Season</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
+                  <tbody>
+                    {view.bySeason.map((season) => (
+                      <tr key={season.seasonYear}>
+                        <th scope="row">{season.seasonYear}</th>
+                        <td>{season.wins.toLocaleString()}–{season.losses.toLocaleString()}</td>
+                        <td className="pool-strong">{formatAverage(season.hitRate)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </> : null}
     </section>
   );

@@ -753,7 +753,17 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-stats-tiles dd small { display: inline; }
 .pool-stats-block h3 { font: 700 1.15rem Georgia, serif; margin: 0; }
 .pool-stats-block > p { color: var(--club-muted); font-size: 0.88rem; margin: 0.15rem 0 0.7rem; max-width: 46rem; }
-.pool-stats-pair { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+/* Teams, splits and seasons sit side by side (one column on a phone), every card as tall as five teams: a row is --pool-row, the table is a header and
+   five rows, and the season list scrolls inside that height once it has more than five seasons. */
+.pool-stats-trio { --pool-row: 2.6rem; display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
+.pool-stats-trio .pool-stats-block { display: flex; flex-direction: column; }
+.pool-stats-trio .pool-stats-block > p { min-height: 3em; }
+.pool-stats-trio .pool-table-wrap { flex: 1 1 auto; max-height: calc(var(--pool-row) * 6 + 2px); min-height: calc(var(--pool-row) * 6 + 2px); overflow-y: auto; }
+.pool-stats-trio .pool-table tr { height: var(--pool-row); }
+.pool-stats-trio .pool-table thead th { position: sticky; top: 0; }
+.pool-table-break { border-top-color: var(--club-gold-dk); }
+.pool-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: 0.2rem 0; text-transform: inherit; }
+.pool-sort:hover, .pool-sort:focus-visible { color: var(--club-gold-lt); }
 .pool-histogram { align-items: end; background: var(--club-paper); border: 1px solid var(--club-line); display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); padding: 1rem 1.2rem 0.7rem; }
 .pool-bar { align-items: center; display: grid; gap: 0.3rem; justify-items: center; }
 .pool-bar-value { font: 700 1.05rem Georgia, serif; font-variant-numeric: tabular-nums; }
@@ -771,7 +781,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-table thead th:first-child { text-align: left; }
 .pool-table th[scope="row"] { font: 400 1.02rem Georgia, serif; text-align: left; width: 100%; }
 .pool-table small { color: var(--club-muted); font: 400 0.72rem Arial, sans-serif; margin-left: 0.4rem; }
-.pool-table .pool-table-group th { background: var(--club-paper-2); color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.2em; padding-block: 0.35rem; text-transform: uppercase; }
 .pool-alive { color: var(--club-ok); font-weight: 700; }
 .pool-strong { font-weight: 700; }
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }

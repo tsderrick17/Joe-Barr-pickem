@@ -1867,6 +1867,10 @@ The all-time Wins and Hit rate table uses fixed column widths (rank, player, win
 
 The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 win, never a 0-2) and **2-0 Sweeps** (2-0 weeks in a row), in the Trophy Room's table and on the Performance tab. They sit under "Regular Season Streaks".
 
+## 2026-10-19 - Performance: three tables side by side
+
+The Performance panel's teams, splits and season tables sit side by side (one column on a phone), each as tall as the five-team table (a header and five rows; the season list scrolls inside that height past five seasons). The small pick count beside each team's Picked percentage is gone. The teams table can show either the five most picked teams or the five with the best hit rate (ties go to the team picked more often): the Picked and Hit rate headers are the buttons. The splits table is one plain list (Favorites, Underdogs, Home, Away) with no sub-headings, and says Away, not Road team. The league now has a Season by season table too, from the same per-season records the players use. The stats route sends `teamsByHitRate` beside `teams` for the league and for each player.
+
 ## Performance tab cleanup: ties, no neutral site, no league streak boards, Survivor over, and a steadier pool map
 
 - **Most picked team:** when teams tie for the most picks the tile says "3 teams tied" with how many picks each, instead of naming whichever sorts first. The top-five table still lists them.
