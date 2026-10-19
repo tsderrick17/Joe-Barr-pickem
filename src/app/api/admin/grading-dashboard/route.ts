@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       () => supabaseAdmin.from("games").select("id, kickoff_at, line_lock_at, status, away_score, home_score, finalized_at, away_team_id, home_team_id").eq("scoring_period_id", period.id).order("kickoff_at"),
       (gameIds) => supabaseAdmin.from("game_lines").select("game_id, locked_spread, locked_at, manual_override").in("game_id", gameIds),
     );
-    const [gamesResult, scheduleGamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult] = await Promise.all([
+    const [gamesResult, scheduleGamesResult, linesResult, picksResult, survivorResult, teamsResult, syncResult, playersResult, auditResult, survivorEntriesResult, oddsRunsResult, previousGamesResult, survivorChampionsResult] = await Promise.all([
       selectedPeriod.games,
       seasonPeriodIds.length ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, line_lock_at, finalized_at, status").in("scoring_period_id", seasonPeriodIds).order("kickoff_at") : Promise.resolve({ data: [], error: null }),
       selectedPeriod.lines,
@@ -124,8 +124,9 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from("survivor_entries").select("status").eq("season_id", season.id),
       providerRunsSince(new Date(Date.UTC(season.year, 0, 1)).toISOString(), now.toISOString()),
       previousPeriod ? supabaseAdmin.from("games").select("id, kickoff_at, finalized_at, status").eq("scoring_period_id", previousPeriod.id) : Promise.resolve({ data: [], error: null }),
+      supabaseAdmin.from("pool_championships").select("player_id").eq("pool", "survivor").eq("season_year", season.year),
     ]);
-    if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error) throw new Error("The grading pipeline could not be read.");
+    if (gamesResult.error || scheduleGamesResult.error || linesResult.error || picksResult.error || survivorResult.error || teamsResult.error || syncResult.error || playersResult.error || auditResult.error || survivorEntriesResult.error || oddsRunsResult.error || previousGamesResult.error || survivorChampionsResult.error) throw new Error("The grading pipeline could not be read.");
     const [lineLockRunsResult, bowlRunsResult] = await Promise.all(["line_locks", "bowl_scores"].map((jobType) =>
       supabaseAdmin.from("sync_runs").select("job_type, status, started_at, completed_at, error_message, details").eq("job_type", jobType).order("started_at", { ascending: false }).limit(1)));
     if (lineLockRunsResult.error || bowlRunsResult.error) throw new Error("The grading dashboard could not read worker activity.");
@@ -205,6 +206,8 @@ export async function GET(request: NextRequest) {
     const lineLockedCount = gameRows.filter((game) => Boolean(game.line)).length;
     const pickOutcomeCounts = (picksResult.data ?? []).reduce((counts, pick) => { counts[pick.result as "win" | "loss" | "void" | "pending"] += 1; return counts; }, { win: 0, loss: 0, void: 0, pending: 0 });
     const survivorEntryCounts = (survivorEntriesResult.data ?? []).reduce((counts, entry) => { counts[entry.status as "active" | "eliminated" | "complete"] += 1; return counts; }, { active: 0, eliminated: 0, complete: 0 });
+    // Survivor is over once a champion is recorded for the season: whoever is left standing has won, so they count as complete, not active.
+    if ((survivorChampionsResult.data ?? []).length > 0) { survivorEntryCounts.complete += survivorEntryCounts.active; survivorEntryCounts.active = 0; }
     const reminderCounts = (remindersResult.data ?? []).reduce((counts, reminder) => { counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] = (counts[reminder.status as "scheduled" | "sending" | "sent" | "cancelled" | "test"] ?? 0) + 1; return counts; }, { scheduled: 0, sending: 0, sent: 0, cancelled: 0, test: 0 });
     const periodTypeById = new Map((periods ?? []).map((item) => [item.id, item.period_type]));
     const regularSeasonGameDates = (scheduleGamesResult.data ?? [])

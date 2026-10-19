@@ -277,9 +277,13 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
-  await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
+  await expect(section.getByText("Neutral site")).toHaveCount(0);
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
+  await section.getByLabel("Show").selectOption({ label: "Rick" });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });

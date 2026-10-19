@@ -68,8 +68,8 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 
 | View | States |
 | --- | --- |
-| Today (map, game pipeline, key counts, and the repair/health drawers, closed) | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
-| Performance (Pick'em performance with a League / player dropdown, provider cost, polling, capacity) | `healthy` |
+| Today (map, game pipeline, key counts, and the repair/health drawers, closed; the map's connecting lines are dark between stages that have been reached (complete or in progress); Participant impact says Survivor is over with its winner once a Survivor champion is recorded; "Up next" has kickoff, line lock and score sync only, and "Next message" sits under "Notification readiness") | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week; Survivor over) |
+| Performance (Pick'em performance with a League / player dropdown: no league streak boards, no neutral-site row, and a tie for the most picked team says how many teams tie; provider cost, polling, capacity) | `healthy` |
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
