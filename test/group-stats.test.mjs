@@ -125,6 +125,26 @@ test("the most picked teams: how often each was taken, and how it did, for the g
   assert.equal(ann.teams.find((team) => team.teamId === "dog").picks, 1, "and Ann once");
 });
 
+test("the five teams with the best hit rate come beside the five most picked, ties going to the team picked more often", () => {
+  const withTeams = buildGroupStats({
+    players, seasons, periods,
+    games: [{ id: "a", home_team_id: "x", away_team_id: "y", home_score: 20, away_score: 10 }, { id: "b", home_team_id: "z", away_team_id: "w", home_score: 20, away_score: 10 }],
+    lines: [{ game_id: "a", favorite_team_id: "x", locked_spread: 3 }, { game_id: "b", favorite_team_id: "z", locked_spread: 3 }],
+    picks: [
+      { id: "1", player_id: "ann", game_id: "a", scoring_period_id: "s25-w1", selected_team_id: "x", result: "win" },
+      { id: "2", player_id: "bob", game_id: "a", scoring_period_id: "s25-w1", selected_team_id: "x", result: "win" },
+      { id: "3", player_id: "ann", game_id: "b", scoring_period_id: "s25-w1", selected_team_id: "z", result: "win" },
+      { id: "4", player_id: "bob", game_id: "a", scoring_period_id: "s25-w1", selected_team_id: "y", result: "loss" },
+      { id: "5", player_id: "bob", game_id: "b", scoring_period_id: "s25-w1", selected_team_id: "w", result: "loss" },
+    ],
+    teams: [{ id: "x", full_name: "X", abbreviation: "X" }, { id: "y", full_name: "Y", abbreviation: "Y" }, { id: "z", full_name: "Z", abbreviation: "Z" }, { id: "w", full_name: "W", abbreviation: "W" }],
+  });
+  assert.deepEqual(withTeams.teamsByHitRate.map((team) => team.teamId), ["x", "z", "w", "y"], "x is 2-0, z is 1-0, then the two 0-1 teams by name");
+  assert.deepEqual(withTeams.teams.map((team) => team.teamId), ["x", "w", "y", "z"], "the most picked list is unchanged: x twice, then the rest by name");
+  assert.ok(withTeams.players.every((player) => player.teamsByHitRate.length === player.teams.length), "each player gets both lists");
+  assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsByHitRate, []);
+});
+
 test("a team missing from the list still counts, under a plain name, and nobody with no graded picks has a most picked team", () => {
   assert.equal(stats.mostPicked.name, "Unknown team");
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });

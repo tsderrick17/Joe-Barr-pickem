@@ -52,14 +52,14 @@ export default function TrophyRoomPage() {
     </th>
   );
 
-  /** A streak cell: the current streak big, the all-time best under it, and a bar showing how close the current streak is to that best. */
+  /** A streak cell: the all-time best big, the current streak small under it, and a bar showing how close the current streak is to that best. */
   const streakCell = (run: Run | undefined, label: string) => {
-    if (!run) return <td aria-label={`${label}: none yet`} className="trophy-streak"><span className="trophy-streak-now">—</span></td>;
+    if (!run) return <td aria-label={`${label}: none yet`} className="trophy-streak"><span className="trophy-streak-best">—</span></td>;
     const atBest = run.current > 0 && run.current >= run.longest;
     return (
       <td aria-label={`${label}: ${run.current} now, ${run.longest} best${atBest ? ", at their best" : ""}`} className={`trophy-streak ${atBest ? "is-best" : ""}`}>
-        <span className="trophy-streak-now">{run.current}</span>
-        <span className="trophy-streak-best">best {run.longest}{atBest ? " ★" : ""}</span>
+        <span className="trophy-streak-best">{run.longest}{atBest ? " ★" : ""}</span>
+        <span className="trophy-streak-now">now {run.current}</span>
         <span aria-hidden="true" className="trophy-streak-bar"><span style={{ width: `${run.longest ? Math.round((run.current / run.longest) * 100) : 0}%` }} /></span>
       </td>
     );
@@ -73,8 +73,8 @@ export default function TrophyRoomPage() {
         <th scope="row">{row.name}</th>
         <td>{row.ab ? row.h : "—"}</td>
         <td className="trophy-avg">{formatAverage(row.avg)}</td>
-        {streakCell(own?.noDonut, "Donut Free Weeks")}
-        {streakCell(own?.sweeps, "2-0 Sweeps")}
+        {streakCell(own?.noDonut, "Consecutive Donut Free Weeks")}
+        {streakCell(own?.sweeps, "Consecutive 2-0 Sweeps")}
       </tr>
     );
   }
@@ -107,7 +107,7 @@ export default function TrophyRoomPage() {
                 <colgroup><col style={{ width: "9%" }} /><col style={{ width: "25%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "18.5%" }} /><col style={{ width: "18.5%" }} /></colgroup>
                 <thead>
                   <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
-                  <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">2-0 Sweeps</th></tr>
+                  <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Consecutive Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">Consecutive 2-0 Sweeps</th></tr>
                 </thead>
                 <tbody>
                   {sorted.map((row, index) => line(row, index + 1))}
