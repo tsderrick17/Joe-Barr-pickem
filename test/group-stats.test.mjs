@@ -107,3 +107,26 @@ test("a player with no graded pick and no completed week is left out, and a form
   });
   assert.deepEqual(out.players.map((player) => player.name), ["Former player"], "Ann only has a pending pick");
 });
+
+test("the most picked teams: how often each was taken, and how it did, for the group and for each player", () => {
+  const withTeams = buildGroupStats({ players, seasons, periods, games, lines, picks, teams: [{ id: "fav", full_name: "Favorites", abbreviation: "FAV" }, { id: "dog", full_name: "Dogs", abbreviation: "DOG" }] });
+  assert.equal(withTeams.mostPicked.teamId, "fav");
+  assert.equal(withTeams.mostPicked.name, "Favorites");
+  assert.equal(withTeams.mostPicked.picks, 14, "fav was taken 14 of the 18 graded picks");
+  assert.equal(withTeams.mostPicked.wins, 14);
+  assert.ok(Math.abs(withTeams.mostPicked.share - 14 / 18) < 1e-9);
+  assert.deepEqual(withTeams.teams.map((team) => team.teamId), ["fav", "dog"]);
+  assert.equal(withTeams.teams.reduce((sum, team) => sum + team.picks, 0), withTeams.graded);
+  const [ann, bob] = withTeams.players;
+  assert.equal(ann.mostPicked.teamId, "fav");
+  assert.equal(ann.teams.reduce((sum, team) => sum + team.picks, 0), ann.graded);
+  assert.equal(bob.teams.find((team) => team.teamId === "dog").picks, 3, "Bob took the underdog three times");
+  assert.equal(ann.teams.find((team) => team.teamId === "dog").picks, 1, "and Ann once");
+});
+
+test("a team missing from the list still counts, under a plain name, and nobody with no graded picks has a most picked team", () => {
+  assert.equal(stats.mostPicked.name, "Unknown team");
+  const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });
+  assert.equal(empty.mostPicked, null);
+  assert.deepEqual(empty.teams, []);
+});

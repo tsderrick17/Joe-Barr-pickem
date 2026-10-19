@@ -13,6 +13,8 @@
  * Streaks run in order of play across seasons with no reset between them, so a streak still alive at the end of a season carries into the
  * next one. "Longest" is the best run ever; "Now" is the run the player is on at their latest counted week.
  *
+ * Most picked team: of the graded picks, which teams were taken most often (top five, with how often and how they did).
+ *
  * Splits: of the picks that were graded, how often the group took the favorite or the underdog, and the home or the road team (neutral-site
  * games are their own row), and how each did.
  */
@@ -41,12 +43,12 @@ function runs(weeks, good) {
  * Record, pushes, seasons and favorite/underdog and home/road splits over a set of picks (the whole pool's, or one player's).
  * Only graded picks count; a push is a loss.
  */
-function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame }) {
+function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, teamById }) {
   let wins = 0, losses = 0, pushPicks = 0;
   const pushedGames = new Set(), pickedGames = new Set();
   const bucket = () => ({ wins: 0, losses: 0 });
   const side = { favorite: bucket(), underdog: bucket() }, venue = { home: bucket(), away: bucket(), neutral: bucket() };
-  const bySeason = new Map();
+  const bySeason = new Map(), byTeam = new Map();
   for (const pick of subset) {
     if (!isDecided(pick)) continue;
     const period = periodById.get(pick.scoring_period_id), game = gameById.get(pick.game_id), line = lineByGame.get(pick.game_id);
@@ -55,6 +57,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame }) 
     if (won) wins += 1; else losses += 1;
     if (year !== undefined) { const season = bySeason.get(year) ?? bucket(); season[won ? "wins" : "losses"] += 1; bySeason.set(year, season); }
     pickedGames.add(pick.game_id);
+    { const team = byTeam.get(pick.selected_team_id) ?? bucket(); team[won ? "wins" : "losses"] += 1; byTeam.set(pick.selected_team_id, team); }
     if (game && line && Number.isInteger(game.home_score) && Number.isInteger(game.away_score)) {
       const margin = pick.selected_team_id === game.home_team_id ? game.home_score - game.away_score : game.away_score - game.home_score;
       const adjusted = margin + (pick.selected_team_id === line.favorite_team_id ? -line.locked_spread : line.locked_spread);
@@ -67,8 +70,14 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame }) 
   const share = (bucketRecord, whole) => ({ ...withRate(bucketRecord), share: rate(bucketRecord.wins + bucketRecord.losses, whole) });
   const sideTotal = side.favorite.wins + side.favorite.losses + side.underdog.wins + side.underdog.losses;
   const venueTotal = Object.values(venue).reduce((sum, item) => sum + item.wins + item.losses, 0);
+  const teams = [...byTeam]
+    .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
+    .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name))
+    .slice(0, 5);
   return {
     record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
+    teams,
+    mostPicked: teams[0] ?? null,
     bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),
     splits: {
       side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal) },
@@ -86,15 +95,16 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame }) 
  *   games: { id: string, home_team_id: string, away_team_id: string, home_score: number | null, away_score: number | null, is_neutral_site: boolean }[],
  *   lines: { game_id: string, favorite_team_id: string | null, locked_spread: number }[],
  *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
+ *   teams?: { id: string, full_name: string, abbreviation: string }[],
  * }} input
  */
-export function buildGroupStats({ players, seasons, periods, games, lines, picks }) {
+export function buildGroupStats({ players, seasons, periods, games, lines, picks, teams = [] }) {
   const nameById = new Map(players.map((player) => [player.id, player.first_name]));
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
   const gameById = new Map(games.map((game) => [game.id, game]));
   const lineByGame = new Map(lines.map((line) => [line.game_id, line]));
-  const lookups = { periodById, yearBySeason, gameById, lineByGame };
+  const lookups = { periodById, yearBySeason, gameById, lineByGame, teamById: new Map(teams.map((team) => [team.id, team])) };
 
   // --- weekly records: regular-season weeks the pool has completed, two picks each
   const picksByPlayerPeriod = new Map();

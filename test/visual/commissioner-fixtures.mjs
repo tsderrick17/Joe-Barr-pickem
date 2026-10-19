@@ -162,20 +162,28 @@ export const TROPHY_ROOM = {
 /** The group's stats: a pool of eight over two seasons. */
 const bucket = (wins, losses) => ({ wins, losses, picks: wins + losses, hitRate: wins / (wins + losses) });
 const split = (wins, losses, share) => ({ ...bucket(wins, losses), share });
+const teamPicked = (teamId, name, abbreviation, wins, losses, share) => ({ teamId, name, abbreviation, ...bucket(wins, losses), share });
+const leagueTeams = [
+  teamPicked("kc", "Kansas City Chiefs", "KC", 236, 190, 0.095), teamPicked("buf", "Buffalo Bills", "BUF", 211, 176, 0.086),
+  teamPicked("phi", "Philadelphia Eagles", "PHI", 198, 171, 0.082), teamPicked("sf", "San Francisco 49ers", "SF", 187, 169, 0.079), teamPicked("det", "Detroit Lions", "DET", 176, 150, 0.073),
+];
+/** Pick'em performance: the league, and four players (ids match the Trophy Room fixture, so its streak columns line up). */
 export const POOL_STATS = {
   record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
+  teams: leagueTeams,
+  mostPicked: leagueTeams[0],
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
   weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
   streaks: {
     sweeps: [
-      { playerId: "p3", name: "Connor", longest: 6, current: 2, endedAt: { seasonYear: 2025, week: 11 } },
-      { playerId: "p2", name: "Tyler", longest: 5, current: 0, endedAt: { seasonYear: 2026, week: 8 } },
+      { playerId: "p2", name: "Connor", longest: 6, current: 2, endedAt: { seasonYear: 2025, week: 11 } },
+      { playerId: "p3", name: "Tyler", longest: 5, current: 0, endedAt: { seasonYear: 2026, week: 8 } },
       { playerId: "p1", name: "Gary", longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 9 } },
       { playerId: "p4", name: "Rick", longest: 3, current: 0, endedAt: { seasonYear: 2025, week: 4 } },
     ],
     noDonut: [
-      { playerId: "p2", name: "Tyler", longest: 23, current: 9, endedAt: { seasonYear: 2026, week: 9 } },
-      { playerId: "p3", name: "Connor", longest: 17, current: 17, endedAt: { seasonYear: 2026, week: 9 } },
+      { playerId: "p3", name: "Tyler", longest: 23, current: 9, endedAt: { seasonYear: 2026, week: 9 } },
+      { playerId: "p2", name: "Connor", longest: 17, current: 17, endedAt: { seasonYear: 2026, week: 9 } },
       { playerId: "p1", name: "Gary", longest: 12, current: 0, endedAt: { seasonYear: 2025, week: 14 } },
       { playerId: "p4", name: "Rick", longest: 8, current: 3, endedAt: { seasonYear: 2025, week: 6 } },
     ],
@@ -186,19 +194,25 @@ export const POOL_STATS = {
   },
   graded: 4495,
   players: [
-    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, [4, 1, { seasonYear: 2025, week: 11 }], [12, 0, { seasonYear: 2026, week: 9 }], 0.55, 0.52],
-    ["p2", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, [5, 0, { seasonYear: 2026, week: 8 }], [23, 9, { seasonYear: 2026, week: 9 }], 0.49, 0.5],
-    ["p3", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, [6, 2, { seasonYear: 2025, week: 11 }], [17, 17, { seasonYear: 2026, week: 9 }], 0.57, 0.46],
-  ].map(([playerId, name, record, weeks, sweeps, noDonut, favoriteShare, homeShare]) => ({
-    playerId, name,
-    record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
-    bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
-    weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
-    streaks: { sweeps: { longest: sweeps[0], current: sweeps[1], endedAt: sweeps[2] }, noDonut: { longest: noDonut[0], current: noDonut[1], endedAt: noDonut[2] } },
-    splits: {
-      side: { favorite: split(Math.round(record.wins * 0.55), Math.round(record.losses * 0.45), favoriteShare), underdog: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.55), 1 - favoriteShare) },
-      venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare), neutral: split(Math.round(record.wins * 0.05), Math.round(record.losses * 0.05), 0.05) },
-    },
-    graded: record.picks,
-  })),
+    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, [4, 4, { seasonYear: 2026, week: 9 }], [12, 0, { seasonYear: 2025, week: 14 }], 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
+    ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, [5, 0, { seasonYear: 2026, week: 8 }], [23, 9, { seasonYear: 2026, week: 9 }], 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
+    ["p4", "Rick", bucket(551, 519), { donut: 58, split: 119, sweep: 53 }, [3, 0, { seasonYear: 2025, week: 4 }], [8, 3, { seasonYear: 2025, week: 6 }], 0.5, 0.49, "phi", "Philadelphia Eagles", "PHI"],
+    ["p2", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, [6, 2, { seasonYear: 2025, week: 11 }], [17, 17, { seasonYear: 2026, week: 9 }], 0.57, 0.46, "kc", "Kansas City Chiefs", "KC"],
+  ].map(([playerId, name, record, weeks, sweeps, noDonut, favoriteShare, homeShare, teamId, teamName, teamAbbreviation]) => {
+    const teams = [teamPicked(teamId, teamName, teamAbbreviation, Math.round(record.wins * 0.11), Math.round(record.losses * 0.1), 0.105), teamPicked("sf", "San Francisco 49ers", "SF", Math.round(record.wins * 0.09), Math.round(record.losses * 0.09), 0.088), teamPicked("det", "Detroit Lions", "DET", Math.round(record.wins * 0.08), Math.round(record.losses * 0.07), 0.074)];
+    return {
+      playerId, name,
+      record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
+      teams,
+      mostPicked: teams[0],
+      bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
+      weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
+      streaks: { sweeps: { longest: sweeps[0], current: sweeps[1], endedAt: sweeps[2] }, noDonut: { longest: noDonut[0], current: noDonut[1], endedAt: noDonut[2] } },
+      splits: {
+        side: { favorite: split(Math.round(record.wins * 0.55), Math.round(record.losses * 0.45), favoriteShare), underdog: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.55), 1 - favoriteShare) },
+        venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare), neutral: split(Math.round(record.wins * 0.05), Math.round(record.losses * 0.05), 0.05) },
+      },
+      graded: record.picks,
+    };
+  }),
 };

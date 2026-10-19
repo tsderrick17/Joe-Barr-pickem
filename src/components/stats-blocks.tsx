@@ -1,23 +1,25 @@
 import { formatAverage } from "@/lib/all-time-stats.js";
 
 /**
- * The pieces the group's stats (Performance panel) and each player's stats (Trophy Room) are built from, so the two always read alike.
+ * The pieces the league's stats and each player's stats (both in the Performance panel) are built from, so the two always read alike.
  * The numbers come from `buildGroupStats` in src/lib/group-stats.js.
  */
 export type Bucket = { wins: number; losses: number; picks: number; hitRate: number | null };
 export type Split = Bucket & { share: number | null };
 export type Weeks = { total: number; donut: number; split: number; sweep: number };
 export type RecordSummary = Bucket & { pushes: number; pushedGames: number; pushShare: number | null };
+export type TeamPicked = Bucket & { teamId: string; name: string; abbreviation: string; share: number | null };
 export type Splits = { side: { favorite: Split; underdog: Split }; venue: { home: Split; away: Split; neutral: Split } };
 
 export const percent = (value: number | null) => (value === null ? "—" : `${Math.round(value * 100)}%`);
 
-export function RecordTiles({ record }: { record: RecordSummary }) {
+export function RecordTiles({ record, mostPicked }: { record: RecordSummary; mostPicked?: TeamPicked | null }) {
   return (
     <dl className="pool-stats-tiles">
       <div><dt>Record</dt><dd>{record.wins.toLocaleString()}–{record.losses.toLocaleString()}</dd></div>
       <div><dt>Hit rate</dt><dd>{formatAverage(record.hitRate)}</dd></div>
       <div><dt>Pushes</dt><dd>{record.pushedGames}<small> {record.pushedGames === 1 ? "game" : "games"} · {percent(record.pushShare)}</small></dd></div>
+      {mostPicked ? <div><dt>Most picked team</dt><dd>{mostPicked.abbreviation || mostPicked.name}<small> {mostPicked.picks} {mostPicked.picks === 1 ? "pick" : "picks"}</small></dd><small>{mostPicked.name} · {mostPicked.wins}–{mostPicked.losses}</small></div> : null}
     </dl>
   );
 }
@@ -74,6 +76,27 @@ export function SplitsTable({ splits }: { splits: Splits }) {
         <tbody>
           <SplitRows label="Side of the spread" rows={[["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog]]} />
           <SplitRows label="Where the game is played" rows={[["Home team", splits.venue.home], ["Road team", splits.venue.away], ["Neutral site", splits.venue.neutral]]} />
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The teams picked most often, with how much of the picking each took and how it did. */
+export function TeamsTable({ teams }: { teams: TeamPicked[] }) {
+  return (
+    <div className="pool-table-wrap">
+      <table className="pool-table">
+        <thead><tr><th scope="col">Team</th><th scope="col">Picked</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
+        <tbody>
+          {teams.map((team) => (
+            <tr key={team.teamId}>
+              <th scope="row">{team.name}</th>
+              <td>{percent(team.share)}<small>{team.picks}</small></td>
+              <td>{team.wins}–{team.losses}</td>
+              <td className="pool-strong">{formatAverage(team.hitRate)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import PlayerStats from "@/components/player-stats";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage, QUALIFYING_AB } from "@/lib/all-time-stats.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean };
+type Run = { longest: number; current: number };
+type Streaks = Record<string, { noDonut: Run; sweeps: Run }>;
 
 export default function TrophyRoomPage() {
   const [data, setData] = useState<{ trophies: Season[]; players: Row[] } | null>(null);
+  const [streaks, setStreaks] = useState<Streaks>({});   // from the performance read; the streak cells stay dashes if it is unavailable
   const [error, setError] = useState("");
   const [sort, setSort] = useState<{ key: "wins" | "rate"; descending: boolean }>({ key: "rate", descending: true });
 
@@ -29,7 +31,15 @@ export default function TrophyRoomPage() {
         else if (!disposed) setError(reason instanceof Error ? reason.message : "The Trophy Room could not be loaded.");
       }
     }
+    async function loadStreaks() {
+      try {
+        const response = await fetchWithSession("/api/admin/pool-stats");
+        const body = await response.json() as { players?: Array<{ playerId: string; streaks: { noDonut: Run; sweeps: Run } }> };
+        if (response.ok && !disposed) setStreaks(Object.fromEntries((body.players ?? []).map((player) => [player.playerId, player.streaks])));
+      } catch { /* streaks are an extra column: the table stands without them */ }
+    }
     void load();
+    void loadStreaks();
     return () => { disposed = true; };
   }, []);
 
@@ -46,18 +56,25 @@ export default function TrophyRoomPage() {
   const firstUnqualified = sort.key === "rate" ? sorted.findIndex((row) => !row.qualified) : -1;
   const choose = (key: "wins" | "rate") => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
   const header = (key: "wins" | "rate", label: string) => (
-    <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} scope="col">
+    <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={2} scope="col">
       <button className="trophy-sort" onClick={() => choose(key)} type="button">{label}<span aria-hidden="true">{sort.key === key ? (sort.descending ? " ▼" : " ▲") : ""}</span></button>
     </th>
   );
 
+  const streakCell = (run: Run | undefined, label: string) => (
+    <td aria-label={run ? `${label}: ${run.current} now, ${run.longest} best` : `${label}: none yet`}>{run ? <>{run.current}<small>/{run.longest}</small></> : "—"}</td>
+  );
+
   function line(row: Row, rank: number) {
+    const own = streaks[row.playerId];
     return (
       <tr key={row.playerId}>
         <td className="trophy-rank">{rank}</td>
         <th scope="row">{row.name}</th>
         <td>{row.ab ? row.h : "—"}</td>
         <td className="trophy-avg">{formatAverage(row.avg)}</td>
+        {streakCell(own?.noDonut, "Weeks with at least 1 win")}
+        {streakCell(own?.sweeps, "2-0 weeks")}
       </tr>
     );
   }
@@ -85,16 +102,17 @@ export default function TrophyRoomPage() {
         {data ? <>
           <section aria-labelledby="all-time" className="py-8">
             <h2 className="font-serif text-2xl font-bold" id="all-time">All-time record</h2>
-            <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first.</p>
+            <p className="mt-1 text-sm text-(color:--themed-text-29)">Tap Wins or Hit rate to sort. Hit rate ranks players with at least {QUALIFYING_AB} picks first. Streaks are consecutive regular-season weeks, shown as now / best.</p>
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table">
                 <thead>
-                  <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}</tr>
+                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Streaks</th></tr>
+                  <tr><th scope="col" title="Weeks in a row with at least 1 win: now / best">1+ win</th><th scope="col" title="2-0 weeks in a row: now / best">2-0</th></tr>
                 </thead>
                 <tbody>
                   {sorted.map((row, index) => (
                     firstUnqualified === index
-                      ? [<tr className="trophy-divider" key="divider"><td colSpan={4}>Under {QUALIFYING_AB} picks</td></tr>, line(row, index + 1)]
+                      ? [<tr className="trophy-divider" key="divider"><td colSpan={6}>Under {QUALIFYING_AB} picks</td></tr>, line(row, index + 1)]
                       : line(row, index + 1)
                   ))}
                 </tbody>
@@ -105,13 +123,13 @@ export default function TrophyRoomPage() {
               <ul className="mt-3 space-y-1 text-(color:--themed-text-29)">
                 <li><b>Wins</b>: Pick’em picks that covered the spread, across every season on record.</li>
                 <li><b>Hit rate</b>: wins divided by graded picks, written like a batting average (.599 is 59.9%). A push counts as a loss; voided picks never count.</li>
+                <li><b>Streaks</b>: weeks in a row with at least 1 win (never a 0-2), and 2-0 weeks in a row, regular season only. A streak still alive at the end of a season carries into the next. A pick not made counts as a loss; a week with a voided pick is left out.</li>
                 <li>A champion from a season with no pick history on file still appears, with dashes.</li>
               </ul>
             </details>
           </section>
         </> : null}
 
-        <div className="desk-rule-top"><PlayerStats /></div>
       </div>
     </main>
   );
