@@ -39,6 +39,7 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
         <defs>
           <clipPath id={cone}><path d={CONE} /></clipPath>
           <linearGradient id={`${cone}-shade`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".26" /><stop offset=".5" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".24" /></linearGradient>
+          <linearGradient id={`${cone}-inside`} x1="0" x2="1" y1="0" y2="0"><stop offset="0" stopColor="#000" stopOpacity=".72" /><stop offset=".6" stopColor="#000" stopOpacity=".5" /><stop offset="1" stopColor="#000" stopOpacity=".3" /></linearGradient>
         </defs>
         <g className="bowl-megaphone-waves">
           <path d="M101.5 13Q107.5 23.5 101.5 34" /><path d="M105.5 8.5Q113.5 23.5 105.5 38.5" /><path d="M109.5 4Q119.5 23.5 109.5 43" />
@@ -52,7 +53,8 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
             <rect className="bowl-megaphone-trim" height="50" width="6.5" x="78" y="0" />
           </g>
           <path className="bowl-megaphone-edge" d={CONE} />
-          <ellipse className="bowl-megaphone-inside" cx="92" cy="23.5" rx="6.5" ry="21" />
+          <ellipse className="bowl-megaphone-body" cx="92" cy="23.5" rx="6.5" ry="21" />
+          <ellipse fill={`url(#${cone}-inside)`} cx="92" cy="23.5" rx="6.5" ry="21" />
           <ellipse className="bowl-megaphone-rim" cx="92" cy="23.5" rx="6.5" ry="21" />
           <rect className="bowl-megaphone-lip" height="15.6" rx="3.5" width="7" x="3" y="15.7" />
           <text className="bowl-megaphone-name" textLength={lines.length > 1 ? 34 : Math.min(38, 5 * lines[0].length)} lengthAdjust="spacingAndGlyphs" x="54" y={lines.length > 1 ? 21 : 25.8}>{lines[0]}</text>

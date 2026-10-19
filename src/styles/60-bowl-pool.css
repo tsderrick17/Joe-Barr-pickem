@@ -100,7 +100,6 @@
 .bowl-megaphone-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linejoin: round; stroke-width: .9; }
 .bowl-megaphone-trim { fill: var(--megaphone-secondary); }
 .bowl-megaphone-lip { fill: var(--megaphone-secondary); stroke: rgba(0, 0, 0, .38); stroke-width: .9; }
-.bowl-megaphone-inside { fill: rgba(0, 0, 0, .52); }
 .bowl-megaphone-rim { fill: none; stroke: var(--megaphone-secondary); stroke-width: 2.4; }
 .bowl-megaphone-handle { fill: none; stroke: var(--megaphone-secondary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.6; }
 .bowl-megaphone-handle-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.2; }
