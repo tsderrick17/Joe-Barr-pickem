@@ -136,6 +136,18 @@ for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcomin
     await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
     await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
     await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+
+// The header is the same height before the player's name arrives as after it, on a phone and on a desktop: nothing below it may jump.
+for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
+  test(`the header does not change height when the player's name loads (${label})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    const board = boardResponse("upcoming-unpicked");
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
+    await page.route("**/api/profile**", async (route) => { await held; await route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }); });
     await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
     await page.route("https://placeholder.invalid/**", (route) => route.abort());
     await page.clock.install({ time: new Date(board.serverTime) });
@@ -143,5 +155,16 @@ for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcomin
     await expect(page.locator("main")).toBeVisible({ timeout: 30000 });
     await page.waitForLoadState("networkidle");
     await expect(page.locator(".forfeit-panel")).toHaveCount(shown ? 1 : 0);
+
+    const headerHeight = () => page.evaluate(() => {
+      const navs = [...document.querySelectorAll("nav")].filter((nav) => nav.getBoundingClientRect().height > 0);
+      return Math.round(navs.reduce((sum, nav) => sum + nav.getBoundingClientRect().height, 0) * 100) / 100;
+    });
+    await expect(page.locator(".theme-toggle:visible")).toBeVisible({ timeout: 30000 });
+    await expect(page.locator(".account-menu-button")).toHaveCount(0);
+    const before = await headerHeight();
+    release();
+    await expect(page.locator(".account-menu-button:visible")).toBeVisible({ timeout: 30000 });
+    expect(await headerHeight()).toBe(before);
   });
 }
