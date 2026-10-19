@@ -136,6 +136,15 @@ for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcomin
     await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
     await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
     await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+    await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(board.serverTime) });
+    await page.goto("/board");
+    await expect(page.locator("main")).toBeVisible({ timeout: 30000 });
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator(".forfeit-panel")).toHaveCount(shown ? 1 : 0);
+  });
+}
 
 // The header is the same height before the player's name arrives as after it, on a phone and on a desktop: nothing below it may jump.
 for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
@@ -152,10 +161,6 @@ for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
     await page.route("https://placeholder.invalid/**", (route) => route.abort());
     await page.clock.install({ time: new Date(board.serverTime) });
     await page.goto("/board");
-    await expect(page.locator("main")).toBeVisible({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator(".forfeit-panel")).toHaveCount(shown ? 1 : 0);
-
     const headerHeight = () => page.evaluate(() => {
       const navs = [...document.querySelectorAll("nav")].filter((nav) => nav.getBoundingClientRect().height > 0);
       return Math.round(navs.reduce((sum, nav) => sum + nav.getBoundingClientRect().height, 0) * 100) / 100;
