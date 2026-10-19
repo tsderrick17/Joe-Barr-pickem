@@ -116,7 +116,7 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 
-Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain with its lead rod planted and "Release to refresh" (screenshot of the indicator) and letting go reloads the page (the drawing's geometry is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
+Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain across the whole page width (turf with yard lines and hash marks, a spotted football, the lead rod planted beside it, the chain taut) and "Release to refresh" (screenshot of the full-width indicator) and letting go reloads the page (the drawing's geometry is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
 
 ## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 
