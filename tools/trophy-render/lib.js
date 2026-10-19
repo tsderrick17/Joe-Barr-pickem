@@ -188,6 +188,7 @@ export async function finish({ renderer, scene, camera }) {
   renderer.render(scene, camera);
   window.__png = renderer.domElement.toDataURL("image/png");
   window.__webp = renderer.domElement.toDataURL("image/webp", 0.76);
+  window.__webpHd = renderer.domElement.toDataURL("image/webp", 0.92);   // the sharp resting views
   window.__done = true;
 }
 

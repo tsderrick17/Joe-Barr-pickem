@@ -79,7 +79,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
-| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
+| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history) | `healthy`, phone, tablet and desktop, day and night |
 | Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
 | Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |
 | Trophy room table: each player's streaks as now / best, under a Streaks heading (1+ win, 2-0), dashes for a player with none (behavior test) | `healthy` |
