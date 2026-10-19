@@ -173,3 +173,38 @@ for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
     expect(await headerHeight()).toBe(before);
   });
 }
+
+
+// The Trophy Room link in the name menu appears only once the Trophy Room is open for the player (the profile says so), and leads to it.
+for (const [open, label] of [[true, "is in"], [false, "is not in"]] as const) {
+  test(`the Trophy Room link ${label} the name menu`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await signIn(page);
+    const board = boardResponse("upcoming-unpicked");
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
+    await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, trophyRoomOpen: open, showPoolChat: false } }));
+    await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(board.serverTime) });
+    await page.goto("/board");
+    await page.locator(".account-menu-button:visible").click({ timeout: 30000 });
+    await expect(page.getByRole("menuitem", { name: "Notifications" })).toBeVisible();
+    if (open) await expect(page.getByRole("menuitem", { name: "Trophy Room" })).toHaveAttribute("href", "/trophy-room");
+    else await expect(page.getByRole("menuitem", { name: "Trophy Room" })).toHaveCount(0);
+  });
+}
+
+// A player who opens the Trophy Room's address while it is the Commissioner's alone is told it is not open, not shown an error.
+test("the Trophy Room says it is not open yet to a player", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page);
+  await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/trophy-room**", (route) => route.fulfill({ status: 404, json: { error: "Not found" } }));
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, trophyRoomOpen: false, showPoolChat: false } }));
+  await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+  await page.route("https://placeholder.invalid/**", (route) => route.abort());
+  await page.goto("/trophy-room");
+  await expect(page.getByText("The Trophy Room is not open yet.")).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("main [role=alert]")).toHaveCount(0);   // the page's own error line (the framework has its own, empty one outside <main>)
+});

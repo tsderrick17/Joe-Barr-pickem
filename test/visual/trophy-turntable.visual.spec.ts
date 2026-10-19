@@ -11,14 +11,14 @@ async function openTrophyRoom(page: Page) {
   await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api\//, "");
-    if (path === "admin/trophy-room") return route.fulfill({ json: TROPHY_ROOM });
+    if (path === "trophy-room") return route.fulfill({ json: TROPHY_ROOM });
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     return route.fulfill({ status: 204, body: "" });
   });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.setViewportSize({ width: 900, height: 900 });
-  await page.goto("/admin/trophy-room");
+  await page.goto("/trophy-room");
   await expect(page.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
 }
 

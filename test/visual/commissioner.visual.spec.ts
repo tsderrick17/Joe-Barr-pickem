@@ -25,7 +25,7 @@ async function serve(page: Page, state: string) {
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "admin/players") return route.fulfill({ json: PLAYERS });
     if (path === "admin/reminders") return route.fulfill({ json: REMINDERS });
-    if (path === "admin/trophy-room") return route.fulfill({ json: TROPHY_ROOM });
+    if (path === "trophy-room") return route.fulfill({ json: TROPHY_ROOM });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     if (path in api) return route.fulfill({ json: api[path] });
     return route.fulfill({ status: 204, body: "" });
@@ -97,7 +97,7 @@ for (const panel of PANELS) {
 }
 
 // The Players, Email center (reminders) and Trophy room pages.
-for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/admin/trophy-room", "table"]] as const) {
+for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/trophy-room", "table"]] as const) {
   for (const theme of ["day", "night"]) {
     for (const [label, width] of Object.entries(WIDTHS)) {
       if (theme === "night" && width !== 390 && width !== 1280) continue;
@@ -233,7 +233,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await page.goto("/admin/trophy-room");
+  await page.goto("/trophy-room");
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
@@ -257,7 +257,7 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await page.goto("/admin/trophy-room");
+  await page.goto("/trophy-room");
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
   await expect(row.getByLabel("Weeks with at least 1 win: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
   await expect(row.getByLabel("2-0 weeks: 0 now, 5 best")).toBeVisible();

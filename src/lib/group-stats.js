@@ -88,25 +88,10 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
 }
 
 /**
- * @param {{
- *   players: { id: string, first_name: string }[],
- *   seasons: { id: string, year: number }[],
- *   periods: { id: string, season_id: string, display_order: number, period_type: string, status: string, max_picks: number }[],
- *   games: { id: string, home_team_id: string, away_team_id: string, home_score: number | null, away_score: number | null, is_neutral_site: boolean }[],
- *   lines: { game_id: string, favorite_team_id: string | null, locked_spread: number }[],
- *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
- *   teams?: { id: string, full_name: string, abbreviation: string }[],
- * }} input
+ * Regular-season weeks the pool has completed, two picks each, per player: { seasonYear, week, wins }. A week with a voided or unsettled pick
+ * is left out; a pick not made is a loss; a player's weeks begin with the first week they made a pick in a season.
  */
-export function buildGroupStats({ players, seasons, periods, games, lines, picks, teams = [] }) {
-  const nameById = new Map(players.map((player) => [player.id, player.first_name]));
-  const periodById = new Map(periods.map((period) => [period.id, period]));
-  const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
-  const gameById = new Map(games.map((game) => [game.id, game]));
-  const lineByGame = new Map(lines.map((line) => [line.game_id, line]));
-  const lookups = { periodById, yearBySeason, gameById, lineByGame, teamById: new Map(teams.map((team) => [team.id, team])) };
-
-  // --- weekly records: regular-season weeks the pool has completed, two picks each
+function playerWeeks({ periodById, yearBySeason, periods, picks }) {
   const picksByPlayerPeriod = new Map();
   const weeksOfPlayerInSeason = new Map();   // "player|season" -> earliest display_order with a pick
   for (const pick of picks) {
@@ -134,6 +119,46 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
       histogram[week.wins === 0 ? "donut" : week.wins === 1 ? "split" : "sweep"] += 1;
     }
   }
+  return { weeksByPlayer, histogram };
+}
+
+/**
+ * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
+ * { longest, current, endedAt }. Only the periods and picks are needed.
+ * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[] }} input
+ * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
+ */
+export function weeklyStreaks({ seasons, periods, picks }) {
+  const periodById = new Map(periods.map((period) => [period.id, period]));
+  const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
+  const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks });
+  const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
+  return new Map([...weeksByPlayer].map(([playerId, weeks]) => {
+    weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
+    return [playerId, { sweeps: summary(runs(weeks, (week) => week.wins === 2)), noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+  }));
+}
+
+/**
+ * @param {{
+ *   players: { id: string, first_name: string }[],
+ *   seasons: { id: string, year: number }[],
+ *   periods: { id: string, season_id: string, display_order: number, period_type: string, status: string, max_picks: number }[],
+ *   games: { id: string, home_team_id: string, away_team_id: string, home_score: number | null, away_score: number | null, is_neutral_site: boolean }[],
+ *   lines: { game_id: string, favorite_team_id: string | null, locked_spread: number }[],
+ *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
+ *   teams?: { id: string, full_name: string, abbreviation: string }[],
+ * }} input
+ */
+export function buildGroupStats({ players, seasons, periods, games, lines, picks, teams = [] }) {
+  const nameById = new Map(players.map((player) => [player.id, player.first_name]));
+  const periodById = new Map(periods.map((period) => [period.id, period]));
+  const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
+  const gameById = new Map(games.map((game) => [game.id, game]));
+  const lineByGame = new Map(lines.map((line) => [line.game_id, line]));
+  const lookups = { periodById, yearBySeason, gameById, lineByGame, teamById: new Map(teams.map((team) => [team.id, team])) };
+
+  const { weeksByPlayer, histogram } = playerWeeks({ periodById, yearBySeason, periods, picks });
   const weekCount = histogram.donut + histogram.split + histogram.sweep;
   const histogramOf = (weeks) => {
     const counts = { donut: 0, split: 0, sweep: 0 };

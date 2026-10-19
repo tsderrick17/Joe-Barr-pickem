@@ -5,6 +5,7 @@ import { profilePlayerAccess } from "@/lib/authenticated-profile-player";
 import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordPlayerActivity } from "@/lib/player-activity";
+import { trophyRoomOpen } from "@/lib/trophy-room-access.js";
 
 export async function GET(request: NextRequest) {
   const playerAccess = await profilePlayerAccess(request, true);
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     firstName: player.first_name,
     isCommissioner: player.is_commissioner,
+    trophyRoomOpen: trophyRoomOpen(Date.now(), player.is_commissioner),   // the Trophy Room link in the name menu
     notificationEmail: player.notification_email ?? "",
     // Brevo can replace a free-address sender with its compliant delivery
     // address. Show recipients the address they will actually see, while the
