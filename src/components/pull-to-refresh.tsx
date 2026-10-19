@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FootballLoadingScreen } from "@/components/football-loader";
 import PullChainScene from "@/components/pull-chain-scene";
 
 /**
@@ -28,6 +29,12 @@ function insideScrolledBox(target: EventTarget | null) {
   return false;
 }
 
+/** Where the page starts, below the header: the loading football covers the page from here down and leaves the header as it is. */
+function pageTop() {
+  const bottoms = Array.from(document.querySelectorAll("nav")).map((element) => element.getBoundingClientRect()).filter((box) => box.height > 0).map((box) => box.bottom);
+  return Math.round(Math.max(0, ...bottoms));
+}
+
 /** How tall the header at the very top is: the chain is drawn inside it and never below it. */
 function headerHeight() {
   const nav = Array.from(document.querySelectorAll("nav")).find((element) => element.getBoundingClientRect().height > 0);
@@ -42,6 +49,7 @@ export default function PullToRefresh() {
   const [phase, setPhase] = useState<Phase>("pulling");
   const [height, setHeight] = useState(56);
   const [width, setWidth] = useState(390);
+  const [coverTop, setCoverTop] = useState(0);
   const [plantedAt, setPlantedAt] = useState(0);
   const [now, setNow] = useState(0);
   const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase });
@@ -54,7 +62,7 @@ export default function PullToRefresh() {
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
       state.startY = event.touches[0]?.clientY ?? 0;
       state.pull = 0;
-      if (state.active) { state.phase = "pulling"; setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); }
+      if (state.active) { state.phase = "pulling"; setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
     };
     const onMove = (event: TouchEvent) => {
       if (!state.active) return;
@@ -80,7 +88,7 @@ export default function PullToRefresh() {
       if (state.phase === "planted") {
         state.phase = "refreshing";
         setPhase("refreshing");
-        window.setTimeout(() => window.location.reload(), 1200);
+        window.setTimeout(() => window.location.reload(), 120);   // the football is up on the next frame; the page reloads right behind it
       } else {
         state.pull = 0;
         setPull(0);
@@ -113,9 +121,16 @@ export default function PullToRefresh() {
   const since = phase === "pulling" || calm ? 0 : Math.max(0, now - plantedAt);   // ms since the foot planted
   const label = phase === "refreshing" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
   return (
-    <div aria-live="polite" className="pull-chain" data-phase={phase} role="status" style={{ height }}>
-      <PullChainScene height={height} width={width} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} />
-      <span className="pull-chain-label">{label}</span>
-    </div>
+    <>
+      {phase === "refreshing" ? (
+        <div className="pull-refresh-cover" style={{ top: coverTop }}>
+          <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />
+        </div>
+      ) : null}
+      <div aria-live="polite" className="pull-chain" data-phase={phase} role="status" style={{ height }}>
+        <PullChainScene height={height} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} width={width} />
+        <span className="pull-chain-label">{label}</span>
+      </div>
+    </>
   );
 }

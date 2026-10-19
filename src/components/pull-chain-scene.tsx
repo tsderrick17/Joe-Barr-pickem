@@ -41,14 +41,24 @@ function Rod({ x, y, tilt = 0, squash = 1, zoom }: { x: number; y: number; tilt?
   );
 }
 
-/** The spotted football lying on the turf, seen from the side, pointing right, with its laces on top and a stripe near each end. */
+/** The spotted football lying on the field, seen from the side, pointing right: a pointed body shaded like leather, a soft gloss, a white stripe
+ *  near each end, laces along the top, a dark outline and its shadow on the turf. */
 function Ball({ spot }: { spot: ReturnType<typeof ballSpot> }) {
-  const half = spot.length / 2, tall = spot.height / 2;
+  const half = spot.length / 2, tall = spot.height / 2, c = tall * 1.34;   // the curve's control height, so the body is `tall` high at its fullest
+  const body = `M${-half} 0C${-half * 0.62} ${-c} ${half * 0.62} ${-c} ${half} 0C${half * 0.62} ${c} ${-half * 0.62} ${c} ${-half} 0Z`;
   return (
     <g transform={`translate(${spot.x} ${spot.y})`}>
-      <path className="pull-chain-ball" d={`M${-half} 0Q${-half * 0.55} ${-tall} 0 ${-tall}Q${half * 0.55} ${-tall} ${half} 0Q${half * 0.55} ${tall} 0 ${tall}Q${-half * 0.55} ${tall} ${-half} 0Z`} />
-      <path className="pull-chain-ball-stripe" d={`M${-half * 0.62} ${-tall * 0.62}V${tall * 0.62}M${half * 0.62} ${-tall * 0.62}V${tall * 0.62}`} />
-      <path className="pull-chain-ball-lace" d={`M${-half * 0.3} ${-tall * 0.82}H${half * 0.3}M${-half * 0.2} ${-tall * 1.0}V${-tall * 0.6}M0 ${-tall * 1.02}V${-tall * 0.62}M${half * 0.2} ${-tall * 1.0}V${-tall * 0.6}`} />
+      <ellipse className="pull-chain-ball-shadow" cx={0} cy={tall + 0.6} rx={half * 0.92} ry={2.6} />
+      <clipPath id="pull-chain-ball-shape"><path d={body} /></clipPath>
+      <path className="pull-chain-ball" d={body} />
+      <g clipPath="url(#pull-chain-ball-shape)">
+        <rect className="pull-chain-ball-stripe" height={spot.height} width={2.8} x={-half * 0.56 - 1.4} y={-tall} />
+        <rect className="pull-chain-ball-stripe" height={spot.height} width={2.8} x={half * 0.56 - 1.4} y={-tall} />
+        <ellipse className="pull-chain-ball-gloss" cx={-half * 0.12} cy={-tall * 0.5} rx={half * 0.55} ry={tall * 0.22} />
+        <path className="pull-chain-ball-seam" d={`M${-half * 0.34} ${-tall * 0.34}H${half * 0.34}`} />
+        <path className="pull-chain-ball-lace" d={[-0.26, -0.13, 0, 0.13, 0.26].map((k) => `M${half * k} ${-tall * 0.6}V${-tall * 0.08}`).join("")} />
+      </g>
+      <path className="pull-chain-ball-outline" d={body} />
     </g>
   );
 }
@@ -70,6 +80,13 @@ export default function PullChainScene({ width, height, progress, planted, since
   const linkW = 2.5 * lay.linkZoom, linkH = 1.5 * lay.linkZoom;
   return (
     <svg aria-hidden="true" height={height} viewBox={`0 0 ${width} ${height}`} width={width}>
+      <defs>
+        <linearGradient id="pull-chain-leather" x1="0" x2="0" y1="0" y2="1">
+          <stop className="pull-chain-leather-hi" offset="0" />
+          <stop className="pull-chain-leather-mid" offset="0.55" />
+          <stop className="pull-chain-leather-lo" offset="1" />
+        </linearGradient>
+      </defs>
       <rect className="pull-chain-ground" height={TURF} width={width} y={turfTop} />
       <rect className="pull-chain-sideline" height={2} width={width} y={turfTop} />
       {marks.lines.map((x) => <rect className="pull-chain-yardline" height={TURF - 2} key={`l${x}`} width={3} x={x - 1.5} y={turfTop + 2} />)}
