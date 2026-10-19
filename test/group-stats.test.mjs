@@ -80,3 +80,30 @@ test("no data gives empty, safe numbers", () => {
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });
   assert.equal(empty.record.hitRate, null); assert.equal(empty.weeks.total, 0); assert.deepEqual(empty.streaks.sweeps, []);
 });
+
+test("each player gets their own full set, and the players add up to the group", () => {
+  assert.deepEqual(stats.players.map((player) => player.name), ["Ann", "Bob"], "sorted by name");
+  const [ann, bob] = stats.players;
+  assert.equal(ann.record.wins + bob.record.wins, stats.record.wins);
+  assert.equal(ann.record.losses + bob.record.losses, stats.record.losses);
+  assert.deepEqual(ann.weeks, { total: 4, donut: 0, split: 1, sweep: 3 });
+  assert.deepEqual(bob.weeks, { total: 5, donut: 1, split: 2, sweep: 2 });
+  assert.equal(ann.weeks.total + bob.weeks.total, stats.weeks.total);
+  assert.deepEqual(ann.streaks.sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 } });
+  assert.deepEqual(bob.streaks.noDonut, { longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 2 } });
+  assert.equal(ann.splits.side.favorite.picks + ann.splits.side.underdog.picks, ann.graded);
+  assert.deepEqual(ann.bySeason.map((season) => season.seasonYear), [2026, 2025]);
+});
+
+test("a player with no graded pick and no completed week is left out, and a former player keeps a name", () => {
+  const out = buildGroupStats({
+    players: [{ id: "ann", first_name: "Ann" }], seasons, periods,
+    games: [{ id: "x", home_team_id: "fav", away_team_id: "dog", home_score: 27, away_score: 20, is_neutral_site: false }],
+    lines: [{ game_id: "x", favorite_team_id: "fav", locked_spread: 3 }],
+    picks: [
+      { id: "1", player_id: "ann", game_id: "x", scoring_period_id: "s26-w3", selected_team_id: "fav", result: "pending" },
+      { id: "2", player_id: "gone", game_id: "x", scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
+    ],
+  });
+  assert.deepEqual(out.players.map((player) => player.name), ["Former player"], "Ann only has a pending pick");
+});

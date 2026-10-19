@@ -1801,3 +1801,4 @@ The Performance panel now opens with "The group", a read-only, Commissioner-only
 
 It sits in the Performance panel at the Commissioner's request, although that panel is otherwise technical (provider cost, polling, account capacity). Players do not see it.
 
+Each player's own full set lives in the Trophy Room, under the all-time record ("Player stats", a row of names to choose from): the same record and hit rate, 0-2 / 1-1 / 2-0 histogram, longest and current streaks, favorite/underdog and home/road splits, plus their record season by season. The group's totals and the two streak boards stay in the Performance panel. Both come from the same function (`buildGroupStats`) and the same Commissioner-only read, so a player's numbers always add up to the group's.

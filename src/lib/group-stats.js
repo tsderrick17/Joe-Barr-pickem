@@ -1,5 +1,6 @@
 /**
- * The group's numbers, for the Commissioner's Performance panel: how the whole pool does against the spread.
+ * The group's numbers, for the Commissioner's Performance panel: how the whole pool does against the spread. Each player also gets the
+ * same full set on their own (the Trophy Room), by the same rules from just their picks.
  *
  * Record and hit rate: every graded Pick'em pick, all seasons, regular season and playoffs (a win or a loss; a push is a loss under the pool
  * rule, shown separately so you can see how often the group lands exactly on the number). Voided and pending picks never count.
@@ -37,29 +38,16 @@ function runs(weeks, good) {
 }
 
 /**
- * @param {{
- *   players: { id: string, first_name: string }[],
- *   seasons: { id: string, year: number }[],
- *   periods: { id: string, season_id: string, display_order: number, period_type: string, status: string, max_picks: number }[],
- *   games: { id: string, home_team_id: string, away_team_id: string, home_score: number | null, away_score: number | null, is_neutral_site: boolean }[],
- *   lines: { game_id: string, favorite_team_id: string | null, locked_spread: number }[],
- *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
- * }} input
+ * Record, pushes, seasons and favorite/underdog and home/road splits over a set of picks (the whole pool's, or one player's).
+ * Only graded picks count; a push is a loss.
  */
-export function buildGroupStats({ players, seasons, periods, games, lines, picks }) {
-  const nameById = new Map(players.map((player) => [player.id, player.first_name]));
-  const periodById = new Map(periods.map((period) => [period.id, period]));
-  const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
-  const gameById = new Map(games.map((game) => [game.id, game]));
-  const lineByGame = new Map(lines.map((line) => [line.game_id, line]));
-
-  // --- overall record, splits and pushes: every graded pick
+function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame }) {
   let wins = 0, losses = 0, pushPicks = 0;
   const pushedGames = new Set(), pickedGames = new Set();
   const bucket = () => ({ wins: 0, losses: 0 });
   const side = { favorite: bucket(), underdog: bucket() }, venue = { home: bucket(), away: bucket(), neutral: bucket() };
   const bySeason = new Map();
-  for (const pick of picks) {
+  for (const pick of subset) {
     if (!isDecided(pick)) continue;
     const period = periodById.get(pick.scoring_period_id), game = gameById.get(pick.game_id), line = lineByGame.get(pick.game_id);
     const year = period ? yearBySeason.get(period.season_id) : undefined;
@@ -79,6 +67,34 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
   const share = (bucketRecord, whole) => ({ ...withRate(bucketRecord), share: rate(bucketRecord.wins + bucketRecord.losses, whole) });
   const sideTotal = side.favorite.wins + side.favorite.losses + side.underdog.wins + side.underdog.losses;
   const venueTotal = Object.values(venue).reduce((sum, item) => sum + item.wins + item.losses, 0);
+  return {
+    record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
+    bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),
+    splits: {
+      side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal) },
+      venue: { home: share(venue.home, venueTotal), away: share(venue.away, venueTotal), neutral: share(venue.neutral, venueTotal) },
+    },
+    graded: total,
+  };
+}
+
+/**
+ * @param {{
+ *   players: { id: string, first_name: string }[],
+ *   seasons: { id: string, year: number }[],
+ *   periods: { id: string, season_id: string, display_order: number, period_type: string, status: string, max_picks: number }[],
+ *   games: { id: string, home_team_id: string, away_team_id: string, home_score: number | null, away_score: number | null, is_neutral_site: boolean }[],
+ *   lines: { game_id: string, favorite_team_id: string | null, locked_spread: number }[],
+ *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
+ * }} input
+ */
+export function buildGroupStats({ players, seasons, periods, games, lines, picks }) {
+  const nameById = new Map(players.map((player) => [player.id, player.first_name]));
+  const periodById = new Map(periods.map((period) => [period.id, period]));
+  const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
+  const gameById = new Map(games.map((game) => [game.id, game]));
+  const lineByGame = new Map(lines.map((line) => [line.game_id, line]));
+  const lookups = { periodById, yearBySeason, gameById, lineByGame };
 
   // --- weekly records: regular-season weeks the pool has completed, two picks each
   const picksByPlayerPeriod = new Map();
@@ -109,6 +125,11 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
     }
   }
   const weekCount = histogram.donut + histogram.split + histogram.sweep;
+  const histogramOf = (weeks) => {
+    const counts = { donut: 0, split: 0, sweep: 0 };
+    for (const week of weeks) counts[week.wins === 0 ? "donut" : week.wins === 1 ? "split" : "sweep"] += 1;
+    return { total: weeks.length, ...counts };
+  };
 
   const streakRows = [...weeksByPlayer].map(([playerId, weeks]) => {
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
@@ -119,15 +140,26 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
     .map((row) => ({ playerId: row.playerId, name: row.name, longest: row[key].longest, current: row[key].current, endedAt: row[key].longestEnd }))
     .sort((a, b) => b.longest - a.longest || b.current - a.current || a.name.localeCompare(b.name));
 
+  // Each player's own full set: the same record, histogram, streaks and splits from just their picks.
+  const picksByPlayer = new Map();
+  for (const pick of picks) picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), pick]);
+  const streaksByPlayer = new Map(streakRows.map((row) => [row.playerId, row]));
+  const summary = (run) => ({ longest: run?.longest ?? 0, current: run?.current ?? 0, endedAt: run?.longestEnd ?? null });
+  const eachPlayer = [...new Set([...picksByPlayer.keys(), ...weeksByPlayer.keys()])]
+    .map((playerId) => ({
+      playerId,
+      name: nameById.get(playerId) ?? "Former player",
+      ...recordsFor(picksByPlayer.get(playerId) ?? [], lookups),
+      weeks: histogramOf(weeksByPlayer.get(playerId) ?? []),
+      streaks: { sweeps: summary(streaksByPlayer.get(playerId)?.sweeps), noDonut: summary(streaksByPlayer.get(playerId)?.noDonut) },
+    }))
+    .filter((player) => player.graded > 0 || player.weeks.total > 0)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return {
-    record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
-    bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),
+    ...recordsFor(picks, lookups),
     weeks: { total: weekCount, donut: histogram.donut, split: histogram.split, sweep: histogram.sweep },
     streaks: { sweeps: leaders("sweeps"), noDonut: leaders("noDonut") },
-    splits: {
-      side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal) },
-      venue: { home: share(venue.home, venueTotal), away: share(venue.away, venueTotal), neutral: share(venue.neutral, venueTotal) },
-    },
-    graded: total,
+    players: eachPlayer,
   };
 }

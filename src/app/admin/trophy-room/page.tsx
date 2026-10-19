@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import PlayerStats from "@/components/player-stats";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage, QUALIFYING_AB } from "@/lib/all-time-stats.js";
 
@@ -109,6 +110,8 @@ export default function TrophyRoomPage() {
             </details>
           </section>
         </> : null}
+
+        <div className="desk-rule-top"><PlayerStats /></div>
       </div>
     </main>
   );

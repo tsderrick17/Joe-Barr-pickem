@@ -735,7 +735,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-stats-tiles > div { background: var(--club-paper); border: 1px solid var(--club-line); border-top: 3px solid var(--club-gold-dk); padding: 0.7rem 0.9rem; }
 .pool-stats-tiles dt { color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
 .pool-stats-tiles dd { font: 400 1.9rem/1.1 Georgia, serif; font-variant-numeric: tabular-nums; margin: 0.2rem 0 0; }
-.pool-stats-tiles small { color: var(--club-muted); font: 400 0.8rem Arial, sans-serif; }
+.pool-stats-tiles small { color: var(--club-muted); display: block; font: 400 0.8rem Arial, sans-serif; }
+.pool-stats-tiles dd small { display: inline; }
 .pool-stats-block h3 { font: 700 1.15rem Georgia, serif; margin: 0; }
 .pool-stats-block > p { color: var(--club-muted); font-size: 0.88rem; margin: 0.15rem 0 0.7rem; max-width: 46rem; }
 .pool-stats-pair { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
@@ -760,3 +761,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-alive { color: var(--club-ok); font-weight: 700; }
 .pool-strong { font-weight: 700; }
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
+.pool-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pool-picker button { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); cursor: pointer; font: 700 0.95rem Georgia, serif; min-height: 2.5rem; padding: 0.35rem 0.9rem; }
+.pool-picker button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-forest); color: var(--sand-93); }
