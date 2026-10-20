@@ -58,8 +58,10 @@ export function pennantCup(m) {
   g.add(beadRing(7.86, 72, 0.19, 18.55, m.gold)); g.add(beadRing(7.86, 72, 0.19, 21.25, m.gold));
 
   // engraved band
-  const band = mesh(new THREE.CylinderGeometry(7.9, 7.9, 1.95, 220, 1, true), new THREE.MeshPhysicalMaterial({ color: 0xd9a93f, metalness: 1, roughness: 0.3, bumpMap: engravingBand([["BOWL POOL CHAMPIONS", 0], ["✦", 0.25], ["JOE BARR MEMORIAL", 0.5], ["✦", 0.75]], 4096, 128, "700 50px Cinzel, Georgia, serif"), bumpScale: -2.4, envMapIntensity: 1.3 }));
+  const band = mesh(new THREE.CylinderGeometry(7.9, 7.9, 1.95, 220, 1, true), new THREE.MeshPhysicalMaterial({ color: 0xd9a93f, metalness: 1, roughness: 0.3, bumpMap: engravingBand([["BOWL POOL CHAMPIONS", 0], ["✦", 0.25], ["✦", 0.75]], 4096, 128, "700 56px Cinzel, Georgia, serif"), bumpScale: -4.2, envMapIntensity: 1.3 }));
   band.position.y = 19.9; g.add(band);
+  // the lettering is the same gold-on-gold engraving, deepened: a faint warm shadow in the cut letters (a see-through overlay, never solid) and a stronger relief
+  { const letters = mesh(new THREE.CylinderGeometry(7.93, 7.93, 1.95, 220, 1, true), new THREE.MeshBasicMaterial({ color: 0x4a2c06, alphaMap: engravingBand([["BOWL POOL CHAMPIONS", 0], ["✦", 0.25], ["✦", 0.75]], 4096, 128, "700 56px Cinzel, Georgia, serif"), transparent: true, opacity: 0.3, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), { cast: false }); letters.position.y = 19.9; g.add(letters); }
 
   // laurel garland around the foot of the bowl
   const ring = new THREE.CatmullRomCurve3(Array.from({ length: 40 }, (_, i) => { const a = (i / 40) * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 5.5, 12.6, Math.sin(a) * 5.5); }), true);
