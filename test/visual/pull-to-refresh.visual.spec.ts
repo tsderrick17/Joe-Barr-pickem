@@ -58,3 +58,15 @@ test("a short pull springs back without reloading", async ({ page }) => {
   await expect(page.locator(".pull-chain")).toHaveCount(0);
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe("kept");
 });
+
+test("if the page never hears the finger lift, the chain still goes away on its own and the page is not reloaded", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await installedApp(page);
+  await page.goto("/login");
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
+  await page.evaluate(() => { (window as unknown as { marker: string }).marker = "kept"; });
+  await drag(page, 100, 260, false);   // planted, and no touchend ever arrives
+  await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
+  await expect(page.locator(".pull-chain")).toHaveCount(0, { timeout: 8000 });
+  expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe("kept");
+});
