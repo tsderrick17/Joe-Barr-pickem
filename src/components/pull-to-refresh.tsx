@@ -52,13 +52,16 @@ export default function PullToRefresh() {
   const [coverTop, setCoverTop] = useState(0);
   const [plantedAt, setPlantedAt] = useState(0);
   const [now, setNow] = useState(0);
-  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase });
+  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0 });
 
   useEffect(() => {
     if (!isInstalledApp()) return;
     document.documentElement.classList.add("has-pull-refresh");
     const state = gesture.current;
+    // However a gesture ends (a lost touchend, a reload that never happens, the page coming back from the back/forward cache), the chain goes away.
+    const reset = () => { state.active = false; state.pull = 0; state.phase = "pulling"; setPull(0); setPhase("pulling"); };
     const onStart = (event: TouchEvent) => {
+      state.lastTouch = Date.now();
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
       state.startY = event.touches[0]?.clientY ?? 0;
       state.pull = 0;
@@ -66,8 +69,9 @@ export default function PullToRefresh() {
     };
     const onMove = (event: TouchEvent) => {
       if (!state.active) return;
+      state.lastTouch = Date.now();
       const distance = (event.touches[0]?.clientY ?? state.startY) - state.startY;
-      if (window.scrollY > 0 || event.touches.length !== 1) { state.active = false; state.pull = 0; setPull(0); return; }
+      if (window.scrollY > 0 || event.touches.length !== 1) { reset(); return; }
       if (distance <= 0) { state.pull = 0; state.phase = "pulling"; setPhase("pulling"); setPull(0); return; }
       if (event.cancelable) event.preventDefault();
       state.pull = Math.min(MAX, distance * RESISTANCE);
@@ -83,17 +87,20 @@ export default function PullToRefresh() {
       setPull(state.pull);
     };
     const onEnd = () => {
-      if (!state.active) return;
-      state.active = false;
-      if (state.phase === "planted") {
+      state.lastTouch = Date.now();
+      if (state.phase === "refreshing") return;
+      if (state.active && state.phase === "planted") {
+        state.active = false;
         state.phase = "refreshing";
         setPhase("refreshing");
         window.setTimeout(() => window.location.reload(), 120);   // the football is up on the next frame; the page reloads right behind it
-      } else {
-        state.pull = 0;
-        setPull(0);
-      }
+        window.setTimeout(() => { if (document.visibilityState === "visible") reset(); }, 6000);   // a reload that never came must not leave the football up
+      } else reset();
     };
+    // a finger that was lifted without the page hearing of it: once nothing has touched the screen for a moment, the chain goes
+    const watchdog = window.setInterval(() => { if (state.phase !== "refreshing" && (state.pull > 0 || state.phase === "planted") && Date.now() - state.lastTouch > (state.active ? 4000 : 1500)) reset(); }, 500);
+    const onShow = () => reset();
+    window.addEventListener("pageshow", onShow);
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: false });
     document.addEventListener("touchend", onEnd, { passive: true });
@@ -104,6 +111,8 @@ export default function PullToRefresh() {
       document.removeEventListener("touchmove", onMove);
       document.removeEventListener("touchend", onEnd);
       document.removeEventListener("touchcancel", onEnd);
+      window.removeEventListener("pageshow", onShow);
+      window.clearInterval(watchdog);
     };
   }, []);
 
