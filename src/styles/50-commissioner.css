@@ -706,7 +706,6 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
   80% { animation-timing-function: ease-out; --wave: 1.4; transform: scaleY(0.99); }
   100% { --wave: 1; transform: none; }
 }
-}
 @keyframes trophy-banner-sway { 0%, 100% { transform: rotate(1.1deg) skewX(0.8deg); } 50% { transform: rotate(-1.1deg) skewX(-0.8deg); } }
 @media (prefers-reduced-motion: reduce) { .trophy-banner, .trophy-banner-slice, .trophy-banner-slice-b { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
