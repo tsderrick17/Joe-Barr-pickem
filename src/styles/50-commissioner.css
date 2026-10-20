@@ -680,10 +680,10 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-rafters { --banner: oklch(0.42 0.18 25); --banner-dark: oklch(0.26 0.12 25); --banner-light: oklch(0.56 0.2 25); border-top: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 0 1rem 1.4rem; position: relative; }
 .trophy-rafters[data-pool="bowl"] { --banner: oklch(0.4 0.14 255); --banner-dark: oklch(0.25 0.1 255); --banner-light: oklch(0.56 0.15 255); }
 .trophy-rafters[data-pool="survivor"] { --banner: oklch(0.36 0.1 160); --banner-dark: oklch(0.24 0.07 160); --banner-light: oklch(0.52 0.12 160); }
-.trophy-beam { background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
+.trophy-beam { position: relative; z-index: 2; background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
 .trophy-banners { align-items: flex-start; display: flex; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.6)); flex-wrap: wrap; gap: 0 0.8rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
 .trophy-rafters[data-moving="true"] .trophy-banners { opacity: 0; transform: translateY(-110%); }
-.trophy-banner { animation: trophy-banner-unfurl 1.9s both, trophy-banner-sway 6.5s ease-in-out infinite; animation-delay: calc(var(--i) * 150ms), calc(var(--i) * 150ms + 1.9s); transform-origin: 50% 0; width: 9.2rem; }
+.trophy-banner { animation: trophy-banner-unfurl 3.2s both, trophy-banner-sway 6.5s ease-in-out infinite; animation-delay: calc(var(--i) * 180ms), calc(var(--i) * 180ms + 3.2s); transform-origin: 50% 0; width: 10.4rem; }
 .trophy-banner-art { display: block; height: auto; overflow: visible; width: 100%; }
 .trophy-banner-stop-light { stop-color: var(--banner-light); }
 .trophy-banner-stop-base { stop-color: var(--banner); }
@@ -694,18 +694,18 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
    hem, two waves of different lengths so it never repeats mechanically. */
 .trophy-banner-slice { animation: trophy-banner-ripple 3.4s ease-in-out infinite; animation-delay: var(--lag); }
 .trophy-banner-slice-b { --amp: 0.45px; animation: trophy-banner-ripple-b 5.3s ease-in-out infinite; animation-delay: var(--lag); }
-@keyframes trophy-banner-ripple { 0%, 100% { transform: translateX(calc(var(--amp) * -1)); } 50% { transform: translateX(var(--amp)); } }
+@keyframes trophy-banner-ripple { 0%, 100% { transform: translateX(calc(var(--amp) * var(--wave) * -1)); } 50% { transform: translateX(calc(var(--amp) * var(--wave))); } }
 @keyframes trophy-banner-ripple-b { 0%, 100% { transform: translateX(-1.8px); } 50% { transform: translateX(1.8px); } }
 .trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
-/* Hung from the rafters rolled up, a banner unrolls under its own weight: the cloth drops faster and faster, stretches a little as it comes
-   taut, then swings and settles into a slow sway. The reveal is a clip that opens downward from the rod. */
+/* A banner is lowered like a stage curtain: it comes down from behind the beam with its cloth unfolding as it falls, rippling widely at first (`--wave` multiplies the ripple
+   below), settles a hair past its place, and then hangs and moves gently. */
+@property --wave { inherits: true; initial-value: 1; syntax: "<number>"; }
 @keyframes trophy-banner-unfurl {
-  0% { animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.55); clip-path: inset(0 0 97% 0); transform: none; }
-  56% { animation-timing-function: cubic-bezier(0.25, 0.55, 0.4, 1); clip-path: inset(0 0 0 0); transform: scaleY(1.05) skewX(2deg); }
-  68% { transform: scaleY(0.975) skewX(-3.5deg) rotate(1.1deg); }
-  80% { transform: scaleY(1.012) skewX(2.2deg) rotate(-0.8deg); }
-  91% { transform: scaleY(0.996) skewX(-0.9deg) rotate(0.35deg); }
-  100% { clip-path: inset(0 0 0 0); transform: none; }
+  0% { animation-timing-function: cubic-bezier(0.4, 0.05, 0.3, 1); --wave: 2.4; transform: translateY(-104%) scaleY(0.5); }
+  62% { animation-timing-function: ease-in-out; --wave: 1.8; transform: translateY(0) scaleY(1.035); }
+  80% { animation-timing-function: ease-out; --wave: 1.4; transform: scaleY(0.99); }
+  100% { --wave: 1; transform: none; }
+}
 }
 @keyframes trophy-banner-sway { 0%, 100% { transform: rotate(1.1deg) skewX(0.8deg); } 50% { transform: rotate(-1.1deg) skewX(-0.8deg); } }
 @media (prefers-reduced-motion: reduce) { .trophy-banner, .trophy-banner-slice, .trophy-banner-slice-b { animation: none; } .trophy-banners { transition: none; } }

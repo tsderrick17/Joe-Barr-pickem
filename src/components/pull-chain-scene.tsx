@@ -1,4 +1,4 @@
-import { ballSpot, chainLinks, chainTwang, fieldMarks, footSquash, FOOT, groundOf, layout, leadPose, POLE, ringPoint, strainLean, TURF } from "@/lib/pull-chain.js";
+import { ballSpot, chainLinks, chainTwang, fieldMarks, footSquash, FOOT, groundOf, layout, leadPose, plantedTop, POLE, poleLength, ringPoint, strainLean, TURF } from "@/lib/pull-chain.js";
 
 /**
  * The picture for pull to refresh: a first-down chain zoomed in on its last three yards, as wide as the page and no taller than the header. The
@@ -44,7 +44,7 @@ function Rod({ x, y, tilt = 0, squash = 1, zoom }: { x: number; y: number; tilt?
 /** The spotted football lying on the field, seen from the side, pointing right: a pointed body shaded like leather, a soft gloss, a white stripe
  *  near each end, laces along the top, a dark outline and its shadow on the turf. */
 function Ball({ spot }: { spot: ReturnType<typeof ballSpot> }) {
-  const half = spot.length / 2, tall = spot.height / 2, c = tall * 1.34;   // the curve's control height, so the body is `tall` high at its fullest
+  const half = spot.length / 2, tall = spot.height / 2, c = tall * 1.42;   // the curve's control height, so the body is `tall` high at its fullest
   const body = `M${-half} 0C${-half * 0.62} ${-c} ${half * 0.62} ${-c} ${half} 0C${half * 0.62} ${c} ${-half * 0.62} ${c} ${-half} 0Z`;
   return (
     <g transform={`translate(${spot.x} ${spot.y})`}>
@@ -69,9 +69,12 @@ export default function PullChainScene({ width, height, progress, planted, since
   const squash = planted ? footSquash(since) : 1;
   const lead = leadPose(progress, ground, lay);
   const tilt = planted ? strainLean(since) : lead.tilt;
-  const leadY = lead.y + (1 - squash) * FOOT * lay.zoom;   // the pole sinks as the rubber compresses, so the foot stays on the turf
+  const sink = (1 - squash) * FOOT * lay.zoom;   // the pole sinks as the rubber compresses, so the foot stays on the turf
+  // once planted the pole leans about its foot, which stays exactly where it touched down; while it is carried in, it swings about its top
+  const top = planted ? plantedTop(lay.leadTo, ground, tilt, poleLength(lay), sink) : { x: lead.x, y: lead.y + sink };
+  const leadY = top.y;
   const rear = ringPoint(lay.rear, ground - (POLE + FOOT) * lay.zoom, 0, lay);   // far off to the left of the page
-  const front = ringPoint(lead.x, leadY, tilt, lay);
+  const front = ringPoint(top.x, leadY, tilt, lay);
   const { links, clip } = chainLinks(rear, front, { chainLength: lay.chainLength, groundY: ground, linkZoom: lay.linkZoom, twang: planted ? chainTwang(since) : 0 });
   const dust = planted ? Math.min(1, since / 380) : 1;
   const marks = fieldMarks(lay);
@@ -96,7 +99,7 @@ export default function PullChainScene({ width, height, progress, planted, since
         <ellipse className={link.edge ? "pull-chain-link-edge" : "pull-chain-link"} cx={link.x} cy={link.y} key={index} rx={linkW} ry={link.edge ? linkH * 0.47 : linkH} transform={`rotate(${link.angle} ${link.x} ${link.y})`} />
       )) : null}
       {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={4.4 * lay.linkZoom} width={2.6 * lay.linkZoom} x={clip.x - 1.3 * lay.linkZoom} y={clip.y - 2.2 * lay.linkZoom} transform={`rotate(${clip.angle} ${clip.x} ${clip.y})`} /> : null}
-      <Rod squash={squash} tilt={tilt} x={lead.x} y={leadY} zoom={lay.zoom} />
+      <Rod squash={squash} tilt={tilt} x={top.x} y={leadY} zoom={lay.zoom} />
       {planted && dust < 1 ? (
         <g className="pull-chain-dust" opacity={0.55 * (1 - dust)}>
           <circle cx={lay.leadTo - 14 - 26 * dust} cy={ground - 3} r={3 + 7 * dust} />

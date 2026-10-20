@@ -6,7 +6,7 @@ import { useId, type CSSProperties } from "react";
  * free hem), two waves of different lengths laid over each other so it never repeats mechanically. The wave is CSS (see `.trophy-banner-slice`),
  * so reduced motion simply stills it. Colours come from `--banner`, `--banner-dark` and `--banner-light` on the rafters (red Pick'em, blue Bowl, green Survivor).
  */
-const WIDTH = 170, ROD_Y = 24, TOP = 30, SLICES = 18, YEAR_ROW = 22;
+const WIDTH = 170, ROD_Y = 24, TOP = 30, SLICES = 30, YEAR_ROW = 22;
 const pleat = (x: number, folds: number, phase: number) => 0.5 - 0.5 * Math.cos(Math.PI * 2 * (folds * x + phase + 0.05 * Math.sin(Math.PI * 2 * 1.3 * x)));   // 0 on a ridge, 1 in a valley
 
 /** Dark in the valleys and light on the ridges of the folds across the width: broad, soft pleats. */
@@ -23,13 +23,13 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
   const height = 212 + YEAR_ROW * Math.max(0, years.length - 2);
   const bottom = TOP + height;
   const phase = 0.12 * index;
-  const nameSize = Math.min(31, 138 / (Math.max(3, name.length) * 0.53));
+  const nameSize = Math.min(35, 146 / (Math.max(3, name.length) * 0.5));
   const strip = (bottom + 2 - TOP) / SLICES;
   const body = `M6 ${TOP}H${WIDTH - 6}V${bottom}L${WIDTH / 2} ${bottom - 36}L6 ${bottom}Z`;
   const stitch = `M14 ${TOP + 17}H${WIDTH - 14}V${bottom - 11}L${WIDTH / 2} ${bottom - 44}L14 ${bottom - 11}Z`;
   const ink = (extra?: CSSProperties): CSSProperties => ({ fontFamily: "var(--font-graduate), Georgia, serif", ...extra });
   const nameY = TOP + 90, yearY = TOP + 112;
-  const tagSize = Math.min(8.6, (8.6 * 17) / Math.max(1, tag.length));   // the longest tag still fits inside the stitching
+  const tagSize = Math.min(10.4, (10.4 * 17) / Math.max(1, tag.length));   // the longest tag still fits inside the stitching
 
   return (
     <svg aria-hidden="true" className="trophy-banner-art" focusable="false" viewBox={`0 0 ${WIDTH} ${bottom + 14}`}>
@@ -69,11 +69,14 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
           <rect className="trophy-banner-sleeve" height="18" width={WIDTH - 12} x="6" y={TOP - 2} />
           <rect fill={`url(#${id}-dark)`} height="18" width={WIDTH - 12} x="6" y={TOP - 2} />
           <path d={`M6 ${TOP + 16}H${WIDTH - 6}`} stroke="#000" strokeOpacity=".35" strokeWidth="1.4" />
-          <text fill="#f3dc94" fontSize={tagSize} letterSpacing="2" style={ink()} textAnchor="middle" x={WIDTH / 2} y={TOP + 54}>{tag.toUpperCase()}</text>
-          <text fill={`url(#${id}-thread)`} fontSize={nameSize} paintOrder="stroke" stroke="#2a1c05" strokeWidth=".9" style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontWeight: 700 }} textAnchor="middle" x={WIDTH / 2} y={nameY}>{name}</text>
-          <text fill="#f3dc94" fontSize="11" textAnchor="middle" x={WIDTH / 2} y={nameY + 22}>★</text>
-          {years.map((year, i) => <text fill="#fff3cf" fontSize="19" key={year} letterSpacing="1.5" stroke="#000" strokeOpacity=".35" strokeWidth=".6" style={ink()} textAnchor="middle" x={WIDTH / 2} y={yearY + 22 + i * YEAR_ROW}>{year}</text>)}
           <rect fill={`url(#${id}-dark)`} height={height - 52} opacity=".5" width={WIDTH - 12} x="6" y={TOP + 16} />
+        </g>
+        {/* the lettering, kept apart from the cloth so it moves as one piece and never shears */}
+        <g id={`${id}-print`}>
+          <text fill="#f8e29a" fontSize={tagSize} letterSpacing="1.2" paintOrder="stroke" stroke="#f8e29a" strokeWidth=".35" style={ink()} textAnchor="middle" x={WIDTH / 2} y={TOP + 54}>{tag.toUpperCase()}</text>
+          <text fill="#fbe7a1" fontSize={nameSize} paintOrder="stroke" stroke="#2a1405" strokeLinejoin="round" strokeWidth="2.2" style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontWeight: 700 }} textAnchor="middle" x={WIDTH / 2} y={nameY}>{name}</text>
+          <text fill="#f8e29a" fontSize="12" textAnchor="middle" x={WIDTH / 2} y={nameY + 24}>★</text>
+          {years.map((year, i) => <text fill="#fff6d8" fontSize="23" key={year} letterSpacing="1.5" paintOrder="stroke" stroke="#1d0a05" strokeLinejoin="round" strokeWidth="2.2" style={ink()} textAnchor="middle" x={WIDTH / 2} y={yearY + 22 + i * YEAR_ROW}>{year}</text>)}
         </g>
       </defs>
 
@@ -81,13 +84,19 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
       {Array.from({ length: SLICES }, (_, j) => {
         const depth = j / (SLICES - 1);
         return (
-          <g className="trophy-banner-slice" key={j} style={{ "--amp": `${(0.2 + 4.8 * depth * depth).toFixed(2)}px`, "--lag": `${(-j * 0.17).toFixed(2)}s` } as CSSProperties}>
-            <g className="trophy-banner-slice-b" style={{ "--lag": `${(-j * 0.11 - 1).toFixed(2)}s` } as CSSProperties}>
+          <g className="trophy-banner-slice" key={j} style={{ "--amp": `${(0.2 + 4.8 * depth * depth).toFixed(2)}px`, "--lag": `${(-j * 0.1).toFixed(2)}s` } as CSSProperties}>
+            <g className="trophy-banner-slice-b" style={{ "--lag": `${(-j * 0.065 - 1).toFixed(2)}s` } as CSSProperties}>
               <g clipPath={`url(#${id}-s${j})`}><use href={`#${id}-cloth`} /></g>
             </g>
           </g>
         );
       })}
+
+      {(() => { const depth = 0.42; return (
+        <g className="trophy-banner-slice" style={{ "--amp": `${(0.2 + 4.8 * depth * depth).toFixed(2)}px`, "--lag": `${(-depth * SLICES * 0.1).toFixed(2)}s` } as CSSProperties}>
+          <g className="trophy-banner-slice-b" style={{ "--lag": `${(-depth * SLICES * 0.065 - 1).toFixed(2)}s` } as CSSProperties}><use href={`#${id}-print`} /></g>
+        </g>
+      ); })()}
 
       <path d={`M32 ${ROD_Y + 1}L${WIDTH / 2} 0L${WIDTH - 32} ${ROD_Y + 1}`} fill="none" stroke="#cdb98a" strokeWidth="1.6" />
       <rect fill={`url(#${id}-brass)`} height="8" rx="4" width={WIDTH - 24} x="12" y={ROD_Y} />

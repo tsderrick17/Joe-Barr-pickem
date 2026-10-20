@@ -15,7 +15,7 @@ const LINK_ZOOM = 2.4;               // the same for chain links
 const LINK_PITCH = 4.4;              // link spacing, in link units
 const FLOOR = 2.2;                   // how high a link lying on the turf sits above the ground line (link units)
 const HEAP_CAP = 4.6;                // the tallest hump of slack chain lying on the turf (link units)
-const BALL = { length: 42, height: 18 };   // px
+const BALL = { length: 44, height: 24 };   // px: about 1.8 long to 1 across, a full-bodied football
 const NOSE_INCHES = 2.5;             // how far the ball's nose is past the pole's far edge: a couple of inches
 
 const lerp = (from, to, amount) => from + (to - from) * amount;
@@ -112,7 +112,7 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
 export function ballSpot(lay, headerHeight) {
   const footHalf = 3.1 * lay.zoom;
   const nose = lay.leadTo + footHalf + NOSE_INCHES * lay.inch;
-  return { x: nose - BALL.length / 2, y: headerHeight - TURF + 9.5, length: BALL.length, height: BALL.height, nose };
+  return { x: nose - BALL.length / 2, y: headerHeight - TURF + 12.5, length: BALL.length, height: BALL.height, nose };
 }
 
 /** The yard lines (every five yards) and hash marks (every yard in between) across the page. */
@@ -139,7 +139,15 @@ export function chainTwang(since) {
   return 14 * Math.exp(-cycle / 130) * Math.sin(cycle / 11);
 }
 
-/** How far (degrees) the planted lead pole leans away from the strain of the chain, easing upright in one smooth movement (no sway back and forth). */
+/** How far (degrees) the planted lead pole leans away from the strain of the chain, easing upright in one smooth movement (no sway back and forth). The
+ *  pole turns about its foot (see `plantedTop`), so its foot never moves while it leans. */
 export function strainLean(since) {
   return 4 * Math.exp(-since / 170);
+}
+
+/** Where the top of a planted pole must be so that, leaning `tilt` degrees about its foot, the foot stays exactly at (footX, ground): the pole turns
+ *  about the top in the drawing, so the top is moved to make up for it. `sink` (px) lowers the whole pole as the rubber foot compresses. */
+export function plantedTop(footX, ground, tilt, length, sink = 0) {
+  const radians = (tilt * Math.PI) / 180;
+  return { x: footX + Math.sin(radians) * length, y: ground - Math.cos(radians) * length + sink };
 }
