@@ -20,7 +20,10 @@ function foldStops(kind: "dark" | "light", folds: number, phase: number) {
 
 export default function TrophyBanner({ tag, name, years, index }: { tag: string; name: string; years: number[]; index: number }) {
   const id = useId().replaceAll(":", "");
-  const height = 212 + YEAR_ROW * Math.max(0, years.length - 2);
+  // a long tag (Bowl Pool, Survivor) wraps onto two lines at a larger size, pushing the rest down a little
+  const tagLines = tag.length > 16 && tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];
+  const extra = (tagLines.length - 1) * 11;
+  const height = 212 + extra + YEAR_ROW * Math.max(0, years.length - 2);
   const bottom = TOP + height;
   const phase = 0.12 * index;
   const nameSize = Math.min(35, 146 / (Math.max(3, name.length) * 0.5));
@@ -29,8 +32,8 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
   const stitch = `M14 ${TOP + 17}H${WIDTH - 14}V${bottom - 11}L${WIDTH / 2} ${bottom - 44}L14 ${bottom - 11}Z`;
   const inner = `M17.6 ${TOP + 20.6}H${WIDTH - 17.6}V${bottom - 15}L${WIDTH / 2} ${bottom - 49}L17.6 ${bottom - 15}Z`;
   const ink = (extra?: CSSProperties): CSSProperties => ({ fontFamily: "var(--font-graduate), Georgia, serif", ...extra });
-  const nameY = TOP + 90, yearY = TOP + 112;
-  const tagSize = Math.min(10, (10 * 16) / Math.max(1, tag.length));   // the longest tag still fits inside the stitching
+  const nameY = TOP + 90 + extra, yearY = TOP + 112 + extra;
+  const tagSize = tagLines.length > 1 ? 10.6 : Math.min(10, (10 * 16) / Math.max(1, tag.length));   // a one-line tag still fits inside the rule
 
   return (
     <svg aria-hidden="true" className="trophy-banner-art" focusable="false" viewBox={`0 0 ${WIDTH} ${bottom + 14}`}>
@@ -76,7 +79,7 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
         </g>
         {/* the lettering, kept apart from the cloth so it moves as one piece and never shears */}
         <g id={`${id}-print`}>
-          <text fill="#f8e29a" fontSize={tagSize} letterSpacing="1.2" paintOrder="stroke" stroke="#f8e29a" strokeWidth=".35" style={ink()} textAnchor="middle" x={WIDTH / 2} y={TOP + 54}>{tag.toUpperCase()}</text>
+          {tagLines.map((line, index) => <text fill="#f8e29a" fontSize={tagSize} key={line} letterSpacing="1.2" paintOrder="stroke" stroke="#f8e29a" strokeWidth=".35" style={ink()} textAnchor="middle" x={WIDTH / 2} y={TOP + 54 + index * 12.5}>{line.toUpperCase()}</text>)}
           <text fill="#fbe7a1" fontSize={nameSize} paintOrder="stroke" stroke="#2a1405" strokeLinejoin="round" strokeWidth="2.2" style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontWeight: 700 }} textAnchor="middle" x={WIDTH / 2} y={nameY}>{name}</text>
           <text fill="#f8e29a" fontSize="12" textAnchor="middle" x={WIDTH / 2} y={nameY + 24}>★</text>
           {years.map((year, i) => <text fill="#fff6d8" fontSize="23" key={year} letterSpacing="1.5" paintOrder="stroke" stroke="#1d0a05" strokeLinejoin="round" strokeWidth="2.2" style={ink()} textAnchor="middle" x={WIDTH / 2} y={yearY + 22 + i * YEAR_ROW}>{year}</text>)}
