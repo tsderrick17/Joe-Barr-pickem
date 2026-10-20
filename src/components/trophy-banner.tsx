@@ -27,9 +27,10 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
   const strip = (bottom + 2 - TOP) / SLICES;
   const body = `M6 ${TOP}H${WIDTH - 6}V${bottom}L${WIDTH / 2} ${bottom - 36}L6 ${bottom}Z`;
   const stitch = `M14 ${TOP + 17}H${WIDTH - 14}V${bottom - 11}L${WIDTH / 2} ${bottom - 44}L14 ${bottom - 11}Z`;
+  const inner = `M17.6 ${TOP + 20.6}H${WIDTH - 17.6}V${bottom - 15}L${WIDTH / 2} ${bottom - 49}L17.6 ${bottom - 15}Z`;
   const ink = (extra?: CSSProperties): CSSProperties => ({ fontFamily: "var(--font-graduate), Georgia, serif", ...extra });
   const nameY = TOP + 90, yearY = TOP + 112;
-  const tagSize = Math.min(10.4, (10.4 * 17) / Math.max(1, tag.length));   // the longest tag still fits inside the stitching
+  const tagSize = Math.min(10, (10 * 16) / Math.max(1, tag.length));   // the longest tag still fits inside the stitching
 
   return (
     <svg aria-hidden="true" className="trophy-banner-art" focusable="false" viewBox={`0 0 ${WIDTH} ${bottom + 14}`}>
@@ -65,7 +66,9 @@ export default function TrophyBanner({ tag, name, years, index }: { tag: string;
             <rect fill={`url(#${id}-shade)`} height={height} width={WIDTH} y={TOP} />
           </g>
           <path d={body} fill="none" stroke="#000" strokeOpacity=".35" />
-          <path d={stitch} fill="none" stroke="#f3e6c0" strokeDasharray="4 3" strokeLinecap="round" strokeWidth="1.6" />
+          <path d={stitch} fill="none" stroke="#e6c46e" strokeLinejoin="round" strokeWidth="1.5" />
+          <path d={inner} fill="none" stroke="#f6e6b4" strokeLinejoin="round" strokeOpacity=".75" strokeWidth=".7" />
+          {[[14, TOP + 17], [WIDTH - 14, TOP + 17], [14, bottom - 11], [WIDTH - 14, bottom - 11], [WIDTH / 2, bottom - 44]].map(([x, y], i) => <path d={`M${x} ${y - 3.2}L${x + 3.2} ${y}L${x} ${y + 3.2}L${x - 3.2} ${y}Z`} fill="#e6c46e" key={i} stroke="#2a1405" strokeOpacity=".5" strokeWidth=".5" />)}
           <rect className="trophy-banner-sleeve" height="18" width={WIDTH - 12} x="6" y={TOP - 2} />
           <rect fill={`url(#${id}-dark)`} height="18" width={WIDTH - 12} x="6" y={TOP - 2} />
           <path d={`M6 ${TOP + 16}H${WIDTH - 6}`} stroke="#000" strokeOpacity=".35" strokeWidth="1.4" />
