@@ -53,11 +53,18 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     const offRest = Math.min(Math.abs(turned - atRest * REST), Math.abs(turned - atRest * REST - 360));
     const crisp = offRest < 0.05 ? sharp.current[atRest] : null;
     if (crisp) { context.drawImage(crisp, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); return; }
-    const wanted = Math.round(turned / STEP) % FRAMES;
-    for (let reach = 0; reach < FRAMES / 2; reach += 1) {     // the nearest picture that has arrived, if the wanted one is still on its way
-      const bitmap = bitmaps.current[(wanted + reach) % FRAMES] ?? bitmaps.current[(wanted - reach + FRAMES) % FRAMES];
-      if (bitmap) { context.drawImage(bitmap, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); return; }
-    }
+    // between two pictures (3 degrees apart) the second is laid over the first in proportion to how far on we are, so a turn glides instead of stepping
+    const position = turned / STEP, lower = Math.floor(position) % FRAMES, blend = position - Math.floor(position);
+    const pick = (wanted: number) => {   // the nearest picture that has arrived, if the wanted one is still on its way
+      for (let reach = 0; reach < FRAMES / 2; reach += 1) {
+        const bitmap = bitmaps.current[(wanted + reach) % FRAMES] ?? bitmaps.current[(wanted - reach + FRAMES) % FRAMES];
+        if (bitmap) return bitmap;
+      }
+      return undefined;
+    };
+    const first = pick(lower), second = blend > 0.02 ? bitmaps.current[(lower + 1) % FRAMES] : undefined;
+    if (first) context.drawImage(first, 0, 0, WIDTH * SHARP, HEIGHT * SHARP);
+    if (first && second) { context.globalAlpha = blend; context.drawImage(second, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); context.globalAlpha = 1; }
   }, []);
 
   useEffect(() => {
@@ -74,7 +81,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
           bitmaps.current[index] = bitmap;
           loaded.current += 1;
           if (loaded.current === FRAMES) setReady(true);
-          if (Math.round(wrap(angle.current) / STEP) % FRAMES === index) draw();
+          if (Math.floor(wrap(angle.current) / STEP) % FRAMES === index || Math.ceil(wrap(angle.current) / STEP) % FRAMES === index) draw();
         } catch { /* a missing picture leaves its neighbour on screen */ }
       }
     };

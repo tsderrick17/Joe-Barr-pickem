@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ballSpot, chainLinks, chainTwang, fieldMarks, footSquash, FOOT, groundOf, layout, leadPose, poleLength, ringPoint, strainLean, TURF } from "../src/lib/pull-chain.js";
+import { plantedTop, ballSpot, chainLinks, chainTwang, fieldMarks, footSquash, FOOT, groundOf, layout, leadPose, poleLength, ringPoint, strainLean, TURF } from "../src/lib/pull-chain.js";
 
 const HEIGHT = 60, GROUND = groundOf(HEIGHT);
 const PHONE = layout(390);
@@ -121,4 +121,14 @@ test("the field has a yard line every five yards and a hash mark on each yard be
 
 test("the foot and the turf fit inside the header", () => {
   for (const height of [44, 56, 60, 96]) assert.ok(TURF + 6 <= height && FOOT * PHONE.zoom < height, String(height));
+});
+
+test("once planted the pole leans about its foot: the foot stays exactly where it touched down however far it leans", () => {
+  const length = 150, footX = 300, ground = 80;
+  for (const tilt of [0, 1, 2.5, 4]) {
+    const top = plantedTop(footX, ground, tilt, length);
+    const radians = (tilt * Math.PI) / 180;
+    const foot = { x: top.x - Math.sin(radians) * length, y: top.y + Math.cos(radians) * length };   // where a pole drawn turning about its top puts its foot
+    assert.ok(Math.abs(foot.x - footX) < 1e-9 && Math.abs(foot.y - ground) < 1e-9, `the foot has not moved at a lean of ${tilt} degrees`);
+  }
 });

@@ -1,6 +1,6 @@
 // The display table: a hand-made mahogany table whose top is cut tight around three identical landing pads, one per trophy, 120 degrees
 // apart, so the whole table is exactly three-fold symmetric. Each pad is a raised moulded step with a velvet inset, and the top flows round them in smooth curves, with
-// satinwood stringing round the edge, a marquetry compass rose in the middle, a carved apron, a carved urn pedestal and three cabriole legs ending
+// satinwood stringing round the edge, a marquetry compass rose in the middle, a carved apron and nothing beneath it (the top floats)
 // in brass claw-and-ball feet. Table units: the top surface is y = 0.
 import { THREE, mesh, profile, revolveMod, fbm } from "/lib.js";
 
@@ -152,20 +152,6 @@ export function mahoganyTable(m, footprints = []) {
     table.add(g);
   }
 
-  // the pedestal: a carved urn column under the centre, and three cabriole legs sweeping out under the lobes to claw-and-ball feet
-  table.add(mesh(revolveMod(profile([[9, -3.6], [7.5, -5], [5, -7], [4.2, -10], [6.5, -14], [7.2, -17], [6, -20], [3.6, -24], [3.4, -27], [5.6, -29], [6.2, -31]], 80), 120, (theta, t, y, r) => r * (1 + 0.06 * Math.cos(16 * theta) * (y < -13 && y > -21 ? 1 : 0))), wood));
-  for (const y of [-7.2, -20.2, -28.6]) { const ring = mesh(new THREE.TorusGeometry(y === -7.2 ? 5 : y === -20.2 ? 6 : 5.4, 0.28, 10, 80), m.gold); ring.rotation.x = Math.PI / 2; ring.position.y = y; table.add(ring); }
-  for (let k = 0; k < 3; k++) {
-    const phi = (k / 3) * Math.PI * 2, dir = new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi));
-    const P = (r, y) => dir.clone().multiplyScalar(r).setY(y);
-    const curve = new THREE.CatmullRomCurve3([P(4.5, -27), P(9, -29.5), P(16, -30.5), P(22, -33), P(25.5, -38.5), P(26.5, -42)]);
-    table.add(mesh(taperedTube(curve, (t) => 2.7 - 1.3 * t + 0.6 * Math.exp(-Math.pow((t - 0.35) / 0.12, 2))), wood));
-    const ball = mesh(new THREE.SphereGeometry(1.7, 28, 20), m.gold); ball.position.copy(P(26.7, -43.5)); table.add(ball);
-    for (let toe = -1; toe <= 1; toe++) {
-      const side = new THREE.Vector3(dir.z, 0, -dir.x);
-      const tc = new THREE.CatmullRomCurve3([P(26.3, -42).addScaledVector(side, toe * 0.5), P(27.6, -42.6).addScaledVector(side, toe * 1.2), P(28.2, -44.2).addScaledVector(side, toe * 1.3)]);
-      table.add(mesh(taperedTube(tc, (t) => 0.55 - 0.3 * t, 24, 10), m.gold));
-    }
-  }
+  // no pedestal or legs: the top floats
   return table;
 }
