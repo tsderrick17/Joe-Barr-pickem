@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage } from "@/lib/all-time-stats.js";
+import { placesFor } from "@/lib/trophy-rank.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -65,11 +66,11 @@ export default function TrophyRoomPage() {
     );
   };
 
-  function line(row: Row, rank: number) {
+  function line(row: Row, rank: number, tied: boolean) {
     const own = row.streaks ?? undefined;
     return (
       <tr key={row.playerId}>
-        <td className="trophy-rank">{rank}</td>
+        <td className="trophy-rank">{tied ? <small>T</small> : null}{rank}</td>
         <th scope="row">{row.name}</th>
         <td>{row.ab ? row.h : "—"}</td>
         <td className="trophy-avg">{formatAverage(row.avg)}</td>
@@ -104,13 +105,13 @@ export default function TrophyRoomPage() {
             <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table">
-                <colgroup><col style={{ width: "9%" }} /><col style={{ width: "25%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "18.5%" }} /><col style={{ width: "18.5%" }} /></colgroup>
+                <colgroup><col style={{ width: "6%" }} /><col style={{ width: "24%" }} /><col style={{ width: "11%" }} /><col style={{ width: "15%" }} /><col style={{ width: "22%" }} /><col style={{ width: "22%" }} /></colgroup>
                 <thead>
                   <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
                   <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Consecutive Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">Consecutive 2-0 Sweeps</th></tr>
                 </thead>
                 <tbody>
-                  {sorted.map((row, index) => line(row, index + 1))}
+                  {(() => { const places = placesFor(sorted, sort.key); return sorted.map((row, index) => line(row, places[index].place, places[index].tied)); })()}
                 </tbody>
               </table>
             </div>

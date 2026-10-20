@@ -46,13 +46,16 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const [ready, setReady] = useState(false);       // every picture has arrived
 
   const draw = useCallback(() => {
-    const context = canvasRef.current?.getContext("2d");
-    if (!context) return;
+    const canvas = canvasRef.current, context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    // the canvas is sharp (twice the size) only while the table is at rest; while it turns, drawing at the pictures' own size is a quarter of the work
+    const resize = (sharp: boolean) => { const w = sharp ? WIDTH * SHARP : WIDTH, h = sharp ? HEIGHT * SHARP : HEIGHT; if (canvas.width !== w) { canvas.width = w; canvas.height = h; } return [w, h] as const; };
     // exactly at rest, the sharp picture of that trophy (if it has arrived)
     const turned = wrap(angle.current), atRest = Math.round(turned / REST) % TROPHIES.length;
     const offRest = Math.min(Math.abs(turned - atRest * REST), Math.abs(turned - atRest * REST - 360));
     const crisp = offRest < 0.05 ? sharp.current[atRest] : null;
-    if (crisp) { context.drawImage(crisp, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); return; }
+    if (crisp) { const [w, h] = resize(true); context.drawImage(crisp, 0, 0, w, h); return; }
+    const [w, h] = resize(false);
     // between two pictures (3 degrees apart) the second is laid over the first in proportion to how far on we are, so a turn glides instead of stepping
     const position = turned / STEP, lower = Math.floor(position) % FRAMES, blend = position - Math.floor(position);
     const pick = (wanted: number) => {   // the nearest picture that has arrived, if the wanted one is still on its way
@@ -63,8 +66,8 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
       return undefined;
     };
     const first = pick(lower), second = blend > 0.02 ? bitmaps.current[(lower + 1) % FRAMES] : undefined;
-    if (first) context.drawImage(first, 0, 0, WIDTH * SHARP, HEIGHT * SHARP);
-    if (first && second) { context.globalAlpha = blend; context.drawImage(second, 0, 0, WIDTH * SHARP, HEIGHT * SHARP); context.globalAlpha = 1; }
+    if (first) context.drawImage(first, 0, 0, w, h);
+    if (first && second) { context.globalAlpha = blend; context.drawImage(second, 0, 0, w, h); context.globalAlpha = 1; }
   }, []);
 
   useEffect(() => {

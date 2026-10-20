@@ -1803,6 +1803,12 @@ It sits in the Performance panel at the Commissioner's request, although that pa
 
 Each player's own full set lives in the Trophy Room, under the all-time record ("Player stats", a row of names to choose from): the same record and hit rate, 0-2 / 1-1 / 2-0 histogram, longest and current streaks, favorite/underdog and home/road splits, plus their record season by season. The group's totals and the two streak boards stay in the Performance panel. Both come from the same function (`buildGroupStats`) and the same Commissioner-only read, so a player's numbers always add up to the group's.
 
+## 2026-10-20 - A lighter Trophy Room, smaller banners, tied places and a tidier table
+
+- **Smooth again:** the banners ran about 120 separate animations plus a shadow filter that had to be redrawn every frame, and the table canvas drew two full-size pictures each frame. The cloth is now 12 strips with one wave each (the lettering already moves as one piece), there is no filter, the banners are promoted to their own layer, and the table is drawn at the pictures' own size while it turns (twice the size only at rest, for sharp plaques).
+- **Banners:** back to a compact size (two to a row on a phone), the star gets room above the year, and a second year has room under the first.
+- **All-Time Table:** players level on what the table is sorted by share a place (standard competition ranking: two players tied for 1st are both 1st, marked "T1", and the next is 3rd). Under Wins that is the same number of wins; under Hit rate it is the same hit rate on the same side of the 50-pick threshold. The columns are rebalanced for a phone (narrower rank and wins, wider streaks) and the long streak headings are a little smaller and tighter there so "Consecutive" fits.
+
 ## Championship banners are per person, not per year
 
 The banners under the front trophy used to be one per season. They are now one per person who has won that pool, and each carries every year that person won (oldest first), so a repeat winner adds a year to the banner they already have. A new winner gets a new banner, hung after the others, and banners stay in the order they were first earned, so the one that has hung longest is always at the left and nothing already flying moves. Co-champions of one season each get their own banner. A banner is matched to its person by player id (by name only when a record has no id), and shows the latest name on record. The banners still drop and bounce in when a trophy comes to the front.
