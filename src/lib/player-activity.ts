@@ -19,18 +19,22 @@ export async function recordPlayerActivity(playerId: string) {
 
   const timestamp = new Date(now).toISOString();
   const cutoff = new Date(now - ACTIVITY_WRITE_INTERVAL_MS).toISOString();
-  const { error } = await supabaseAdmin
-    .from("players")
-    .update({ last_active_at: timestamp })
-    .eq("id", playerId)
-    // The database condition also coalesces writes from separate serverless
-    // instances that happen to see the same activity at once.
-    .or(`last_active_at.is.null,last_active_at.lte.${cutoff}`);
+  try {
+    const { error } = await supabaseAdmin
+      .from("players")
+      .update({ last_active_at: timestamp })
+      .eq("id", playerId)
+      // The database condition also coalesces writes from separate serverless
+      // instances that happen to see the same activity at once.
+      .or(`last_active_at.is.null,last_active_at.lte.${cutoff}`);
 
-  // Presence is a Commissioner convenience, never a reason to make a player
-  // lose access or fail a saved selection during a transient database issue.
-  if (error) {
+    // Presence is a Commissioner convenience, never a reason to make a player
+    // lose access or fail a saved selection during a transient database issue.
+    if (error) {
+      lastAttemptByPlayer.delete(playerId);
+      console.error("Player activity could not be recorded.", error.code);
+    }
+  } catch {
     lastAttemptByPlayer.delete(playerId);
-    console.error("Player activity could not be recorded.", error.code);
   }
 }
