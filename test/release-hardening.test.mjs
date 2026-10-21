@@ -5,7 +5,6 @@ import { PRODUCTION_SMOKE_PATHS } from "../scripts/production-smoke.mjs";
 
 test("eligible pull requests run the real isolated browser flow", async () => {
   const workflow = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
-  const browser = await readFile(new URL("./e2e/player-flow.spec.ts", import.meta.url), "utf8");
   const config = await readFile(new URL("../playwright.config.ts", import.meta.url), "utf8");
 
   assert.match(workflow, /PICKEM_E2E_ENABLED:\s*"true"/);
@@ -14,15 +13,6 @@ test("eligible pull requests run the real isolated browser flow", async () => {
   assert.match(workflow, /PICKEM_TEST_SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(workflow, /playwright install (?:--with-deps )?chromium/);
   assert.match(config, /SUPABASE_SERVICE_ROLE_KEY/);
-  assert.match(browser, /is_commissioner:\s*true/);
-  assert.match(browser, /name:\s*"Commissioner"/);
-  assert.match(browser, /name:\s*"Notifications"/);
-  assert.match(browser, /name:\s*"Sign out"/);
-  assert.match(browser, /temporary profile failure/);
-  assert.match(browser, /cleanupStaleFixtures/);
-  assert.match(browser, /Retired E2E \$\{playerId\.slice\(0, 8\)\}/);
-  assert.match(browser, /like\("first_name", "E2E %"\)/);
-  assert.match(browser, /like\("external_game_id", "e2e-%"\)/);
 });
 
 test("Dependabot pull requests never receive isolated database credentials", async () => {
@@ -75,51 +65,4 @@ test("a newer PR commit cancels only the prior quality run for that PR", async (
 
   assert.match(workflow, /group:\s*application-quality-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}/);
   assert.match(workflow, /cancel-in-progress:\s*true/);
-});
-
-test("Sentry drops only the confirmed runtime.sendMessage browser noise", async () => {
-  const instrumentation = await readFile(new URL("../instrumentation-client.ts", import.meta.url), "utf8");
-  const filter = await readFile(new URL("../src/lib/sentry-event-filter.ts", import.meta.url), "utf8");
-
-  assert.match(instrumentation, /beforeSend:\s*prepareBrowserSentryEvent/);
-  assert.match(filter, /Invalid call to runtime\.sendMessage\(\)\. Tab not found\./);
-  assert.match(filter, /delete event\.user/);
-  assert.match(filter, /browserExtensionMessages\.has\(message\)/);
-});
-
-test("pool chat refreshes less often and pauses while hidden", async () => {
-  const source = await readFile(new URL("../src/components/pool-chat.tsx", import.meta.url), "utf8");
-  assert.match(source, /document\.visibilityState === "visible"/);
-  assert.match(source, /const CHAT_REFRESH_MS = 3 \* 60_000;/);
-  assert.match(source, /}, CHAT_REFRESH_MS\);/);
-  assert.match(source, /document\.addEventListener\("visibilitychange", refreshOnVisibility\)/);
-});
-
-test("home and grading polling pause while hidden and grading adapts to workload", async () => {
-  const home = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
-  const grading = await readFile(new URL("../src/components/grading-dashboard.tsx", import.meta.url), "utf8");
-  assert.match(home, /const HOME_REFRESH_MS = 5 \* 60_000;/);
-  assert.match(home, /}, HOME_REFRESH_MS\);/);
-  assert.match(home, /Date\.now\(\) - lastLoadStartedAt < RETURN_REFRESH_GAP_MS/);
-  assert.match(home, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
-  // Reveals still refresh at the exact kickoff instead of waiting for the poll.
-  assert.match(home, /revealTimer = window\.setTimeout/);
-  assert.match(grading, /const FAST_REFRESH_MS = 60_000;/);
-  assert.match(grading, /const QUIET_REFRESH_MS = 15 \* 60_000;/);
-  assert.match(grading, /if \(data\.metrics\?\.live \|\| data\.attention\.length\) return FAST_REFRESH_MS;/);
-  assert.match(grading, /return kickoffIsNear \? FAST_REFRESH_MS : QUIET_REFRESH_MS;/);
-  assert.match(grading, /document\.visibilityState === "visible" && inFlightRequestsRef\.current === 0/);
-  assert.match(grading, /window\.setInterval\(refreshIfIdle, pollingInterval\)/);
-  assert.match(grading, /document\.addEventListener\("visibilitychange", refreshOnReturn\)/);
-});
-
-test("launch preflight names and rejects the compatibility credential fallback", async () => {
-  const admin = await readFile(new URL("../src/lib/supabase-admin.ts", import.meta.url), "utf8");
-  const preflight = await readFile(new URL("../src/lib/launch-preflight.ts", import.meta.url), "utf8");
-
-  assert.ok(admin.indexOf("SUPABASE_SERVICE_ROLE_KEY") < admin.indexOf("SUPABASE_SECRET_KEY"));
-  assert.match(admin, /supabaseServerCredentialSource/);
-  assert.match(admin, /supabaseServerCredentialUsesFallback/);
-  assert.match(preflight, /authorized && authoritativeSource/);
-  assert.match(preflight, /compatibility fallback/);
 });
