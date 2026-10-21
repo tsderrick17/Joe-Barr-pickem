@@ -710,8 +710,12 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; overflow: hidden; padding-left: .5rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .trophy-table .trophy-rank { color: var(--club-muted); }
 .trophy-table .trophy-rank small { font-size: .62em; margin-right: .08rem; }
+/* Other Stats column widths: roomy streak columns on a phone so CONSECUTIVE fits, a wider player column on larger screens. */
+.trophy-col-rank { width: 6%; } .trophy-col-player { width: 17%; } .trophy-col-donut { width: 17%; } .trophy-col-sweeps { width: 17%; }
+.trophy-col-wins { width: 8%; } .trophy-col-losses { width: 10%; } .trophy-col-rate { width: 11%; } .trophy-col-pushes { width: 14%; }
+@media (min-width: 640px) { .trophy-col-rank { width: 7%; } .trophy-col-player { width: 19%; } .trophy-col-donut { width: 16%; } .trophy-col-sweeps { width: 14%; } .trophy-col-wins { width: 9%; } .trophy-col-losses { width: 9%; } .trophy-col-rate { width: 12%; } .trophy-col-pushes { width: 14%; } }
 /* On a phone the long streak headings (CONSECUTIVE ...) must fit their columns: a little smaller and tighter, and no padding eating into them. */
-@media (max-width: 639px) { .trophy-table thead th { font-size: .52rem; letter-spacing: .03em; } .trophy-table th, .trophy-table td { padding-inline: .1rem; } .trophy-table th[scope="row"] { font-size: 1rem; padding-left: .35rem; } }
+@media (max-width: 639px) { .trophy-table thead th { font-size: .48rem; letter-spacing: .02em; } .trophy-table th, .trophy-table td { padding-inline: .1rem; } .trophy-table th[scope="row"] { font-size: .9rem; padding-left: .35rem; } }
 .trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
 .trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }

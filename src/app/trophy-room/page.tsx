@@ -124,7 +124,7 @@ export default function TrophyRoomPage() {
               <table className="trophy-table" data-view={view}>
                 {view === "record"
                   ? <colgroup><col style={{ width: "10%" }} /><col style={{ width: "40%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
-                  : <colgroup><col style={{ width: "7%" }} /><col style={{ width: "19%" }} /><col style={{ width: "16%" }} /><col style={{ width: "14%" }} /><col style={{ width: "9%" }} /><col style={{ width: "9%" }} /><col style={{ width: "12%" }} /><col style={{ width: "14%" }} /></colgroup>}
+                  : <colgroup><col className="trophy-col-rank" /><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
                 <thead>
                   {view === "record" ? (
                     <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
