@@ -1786,6 +1786,10 @@ The "Past champions" cards are gone. In their place, below the table, the champi
 Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, so they are now spaced well apart and joined by cross-pins; the Survivor plaques are wider and more evenly spaced.
 
 
+## 2026-10-21 - Any page a player opens counts as being active
+
+The Commissioner's "last active" time was written only on login, the Slate, saving picks and chat, so a player who had only looked at the Standings, the Trophy Room, the Bowl Pool or Survivor, or who stayed signed in on their phone, kept showing an old time (Zac tested a feature and was shown as last on the day before). Every page reads its data through the shared player authentication, so recording activity there covers them all, after the response and no more than once every 15 minutes per player as before. The Commissioner's own background admin calls do not count, and a failure to record never affects the player.
+
 ## The header keeps its height while the player's name loads
 
 The top bar grew when the name ("Tyler ▾") arrived after the session check, pushing the whole page down. The name button is taller than the theme button, and the reserved height was smaller than the name's. The bar now reserves the name's full height from the first paint (3.75rem on a phone including its padding, 2.75rem for the account area on a desktop), so the name can take a second to appear and nothing moves. A screenshot-suite test measures the header before and after the name loads, on a phone and a desktop.
@@ -1844,6 +1848,10 @@ The pull-down refresh used to be a drop of water, which belonged to nothing else
 ## 2026-10-20 - The pull-to-refresh chain can never get stuck
 
 Once the chain was planted, a finger lift the page never heard of (or a reload that never came, or the page coming back from the browser's back/forward cache) could leave the chain drawn over the header after the page had refreshed by other means. Now the gesture always ends: letting go with the foot planted refreshes as before; any other ending, or a touch that goes quiet (1.5 seconds with no finger down, 4 seconds with a finger held still), resets the chain; a page restored from the cache starts clean; and a reload that has not happened after 6 seconds takes the football down again.
+
+## 2026-10-21 - New tables are granted to the service role explicitly
+
+Supabase stops granting Data API access to new `public` tables on 2026-10-30. A catch-up migration re-grants the service role access to every existing table, sequence and function and to future ones, and from now on each migration that creates a table grants it in the same file; a test fails if one does not. Existing tables, and what anon and authenticated players can reach, are unchanged.
 
 ## The browser tab shows the site's own goalpost icon
 
