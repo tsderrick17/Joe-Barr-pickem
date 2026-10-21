@@ -4,6 +4,7 @@ import { buildAllTimeStats } from "@/lib/all-time-stats.js";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
 import { settledPeriods, weeklyStreaks } from "@/lib/group-stats.js";
 import { readAllPages } from "@/lib/read-all-pages";
+import { createShortCache } from "@/lib/short-cache.js";
 import { trophyRoomOpen } from "@/lib/trophy-room-access.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -16,7 +17,18 @@ export async function GET(request: NextRequest) {
   const access = await authenticateActivePlayer(request);
   if (!access.ok) return accessDenied(access);
   if (!trophyRoomOpen(Date.now(), access.player.is_commissioner)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    return NextResponse.json(await readTrophyRoom());
+  } catch {
+    return NextResponse.json({ error: "The Trophy Room could not be loaded." }, { status: 500 });
+  }
+}
 
+/** The same figures for every player, and they only change when a game is graded, so one build serves everyone for a minute (a graded game shows
+ *  up within that minute). Without this, each page open reads every pick, game and line ever recorded. */
+const readTrophyRoom = createShortCache(60_000, buildTrophyRoom);
+
+async function buildTrophyRoom() {
   const [players, seasons, periods, survivorEntries, championships, bowlSeasons, bowlChampionships, games, lines, picks, weekPicks] = await Promise.all([
     supabaseAdmin.from("players").select("id, first_name"),
     supabaseAdmin.from("seasons").select("id, year"),
@@ -33,7 +45,7 @@ export async function GET(request: NextRequest) {
   ]);
 
   const failed = [players, seasons, periods, survivorEntries, championships, bowlSeasons, bowlChampionships, games, lines, picks, weekPicks].some((read) => read.error);
-  if (failed) return NextResponse.json({ error: "The Trophy Room could not be loaded." }, { status: 500 });
+  if (failed) throw new Error("The Trophy Room could not be loaded.");
 
   const bowlYearBySeason = new Map((bowlSeasons.data ?? []).map((season) => [season.id, season.season_year]));
   const stats = buildAllTimeStats({
@@ -53,5 +65,5 @@ export async function GET(request: NextRequest) {
   // a week counts for the streaks as soon as every game in it is final, not only once the pool has moved on to the next week
   const settledPeriodIds = settledPeriods(games.data ?? []);
   const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [], settledPeriodIds });
-  return NextResponse.json({ ...stats, players: stats.players.map((row: { playerId: string }) => ({ ...row, streaks: streaks.get(row.playerId) ?? null })) });
+  return { ...stats, players: stats.players.map((row: { playerId: string }) => ({ ...row, streaks: streaks.get(row.playerId) ?? null })) };
 }
