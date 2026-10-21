@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { accessDenied } from "@/lib/access-response";
 import { buildAllTimeStats } from "@/lib/all-time-stats.js";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
-import { weeklyStreaks } from "@/lib/group-stats.js";
+import { settledPeriods, weeklyStreaks } from "@/lib/group-stats.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { trophyRoomOpen } from "@/lib/trophy-room-access.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
     supabaseAdmin.from("pool_championships").select("season_year, pool, player_id"),
     supabaseAdmin.from("bowl_pool_seasons").select("id, season_year"),
     supabaseAdmin.from("bowl_pool_championships").select("season_id, player_id"),
-    readAllPages((from, to) => supabaseAdmin.from("games").select("id, kickoff_at").order("id").range(from, to)),
-    readAllPages((from, to) => supabaseAdmin.from("game_lines").select("game_id, favorite_team_id").order("game_id").range(from, to)),
+    readAllPages((from, to) => supabaseAdmin.from("games").select("id, kickoff_at, scoring_period_id, status, home_team_id, away_team_id, home_score, away_score").order("id").range(from, to)),
+    readAllPages((from, to) => supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread").order("game_id").range(from, to)),
     readAllPages((from, to) => supabaseAdmin.from("picks").select("id, player_id, game_id, scoring_period_id, selected_team_id, result").in("result", ["win", "loss"]).order("id").range(from, to)),
     // the streaks also need the voided and unsettled picks, which leave a week out
     readAllPages((from, to) => supabaseAdmin.from("picks").select("id, player_id, scoring_period_id, result").order("id").range(from, to)),
@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
       return year === undefined ? [] : [{ season_year: year, player_id: record.player_id }];
     }),
   });
-  const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [] });
+  // a week counts for the streaks as soon as every game in it is final, not only once the pool has moved on to the next week
+  const settledPeriodIds = settledPeriods(games.data ?? []);
+  const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [], settledPeriodIds });
   return NextResponse.json({ ...stats, players: stats.players.map((row: { playerId: string }) => ({ ...row, streaks: streaks.get(row.playerId) ?? null })) });
 }

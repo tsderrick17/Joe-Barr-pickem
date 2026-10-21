@@ -1,22 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage } from "@/lib/all-time-stats.js";
-import { placesFor } from "@/lib/trophy-rank.js";
+import { placesFor, sortValue, type SortKey } from "@/lib/trophy-rank.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
-type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean; streaks: { noDonut: Run; sweeps: Run } | null };
+type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean; halfWins?: number; halfLosses?: number; pushes?: number; streaks: { noDonut: Run; sweeps: Run } | null };
+type View = "record" | "more";
 type Run = { longest: number; current: number };
 
 export default function TrophyRoomPage() {
   const [data, setData] = useState<{ trophies: Season[]; players: Row[] } | null>(null);
   const [notYet, setNotYet] = useState(false);   // before the Trophy Room opens, a player is told when
   const [error, setError] = useState("");
-  const [sort, setSort] = useState<{ key: "wins" | "rate"; descending: boolean }>({ key: "rate", descending: true });
+  const [view, setView] = useState<View>("record");   // two views: wins and hit rate, or streaks and the other statistics
+  const [sort, setSort] = useState<{ key: SortKey; descending: boolean }>({ key: "rate", descending: true });
 
   useEffect(() => {
     let disposed = false;
@@ -37,34 +39,36 @@ export default function TrophyRoomPage() {
   }, []);
 
   const players = data?.players ?? [];
-  // Wins and hit rate sort on their own. Hit rate ranks players with enough picks first (so one lucky pick does not top the table);
-  // wins ranks everyone.
+  // Every column sorts on its own number (a streak column on the best run). Hit rate ranks players with enough picks first (so one lucky pick
+  // does not top the table); the rest rank everyone. Ties share a place (see placesFor).
   const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
   const sorted = [...players].sort((a, b) => {
     const direction = sort.descending ? 1 : -1;
-    if (sort.key === "wins") return direction * (b.h - a.h) || direction * ((b.avg ?? 0) - (a.avg ?? 0)) || byName(a, b);
-    if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
-    return direction * ((b.avg ?? 0) - (a.avg ?? 0)) || direction * (b.h - a.h) || byName(a, b);
+    if (sort.key === "rate") {
+      if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
+      return direction * ((b.avg ?? 0) - (a.avg ?? 0)) || direction * (b.h - a.h) || byName(a, b);
+    }
+    return direction * (sortValue(b, sort.key) - sortValue(a, sort.key)) || (sort.key === "wins" ? direction * ((b.avg ?? 0) - (a.avg ?? 0)) : 0) || byName(a, b);
   });
-  const choose = (key: "wins" | "rate") => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
-  const header = (key: "wins" | "rate", label: string) => (
-    <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={2} scope="col">
+  const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
+  const switchView = (next: View) => { setView(next); setSort({ key: next === "record" ? "rate" : "donut", descending: true }); };
+  const header = (key: SortKey, label: ReactNode, rowSpan = 2) => (
+    <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={rowSpan} scope="col">
       <button className="trophy-sort" onClick={() => choose(key)} type="button">{label}<span aria-hidden="true">{sort.key === key ? (sort.descending ? " ▼" : " ▲") : ""}</span></button>
     </th>
   );
 
-  /** A streak cell: the all-time best big, the current streak small under it, and a bar showing how close the current streak is to that best. */
+  /** A streak cell: the all-time best big, and the current streak small under it. */
   const streakCell = (run: Run | undefined, label: string) => {
     if (!run) return <td aria-label={`${label}: none yet`} className="trophy-streak"><span className="trophy-streak-best">—</span></td>;
-    const atBest = run.current > 0 && run.current >= run.longest;
     return (
-      <td aria-label={`${label}: ${run.current} now, ${run.longest} best${atBest ? ", at their best" : ""}`} className={`trophy-streak ${atBest ? "is-best" : ""}`}>
-        <span className="trophy-streak-best">{run.longest}{atBest ? " ★" : ""}</span>
+      <td aria-label={`${label}: ${run.current} now, ${run.longest} best`} className="trophy-streak">
+        <span className="trophy-streak-best">{run.longest}</span>
         <span className="trophy-streak-now">now {run.current}</span>
-        <span aria-hidden="true" className="trophy-streak-bar"><span style={{ width: `${run.longest ? Math.round((run.current / run.longest) * 100) : 0}%` }} /></span>
       </td>
     );
   };
+  const count = (row: Row, value: number | undefined) => (row.ab ? value ?? 0 : "—");
 
   function line(row: Row, rank: number, tied: boolean) {
     const own = row.streaks ?? undefined;
@@ -72,10 +76,16 @@ export default function TrophyRoomPage() {
       <tr key={row.playerId}>
         <td className="trophy-rank">{tied ? <small>T</small> : null}{rank}</td>
         <th scope="row">{row.name}</th>
-        <td>{row.ab ? row.h : "—"}</td>
-        <td className="trophy-avg">{formatAverage(row.avg)}</td>
-        {streakCell(own?.noDonut, "Consecutive Donut Free Weeks")}
-        {streakCell(own?.sweeps, "Consecutive 2-0 Sweeps")}
+        {view === "record" ? <>
+          <td>{row.ab ? row.h : "—"}</td>
+          <td className="trophy-avg">{formatAverage(row.avg)}</td>
+        </> : <>
+          {streakCell(own?.noDonut, "Consecutive Donut Free Weeks")}
+          {streakCell(own?.sweeps, "Consecutive 2-0 Weeks")}
+          <td>{count(row, row.halfWins)}</td>
+          <td>{count(row, row.halfLosses)}</td>
+          <td>{count(row, row.pushes)}</td>
+        </>}
       </tr>
     );
   }
@@ -102,13 +112,30 @@ export default function TrophyRoomPage() {
 
         {data ? <>
           <section aria-labelledby="all-time" className="py-8">
-            <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
+            <div className="trophy-table-head">
+              <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
+              <div aria-label="Table view" className="trophy-view-switch" role="group">
+                <button aria-pressed={view === "record"} className={view === "record" ? "is-active" : ""} onClick={() => switchView("record")} type="button">Wins &amp; hit rate</button>
+                <button aria-pressed={view === "more"} className={view === "more" ? "is-active" : ""} onClick={() => switchView("more")} type="button">Streaks &amp; more</button>
+              </div>
+            </div>
             <div className="trophy-table-wrap mt-4">
-              <table className="trophy-table">
-                <colgroup><col style={{ width: "6%" }} /><col style={{ width: "24%" }} /><col style={{ width: "11%" }} /><col style={{ width: "15%" }} /><col style={{ width: "22%" }} /><col style={{ width: "22%" }} /></colgroup>
+              <table className="trophy-table" data-view={view}>
+                {view === "record"
+                  ? <colgroup><col style={{ width: "10%" }} /><col style={{ width: "40%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
+                  : <colgroup><col style={{ width: "7%" }} /><col style={{ width: "19%" }} /><col style={{ width: "17%" }} /><col style={{ width: "17%" }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "16%" }} /></colgroup>}
                 <thead>
-                  <tr><th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>{header("wins", "Wins")}{header("rate", "Hit rate")}<th colSpan={2} scope="colgroup">Regular Season Streaks</th></tr>
-                  <tr><th scope="col" title="Weeks in a row with at least 1 win (never a 0-2)">Consecutive Donut Free Weeks</th><th scope="col" title="2-0 weeks in a row">Consecutive 2-0 Sweeps</th></tr>
+                  {view === "record" ? (
+                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
+                  ) : <>
+                    <tr>
+                      <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>
+                      <th colSpan={2} scope="colgroup">Regular Season Streaks</th><th colSpan={2} scope="colgroup">Decided by a half point</th>{header("pushes", "Pushes picked")}
+                    </tr>
+                    <tr>
+                      {header("donut", <>Consecutive <br />Donut Free Weeks</>, 1)}{header("sweeps", <>Consecutive <br />2-0 Weeks</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}
+                    </tr>
+                  </>}
                 </thead>
                 <tbody>
                   {(() => { const places = placesFor(sorted, sort.key); return sorted.map((row, index) => line(row, places[index].place, places[index].tied)); })()}
