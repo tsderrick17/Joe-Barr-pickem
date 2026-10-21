@@ -20,3 +20,12 @@ test("players below the picks threshold are not tied with those above it, and ha
   assert.deepEqual(placesFor(rows, "rate").map((p) => p.place), [1, 2]);
   assert.deepEqual(placesFor([], "rate"), []);
 });
+
+test("the half-point hit rate is wins over games decided that way, and nothing when none were", async () => {
+  const { halfRate, sortValue } = await import("../src/lib/trophy-rank.js");
+  assert.equal(halfRate({ halfWins: 6, halfLosses: 4 }), 0.6);
+  assert.equal(halfRate({ halfWins: 0, halfLosses: 0 }), null);
+  assert.equal(halfRate({}), null);
+  assert.equal(sortValue({ halfWins: 3, halfLosses: 1 }, "halfRate"), 0.75);
+  assert.equal(sortValue({}, "halfRate"), 0, "no games sorts last");
+});

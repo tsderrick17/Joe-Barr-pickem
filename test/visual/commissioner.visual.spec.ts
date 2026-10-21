@@ -258,7 +258,7 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await signIn(page, "day");
   await serve(page, "healthy");
   await page.goto("/trophy-room");
-  await page.getByRole("button", { name: "Streaks & more" }).click();   // the streaks are in the second view of the table
+  await page.getByRole("button", { name: "Other Stats" }).click();   // the streaks are in the second view of the table
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
   await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
   await expect(row.getByLabel("Consecutive 2-0 Weeks: 0 now, 5 best")).toBeVisible();
@@ -266,18 +266,18 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
 });
 
-// The second view of the table: streaks, games decided by half a point (wins and losses) and pushes picked, ranked on the sorted column with
+// The second view of the table: streaks, games decided by half a point (wins, losses and hit rate) and pushes picked, ranked on the sorted column with
 // ties sharing a place (Ron, Al, Dana and Zac have no streaks, so they are all tied for 5th).
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
-  test(`Trophy room: the Streaks & more view at ${label}`, async ({ page }) => {
+  test(`Trophy room: the Other Stats view at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signIn(page, "day");
     await serve(page, "healthy");
     await page.goto("/trophy-room");
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("button", { name: "Streaks & more" }).click();
-    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "Pushes picked", "Consecutive Donut Free Weeks ▼", "Consecutive 2-0 Weeks", "Wins", "Losses"]);
+    await page.getByRole("button", { name: "Other Stats" }).click();
+    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Consecutive Donut Free Weeks ▼", "Consecutive 2-0 Weeks", "Wins", "Losses", "Hit rate", "Pushes picked"]);
     const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
     expect(await rankOf("Tyler")).toBe("1");
     expect(await rankOf("Ron")).toBe("T5");
@@ -285,7 +285,8 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const tyler = table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
     await expect(tyler.locator("td").nth(3)).toHaveText("6");   // half-point wins
     await expect(tyler.locator("td").nth(4)).toHaveText("4");   // half-point losses
-    await expect(tyler.locator("td").nth(5)).toHaveText("3");   // pushes picked
+    await expect(tyler.locator("td").nth(5)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
+    await expect(tyler.locator("td").nth(6)).toHaveText("3");   // pushes picked
     await table.getByRole("button", { name: /^Pushes picked/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Connor");   // 4 pushes
     await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
