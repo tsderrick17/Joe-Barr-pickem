@@ -1857,6 +1857,10 @@ Supabase stops granting Data API access to new `public` tables on 2026-10-30. A 
 
 The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` and `src/app/icon.png` are now an 8-bit goalpost under a night sky: yellow uprights lit on one edge and shaded on the other, small red streamers on top, crimson padding on the stem, mowed turf below, and "JB" between the uprights in white varsity letters with a crimson drop shadow. It is two hand-placed pixel pictures rather than one shrunk image: a detailed 32 by 32 (used at 32, 64 and 256 px, enlarged without smoothing so it stays crisp) and a simplified 16 by 16 for an ordinary tab. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
 
+## 2026-10-21 - On a phone the Slate's display switch sits beside the week selector
+
+The All games / Pool action switch moves to the right of the View week selector on the same row (below 768 px), saving a row of height at the top of the Slate. Wider screens keep the stacked layout.
+
 ## The home-screen icon is the goalpost too
 
 The app's home-screen icon (what shows when the pool is added to a phone, and the manifest's 192 and 512 px and maskable icons, and `apple-icon.png`) was a football with "JB" on cream. It is now the same 8-bit goalpost as the browser tab: yellow uprights with the varsity JB between them, crimson padding, a night sky and mowed turf. It is the detailed 32 by 32 picture enlarged without smoothing (16 times for 512, 6 times for 192, so every pixel stays crisp) as a full square with no transparent corners, since the phone applies its own rounded mask; the maskable icon is the same picture, because the goalpost and JB sit well inside the 80% safe zone. A test checks the sizes and that none of the files has transparency. A phone keeps the icon of an app that was already added to the home screen, so to see the new one remove the app from the home screen and add it again.
