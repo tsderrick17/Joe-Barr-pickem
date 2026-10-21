@@ -3,7 +3,7 @@ import { TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 // The Trophy Room's turntable: three trophies on a mahogany table that turns by drag, swipe or arrow, and the banners of the trophy at the front.
 
-async function openTrophyRoom(page: Page) {
+async function openTrophyRoom(page: Page, width = 900) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
   const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
   const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
@@ -17,7 +17,7 @@ async function openTrophyRoom(page: Page) {
     return route.fulfill({ status: 204, body: "" });
   });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
-  await page.setViewportSize({ width: 900, height: 900 });
+  await page.setViewportSize({ width, height: 900 });
   await page.goto("/trophy-room");
   await expect(page.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
 }
@@ -50,14 +50,36 @@ test("the arrows bring the next trophy to the front, and its champions hang from
   await expect(front(page)).toHaveText("Bowl Pool is at the front");
 });
 
-test("the banners lift away while the table turns and drop in when it settles", async ({ page }) => {
+test("the banners stay while the table turns, and are replaced by the next trophy's once it has settled", async ({ page }) => {
   await openTrophyRoom(page);
   await page.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Turning" })).toBeVisible();
-  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "true");
-  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  // mid-turn the Pick'em banners are still hanging, and nothing has lifted
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "pickem");
   await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "false");
+  await expect(page.locator(".trophy-banner").first()).toContainText("Tyler");
+  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "bowl");   // swapped only after it settled
+  await expect(page.locator(".trophy-banner")).toHaveText([/Connor[\s\S]*2026/]);
   expect(await page.locator(".trophy-banner").first().evaluate((banner) => getComputedStyle(banner).animationName)).toContain("trophy-banner-unfurl");
+});
+
+test("a phone is sent the smaller pictures (60 at 660 wide), a desktop the full set", async ({ page }) => {
+  const requested: string[] = [];
+  page.on("request", (request) => { if (/\/trophies\/turntable\/(sm\/)?(frame|rest)-\d+\.webp/.test(request.url())) requested.push(new URL(request.url()).pathname); });
+  await openTrophyRoom(page, 390);
+  const small = requested.filter((path) => path.includes("/sm/"));
+  expect(small.filter((path) => path.includes("/frame-")).length, "all 60 small pictures").toBe(60);
+  expect(small.filter((path) => path.includes("/rest-")).length, "and the 3 sharp resting views").toBe(3);
+  expect(requested.filter((path) => !path.includes("/sm/") && !path.endsWith("/frame-000.webp")), "no full-size picture was fetched on a phone").toEqual([]);
+  await page.close();
+});
+
+test("a desktop is sent the full set of 120 pictures", async ({ page }) => {
+  const requested = new Set<string>();
+  page.on("request", (request) => { if (/\/trophies\/turntable\/frame-\d+\.webp/.test(request.url())) requested.add(new URL(request.url()).pathname); });
+  await openTrophyRoom(page, 1280);
+  expect(requested.size).toBe(120);
 });
 
 test("dragging turns the table and it settles on the nearest trophy", async ({ page }) => {
@@ -92,9 +114,8 @@ test("a cancelled drag settles on a trophy instead of sticking between two", asy
   const y = box.y + box.height * 0.6;
   await page.mouse.move(box.x + box.width * 0.7, y); await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.7 - box.width * 0.18, y, { steps: 8 });
-  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "true");
+  await expect(page.getByRole("status").filter({ hasText: "Turning" })).toBeVisible();
   await stage.dispatchEvent("pointercancel");
-  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-moving", "false");
   await expect(front(page)).toHaveText(/is at the front/);
   await page.mouse.up();
 });
