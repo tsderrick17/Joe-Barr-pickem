@@ -18,7 +18,7 @@ const good = () => ({
 });
 let world = good();
 const requests = [];
-const respond = (table, calls) => {
+const respond = (table) => {
   if (table === "seasons") return { data: [{ id: "s" }], error: null };
   if (table === "players") return { data: world.commissioners, error: null };
   if (table === "automation_worker_heartbeats") return { data: world.heartbeat, error: null };
