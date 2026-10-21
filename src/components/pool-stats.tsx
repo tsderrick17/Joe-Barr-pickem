@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { formatAverage } from "@/lib/all-time-stats.js";
+import { formatAdminNumber } from "@/lib/format-admin-number.js";
 import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type RecordSummary, type Splits, type TeamPicked, type TeamSort, type Weeks } from "@/components/stats-blocks";
 
 /**
@@ -115,7 +116,7 @@ export default function PoolStats() {
                     {view.bySeason.map((season) => (
                       <tr key={season.seasonYear}>
                         <th scope="row">{season.seasonYear}</th>
-                        <td>{season.wins.toLocaleString()}–{season.losses.toLocaleString()}</td>
+                        <td>{formatAdminNumber(season.wins)}–{formatAdminNumber(season.losses)}</td>
                         <td className="pool-strong">{formatAverage(season.hitRate)}</td>
                       </tr>
                     ))}
