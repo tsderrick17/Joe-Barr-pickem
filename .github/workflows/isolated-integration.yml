@@ -76,14 +76,14 @@ jobs:
             *) echo "Refusing a browser-test URL that is not the isolated test project." >&2; exit 1 ;;
           esac
           echo "Using the explicitly confirmed isolated test environment."
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-      - uses: supabase/setup-cli@v2
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.113.0
           github-token: ${{ github.token }}
@@ -112,7 +112,7 @@ jobs:
         # `supabase gen types` pulls a container from a public registry that caps anonymous downloads per runner address,
         # and answers "too many requests" for hours once it has. The images only change with the CLI version, so keep them.
         id: supabase-images
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ~/supabase-images.tar
           key: supabase-cli-images-2.113.0
@@ -150,7 +150,7 @@ jobs:
           if [ -n "$images" ]; then docker save --output ~/supabase-images.tar $images && echo "kept=true" >> "$GITHUB_OUTPUT"; fi
       - name: Save the Supabase CLI's container images
         if: ${{ steps.keep-images.outputs.kept == 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ~/supabase-images.tar
           key: supabase-cli-images-2.113.0
