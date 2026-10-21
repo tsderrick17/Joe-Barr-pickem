@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 import { resolvePlayerAccess } from "@/lib/player-access-result";
 import { retrySafeRead } from "@/lib/retry-safe-read";
+import { countsAsActivity } from "@/lib/activity-rule.js";
+import { recordPlayerActivity } from "@/lib/player-activity";
 
 type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
 type BasicPlayer = Pick<PlayerRow, "id" | "active" | "is_commissioner">;
@@ -36,7 +38,7 @@ export async function authenticateActivePlayer(
   const serverKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   const authorization = request.headers.get("authorization");
 
-  return resolvePlayerAccess({
+  const access = await resolvePlayerAccess({
     authorization,
     configured: Boolean(url && publishableKey && serverKey),
     requireCommissioner: options.requireCommissioner,
@@ -69,4 +71,10 @@ export async function authenticateActivePlayer(
         .maybeSingle());
     },
   });
+  // Using any page counts as being active (the write is throttled to once per 15 minutes per player, and runs after the response).
+  if (countsAsActivity(access, options)) {
+    const playerId = (access as { ok: true; player: { id: string } }).player.id;
+    try { after(() => recordPlayerActivity(playerId)); } catch { void recordPlayerActivity(playerId); }
+  }
+  return access;
 }

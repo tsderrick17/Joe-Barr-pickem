@@ -1786,6 +1786,10 @@ The "Past champions" cards are gone. In their place, below the table, the champi
 Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, so they are now spaced well apart and joined by cross-pins; the Survivor plaques are wider and more evenly spaced.
 
 
+## 2026-10-21 - Any page a player opens counts as being active
+
+The Commissioner's "last active" time was written only on login, the Slate, saving picks and chat, so a player who had only looked at the Standings, the Trophy Room, the Bowl Pool or Survivor, or who stayed signed in on their phone, kept showing an old time (Zac tested a feature and was shown as last on the day before). Every page reads its data through the shared player authentication, so recording activity there covers them all, after the response and no more than once every 15 minutes per player as before. The Commissioner's own background admin calls do not count, and a failure to record never affects the player.
+
 ## The header keeps its height while the player's name loads
 
 The top bar grew when the name ("Tyler ▾") arrived after the session check, pushing the whole page down. The name button is taller than the theme button, and the reserved height was smaller than the name's. The bar now reserves the name's full height from the first paint (3.75rem on a phone including its padding, 2.75rem for the account area on a desktop), so the name can take a second to appear and nothing moves. A screenshot-suite test measures the header before and after the name loads, on a phone and a desktop.
@@ -1849,13 +1853,25 @@ The pull-down refresh used to be a drop of water, which belonged to nothing else
 
 Once the chain was planted, a finger lift the page never heard of (or a reload that never came, or the page coming back from the browser's back/forward cache) could leave the chain drawn over the header after the page had refreshed by other means. Now the gesture always ends: letting go with the foot planted refreshes as before; any other ending, or a touch that goes quiet (1.5 seconds with no finger down, 4 seconds with a finger held still), resets the chain; a page restored from the cache starts clean; and a reload that has not happened after 6 seconds takes the football down again.
 
+## 2026-10-21 - New tables are granted to the service role explicitly
+
+Supabase stops granting Data API access to new `public` tables on 2026-10-30. A catch-up migration re-grants the service role access to every existing table, sequence and function and to future ones, and from now on each migration that creates a table grants it in the same file; a test fails if one does not. Existing tables, and what anon and authenticated players can reach, are unchanged.
+
 ## The browser tab shows the site's own goalpost icon
 
 The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` and `src/app/icon.png` are now an 8-bit goalpost under a night sky: yellow uprights lit on one edge and shaded on the other, small red streamers on top, crimson padding on the stem, mowed turf below, and "JB" between the uprights in white varsity letters with a crimson drop shadow. It is two hand-placed pixel pictures rather than one shrunk image: a detailed 32 by 32 (used at 32, 64 and 256 px, enlarged without smoothing so it stays crisp) and a simplified 16 by 16 for an ordinary tab. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
 
+## 2026-10-21 - On a phone the Slate's display switch sits beside the week selector
+
+The All games / Pool action switch moves to the right of the View week selector on the same row (below 768 px), saving a row of height at the top of the Slate. Wider screens keep the stacked layout.
+
 ## The home-screen icon is the goalpost too
 
 The app's home-screen icon (what shows when the pool is added to a phone, and the manifest's 192 and 512 px and maskable icons, and `apple-icon.png`) was a football with "JB" on cream. It is now the same 8-bit goalpost as the browser tab: yellow uprights with the varsity JB between them, crimson padding, a night sky and mowed turf. It is the detailed 32 by 32 picture enlarged without smoothing (16 times for 512, 6 times for 192, so every pixel stays crisp) as a full square with no transparent corners, since the phone applies its own rounded mask; the maskable icon is the same picture, because the goalpost and JB sit well inside the 80% safe zone. A test checks the sizes and that none of the files has transparency. A phone keeps the icon of an app that was already added to the home screen, so to see the new one remove the app from the home screen and add it again.
+
+## 2026-10-21 - A Survivor champion is never eliminated afterward
+
+The no-pick rule eliminates any active Survivor entry with no pick in a finished week. A crowned champion stays an active entry and makes no further Survivor picks, so the week after the crowning the rule eliminated the champion and the weekly recap then reported the winner as eliminated. The rule now leaves a season alone once its champion is crowned (new migration). The recap never marks a champion OUT and decides "crowned this week" from the crowning time, not from "somebody was eliminated that week"; the Survivor table shows the champion as WON. An entry already wrongly eliminated cannot be reinstated (an integrity trigger forbids reactivating an entry, deliberately), so the champion is identified by the season's champion record, never by the entry's status.
 
 ## The Trophy Room is the Commissioner's alone, with a link in the name menu
 

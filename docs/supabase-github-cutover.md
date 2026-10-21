@@ -49,3 +49,12 @@ migration workflow is green and Launch Preflight passes.
   Commit a migration instead.
 - Never edit or reorder an applied migration to make a failing deployment look
   green. Add a new corrective migration and test it against `isolated-test`.
+
+## Explicit grants for new tables (from 2026-10-30)
+
+Supabase stopped granting Data API access to new `public` tables automatically on 2026-10-30. Existing tables keep their grants. Server routes use the
+service role, so `20261021010000_explicit_service_role_grants.sql` re-asserts the service role's privileges on everything that exists and on future
+objects. The platform may reset its own default privileges, so every migration after it that creates a table must also grant it explicitly in the same
+file: `grant all privileges on public.<table> to service_role;` (`test/migration-grants.test.mjs` fails otherwise). Client roles (`anon`,
+`authenticated`) still receive only the grants a migration declares for them.
+
