@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: `/api/trophy-room` builds its figures through `createShortCache` (60 seconds, one build shared by requests that arrive together, a failed build never kept). Access is checked before the cache, so a player who may not see the Trophy Room still gets the 404.
 - Why: the figures are the same for everyone and only change when a game is graded, but each page open read every pick, game and line ever recorded. The Trophy Room opens to all players on 2026-12-07, and the project stays on Vercel Hobby, so its Fluid CPU has to stay low. A graded game still shows within a minute.
 
+## 2026-10-21 - Keep the Supabase CLI's container images between isolated runs
+
+- Decision: `isolated-integration.yml` restores the CLI's container images from the Actions cache (keyed on the pinned CLI version, so a new version starts a new cache) before the database-types check, and saves them after the first successful pull. `scripts/database-types.mjs` still retries a rate-limited pull a few times.
+- Why: `supabase gen types` pulls a postgres-meta container from a public registry that caps anonymous downloads per runner address and answers "too many requests" for hours once it has; a short retry cannot outwait that, and it blocked four merges on 2026-10-21.
+
 ## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
 
 - Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
