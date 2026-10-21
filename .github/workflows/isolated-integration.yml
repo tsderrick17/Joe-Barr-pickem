@@ -108,6 +108,17 @@ jobs:
         run: |
           node scripts/prepare-isolated-schema.mjs
           supabase db push --db-url "$PICKEM_TEST_DATABASE_URL" --include-all
+      - name: Restore the Supabase CLI's container images
+        # `supabase gen types` pulls a container from a public registry that caps anonymous downloads per runner address,
+        # and answers "too many requests" for hours once it has. The images only change with the CLI version, so keep them.
+        id: supabase-images
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/supabase-images.tar
+          key: supabase-cli-images-2.113.0
+      - name: Load the cached container images
+        if: ${{ steps.supabase-images.outputs.cache-hit == 'true' }}
+        run: docker load --input ~/supabase-images.tar
       - name: Generate database types for download
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.write_database_types }}
         run: npm run db:types
@@ -131,6 +142,18 @@ jobs:
             if git diff --name-only HEAD^1 HEAD | grep -Eq '^(supabase/migrations/|src/lib/database\.types\.ts)'; then check=true; fi
           fi
           if [ "$check" = "true" ] && [ -f src/lib/database.types.ts ]; then npm run db:types:check; else echo "Database type check not needed for this change."; fi
+      - name: Keep the Supabase CLI's container images for the next run
+        if: ${{ steps.supabase-images.outputs.cache-hit != 'true' }}
+        id: keep-images
+        run: |
+          images="$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -i supabase || true)"
+          if [ -n "$images" ]; then docker save --output ~/supabase-images.tar $images && echo "kept=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Save the Supabase CLI's container images
+        if: ${{ steps.keep-images.outputs.kept == 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: ~/supabase-images.tar
+          key: supabase-cli-images-2.113.0
       - name: Run isolated season certification
         id: certification
         run: npm run test:season-drill

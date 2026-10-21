@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the Season Snapshot's source-text tests are gone. Its access gate now runs the real loader with a scripted database (`season-snapshot-access.test.mjs`: players see nothing and only Week 6 is read before the release; a chart cached for the Commissioner never reaches a player), and page-by-page reading runs `readAllPages` (`read-all-pages.test.mjs`). The remembered-choices and loads-once tests already existed as browser tests, so their text twins were deleted. Polling cadence is pinned by behavior with a fake clock (`polling.visual.spec.ts`: home every 5 minutes, chat every 3, grading every minute while live and every 15 when quiet, none while hidden, one refresh on return), and the Sentry filter runs (`sentry-event-filter.test.mjs`). Rules about how the code is put together live in `architecture-rules.test.mjs`, on purpose lint-style.
 - Why: tests that match source text break on harmless refactors and pass when behavior is wrong. Each new test was mutation-checked (the code was broken, the test failed).
 
+## 2026-10-21 - Keep the Supabase CLI's container images between isolated runs
+
+- Decision: `isolated-integration.yml` restores the CLI's container images from the Actions cache (keyed on the pinned CLI version, so a new version starts a new cache) before the database-types check, and saves them after the first successful pull. `scripts/database-types.mjs` still retries a rate-limited pull a few times.
+- Why: `supabase gen types` pulls a postgres-meta container from a public registry that caps anonymous downloads per runner address and answers "too many requests" for hours once it has; a short retry cannot outwait that, and it blocked four merges on 2026-10-21.
+
 ## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
 
 - Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
