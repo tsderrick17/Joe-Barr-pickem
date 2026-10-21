@@ -25,31 +25,35 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
         <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">
           The Slate
         </h1>
-        <label
-          className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
-          htmlFor="week-selector"
-        >
-          VIEW WEEK
-        </label>
+        <div className="slate-week-row">
+          <div className="slate-week-picker">
+          <label
+            className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
+            htmlFor="week-selector"
+          >
+            VIEW WEEK
+          </label>
 
-        <select
-          className="mt-1 border border-(color:--themed-border-10) bg-(color:--themed-bg-26) px-3 py-1.5 text-sm font-semibold text-(color:--themed-text-18)"
-          id="week-selector"
-          onChange={onChooseWeek}
-          value={week.id}
-        >
-          {availableWeeks.map((period) => (
-            <option key={period.id} value={period.id}>
-              {period.display_name}
-              {period.status === "complete" ? " — Final" : ""}
-          </option>
-        ))}
-        </select>
+          <select
+            className="mt-1 border border-(color:--themed-border-10) bg-(color:--themed-bg-26) px-3 py-1.5 text-sm font-semibold text-(color:--themed-text-18)"
+            id="week-selector"
+            onChange={onChooseWeek}
+            value={week.id}
+          >
+            {availableWeeks.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.display_name}
+                {period.status === "complete" ? " — Final" : ""}
+            </option>
+          ))}
+          </select>
+          </div>
 
-        <div className="slate-view-switch-slot">
-          <div aria-label="Slate display" className="slate-view-switch" role="group">
-            <button aria-pressed={!actionOnlyActive} className={!actionOnlyActive ? "is-active" : ""} onClick={() => { if (actionOnlyActive) onToggleDisplay(); }} type="button">All<br />games</button>
-            <button aria-pressed={actionOnlyActive} className={actionOnlyActive ? "is-active" : ""} onClick={() => { if (!actionOnlyActive) onToggleDisplay(); }} type="button">Pool<br />action</button>
+          <div className="slate-view-switch-slot">
+            <div aria-label="Slate display" className="slate-view-switch" role="group">
+              <button aria-pressed={!actionOnlyActive} className={!actionOnlyActive ? "is-active" : ""} onClick={() => { if (actionOnlyActive) onToggleDisplay(); }} type="button">All<br />games</button>
+              <button aria-pressed={actionOnlyActive} className={actionOnlyActive ? "is-active" : ""} onClick={() => { if (!actionOnlyActive) onToggleDisplay(); }} type="button">Pool<br />action</button>
+            </div>
           </div>
         </div>
       </div>

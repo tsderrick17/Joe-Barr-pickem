@@ -176,3 +176,25 @@ test("when teams tie for the most picks it says how many, and a single leader sa
   assert.equal(even.mostPicked.picks, 1);
   assert.equal(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).mostPickedTied, 0);
 });
+
+test("a week counts for the streaks once every game in it is final, without waiting for the week to be marked complete", async () => {
+  const { settledPeriods } = await import("../src/lib/group-stats.js");
+  const games = [
+    { scoring_period_id: "a", status: "final" }, { scoring_period_id: "a", status: "final" },
+    { scoring_period_id: "b", status: "final" }, { scoring_period_id: "b", status: "scheduled" },
+    { scoring_period_id: "c", status: "final" }, { scoring_period_id: "c", status: "postponed" },
+    { scoring_period_id: "d", status: "cancelled" },
+  ];
+  assert.deepEqual([...settledPeriods(games)].sort(), ["a", "c"], "b still has a game to play; d has nothing playable; a postponed game does not hold a week open");
+  // an active (not yet complete) week counts when it is settled
+  const active = [week("s26", 1, "active")];
+  const weekGame = game("s26-w1"), other = game("s26-w1");
+  const own = [
+    { id: "x1", player_id: "ann", game_id: weekGame, scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
+    { id: "x2", player_id: "ann", game_id: other, scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
+  ];
+  const without = weeklyStreaks({ seasons, periods: active, picks: own });
+  const withSettled = weeklyStreaks({ seasons, periods: active, picks: own, settledPeriodIds: new Set(["s26-w1"]) });
+  assert.equal(without.has("ann"), false, "an unfinished, unsettled week is not counted");
+  assert.deepEqual(withSettled.get("ann").sweeps.longest, 1);
+});

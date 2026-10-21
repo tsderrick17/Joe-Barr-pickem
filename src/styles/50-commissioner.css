@@ -720,13 +720,16 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
 .trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }
+.trophy-table-head { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; }
+/* Wins & hit rate / Streaks & more: one quiet two-option control, the chosen half filled with the table's green. */
+.trophy-view-switch { border: 1px solid var(--club-forest); border-radius: .35rem; display: inline-flex; overflow: hidden; }
+.trophy-view-switch button { background: transparent; color: var(--club-forest); cursor: pointer; font: 700 .72rem/1.1 Arial, sans-serif; letter-spacing: .04em; min-height: 2.5rem; padding: .4rem .8rem; }
+.trophy-view-switch button + button { border-left: 1px solid var(--club-forest); }
+.trophy-view-switch button.is-active { background: var(--club-forest); color: var(--sand-93); }
+.trophy-view-switch button:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -3px; }
 .trophy-streak { padding-block: .5rem; }
 .trophy-streak-best { display: block; font: 700 1.2rem/1.1 Georgia, serif; }
 .trophy-streak-now { color: var(--club-muted); display: block; font: 400 .7rem/1.2 Arial, sans-serif; margin-top: .15rem; }
-.trophy-streak-bar { background: var(--club-line); display: block; height: 3px; margin: .3rem auto 0; max-width: 3.2rem; }
-.trophy-streak-bar > span { background: var(--club-forest); display: block; height: 100%; }
-.trophy-streak.is-best .trophy-streak-now, .trophy-streak.is-best .trophy-streak-best { color: var(--club-gold-dk); }
-.trophy-streak.is-best .trophy-streak-bar > span { background: var(--club-gold-dk); }
 
 /* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
    recoloured by the Bowl Card rules.) */

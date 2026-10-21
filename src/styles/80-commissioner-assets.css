@@ -277,5 +277,11 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-link-edge { fill: var(--steel); }
 .pull-chain-clip { fill: var(--clip); }
 .pull-chain-dust { fill: var(--chalk); }
+.pull-counter-frame { fill: oklch(0.26 0.01 260); stroke: oklch(0.14 0.01 260); stroke-width: 1.5; }
+.pull-counter-panel { fill: oklch(0.22 0.04 255); }
+.pull-counter-label { fill: oklch(0.12 0.01 260); }
+.pull-counter-post { fill: oklch(0.14 0.01 260); }
+.pull-counter-digit { fill: oklch(0.62 0.21 38); paint-order: stroke; stroke: var(--chalk); stroke-linejoin: round; stroke-width: 2.2; }
+.pull-counter-seam { fill: none; stroke: oklch(0.12 0.02 255); stroke-width: 0.7; }
 .pull-refresh-cover { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 55; }
 .pull-chain-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }

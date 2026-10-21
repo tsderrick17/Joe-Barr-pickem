@@ -3,7 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 // Pull down to refresh runs only in the app added to a home screen. The test marks the page as installed, then drags down
 // from the top with synthetic touches (Chromium accepts the Touch constructor).
 async function installedApp(page: Page) {
-  await page.addInitScript(() => { Object.defineProperty(navigator, "standalone", { value: true }); window.localStorage.setItem("pickem-theme", "day"); });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "standalone", { value: true });
+    window.localStorage.setItem("pickem-theme", "day");
+    // count the haptic buzzes: there must be exactly one, when the counter has fully turned to 1
+    (window as unknown as { buzzes: number }).buzzes = 0;
+    navigator.vibrate = () => { (window as unknown as { buzzes: number }).buzzes += 1; return true; };
+  });
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
 }
@@ -27,11 +33,22 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
   await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);   // the pull is wired up only after the page has hydrated
-  await drag(page, 100, 160, false);
+  const buzzes = () => page.evaluate(() => (window as unknown as { buzzes: number }).buzzes);
+  const strip = { clip: { x: 0, y: 0, width: 390, height: 110 } };
+  // a pull of D px of finger travel is D x 0.6 of pull; the pole lands (the dust puff) at half of 76, the counter has turned to 1 at all of it
+  await drag(page, 100, 132, false);   // a quarter of the way: the pole is coming down, its foot leading and the chain taut and slanting up
   await expect(page.locator(".pull-chain")).toContainText("Pull to refresh");
+  await expect(page).toHaveScreenshot("pull-to-refresh-descending.png", strip);
+  await drag(page, 100, 163, false);   // halfway: the foot has landed upright beside the ball, and the counter still says 4
+  await expect(page).toHaveScreenshot("pull-to-refresh-landed.png", strip);
+  await drag(page, 100, 195, false);   // three quarters: the counter is half way through, its slats reading 1, 4, 1, 4
+  await expect(page.locator(".pull-chain")).toContainText("Pull to refresh");
+  await expect(page).toHaveScreenshot("pull-to-refresh-counter-halfway.png", strip);
+  expect(await buzzes(), "no buzz until the counter has fully turned").toBe(0);
   await drag(page, 100, 260, false);
   await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
-  await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", { clip: { x: 0, y: 0, width: 390, height: 110 } });
+  expect(await buzzes(), "one buzz, when the counter reaches 1").toBe(1);
+  await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", strip);
   // The chain is drawn inside the header's height and never below it (a page without a header keeps to the 96 px cap).
   const drop = await page.locator(".pull-chain").boundingBox();
   const header = await page.locator("nav").count() ? await page.locator("nav").first().boundingBox() : null;

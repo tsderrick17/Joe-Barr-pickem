@@ -36,7 +36,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer still in Survivor (two-column ticket) | `regular-in` |
 | Viewer eliminated (one-column ticket) | `regular-out` |
 | Eliminated rows hidden, Bowl Card open | `regular-hidden-rows` |
-| Survivor has a champion | `regular-complete` |
+| Survivor has a champion (the champion's row reads WON in the Survivor table) | `regular-complete` |
 | Survivor has a champion and the viewer is that champion (entry still active): Pick'em-only ticket owing two selections, not three (behavior test and screenshot) | `regular-complete-champion` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
@@ -83,7 +83,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
 | Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
 | Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |
-| Trophy room table: fixed, evenly spaced columns; each player's regular season streaks under a "Regular Season Streaks" heading (Consecutive Donut Free Weeks, Consecutive 2-0 Sweeps, each heading centred over its column), each cell the all-time best streak big, the current streak small under it ("now N") and a bar showing how close the current streak is to the best (gold, with a star, when it is the best); dashes for a player with none (behavior test) | `healthy` |
+| Trophy room All-Time Table with a switch between two views: Wins & hit rate (sortable, ties share a place such as T1), and Streaks & more (Consecutive Donut Free Weeks and Consecutive 2-0 Weeks as the best run big with "now N" small and no colour, star or bar; games decided by a half point, wins and losses; pushes picked; every column sortable with ties sharing a place); a champion with no pick history shows dashes (behavior tests; screenshot of the second view) | `healthy` |
 | Performance dropdown: the league first (with its own Season by season table), then choosing a player swaps every figure, the most picked team and the Season by season table; the Picked and Hit rate headers of the teams table switch it between the five most picked and the five best hit rate (behavior test) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
@@ -117,7 +117,7 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 
-Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain zoomed in on its last three yards across the whole page width (deep turf with hash marks, the chain running in from the left edge, the bottom third of the lead pole planted at a spotted football whose tip pokes out a couple of inches past its foot, the chain taut) and "Release to refresh" (screenshot of the full-width indicator) and letting go covers the page below the header with the spinning loading football at once and reloads right behind it (the test checks the football appeared before the reload, and that the reload followed within seconds; the drawing's geometry, including the single touchdown, is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
+Only runs when the page is opened from the home screen (the test marks the page as installed and counts haptic buzzes). The pull has two stages and the screenshots take the header at each: descending (a quarter of the way: the pole's foot leads, the chain taut and slanting up about 15 degrees), landed (halfway: the foot upright beside the spotted football with the dust puff, the distant down counter still on 4), counter halfway (three quarters: the counter's slats read 1, 4, 1, 4), and ready (the counter fully on 1, "Release to refresh", exactly one buzz). Behavior: letting go with the counter on 1 covers the page with the loading football and reloads; a short pull springs back without reloading; if the page never hears the finger lift, everything clears itself and nothing reloads.
 
 ## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 
