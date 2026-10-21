@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Restore Survivor champions eliminated after the crown
+
+- Decision: a one-time migration (`20261021030000_restore_champions_eliminated_after_crown.sql`) puts a crowned Survivor champion's entry back to active when the no-pick rule eliminated it after the crown (no losing game, an audit row from the rule, eliminated after the championship). It uses the integrity trigger's own audited score-correction guard for that statement only and writes `survivor_champion_entry_restored` for each entry. Owner approved it for Zac's entry.
+- Why: the rule fixed in 20261021020000 had already eliminated the champion, and the trigger forbids reactivation, so the data stayed wrong even though the app now reads the champion from the season record.
+
 ## 2026-10-14 - Standings starts the Bowl Card's read with its own
 
 **Status:** Accepted

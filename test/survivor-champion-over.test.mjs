@@ -26,3 +26,14 @@ test("the no-pick rule leaves a season alone once its Survivor champion is crown
   assert.match(sql, /season\.survivor_champion_crowned_at <= period\.final_kickoff_at/i);
   assert.match(sql, /grant execute on function public\.eliminate_survivor_no_picks\(timestamptz\)\s+to service_role/i);
 });
+
+test("the one-time repair restores only a champion eliminated by the no-pick rule after the crown, behind the audited guard, and audits each entry", async () => {
+  const sql = await readFile(new URL("../supabase/migrations/20261021030000_restore_champions_eliminated_after_crown.sql", import.meta.url), "utf8");
+  assert.match(sql, /set_config\('app\.allow_survivor_score_correction', 'on', true\)/, "the guard is local to the transaction");
+  assert.match(sql, /set_config\('app\.allow_survivor_score_correction', 'off', true\)/, "and is closed again");
+  assert.match(sql, /championship\.pool = 'survivor'/);
+  assert.match(sql, /entry\.eliminated_game_id is null/, "never a genuine loss");
+  assert.match(sql, /entry\.eliminated_at > championship\.crowned_at/, "only after the crown");
+  assert.match(sql, /audit\.action = 'survivor_no_pick_eliminated'/, "only what the no-pick rule did");
+  assert.match(sql, /'survivor_champion_entry_restored'/, "each restored entry is audited");
+});
