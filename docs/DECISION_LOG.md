@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
 - Why: a column reorder silently relabelled the Started and Finished lines of the Worker table. Specificity was kept equal rule by rule, and the screenshots gate that nothing moved.
 
+## 2026-10-21 - Keep the Supabase CLI's container images between isolated runs
+
+- Decision: `isolated-integration.yml` restores the CLI's container images from the Actions cache (keyed on the pinned CLI version, so a new version starts a new cache) before the database-types check, and saves them after the first successful pull. `scripts/database-types.mjs` still retries a rate-limited pull a few times.
+- Why: `supabase gen types` pulls a postgres-meta container from a public registry that caps anonymous downloads per runner address and answers "too many requests" for hours once it has; a short retry cannot outwait that, and it blocked four merges on 2026-10-21.
+
 ## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
 
 - Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
