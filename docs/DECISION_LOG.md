@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Elements are styled by name, not by their place in a list
+
+- Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
+- Why: a column reorder silently relabelled the Started and Finished lines of the Worker table. Specificity was kept equal rule by rule, and the screenshots gate that nothing moved.
+
 ## 2026-10-21 - Source-text tests, stage 2 (second slice): Season Snapshot, polling cadence, Sentry filter
 
 - Decision: the Season Snapshot's source-text tests are gone. Its access gate now runs the real loader with a scripted database (`season-snapshot-access.test.mjs`: players see nothing and only Week 6 is read before the release; a chart cached for the Commissioner never reaches a player), and page-by-page reading runs `readAllPages` (`read-all-pages.test.mjs`). The remembered-choices and loads-once tests already existed as browser tests, so their text twins were deleted. Polling cadence is pinned by behavior with a fake clock (`polling.visual.spec.ts`: home every 5 minutes, chat every 3, grading every minute while live and every 15 when quiet, none while hidden, one refresh on return), and the Sentry filter runs (`sentry-event-filter.test.mjs`). Rules about how the code is put together live in `architecture-rules.test.mjs`, on purpose lint-style.
