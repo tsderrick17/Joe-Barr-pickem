@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - The Trophy Room data is built once a minute, not once per page open
+
+- Decision: `/api/trophy-room` builds its figures through `createShortCache` (60 seconds, one build shared by requests that arrive together, a failed build never kept). Access is checked before the cache, so a player who may not see the Trophy Room still gets the 404.
+- Why: the figures are the same for everyone and only change when a game is graded, but each page open read every pick, game and line ever recorded. The Trophy Room opens to all players on 2026-12-07, and the project stays on Vercel Hobby, so its Fluid CPU has to stay low. A graded game still shows within a minute.
+
 ## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
 
 - Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
