@@ -83,8 +83,8 @@ export default function PoolStats() {
             <h3>Regular season streaks</h3>
             <p>A streak alive at the end of a season carries into the next. The whole league&rsquo;s streaks are in the Trophy Room.</p>
             <dl className="pool-stats-tiles">
-              <RunTile label="Donut Free Weeks" run={player.streaks.noDonut} />
-              <RunTile label="2-0 Sweeps" run={player.streaks.sweeps} />
+              <RunTile label="Consecutive Donut Free Weeks" run={player.streaks.noDonut} />
+              <RunTile label="Consecutive 2-0 Weeks" run={player.streaks.sweeps} />
             </dl>
           </div>
         ) : null}

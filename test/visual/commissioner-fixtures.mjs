@@ -166,7 +166,9 @@ const STREAKS = {
   p4: { noDonut: { longest: 8, current: 3 }, sweeps: { longest: 3, current: 0 } },
   p2: { noDonut: { longest: 17, current: 17 }, sweeps: { longest: 6, current: 2 } },
 };
-TROPHY_ROOM.players = TROPHY_ROOM.players.map((player) => ({ ...player, streaks: STREAKS[player.playerId] ?? null }));
+// games decided by half a point (won / lost) and pushes picked, as the route sends them
+const HALF_POINT = { p3: [6, 4, 3], p1: [5, 5, 2], p4: [4, 6, 1], p2: [7, 3, 4], p6: [3, 5, 2], p7: [1, 1, 0], p8: [0, 1, 0], p5: [0, 0, 0] };
+TROPHY_ROOM.players = TROPHY_ROOM.players.map((player) => ({ ...player, streaks: STREAKS[player.playerId] ?? null, halfWins: HALF_POINT[player.playerId][0], halfLosses: HALF_POINT[player.playerId][1], pushes: HALF_POINT[player.playerId][2] }));
 
 /** The group's stats: a pool of eight over two seasons. */
 const bucket = (wins, losses) => ({ wins, losses, picks: wins + losses, hitRate: wins / (wins + losses) });

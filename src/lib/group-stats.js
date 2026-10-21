@@ -95,7 +95,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
  * Regular-season weeks the pool has completed, two picks each, per player: { seasonYear, week, wins }. A week with a voided or unsettled pick
  * is left out; a pick not made is a loss; a player's weeks begin with the first week they made a pick in a season.
  */
-function playerWeeks({ periodById, yearBySeason, periods, picks }) {
+function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds = new Set() }) {
   const picksByPlayerPeriod = new Map();
   const weeksOfPlayerInSeason = new Map();   // "player|season" -> earliest display_order with a pick
   for (const pick of picks) {
@@ -107,7 +107,7 @@ function playerWeeks({ periodById, yearBySeason, periods, picks }) {
     weeksOfPlayerInSeason.set(joinKey, Math.min(weeksOfPlayerInSeason.get(joinKey) ?? Infinity, period.display_order));
   }
   const counted = periods
-    .filter((period) => period.period_type === "regular" && period.status === "complete" && period.max_picks === WEEK_PICKS && yearBySeason.has(period.season_id))
+    .filter((period) => period.period_type === "regular" && (period.status === "complete" || settledPeriodIds.has(period.id)) && period.max_picks === WEEK_PICKS && yearBySeason.has(period.season_id))
     .sort((a, b) => yearBySeason.get(a.season_id) - yearBySeason.get(b.season_id) || a.display_order - b.display_order);
   const histogram = { donut: 0, split: 0, sweep: 0 };
   const weeksByPlayer = new Map();
@@ -129,13 +129,14 @@ function playerWeeks({ periodById, yearBySeason, periods, picks }) {
 /**
  * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
  * { longest, current, endedAt }. Only the periods and picks are needed.
- * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[] }} input
+ * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
+ * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string> }} input
  * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
  */
-export function weeklyStreaks({ seasons, periods, picks }) {
+export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set() }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
-  const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks });
+  const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
   return new Map([...weeksByPlayer].map(([playerId, weeks]) => {
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
@@ -195,4 +196,20 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
     weeks: { total: weekCount, donut: histogram.donut, split: histogram.split, sweep: histogram.sweep },
     players: eachPlayer,
   };
+}
+
+/**
+ * The scoring periods whose games are all final (games that were postponed, cancelled or ruled no contest do not hold a week open). A period
+ * with no playable game is not settled.
+ * @param {{ scoring_period_id: string, status: string }[]} games
+ * @returns {Set<string>}
+ */
+export function settledPeriods(games) {
+  const open = new Set(), seen = new Set();
+  for (const game of games) {
+    if (["postponed", "cancelled", "no_contest"].includes(game.status)) continue;
+    seen.add(game.scoring_period_id);
+    if (game.status !== "final") open.add(game.scoring_period_id);
+  }
+  return new Set([...seen].filter((id) => !open.has(id)));
 }
