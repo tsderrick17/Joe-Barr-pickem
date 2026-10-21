@@ -543,6 +543,9 @@
   /* Once the title rail stacks above the instructions, avoid reserving a
      second separator lane between the week selector and the instruction card. */
   .slate-header-grid { gap: .55rem; }
+  /* The All games / Pool action switch sits to the right of the week selector on a phone, to save a row of height. */
+  .slate-week-row { align-items: flex-end; display: flex; gap: .75rem; justify-content: space-between; }
+  .slate-week-row .slate-view-switch-slot { padding-top: 0; }
   .slate-header-grid > aside {
     border-top: 0;
     padding-top: 0;

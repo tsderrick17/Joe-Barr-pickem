@@ -36,7 +36,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer still in Survivor (two-column ticket) | `regular-in` |
 | Viewer eliminated (one-column ticket) | `regular-out` |
 | Eliminated rows hidden, Bowl Card open | `regular-hidden-rows` |
-| Survivor has a champion | `regular-complete` |
+| Survivor has a champion (the champion's row reads WON in the Survivor table) | `regular-complete` |
 | Survivor has a champion and the viewer is that champion (entry still active): Pick'em-only ticket owing two selections, not three (behavior test and screenshot) | `regular-complete-champion` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
@@ -117,7 +117,7 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 
-Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the first-down chain zoomed in on its last three yards across the whole page width (deep turf with hash marks, the chain running in from the left edge, the bottom third of the lead pole planted at a spotted football whose tip pokes out a couple of inches past its foot, the chain taut) and "Release to refresh" (screenshot of the full-width indicator) and letting go covers the page below the header with the spinning loading football at once and reloads right behind it (the test checks the football appeared before the reload, and that the reload followed within seconds; the drawing's geometry, including the single touchdown, is unit-tested in `test/pull-chain.test.mjs`); a short pull springs back and nothing reloads.
+Only runs when the page is opened from the home screen (the test marks the page as installed and counts haptic buzzes). The pull has two stages and the screenshots take the header at each: descending (a quarter of the way: the pole's foot leads, the chain taut and slanting up about 15 degrees), landed (halfway: the foot upright beside the spotted football with the dust puff, the distant down counter still on 4), counter halfway (three quarters: the counter's slats read 1, 4, 1, 4), and ready (the counter fully on 1, "Release to refresh", exactly one buzz). Behavior: letting go with the counter on 1 covers the page with the loading football and reloads; a short pull springs back without reloading; if the page never hears the finger lift, everything clears itself and nothing reloads.
 
 ## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 

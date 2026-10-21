@@ -3,18 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import PullChainScene from "@/components/pull-chain-scene";
+import { PUFF_AT } from "@/lib/pull-chain.js";
 
 /**
  * Pull down to refresh, for the app added to a phone's home screen (a standalone window has no browser bar, so no refresh
  * button and no built-in pull). In a normal browser tab this does nothing and the browser keeps its own behavior.
  *
- * The page is pulled down from the very top and the lead pole of a first-down chain is dragged out of the top edge of the header,
- * swinging down and stretching the chain as it comes. Far enough, and its rubber foot plants on the ground with a thud and the chain
- * snaps taut: that is the signal to release. Letting go reloads the page while the chain hums; letting go early lets the pole draw
- * back up. Everything is drawn inside the header and never below it.
+ * The page is pulled down from the very top and your finger drives a first-down scene in the header. First the lead pole comes down foot first
+ * with the chain taut, straightening as it lowers, and its foot lands beside the ball in a puff of dust (the measurement, `PUFF_AT` of the way). Then
+ * the down counter in the distance slides from 4 to 1, following the finger; when it has fully turned to 1 there is a light buzz (where the phone has
+ * one) and that is the signal to release. Letting go covers the page with the spinning loading football at once and reloads it right behind;
+ * letting go early draws everything back. Everything is drawn inside the header and never below it.
  */
-const THRESHOLD = 60;
-const MAX = 84;
+const THRESHOLD = 76;
+const MAX = 98;
 const RESISTANCE = 0.6;
 
 function isInstalledApp() {
@@ -50,22 +52,22 @@ export default function PullToRefresh() {
   const [height, setHeight] = useState(56);
   const [width, setWidth] = useState(390);
   const [coverTop, setCoverTop] = useState(0);
-  const [plantedAt, setPlantedAt] = useState(0);
+  const [landedAt, setLandedAt] = useState<number | null>(null);   // when the foot landed (the puff), or null while the pole is still coming down
   const [now, setNow] = useState(0);
-  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0 });
+  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0, landed: false });
 
   useEffect(() => {
     if (!isInstalledApp()) return;
     document.documentElement.classList.add("has-pull-refresh");
     const state = gesture.current;
     // However a gesture ends (a lost touchend, a reload that never happens, the page coming back from the back/forward cache), the chain goes away.
-    const reset = () => { state.active = false; state.pull = 0; state.phase = "pulling"; setPull(0); setPhase("pulling"); };
+    const reset = () => { state.active = false; state.pull = 0; state.phase = "pulling"; state.landed = false; setPull(0); setPhase("pulling"); setLandedAt(null); };
     const onStart = (event: TouchEvent) => {
       state.lastTouch = Date.now();
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
       state.startY = event.touches[0]?.clientY ?? 0;
       state.pull = 0;
-      if (state.active) { state.phase = "pulling"; setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
+      if (state.active) { state.phase = "pulling"; state.landed = false; setLandedAt(null); setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
     };
     const onMove = (event: TouchEvent) => {
       if (!state.active) return;
@@ -75,12 +77,16 @@ export default function PullToRefresh() {
       if (distance <= 0) { state.pull = 0; state.phase = "pulling"; setPhase("pulling"); setPull(0); return; }
       if (event.cancelable) event.preventDefault();
       state.pull = Math.min(MAX, distance * RESISTANCE);
-      if (state.pull >= THRESHOLD && state.phase === "pulling") {
+      const progress = state.pull / THRESHOLD;
+      // the foot lands (and dust puffs) at PUFF_AT of the way; pulling back up lifts it again
+      if (progress >= PUFF_AT && !state.landed) { state.landed = true; setLandedAt(performance.now()); }
+      else if (progress < PUFF_AT - 0.04 && state.landed) { state.landed = false; setLandedAt(null); }
+      // the counter has fully turned to 1: a light buzz, and this is the signal to release
+      if (progress >= 1 && state.phase === "pulling") {
         state.phase = "planted";
         setPhase("planted");
-        setPlantedAt(performance.now());
-        navigator.vibrate?.(12);   // one light thud where the phone supports it
-      } else if (state.pull < THRESHOLD - 8 && state.phase === "planted") {
+        navigator.vibrate?.(12);
+      } else if (progress < 0.96 && state.phase === "planted") {
         state.phase = "pulling";
         setPhase("pulling");
       }
@@ -116,18 +122,18 @@ export default function PullToRefresh() {
     };
   }, []);
 
-  // Once the foot has planted the chain keeps moving (the thud, then a hum), so the clock runs until the pole lifts or the page reloads.
+  // Once the foot has landed the pole swings once past upright and settles, so the clock runs until the pole lifts or the page reloads.
   useEffect(() => {
-    if (phase === "pulling") return;
+    if (landedAt === null) return;
     let frame = 0;
     const tick = (time: number) => { setNow(time); frame = requestAnimationFrame(tick); };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [phase]);
+  }, [landedAt]);
 
   if (pull <= 0 && phase !== "refreshing") return null;
   const calm = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const since = phase === "pulling" || calm ? 0 : Math.max(0, now - plantedAt);   // ms since the foot planted
+  const since = landedAt === null || calm ? 0 : Math.max(0, now - landedAt);   // ms since the foot landed
   const label = phase === "refreshing" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
   return (
     <>
@@ -137,7 +143,7 @@ export default function PullToRefresh() {
         </div>
       ) : null}
       <div aria-live="polite" className="pull-chain" data-phase={phase} role="status" style={{ height }}>
-        <PullChainScene height={height} planted={phase !== "pulling"} progress={pull / THRESHOLD} since={since} width={width} />
+        <PullChainScene height={height} landed={landedAt !== null} progress={pull / THRESHOLD} since={since} width={width} />
         <span className="pull-chain-label">{label}</span>
       </div>
     </>
