@@ -10,18 +10,20 @@ import { loadOrder } from "@/lib/trophy-turn.js";
  * The three trophies on a mahogany table that turns. The table is a set of pictures, one for every few degrees of a full turn (rendered once, see
  * tools/trophy-render). They are fetched and decoded in the background and drawn onto a canvas, so a spin never waits on an image (swapping an <img>
  * source flashes black while the next picture decodes). Dragging or swiping turns the table, a flick carries on and settles the nearest trophy at the
- * front, and the arrows at the sides bring the next one forward. A phone gets a smaller set (60 pictures 6 degrees apart at 660 wide, blended between
- * neighbours so the turn still glides) because 120 full-size decoded pictures are more than an iPhone lets a page hold: it kills the tab. Two canvases are
- * stacked: a sharp one shown only when the table is at rest, and a plain one drawn while it turns, so touching the table never reallocates a canvas.
+ * front, and the arrows at the sides bring the next one forward. A phone gets a smaller set (the same 120 pictures at 660 wide) because 120 full-size
+ * decoded pictures are more than an iPhone lets a page hold: it kills the tab. Every turn shows the nearest single picture, never two laid over each other
+ * (a cross-fade of neighbours makes a ghost of every trophy), and the table follows a finger with a short glide so the 3-degree steps read as motion, not as
+ * ticks. Two canvases are stacked: a sharp one shown only when the table is at rest (it fades in), and a plain one drawn while it turns, so touching the
+ * table never reallocates a canvas.
  * When a trophy settles, its champions hang from the rafters below as cloth banners that drop in, bounce into place and then ripple and sway freely.
  */
 type Champion = { name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 
-/** The picture sets: every picture is named by its position in the full 120 (the phone set keeps the even ones). */
+/** The picture sets: every picture is named by its position in the 120 (the phone set is the same views, smaller). */
 const PROFILES = {
   full: { frames: 120, step: 3, width: 1100, height: 825, restWidth: 2200, restHeight: 1650, dir: "", workers: 4 },
-  small: { frames: 60, step: 6, width: 660, height: 495, restWidth: 1320, restHeight: 990, dir: "sm/", workers: 3 },
+  small: { frames: 120, step: 3, width: 660, height: 495, restWidth: 1320, restHeight: 990, dir: "sm/", workers: 3 },
 } as const;
 type Profile = (typeof PROFILES)[keyof typeof PROFILES];
 
@@ -48,7 +50,8 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const sharp = useRef<Array<ImageBitmap | null>>([null, null, null]);   // the resting views, sharp
   const angle = useRef(0);
   const frame = useRef<number | null>(null);
-  const redraw = useRef<number | null>(null);
+  const glide = useRef<number | null>(null);   // the frame request that carries the table toward the finger
+  const aim = useRef<number | null>(null);     // where the finger wants the table to be
   const drag = useRef<{ startX: number; startAngle: number; samples: Array<{ t: number; x: number }> } | null>(null);
   const [front, setFront] = useState(0);        // the trophy at the front once the table has settled
   const [shown, setShown] = useState(0);        // the trophy whose banners are hanging: they stay until the table has settled on the next
@@ -78,18 +81,17 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     setAtRest(false);
     const context = move.getContext("2d");
     if (!context) return;
-    // between two pictures the second is laid over the first in proportion to how far on we are, so a turn glides instead of stepping
-    const position = turned / p.step, lower = Math.floor(position) % p.frames, blend = position - Math.floor(position);
-    const pick = (wanted: number) => {   // the nearest picture that has arrived, if the wanted one is still on its way
+    // the nearest single picture (never two blended: that ghosts every trophy)
+    const wanted = Math.round(turned / p.step) % p.frames;
+    const pick = () => {   // the nearest picture that has arrived, if the wanted one is still on its way
       for (let reach = 0; reach < p.frames / 2; reach += 1) {
         const bitmap = bitmaps.current[(wanted + reach) % p.frames] ?? bitmaps.current[(wanted - reach + p.frames) % p.frames];
         if (bitmap) return bitmap;
       }
       return undefined;
     };
-    const first = pick(lower), second = blend > 0.02 ? bitmaps.current[(lower + 1) % p.frames] : undefined;
-    if (first) context.drawImage(first, 0, 0, p.width, p.height);
-    if (first && second) { context.globalAlpha = blend; context.drawImage(second, 0, 0, p.width, p.height); context.globalAlpha = 1; }
+    const picture = pick();
+    if (picture) context.drawImage(picture, 0, 0, p.width, p.height);
   }, [profile]);
 
   useEffect(() => {
@@ -110,8 +112,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
           bitmaps.current[slot] = bitmap;
           loaded.current += 1;
           if (loaded.current === p.frames) setReady(true);
-          const position = wrap(angle.current) / p.step;
-          if (Math.floor(position) % p.frames === slot || Math.ceil(position) % p.frames === slot) draw();
+          if (Math.round(wrap(angle.current) / p.step) % p.frames === slot) draw();
         } catch { /* a missing picture leaves its neighbour on screen */ }
       }
     };
@@ -130,17 +131,35 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     return () => {
       cancelled = true;
       if (frame.current !== null) cancelAnimationFrame(frame.current);
-      if (redraw.current !== null) cancelAnimationFrame(redraw.current);
+      if (glide.current !== null) cancelAnimationFrame(glide.current);
       for (const bitmap of [...bitmaps.current, ...sharp.current]) bitmap?.close();   // hand the memory back at once
     };
   }, [chosen, draw]);
 
   const set = useCallback((next: number) => { angle.current = next; draw(); }, [draw]);
-  /** Pointer events can arrive several times a frame: the table follows the finger, but is drawn once a frame. */
+  /** Pointer events can arrive several times a frame: the table glides toward the finger (about 45 ms behind it, never faster than 10 degrees a frame:
+   *  the fluted pedestal repeats every 22.5 degrees, so a faster turn makes its flutes appear to roll backwards) and is drawn once a frame. */
   const follow = useCallback((next: number) => {
-    angle.current = next;
-    if (redraw.current === null) redraw.current = requestAnimationFrame(() => { redraw.current = null; draw(); });
+    aim.current = next;
+    if (glide.current !== null) return;
+    let last = performance.now();
+    const tick = (now: number) => {
+      glide.current = null;
+      const target = aim.current;
+      if (target === null) return;
+      const elapsed = Math.min(48, now - last);
+      last = now;
+      const gap = target - angle.current;
+      angle.current += Math.max(-10, Math.min(10, gap * (1 - Math.exp(-elapsed / 45))));
+      draw();
+      if (Math.abs(target - angle.current) > 0.02) glide.current = requestAnimationFrame(tick);
+    };
+    glide.current = requestAnimationFrame(tick);
   }, [draw]);
+  const stopGliding = useCallback(() => {
+    aim.current = null;
+    if (glide.current !== null) { cancelAnimationFrame(glide.current); glide.current = null; }
+  }, []);
 
   /** Turn smoothly to an angle by the short way round, then report which trophy is at the front. The arrow buttons turn it slowly and evenly, easing
    *  in and out like a heavy table; a settle after a drag or flick keeps the quicker, ease-out turn. Neither may go faster than about 10 degrees a
@@ -172,8 +191,9 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const settle = useCallback(() => {
     if (!drag.current) return;
     drag.current = null;
+    stopGliding();
     turnTo(nearestRest(angle.current));
-  }, [turnTo]);
+  }, [stopGliding, turnTo]);
 
   const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST, true), [turnTo]);
 
@@ -194,6 +214,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
         onPointerDown={(event) => {
           if ((event.target as HTMLElement).closest("button")) return;
           if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
+          stopGliding();
           drag.current = { startX: event.clientX, startAngle: angle.current, samples: [{ t: performance.now(), x: event.clientX }] };
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
@@ -210,6 +231,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
           const current = drag.current;
           if (!current) return;
           drag.current = null;
+          stopGliding();
           const width = event.currentTarget.getBoundingClientRect().width || 1, now = performance.now(), recent = current.samples.filter((sample) => now - sample.t < 90);   // only the last instant counts: a pause before letting go is not a flick
           const first = recent[0], last = recent[recent.length - 1];
           const velocity = first && last && last.t > first.t ? ((-(last.x - first.x) / width) * 200) / (last.t - first.t) : 0;   // degrees per millisecond
@@ -231,7 +253,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
           <ul className="trophy-banners">
             {roll.map((banner, index) => (
               <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>
-                <TrophyBanner index={index} name={banner.name} tag={TROPHIES[shown].tag} years={banner.years} />
+                <TrophyBanner index={index} name={banner.name} still={moving} tag={TROPHIES[shown].tag} years={banner.years} />
                 <span className="sr-only">{banner.name}, {TROPHIES[shown].tag}, {banner.years.join(", ")}</span>
               </li>
             ))}

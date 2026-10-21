@@ -670,7 +670,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-turn-stage:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -4px; }
 .trophy-turn-poster { display: block; height: auto; pointer-events: none; width: 100%; }
 .trophy-turn-canvas { height: 100%; inset: 0; pointer-events: none; position: absolute; width: 100%; }
-.trophy-turn-canvas[data-layer="rest"][data-visible="false"] { visibility: hidden; }
+.trophy-turn-canvas[data-layer="rest"] { transition: opacity 0.22s ease-out; }
+.trophy-turn-canvas[data-layer="rest"][data-visible="false"] { opacity: 0; transition: none; }
 .trophy-turn-arrow { align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; color: rgba(255, 255, 255, 0.78); cursor: pointer; display: flex; font-size: 1.7rem; height: 2.5rem; justify-content: center; line-height: 1; opacity: 0.55; padding: 0 0 0.2rem; position: absolute; top: 50%; transform: translateY(-50%); transition: opacity 0.2s; width: 2.5rem; }
 .trophy-turn-arrow:hover, .trophy-turn-arrow:focus-visible { opacity: 1; }
 .trophy-turn-arrow[data-side="left"] { left: 0.6rem; }
@@ -684,17 +685,10 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-beam { position: relative; z-index: 2; background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
 .trophy-banners { align-items: flex-start; display: flex; flex-wrap: wrap; gap: 0 0.8rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
 .trophy-rafters[data-moving="true"] .trophy-banners { opacity: 0; transform: translateY(-110%); }
-.trophy-banner { animation: trophy-banner-unfurl 3.2s both, trophy-banner-sway 6.5s ease-in-out infinite; animation-delay: calc(var(--i) * 180ms), calc(var(--i) * 180ms + 3.2s); transform-origin: 50% 0; width: 8.6rem; will-change: transform; }
-.trophy-banner-art { display: block; height: auto; overflow: visible; width: 100%; }
-.trophy-banner-stop-light { stop-color: var(--banner-light); }
-.trophy-banner-stop-base { stop-color: var(--banner); }
-.trophy-banner-stop-dark { stop-color: var(--banner-dark); }
-.trophy-banner-sleeve { fill: var(--banner-dark); }
-.trophy-banner-shadow { fill: rgba(0, 0, 0, 0.35); }
-/* The cloth is cut into thin strips (see TrophyBanner) that slide sideways in a wave running down from the rod: none at the rod, most at the free
-   hem, two waves of different lengths so it never repeats mechanically. */
-.trophy-banner-slice { animation: trophy-banner-ripple 3.4s ease-in-out infinite; animation-delay: var(--lag); }
-@keyframes trophy-banner-ripple { 0%, 100% { transform: translateX(calc(var(--amp) * -1)); } 50% { transform: translateX(var(--amp)); } }
+.trophy-banner { animation: trophy-banner-unfurl 3.2s both; animation-delay: calc(var(--i) * 180ms); transform-origin: 50% 0; width: 8.6rem; }
+/* The canvas is a little wider than the banner so the cloth can swing past its edges; it is drawn at full device resolution and never scaled or rotated. */
+.trophy-banner-art { display: block; position: relative; width: 100%; }
+.trophy-banner-art canvas { height: 100%; left: -4.706%; position: absolute; top: 0; width: 109.412%; }
 .trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
 /* A banner is lowered like a stage curtain: it comes down from behind the beam with its cloth unfolding as it falls, settles a hair past its place, and then hangs and moves gently. */
 @keyframes trophy-banner-unfurl {
@@ -703,8 +697,7 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
   80% { animation-timing-function: ease-out; transform: scaleY(0.99); }
   100% { transform: none; }
 }
-@keyframes trophy-banner-sway { 0%, 100% { transform: rotate(1.1deg) skewX(0.8deg); } 50% { transform: rotate(-1.1deg) skewX(-0.8deg); } }
-@media (prefers-reduced-motion: reduce) { .trophy-banner, .trophy-banner-slice { animation: none; } .trophy-banners { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .trophy-banner { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: fixed; width: 100%; }
 .trophy-table th, .trophy-table td { padding: .65rem .25rem; text-align: center; vertical-align: middle; }
