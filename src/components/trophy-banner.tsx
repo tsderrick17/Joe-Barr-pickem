@@ -9,7 +9,7 @@ import { clothSheen, clothShift } from "@/lib/banner-wave.js";
  * by a swing from the rod and a wave running down the cloth (see `clothShift`) and lightened or darkened by how the cloth leans (`clothSheen`). Every row
  * moves a little differently from its neighbour, so the edges, stitching and lettering bend in one smooth curve instead of stepping, and the folds catch
  * the light as the wave passes. Nothing is rotated or scaled, so it stays sharp. The rod, cords and balls stay put. The cloth holds still while the table
- * is being turned (`still`), keeping the page's busiest moment free, and does not move at all for reduced motion or while the banner is off screen.
+ * is being turned (`still`), keeping the page's busiest moment free, and does not move at all for reduced motion, in automated browsers, or while the banner is off screen.
  * Colours come from `--banner`, `--banner-dark` and `--banner-light` on the rafters (red Pick'em, blue Bowl, green Survivor).
  */
 const WIDTH = 170, ROD_Y = 24, TOP = 30, YEAR_ROW = 26, MARGIN = 8;   // MARGIN: room on each side for the cloth to swing
@@ -54,7 +54,8 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
     const lines = tag.length > 16 && tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];
     const lettered = yearsKey.split(",");
     let cancelled = false, frame = 0, visible = true, clock = 0, last = 0;
-    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // reduced motion keeps the cloth still; so do automated browsers (the screenshot tests), so a picture never catches the cloth mid-swing
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.webdriver;
     const phase = 0.12 * index;
     const nameSize = Math.min(35, 146 / (Math.max(3, name.length) * 0.5));
     const body = `M6 ${TOP}H${WIDTH - 6}V${bottom}L${WIDTH / 2} ${bottom - 36}L6 ${bottom}Z`;
