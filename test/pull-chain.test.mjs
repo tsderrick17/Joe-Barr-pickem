@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PUFF_AT, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
+import { COUNTER_TALL, PUFF_AT, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
 
 const HEIGHT = 60, GROUND = groundOf(HEIGHT);
 const PHONE = layout(390);
@@ -107,13 +107,15 @@ test("the counter's slats slide in two waves: every other slat first, the ones b
   assert.equal(slatOffsets(-1, 12)[3], 0);
 });
 
-test("the down counter stands off to the right of the ball, whole inside the header, far enough away to be small", () => {
+test("the down counter stands off to the right of the ball, its pole planted beside the field rather than on it, whole inside the header, small, on a long pole", () => {
   for (const width of [320, 390, 430]) for (const height of [56, 80, 96]) {
     const lay = layout(width), counter = counterSpot(lay, height), ball = ballSpot(lay, height);
     assert.ok(counter.x > ball.nose + 10, "clear of the ball, off to its right");
     assert.ok(counter.x + 38 * counter.scale < width, "inside the page");
-    assert.ok(counter.ground - 126 * counter.scale >= 0, `the whole counter is inside the header (${width}x${height})`);
-    assert.ok(counter.scale <= 0.5, "small, for standing in the distance");
+    assert.ok(counter.ground - COUNTER_TALL * counter.scale >= 0, `the whole counter is inside the header (${width}x${height})`);
+    assert.equal(counter.ground, height - TURF, "its pole is planted on the sideline, off the field");
+    assert.ok(counter.scale <= 0.36, "small, for standing in the distance");
+    assert.ok((COUNTER_TALL - 104) / COUNTER_TALL > 0.35, "the pole is more than a third of its height");
   }
 });
 

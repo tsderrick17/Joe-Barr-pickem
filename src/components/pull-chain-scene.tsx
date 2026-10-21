@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, POLE, pullStages, slatOffsets, TURF } from "@/lib/pull-chain.js";
+import { ballSpot, chainAnchor, chainLinks, chainReach, COUNTER_TALL, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, POLE, pullStages, slatOffsets, TURF } from "@/lib/pull-chain.js";
 
 /**
  * The picture for pull to refresh: a first-down chain zoomed in on its last three yards, as wide as the page and no taller than the header. The
@@ -73,9 +73,9 @@ function DownCounter({ x, ground, scale, progress }: { x: number; ground: number
   const row = PANEL.height / SLATS, offsets = slatOffsets(progress, SLATS);
   const digit = (path: string) => <path className="pull-counter-digit" d={path} fillRule="evenodd" />;
   return (
-    <g transform={`translate(${x} ${ground}) scale(${scale}) translate(-38 -126)`}>
-      <ellipse className="pull-chain-ball-shadow" cx={38} cy={126} rx={22} ry={4} />
-      <rect className="pull-counter-post" height={26} rx={3} width={9} x={33.5} y={100} />
+    <g transform={`translate(${x} ${ground}) scale(${scale}) translate(-38 -${COUNTER_TALL})`}>
+      <ellipse className="pull-chain-ball-shadow" cx={38} cy={COUNTER_TALL} rx={22} ry={4} />
+      <rect className="pull-counter-post" height={COUNTER_TALL - 100} rx={3} width={9} x={33.5} y={100} />
       <rect className="pull-counter-frame" height={104} rx={9} width={76} x={0} y={0} />
       <rect className="pull-counter-panel" height={PANEL.height} width={PANEL.width} x={8} y={8} />
       <rect className="pull-counter-label" height={9} width={PANEL.width} x={8} y={93} />

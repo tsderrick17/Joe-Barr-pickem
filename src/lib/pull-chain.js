@@ -193,8 +193,12 @@ export function slatOffsets(progress, slats) {
   return Array.from({ length: slats }, (_, index) => (index % 2 === 1 ? smooth(clamp01(turned / 0.5)) : smooth(clamp01((turned - 0.5) / 0.5))));
 }
 
-/** Where the down counter stands: well to the right of the ball, small for being far away, on the turf behind the poles' line. */
+/** The down counter is 168 units tall: a 104-unit marker on a long 64-unit pole. */
+export const COUNTER_TALL = 168;
+
+/** Where the down counter stands: well to the right of the ball, small for being far away, with its pole planted just off the field, on the sideline. */
 export function counterSpot(lay, headerHeight) {
-  const scale = Math.min(0.5, (headerHeight - 14) / 126);   // the counter is 126 units tall, post included
-  return { x: lay.leadTo + lay.yard * 0.42, ground: groundOf(headerHeight) - 5, scale };
+  const ground = headerHeight - TURF;
+  const scale = Math.min(0.36, (ground - 3) / COUNTER_TALL);
+  return { x: lay.leadTo + lay.yard * 0.42, ground, scale };
 }
