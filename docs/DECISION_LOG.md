@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Source-text tests, stage 2 (third slice): Grading route, season ladder, Bowl Pool entry rules
+
+- Decision: the Grading dashboard's route is run against a scripted database (`grading-dashboard-route.test.mjs`: refused before any read unless Commissioner; the answer carries every field the dashboard draws; every worker's latest run is read), the season ladder's paging is run (`season-ladder-loader.test.mjs`), and the Bowl Pool's entry rules run through the real submit route (`bowl-pool-entry-rules.test.mjs`: entry and opt-out close at the first kickoff, a seat holder can still pick open games, a kicked-off game is never saved, a pick must be one of the game's teams). The Bowl Pool's player flow is a browser test (`bowl-flow.visual.spec.ts`: claim a seat, choose, submit, opt out). Their text twins were deleted. Each test was mutation-checked.
+- Why: the Bowl Pool opens to all players on 2026-12-07; its entry rules and flow now fail when broken, instead of passing on the words in the source.
+
 ## 2026-10-21 - Elements are styled by name, not by their place in a list
 
 - Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
