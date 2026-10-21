@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the Season Snapshot's source-text tests are gone. Its access gate now runs the real loader with a scripted database (`season-snapshot-access.test.mjs`: players see nothing and only Week 6 is read before the release; a chart cached for the Commissioner never reaches a player), and page-by-page reading runs `readAllPages` (`read-all-pages.test.mjs`). The remembered-choices and loads-once tests already existed as browser tests, so their text twins were deleted. Polling cadence is pinned by behavior with a fake clock (`polling.visual.spec.ts`: home every 5 minutes, chat every 3, grading every minute while live and every 15 when quiet, none while hidden, one refresh on return), and the Sentry filter runs (`sentry-event-filter.test.mjs`). Rules about how the code is put together live in `architecture-rules.test.mjs`, on purpose lint-style.
 - Why: tests that match source text break on harmless refactors and pass when behavior is wrong. Each new test was mutation-checked (the code was broken, the test failed).
 
+## 2026-10-21 - The Trophy Room data is built once a minute, not once per page open
+
+- Decision: `/api/trophy-room` builds its figures through `createShortCache` (60 seconds, one build shared by requests that arrive together, a failed build never kept). Access is checked before the cache, so a player who may not see the Trophy Room still gets the 404.
+- Why: the figures are the same for everyone and only change when a game is graded, but each page open read every pick, game and line ever recorded. The Trophy Room opens to all players on 2026-12-07, and the project stays on Vercel Hobby, so its Fluid CPU has to stay low. A graded game still shows within a minute.
+
 ## 2026-10-21 - Keep the Supabase CLI's container images between isolated runs
 
 - Decision: `isolated-integration.yml` restores the CLI's container images from the Actions cache (keyed on the pinned CLI version, so a new version starts a new cache) before the database-types check, and saves them after the first successful pull. `scripts/database-types.mjs` still retries a rate-limited pull a few times.
