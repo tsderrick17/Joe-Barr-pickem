@@ -722,7 +722,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-table-head { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; }
 /* Wins & hit rate / Streaks & more: one quiet two-option control, the chosen half filled with the table's green. */
 .trophy-view-switch { border: 1px solid var(--club-forest); border-radius: .35rem; display: inline-flex; overflow: hidden; }
-.trophy-view-switch button { background: transparent; color: var(--club-forest); cursor: pointer; font: 700 .72rem/1.1 Arial, sans-serif; letter-spacing: .04em; min-height: 2.5rem; padding: .4rem .8rem; }
+/* Two halves of exactly the same size (a width, not the words), so the switch is always symmetrical; "Other Stats" takes two rows. Either half flips to the other view. */
+.trophy-view-switch button { background: transparent; color: var(--club-forest); cursor: pointer; flex: none; font: 700 .72rem/1.15 Arial, sans-serif; letter-spacing: .04em; min-height: 2.75rem; padding: .4rem .3rem; text-align: center; width: 4.6rem; }
 .trophy-view-switch button + button { border-left: 1px solid var(--club-forest); }
 .trophy-view-switch button.is-active { background: var(--club-forest); color: var(--sand-93); }
 .trophy-view-switch button:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -3px; }

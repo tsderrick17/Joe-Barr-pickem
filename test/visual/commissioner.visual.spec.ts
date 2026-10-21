@@ -341,3 +341,22 @@ for (const width of [390, 560, 768, 1280]) {
     expect(overflowing, "no table wider than its card").toBe(0);
   });
 }
+
+// Record / Other Stats is a two-way switch: tapping either half flips to the other view, and the halves are exactly the same size.
+test("either half of the Record / Other Stats switch flips the All-Time Table", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/trophy-room");
+  const switcher = page.getByRole("group", { name: "Table view" });
+  const record = switcher.getByRole("button", { name: "Record" }), other = switcher.getByRole("button", { name: /Other\s*Stats/ });
+  await expect(record).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  const [a, b] = [await record.boundingBox(), await other.boundingBox()];
+  expect([Math.round(a!.width), Math.round(a!.height)], "the halves are the same size").toEqual([Math.round(b!.width), Math.round(b!.height)]);
+  await record.click();   // the half that is already chosen: flips to the other view
+  await expect(other).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".trophy-table")).toHaveAttribute("data-view", "more");
+  await other.click();
+  await expect(record).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".trophy-table")).toHaveAttribute("data-view", "record");
+});

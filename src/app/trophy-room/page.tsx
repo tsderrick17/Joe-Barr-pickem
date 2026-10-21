@@ -52,6 +52,7 @@ export default function TrophyRoomPage() {
   });
   const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
   const switchView = (next: View) => { setView(next); setSort({ key: next === "record" ? "rate" : "donut", descending: true }); };
+  const flipView = () => switchView(view === "record" ? "more" : "record");   // a two-way switch: either half flips to the other view
   const header = (key: SortKey, label: ReactNode, rowSpan = 2) => (
     <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={rowSpan} scope="col">
       <button className="trophy-sort" onClick={() => choose(key)} type="button">{label}<span aria-hidden="true">{sort.key === key ? (sort.descending ? " ▼" : " ▲") : ""}</span></button>
@@ -116,8 +117,8 @@ export default function TrophyRoomPage() {
             <div className="trophy-table-head">
               <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
               <div aria-label="Table view" className="trophy-view-switch" role="group">
-                <button aria-pressed={view === "record"} className={view === "record" ? "is-active" : ""} onClick={() => switchView("record")} type="button">Record</button>
-                <button aria-pressed={view === "more"} className={view === "more" ? "is-active" : ""} onClick={() => switchView("more")} type="button">Other Stats</button>
+                <button aria-pressed={view === "record"} className={view === "record" ? "is-active" : ""} onClick={flipView} type="button">Record</button>
+                <button aria-pressed={view === "more"} className={view === "more" ? "is-active" : ""} onClick={flipView} type="button">Other <br />Stats</button>
               </div>
             </div>
             <div className="trophy-table-wrap mt-4">
