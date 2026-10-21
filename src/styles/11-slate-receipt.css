@@ -584,7 +584,7 @@
   .slate-action-instructions.has-survivor {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .slate-action-instructions.has-survivor > p:nth-child(2) { padding-left: calc(1.75rem + 1px); padding-right: .75rem; }
+  .slate-action-instructions.has-survivor > .slate-action-survivor { padding-left: calc(1.75rem + 1px); padding-right: .75rem; }
 }
 
 @media (min-width: 1280px) {
