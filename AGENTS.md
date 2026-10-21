@@ -62,6 +62,8 @@ rule, preserve user data, and update stale documentation in the same change.
 
 - The root-level `supabase/001_*.sql` through `supabase/042_*.sql` files are
   historical build evidence. Never replay, reorder, edit, or deploy them.
+- A migration that creates a table also grants the service role access to it (`grant all privileges on public.<table> to service_role;`): from
+  2026-10-30 Supabase no longer grants Data API access to new tables automatically. A test enforces this.
 - Every new database change is a new timestamped file in
   `supabase/migrations/`. Never modify an already-applied migration.
 - Never use production for fixtures, destructive tests, season drills, or
