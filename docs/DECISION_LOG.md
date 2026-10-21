@@ -1845,6 +1845,10 @@ The pull-down refresh used to be a drop of water, which belonged to nothing else
 
 Once the chain was planted, a finger lift the page never heard of (or a reload that never came, or the page coming back from the browser's back/forward cache) could leave the chain drawn over the header after the page had refreshed by other means. Now the gesture always ends: letting go with the foot planted refreshes as before; any other ending, or a touch that goes quiet (1.5 seconds with no finger down, 4 seconds with a finger held still), resets the chain; a page restored from the cache starts clean; and a reload that has not happened after 6 seconds takes the football down again.
 
+## 2026-10-21 - New tables are granted to the service role explicitly
+
+Supabase stops granting Data API access to new `public` tables on 2026-10-30. A catch-up migration re-grants the service role access to every existing table, sequence and function and to future ones, and from now on each migration that creates a table grants it in the same file; a test fails if one does not. Existing tables, and what anon and authenticated players can reach, are unchanged.
+
 ## The browser tab shows the site's own goalpost icon
 
 The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` and `src/app/icon.png` are now an 8-bit goalpost under a night sky: yellow uprights lit on one edge and shaded on the other, small red streamers on top, crimson padding on the stem, mowed turf below, and "JB" between the uprights in white varsity letters with a crimson drop shadow. It is two hand-placed pixel pictures rather than one shrunk image: a detailed 32 by 32 (used at 32, 64 and 256 px, enlarged without smoothing so it stays crisp) and a simplified 16 by 16 for an ordinary tab. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
