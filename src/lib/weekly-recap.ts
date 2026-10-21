@@ -4,6 +4,7 @@ import { calculatePlayoffEligibility } from "@/lib/playoff-math.js";
 import { findLatestSettledWeeklyRecapPeriod } from "@/lib/weekly-recap-period";
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
 import { championNames } from "@/lib/champion-names.js";
+import { crownedInRecapWeek, recapSurvivorStatus } from "@/lib/survivor-recap-status.js";
 import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { onlyRowsWithPublicPicks, publicPickLabel, revealPickLabels, type LockedGameLine } from "@/lib/reveal-rows";
@@ -212,13 +213,13 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   if (seasonPeriodsError) throw new Error("Season records could not be prepared for the recap.");
   const seasonPeriodIds = (seasonPeriods ?? []).map((item) => item.id);
   const [gamesResult, linesResult, playersResult, picksResult, entriesResult, survivorPicksResult, seasonResult] = await Promise.all([
-    supabaseAdmin.from("games").select("id, away_team_id, home_team_id, away_score, home_score").eq("scoring_period_id", period.id).eq("status", "final").order("kickoff_at"),
+    supabaseAdmin.from("games").select("id, away_team_id, home_team_id, away_score, home_score, kickoff_at").eq("scoring_period_id", period.id).eq("status", "final").order("kickoff_at"),
     supabaseAdmin.from("game_lines").select("game_id, favorite_team_id, locked_spread"),
     supabaseAdmin.from("players").select("id, first_name").eq("active", true),
     seasonPeriodIds.length ? readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, selected_team_id, result, scoring_period_id, submitted_at").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("submitted_at").order("id").range(from, to)) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("survivor_entries").select("id, player_id, status, eliminated_at, eliminated_scoring_period_id").eq("season_id", period.season_id),
     seasonPeriodIds.length ? readAllPages((from, to) => supabaseAdmin.from("survivor_picks").select("survivor_entry_id, scoring_period_id, selected_team_id, result").in("scoring_period_id", seasonPeriodIds).neq("result", "void").order("id").range(from, to)) : Promise.resolve({ data: [], error: null }),
-    supabaseAdmin.from("seasons").select("survivor_champion_player_id").eq("id", period.season_id).maybeSingle(),
+    supabaseAdmin.from("seasons").select("survivor_champion_player_id, survivor_champion_crowned_at").eq("id", period.season_id).maybeSingle(),
   ]);
   const { data: games, error: gamesError } = gamesResult;
   const { data: lines, error: linesError } = linesResult;
@@ -254,9 +255,9 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
   const championName = season?.survivor_champion_player_id
     ? championNames((championIds.length ? championIds : [season.survivor_champion_player_id]).map((id) => (players ?? []).find((player) => player.id === id)?.first_name)) ?? "Survivor champion"
     : null;
-  const championCrownedInRecapWeek = Boolean(
-    championName && (entries ?? []).some((entry) => entry.eliminated_scoring_period_id === period.id),
-  );
+  const championIdSet = new Set(season?.survivor_champion_player_id ? (championIds.length ? championIds : [season.survivor_champion_player_id]) : []);
+  const weekKickoffs = (games ?? []).map((game) => game.kickoff_at).filter((value): value is string => Boolean(value)).sort();
+  const championCrownedInRecapWeek = Boolean(championName) && crownedInRecapWeek({ crownedAt: season?.survivor_champion_crowned_at, firstKickoffAt: weekKickoffs[0], lastKickoffAt: weekKickoffs.at(-1) });
   const survivorPicksByEntry = new Map<string, Array<{ scoring_period_id: string; selected_team_id: string; result: string }>>();
   for (const pick of survivorPicks ?? []) survivorPicksByEntry.set(pick.survivor_entry_id, [...(survivorPicksByEntry.get(pick.survivor_entry_id) ?? []), pick]);
 
@@ -271,11 +272,11 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
     }),
     standings: (players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: wins.get(player.id) ?? 0 })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
     weeklySummary: (players ?? []).map((player) => ({ playerId: player.id, name: player.first_name, wins: (weeklyPicksByPlayer.get(player.id) ?? []).filter((pick) => pick.result === "win").length, picks: (weeklyPicksByPlayer.get(player.id) ?? []).map((pick) => `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`) })).filter((row) => row.picks.length > 0),
-    survivor: { in: (entries ?? []).filter((entry) => entry.status === "active").length, out: (entries ?? []).filter((entry) => entry.status === "eliminated").length, latest: latest ? `${latest} Survivor pick${latest === 1 ? "" : "s"} advanced` : null, championName, championCrownedInRecapWeek, visibleWeeks, rows: (players ?? []).map((player) => {
+    survivor: { in: championIdSet.size ? championIdSet.size : (entries ?? []).filter((entry) => entry.status === "active").length, out: (entries ?? []).filter((entry) => entry.status === "eliminated" && !championIdSet.has(entry.player_id)).length, latest: latest ? `${latest} Survivor pick${latest === 1 ? "" : "s"} advanced` : null, championName, championCrownedInRecapWeek, visibleWeeks, rows: (players ?? []).map((player) => {
       const entry = [...entryById.values()].find((item) => item.player_id === player.id);
       const entryPicks = entry ? survivorPicksByEntry.get(entry.id) ?? [] : [];
       const byWeek = new Map(entryPicks.map((pick) => [orderByPeriod.get(pick.scoring_period_id), `${abbreviations.get(pick.selected_team_id) ?? "NFL"} ${pick.result === "win" ? "W" : "L"}`]));
-      const status: "IN" | "OUT" = entry?.status === "eliminated" ? "OUT" : "IN";
+      const status = recapSurvivorStatus({ entryStatus: entry?.status, isChampion: championIdSet.has(player.id) });
       return { name: player.first_name, status, eliminatedAt: entry?.eliminated_at ?? null, eliminatedInRecapWeek: entry?.eliminated_scoring_period_id === period.id, picks: Array.from({ length: visibleWeeks }, (_, index) => byWeek.get(index + 1) ?? null) };
     }).filter((row) => row.status === "IN" || row.eliminatedInRecapWeek).sort((first, second) => {
       if (first.status !== second.status) return first.status === "IN" ? -1 : 1;
