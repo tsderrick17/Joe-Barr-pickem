@@ -12,3 +12,17 @@ test("the Season Snapshot route checks sign-in before it reads anything, and rep
   assert.ok(route.indexOf("authenticateActivePlayer(request)") >= 0 && route.indexOf("authenticateActivePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
   assert.match(route, /status: access\.status/);
 });
+
+test("the browser's Sentry events pass through the shared filter before they are sent", async () => {
+  assert.match(await source("instrumentation-client.ts"), /beforeSend:\s*prepareBrowserSentryEvent/);
+});
+
+test("the server credential is the service-role key first, the secret key only as a named fallback, and launch preflight rejects the fallback", async () => {
+  const admin = await source("src/lib/supabase-admin.ts");
+  const preflight = await source("src/lib/launch-preflight.ts");
+  assert.ok(admin.indexOf("SUPABASE_SERVICE_ROLE_KEY") < admin.indexOf("SUPABASE_SECRET_KEY"));
+  assert.match(admin, /supabaseServerCredentialSource/);
+  assert.match(admin, /supabaseServerCredentialUsesFallback/);
+  assert.match(preflight, /authorized && authoritativeSource/);
+  assert.match(preflight, /compatibility fallback/);
+});
