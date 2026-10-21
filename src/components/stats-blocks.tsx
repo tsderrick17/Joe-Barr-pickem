@@ -1,4 +1,5 @@
 import { formatAverage } from "@/lib/all-time-stats.js";
+import { formatAdminNumber } from "@/lib/format-admin-number.js";
 
 /**
  * The pieces the league's stats and each player's stats (both in the Performance panel) are built from, so the two always read alike.
@@ -16,7 +17,7 @@ export const percent = (value: number | null) => (value === null ? "—" : `${Ma
 export function RecordTiles({ record, mostPicked, mostPickedTied = 1 }: { record: RecordSummary; mostPicked?: TeamPicked | null; mostPickedTied?: number }) {
   return (
     <dl className="pool-stats-tiles">
-      <div><dt>Record</dt><dd>{record.wins.toLocaleString()}–{record.losses.toLocaleString()}</dd></div>
+      <div><dt>Record</dt><dd>{formatAdminNumber(record.wins)}–{formatAdminNumber(record.losses)}</dd></div>
       <div><dt>Hit rate</dt><dd>{formatAverage(record.hitRate)}</dd></div>
       <div><dt>Pushes</dt><dd>{record.pushedGames}<small> {record.pushedGames === 1 ? "game" : "games"} · {percent(record.pushShare)}</small></dd></div>
       {mostPicked && mostPickedTied > 1
@@ -41,7 +42,7 @@ export function WeeksHistogram({ weeks, label }: { weeks: Weeks; label: string }
         const share = weeks.total ? bar.count / weeks.total : 0;
         return (
           <div className="pool-bar" key={bar.label}>
-            <span className="pool-bar-value">{bar.count.toLocaleString()} <small>{percent(share)}</small></span>
+            <span className="pool-bar-value">{formatAdminNumber(bar.count)} <small>{percent(share)}</small></span>
             <span className="pool-bar-track">
               <span className="pool-bar-fill" style={{ height: `${(share / scale) * 100}%` }} />
               <span className="pool-bar-expected" style={{ bottom: `${(bar.expected / scale) * 100}%` }} />

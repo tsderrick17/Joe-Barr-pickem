@@ -64,12 +64,12 @@ test("the banners stay while the table turns, and are replaced by the next troph
   expect(await page.locator(".trophy-banner").first().evaluate((banner) => getComputedStyle(banner).animationName)).toContain("trophy-banner-unfurl");
 });
 
-test("a phone is sent the smaller pictures (60 at 660 wide), a desktop the full set", async ({ page }) => {
+test("a phone is sent the smaller pictures (the same 120 views at 660 wide), a desktop the full set", async ({ page }) => {
   const requested: string[] = [];
   page.on("request", (request) => { if (/\/trophies\/turntable\/(sm\/)?(frame|rest)-\d+\.webp/.test(request.url())) requested.push(new URL(request.url()).pathname); });
   await openTrophyRoom(page, 390);
   const small = requested.filter((path) => path.includes("/sm/"));
-  expect(small.filter((path) => path.includes("/frame-")).length, "all 60 small pictures").toBe(60);
+  expect(small.filter((path) => path.includes("/frame-")).length, "all 120 small pictures").toBe(120);
   expect(small.filter((path) => path.includes("/rest-")).length, "and the 3 sharp resting views").toBe(3);
   expect(requested.filter((path) => !path.includes("/sm/") && !path.endsWith("/frame-000.webp")), "no full-size picture was fetched on a phone").toEqual([]);
   await page.close();
@@ -118,4 +118,17 @@ test("a cancelled drag settles on a trophy instead of sticking between two", asy
   await stage.dispatchEvent("pointercancel");
   await expect(front(page)).toHaveText(/is at the front/);
   await page.mouse.up();
+});
+
+// The banners are drawn on a canvas at the screen's full device resolution (and never scaled or rotated), so they stay sharp.
+test("the banners are drawn at full device resolution", async ({ browser }) => {
+  const context = await browser.newContext({ deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  await openTrophyRoom(page, 900);
+  const canvas = page.locator(".trophy-banner canvas").first();
+  await expect(canvas).toBeVisible();
+  const sizes = await canvas.evaluate((element) => { const target = element as HTMLCanvasElement; return { drawn: target.width, shown: target.clientWidth, ratio: window.devicePixelRatio }; });
+  expect(sizes.ratio).toBe(2);
+  expect(sizes.drawn, "one canvas pixel for every screen pixel").toBeGreaterThanOrEqual(Math.round(sizes.shown * 2) - 1);
+  await context.close();
 });

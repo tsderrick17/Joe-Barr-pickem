@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage } from "@/lib/all-time-stats.js";
-import { placesFor, sortValue, type SortKey } from "@/lib/trophy-rank.js";
+import { halfRate, placesFor, sortValue, type SortKey } from "@/lib/trophy-rank.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -52,6 +52,7 @@ export default function TrophyRoomPage() {
   });
   const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
   const switchView = (next: View) => { setView(next); setSort({ key: next === "record" ? "rate" : "donut", descending: true }); };
+  const flipView = () => switchView(view === "record" ? "more" : "record");   // a two-way switch: either half flips to the other view
   const header = (key: SortKey, label: ReactNode, rowSpan = 2) => (
     <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={rowSpan} scope="col">
       <button className="trophy-sort" onClick={() => choose(key)} type="button">{label}<span aria-hidden="true">{sort.key === key ? (sort.descending ? " ▼" : " ▲") : ""}</span></button>
@@ -84,6 +85,7 @@ export default function TrophyRoomPage() {
           {streakCell(own?.sweeps, "Consecutive 2-0 Weeks")}
           <td>{count(row, row.halfWins)}</td>
           <td>{count(row, row.halfLosses)}</td>
+          <td>{formatAverage(halfRate(row))}</td>
           <td>{count(row, row.pushes)}</td>
         </>}
       </tr>
@@ -115,25 +117,25 @@ export default function TrophyRoomPage() {
             <div className="trophy-table-head">
               <h2 className="font-serif text-2xl font-bold" id="all-time">All-Time Table</h2>
               <div aria-label="Table view" className="trophy-view-switch" role="group">
-                <button aria-pressed={view === "record"} className={view === "record" ? "is-active" : ""} onClick={() => switchView("record")} type="button">Wins &amp; hit rate</button>
-                <button aria-pressed={view === "more"} className={view === "more" ? "is-active" : ""} onClick={() => switchView("more")} type="button">Streaks &amp; more</button>
+                <button aria-pressed={view === "record"} className={view === "record" ? "is-active" : ""} onClick={flipView} type="button">Record</button>
+                <button aria-pressed={view === "more"} className={view === "more" ? "is-active" : ""} onClick={flipView} type="button">Other <br />Stats</button>
               </div>
             </div>
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table" data-view={view}>
                 {view === "record"
                   ? <colgroup><col style={{ width: "10%" }} /><col style={{ width: "40%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
-                  : <colgroup><col style={{ width: "7%" }} /><col style={{ width: "19%" }} /><col style={{ width: "17%" }} /><col style={{ width: "17%" }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "16%" }} /></colgroup>}
+                  : <colgroup><col className="trophy-col-rank" /><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
                 <thead>
                   {view === "record" ? (
                     <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
                   ) : <>
                     <tr>
                       <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>
-                      <th colSpan={2} scope="colgroup">Regular Season Streaks</th><th colSpan={2} scope="colgroup">Decided by a half point</th>{header("pushes", "Pushes picked")}
+                      <th colSpan={2} scope="colgroup"><span className="trophy-group">Regular Season Streaks</span></th><th colSpan={3} scope="colgroup"><span className="trophy-group">Decided by a half point</span></th><th aria-hidden="true" />
                     </tr>
                     <tr>
-                      {header("donut", <>Consecutive <br />Donut Free Weeks</>, 1)}{header("sweeps", <>Consecutive <br />2-0 Weeks</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}
+                      {header("donut", <>Consecutive <br />Donut Free Weeks</>, 1)}{header("sweeps", <>Consecutive <br />2-0 Weeks</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
                     </tr>
                   </>}
                 </thead>

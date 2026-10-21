@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
+
+- Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
+- Why: the SVG banner was cut into 12 strips (stair-stepped edges, broken stitching) and was rasterized small and scaled by the unfurl, so it looked pixelated. Blending neighbouring pictures ghosted every trophy, which read as blur.
+
 ## 2026-10-21 - Restore Survivor champions eliminated after the crown
 
 - Decision: a one-time migration (`20261021030000_restore_champions_eliminated_after_crown.sql`) puts a crowned Survivor champion's entry back to active when the no-pick rule eliminated it after the crown (no losing game, an audit row from the rule, eliminated after the championship). It uses the integrity trigger's own audited score-correction guard for that statement only and writes `survivor_champion_entry_restored` for each entry. Owner approved it for Zac's entry.

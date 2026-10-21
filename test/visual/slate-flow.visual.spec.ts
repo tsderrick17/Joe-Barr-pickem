@@ -208,3 +208,23 @@ test("the Trophy Room says it is not open yet to a player", async ({ page }) => 
   await expect(page.getByText("The Trophy Room is not open yet.")).toBeVisible({ timeout: 30000 });
   await expect(page.locator("main [role=alert]")).toHaveCount(0);   // the page's own error line (the framework has its own, empty one outside <main>)
 });
+
+// All games / Pool action is a two-way switch: tapping either half flips to the other, and the halves are exactly the same size.
+test("either half of the All games / Pool action switch flips to the other", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page);
+  await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
+  await page.goto("/board");
+  const group = page.getByRole("group", { name: "Slate display" });
+  const all = group.getByRole("button", { name: /All\s*games/ }), action = group.getByRole("button", { name: /Pool\s*action/ });
+  await expect(all).toHaveAttribute("aria-pressed", "true", { timeout: 30000 });
+  const sizes = async () => [await all.boundingBox(), await action.boundingBox()].map((box) => box && [Math.round(box.width), Math.round(box.height)]);
+  const [first, second] = await sizes();
+  expect(first, "the halves are the same size").toEqual(second);
+  await all.click();   // the half that is already chosen: flips to the other option
+  await expect(action).toHaveAttribute("aria-pressed", "true");
+  await action.click();
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await action.click();
+  await expect(action).toHaveAttribute("aria-pressed", "true");
+});
