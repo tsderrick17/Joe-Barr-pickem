@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Playwright is upgraded on purpose, not by Dependabot
+
+- Decision: Dependabot ignores minor and major updates of `@playwright/test`. A test checks that the package version and the Playwright container tags in `quality.yml` and `visual-baselines.yml` are one version. An upgrade bumps all three together and re-records the Linux baselines.
+- Why: the npm group PR #547 bumped `@playwright/test` to 1.64 while the screenshot job runs in the 1.63 container, so every visual test failed with "Executable doesn't exist"; a new browser can also move pixels.
+
 ## 2026-10-23 - A first load that fails is tried again by itself before the player sees an error
 
 - Decision: the Standings and the Slate retry a failed first load once, 1.5 seconds later, and show "taking too long" only when the retry also fails. The Slate's first request now also has the Standings' fifteen-second limit, so a request that hangs is dropped and retried instead of leaving the football spinning. While the Standings error is showing, coming back to the tab (or focus) loads again at once instead of waiting out the 30-second return gap. Browser tests with failing and hanging requests are in `load-retry.visual.spec.ts`.

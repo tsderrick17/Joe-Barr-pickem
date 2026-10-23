@@ -18,6 +18,11 @@ updates:
       # (it calls an API ESLint 10 removed). Revisit when Next's config supports it.
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # The screenshot job runs in the Playwright container pinned in quality.yml and visual-baselines.yml, and the Linux baselines are recorded with its
+      # browser. A newer @playwright/test cannot find that browser (CI fails with "Executable doesn't exist"), and a new browser can move pixels. Upgrade
+      # on purpose: bump the package and both container tags together, then re-record the baselines (visual-baselines.yml).
+      - dependency-name: "@playwright/test"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
