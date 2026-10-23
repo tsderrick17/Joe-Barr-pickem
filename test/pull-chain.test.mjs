@@ -9,12 +9,13 @@ const chainAt = (descent, lay = PHONE) => {
   return { pose, ...chainLinks(chainAnchor(lay, GROUND), pose.ring, { chainLength: chainReach(lay), groundY: GROUND, linkZoom: lay.linkZoom }) };
 };
 
-test("the scene shows three yards across the page, with the chain fastened at the page's left edge and reaching the lead pole", () => {
+test("the scene shows three yards across the page, with the chain ten yards long: fastened ten yards behind the lead pole, far off the page to the left", () => {
   for (const width of [320, 390, 430, 768]) {
     const lay = layout(width);
     assert.ok(Math.abs(lay.yard * 3 - width) < 1e-9, "three yards across");
     assert.ok(lay.leadTo > width * 0.6 && lay.leadTo < width * 0.85, "the lead pole lands toward the right");
-    assert.ok(lay.anchorX <= 0, "the chain's fixed end is at (or just off) the left edge");
+    assert.ok(Math.abs(lay.leadTo - lay.anchorX - 10 * lay.yard) < 1e-9, "its fixed end is ten yards behind the lead pole");
+    assert.ok(lay.anchorX < -5 * lay.yard, "so it is well off the page");
     assert.ok(Math.abs(chainReach(lay) - (lay.leadTo - lay.anchorX)) < 1e-9);
   }
 });
@@ -38,7 +39,7 @@ test("the chain starts slack on the ground, is drawn out until it is stretched t
   const anchor = chainAnchor(PHONE, GROUND), reach = chainReach(PHONE);
   const lengthAt = (descent) => { const { pose } = chainAt(descent); return Math.hypot(pose.ring.x - anchor.x, pose.ring.y - anchor.y); };
   const slackAt = (descent) => chainAt(descent).slack;
-  assert.ok(slackAt(0) > 0.2 * reach, `it begins with slack, not taut (${slackAt(0).toFixed(0)} px of slack)`);
+  assert.ok(slackAt(0) > 0.4 * PHONE.leadTo, `it begins with slack, not taut (${slackAt(0).toFixed(0)} px of slack)`);
   assert.equal(chainAt(0).taut, false);
   let previous = Infinity;
   for (const descent of [0, 0.1, 0.2, 0.3, 0.4, STRETCH_END]) {
@@ -53,7 +54,7 @@ test("the chain starts slack on the ground, is drawn out until it is stretched t
     for (const link of links) assert.ok(Math.abs(link.y - (anchor.y + slope * (link.x - anchor.x))) < 1e-6, "straight and taut once stretched");
   }
   const degrees = (descent) => { const ring = chainAt(descent).pose.ring; return (Math.atan2(anchor.y - ring.y, ring.x - anchor.x) * 180) / Math.PI; };
-  assert.ok(Math.abs(degrees(STRETCH_END) - 8) < 0.01, `rising 8 degrees where the drop begins (${degrees(STRETCH_END).toFixed(2)})`);
+  assert.ok(Math.abs(degrees(STRETCH_END) - 2) < 0.01, `rising only 2 degrees where the drop begins, a gentle climb over ten yards (${degrees(STRETCH_END).toFixed(2)})`);
   const end = chainAt(1).pose.ring;
   assert.ok(Math.abs(end.y - anchor.y) < 1e-9 && Math.abs(end.x - PHONE.leadTo) < 1e-9, "flat, and the ring arrives at the ball only as the foot lands");
 });
@@ -148,4 +149,15 @@ test("the field has a yard line every five yards and a hash mark on each yard be
 
 test("the foot and the turf fit inside the header", () => {
   for (const height of [44, 56, 60, 96]) assert.ok(TURF + 6 <= height && FOOT * PHONE.zoom < height, String(height));
+});
+
+test("the pole comes in at a spot on the page, and the flag hangs on the chain where it can be seen, however far the chain runs back", () => {
+  for (const width of [320, 390, 430, 768]) {
+    const lay = layout(width), start = descentPose(0, lay, GROUND);
+    assert.ok(start.ring.x > 0.3 * lay.leadTo && start.ring.x < 0.7 * lay.leadTo, `the pole first shows on the page (${start.ring.x.toFixed(0)} of ${width})`);
+    for (const descent of [0, 0.25, STRETCH_END, 0.75, 1]) {
+      const { clip } = chainAt(descent, lay);
+      assert.ok(clip.x > 0 && clip.x < lay.leadTo, `the flag is on the page at ${descent} (${clip.x.toFixed(0)})`);
+    }
+  }
 });

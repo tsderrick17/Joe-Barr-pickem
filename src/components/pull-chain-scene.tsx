@@ -19,12 +19,14 @@ function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zo
   const rod = POLE;
   const half = (at: number) => (TOP_WIDTH + (BOTTOM_WIDTH - TOP_WIDTH) * ((at - BANNER_TOP) / (rod - BANNER_TOP))) / 2;
   const step = (rod - BANNER_TOP) / (CHEVRONS + 1);
+  const bannerShape = `M${-TOP_WIDTH / 2} ${BANNER_TOP}H${TOP_WIDTH / 2}L${BOTTOM_WIDTH / 2} ${rod}H${-BOTTOM_WIDTH / 2}Z`;
   return (
     <g transform={`translate(${x} ${y}) rotate(${tilt}) scale(${zoom})`}>
       <path className="pull-chain-strap" d={`M${-DISC * 0.7} ${DISC * 1.5}L${-TOP_WIDTH / 2} ${BANNER_TOP}M${DISC * 0.7} ${DISC * 1.5}L${TOP_WIDTH / 2} ${BANNER_TOP}`} />
       <rect className="pull-chain-rod" height={BANNER_TOP - DISC} width={1.8} x={-0.9} y={DISC * 1.6} />
-      <path className="pull-chain-rod" d={`M${-TOP_WIDTH / 2} ${BANNER_TOP}H${TOP_WIDTH / 2}L${BOTTOM_WIDTH / 2} ${rod}H${-BOTTOM_WIDTH / 2}Z`} />
-      {Array.from({ length: CHEVRONS }, (_, index) => {
+      <clipPath id="pull-chain-banner-shape"><path d={bannerShape} /></clipPath>
+      <path className="pull-chain-rod" d={bannerShape} />
+      <g clipPath="url(#pull-chain-banner-shape)">{Array.from({ length: CHEVRONS }, (_, index) => {
         const at = BANNER_TOP + step * (index + 1), width = half(at), drop = Math.min(3.2, width * 0.55);
         return (
           <g key={index}>
@@ -32,7 +34,7 @@ function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zo
             <path className="pull-chain-chevron" d={`M${-width} ${at - drop}L0 ${at}L${width} ${at - drop}`} />
           </g>
         );
-      })}
+      })}</g>
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC} />
       <circle className="pull-chain-ring" cx={0} cy={DISC} r={DISC * 0.64} />
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC * 0.4} />
