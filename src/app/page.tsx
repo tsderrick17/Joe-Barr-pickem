@@ -81,6 +81,10 @@ export default function HomePage() {
     let activeRequest: AbortController | null = null;
     let hasLoaded = false;
     let lastLoadStartedAt = 0;
+    // A first load that fails (iPhone Safari cuts off a request when the tab is backgrounded, a cold start can run long) is tried once more by itself
+    // before the player is shown an error; coming back to the tab reloads at once while there is still nothing to show.
+    let failedFirstLoads = 0;
+    let retryTimer: number | null = null;
 
     async function loadHome() {
       lastLoadStartedAt = Date.now();
@@ -128,6 +132,7 @@ export default function HomePage() {
           setBowlPoolMinimized(!effectiveResult.showBowlCard);
         });
         hasLoaded = true;
+        failedFirstLoads = 0;
 
         if (revealTimer !== null) {
           window.clearTimeout(revealTimer);
@@ -156,6 +161,11 @@ export default function HomePage() {
         }
 
         if (!hasLoaded) {
+          failedFirstLoads += 1;
+          if (failedFirstLoads < 2) {
+            retryTimer = window.setTimeout(() => { retryTimer = null; void loadHome(); }, 1_500);
+            return;
+          }
           setErrorMessage(
             "The Standings are taking too long to load. Please try again.",
           );
@@ -181,7 +191,8 @@ export default function HomePage() {
 
     const refreshOnReturn = () => {
       if (document.visibilityState !== "visible") return;
-      if (Date.now() - lastLoadStartedAt < RETURN_REFRESH_GAP_MS) return;
+      if (hasLoaded && Date.now() - lastLoadStartedAt < RETURN_REFRESH_GAP_MS) return;
+      if (retryTimer !== null) { window.clearTimeout(retryTimer); retryTimer = null; }
       void loadHome();
     };
 
@@ -190,6 +201,7 @@ export default function HomePage() {
 
     return () => {
       window.clearInterval(refreshInterval);
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
       if (revealTimer !== null) {
         window.clearTimeout(revealTimer);
       }
