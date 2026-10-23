@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Perfect Weeks"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -250,6 +250,10 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   // Al (20 wins, .588 on 34 picks) is under the pick minimum, so a hit-rate sort puts him after the qualified players.
   const names = await table.locator("tbody th[scope=row]").allInnerTexts();
   expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
+  // Perfect Weeks (how many 2-0 weeks in all): Tyler 14, Connor 12, Gary 9, Rick 6, and the players with no completed weeks last.
+  await table.getByRole("button", { name: /^Perfect Weeks/ }).click();
+  expect((await table.locator("tbody th[scope=row]").allInnerTexts()).slice(0, 4)).toEqual(["Tyler", "Connor", "Gary", "Rick"]);
+  await expect(table.locator("tbody tr").first().locator("td").last()).toHaveText("14");
 });
 
 // The Trophy Room's table carries each player's streaks, as now / best: Tyler has gone 9 weeks in a row with a win (best 23) and none 2-0 right now (best 5).
@@ -260,10 +264,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await page.goto("/trophy-room");
   await page.getByRole("button", { name: "Other Stats" }).click();   // the streaks are in the second view of the table
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
-  await expect(row.getByLabel("Consecutive 2-0 Weeks: 0 now, 5 best")).toBeVisible();
+  await expect(row.getByLabel("Shutout Free Streak: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Perfect Weeks in a Row: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Shutout Free Streak: none yet")).toBeVisible();
 });
 
 // The second view of the table: streaks, games decided by half a point (wins, losses and hit rate) and pushes picked, ranked on the sorted column with
@@ -277,18 +281,24 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
     await page.getByRole("button", { name: "Other Stats" }).click();
-    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Consecutive Donut Free Weeks ▼", "Consecutive 2-0 Weeks", "Wins", "Losses", "Hit rate", "Pushes picked"]);
-    const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
-    expect(await rankOf("Tyler")).toBe("1");
-    expect(await rankOf("Ron")).toBe("T5");
-    expect(await rankOf("Zac")).toBe("T5");
+    await expect(table.locator("thead th")).toHaveText(["", "Regular Season Streaks", "Decided by a half point", "", "Player ▲", "Shutout Free Streak", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    // no places on this page: players are listed A to Z until a column is chosen
+    await expect(table.locator(".trophy-rank")).toHaveCount(0);
+    expect(await table.locator("tbody th[scope=row]").allInnerTexts()).toEqual(["Al", "Connor", "Dana", "Gary", "Rick", "Ron", "Tyler", "Zac"]);
     const tyler = table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-    await expect(tyler.locator("td").nth(3)).toHaveText("6");   // half-point wins
-    await expect(tyler.locator("td").nth(4)).toHaveText("4");   // half-point losses
-    await expect(tyler.locator("td").nth(5)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
-    await expect(tyler.locator("td").nth(6)).toHaveText("3");   // pushes picked
+    await expect(tyler.locator("td").nth(2)).toHaveText("6");   // half-point wins
+    await expect(tyler.locator("td").nth(3)).toHaveText("4");   // half-point losses
+    await expect(tyler.locator("td").nth(4)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
+    await expect(tyler.locator("td").nth(5)).toHaveText("3");   // pushes picked
     await table.getByRole("button", { name: /^Pushes picked/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Connor");   // 4 pushes
+    await table.getByRole("button", { name: /^Shutout Free Streak/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Tyler");   // best run 23
+    await table.getByRole("button", { name: /^Player/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Al");   // back to A to Z
+    await table.getByRole("button", { name: /^Player/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Zac");   // a second tap reverses
+    await table.getByRole("button", { name: /^Player/ }).click();
     await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
     await expect(page.locator("#all-time")).toBeVisible();
     await expect(page.locator("section[aria-labelledby=all-time]")).toHaveScreenshot(`commissioner-trophy-room-more-${label}.png`);

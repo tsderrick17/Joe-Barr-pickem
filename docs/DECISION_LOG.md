@@ -9,6 +9,21 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: `TROPHY_ROOM_PLAYER_OPENS_AT` is 2026-10-23T12:00Z, so every active player can open the Trophy Room (and sees its link in the name menu) from that time, for good; the Commissioner always could. Supersedes the plan to open it with the Bowl Pool on 2026-12-07.
 - Why: owner decision after the trophy, banners, tables, phone memory and speed work. The data is built once a minute for everyone (decision of 2026-10-21), so the opening costs little CPU.
 
+## 2026-10-23 - Trophy Room: no places on Other Stats, A to Z by default, no visible heading over the trophies
+
+- Decision: the Other Stats table has no rank column or tie marks; it opens sorted A to Z by player name, the Player heading is a sort button (a second tap reverses), and choosing a column sorts by it. The Record table keeps its places. The "The trophies" heading above the turntable is no longer shown (it stays for screen readers).
+- Why: owner review: places make no sense across so many different stats, and the heading was redundant over the picture of the trophies.
+
+## 2026-10-23 - Other Stats: Player and Rank sit on the label row
+
+- Decision: in the Other Stats heading the group headings (with their gold rules) have a row to themselves, and Player and Rank are in the row of column labels with everything else, all bottom-aligned, instead of spanning both rows and floating between them.
+- Why: owner review on a phone: Player sat in the middle of the heading, level with nothing.
+
+## 2026-10-23 - Trophy Room polish before it opens to players
+
+- Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder (the years keep their lettering); Consecutive Donut Free Weeks is now Shutout Free Streak and Consecutive 2-0 Weeks is now Perfect Weeks in a Row; the Record table gains a sortable Perfect Weeks column, the count of 2-0 weeks in all, as its last column (`streaks.sweeps.total`).
+- Why: owner review ahead of opening the Trophy Room to every player.
+
 ## 2026-10-23 - The Pick'em trophy: a smooth marble column, marble that belongs to the stone, collars cast into it
 
 - Decision: the Pick'em trophy's column is a smooth turned column (no scalloped flutes). Its marble is painted from the column's own profile with 3D noise (`marbleOnProfile` in `tools/trophy-render/lib.js`): veins are soft, grey and diagonal, run on continuously and never repeat or pinch, in place of a small tiled picture wrapped round the stone. Every gold collar (the two on the column, the two where the lattice anchors, and a slimmer one round the foot) swells out of the stone in a smooth ogee and sits in a hairline seating groove, with an engine-turned face between two rope rolls; the rubies grow in size from the top collar to the bottom one, and the foot's collar has none. All 120 pictures, the three sharp resting views and the phone set were re-rendered.

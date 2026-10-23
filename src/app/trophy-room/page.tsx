@@ -11,7 +11,7 @@ type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean; halfWins?: number; halfLosses?: number; pushes?: number; streaks: { noDonut: Run; sweeps: Run } | null };
 type View = "record" | "more";
-type Run = { longest: number; current: number };
+type Run = { longest: number; current: number; total?: number };
 
 export default function TrophyRoomPage() {
   const [data, setData] = useState<{ trophies: Season[]; players: Row[] } | null>(null);
@@ -44,14 +44,15 @@ export default function TrophyRoomPage() {
   const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
   const sorted = [...players].sort((a, b) => {
     const direction = sort.descending ? 1 : -1;
+    if (sort.key === "name") return (sort.descending ? -1 : 1) * byName(a, b);
     if (sort.key === "rate") {
       if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
       return direction * ((b.avg ?? 0) - (a.avg ?? 0)) || direction * (b.h - a.h) || byName(a, b);
     }
     return direction * (sortValue(b, sort.key) - sortValue(a, sort.key)) || (sort.key === "wins" ? direction * ((b.avg ?? 0) - (a.avg ?? 0)) : 0) || byName(a, b);
   });
-  const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: true });
-  const switchView = (next: View) => { setView(next); setSort({ key: next === "record" ? "rate" : "donut", descending: true }); };
+  const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: key !== "name" });
+  const switchView = (next: View) => { setView(next); setSort(next === "record" ? { key: "rate", descending: true } : { key: "name", descending: false }); };   // Record opens on hit rate, Other Stats A to Z
   const flipView = () => switchView(view === "record" ? "more" : "record");   // a two-way switch: either half flips to the other view
   const header = (key: SortKey, label: ReactNode, rowSpan = 2) => (
     <th aria-sort={sort.key === key ? (sort.descending ? "descending" : "ascending") : "none"} rowSpan={rowSpan} scope="col">
@@ -71,18 +72,24 @@ export default function TrophyRoomPage() {
   };
   const count = (row: Row, value: number | undefined) => (row.ab ? value ?? 0 : "—");
 
+  const playerHead = () => (
+    <th aria-sort={sort.key === "name" ? (sort.descending ? "descending" : "ascending") : "none"} className="trophy-player-head" scope="col">
+      <button className="trophy-sort" onClick={() => choose("name")} type="button">Player<span aria-hidden="true">{sort.key === "name" ? (sort.descending ? " ▼" : " ▲") : ""}</span></button>
+    </th>
+  );
   function line(row: Row, rank: number, tied: boolean) {
     const own = row.streaks ?? undefined;
     return (
       <tr key={row.playerId}>
-        <td className="trophy-rank">{tied ? <small>T</small> : null}{rank}</td>
+        {view === "record" ? <td className="trophy-rank">{tied ? <small>T</small> : null}{rank}</td> : null}
         <th scope="row">{row.name}</th>
         {view === "record" ? <>
           <td>{row.ab ? row.h : "—"}</td>
           <td className="trophy-avg">{formatAverage(row.avg)}</td>
+          <td>{row.streaks ? row.streaks.sweeps.total ?? 0 : "—"}</td>
         </> : <>
-          {streakCell(own?.noDonut, "Consecutive Donut Free Weeks")}
-          {streakCell(own?.sweeps, "Consecutive 2-0 Weeks")}
+          {streakCell(own?.noDonut, "Shutout Free Streak")}
+          {streakCell(own?.sweeps, "Perfect Weeks in a Row")}
           <td>{count(row, row.halfWins)}</td>
           <td>{count(row, row.halfLosses)}</td>
           <td>{formatAverage(halfRate(row))}</td>
@@ -108,8 +115,8 @@ export default function TrophyRoomPage() {
         {!data && !error && !notYet ? <p className="mt-6 text-sm text-(color:--themed-text-28)">Loading the Trophy Room…</p> : null}
 
         <section aria-labelledby="trophy-display" className="desk-rule-bottom py-8">
-          <h2 className="font-serif text-2xl font-bold" id="trophy-display">The trophies</h2>
-          <div className="mt-4"><TrophyTurntable seasons={data?.trophies ?? []} /></div>
+          <h2 className="sr-only" id="trophy-display">The trophies</h2>
+          <div><TrophyTurntable seasons={data?.trophies ?? []} /></div>
         </section>
 
         {data ? <>
@@ -124,18 +131,19 @@ export default function TrophyRoomPage() {
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table" data-view={view}>
                 {view === "record"
-                  ? <colgroup><col style={{ width: "10%" }} /><col style={{ width: "40%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
-                  : <colgroup><col className="trophy-col-rank" /><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
+                  ? <colgroup><col style={{ width: "9%" }} /><col style={{ width: "33%" }} /><col style={{ width: "19%" }} /><col style={{ width: "22%" }} /><col style={{ width: "17%" }} /></colgroup>
+                  : <colgroup><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
                 <thead>
                   {view === "record" ? (
-                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
+                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}{header("perfect", "Perfect Weeks", 1)}</tr>
                   ) : <>
-                    <tr>
-                      <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" rowSpan={2} scope="col">Player</th>
+                    <tr className="trophy-groups">
+                      <th aria-hidden="true" />
                       <th colSpan={2} scope="colgroup"><span className="trophy-group">Regular Season Streaks</span></th><th colSpan={3} scope="colgroup"><span className="trophy-group">Decided by a half point</span></th><th aria-hidden="true" />
                     </tr>
-                    <tr>
-                      {header("donut", <>Consecutive <br />Donut Free Weeks</>, 1)}{header("sweeps", <>Consecutive <br />2-0 Weeks</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
+                    <tr className="trophy-subheads">
+                      {playerHead()}
+                      {header("donut", <>Shutout Free <br />Streak</>, 1)}{header("sweeps", <>Perfect Weeks <br />in a Row</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
                     </tr>
                   </>}
                 </thead>
