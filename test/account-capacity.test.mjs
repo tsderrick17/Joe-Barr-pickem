@@ -13,8 +13,8 @@ test("database size and per-table storage details are not readable by players or
 
 test("the Vercel estimates reproduce the observed 30-day figures", async () => {
   const { estimateFluidCpu, estimateFunctionsStorageBytes } = await import("../src/lib/vercel-usage-estimate.js");
-  // Calibration points from Vercel's Usage page: 3h 16m of CPU with 11 active players (2026-10-19), 10.4 GB over 730 deployments.
-  assert.ok(Math.abs(estimateFluidCpu({ activePlayers: 11 }).seconds / 3600 - (3 + 16 / 60)) < 0.05);
+  // Calibration points from Vercel's Usage page: 2h 55m of CPU with 11 active players (2026-10-23), 10.4 GB over 730 deployments.
+  assert.ok(Math.abs(estimateFluidCpu({ activePlayers: 11 }).seconds / 3600 - (2 + 55 / 60)) < 0.05);
   assert.ok(Math.abs(estimateFunctionsStorageBytes(730) / 1024 ** 3 - 10.4) < 0.05);
   assert.ok(estimateFluidCpu({ activePlayers: 5 }).seconds < estimateFluidCpu({ activePlayers: 11 }).seconds);
 });
