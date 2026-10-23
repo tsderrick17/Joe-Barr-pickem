@@ -1,5 +1,5 @@
 // Second pass: an abstract armillary for Pick'em, a crystal spade with the team chip for Survivor, and a unique engraved base for each trophy.
-import { THREE, RoundedBoxGeometry, profile, revolveMod, mesh, beadRing, engravingBand, marbleTexture, leafGeometry, laurel, fbm } from "/lib.js";
+import { THREE, RoundedBoxGeometry, profile, revolveMod, mesh, beadRing, engravingBand, marbleTexture, marbleOnProfile, leafGeometry, laurel, fbm } from "/lib.js";
 import { chipTexture } from "/trophies.js";
 
 /** Re-tone every gold part of a trophy as platinum: bright by default, dark smoky platinum on meshes tagged userData.smoky. */
@@ -344,24 +344,28 @@ export function ivorySpire(m, opts = {}) {
   const ybase = cage ? y0 - 3.45 : y0;
   const flareAt = (y) => (cage ? 1.35 : 0.9) * Math.pow(Math.max(0, 1 - (y - ybase) / (cage ? 9 : 6)), 2);   // the pillar widens gracefully toward its foot
   const rc = (y) => { const t = Math.max(0, (y - y0) / (y1 - y0)); return 2.9 - 1.9 * t + 0.25 * Math.sin(Math.PI * t) + flareAt(y); };
-  // scalloped flutes: rounded ridges between sharp-bottomed grooves, deeper than before
-  const scallop = (lo, hi) => (theta, tt, y, r) => r * (1 + 0.19 * (Math.pow(Math.abs(Math.cos(10 * theta)), 0.7) - 0.62) * smooth(lo, lo + 0.6, y) * (1 - smooth(hi - 0.6, hi, y)));
-  if (cage) {
-    const R0 = rc(ybase);
-    const plinth = mesh(new THREE.CylinderGeometry(R0 + 0.25, R0 + 0.4, 0.7, 96, 1, true), engravedGold(guillocheTexture(4), 1.5)); plinth.position.y = ybase + 0.35; g.add(plinth);
-    for (const [r, y] of [[R0 + 0.42, ybase], [R0 + 0.3, ybase + 0.72]]) { const e = mesh(new THREE.TorusGeometry(r, 0.13, 12, 96), engravedGold(ropeTexture(80), 1.1)); e.rotation.x = Math.PI / 2; e.position.y = y; g.add(e); }
-    g.add(beadRing(R0 + 0.55, 72, 0.07, ybase + 0.35, m.gold));
-  }
-  const core = profile(Array.from({ length: cage ? 26 : 14 }, (_, i) => { const y = ybase + (i / (cage ? 25 : 13)) * (y1 - ybase); return [rc(y), y]; }), 220);
-  g.add(mesh(revolveMod(core, 240, scallop(ybase + 0.8, y1 - 1)), colMat));
-  // engraved gold collars on the column: engine-turned centre, rope-twist edges, a row of fine beads
-  for (const y of fin.kind === "coil" ? [12.1, 19.5] : [9.5, 17.5, 25.0]) {
-    const r = rc(y) + 0.34, circ = 2 * Math.PI * r;
-    const rAt = (yy) => rc(yy) + 0.34;   // the pillar tapers, so every part of the collar is cut to the radius of the stone at its own height
-    const band = mesh(new THREE.CylinderGeometry(rAt(y + 0.55), rAt(y - 0.55), 1.1, 120, 1, true), engravedGold(guillocheTexture(Math.max(1, Math.round(circ / 6))), 1.6)); band.position.y = y; g.add(band);
-    for (let q = 0; q < 4; q++) { const th = q * Math.PI / 2 + Math.PI / 4, dir = new THREE.Vector3(Math.cos(th), 0, -Math.sin(th)); rubyStud(g, m, dir.clone().multiplyScalar(rAt(y) + 0.04).setY(y), dir, 0.3); }
-    for (const s of [-1, 1]) { const ey = y + s * 0.6, er = rAt(ey), edge = mesh(new THREE.TorusGeometry(er, 0.13, 12, 90), engravedGold(ropeTexture(Math.round(circ * 3)), 1.2)); edge.rotation.x = Math.PI / 2; edge.position.y = ey; g.add(edge); g.add(beadRing(rAt(y + s * 0.8) + 0.16, Math.round(circ * 3.2), 0.07, y + s * 0.8, m.gold)); }
-  }
+  // the collars' heights: the stone is cut with a hairline seating groove at each edge, so a collar sits in the column instead of lying on it
+  const BAND_YS = fin.kind === "coil" ? [y1 - 2.6, 19.5, 12.1, y0 + 1.1] : [25.0, 17.5, 9.5];   // top to bottom (for the coil, the two ends are where the strands anchor)
+  const seat = (y) => BAND_YS.reduce((cut, by) => cut + 0.075 * Math.max(0, Math.cos(((Math.abs(y - by) - 0.74) / 0.12) * Math.PI / 2)) * (Math.abs(Math.abs(y - by) - 0.74) < 0.12 ? 1 : 0), 0);
+  const rs = (y) => rc(y) - seat(y);
+  const core = profile(Array.from({ length: 70 }, (_, i) => { const y = ybase + (i / 69) * (y1 - ybase); return [rs(y), y]; }), 420);
+  if ((opts.material ?? "white") === "white") { colMat.map = marbleOnProfile(core, 2048, 5); colMat.map.repeat.set(1, 1); colMat.needsUpdate = true; }
+  g.add(mesh(revolveMod(core, 240), colMat));
+  // gold collars cast as part of the column: each swells out of the stone in a smooth ogee at both edges (so the silhouette flows from stone to gold with no step),
+  // carries an engine-turned face between two rope-twist rolls, and (except the one at the foot) four rubies that grow a little from the top collar to the bottom one
+  const collar = (y, { ruby = 0, face = 0.22, size = 1 } = {}) => {   // `size` scales its height (the foot's is slimmer)
+    const rAt = (yy) => rc(yy) + face;   // the pillar tapers, so every part of the collar is cut to the radius of the stone at its own height
+    const circ = 2 * Math.PI * rAt(y);
+    const swell = (dy) => { const k = Math.min(1, Math.max(0, (0.82 * size - dy) / (0.5 * size))); return face * (k * k * (3 - 2 * k)); };   // 0 at the stone, the full face height from 0.32 up
+    const side = [];
+    for (let n = 0; n <= 24; n += 1) { const dy = (-0.8 + (n / 24) * 1.6) * size, ay = Math.abs(dy); side.push([rc(y + dy) + swell(ay), y + dy]); }
+    g.add(mesh(revolveMod(side, 200), m.gold));
+    const band = mesh(new THREE.CylinderGeometry(rAt(y + 0.34 * size) + 0.012, rAt(y - 0.34 * size) + 0.012, 0.68 * size, 120, 1, true), engravedGold(guillocheTexture(Math.max(1, Math.round(circ / 6))), 1.6)); band.position.y = y; g.add(band);
+    if (ruby) for (let q = 0; q < 4; q++) { const th = q * Math.PI / 2 + Math.PI / 4, dir = new THREE.Vector3(Math.cos(th), 0, -Math.sin(th)); rubyStud(g, m, dir.clone().multiplyScalar(rAt(y) + 0.03).setY(y), dir, ruby); }
+    for (const s of [-1, 1]) { const ey = y + s * 0.46 * size, edge = mesh(new THREE.TorusGeometry(rAt(ey) - 0.02, 0.075 * Math.max(0.7, size), 12, 90), engravedGold(ropeTexture(Math.round(circ * 3)), 1.2)); edge.rotation.x = Math.PI / 2; edge.position.y = ey; g.add(edge); }
+  };
+  BAND_YS.forEach((y, n) => collar(y, { ruby: 0.22 + (n / (BAND_YS.length - 1)) * 0.12 }));
+  if (cage) collar(ybase + 0.5, { face: 0.2, size: 0.6 });   // the same collar round the foot, without rubies
 
   // four silver blades twisting up the column like scooped leaves: each tapers to nothing at both ends, with a gold rope edge, a gold root line and a fine inlaid centre rib
   const blade = (a0, wScale = 1) => {
@@ -485,14 +489,7 @@ export function ivorySpire(m, opts = {}) {
         const off = 0.45 + 1.15 * k, sep = 0.08 + 0.6 * k, r = rc(y) + off;
         return new V(Math.cos(th) * r, y + s * sep, -Math.sin(th) * r);
       };
-      // the anchoring rings: engraved gold bands round the pillar where the strands begin and end
-      for (const y of [yA, yB]) {
-        const r = rc(y) + 0.36, circ = 2 * Math.PI * r;
-        for (let q = 0; q < 4; q++) { const th = q * Math.PI / 2 + Math.PI / 4, dir = new V(Math.cos(th), 0, -Math.sin(th)); rubyStud(g, m, dir.clone().multiplyScalar(r + 0.04).setY(y), dir, 0.28); }
-        const rAt = (yy) => rc(yy) + 0.36;
-        const band = mesh(new THREE.CylinderGeometry(rAt(y + 0.45), rAt(y - 0.45), 0.9, 120, 1, true), engravedGold(guillocheTexture(Math.max(1, Math.round(circ / 6))), 1.6)); band.position.y = y; g.add(band);
-        for (const s of [-1, 1]) { const ey = y + s * 0.48, e = mesh(new THREE.TorusGeometry(rAt(ey), 0.12, 12, 90), engravedGold(ropeTexture(Math.round(circ * 3)), 1.2)); e.rotation.x = Math.PI / 2; e.position.y = ey; g.add(e); g.add(beadRing(rAt(y + s * 0.62) + 0.14, Math.round(circ * 3), 0.055, y + s * 0.62, m.gold)); }
-      }
+      // (the anchoring rings are the top and bottom collars, made with the others above)
       for (const a0 of [Math.PI / 4, Math.PI / 4 + Math.PI]) {
         const n = 160;
         for (const s of [-1, 1]) rope(Array.from({ length: n + 1 }, (_, i) => at(a0, i / n, s)), 0.115);
