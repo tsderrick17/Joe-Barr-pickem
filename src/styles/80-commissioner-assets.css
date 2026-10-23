@@ -257,7 +257,7 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-sideline { fill: var(--chalk); }
 .pull-chain-yardline { fill: var(--chalk); opacity: 0.85; }
 /* Alternate five-yard bands are mowed darker, and the far side of the field is a little darker still, as a field looks from the sideline. */
-.pull-chain-stripe { fill: #000; opacity: 0.14; }
+.pull-chain-stripe { fill: black; opacity: 0.14; }
 .pull-chain-farshade { fill: url(#pull-chain-far); }
 .pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 2.2; }
 .pull-chain-ball { fill: url(#pull-chain-leather); }
