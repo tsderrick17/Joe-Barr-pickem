@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
+// The playoff-day recap and its email copy run for real in playoff-recap-behavior.test.mjs; the three plans' playoff toggles in email-plans.visual.spec.ts; the
+// email images (full-width receipts table, the Survivor count under the Survivor table) in the email artwork render and baseline tests.
+// What remains are the two reveal snapshots, which are built against a live database and so keep their source rules.
 const weeklyRecap = await readFile(new URL("../src/lib/weekly-recap.ts", import.meta.url), "utf8");
-const recapImage = await readFile(new URL("../src/lib/email-artwork.tsx", import.meta.url), "utf8");
-const profile = await readFile(new URL("../src/app/profile/page.tsx", import.meta.url), "utf8");
-const emailReminders = await readFile(new URL("../src/lib/email-reminders.ts", import.meta.url), "utf8");
 
 test("playoff reveal snapshots are scoped to their scheduled kickoff games", () => {
   assert.match(weeklyRecap, /select\("source_game_ids"\)/);
@@ -17,28 +17,4 @@ test("playoff reveal snapshots are scoped to their scheduled kickoff games", () 
 test("featured reveal snapshots stay scoped to the scheduled featured game window", () => {
   assert.match(weeklyRecap, /const selectedFeaturedGameIds = new Set/);
   assert.match(weeklyRecap, /selectedFeaturedGameIds\.has\(pick\.game_id\)/);
-});
-
-test("large public receipts retain a full-width readable table", () => {
-  assert.match(recapImage, /PickemTable/);
-  assert.match(recapImage, /flexWrap: "wrap"/);
-});
-
-test("Regular includes daily playoff recaps while Full Card adds every reveal", () => {
-  assert.match(profile, /const regular:[^\n]+playoffDayRecap: true, playoffPublicReveal: false/);
-  assert.match(profile, /const full:[^\n]+playoffDayRecap: true, playoffPublicReveal: true/);
-});
-
-test("playoff recaps explicitly memorialize eliminations and champions", () => {
-  assert.match(weeklyRecap, /championsCrowned/);
-  assert.match(emailReminders, /Pick'em Champion/);
-  assert.match(emailReminders, /Pick'em co-champions/);
-  assert.match(emailReminders, /Eliminated from Pick'em today/);
-});
-
-test("weekly Survivor recap keeps the remaining count directly under the Survivor table", () => {
-  assert.match(recapImage, /const survivorFooter/);
-  assert.match(recapImage, /note=\{survivorFooter\}/);
-  assert.doesNotMatch(emailReminders, /survivorUpdateBlock/);
-  assert.doesNotMatch(recapImage, /survivor\.in\} in · \$\{snapshot\.survivor\.out\} out/);
 });

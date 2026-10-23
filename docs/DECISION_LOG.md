@@ -29,6 +29,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the per-active-player cost in `src/lib/vercel-usage-estimate.js` goes from 22 to 18.3 seconds a day so the model reproduces Vercel's meter, 2 h 55 m for the 30 days ending 2026-10-23 with 11 active players (the background jobs are unchanged at about 2.5 minutes a day).
 - Why: the dashboard still read higher than Vercel after the 2026-10-19 calibration (3 h 16 m); the meter keeps falling as polling has slowed. The Trophy Room opened to players on 2026-10-23: its data is built once a minute for everyone, so watch the meter over the next weeks and recalibrate if it moves.
 
+## 2026-10-23 - Playoff recap, email plans and season turnover are tested by running them
+
+- Decision: `test/playoff-recap-behavior.test.mjs` runs the real playoff-day recap builder against a scripted database (the game day it covers, scheduled-games scoping, an unsettled day refused, champions named only on the round's last day) and renders the recap email (champion, co-champions, eliminations). `email-plans.visual.spec.ts` clicks Essentials, Regular and Full Card on the Notifications page and checks the playoff toggles. `test/season-rollover-behavior.test.mjs` runs the annual boundary and cleanup steps and the bootstrap status reader. The matching source-text assertions were removed from `playoff-email-policy`, `annual-season-turnover`; the SQL/migration contracts and the two reveal-snapshot source rules stay.
+- Why: the text twins passed whenever the words were in a file. Each new test was mutation-checked (scheduled games ignored, champions on any day, champion copy changed, elimination gate off, regular plan with and without the recap/reveals, boundary error ignored, empty cleanup answer accepted, wrong turnover year).
+
 ## 2026-10-23 - The refresh pole's foot is a black cuff, post and small flange
 
 - Decision: the foot of the first-down pole is drawn after the real marker: a black cuff where the orange banner ends, a narrow black post, and a small flat flange at the bottom, with a steel clasp where the chain is fastened (plain black, no highlight). It replaces the single grey rubber stopper. The spotted football is unchanged (an attempt to redraw it with pebbled leather and a seam was rejected as worse).

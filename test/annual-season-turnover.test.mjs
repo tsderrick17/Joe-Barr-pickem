@@ -3,11 +3,10 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { evaluateWatchdogSignals } from "../src/lib/watchdog-rules.js";
 
-test("annual turnover is certified, retry-safe, and preserves official history", async () => {
-  const [migration, rollover, bootstrap, panel] = await Promise.all([
+test("annual turnover is certified, retry-safe, and preserves official history (SQL contract, and the Commissioner panel's certificate wording)", async () => {
+  // The two application steps (ensure the boundary, then the certified cleanup) and the status reader run for real in season-rollover-behavior.test.mjs.
+  const [migration, panel] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820010000_add_certified_annual_turnover.sql", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/season-rollover.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/full-schedule-bootstrap.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/season-bootstrap-status.tsx", import.meta.url), "utf8"),
   ]);
 
@@ -26,9 +25,6 @@ test("annual turnover is certified, retry-safe, and preserves official history",
   assert.match(migration, /season_turnover_completed/);
   assert.match(migration, /existing_run\.status = 'completed'/);
 
-  assert.match(rollover, /ensure_annual_season_rollover/);
-  assert.match(rollover, /perform_annual_season_turnover/);
-  assert.match(bootstrap, /season_turnover_runs/);
   assert.match(panel, /season turnover is certified/i);
   assert.match(panel, /Official games, lines, picks, championships, and message receipts were preserved/);
 });
