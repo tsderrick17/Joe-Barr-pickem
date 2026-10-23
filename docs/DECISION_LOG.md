@@ -29,6 +29,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the per-active-player cost in `src/lib/vercel-usage-estimate.js` goes from 22 to 18.3 seconds a day so the model reproduces Vercel's meter, 2 h 55 m for the 30 days ending 2026-10-23 with 11 active players (the background jobs are unchanged at about 2.5 minutes a day).
 - Why: the dashboard still read higher than Vercel after the 2026-10-19 calibration (3 h 16 m); the meter keeps falling as polling has slowed. The Trophy Room opened to players on 2026-10-23: its data is built once a minute for everyone, so watch the meter over the next weeks and recalibrate if it moves.
 
+## 2026-10-23 - The refresh pole's foot is a black cuff, post and small flange
+
+- Decision: the foot of the first-down pole is drawn after the real marker: a black cuff where the orange banner ends, a narrow black post, and a small flat flange at the bottom, with a steel clasp where the chain is fastened (plain black, no highlight). It replaces the single grey rubber stopper. The spotted football is unchanged (an attempt to redraw it with pebbled leather and a seam was rejected as worse).
+- Why: owner request, with a photo of the real marker as the reference; the first flange was too wide, and the round bolt and the shine on the post were dropped.
+
 ## 2026-10-23 - The refresh chain runs ten yards back, and the flag is clipped to the pole
 
 - Decision: the chain's fixed end is ten yards behind the lead pole (it was a few pixels off the left edge), so the chain climbs at about 2 degrees instead of 8 and the pole first shows about a third of the way across. The flag hangs on a link a little way back from the lead pole (the true middle of a ten-yard chain is off the page). The chevrons on the orange banner are clipped to the banner's outline, so they can no longer poke past its edges.

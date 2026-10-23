@@ -126,7 +126,7 @@ test("the down counter stands off to the right of the ball, its pole planted bes
 test("the football is spotted at the lead pole and its tip pokes out a couple of inches past the pole's foot: a first down", () => {
   for (const width of [320, 390, 430]) {
     const lay = layout(width), ball = ballSpot(lay, HEIGHT);
-    const footFarEdge = lay.leadTo + 3.1 * lay.zoom;
+    const footFarEdge = lay.leadTo + 1.5 * lay.zoom;   // the flange at the foot is 3 units wide
     const inches = (ball.nose - footFarEdge) / lay.inch;
     assert.ok(ball.nose > footFarEdge, "past the pole's foot");
     assert.ok(inches > 1.5 && inches < 4, `a couple of inches, not feet (${inches.toFixed(1)} in at ${width} px)`);
