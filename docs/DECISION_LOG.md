@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - The Pick'em trophy: a smooth marble column, marble that belongs to the stone, collars cast into it
+
+- Decision: the Pick'em trophy's column is a smooth turned column (no scalloped flutes). Its marble is painted from the column's own profile with 3D noise (`marbleOnProfile` in `tools/trophy-render/lib.js`): veins are soft, grey and diagonal, run on continuously and never repeat or pinch, in place of a small tiled picture wrapped round the stone. Every gold collar (the two on the column, the two where the lattice anchors, and a slimmer one round the foot) swells out of the stone in a smooth ogee and sits in a hairline seating groove, with an engine-turned face between two rope rolls; the rubies grow in size from the top collar to the bottom one, and the foot's collar has none. All 120 pictures, the three sharp resting views and the phone set were re-rendered.
+- Why: owner feedback: the column was not convincing, the marble looked janky (streaked, repeating), and the gold bands looked pasted on.
+
 ## 2026-10-23 - Pull to refresh: the chain is stretched first, the foot is planted and stays
 
 - Decision: the pole no longer starts with the chain taut. It is drawn out leaning, at one height, with the chain slack in humps on the turf, until the chain is stretched to its full length (one slight boing, `chainTwang`); only then does it drop, straightening, and land with the dust. The foot, once planted, does not squash, bounce or swing: the pole stands upright and still. The down counter is a little larger (shorter post) with six thick slats instead of twelve thin ones; the field gets mowing stripes, a darker far side and a near sideline; the red marker on the chain is a simple flag through it that hangs a little below. Supersedes the 2026-10-21 rules that the chain is taut throughout and that the pole swings once past upright.

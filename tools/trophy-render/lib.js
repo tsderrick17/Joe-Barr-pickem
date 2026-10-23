@@ -54,6 +54,59 @@ export function marbleTexture(size = 1024, seed = 3) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
 }
 
+// ---------- marble that belongs to the stone: veins are a function of position in space, not a tiled picture
+const h3 = (x, y, z) => { let h = (x * 374761393 + y * 668265263 + z * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+function vnoise3(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi, s = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  const sx = s(xf), sy = s(yf), sz = s(zf);
+  const l = (a, b, k) => a + (b - a) * k;
+  return l(
+    l(l(h3(xi, yi, zi), h3(xi + 1, yi, zi), sx), l(h3(xi, yi + 1, zi), h3(xi + 1, yi + 1, zi), sx), sy),
+    l(l(h3(xi, yi, zi + 1), h3(xi + 1, yi, zi + 1), sx), l(h3(xi, yi + 1, zi + 1), h3(xi + 1, yi + 1, zi + 1), sx), sy), sz);
+}
+function fbm3(x, y, z, octaves = 5) { let v = 0, a = 0.5, f = 1; for (let i = 0; i < octaves; i++) { v += a * vnoise3(x * f + i * 17.3, y * f + i * 5.1, z * f + i * 9.7); f *= 2.02; a *= 0.5; } return v; }
+
+/**
+ * Statuario-style marble painted onto a turned stone. `points` is the stone's profile ([radius, y] from the bottom up, exactly as it is revolved): every texel is
+ * mapped back to its true place on the stone and coloured from 3D noise there, so the veins run on continuously round the stone and up it, never repeat, never
+ * pinch where the column narrows and never show a seam. Soft grey veins run diagonally and branch; a few finer ones follow; the body is a warm, cloudy white.
+ */
+export function marbleOnProfile(points, size = 2048, seed = 1) {
+  const cumulative = [0];
+  for (let i = 1; i < points.length; i++) cumulative.push(cumulative[i - 1] + Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]));
+  const total = cumulative[cumulative.length - 1];
+  const at = (s) => { let i = 1; while (i < points.length - 1 && cumulative[i] < s) i++; const k = (s - cumulative[i - 1]) / ((cumulative[i] - cumulative[i - 1]) || 1); return [points[i - 1][0] + (points[i][0] - points[i - 1][0]) * k, points[i - 1][1] + (points[i][1] - points[i - 1][1]) * k]; };
+  const c = canvas(size, size), g = c.getContext("2d"), img = g.createImageData(size, size);
+  const S = seed * 11.7;
+  for (let ry = 0; ry < size; ry++) {
+    const [radius, y] = at((1 - ry / size) * total);
+    for (let rx = 0; rx < size; rx++) {
+      const theta = (rx / size) * Math.PI * 2, px = Math.cos(theta) * radius, pz = -Math.sin(theta) * radius;
+      const q = [px * 0.3 + S, y * 0.3 + S * 0.5, pz * 0.3];
+      // wander: the coordinates are pushed about by low-frequency noise, and the veins lean diagonally up the stone
+      const wx = (fbm3(q[0] + 3.1, q[1] + 1.7, q[2] + 8.3, 4) - 0.5) * 2.4, wy = (fbm3(q[0] + 9.2, q[1] + 4.4, q[2] + 2.8, 4) - 0.5) * 2.4, wz = (fbm3(q[0] + 5.5, q[1] + 7.9, q[2] + 6.1, 4) - 0.5) * 2.4;
+      const lean = (px * 0.55 + pz * 0.25) * 0.3;
+      const d1 = fbm3(q[0] + wx, q[1] * 0.8 + wy + lean, q[2] + wz, 5);
+      const d2 = fbm3(q[0] * 2.1 + wx * 1.4 + 11, q[1] * 1.7 + wy * 1.4 + lean * 1.5, q[2] * 2.1 + wz * 1.4 + 3, 4);
+      const d3 = fbm3(q[0] * 4.6 + wx * 1.8 + 5, q[1] * 3.8 + wy * 1.8, q[2] * 4.6 + wz * 1.8 + 13, 3);
+      const major = Math.pow(1 - Math.abs(2 * d1 - 1), 13);
+      const minor = Math.pow(1 - Math.abs(2 * d2 - 1), 24) * 0.55;
+      const hair = Math.pow(1 - Math.abs(2 * d3 - 1), 44) * 0.3;
+      const halo = Math.pow(1 - Math.abs(2 * d1 - 1), 4) * 0.07;        // a faint cloudiness either side of a vein
+      const cloud = fbm3(q[0] * 0.8 + 21, q[1] * 0.7, q[2] * 0.8 + 6, 4);
+      const warm = fbm3(q[0] * 0.5 + 40, q[1] * 0.5, q[2] * 0.5, 3);
+      const shade = 0.955 + cloud * 0.07;
+      let r = 241 * shade + (warm - 0.5) * 6, gg = 237 * shade + (warm - 0.5) * 3, b = 229 * shade - (warm - 0.5) * 6;
+      const k = Math.min(1, major * 0.62 + minor * 0.5 + hair * 0.4);
+      const pale = 1 - halo;
+      r = r * pale * (1 - k) + 120 * k; gg = gg * pale * (1 - k) + 116 * k; b = b * pale * (1 - k) + 122 * k;
+      const i = (ry * size + rx) * 4; img.data[i] = r; img.data[i + 1] = gg; img.data[i + 2] = b; img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 16; return t;
+}
+
 export function walnutTexture(size = 1024) {
   const c = canvas(size, size), g = c.getContext("2d"), img = g.createImageData(size, size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
