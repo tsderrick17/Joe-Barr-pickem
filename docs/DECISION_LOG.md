@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Trophy Room: no places on Other Stats, A to Z by default, no visible heading over the trophies
+
+- Decision: the Other Stats table has no rank column or tie marks; it opens sorted A to Z by player name, the Player heading is a sort button (a second tap reverses), and choosing a column sorts by it. The Record table keeps its places. The "The trophies" heading above the turntable is no longer shown (it stays for screen readers).
+- Why: owner review: places make no sense across so many different stats, and the heading was redundant over the picture of the trophies.
+
 ## 2026-10-23 - Other Stats: Player and Rank sit on the label row
 
 - Decision: in the Other Stats heading the group headings (with their gold rules) have a row to themselves, and Player and Rank are in the row of column labels with everything else, all bottom-aligned, instead of spanning both rows and floating between them.
