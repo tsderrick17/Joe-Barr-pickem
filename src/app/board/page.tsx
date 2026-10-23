@@ -122,14 +122,20 @@ export default function BoardPage() {
 
   useEffect(() => {
     let disposed = false;
+    let retryTimer: number | null = null;
 
-    async function loadBoard() {
+    // A first load that fails (iPhone Safari cuts a request off when the tab is backgrounded) is tried once more by itself before an error is shown.
+    async function loadBoard(attempt = 1) {
+      let retrying = false;
       const requestedWeekId = new URLSearchParams(window.location.search).get("week");
       const params = new URLSearchParams({ bootstrap: "1" });
       if (requestedWeekId) params.set("week", requestedWeekId);
 
+      // a request that hangs (a backgrounded iPhone tab) is dropped after fifteen seconds so it can be tried again
+      const request = new AbortController();
+      const requestTimer = window.setTimeout(() => request.abort(), 15_000);
       try {
-        const response = await fetchWithSession(`/api/board?${params}`);
+        const response = await fetchWithSession(`/api/board?${params}`, { signal: request.signal });
         const data = (await response.json()) as BoardResponse;
 
         if (disposed) return;
@@ -170,9 +176,15 @@ export default function BoardPage() {
           window.location.replace("/login");
           return;
         }
+        if (attempt < 2 && !disposed) {
+          retrying = true;
+          retryTimer = window.setTimeout(() => { retryTimer = null; void loadBoard(attempt + 1); }, 1_500);
+          return;
+        }
         dispatch({ type: "load-failed", loadId: boardRequestId.current, message: "The Slate is taking too long to load. Please try again." });
       } finally {
-        if (!disposed) { const loadId = boardRequestId.current; startTransition(() => dispatch({ type: "load-finished", loadId })); }
+        window.clearTimeout(requestTimer);
+        if (!disposed && !retrying) { const loadId = boardRequestId.current; startTransition(() => dispatch({ type: "load-finished", loadId })); }
       }
     }
 
@@ -180,6 +192,7 @@ export default function BoardPage() {
 
     return () => {
       disposed = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
     };
   }, []);
 

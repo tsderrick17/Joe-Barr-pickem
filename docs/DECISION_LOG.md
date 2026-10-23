@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - A first load that fails is tried again by itself before the player sees an error
+
+- Decision: the Standings and the Slate retry a failed first load once, 1.5 seconds later, and show "taking too long" only when the retry also fails. The Slate's first request now also has the Standings' fifteen-second limit, so a request that hangs is dropped and retried instead of leaving the football spinning. While the Standings error is showing, coming back to the tab (or focus) loads again at once instead of waiting out the 30-second return gap. Browser tests with failing and hanging requests are in `load-retry.visual.spec.ts`.
+- Why: iPhone Safari cuts off or suspends a request when the tab is in the background, and a cold start can run long; the page treated any failed first load as "taking too long" (a screenshot from 2026-10-22 showed it while the site and its health checks were fine).
+
 ## 2026-10-23 - Next.js 16.4.2 (security release)
 
 - Decision: `next` and `eslint-config-next` move to 16.4.2. `next` stays exact-pinned.
