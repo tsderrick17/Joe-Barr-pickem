@@ -65,7 +65,7 @@ function Ball({ spot }: { spot: ReturnType<typeof ballSpot> }) {
 
 /** The down counter: a thick foam frame round a dark panel of horizontal slats that carry the digit. Each slat is a window on a little strip with its slice
  *  of the 4 above and its slice of the 1 below; sliding the strip up swaps one for the other, so a panel part-way through reads 1, 4, 1, 4 down its height. */
-const SLATS = 12, PANEL = { width: 60, height: 84 };
+const SLATS = 6, PANEL = { width: 60, height: 84 };
 const FOUR = "M36 6L50 6L50 50L58 50L58 64L50 64L50 78L34 78L34 64L4 64L4 52ZM34 24L34 50L17 50Z";
 const ONE = "M26 6L44 6L44 78L28 78L28 26L10 36L10 22Z";
 function DownCounter({ x, ground, scale, progress }: { x: number; ground: number; scale: number; progress: number }) {
@@ -117,6 +117,7 @@ export default function PullChainScene({ width, height, progress, landed, since,
   return (
     <svg aria-hidden="true" height={height} viewBox={`0 0 ${width} ${height}`} width={width}>
       <defs>
+        <linearGradient id="pull-chain-far" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#000" stopOpacity="0.28" /><stop offset="1" stopColor="#000" stopOpacity="0" /></linearGradient>
         <linearGradient id="pull-chain-leather" x1="0" x2="0" y1="0" y2="1">
           <stop className="pull-chain-leather-hi" offset="0" />
           <stop className="pull-chain-leather-mid" offset="0.55" />
@@ -124,7 +125,10 @@ export default function PullChainScene({ width, height, progress, landed, since,
         </linearGradient>
       </defs>
       <rect className="pull-chain-ground" height={TURF} width={width} y={turfTop} />
+      {marks.stripes.filter((stripe) => stripe.dark).map((stripe) => <rect className="pull-chain-stripe" height={TURF} key={`s${stripe.x}`} width={stripe.width} x={stripe.x} y={turfTop} />)}
+      <rect className="pull-chain-farshade" height={TURF} width={width} y={turfTop} />
       <rect className="pull-chain-sideline" height={2} width={width} y={turfTop} />
+      <rect className="pull-chain-sideline" height={2} width={width} y={height - 2} />
       {marks.lines.map((x) => <rect className="pull-chain-yardline" height={TURF - 2} key={`l${x}`} width={3} x={x - 1.5} y={turfTop + 2} />)}
       {marks.hashes.map((x) => <path className="pull-chain-hash" d={`M${x} ${turfTop + 2}v5M${x} ${height - 5}v5`} key={`h${x}`} />)}
       <DownCounter ground={counter.ground} progress={stages.counter} scale={counter.scale} x={counter.x} />
@@ -132,7 +136,7 @@ export default function PullChainScene({ width, height, progress, landed, since,
       {shown.map((link, index) => (
         <ellipse className={link.edge ? "pull-chain-link-edge" : "pull-chain-link"} cx={link.x} cy={link.y} key={index} rx={linkW} ry={link.edge ? linkH * 0.47 : linkH} transform={`rotate(${link.angle} ${link.x} ${link.y})`} />
       ))}
-      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={4.4 * lay.linkZoom} width={2.6 * lay.linkZoom} x={clip.x - 1.3 * lay.linkZoom} y={clip.y - 2.2 * lay.linkZoom} transform={`rotate(${clip.angle} ${clip.x} ${clip.y})`} /> : null}
+      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={5.4 * lay.linkZoom} rx={0.5} width={2.2 * lay.linkZoom} x={clip.x - 1.1 * lay.linkZoom} y={clip.y - 1.5 * lay.linkZoom} transform={`rotate(${clip.angle} ${clip.x} ${clip.y})`} /> : null}
       <Rod tilt={-pose.lean} x={pose.top.x} y={pose.top.y} zoom={lay.zoom} />
       {landed && dust < 1 ? (
         <g className="pull-chain-dust" opacity={0.55 * (1 - dust)}>

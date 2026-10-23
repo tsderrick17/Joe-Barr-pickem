@@ -103,16 +103,22 @@ export function ballSpot(lay, headerHeight) {
   return { x: nose - BALL.length / 2, y: headerHeight - TURF + 12.5, length: BALL.length, height: BALL.height, nose };
 }
 
-/** The yard lines (every five yards) and hash marks (every yard in between) across the page. */
+/** The yard lines (every five yards), hash marks (every yard in between), and the mowing stripes (one band per five yards, alternate bands darker, as on a
+ *  real field) across the page. */
 export function fieldMarks(lay) {
   const offset = lay.yard * 0.35;   // the poles are not on a line
-  const lines = [], hashes = [];
+  const lines = [], hashes = [], stripes = [];
   for (let k = -2; k <= Math.ceil(lay.width / lay.yard) + 6; k += 1) {
     const x = lay.leadTo - offset + (k - 6) * lay.yard;
     (k % 5 === 0 ? lines : hashes).push(x);
   }
+  for (let k = -10; k <= Math.ceil(lay.width / lay.yard) + 10; k += 1) {
+    if (k % 5 !== 0) continue;
+    const x = lay.leadTo - offset + (k - 6) * lay.yard;
+    if (x + 5 * lay.yard > 0 && x < lay.width) stripes.push({ x, width: 5 * lay.yard, dark: (((k / 5) % 2) + 2) % 2 === 0 });
+  }
   const inView = (x) => x > -2 && x < lay.width + 2;
-  return { lines: lines.filter(inView), hashes: hashes.filter(inView) };
+  return { lines: lines.filter(inView), hashes: hashes.filter(inView), stripes };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
