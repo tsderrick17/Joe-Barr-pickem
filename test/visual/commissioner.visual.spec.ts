@@ -281,18 +281,24 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
     await page.getByRole("button", { name: "Other Stats" }).click();
-    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Shutout Free Streak ▼", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
-    const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
-    expect(await rankOf("Tyler")).toBe("1");
-    expect(await rankOf("Ron")).toBe("T5");
-    expect(await rankOf("Zac")).toBe("T5");
+    await expect(table.locator("thead th")).toHaveText(["", "Regular Season Streaks", "Decided by a half point", "", "Player ▲", "Shutout Free Streak", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    // no places on this page: players are listed A to Z until a column is chosen
+    await expect(table.locator(".trophy-rank")).toHaveCount(0);
+    expect(await table.locator("tbody th[scope=row]").allInnerTexts()).toEqual(["Al", "Connor", "Dana", "Gary", "Rick", "Ron", "Tyler", "Zac"]);
     const tyler = table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-    await expect(tyler.locator("td").nth(3)).toHaveText("6");   // half-point wins
-    await expect(tyler.locator("td").nth(4)).toHaveText("4");   // half-point losses
-    await expect(tyler.locator("td").nth(5)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
-    await expect(tyler.locator("td").nth(6)).toHaveText("3");   // pushes picked
+    await expect(tyler.locator("td").nth(2)).toHaveText("6");   // half-point wins
+    await expect(tyler.locator("td").nth(3)).toHaveText("4");   // half-point losses
+    await expect(tyler.locator("td").nth(4)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
+    await expect(tyler.locator("td").nth(5)).toHaveText("3");   // pushes picked
     await table.getByRole("button", { name: /^Pushes picked/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Connor");   // 4 pushes
+    await table.getByRole("button", { name: /^Shutout Free Streak/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Tyler");   // best run 23
+    await table.getByRole("button", { name: /^Player/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Al");   // back to A to Z
+    await table.getByRole("button", { name: /^Player/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Zac");   // a second tap reverses
+    await table.getByRole("button", { name: /^Player/ }).click();
     await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
     await expect(page.locator("#all-time")).toBeVisible();
     await expect(page.locator("section[aria-labelledby=all-time]")).toHaveScreenshot(`commissioner-trophy-room-more-${label}.png`);
