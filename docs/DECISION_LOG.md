@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the Standings and the Slate retry a failed first load once, 1.5 seconds later, and show "taking too long" only when the retry also fails. The Slate's first request now also has the Standings' fifteen-second limit, so a request that hangs is dropped and retried instead of leaving the football spinning. While the Standings error is showing, coming back to the tab (or focus) loads again at once instead of waiting out the 30-second return gap. Browser tests with failing and hanging requests are in `load-retry.visual.spec.ts`.
 - Why: iPhone Safari cuts off or suspends a request when the tab is in the background, and a cold start can run long; the page treated any failed first load as "taking too long" (a screenshot from 2026-10-22 showed it while the site and its health checks were fine).
 
+## 2026-10-23 - Next.js 16.4.2 (security release)
+
+- Decision: `next` and `eslint-config-next` move to 16.4.2. `next` stays exact-pinned.
+- Why: advisories published for Next 16.0.0 to 16.4.0 (unauthenticated remote code execution through the image optimization API with SVG files and through `use cache` functions, and a Server Actions denial of service) made `npm audit --audit-level=high` fail in every pull request's `verify` job. 16.4.2 is the patched release.
+
 ## 2026-10-21 - Elements are styled by name, not by their place in a list
 
 - Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
