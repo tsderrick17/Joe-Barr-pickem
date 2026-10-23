@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - The rehearsal is checked by walking it
+
+- Decision: `test/visual/rehearsal-walkthrough.visual.spec.ts` opens `/preview` and walks the six scenarios in the four views (Ticket, Slate, Pick'em Pad, Email): blank ticket, the Week 5 handoff, Monday's W/L stamps and the Pad's win counts, no win counted before its game is final, the playoff round's sealed picks, and which sample image each email carries. It replaces `rehearsal-ticket-lifecycle.test.mjs`, which matched the page's source text. No screenshots are compared; the Account "preview" state still covers how it looks.
+- Why: the text checks passed whenever the words were in the file, not when the page showed the right thing. Mutation-checked: a game left non-final, a scenario label changed, a reveal email given the Slate image, the Survivor recap line changed.
+
 ## 2026-10-23 - The reminder-schedule job is tested by running it
 
 - Decision: `test/reminder-schedule-maintenance.test.mjs` runs the real `/api/cron/maintain-reminders` route and `maintainAutomaticReminderSchedule` with the reconcilers and lease scripted (auth, off-season gate, `reminder_schedule` lease, order of the three reconcilers, busy-lease skip, 500 with the reason). The text assertions on the maintenance module and route were removed; the SQL and migration contract tests in `critical-automation-reproducibility.test.mjs` stay.

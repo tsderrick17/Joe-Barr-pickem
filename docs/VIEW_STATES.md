@@ -99,6 +99,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Notifications (`/profile`) | `profile-default`, `profile-custom` (fine-tune open) |
 | Week Archive | `archive` (four weeks), `archive-empty` |
 | Rehearsal preview (`/preview`) | default |
+| Rehearsal walk-through: the six scenarios in all four views (behavior test, `rehearsal-walkthrough.visual.spec.ts`; no screenshots) | `/preview` |
 | `/survivor` | redirects to `/board#slate-matchups`; no screen of its own |
 
 ## Email images — `test/email-artwork-baseline.test.mjs`
