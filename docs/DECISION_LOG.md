@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Trophy Room polish before it opens to players
+
+- Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder, and its years are set in the name's serif in bold between small gold diamonds; Consecutive Donut Free Weeks is now Weeks in a Row With a Win; the Record table gains a sortable Titles column (Pick'em championships; the table stays Pick'em only, so Survivor and Bowl Pool titles are not counted in it).
+- Why: owner review ahead of opening the Trophy Room to every player.
+
 ## 2026-10-23 - Pull to refresh: the chain is stretched first, the foot is planted and stays
 
 - Decision: the pole no longer starts with the chain taut. It is drawn out leaning, at one height, with the chain slack in humps on the turf, until the chain is stretched to its full length (one slight boing, `chainTwang`); only then does it drop, straightening, and land with the dust. The foot, once planted, does not squash, bounce or swing: the pole stands upright and still. The down counter is a little larger (shorter post) with six thick slats instead of twelve thin ones; the field gets mowing stripes, a darker far side and a near sideline; the red marker on the chain is a simple flag through it that hangs a little below. Supersedes the 2026-10-21 rules that the chain is taut throughout and that the pole swings once past upright.
