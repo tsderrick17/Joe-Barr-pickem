@@ -90,7 +90,7 @@ test("each player gets their own full set, and the players add up to the group",
   assert.deepEqual(ann.weeks, { total: 4, donut: 0, split: 1, sweep: 3 });
   assert.deepEqual(bob.weeks, { total: 5, donut: 1, split: 2, sweep: 2 });
   assert.equal(ann.weeks.total + bob.weeks.total, stats.weeks.total);
-  assert.deepEqual(ann.streaks.sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 } });
+  assert.deepEqual(ann.streaks.sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
   assert.deepEqual(bob.streaks.noDonut, { longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 2 } });
   assert.equal(ann.splits.side.favorite.picks + ann.splits.side.underdog.picks, ann.graded);
   assert.deepEqual(ann.bySeason.map((season) => season.seasonYear), [2026, 2025]);
@@ -155,7 +155,7 @@ test("a team missing from the list still counts, under a plain name, and nobody 
 test("weekly streaks alone (what the Trophy Room sends) match the ones inside the full stats", () => {
   const streaks = weeklyStreaks({ seasons, periods, picks });
   for (const player of stats.players) assert.deepEqual(streaks.get(player.playerId), player.streaks, player.name);
-  assert.deepEqual(streaks.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 } });
+  assert.deepEqual(streaks.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
   assert.equal(streaks.has("nobody"), false);
 });
 
@@ -197,4 +197,18 @@ test("a week counts for the streaks once every game in it is final, without wait
   const withSettled = weeklyStreaks({ seasons, periods: active, picks: own, settledPeriodIds: new Set(["s26-w1"]) });
   assert.equal(without.has("ann"), false, "an unfinished, unsettled week is not counted");
   assert.deepEqual(withSettled.get("ann").sweeps.longest, 1);
+});
+
+test("the perfect-week streak also counts every 2-0 week the player has had, not just the longest run", async () => {
+  const { weeklyStreaks } = await import("../src/lib/group-stats.js");
+  const seasons = [{ id: "s1", year: 2026 }];
+  const periods = [1, 2, 3, 4].map((week) => ({ id: `w${week}`, season_id: "s1", display_order: week, period_type: "regular", status: "complete", max_picks: 2 }));
+  const picks = [];
+  // ann: 2-0, 2-0, 1-1, 2-0 (three perfect weeks, the longest run two); bob: never 2-0
+  const wins = { ann: [2, 2, 1, 2], bob: [1, 0, 1, 1] };
+  for (const [player, perWeek] of Object.entries(wins)) perWeek.forEach((won, index) => { for (let pick = 0; pick < 2; pick += 1) picks.push({ id: `${player}-${index}-${pick}`, player_id: player, scoring_period_id: `w${index + 1}`, game_id: `g${index}-${pick}`, result: pick < won ? "win" : "loss" }); });
+  const streaks = weeklyStreaks({ seasons, periods, picks });
+  assert.equal(streaks.get("ann").sweeps.total, 3);
+  assert.equal(streaks.get("ann").sweeps.longest, 2);
+  assert.equal(streaks.get("bob").sweeps.total, 0);
 });

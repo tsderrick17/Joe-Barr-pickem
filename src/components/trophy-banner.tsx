@@ -39,8 +39,8 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
   useEffect(() => { holding.current = still; }, [still]);
 
   // a long tag (Bowl Pool, Survivor) wraps onto two lines at a larger size, pushing the rest down a little
-  const tagLines = tag.length > 16 && tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];
-  const extra = (tagLines.length - 1) * 11;
+  const tagLines = tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];   // every title wraps onto two lines
+  const extra = (tagLines.length - 1) * 15;
   const height = 224 + extra + YEAR_ROW * Math.max(0, years.length - 2);
   const bottom = TOP + height;
   const total = bottom + 14;   // the picture's height in banner units
@@ -51,7 +51,7 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
     if (!target) return;
     const display = target.getContext("2d");
     if (!display) return;
-    const lines = tag.length > 16 && tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];
+    const lines = tag.includes(" ") ? [tag.slice(0, tag.lastIndexOf(" ")), tag.slice(tag.lastIndexOf(" ") + 1)] : [tag];
     const lettered = yearsKey.split(",");
     let cancelled = false, frame = 0, visible = true, clock = 0, last = 0;
     // reduced motion keeps the cloth still; so do automated browsers (the screenshot tests), so a picture never catches the cloth mid-swing
@@ -61,7 +61,7 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
     const body = `M6 ${TOP}H${WIDTH - 6}V${bottom}L${WIDTH / 2} ${bottom - 36}L6 ${bottom}Z`;
     const stitch = `M14 ${TOP + 17}H${WIDTH - 14}V${bottom - 11}L${WIDTH / 2} ${bottom - 44}L14 ${bottom - 11}Z`;
     const inner = `M17.6 ${TOP + 20.6}H${WIDTH - 17.6}V${bottom - 15}L${WIDTH / 2} ${bottom - 49}L17.6 ${bottom - 15}Z`;
-    const tagSize = lines.length > 1 ? 10.6 : Math.min(10, (10 * 16) / Math.max(1, tag.length));   // a one-line tag still fits inside the rule
+    const tagSize = lines.length > 1 ? 13.4 : Math.min(12, (12 * 16) / Math.max(1, tag.length));   // the title is the banner's headline: large, in bold gold capitals
     const nameY = TOP + 90 + extra, yearY = TOP + 124 + extra;
     let scale = 1, cloth: HTMLCanvasElement | null = null, fixtures: HTMLCanvasElement | null = null, work: HTMLCanvasElement | null = null;
 
@@ -135,7 +135,7 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
       };
       c.textBaseline = "alphabetic";
       c.font = `${tagSize}px ${graduate}`;
-      lines.forEach((line, i) => spaced(line.toUpperCase(), TOP + 54 + i * 12.5, 1.2, "#f8e29a", { color: "#f8e29a", width: 0.35 }));
+      lines.forEach((line, i) => spaced(line.toUpperCase(), TOP + 56 + i * 16, 1.6, "#fae9a8", { color: "#2a1405", width: 1.5 }));
       c.font = `700 ${nameSize}px ${cormorant}`;
       c.textAlign = "center"; c.lineWidth = 2.2; c.strokeStyle = "#2a1405"; c.strokeText(name, WIDTH / 2, nameY);
       c.fillStyle = "#fbe7a1"; c.fillText(name, WIDTH / 2, nameY);

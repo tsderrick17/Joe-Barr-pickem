@@ -11,7 +11,7 @@ type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
 type Row = { playerId: string; name: string; ab: number; h: number; avg: number | null; qualified: boolean; halfWins?: number; halfLosses?: number; pushes?: number; streaks: { noDonut: Run; sweeps: Run } | null };
 type View = "record" | "more";
-type Run = { longest: number; current: number };
+type Run = { longest: number; current: number; total?: number };
 
 export default function TrophyRoomPage() {
   const [data, setData] = useState<{ trophies: Season[]; players: Row[] } | null>(null);
@@ -80,9 +80,10 @@ export default function TrophyRoomPage() {
         {view === "record" ? <>
           <td>{row.ab ? row.h : "—"}</td>
           <td className="trophy-avg">{formatAverage(row.avg)}</td>
+          <td>{row.streaks ? row.streaks.sweeps.total ?? 0 : "—"}</td>
         </> : <>
-          {streakCell(own?.noDonut, "Consecutive Donut Free Weeks")}
-          {streakCell(own?.sweeps, "Consecutive 2-0 Weeks")}
+          {streakCell(own?.noDonut, "Shutout Free Streak")}
+          {streakCell(own?.sweeps, "Perfect Weeks in a Row")}
           <td>{count(row, row.halfWins)}</td>
           <td>{count(row, row.halfLosses)}</td>
           <td>{formatAverage(halfRate(row))}</td>
@@ -124,18 +125,18 @@ export default function TrophyRoomPage() {
             <div className="trophy-table-wrap mt-4">
               <table className="trophy-table" data-view={view}>
                 {view === "record"
-                  ? <colgroup><col style={{ width: "10%" }} /><col style={{ width: "40%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
+                  ? <colgroup><col style={{ width: "9%" }} /><col style={{ width: "33%" }} /><col style={{ width: "19%" }} /><col style={{ width: "22%" }} /><col style={{ width: "17%" }} /></colgroup>
                   : <colgroup><col className="trophy-col-rank" /><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
                 <thead>
                   {view === "record" ? (
-                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
+                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}{header("perfect", "Perfect Weeks", 1)}</tr>
                   ) : <>
                     <tr>
                       <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" rowSpan={2} scope="col">Player</th>
                       <th colSpan={2} scope="colgroup"><span className="trophy-group">Regular Season Streaks</span></th><th colSpan={3} scope="colgroup"><span className="trophy-group">Decided by a half point</span></th><th aria-hidden="true" />
                     </tr>
-                    <tr>
-                      {header("donut", <>Consecutive <br />Donut Free Weeks</>, 1)}{header("sweeps", <>Consecutive <br />2-0 Weeks</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
+                    <tr className="trophy-subheads">
+                      {header("donut", <>Shutout Free <br />Streak</>, 1)}{header("sweeps", <>Perfect Weeks <br />in a Row</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
                     </tr>
                   </>}
                 </thead>

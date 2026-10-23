@@ -161,10 +161,10 @@ export const TROPHY_ROOM = {
 
 // Each player's streaks, as the Trophy Room route sends them (now / best): the same people as the Performance fixture, and no streaks for players with no completed weeks.
 const STREAKS = {
-  p1: { noDonut: { longest: 12, current: 0 }, sweeps: { longest: 4, current: 4 } },
-  p3: { noDonut: { longest: 23, current: 9 }, sweeps: { longest: 5, current: 0 } },
-  p4: { noDonut: { longest: 8, current: 3 }, sweeps: { longest: 3, current: 0 } },
-  p2: { noDonut: { longest: 17, current: 17 }, sweeps: { longest: 6, current: 2 } },
+  p1: { noDonut: { longest: 12, current: 0 }, sweeps: { longest: 4, current: 4, total: 9 } },
+  p3: { noDonut: { longest: 23, current: 9 }, sweeps: { longest: 5, current: 0, total: 14 } },
+  p4: { noDonut: { longest: 8, current: 3 }, sweeps: { longest: 3, current: 0, total: 6 } },
+  p2: { noDonut: { longest: 17, current: 17 }, sweeps: { longest: 6, current: 2, total: 12 } },
 };
 // games decided by half a point (won / lost) and pushes picked, as the route sends them
 const HALF_POINT = { p3: [6, 4, 3], p1: [5, 5, 2], p4: [4, 6, 1], p2: [7, 3, 4], p6: [3, 5, 2], p7: [1, 1, 0], p8: [0, 1, 0], p5: [0, 0, 0] };

@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Trophy Room polish before it opens to players
+
+- Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder (the years keep their lettering); Consecutive Donut Free Weeks is now Shutout Free Streak and Consecutive 2-0 Weeks is now Perfect Weeks in a Row; the Record table gains a sortable Perfect Weeks column, the count of 2-0 weeks in all, as its last column (`streaks.sweeps.total`).
+- Why: owner review ahead of opening the Trophy Room to every player.
+
 ## 2026-10-23 - The Pick'em trophy: a smooth marble column, marble that belongs to the stone, collars cast into it
 
 - Decision: the Pick'em trophy's column is a smooth turned column (no scalloped flutes). Its marble is painted from the column's own profile with 3D noise (`marbleOnProfile` in `tools/trophy-render/lib.js`): veins are soft, grey and diagonal, run on continuously and never repeat or pinch, in place of a small tiled picture wrapped round the stone. Every gold collar (the two on the column, the two where the lattice anchors, and a slimmer one round the foot) swells out of the stone in a smooth ogee and sits in a hairline seating groove, with an engine-turned face between two rope rolls; the rubies grow in size from the top collar to the bottom one, and the foot's collar has none. All 120 pictures, the three sharp resting views and the phone set were re-rendered.
