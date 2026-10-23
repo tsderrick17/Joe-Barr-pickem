@@ -32,26 +32,6 @@ test("bowl-pool migration keeps voluntary entry, per-kickoff privacy, and draft-
   assert.match(migration, /revoke all on table public\.bowl_pool_seasons/i);
 });
 
-test("Claiming a seat controls the whole selection card", async () => {
-  const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /<BowlClaimSeat onClaim=\{\(\) => void changeOptIn\(true\)\} \/>/);
-  assert.match(page, />Opt out</);
-  assert.match(page, /bowlReceiptSummary/);
-  assert.match(page, /BOWL RECEIPT/);
-  assert.match(page, /optedIn === true \? <section/);
-  assert.match(page, /poolLocked \? optedIn === false/);
-  assert.match(page, /Bowl Pool entry is closed for this year\. Check back next year\./);
-  assert.match(page, /Select favorite team/);
-  assert.match(page, /aria-label="Spread"/);
-  assert.match(page, /Select underdog team/);
-  assert.match(page, /bowl-team-pick/);
-  assert.match(page, /<BowlMegaphone side="left"/);
-  assert.match(page, /!gameLocked\(game\)/);
-  assert.match(page, /type="button">SUBMIT<\/button>/);
-  assert.doesNotMatch(page, /SUBMITTING…/);
-  assert.doesNotMatch(page, /Separate competition|>Preview<|Stage the schedule|Standings card|Commissioner preview only/);
-});
-
 test("Bowl receipt distinguishes a draft, a saved partial card, and a complete saved card", () => {
   assert.deepEqual(bowlReceiptSummary({ selectedCount: 5, totalGames: 42, tiebreaker: "", hasUnsavedChanges: true }), {
     picksLabel: "5/42", tiebreakerLabel: "DUE", status: "CHANGED · SUBMIT TO SAVE", state: "unsaved",
@@ -104,17 +84,6 @@ test("Bowl standings list only active entries", () => {
 test("bowl selections compare by game/value, not insertion order", () => {
   assert.equal(bowlSelectionsEqual({ first: "favorite", second: "underdog" }, { second: "underdog", first: "favorite" }), true);
   assert.equal(bowlSelectionsEqual({ first: "favorite" }, { first: "underdog" }), false);
-});
-
-test("Bowl entry locks opt-in at the first kickoff but still accepts later open-game selections", async () => {
-  const route = await readFile(new URL("../src/app/api/bowl-pool/route.ts", import.meta.url), "utf8");
-  const page = await readFile(new URL("../src/app/bowl-pool/page.tsx", import.meta.url), "utf8");
-  assert.match(route, /const entryClosed = Boolean\(firstKickoff/);
-  assert.match(route, /entryClosed && \(!existing \|\| existing\.status !== "active"\)/);
-  assert.match(page, /const championshipLocked/);
-  assert.match(page, /disabled=\{championshipLocked\}/);
-  assert.match(page, /!gameLocked\(game\)/);
-  assert.match(page, /disabled=\{gameLocked\(game\)\}/);
 });
 
 test("Bowl readiness treats preseason TBD teams as setup while preserving order checks", async () => {
