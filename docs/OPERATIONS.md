@@ -194,8 +194,25 @@ Still needs a person, and alerts the commissioner by email when it does:
 ## App read load
 
 The commissioner Grading page polls once per minute during live games, open
-attention items, or the 15 minutes around kickoff; otherwise it polls every five
-minutes. Hidden tabs pause polling and refresh on return. The Home standings route
+attention items, or the 15 minutes around kickoff; otherwise it polls every 15
+minutes. The Standings page asks again every five minutes and the pool chat every
+three. Hidden tabs never poll. On return the Standings refresh if the last load was
+more than 30 seconds ago (at once while its error is showing) and the Grading page
+refreshes at once. Browser tests pin every cadence with a fake clock
+(`test/visual/polling.visual.spec.ts`).
+
+A first load of the Standings or the Slate that fails (iPhone Safari cuts off or
+suspends a request when a tab is backgrounded; a cold start can run long) is tried
+once more by itself, 1.5 seconds later, before "taking too long to load" is shown;
+the Slate's first request has the Standings' 15-second limit.
+
+The Trophy Room's data is built once a minute and shared by every page open.
+
+Fluid Active CPU is modelled in `src/lib/vercel-usage-estimate.js` and calibrated
+to Vercel's meter (Hobby limit 4 hours a month): over 4 hours on 2026-10-02, 3 h 16 m
+on 2026-10-19 and 2 h 55 m on 2026-10-23, with 11 active players. After a large change
+in player activity, read Vercel's Usage page and recalibrate
+`PLAYER_SECONDS_PER_ACTIVE_DAY`. The Home standings route
 does not run Survivor enrollment or elimination maintenance. Whole-season pick
 queries paginate past PostgREST's 1,000-row cap, and activity timestamps are
 best-effort and throttled to one write per player per 15 minutes per warm app
@@ -313,6 +330,14 @@ selected Supabase server credential variable without exposing its value and
 holds production in attention if only the compatibility fallback is active.
 
 ## Release validation and correlated failures
+
+CI notes. The Supabase CLI's container images (used by the database-types check) are cached
+by CLI version; a registry rate limit used to fail that check for hours. Playwright is pinned
+on purpose: the screenshot job runs in the Playwright container of the same version, the Linux
+baselines are recorded with its browser, and Dependabot ignores minor and major Playwright
+updates (upgrade the package and both container tags together, then re-record the baselines
+with the visual-baselines workflow; a test fails if they differ). `npm audit` at high severity
+gates `verify`; Next.js is exact-pinned and moves with its security releases.
 
 Pull requests run an isolated Chromium player flow in addition to the database
 lifecycle rehearsal. The browser creates a disposable commissioner, signs in

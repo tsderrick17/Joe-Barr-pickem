@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Documentation caught up with the Trophy Room launch week
+
+- Decision: `docs/PROJECT_REFERENCE.md` gains a Trophy Room section (open to players since 2026-10-23; pictures and banners; the Pick'em-only tables; the one-minute server cache); `docs/OPERATIONS.md` records the polling cadences (and corrects the Grading page's quiet interval to 15 minutes, as the code has it), the first-load retry, the Fluid CPU calibration history and the CI notes (cached CLI images, Playwright pinned, `npm audit` gate).
+- Why: the facts were only in decision-log entries and tests.
+
 ## 2026-10-23 - Fluid CPU estimate recalibrated to 2 h 55 m
 
 - Decision: the per-active-player cost in `src/lib/vercel-usage-estimate.js` goes from 22 to 18.3 seconds a day so the model reproduces Vercel's meter, 2 h 55 m for the 30 days ending 2026-10-23 with 11 active players (the background jobs are unchanged at about 2.5 minutes a day).

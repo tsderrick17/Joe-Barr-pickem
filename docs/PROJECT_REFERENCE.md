@@ -303,6 +303,24 @@ measure database requests or end-to-end route time.
   postponed, cancelled, and no-contest games must be recorded by the
   Commissioner so picks are handled as void disruptions.
 
+## Trophy Room
+
+- The Trophy Room (`/trophy-room`) has been open to every active player since 2026-10-23 (`TROPHY_ROOM_PLAYER_OPENS_AT` in
+  `src/lib/trophy-room-access.js`; the Commissioner could always open it). Until a player is let in, the page and the API answer
+  "not open yet" / 404 and the name-menu link is absent.
+- It shows three trophies (Pick'em, Bowl Pool, Survivor) on a turning table, built from 120 rendered pictures (3 degrees apart) drawn
+  on a canvas, with three sharp resting views; a phone gets the same 120 views at 660 wide (the full set is more than an iPhone page
+  can hold). The champions of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won
+  (a person's banner is drawn at the screen's full resolution and moves with a smooth swing and wave).
+- The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
+- Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
+  appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
+  view: Shutout Free Streak and Perfect Weeks in a Row (best run, current run beneath), games decided by a half point (wins, losses, hit
+  rate) and pushes picked; A to Z by default, no places, every column sorts. The two views are one two-way switch.
+- Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
+  (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
+- A week counts toward a streak once every game in it is final, not only once the pool has advanced.
+
 ## Weekly lifecycle
 
 All operational times below are `America/New_York` and therefore remain stable
