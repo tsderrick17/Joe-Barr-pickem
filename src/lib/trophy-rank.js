@@ -3,8 +3,8 @@
  * tied for 1st are both 1st and the next player is 3rd), and are marked as tied. Wins are level on wins; under Hit rate, players are level when they
  * are on the same side of the picks threshold and have the same hit rate; the other columns are level on their own number (a streak on its best run).
  * The rows must already be in order.
- * @typedef {"wins" | "rate" | "donut" | "sweeps" | "halfW" | "halfL" | "halfRate" | "pushes"} SortKey
- * @param {{ h: number, avg: number | null, qualified: boolean, halfWins?: number, halfLosses?: number, pushes?: number, streaks?: { noDonut: { longest: number }, sweeps: { longest: number } } | null }[]} rows
+ * @typedef {"wins" | "rate" | "donut" | "sweeps" | "halfW" | "halfL" | "halfRate" | "pushes" | "titles"} SortKey
+ * @param {{ h: number, avg: number | null, qualified: boolean, titles?: { pickem: number }, halfWins?: number, halfLosses?: number, pushes?: number, streaks?: { noDonut: { longest: number }, sweeps: { longest: number } } | null }[]} rows
  * @param {SortKey} key
  * @returns {{ place: number, tied: boolean }[]}
  */
@@ -22,6 +22,7 @@ export function placesFor(rows, key) {
 export function sortValue(row, key) {
   switch (key) {
     case "wins": return row.h;
+    case "titles": return row.titles?.pickem ?? 0;
     case "rate": return row.avg ?? 0;
     case "donut": return row.streaks?.noDonut?.longest ?? 0;
     case "sweeps": return row.streaks?.sweeps?.longest ?? 0;

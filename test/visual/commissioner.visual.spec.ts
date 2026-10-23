@@ -237,7 +237,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
-  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼"]);
+  await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Wins", "Hit rate ▼", "Titles"]);
   expect(await firstName()).toBe("Connor");
   await table.getByRole("button", { name: /^Wins/ }).click();
   expect(await firstName()).toBe("Tyler");
@@ -250,6 +250,10 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   // Al (20 wins, .588 on 34 picks) is under the pick minimum, so a hit-rate sort puts him after the qualified players.
   const names = await table.locator("tbody th[scope=row]").allInnerTexts();
   expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
+  // Titles (Pick'em championships): Gary, Rick and Tyler have one each, so they share first place and the rest are level on none.
+  await table.getByRole("button", { name: /^Titles/ }).click();
+  expect(await table.locator("tbody th[scope=row]").allInnerTexts().then((all) => all.slice(0, 3).sort())).toEqual(["Gary", "Rick", "Tyler"]);
+  expect((await table.locator("tbody tr").first().locator(".trophy-rank").innerText()).replace(/\s+/g, "")).toBe("T1");
 });
 
 // The Trophy Room's table carries each player's streaks, as now / best: Tyler has gone 9 weeks in a row with a win (best 23) and none 2-0 right now (best 5).
@@ -260,10 +264,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await page.goto("/trophy-room");
   await page.getByRole("button", { name: "Other Stats" }).click();   // the streaks are in the second view of the table
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Weeks in a Row With a Win: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
   await expect(row.getByLabel("Consecutive 2-0 Weeks: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Weeks in a Row With a Win: none yet")).toBeVisible();
 });
 
 // The second view of the table: streaks, games decided by half a point (wins, losses and hit rate) and pushes picked, ranked on the sorted column with
@@ -277,7 +281,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
     await page.getByRole("button", { name: "Other Stats" }).click();
-    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Consecutive Donut Free Weeks ▼", "Consecutive 2-0 Weeks", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Weeks in a Row With a Win ▼", "Consecutive 2-0 Weeks", "Wins", "Losses", "Hit rate", "Pushes picked"]);
     const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
     expect(await rankOf("Tyler")).toBe("1");
     expect(await rankOf("Ron")).toBe("T5");

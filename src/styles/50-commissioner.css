@@ -664,7 +664,7 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-turn-canvas { height: 100%; inset: 0; pointer-events: none; position: absolute; width: 100%; }
 .trophy-turn-canvas[data-layer="rest"] { transition: opacity 0.22s ease-out; }
 .trophy-turn-canvas[data-layer="rest"][data-visible="false"] { opacity: 0; transition: none; }
-.trophy-turn-arrow { align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; color: rgba(255, 255, 255, 0.78); cursor: pointer; display: flex; font-size: 1.7rem; height: 2.5rem; justify-content: center; line-height: 1; opacity: 0.55; padding: 0 0 0.2rem; position: absolute; top: 50%; transform: translateY(-50%); transition: opacity 0.2s; width: 2.5rem; }
+.trophy-turn-arrow { align-items: center; background: rgba(0, 0, 0, 0.42); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: rgba(255, 255, 255, 0.95); cursor: pointer; display: flex; font-size: 1.7rem; height: 2.5rem; justify-content: center; line-height: 1; opacity: 0.8; padding: 0 0 0.2rem; position: absolute; top: 50%; transform: translateY(-50%); transition: opacity 0.2s; width: 2.5rem; }
 .trophy-turn-arrow:hover, .trophy-turn-arrow:focus-visible { opacity: 1; }
 .trophy-turn-arrow[data-side="left"] { left: 0.6rem; }
 .trophy-turn-arrow[data-side="right"] { right: 0.6rem; }
@@ -694,11 +694,14 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: fixed; width: 100%; }
 .trophy-table th, .trophy-table td { padding: .65rem .25rem; text-align: center; vertical-align: middle; }
 .trophy-table tbody tr { border-top: 1px solid var(--club-line); }
-.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .6rem/1.25 Arial, sans-serif; letter-spacing: .08em; padding-block: .6rem; text-transform: uppercase; }
+.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .6rem/1.5 Arial, sans-serif; letter-spacing: .1em; padding-block: .85rem; text-transform: uppercase; }
+/* The headings breathe: a group heading sits well clear of the top and of its gold rule, and the column headings clear of the rule above them. */
+.trophy-table thead tr:first-child th { padding-top: 1.05rem; }
+.trophy-table .trophy-subheads th { padding-top: 1rem; }
 .trophy-table .trophy-player-head { padding-left: .5rem; text-align: left; }
 /* Each group heading carries its own short gold rule, with a gap between neighbours so the two read as separate sections. */
 .trophy-table thead th[colspan] { padding-inline: .35rem; }
-.trophy-group { border-bottom: 1px solid var(--club-gold-dk); display: block; padding-bottom: .35rem; }
+.trophy-group { border-bottom: 1px solid var(--club-gold-dk); display: block; padding-bottom: .55rem; }
 .trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; overflow: hidden; padding-left: .5rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .trophy-table .trophy-rank { color: var(--club-muted); }
 .trophy-table .trophy-rank small { font-size: .62em; margin-right: .08rem; }
