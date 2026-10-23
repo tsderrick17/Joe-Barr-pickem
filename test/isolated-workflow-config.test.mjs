@@ -34,3 +34,15 @@ test("the isolated workflow keeps the Supabase CLI's container images, keyed on 
   assert.equal(keys.length, 2, "restored and saved under the same key");
   assert.ok(keys.every((key) => key === version), "a new CLI version starts a new cache");
 });
+
+test("Playwright is upgraded on purpose: Dependabot leaves it alone, and the package and both container tags are one version", async () => {
+  const dependabotText = await readFile(new URL("../.github/dependabot.yml", import.meta.url), "utf8");
+  assert.match(dependabotText, /dependency-name: "@playwright\/test"[\s\S]*?version-update:semver-minor/);
+  const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  const wanted = String(pkg.devDependencies["@playwright/test"]).replace(/^[^\d]*/, "");
+  for (const file of ["quality.yml", "visual-baselines.yml"]) {
+    const text = await readFile(new URL(`../.github/workflows/${file}`, import.meta.url), "utf8");
+    const tag = text.match(/mcr\.microsoft\.com\/playwright:v([\d.]+)-/)?.[1];
+    assert.equal(tag, wanted, `${file}: container tag ${tag} must match @playwright/test ${wanted}`);
+  }
+});

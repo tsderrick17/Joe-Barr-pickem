@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Playwright is upgraded on purpose, not by Dependabot
+
+- Decision: Dependabot ignores minor and major updates of `@playwright/test`. A test checks that the package version and the Playwright container tags in `quality.yml` and `visual-baselines.yml` are one version. An upgrade bumps all three together and re-records the Linux baselines.
+- Why: the npm group PR #547 bumped `@playwright/test` to 1.64 while the screenshot job runs in the 1.63 container, so every visual test failed with "Executable doesn't exist"; a new browser can also move pixels.
+
 ## 2026-10-21 - Elements are styled by name, not by their place in a list
 
 - Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
