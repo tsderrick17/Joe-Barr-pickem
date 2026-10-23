@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Period rollover is tested by running it, and the app-calls-RPC rules live with the architecture rules
+
+- Decision: `test/advance-scoring-periods.test.mjs` runs the real `advanceScoringPeriods` against a scripted database (earliest due period, blocked/waiting outcomes, the pending Pick'em and Survivor gates, rollover only after `weekRolloverAt`). The "app calls the atomic function" and ESPN Bowl protected-path source rules moved from `atomic-grading-and-line-lock.test.mjs` to `test/architecture-rules.test.mjs`; the season-year and retry-ladder checks now import the modules. SQL contract tests stay in place.
+- Why: the text twins broke on harmless edits and passed when behavior broke. Each new test was mutation-checked (latest period picked; Survivor gate off).
+
 ## 2026-10-23 - The Trophy Room opens to every player
 
 - Decision: `TROPHY_ROOM_PLAYER_OPENS_AT` is 2026-10-23T12:00Z, so every active player can open the Trophy Room (and sees its link in the name menu) from that time, for good; the Commissioner always could. Supersedes the plan to open it with the Bowl Pool on 2026-12-07.

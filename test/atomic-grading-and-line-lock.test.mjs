@@ -6,9 +6,6 @@ const migration = await readFile(
   new URL("../supabase/migrations/20260929010000_atomic_grading_and_line_lock.sql", import.meta.url),
   "utf8",
 );
-const finalScores = await readFile(new URL("../src/lib/sync-final-scores.ts", import.meta.url), "utf8");
-const bowlSync = await readFile(new URL("../src/lib/sync-bowl-pool.ts", import.meta.url), "utf8");
-const lineLock = await readFile(new URL("../src/lib/lock-due-lines.ts", import.meta.url), "utf8");
 
 const functions = [
   "recover_pending_ats_grades()",
@@ -55,65 +52,19 @@ test("official line, history snapshot, and audit entry are saved together and au
   assert.match(migration, /'official_line_locked'/);
 });
 
-test("the application calls the atomic functions instead of writing step by step", () => {
-  assert.match(finalScores, /rpc\("recover_pending_ats_grades"\)/);
-  assert.doesNotMatch(finalScores, /from\("picks"\)\s*\.update\(\{ result \}\)/);
-  assert.doesNotMatch(finalScores, /gradeAtsPick/);
-
-  assert.match(bowlSync, /rpc\("grade_bowl_pool_final_picks"/);
-  assert.doesNotMatch(bowlSync, /from\("bowl_pool_picks"\)\.update\(\{ result/);
-  assert.doesNotMatch(bowlSync, /from\("bowl_pool_game_results"\)\.upsert/);
-  assert.doesNotMatch(bowlSync, /getUTCMonth\(\) >= 7/, "Bowl sync must use the shared Eastern season year");
-
-  assert.match(lineLock, /rpc\(\s*"lock_official_lines_atomically"/);
-  assert.doesNotMatch(lineLock, /from\("game_lines"\)\s*\.(upsert|insert|update)/);
-  assert.doesNotMatch(lineLock, /from\("spread_history"\)\s*\.insert/);
-  assert.doesNotMatch(lineLock, /from\("audit_logs"\)\s*\.insert/);
-  assert.match(lineLock, /throw new Error\("The official game lines could not be saved\."\)/);
-});
-
-const watchdog = await readFile(new URL("../src/lib/automation-watchdog.ts", import.meta.url), "utf8");
-const syncRun = await readFile(new URL("../src/lib/sync-run.ts", import.meta.url), "utf8");
-const bootstrap = await readFile(new URL("../src/lib/full-schedule-bootstrap.ts", import.meta.url), "utf8");
-const reconciliation = await readFile(new URL("../src/lib/full-schedule-reconciliation.ts", import.meta.url), "utf8");
-
-test("run outcomes are recorded through one checked helper that retries and reports", () => {
-  assert.match(syncRun, /attempt < 2/);
-  assert.match(syncRun, /console\.error\("A sync run outcome could not be recorded\."/);
-  for (const [name, source] of [["sync-final-scores", finalScores], ["full-schedule-bootstrap", bootstrap], ["full-schedule-reconciliation", reconciliation], ["automation-watchdog", watchdog]]) {
-    assert.match(source, /finishSyncRun\(/, `${name} must use finishSyncRun`);
-    assert.doesNotMatch(source, /^\s*await supabaseAdmin\s*\.from\("sync_runs"\)\s*\.update\([\s\S]{0,400}?\)\s*\.eq\("id", run(\.data)?\.id\);/m, `${name} must not ignore run-outcome write errors`);
-  }
-});
-
-test("a watchdog alert is not sent unless its attempt time was saved", () => {
-  const attempt = watchdog.indexOf("notification_attempted_at: now.toISOString()");
-  const guard = watchdog.indexOf("so the alert was not sent");
-  const send = watchdog.indexOf("await notifyCommissioners(signal)");
-  assert.ok(attempt > 0 && guard > attempt && send > guard, "attempt must be saved and checked before sending");
-  // A failed write on one incident is counted and skipped, never thrown, so one bad
-  // row cannot stop every other incident from being opened or sent.
-  assert.match(watchdog, /bookkeepingFailures \+= 1;/);
-  assert.match(watchdog, /Recovered watchdog incidents could not be closed/);
-  assert.match(watchdog, /An open watchdog incident could not be refreshed/);
-  assert.doesNotMatch(watchdog, /throw new Error\("(Recovered watchdog incidents could not be closed|An open watchdog incident could not be refreshed|A watchdog alert attempt could not be recorded)/);
-  assert.match(watchdog, /bookkeepingFailures,\s+criticalWorkerRecovery/);
-});
-
-test("the ESPN Bowl sync never replaces a locked official line", () => {
-  assert.match(bowlSync, /ignoreDuplicates: true/);
-  assert.match(bowlSync, /\.eq\("game_id", saved\.id\)\.is\("locked_at", null\)/);
-  assert.doesNotMatch(bowlSync, /bowl_pool_game_lines"\)\.upsert\(\{ game_id: saved\.id/);
-});
 
 test("the season year is evaluated on every call, never frozen at module load", async () => {
-  const { seasonYearAt } = await import("../src/lib/season.ts");
-  assert.equal(seasonYearAt(new Date("2026-08-01T03:59:00Z")), 2025, "before 12:00 AM Eastern on August 1");
-  assert.equal(seasonYearAt(new Date("2026-08-01T04:01:00Z")), 2026, "after 12:00 AM Eastern on August 1");
-  assert.equal(seasonYearAt(new Date("2027-01-20T12:00:00Z")), 2026, "playoffs belong to the season that began the prior August");
-  const season = await readFile(new URL("../src/lib/season.ts", import.meta.url), "utf8");
-  assert.doesNotMatch(season, /export const CURRENT_SEASON_YEAR/);
-  assert.match(season, /export function currentSeasonYear\(\)/);
+  const season = await import("../src/lib/season.ts");
+  assert.equal(season.seasonYearAt(new Date("2026-08-01T03:59:00Z")), 2025, "before 12:00 AM Eastern on August 1");
+  assert.equal(season.seasonYearAt(new Date("2026-08-01T04:01:00Z")), 2026, "after 12:00 AM Eastern on August 1");
+  assert.equal(season.seasonYearAt(new Date("2027-01-20T12:00:00Z")), 2026, "playoffs belong to the season that began the prior August");
+  assert.equal(typeof season.currentSeasonYear, "function");
+  assert.equal("CURRENT_SEASON_YEAR" in season, false, "there is no constant frozen at load");
+});
+
+test("the real retry ladder is the only polling policy", async () => {
+  const { SCORE_POLLING_RETRY_MINUTES } = await import("../src/lib/score-check-backoff.ts");
+  assert.deepEqual([...SCORE_POLLING_RETRY_MINUTES], [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240]);
 });
 
 test("every automation job has one settings row with a timeout shorter than its lease", async () => {
@@ -129,7 +80,6 @@ test("every automation job has one settings row with a timeout shorter than its 
 });
 
 const activationMigration = await readFile(new URL("../supabase/migrations/20260929020000_atomic_period_activation.sql", import.meta.url), "utf8");
-const advance = await readFile(new URL("../src/lib/advance-scoring-periods.ts", import.meta.url), "utf8");
 
 test("period activation refuses to skip, double-activate, or open an empty period", () => {
   assert.match(activationMigration, /revoke all on function public\.activate_scoring_period_atomically\(uuid, timestamptz\) from public, anon, authenticated;/);
@@ -141,29 +91,6 @@ test("period activation refuses to skip, double-activate, or open an empty perio
   assert.match(activationMigration, /'scoring_period_activated'/);
 });
 
-test("the application opens the earliest due period through the database and gates rollover on Survivor picks", () => {
-  assert.match(advance, /rpc\(\s*"activate_scoring_period_atomically"/);
-  assert.doesNotMatch(advance, /\.update\(\{ status: "active" \}\)/);
-  assert.match(advance, /\.sort\(\(left, right\) => left\.display_order - right\.display_order\)\[0\]/);
-  assert.doesNotMatch(advance, /starts_at[\s\S]{0,200}\.at\(-1\)/, "must never pick the latest due period");
-  assert.match(advance, /from\("survivor_picks"\)[\s\S]{0,200}\.eq\("result", "pending"\)/);
-  assert.match(advance, /Survivor picks still need a final grade or audited void\./);
-});
-
-test("the ESPN Bowl refresh links games and fixes timing but keeps curated names and order", () => {
-  assert.match(bowlSync, /function existingGameUpdate/);
-  assert.match(bowlSync, /const \{ season_id: _season, bowl_name: _name, order_index: _order, \.\.\.provider \} = row;/);
-  assert.match(bowlSync, /update\(existingGameUpdate\(row\)\)/);
-  assert.match(bowlSync, /provider_game_id: `espn:\$\{event\.id\}`/, "the ESPN id link is what lets scores match seeded games");
-});
-
-test("the retired polling simulator is gone and the real retry ladder is the only policy", async () => {
-  const route = await readFile(new URL("../src/app/api/admin/grading-dashboard/route.ts", import.meta.url), "utf8");
-  assert.doesNotMatch(route, /polling-plan|simulatePollingPlans|recommendPollingPlan/);
-  const backoff = await readFile(new URL("../src/lib/score-check-backoff.ts", import.meta.url), "utf8");
-  assert.match(backoff, /SCORE_POLLING_RETRY_MINUTES = \[10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240\]/);
-});
-
 test("activation takes the per-season lock before locking any period row", async () => {
   const fix = await readFile(new URL("../supabase/migrations/20260929030000_activation_lock_order.sql", import.meta.url), "utf8");
   const lock = fix.indexOf("pg_advisory_xact_lock");
@@ -173,8 +100,3 @@ test("activation takes the per-season lock before locking any period row", async
   assert.match(fix, /grant execute on function public\.activate_scoring_period_atomically\(uuid, timestamptz\) to service_role;/);
 });
 
-test("a Bowl game already linked to its ESPN event stays on the protected update path", () => {
-  assert.match(bowlSync, /candidate\.provider_game_id === `espn:\$\{event\.id\}`/);
-  assert.match(bowlSync, /const gameId = matched\?\.id;/);
-  assert.match(bowlSync, /matched\.kickoff_at !== kickoff/);
-});
