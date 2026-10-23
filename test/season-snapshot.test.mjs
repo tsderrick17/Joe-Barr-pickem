@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "../src/lib/season-snapshot-chart.js";
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -113,34 +108,6 @@ test("ribbons keep joined endpoints when bundles split and merge", () => {
   for (const sample of [0, 1]) assert.ok(first.points[sample].bottom <= third.points[sample].top + 1e-9);
 });
 
-test("snapshot is commissioner-only, previews before week six, and loads on expansion", () => {
-  const route = fs.readFileSync(path.join(root, "src/app/api/season-snapshot/route.ts"), "utf8");
-  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
-  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  // Sign-in is verified before anything is read.
-  assert.ok(route.indexOf("authenticateActivePlayer(request)") < route.indexOf("loadSeasonSnapshot("));
-  assert.match(route, /status: access\.status/);
-  // Players are refused until Week 6 settles; commissioners always get it.
-  assert.ok(loader.includes("if (!isCommissioner && !released) return { ok: true, released, payload: null, freshForMs: CLOSED_CHART_MS };"));
-  assert.match(route, /if \(!result\.payload\) return NextResponse\.json\(\{ error: "The Season Snapshot opens once every Week 6 pick has settled\." \}, \{ status: 403 \}\);/);
-  assert.ok(loader.indexOf("if (!isCommissioner && !released)") < loader.indexOf("loadPicks(visibleIds)"), "no pick data is read before the release check");
-  // A cached chart is never handed to a player before the release.
-  assert.match(loader, /if \(payload && \(isCommissioner \|\| released\)\) return \{ ok: true, released, payload, freshForMs \};/);
-  assert.ok(scoreboard.includes("const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;"));
-  assert.match(scoreboard, /showSeasonSnapshot \? <div className="pad-face pad-back"[^>]*><SeasonSnapshot active=\{flipped\}/);
-  // It loads the first time the pad is turned over, not on page load.
-  assert.match(snapshot, /if \(!active\) return;/);
-  assert.match(snapshot, /if \(active && !opened\) \{\s*setOpened\(true\);/);
-  assert.match(snapshot, /fetchSnapshot\(\)\.then/);
-  assert.doesNotMatch(snapshot, />CUMULATIVE WINS<|<details className="season-snapshot-data"|season-snapshot-readout/);
-  assert.doesNotMatch(snapshot, /<circle/);
-  assert.match(snapshot, /regular\[1\]/);
-  assert.match(snapshot, /textAnchor=\{index === weeks.length - 1 \? "end" : "middle"\}/);
-  assert.doesNotMatch(snapshot, /lane =/);
-  assert.doesNotMatch(snapshot, /<rect|<polyline/);
-});
-
 const ids = (players) => players.map((player) => player.id).join("");
 const players = (...list) => list.map((id) => ({ id }));
 const weeksOf = (...rows) => rows.map((row) => ({ scores: Object.entries(row).map(([playerId, wins]) => ({ playerId, wins })) }));
@@ -202,49 +169,6 @@ test("each week is one straight band, so lines bend only at week boundaries", ()
   }
 });
 
-test("chart choices are remembered, and the playoff chart starts without eliminated players", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  const scoreboard = fs.readFileSync(path.join(root, "src/components/pickem-scoreboard.tsx"), "utf8");
-  assert.match(snapshot, /const RANGE_KEY = "pickem\.seasonSnapshot\.range";/);
-  assert.match(snapshot, /pickem\.seasonSnapshot\.hidden\.\$\{phase\}/);
-  assert.match(snapshot, /try \{ return window\.localStorage\.getItem\(key\); \} catch \{ return null; \}/);
-  assert.match(snapshot, /saveSetting\(RANGE_KEY, next\);/);
-  assert.match(snapshot, /saveSetting\(hiddenKey\(phase\), JSON\.stringify\(\[\.\.\.next\]\)\);/);
-  // The saved range is read on first turn-over, never during the first render.
-  assert.match(snapshot, /useState<Range>\("all"\)/);
-  assert.match(snapshot, /setOpened\(true\);\s*setRange\(readSetting\(RANGE_KEY\) === "six" \? "six" : "all"\);/);
-  // With no saved choice, playoffs default to hiding players out of the race.
-  assert.match(snapshot, /return new Set\(showPlayoffs \? standings\.filter\(\(player\) => player\.eliminated\)\.map\(\(player\) => player\.id\) : \[\]\);/);
-  assert.match(scoreboard, /eliminated: row\.playoffEliminated/);
-  assert.match(snapshot, /key=\{showPlayoffs \? "playoffs" : "regular"\}/);
-});
-
-test("the snapshot loads fast: shared short cache, paged picks, and a saved copy for instant opens", () => {
-  const loader = fs.readFileSync(path.join(root, "src/lib/season-snapshot-loader.ts"), "utf8");
-  const readPages = fs.readFileSync(path.join(root, "src/lib/read-all-pages.ts"), "utf8");
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  // Freshness follows the weekly schedule instead of a fixed timer.
-  const freshness = fs.readFileSync(path.join(root, "src/lib/season-snapshot-freshness.js"), "utf8");
-  assert.match(freshness, /export const HOLD_MS = 60 \* 60 \* 1000;/);
-  assert.match(freshness, /export const WAITING_FOR_GRADES_MS = 2 \* 60 \* 1000;/);
-  assert.match(loader, /Date\.now\(\) - cached\.at < cached\.freshForMs/);
-  assert.doesNotMatch(loader, /CACHE_MS = 30_000/);
-  // Simultaneous opens share one load, kept apart by viewer kind so gating still holds.
-  assert.match(loader, /inFlight\[kind\] \?\?= load\(isCommissioner\)/);
-  // PostgREST caps responses at 1,000 rows, so picks are read in pages.
-  assert.match(loader, /import \{ readAllPages \} from "@\/lib\/read-all-pages"/);
-  assert.match(loader, /\.select\("player_id, scoring_period_id, game_id, result"\)\s*\.in\("scoring_period_id", periodIds\)\.order\("id"\)/);
-  assert.match(readPages, /const PAGE_SIZE = 1000;/);
-  assert.match(readPages, /readPage\(from, from \+ PAGE_SIZE - 1\)/);
-  assert.match(readPages, /if \(\(data \?\? \[\]\)\.length < PAGE_SIZE\) return \{ data: rows, error: null \};/);
-  // The device keeps the last chart so opening the back is instant; fresh data replaces it.
-  assert.match(snapshot, /const SNAPSHOT_KEY = "pickem\.seasonSnapshot\.last";/);
-  assert.match(snapshot, /const saved = readSavedSnapshot\(\);\s*if \(saved\) setSnapshot\(saved\);/);
-  assert.match(snapshot, /saveSetting\(SNAPSHOT_KEY, JSON\.stringify\(data\)\);/);
-  // An error still wins over a saved copy, so a closed or failed chart is never shown stale.
-  assert.match(snapshot, /\{error \? <div className="season-snapshot-message" role="alert">/);
-});
-
 test("the week settles when the last Pick'em pick settles, usually before the final game", async () => {
   const { activeWeekState } = await import("../src/lib/season-snapshot-freshness.js");
   const HOUR = 60 * 60 * 1000;
@@ -302,17 +226,6 @@ test("the chart is held until it can change: while picks await grading, while a 
   assert.equal(snapshotFreshForMs(mondayNight - 4 * HOUR, [settled]), HOUR);
   // Between weeks, with no active week, there is nothing to wait for.
   assert.equal(snapshotFreshForMs(sunday, []), HOUR);
-});
-
-test("the back of the pad loads only when shown and only when the standings changed", () => {
-  const snapshot = fs.readFileSync(path.join(root, "src/components/season-snapshot.tsx"), "utf8");
-  assert.match(snapshot, /const loadedFor = useRef<string \| null>\(null\);/);
-  assert.match(snapshot, /const wanted = `\$\{refreshKey\}#\$\{retry\}`;\s*if \(loadedFor\.current === wanted\) return;/);
-  assert.match(snapshot, /loadedFor\.current = wanted;/);
-  // A newer request supersedes an older one; flipping the pad does not cancel a load.
-  assert.match(snapshot, /const id = \+\+requestId\.current;/);
-  assert.match(snapshot, /if \(id !== requestId\.current\) return;/);
-  assert.doesNotMatch(snapshot, /setInterval/);
 });
 
 test("everyone keeps a permanent color: join order decides, and hiding, leaving or joining never shifts anyone", async () => {

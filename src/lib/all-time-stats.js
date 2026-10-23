@@ -10,6 +10,8 @@
  * The Bowl Pool is a separate game and is not part of the batting table; its champions appear only in the season plaques.
  * Survivor exit: the average regular-season week a player was knocked out of Survivor, over the seasons they were eliminated
  * (a season still alive or won is not an exit, so it is not averaged in).
+ * Half-point games: graded picks that finished exactly half a point from the number (won or lost by a half), as halfWins and halfLosses.
+ * Pushes picked: picks that landed exactly on the number (graded as losses under the pool rule). Both need the final score and the locked spread.
  */
 export const QUALIFYING_AB = 50;
 export const BEST_SEASON_MIN_AB = 20;
@@ -29,8 +31,8 @@ export function formatAverage(value) {
  *   seasons: { id: string, year: number }[],
  *   periods: { id: string, season_id: string, display_order: number, period_type: string }[],
  *   survivorEntries: { player_id: string, eliminated_scoring_period_id: string | null }[],
- *   games: { id: string, kickoff_at: string }[],
- *   lines: { game_id: string, favorite_team_id: string | null }[],
+ *   games: { id: string, kickoff_at: string, home_team_id?: string, away_team_id?: string, home_score?: number | null, away_score?: number | null }[],
+ *   lines: { game_id: string, favorite_team_id: string | null, locked_spread?: number | null }[],
  *   picks: { id: string, player_id: string, game_id: string, scoring_period_id: string, selected_team_id: string, result: string }[],
  *   championships: { season_year: number, pool: string, player_id: string }[],
  *   bowlChampionships: { season_year: number, player_id: string }[],
@@ -41,6 +43,15 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
   const seasonYearByPeriod = new Map(periods.map((period) => [period.id, seasons.find((season) => season.id === period.season_id)?.year ?? null]));
   const kickoffByGame = new Map(games.map((game) => [game.id, Date.parse(game.kickoff_at)]));
   const favoriteByGame = new Map(lines.map((line) => [line.game_id, line.favorite_team_id]));
+  const spreadByGame = new Map(lines.map((line) => [line.game_id, line.locked_spread]));
+  const gameById = new Map(games.map((game) => [game.id, game]));
+  /** How far a pick finished from the number, in points: positive covered, negative missed, 0 a push; null when the score or spread is missing. */
+  const marginAgainstNumber = (pick) => {
+    const game = gameById.get(pick.game_id), spread = spreadByGame.get(pick.game_id);
+    if (!game || typeof spread !== "number" || !Number.isFinite(game.home_score) || !Number.isFinite(game.away_score)) return null;
+    const margin = pick.selected_team_id === game.home_team_id ? game.home_score - game.away_score : game.away_score - game.home_score;
+    return margin + (pick.selected_team_id === favoriteByGame.get(pick.game_id) ? -spread : spread);
+  };
 
   const titlesByPlayer = new Map();
   const addTitle = (playerId, pool) => {
@@ -104,8 +115,16 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
     let bases = 0;
     let streak = 0;
     let longest = 0;
+    let halfWins = 0;
+    let halfLosses = 0;
+    let pushes = 0;
     const bySeason = new Map();
     for (const pick of playerPicks) {
+      const against = marginAgainstNumber(pick);
+      if (against !== null) {
+        if (Math.abs(against) === 0.5) { if (against > 0) halfWins += 1; else halfLosses += 1; }
+        if (against === 0) pushes += 1;
+      }
       const year = seasonYearByPeriod.get(pick.scoring_period_id) ?? null;
       const season = bySeason.get(year) ?? { ab: 0, h: 0 };
       bySeason.set(year, season);
@@ -139,6 +158,9 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
       slg: bases / ab,
       bestSeason: best,
       longestStreak: longest,
+      halfWins,
+      halfLosses,
+      pushes,
       survivorExit: survivorExit(playerId),
       titles,
       qualified: ab >= QUALIFYING_AB,
@@ -148,7 +170,7 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
   // A champion or a Survivor veteran from a season with no pick history on file (the inaugural year) still belongs in the table, with no at bats.
   for (const playerId of new Set([...titlesByPlayer.keys(), ...exitWeeksByPlayer.keys()])) {
     if (picksByPlayer.has(playerId)) continue;
-    rows.push({ playerId, name: nameById.get(playerId) ?? "Former player", seasons: 0, ab: 0, h: 0, avg: null, slg: null, bestSeason: null, longestStreak: 0, survivorExit: survivorExit(playerId), titles: titlesByPlayer.get(playerId) ?? { pickem: 0, survivor: 0 }, qualified: false });
+    rows.push({ playerId, name: nameById.get(playerId) ?? "Former player", seasons: 0, ab: 0, h: 0, avg: null, slg: null, bestSeason: null, longestStreak: 0, halfWins: 0, halfLosses: 0, pushes: 0, survivorExit: survivorExit(playerId), titles: titlesByPlayer.get(playerId) ?? { pickem: 0, survivor: 0 }, qualified: false });
   }
 
   rows.sort((a, b) => {

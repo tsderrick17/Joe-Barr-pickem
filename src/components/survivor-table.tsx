@@ -14,6 +14,8 @@ export type SurvivorTableData = {
   hideSurvivorEliminatedRows: boolean;
   survivorAvailable: boolean;
   survivorNotice: string | null;
+  survivorComplete?: boolean;
+  survivorChampionPlayerId?: string | null;
   survivorRows: {
     id: string;
     playerId: string;
@@ -32,10 +34,11 @@ function MiniLogo({ abbreviation, muted, resultMark }: { abbreviation: string; m
 type SurvivorTableRow = SurvivorTableData["survivorRows"][number];
 
 /** One player's row. It redraws only when its own data changes, so toggling the table does not rebuild every logo. */
-const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer }: { row: SurvivorTableRow; rowIndex: number; isViewer: boolean }) {
+const SurvivorRow = memo(function SurvivorRow({ row, rowIndex, isViewer, champion }: { row: SurvivorTableRow; rowIndex: number; isViewer: boolean; champion: boolean }) {
+  // the champion reads WON, never IN or OUT: the competition is over, and the entry's own status is not what decides who won
   return (
       <div data-blind-row={row.status === "eliminated" ? "" : undefined} className={`survivor-standings-row grid items-center border-b border-(color:--themed-border-11) last:border-b-0 ${rowIndex % 2 ? "is-alt" : ""} ${isViewer ? "viewer-row" : ""}`}>
-        <span className={`survivor-sticky-status text-center text-[10px] font-black ${row.status === "active" ? "text-green-800" : "text-red-700"}`}>{row.status === "active" ? "IN" : "OUT"}</span>
+        <span className={`survivor-sticky-status text-center text-[10px] font-black ${champion || row.status === "active" ? "text-green-800" : "text-red-700"}`}>{champion ? "WON" : row.status === "active" ? "IN" : "OUT"}</span>
         <span className={`survivor-sticky-name truncate px-2 py-[0.4rem] font-serif text-sm font-bold ${row.status === "active" ? "" : "text-slate-500"}`}><PlayerTrophyName name={row.firstName} nameClassName={row.status === "active" ? undefined : "line-through"} showTrophy={Boolean(row.holdsSurvivorTrophy)} titles={row.trophies} /></span>
         {Array.from({ length: 18 }, (_, index) => {
           const pick = row.picks[index];
@@ -72,7 +75,7 @@ export default function SurvivorTable({ data, savingDisplay, displayLocked = fal
             const isViewer = row.playerId === data.viewerPlayerId;
 
             return (
-            <SurvivorRow isViewer={isViewer} key={row.id} row={row} rowIndex={rowIndex} />
+            <SurvivorRow champion={Boolean(data.survivorComplete) && row.playerId === data.survivorChampionPlayerId} isViewer={isViewer} key={row.id} row={row} rowIndex={rowIndex} />
             );
           })}
         </div>

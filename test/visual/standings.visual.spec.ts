@@ -102,6 +102,17 @@ for (const scenario of Object.keys(SCENARIOS)) {
   }
 }
 
+test("once Survivor has a champion, even the champion's ticket owes only the two Pick'em selections", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await signIn(page, "day");
+  await serve(page, "regular-complete-champion");
+  await page.goto("/");
+  const ticket = page.locator(".my-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30000 });
+  await expect(ticket.locator(".my-ticket-completion")).toContainText("/2 SELECTIONS MADE");
+  await expect(ticket.getByText("SURVIVOR WINNER")).toHaveCount(0);
+});
+
 test("the account menu opens from your name, and Sign out asks before signing out", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await signIn(page, "day");

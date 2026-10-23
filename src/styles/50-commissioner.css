@@ -68,7 +68,7 @@
   z-index: 0;
 }
 
-.commissioner-flow-step.is-complete:not(:last-child)::after { background: var(--club-forest-2); }
+.commissioner-flow-step:is(.is-complete, .is-active):has(+ .commissioner-flow-step:is(.is-complete, .is-active))::after { background: var(--club-forest-2); }
 
 .commissioner-flow-button {
   align-items: center;
@@ -425,15 +425,7 @@ html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #272
    (which force one-line cells and a pill on every second column). */
 [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
 [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td { white-space: normal; overflow-wrap: anywhere; }
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(1),
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(1) { width: 20%; }
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(2),
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(2) { width: 14%; }
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(3),
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th:nth-child(4),
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
-[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(2) { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
+[aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-state { border-radius: 0; font-size: inherit; letter-spacing: normal; text-transform: none; }
 /* On a phone, each run is a small card: the worker and its status on one line,
    then when it started and finished, each on a labeled line of its own. */
 @media (max-width: 639px) {
@@ -442,12 +434,12 @@ html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #272
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) thead,
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) colgroup { display: none; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid var(--gray-95); border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(n) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:is(.grading-worker-name, .grading-worker-state, .grading-worker-started, .grading-worker-finished) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) .grading-worker-status { white-space: nowrap; }
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3),
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4) { grid-column: 1 / -1; }
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(3)::before { content: "Started  "; font-weight: 700; }
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:nth-child(4)::before { content: "Finished  "; font-weight: 700; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-started,
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-finished { grid-column: 1 / -1; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-started::before { content: "Started  "; font-weight: 700; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-finished::before { content: "Finished  "; font-weight: 700; }
 }
 html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { border-color: #27272a; }
 .grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
@@ -670,6 +662,8 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-turn-stage:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -4px; }
 .trophy-turn-poster { display: block; height: auto; pointer-events: none; width: 100%; }
 .trophy-turn-canvas { height: 100%; inset: 0; pointer-events: none; position: absolute; width: 100%; }
+.trophy-turn-canvas[data-layer="rest"] { transition: opacity 0.22s ease-out; }
+.trophy-turn-canvas[data-layer="rest"][data-visible="false"] { opacity: 0; transition: none; }
 .trophy-turn-arrow { align-items: center; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; color: rgba(255, 255, 255, 0.78); cursor: pointer; display: flex; font-size: 1.7rem; height: 2.5rem; justify-content: center; line-height: 1; opacity: 0.55; padding: 0 0 0.2rem; position: absolute; top: 50%; transform: translateY(-50%); transition: opacity 0.2s; width: 2.5rem; }
 .trophy-turn-arrow:hover, .trophy-turn-arrow:focus-visible { opacity: 1; }
 .trophy-turn-arrow[data-side="left"] { left: 0.6rem; }
@@ -677,43 +671,58 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 
 /* The rafters: a dark beam across the top, and the champions of the trophy at the front hanging from it as stadium banners. When a trophy
    settles at the front its banners drop in from above, one after another, and bounce into place; while the table turns they lift away. */
-.trophy-rafters { --banner: oklch(0.3 0.07 265); --banner-dark: oklch(0.2 0.05 265); --trim: oklch(0.8 0.12 85); --ink: oklch(0.95 0.03 90); border-top: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 0 1rem 1.4rem; position: relative; }
-.trophy-rafters[data-pool="bowl"] { --banner: oklch(0.38 0.15 25); --banner-dark: oklch(0.26 0.1 25); }
-.trophy-rafters[data-pool="survivor"] { --banner: oklch(0.36 0.1 160); --banner-dark: oklch(0.24 0.07 160); }
-.trophy-beam { background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
-.trophy-banners { display: flex; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.6)); flex-wrap: wrap; gap: 0 1.2rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
+.trophy-rafters { --banner: oklch(0.42 0.18 25); --banner-dark: oklch(0.26 0.12 25); --banner-light: oklch(0.56 0.2 25); border-top: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 0 1rem 1.4rem; position: relative; }
+.trophy-rafters[data-pool="bowl"] { --banner: oklch(0.4 0.14 255); --banner-dark: oklch(0.25 0.1 255); --banner-light: oklch(0.56 0.15 255); }
+.trophy-rafters[data-pool="survivor"] { --banner: oklch(0.36 0.1 160); --banner-dark: oklch(0.24 0.07 160); --banner-light: oklch(0.52 0.12 160); }
+.trophy-beam { position: relative; z-index: 2; background: linear-gradient(180deg, oklch(0.34 0.05 45), oklch(0.2 0.04 40) 55%, oklch(0.14 0.03 40)); border-bottom: 1px solid oklch(0.5 0.08 80 / 0.5); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55); height: 1.1rem; margin: 0 -1rem; }
+.trophy-banners { align-items: flex-start; display: flex; flex-wrap: wrap; gap: 0 0.8rem; justify-content: center; list-style: none; margin: 0; padding: 0; transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
 .trophy-rafters[data-moving="true"] .trophy-banners { opacity: 0; transform: translateY(-110%); }
-.trophy-banner { align-items: center; animation: trophy-banner-drop 0.95s both; animation-delay: calc(var(--i) * 110ms); background: linear-gradient(180deg, var(--banner), var(--banner-dark)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); display: grid; justify-items: center; margin-top: 0.3rem; min-height: 12rem; padding: 0.7rem 0.55rem 2.2rem; position: relative; transform-origin: 50% 0; width: 7.6rem; }
-.trophy-banner > * { color: var(--ink); display: block; position: relative; text-align: center; z-index: 1; }
-.trophy-banner::before { background: oklch(0.8 0.1 85); content: ""; height: 0.5rem; left: 50%; margin-top: -0.3rem; position: absolute; top: 0; width: 0.14rem; }
-.trophy-banner::after { border: 1px solid var(--trim); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); content: ""; inset: 0.3rem; pointer-events: none; position: absolute; }
-.trophy-banner-tag { color: var(--trim); font: 700 0.58rem/1.2 var(--font-graduate), Georgia, serif; letter-spacing: 0.14em; text-transform: uppercase; }
-.trophy-banner-years { font: 400 1.5rem/1.2 var(--font-graduate), Georgia, serif; letter-spacing: 0.04em; list-style: none; margin: 0; padding: 0; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
-.trophy-banner-star { color: var(--trim); font-size: 0.8rem; margin: 0.25rem 0; }
-.trophy-banner-name { font: 700 1.3rem/1.1 var(--font-cormorant), Georgia, serif; margin-top: 0.35rem; overflow-wrap: anywhere; }
+.trophy-banner { animation: trophy-banner-unfurl 3.2s both; animation-delay: calc(var(--i) * 180ms); transform-origin: 50% 0; width: 8.6rem; }
+/* The canvas is a little wider than the banner so the cloth can swing past its edges; it is drawn at full device resolution and never scaled or rotated. */
+.trophy-banner-art { display: block; position: relative; width: 100%; }
+.trophy-banner-art canvas { height: 100%; left: -4.706%; position: absolute; top: 0; width: 109.412%; }
 .trophy-banners-empty { color: rgba(255, 255, 255, 0.6); font-style: italic; margin: 1rem 0 0; text-align: center; }
-@keyframes trophy-banner-drop {
-  0% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.7); opacity: 0; transform: translateY(-140%) rotate(-5deg); }
-  8% { opacity: 1; }
-  52% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(3deg); }
-  68% { animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6); transform: translateY(-9%) rotate(-2deg); }
-  80% { animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1); transform: translateY(0) rotate(1.2deg); }
-  90% { transform: translateY(-2.5%) rotate(-0.5deg); }
-  100% { transform: translateY(0) rotate(0); }
+/* A banner is lowered like a stage curtain: it comes down from behind the beam with its cloth unfolding as it falls, settles a hair past its place, and then hangs and moves gently. */
+@keyframes trophy-banner-unfurl {
+  0% { animation-timing-function: cubic-bezier(0.4, 0.05, 0.3, 1); transform: translateY(-104%) scaleY(0.5); }
+  62% { animation-timing-function: ease-in-out; transform: translateY(0) scaleY(1.035); }
+  80% { animation-timing-function: ease-out; transform: scaleY(0.99); }
+  100% { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { .trophy-banner { animation: none; } .trophy-banners { transition: none; } }
 .trophy-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
-.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
-.trophy-table th, .trophy-table td { padding: .6rem .8rem; text-align: right; white-space: nowrap; }
+.trophy-table { border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: fixed; width: 100%; }
+.trophy-table th, .trophy-table td { padding: .65rem .25rem; text-align: center; vertical-align: middle; }
 .trophy-table tbody tr { border-top: 1px solid var(--club-line); }
-.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .62rem Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; }
-.trophy-table thead th:nth-child(2) { text-align: left; }
-.trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; text-align: left; width: 100%; }
-.trophy-table .trophy-rank { color: var(--club-muted); text-align: center; width: 2.2rem; }
+.trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .6rem/1.25 Arial, sans-serif; letter-spacing: .08em; padding-block: .6rem; text-transform: uppercase; }
+.trophy-table .trophy-player-head { padding-left: .5rem; text-align: left; }
+/* Each group heading carries its own short gold rule, with a gap between neighbours so the two read as separate sections. */
+.trophy-table thead th[colspan] { padding-inline: .35rem; }
+.trophy-group { border-bottom: 1px solid var(--club-gold-dk); display: block; padding-bottom: .35rem; }
+.trophy-table th[scope="row"] { font: 400 1.05rem Georgia, serif; overflow: hidden; padding-left: .5rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.trophy-table .trophy-rank { color: var(--club-muted); }
+.trophy-table .trophy-rank small { font-size: .62em; margin-right: .08rem; }
+/* Other Stats column widths: roomy streak columns on a phone so CONSECUTIVE fits, a wider player column on larger screens. */
+.trophy-col-rank { width: 6%; } .trophy-col-player { width: 17%; } .trophy-col-donut { width: 17%; } .trophy-col-sweeps { width: 17%; }
+.trophy-col-wins { width: 8%; } .trophy-col-losses { width: 10%; } .trophy-col-rate { width: 11%; } .trophy-col-pushes { width: 14%; }
+@media (min-width: 640px) { .trophy-col-rank { width: 7%; } .trophy-col-player { width: 19%; } .trophy-col-donut { width: 16%; } .trophy-col-sweeps { width: 14%; } .trophy-col-wins { width: 9%; } .trophy-col-losses { width: 9%; } .trophy-col-rate { width: 12%; } .trophy-col-pushes { width: 14%; } }
+/* On a phone the long streak headings (CONSECUTIVE ...) must fit their columns: a little smaller and tighter, and no padding eating into them. */
+@media (max-width: 639px) { .trophy-table thead th { font-size: .48rem; letter-spacing: .02em; } .trophy-table th, .trophy-table td { padding-inline: .1rem; } .trophy-table th[scope="row"] { font-size: .9rem; padding-left: .35rem; } }
 .trophy-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: .2rem .1rem; text-transform: inherit; }
 .trophy-sort:hover, .trophy-sort:focus-visible { color: var(--club-gold-lt); }
 .trophy-avg { font-weight: 700; }
-.trophy-table .trophy-divider td { background: var(--club-paper-2); color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; padding-block: .4rem; text-align: left; text-transform: uppercase; }
+.trophy-table-head { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; }
+/* Wins & hit rate / Streaks & more: one quiet two-option control, the chosen half filled with the table's green. */
+.trophy-view-switch { border: 1px solid var(--club-forest); border-radius: .35rem; display: inline-flex; overflow: hidden; }
+/* Two halves of exactly the same size (a width, not the words), so the switch is always symmetrical; "Other Stats" takes two rows. Either half flips to the other view. */
+.trophy-view-switch button { background: transparent; color: var(--club-forest); cursor: pointer; flex: none; font: 700 .72rem/1.15 Arial, sans-serif; letter-spacing: .04em; min-height: 2.75rem; padding: .4rem .3rem; text-align: center; width: 4.6rem; }
+.trophy-view-switch button + button { border-left: 1px solid var(--club-forest); }
+.trophy-view-switch button.is-active { background: var(--club-forest); color: var(--sand-93); }
+.trophy-view-switch button:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -3px; }
+/* The best run is set like every other number in the row and sits exactly in the middle of it; the current run is lowered under it, small. */
+.trophy-streak { padding-block: 1.15rem; position: relative; }
+.trophy-streak-best { display: block; }
+.trophy-streak-now { bottom: .3rem; color: var(--club-muted); display: block; font: 400 .66rem/1.2 Arial, sans-serif; left: 0; position: absolute; right: 0; }
 
 /* Bowl Card result cells: the colour of a pick's result. (Day: Tailwind's green, red and greys; the "open" dot and the pick itself are
    recoloured by the Bowl Card rules.) */
@@ -739,7 +748,17 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-stats-tiles dd small { display: inline; }
 .pool-stats-block h3 { font: 700 1.15rem Georgia, serif; margin: 0; }
 .pool-stats-block > p { color: var(--club-muted); font-size: 0.88rem; margin: 0.15rem 0 0.7rem; max-width: 46rem; }
-.pool-stats-pair { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+/* Teams, splits and seasons sit side by side (one column on a phone), every card as tall as five teams: a row is --pool-row, the table is a header and
+   five rows, and the season list scrolls inside that height once it has more than five seasons. */
+.pool-stats-trio { --pool-row: 2.6rem; display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
+.pool-stats-trio .pool-stats-block { display: flex; flex-direction: column; }
+.pool-stats-trio .pool-stats-block > p { min-height: 3em; }
+.pool-stats-trio .pool-table-wrap { flex: 1 1 auto; max-height: calc(var(--pool-row) * 6 + 2px); min-height: calc(var(--pool-row) * 6 + 2px); overflow-y: auto; }
+.pool-stats-trio .pool-table tr { height: var(--pool-row); }
+.pool-stats-trio .pool-table thead th { position: sticky; top: 0; }
+.pool-table-break { border-top-color: var(--club-gold-dk); }
+.pool-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; padding: 0.2rem 0; text-transform: inherit; }
+.pool-sort:hover, .pool-sort:focus-visible { color: var(--club-gold-lt); }
 .pool-histogram { align-items: end; background: var(--club-paper); border: 1px solid var(--club-line); display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); padding: 1rem 1.2rem 0.7rem; }
 .pool-bar { align-items: center; display: grid; gap: 0.3rem; justify-items: center; }
 .pool-bar-value { font: 700 1.05rem Georgia, serif; font-variant-numeric: tabular-nums; }
@@ -751,16 +770,18 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .pool-bar-label small { color: var(--club-muted); display: block; font: 400 0.7rem Arial, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
 .pool-table-wrap { background: var(--club-paper); border: 1px solid var(--club-line); border-top-color: var(--club-gold-dk); overflow-x: auto; }
 .pool-table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; }
-.pool-table th, .pool-table td { padding: 0.5rem 0.8rem; text-align: right; white-space: nowrap; }
-.pool-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+/* These tables fit their card instead of scrolling: the numbers keep to one line with modest padding, the headings may wrap, and a long team name wraps
+   rather than pushing the table wider. The card scrolls sideways only when it truly cannot fit. */
+.pool-table th, .pool-table td { padding: 0.5rem 0.55rem; text-align: right; white-space: nowrap; }
+.pool-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
+.pool-table thead th:not(:first-child) { white-space: normal; }
 .pool-table tbody tr { border-top: 1px solid var(--club-line); }
 .pool-table thead th:first-child { text-align: left; }
-.pool-table th[scope="row"] { font: 400 1.02rem Georgia, serif; text-align: left; width: 100%; }
+.pool-table th[scope="row"] { font: 400 1rem/1.12 Georgia, serif; padding-block: 0.3rem; text-align: left; white-space: normal; width: 100%; }
 .pool-table small { color: var(--club-muted); font: 400 0.72rem Arial, sans-serif; margin-left: 0.4rem; }
-.pool-table .pool-table-group th { background: var(--club-paper-2); color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.2em; padding-block: 0.35rem; text-transform: uppercase; }
 .pool-alive { color: var(--club-ok); font-weight: 700; }
 .pool-strong { font-weight: 700; }
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
-.pool-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.pool-picker button { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); cursor: pointer; font: 700 0.95rem Georgia, serif; min-height: 2.5rem; padding: 0.35rem 0.9rem; }
-.pool-picker button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-forest); color: var(--sand-93); }
+.pool-select { align-items: center; display: flex; gap: 0.7rem; }
+.pool-select span { color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
+.pool-select select { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); font: 700 1rem Georgia, serif; min-height: 2.75rem; min-width: 12rem; padding: 0.35rem 0.9rem; }

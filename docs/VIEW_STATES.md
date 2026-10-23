@@ -36,7 +36,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer still in Survivor (two-column ticket) | `regular-in` |
 | Viewer eliminated (one-column ticket) | `regular-out` |
 | Eliminated rows hidden, Bowl Card open | `regular-hidden-rows` |
-| Survivor has a champion | `regular-complete` |
+| Survivor has a champion (the champion's row reads WON in the Survivor table) | `regular-complete` |
+| Survivor has a champion and the viewer is that champion (entry still active): Pick'em-only ticket owing two selections, not three (behavior test and screenshot) | `regular-complete-champion` |
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
@@ -64,23 +65,27 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | A team chosen, not yet submitted | `unsaved-change` |
 | Not a participant, first kickoff passed | `entry-closed` |
 
-## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`, `/admin/trophy-room`) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
+## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`; the Trophy Room at `/trophy-room` is shot here too) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
 
 | View | States |
 | --- | --- |
-| Today (map, game pipeline, key counts, and the repair/health drawers, closed) | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week) |
-| Performance (the group's stats, provider cost, polling, capacity) | `healthy` |
+| Today (map, game pipeline, key counts, and the repair/health drawers, closed; the map's connecting lines are dark between stages that have been reached (complete or in progress); Participant impact says Survivor is over with its winner once a Survivor champion is recorded; "Up next" has kickoff, line lock and score sync only, and "Next message" sits under "Notification readiness") | `healthy` (game day), `attention` (failed score sync, open incident), `quiet` (off-week; Survivor over) |
+| Performance (Pick'em performance with a League / player dropdown: no league streak boards, no neutral-site row, and a tie for the most picked team says how many teams tie; teams, splits and seasons side by side at one height, the splits one plain list (Favorites, Underdogs, Home, Away); provider cost, polling, capacity) | `healthy` |
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
 | Bowl Pool | `healthy`, `attention` (missing teams/lines, schedule change) |
-| Workshop (every custom piece, live: submit button, pick highlight, chips, pennants, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
+| Workshop (every custom piece, live: submit button, pick highlight, chips, megaphones, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
 | Five tabs, with the repair and health drawers on Today (behavior test) | `healthy` |
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
 | Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
 | Reminders | scheduled, sent, cancelled-with-reason |
-| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won; all-time record with Wins and Hit rate, an under-50-picks group, and a champion with no pick history; then Player stats for the first player) | `healthy`, phone, tablet and desktop, day and night |
-| Trophy room, Player stats: a name picker, then that player's own record, weekly histogram, streaks, pick splits and seasons (behavior test: choosing another player swaps every figure) | `healthy` |
+| Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
+| Slate display switch (All games / Pool action): two equal halves, and tapping either half flips to the other option (behavior test, `slate-flow.visual.spec.ts`) | `upcoming-unpicked`, phone |
+| Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
+| Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |
+| Trophy room All-Time Table with a two-way switch (two equal halves; tapping either flips to the other view) between two views: Record (sortable, ties share a place such as T1), and Other Stats (Consecutive Donut Free Weeks and Consecutive 2-0 Weeks as the best run big with "now N" small and no colour, star or bar; games decided by a half point, wins, losses and hit rate; pushes picked, labelled in the lower row of headings; every column sortable with ties sharing a place); a champion with no pick history shows dashes (behavior tests; screenshot of the second view) | `healthy` |
+| Performance dropdown: the league first (with its own Season by season table), then choosing a player swaps every figure, the most picked team and the Season by season table; the Picked and Hit rate headers of the teams table switch it between the five most picked and the five best hit rate (behavior test) | `healthy` |
 | Trophy room sorting: Wins and Hit rate sort independently, and a second tap reverses (behavior test) | `healthy` |
 
 ## Account pages — `account.visual.spec.ts`
@@ -113,8 +118,8 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 
-Only runs when the page is opened from the home screen (the test marks the page as installed). Two tests: pulling past the threshold shows the football with "Release to refresh" (screenshot of the indicator) and letting go reloads the page; a short pull springs back and nothing reloads.
+Only runs when the page is opened from the home screen (the test marks the page as installed and counts haptic buzzes). The pull has two stages and the screenshots take the header at each: descending (a quarter of the way: the pole's foot leads, the chain taut and slanting up about 15 degrees), landed (halfway: the foot upright beside the spotted football with the dust puff, the distant down counter still on 4), counter halfway (three quarters: the counter's slats read 1, 4, 1, 4), and ready (the counter fully on 1, "Release to refresh", exactly one buzz). Behavior: letting go with the counter on 1 covers the page with the loading football and reloads; a short pull springs back without reloading; if the page never hears the finger lift, everything clears itself and nothing reloads.
 
-## Trophy Room turntable (`/admin/trophy-room`) — `trophy-turntable.visual.spec.ts`
+## Trophy Room turntable (`/trophy-room`) — `trophy-turntable.visual.spec.ts`
 
-Behavior tests: the arrows bring the next or previous trophy to the front and its champions hang from the rafters as banners (the screen-reader status and the banners' pool follow); the banners lift away while the table turns and drop in (the `trophy-banner-drop` animation) when it settles; dragging turns the table, a short slow drag springs back, and a long drag settles on the next trophy. One screenshot: the table and banners at rest with the Bowl Pool at the front.
+Behavior tests: the arrows bring the next or previous trophy to the front and its champions hang from the rafters as banners (the screen-reader status and the banners' pool follow); the banners lift away while the table turns and drop in (the `trophy-banner-unfurl` animation) when it settles, are drawn on a canvas at full device resolution (sharp, with one smooth curve down each edge) and hold still while the table turns; dragging turns the table, a short slow drag springs back, and a long drag settles on the next trophy. One screenshot: the table and banners at rest with the Bowl Pool at the front.

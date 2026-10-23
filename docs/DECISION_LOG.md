@@ -4,6 +4,36 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Elements are styled by name, not by their place in a list
+
+- Decision: the Worker activity table's cells, the Pick'em ledger's first pick cell, the Slate's Survivor instruction and the Trophy Room's Player heading are styled through class names (and an adjacent-sibling rule on a named cell), not `:nth-child(n)`. `scripts/css-report.mjs` now counts index-based selectors (`indexSelectors`, 17 left: generic dashboard table styling, the Slate row grid, animation stagger on a fixed set of marks) and the stylesheet budget ratchets it down. Selectors that use an id as the specificity anchor (`#bowl-selections`) are left as they are: turning an id into a class changes which rule wins.
+- Why: a column reorder silently relabelled the Started and Finished lines of the Worker table. Specificity was kept equal rule by rule, and the screenshots gate that nothing moved.
+
+## 2026-10-21 - Source-text tests, stage 2 (second slice): Season Snapshot, polling cadence, Sentry filter
+
+- Decision: the Season Snapshot's source-text tests are gone. Its access gate now runs the real loader with a scripted database (`season-snapshot-access.test.mjs`: players see nothing and only Week 6 is read before the release; a chart cached for the Commissioner never reaches a player), and page-by-page reading runs `readAllPages` (`read-all-pages.test.mjs`). The remembered-choices and loads-once tests already existed as browser tests, so their text twins were deleted. Polling cadence is pinned by behavior with a fake clock (`polling.visual.spec.ts`: home every 5 minutes, chat every 3, grading every minute while live and every 15 when quiet, none while hidden, one refresh on return), and the Sentry filter runs (`sentry-event-filter.test.mjs`). Rules about how the code is put together live in `architecture-rules.test.mjs`, on purpose lint-style.
+- Why: tests that match source text break on harmless refactors and pass when behavior is wrong. Each new test was mutation-checked (the code was broken, the test failed).
+
+## 2026-10-21 - The Trophy Room data is built once a minute, not once per page open
+
+- Decision: `/api/trophy-room` builds its figures through `createShortCache` (60 seconds, one build shared by requests that arrive together, a failed build never kept). Access is checked before the cache, so a player who may not see the Trophy Room still gets the 404.
+- Why: the figures are the same for everyone and only change when a game is graded, but each page open read every pick, game and line ever recorded. The Trophy Room opens to all players on 2026-12-07, and the project stays on Vercel Hobby, so its Fluid CPU has to stay low. A graded game still shows within a minute.
+
+## 2026-10-21 - Keep the Supabase CLI's container images between isolated runs
+
+- Decision: `isolated-integration.yml` restores the CLI's container images from the Actions cache (keyed on the pinned CLI version, so a new version starts a new cache) before the database-types check, and saves them after the first successful pull. `scripts/database-types.mjs` still retries a rate-limited pull a few times.
+- Why: `supabase gen types` pulls a postgres-meta container from a public registry that caps anonymous downloads per runner address and answers "too many requests" for hours once it has; a short retry cannot outwait that, and it blocked four merges on 2026-10-21.
+
+## 2026-10-21 - Trophy Room: banners on a canvas, no cross-fade in the turn
+
+- Decision: a banner is drawn on a canvas at full device resolution; its cloth is laid down a couple of pixels of height at a time, each row shifted by a swing from the rod and a travelling wave (`src/lib/banner-wave.js`) and lit by how it leans. Edges, stitching and lettering bend in one smooth curve; nothing is rotated or scaled, so it stays sharp. The table shows the nearest single picture (never two blended), and follows a finger with a short glide; the phone set is the same 120 views at 660 wide.
+- Why: the SVG banner was cut into 12 strips (stair-stepped edges, broken stitching) and was rasterized small and scaled by the unfurl, so it looked pixelated. Blending neighbouring pictures ghosted every trophy, which read as blur.
+
+## 2026-10-21 - Restore Survivor champions eliminated after the crown
+
+- Decision: a one-time migration (`20261021030000_restore_champions_eliminated_after_crown.sql`) puts a crowned Survivor champion's entry back to active when the no-pick rule eliminated it after the crown (no losing game, an audit row from the rule, eliminated after the championship). It uses the integrity trigger's own audited score-correction guard for that statement only and writes `survivor_champion_entry_restored` for each entry. Owner approved it for Zac's entry.
+- Why: the rule fixed in 20261021020000 had already eliminated the champion, and the trigger forbids reactivation, so the data stayed wrong even though the app now reads the champion from the season record.
+
 ## 2026-10-14 - Standings starts the Bowl Card's read with its own
 
 **Status:** Accepted
@@ -1786,6 +1816,10 @@ The "Past champions" cards are gone. In their place, below the table, the champi
 Also: the Bowl Pool cup's handles were two close ribbons that vanished edge-on, so they are now spaced well apart and joined by cross-pins; the Survivor plaques are wider and more evenly spaced.
 
 
+## 2026-10-21 - Any page a player opens counts as being active
+
+The Commissioner's "last active" time was written only on login, the Slate, saving picks and chat, so a player who had only looked at the Standings, the Trophy Room, the Bowl Pool or Survivor, or who stayed signed in on their phone, kept showing an old time (Zac tested a feature and was shown as last on the day before). Every page reads its data through the shared player authentication, so recording activity there covers them all, after the response and no more than once every 15 minutes per player as before. The Commissioner's own background admin calls do not count, and a failure to record never affects the player.
+
 ## The header keeps its height while the player's name loads
 
 The top bar grew when the name ("Tyler ▾") arrived after the session check, pushing the whole page down. The name button is taller than the theme button, and the reserved height was smaller than the name's. The bar now reserves the name's full height from the first paint (3.75rem on a phone including its padding, 2.75rem for the account area on a desktop), so the name can take a second to appear and nothing moves. A screenshot-suite test measures the header before and after the name loads, on a phone and a desktop.
@@ -1803,6 +1837,152 @@ It sits in the Performance panel at the Commissioner's request, although that pa
 
 Each player's own full set lives in the Trophy Room, under the all-time record ("Player stats", a row of names to choose from): the same record and hit rate, 0-2 / 1-1 / 2-0 histogram, longest and current streaks, favorite/underdog and home/road splits, plus their record season by season. The group's totals and the two streak boards stay in the Performance panel. Both come from the same function (`buildGroupStats`) and the same Commissioner-only read, so a player's numbers always add up to the group's.
 
+## 2026-10-20 - A lighter Trophy Room, smaller banners, tied places and a tidier table
+
+- **Smooth again:** the banners ran about 120 separate animations plus a shadow filter that had to be redrawn every frame, and the table canvas drew two full-size pictures each frame. The cloth is now 12 strips with one wave each (the lettering already moves as one piece), there is no filter, the banners are promoted to their own layer, and the table is drawn at the pictures' own size while it turns (twice the size only at rest, for sharp plaques).
+- **Banners:** back to a compact size (two to a row on a phone), the star gets room above the year, and a second year has room under the first.
+- **All-Time Table:** players level on what the table is sorted by share a place (standard competition ranking: two players tied for 1st are both 1st, marked "T1", and the next is 3rd). Under Wins that is the same number of wins; under Hit rate it is the same hit rate on the same side of the 50-pick threshold. The columns are rebalanced for a phone (narrower rank and wins, wider streaks) and the long streak headings are a little smaller and tighter there so "Consecutive" fits.
+
 ## Championship banners are per person, not per year
 
 The banners under the front trophy used to be one per season. They are now one per person who has won that pool, and each carries every year that person won (oldest first), so a repeat winner adds a year to the banner they already have. A new winner gets a new banner, hung after the others, and banners stay in the order they were first earned, so the one that has hung longest is always at the left and nothing already flying moves. Co-champions of one season each get their own banner. A banner is matched to its person by player id (by name only when a record has no id), and shows the latest name on record. The banners still drop and bounce in when a trophy comes to the front.
+
+## 2026-10-21 - The All-Time Table has two views, and streak weeks count once their games are final
+
+A switch above the table chooses between Wins & hit rate (as before) and Streaks & more. The second view holds the streaks (the best run big, the current run small under it as "now N", with no gold, star or bar), games decided by half a point (the pick won or lost by exactly half a point against the locked spread, in a wins and a losses column) and pushes picked (the pick landed exactly on the number and was graded a loss). Every column sorts on its own number and players level on it share a place (T1, then 3rd), under either view. The streak headings read "Consecutive Donut Free Weeks" and "Consecutive 2-0 Weeks" with a forced break after "Consecutive"; the Performance tab's streak tiles are named the same. A streak week now counts as soon as every game in it is final (postponed, cancelled and no-contest games do not hold it open) instead of waiting for the pool to move on to the next week, which is why the table was a week behind. Wins and hit rate already counted every graded pick.
+
+## The Trophy Room table is symmetric, with three identical landing pads
+
+The three pads were cut to each trophy's own base (a hexagon, a circle and a rectangle), so the table's lobes differed. All three pads are now the same round velvet disc, 12.2 wide in table units (just big enough for the widest base), spaced 120 degrees apart, and the table top flows between them in the same smooth curves. The blend that joins the pads to the middle was not order-independent (joining A then B is not quite B then A), so it is now averaged over every order the three can be joined in, which makes the outline exactly three-fold symmetric. The trade-off: the Bowl and Survivor bases leave a little more velvet showing than when each pad hugged its own base, because three identical pads cannot hug three different shapes. The 120 turntable pictures were re-rendered; `scenes.js` also has a `view=top` option that looks straight down on the table, to check its symmetry.
+
+Two more fixes in the same change, from using it on a phone. The Pick'em trophy's flame was cut off by the top edge of the picture, so the camera is pulled back and aimed a little higher (all 120 pictures re-rendered with room above the tallest tip). And the spin got "stuck in the middle": the pictures between two trophies were fetched last, so a spin started before everything had arrived passed through a gap and sat on the nearest picture; they are now fetched evenly all the way round (every 10th, then every 5th, every 2nd, then the rest), so a spin is uniformly coarse and then smooth. A touch the browser takes over to scroll the page ends in a pointer cancel rather than a release, which used to leave the table between two trophies with the banners hidden; a cancel now settles on the nearest trophy like a release does.
+
+The banners no longer drop like stiff boards. They hang from the rafters rolled up and unroll under their own weight: the cloth falls faster and faster as it opens downward (a clip that reveals from the top, so the swallowtail forms last), stretches a little as it comes taut, then swings and settles in a few slow, heavy sways, each banner a beat after the one before. The cloth has soft vertical folds and a slow sheen that sweeps across it while it unrolls, and once hung it sways very slightly, out of step with its neighbours. Reduced-motion settings get the finished banners with none of it.
+
+## Streaks join the Trophy Room's hit rate table, and the Performance tab has a league / player dropdown
+
+The all-time Wins and Hit rate table in the Trophy Room has a Streaks section: weeks in a row with at least 1 win, and 2-0 weeks in a row, each shown as now / best (regular season only; a streak alive at the end of a season carries into the next). The Season Snapshot panel is not changed.
+
+All the other performance numbers live in one place, the Performance tab, behind a dropdown: The league (record and hit rate, the weekly 0-2 / 1-1 / 2-0 histogram, the two streak boards, most picked teams, favorite/underdog and home/road splits) or any one player (the same set from just their picks, with streak tiles in place of the boards, plus a season-by-season record). The separate Player stats section in the Trophy Room is gone.
+
+New in both views: the most picked team, which is the team taken most often among graded picks, shown as a tile and as a top-five table with each team's share of the picking and how those picks did. Everything here is private to the Commissioner.
+
+## 2026-10-19 - A picked Bowl Pool team shows a megaphone, not a pennant
+
+When a team is picked on the Bowl Pool page, the mark that swings into its box is a cheerleader's megaphone in the school's own colors (body, mouthpiece bulge, band, rim and handle), lettered with its name, instead of a felt pennant: a narrow mouthpiece with a distinct bulge, a cone flaring to a wide bell with a dark inside, a band near the bell and a small handle underneath. A newly picked team's megaphone swings up from the mouthpiece with a little overshoot and gives a cheer (three sound arcs by the bell). It is used for the selection only; the Bowl Pool trophy keeps its pennants. The school colors and their fallback (the pool's navy and gold) are unchanged (`src/lib/bowl-pennant.js`). Reduced motion shows the megaphone still.
+
+## 2026-10-20 - The Bowl Pool cup's lettering is a little easier to read, and carries no memorial line
+
+The engraved band on the cup says only "BOWL POOL CHAMPIONS" (the "Joe Barr Memorial" line on the back is gone). It is still engraved gold, only subtly easier to read: a deeper relief, slightly larger letters, and a faint warm shadow in the cut letters (a see-through overlay, never solid dark lettering, which looked wrong against the gold). All table pictures were re-rendered.
+
+## 2026-10-21 - Pull to refresh: a foot-first pole, a taut chain, and a down counter that turns to 1
+
+The refresh pull has two stages, both following the finger. First the lead pole comes down foot first, its foot leading and the pole straightening as it lowers, while the chain stays straight and taut the whole way: it is fastened at the left edge of the page and turns about that end, rising about 15 degrees at the start (its ring hanging short of and above the ball) and lying flat when the foot lands, so its reach grows with the cosine of its angle. The foot lands upright beside the ball with a puff of dust, which is the measurement (halfway through the pull), then the pole swings once a little past upright and settles. Second, a down counter standing in the distance to the right of the ball slides from 4 to 1: about a dozen thin slats, every other one sliding up first so halfway the panel reads 1, 4, 1, 4. The counter fully on 1 is the refresh signal: one light buzz where the phone has one, the label flips to "Release to refresh", and letting go reloads. The chain snap is gone as a signal. The counter is unbranded. Pulling back lifts the pole and turns the counter back toward 4; letting go before the 1 does nothing. The pull is a little longer than before to give the two stages room.
+
+## Pull to refresh is a first-down chain
+
+The pull-down refresh used to be a drop of water, which belonged to nothing else in the app. It is now the chain crew's first-down markers, drawn from the real ones: two padded orange rods, each with a round target disc on top and a long tapered banner with black-and-white chevrons pointing down, ending in a black rubber foot, joined at the foot by a steel chain with a red clip at its middle (the way the rods are joined on a field), on a strip of turf along the foot of the header. The rear rod stands planted at the left. Pulling down carries the lead rod in from above the top edge at an angle, swinging upright and dragging the chain taut; the slack lies in humps that flatten as it comes. At the threshold its rubber foot plants on the turf with a squash, a puff of dust and one light buzz, and the chain snaps taut and twangs: that is the signal to release. Letting go reloads the page (after 1.2 seconds, so the twang can be seen) while the chain keeps humming; letting go early lets the lead rod draw back up. It is drawn inside the header's height and never below it, runs only in the installed app, and with reduced motion the chain simply appears taut. The strip behind it matches the header, so it is invisible on pages with a header.
+
+## 2026-10-20 - The pull-to-refresh chain can never get stuck
+
+Once the chain was planted, a finger lift the page never heard of (or a reload that never came, or the page coming back from the browser's back/forward cache) could leave the chain drawn over the header after the page had refreshed by other means. Now the gesture always ends: letting go with the foot planted refreshes as before; any other ending, or a touch that goes quiet (1.5 seconds with no finger down, 4 seconds with a finger held still), resets the chain; a page restored from the cache starts clean; and a reload that has not happened after 6 seconds takes the football down again.
+
+## 2026-10-21 - New tables are granted to the service role explicitly
+
+Supabase stops granting Data API access to new `public` tables on 2026-10-30. A catch-up migration re-grants the service role access to every existing table, sequence and function and to future ones, and from now on each migration that creates a table grants it in the same file; a test fails if one does not. Existing tables, and what anon and authenticated players can reach, are unchanged.
+
+## The browser tab shows the site's own goalpost icon
+
+The tab still showed the framework's default (a white triangle in a black circle). `src/app/favicon.ico` and `src/app/icon.png` are now an 8-bit goalpost under a night sky: yellow uprights lit on one edge and shaded on the other, small red streamers on top, crimson padding on the stem, mowed turf below, and "JB" between the uprights in white varsity letters with a crimson drop shadow. It is two hand-placed pixel pictures rather than one shrunk image: a detailed 32 by 32 (used at 32, 64 and 256 px, enlarged without smoothing so it stays crisp) and a simplified 16 by 16 for an ordinary tab. The home-screen icons (`apple-icon.png` and the manifest icons) are unchanged. Browsers cache a site's icon for a long time, so it can take a hard refresh, or a few days, to appear in a tab that has been open before.
+
+## 2026-10-21 - On a phone the Slate's display switch sits beside the week selector
+
+The All games / Pool action switch moves to the right of the View week selector on the same row (below 768 px), saving a row of height at the top of the Slate. Wider screens keep the stacked layout.
+
+## The home-screen icon is the goalpost too
+
+The app's home-screen icon (what shows when the pool is added to a phone, and the manifest's 192 and 512 px and maskable icons, and `apple-icon.png`) was a football with "JB" on cream. It is now the same 8-bit goalpost as the browser tab: yellow uprights with the varsity JB between them, crimson padding, a night sky and mowed turf. It is the detailed 32 by 32 picture enlarged without smoothing (16 times for 512, 6 times for 192, so every pixel stays crisp) as a full square with no transparent corners, since the phone applies its own rounded mask; the maskable icon is the same picture, because the goalpost and JB sit well inside the 80% safe zone. A test checks the sizes and that none of the files has transparency. A phone keeps the icon of an app that was already added to the home screen, so to see the new one remove the app from the home screen and add it again.
+
+## 2026-10-21 - A Survivor champion is never eliminated afterward
+
+The no-pick rule eliminates any active Survivor entry with no pick in a finished week. A crowned champion stays an active entry and makes no further Survivor picks, so the week after the crowning the rule eliminated the champion and the weekly recap then reported the winner as eliminated. The rule now leaves a season alone once its champion is crowned (new migration). The recap never marks a champion OUT and decides "crowned this week" from the crowning time, not from "somebody was eliminated that week"; the Survivor table shows the champion as WON. An entry already wrongly eliminated cannot be reinstated (an integrity trigger forbids reactivating an entry, deliberately), so the champion is identified by the season's champion record, never by the entry's status.
+
+## The Trophy Room is the Commissioner's alone, with a link in the name menu
+
+The Trophy Room (the three trophies on the turning table, the champion banners, and the all-time Wins and Hit rate table with each player's Streaks) lives at `/trophy-room` and is open only to the Commissioner for now. The way in is a "Trophy Room" link in the drop-down menu under the Commissioner's name (between the name and Notifications); the shortcut on the Commissioner's operations desk was removed, and the old `/admin/trophy-room` address forwards to the new one. A player has no link, and the page and its data answer "not found" (the page says it is not open yet).
+
+Opening it to every player later is one setting: `TROPHY_ROOM_PLAYER_OPENS_AT` in `src/lib/trophy-room-access.js` (null today). It was first planned to open with the Bowl Pool (`bowlPoolLaunchAt(2026)`, December 7 at 3:00 AM Eastern); setting it to that, or any time, opens it to everyone from then on, and it stays open between seasons. `/api/profile` tells the menu whether to show the link.
+
+It is built only from graded picks, so even when opened it can never show anyone's unstarted pick. The Commissioner's Performance tab (the league / player dropdown with splits, histograms and most picked team) is private either way.
+
+The first-down chain was improved after a first look. It now spans the whole width of the page (the rods end up a chain, ten yards, apart, at 10% and 90% of the width), and its strip of turf is a football field: a sideline, yard lines every five yards and hash marks on the yards between. The chain stretches more believably: it pays out of a heap lying on the turf by the rear rod (tight humps that shrink as the slack is used up), then lifts off the turf behind the lead rod and runs straight up to its ring, coming taut as the rod plants; the rod leans against the strain for a moment and settles. A football is spotted at the end being measured, lying on the field with its nose a couple of inches past the lead rod's near edge: it is a first down by inches.
+
+## 2026-10-19 - Trophy Room: compass rose, plaque lettering, streak table, slower arrows
+
+- **Compass rose, steady:** the table's marquetry is a classic compass rose again (eight points, each split into a light satinwood and a dark ebony half, two rings with a ring of tick marks between, a small boss at the centre). The old star flickered and its colours blended as the table turned because overlapping pieces lying almost flat on the top fought over the depth buffer (which piece wins changed with the angle) and the clear coat turned the ebony grey at low angles. Each layer is now pushed forward by a depth offset and the inlay is matte, so it reads the same from every angle. The gold line round the table's apron, which showed up in tapering slivers where it poked out of the wood, is removed.
+- **Plaques:** lettering is lighter and more refined (smaller capitals with wide tracking, a small diamond between the year and the name, a fine double keyline) instead of heavy block letters. The keylines follow the plate's concave corners at a steady distance, so none runs off the gold; the corner rivets, which sat in the cut-out corners, are gone. The Survivor plates are smaller, with room between them.
+- **Streak table:** both streak headings say "Consecutive" ("Consecutive Donut Free Weeks", "Consecutive 2-0 Sweeps") and the second one is centred over its column like the first (a left-align rule meant for the Player heading was catching it). In each cell the all-time best is the big number and the current streak is the small "now N" under it; the bar and the gold star still show how close the current streak is to the best.
+- **Arrows:** the arrow buttons turn the table slowly and evenly (about a second and a half for a full step, easing in and out) instead of snapping round in half a second. A settle after a drag or flick is capped at roughly 10 degrees a frame: the pictures are 3 degrees apart and the fluted pedestal repeats every 22.5, so a faster turn made its flutes appear to roll backwards.
+- **Banners:** each champion's banner is now a hanging cloth banner: cut-felt lettering on a stitched, swallowtailed field, hung from a brass rod on two cords, in red (Pick'em), blue (Bowl Pool) or green (Survivor). The cloth moves freely instead of hanging stiff: the picture is cut into thin strips that slide sideways in two slow waves of different lengths travelling down from the rod (none at the rod, most at the free hem), and the whole banner sways from the rod. It still drops in from the rafters when a trophy settles and lifts away when the table turns; reduced motion stills it. The old noisy "cloth" filter is gone.
+
+## Banners are red and blue cloth, and the plaques are readable
+
+Pick'em's banners are red, the college Bowl Pool's blue and Survivor's green (they were navy, red and green). The banners now look like fabric: each is a layer of cloth lit through an SVG filter (a slow, streaky height map for long vertical folds, lit from one side and multiplied into the banner's colour, with a fine woven grain), wavy side edges, a dark sleeve at the top where it hangs from the rafters and stitched (dashed) trim. The unfurl and sway from before are unchanged, and the text sits above the cloth, unfiltered, so it stays sharp.
+
+The brass plaques on the trophies themselves were hard to read in the pictures: the year and the name were small and thin, with scrolls and a double keyline taking most of the face. The plaque now has one slim keyline and the lettering fills it: a bigger year and an even bigger name, heavy strokes (filled and outlined), near-black engraving on a brighter brass, and wider plates where the base has room (Pick'em's, Survivor's and a taller Bowl Pool plate). All 120 turntable pictures were re-rendered.
+
+The names on the trophies' plaques were still blurry on a phone because the 1100 px pictures are enlarged to the width of the screen. The three resting views (one for each trophy at the front) are therefore also kept at twice the size (2200 px, higher quality, `rest-0.webp` to `rest-2.webp`, about 360 KB each) and the page draws them whenever the table is exactly at rest, which is when the names are read; the 120 ordinary pictures are still used for the spin, so it costs little extra to load. The sharp pictures arrive after the spin's own, one at a time.
+
+## 2026-10-19 - Survivor is off once it has a champion: the ticket and the reminders agree
+
+Zac's ticket said he owed three selections. He had been crowned Survivor champion, but a champion's entry stays "active" in the database (the crowning does not change it), and the ticket counted any active entry as a required Survivor pick while its Survivor section had already been torn off. The crowned champion is the "Survivor is over" switch the app already has (`seasons.survivor_champion_player_id`, set automatically when one entry is left), so it now ends the competition everywhere the same way: `ticketCompletion` never counts Survivor once the pool is complete (so the champion owes just the two Pick'em selections), and the Survivor reminders (`survivor_due`, and the courteous check that covers both) are not sent once a champion is crowned. Playoff rounds were already Pick'em only.
+
+## The Trophy Room's hit rate table is evenly spaced, and shows each streak against its best
+
+The all-time Wins and Hit rate table uses fixed column widths (rank, player, wins, hit rate and two streak columns share the width in set proportions, with the player's name trimmed with an ellipsis if it is too long) so the columns line up and nothing runs off the edge of a phone. The streaks sit under one "Regular Season Streaks" heading with two columns, "Weeks with a win" and "2-0 weeks". Each cell shows the current streak as the big number, the all-time best under it ("best 23"), and a thin bar showing how close the current streak is to that best; when the player is at their best the cell turns gold with a star, and the cell's spoken label says so.
+
+The two streaks are named **Donut Free Weeks** (weeks in a row with at least 1 win, never a 0-2) and **2-0 Sweeps** (2-0 weeks in a row), in the Trophy Room's table and on the Performance tab. They sit under "Regular Season Streaks".
+
+## 2026-10-19 - Performance: three tables side by side
+
+The Performance panel's teams, splits and season tables sit side by side (one column on a phone), each as tall as the five-team table (a header and five rows; the season list scrolls inside that height past five seasons). The small pick count beside each team's Picked percentage is gone. The teams table can show either the five most picked teams or the five with the best hit rate (ties go to the team picked more often): the Picked and Hit rate headers are the buttons. The splits table is one plain list (Favorites, Underdogs, Home, Away) with no sub-headings, and says Away, not Road team. The league now has a Season by season table too, from the same per-season records the players use. The stats route sends `teamsByHitRate` beside `teams` for the league and for each player.
+
+## Performance tab cleanup: ties, no neutral site, no league streak boards, Survivor over, and a steadier pool map
+
+- **Most picked team:** when teams tie for the most picks the tile says "3 teams tied" with how many picks each, instead of naming whichever sorts first. The top-five table still lists them.
+- **No neutral-site row:** the home / road split is just home and road. International games are not treated as neutral, and the Super Bowl has a designated home team, so a pick is always on the home or the road team. (A game flagged neutral in the data is still counted as the home or the road team.)
+- **No league streak boards:** the two Player / Longest / Now tables are gone from the Performance tab; the streaks are in the Trophy Room's table (and a player's own view here keeps their two streaks).
+- **Survivor over:** once a Survivor champion is recorded for the season, Participant impact counts the last player standing as complete and says "Over · 1 winner · 10 eliminated", not "1 active".
+- **The pool map:** the line between two stages was dark only when the stage on its left was complete, so it broke between an in-progress stage and a completed one. It is now dark between any two stages that have been reached (complete or in progress), so the progress line is unbroken.
+
+The Today panel's three boxes were tidied: "Up next" no longer lists the Schedule (games loaded) or Provider allowance lines (the allowance is still shown in Automation health and in the operations map's footer), and "Next message" moved under the "Notification readiness" heading, where the rest of the message queue is.
+
+The Trophy Room page is plainer: "Trophy Room" (capital R) with no line of subtext under it, and the all-time record is now called "All-Time Table" with no subtext under its title, no "Under 50 picks" divider and no "How these are figured" section. The ordering is unchanged (Hit rate still ranks players with at least 50 picks first); it is just no longer explained on the page.
+
+The Trophy Room page is plainer: "Trophy Room" (capital R) with no line of subtext under it, and the all-time record is now called "All-Time Table" with no subtext under its title, no "Under 50 picks" divider and no "How these are figured" section. The ordering is unchanged (Hit rate still ranks players with at least 50 picks first); it is just no longer explained on the page.
+
+The first-down chain is now zoomed in on its last three yards. Still inside the header (nothing is drawn below it): the whole scene is three yards across the page, so the chain runs in from the left edge (its rear end, the rear pole and the heap of slack are ten yards off to the left, out of view) and is dragged across the turf toward the lead pole, which is drawn three times larger than before so that only its bottom third shows (the target disc and most of the banner are above the header), ending in a big rubber foot. The football is spotted at the right, behind the pole, with its tip poking out a couple of inches (2.5, measured against the yard) past the pole's foot: a first down. The field is a deep strip of turf with hash marks every yard and a yard line every five. Chain links, the ball and the marks are drawn larger to match; the pole planting, the squash, the dust, the twang and the lean are unchanged.
+
+## 2026-10-20 - Banners lowered like a curtain, a gliding table, a floating top, and a steadier refresh pole
+
+- **Banners:** each banner is lowered like a stage curtain (it comes down from behind the beam with its cloth unfolding, overshoots slightly, then hangs and moves gently). The lettering is larger, solid gold and cream with dark outlines, and moves as one piece while only the cloth ripples, so letters and years no longer shear. The dashed stitching is replaced by a gold double rule (a firm outer line and an inner hairline) with small diamonds at the corners and the swallowtail point.
+- **Table:** the turn keeps its speed but glides: neighbouring pictures (3 degrees apart) are blended in proportion to how far on the turn is, instead of snapping to the nearest. The pedestal and legs are gone; the top floats (all pictures re-rendered).
+- **Refresh graphic:** once planted, the lead pole leans about its foot instead of its top, so its foot stays exactly where it touched down (it used to slide about 10px forward as the lean eased out). The football is fuller (about 1.8 long to 1 across).
+
+## 2026-10-21 - The Trophy Room fits in a phone's memory, and its banners stay until the next trophy settles
+
+The Trophy Room page crashed an iPhone's Safari tab ("a problem repeatedly occurred"): it kept 120 decoded 1100x825 pictures (about 3.6 MB each, roughly 450 MB) plus a 2200x1650 canvas, more than the browser allows a page, so it killed the tab and then gave up reloading it. A phone now gets a smaller set (`public/trophies/turntable/sm/`: 60 pictures 6 degrees apart at 660x495, plus sharp resting views at 1320x990), about 100 MB decoded, blended between neighbours so the turn still glides at the same speed; every other device keeps the full set. Decoded pictures are released when the page goes away, and fewer are fetched and decoded at once. The sharp resting canvas and the turning canvas are two stacked canvases, so touching the table no longer reallocates a canvas (that hitch was the jerk when a finger went down); finger moves are drawn once a frame. The banners no longer lift away when a turn starts: the old trophy's banners stay hanging until the table has settled on the next trophy, then lift away and the new ones are lowered like a curtain.
+
+## The chain plants once, the football is redrawn, and the loading football appears at once
+
+- **One touchdown:** the lead pole bounced a couple of times on landing because the rubber foot's squash was a spring (it rebounded past its resting height and swayed). The foot is now fully squashed at contact and eases back up in one smooth movement, never going past its resting height, and the pole's lean eases out the same way, so the pole touches the ground once. (The chain still twangs, since a taut chain does vibrate.)
+- **A better football:** the spotted ball is drawn properly: a pointed body shaded like leather (lighter on top), a soft gloss, a white stripe near each end clipped to the outline, laces along the top, a dark outline and a shadow on the turf, slightly larger.
+- **No wait after letting go:** the page used to sit there for 1.2 seconds with the chain humming before it reloaded, and only then did the page's own loading football appear. Letting go now covers the page (below the header) with the same spinning loading football at once and reloads 120 ms later, right behind it, so the football is on screen immediately and the reloaded page's own loading screen takes over in the same place.
+
+The "Wins" axis label on the Season Snapshot chart sits 2px further from the card border (translate x 8 → 10), clear of the numbers beside it; nothing else in the chart moved.
+
+## 2026-10-19 - Fluid CPU estimate recalibrated
+
+The Commissioner dashboard estimated 4 h+ of Fluid Active CPU while Vercel's own meter read 3 h 16 m. The per-active-player cost in `src/lib/vercel-usage-estimate.js` drops from 30 to 22 seconds a day (the slower chat, home and grading polling since the 2026-10-02 calibration costs each player less), so 11 active players plus the scheduled jobs and uptime probes now come to 3 h 16 m. It is still an estimate (Vercel does not expose Hobby usage to an app): compare it with the Usage page now and then and adjust that one constant.
+
+The Provider cost chart (credits per game, 15- and 30-day averages) no longer starts its axis at zero: it now fits the axis to the range the two lines actually move in (the existing "tight" scale, with one step of room above and below), so the story of the lines is not flattened into the top of a tall chart.

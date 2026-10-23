@@ -25,7 +25,7 @@ async function serve(page: Page, state: string) {
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "admin/players") return route.fulfill({ json: PLAYERS });
     if (path === "admin/reminders") return route.fulfill({ json: REMINDERS });
-    if (path === "admin/trophy-room") return route.fulfill({ json: TROPHY_ROOM });
+    if (path === "trophy-room") return route.fulfill({ json: TROPHY_ROOM });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     if (path in api) return route.fulfill({ json: api[path] });
     return route.fulfill({ status: 204, body: "" });
@@ -97,7 +97,7 @@ for (const panel of PANELS) {
 }
 
 // The Players, Email center (reminders) and Trophy room pages.
-for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/admin/trophy-room", "table"]] as const) {
+for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/trophy-room", "table"]] as const) {
   for (const theme of ["day", "night"]) {
     for (const [label, width] of Object.entries(WIDTHS)) {
       if (theme === "night" && width !== 390 && width !== 1280) continue;
@@ -233,7 +233,7 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await page.goto("/admin/trophy-room");
+  await page.goto("/trophy-room");
   const table = page.locator(".trophy-table");
   await expect(table).toBeVisible({ timeout: 30_000 });
   const firstName = () => table.locator("tbody th[scope=row]").first().innerText();
@@ -252,18 +252,111 @@ test("Trophy room: wins and hit rate sort independently", async ({ page }) => {
   expect(names.indexOf("Al")).toBeGreaterThan(names.indexOf("Ron"));
 });
 
-// Player stats: each player has their own full set. The first player shows by default; choosing another swaps every figure.
-test("Trophy room: choosing a player shows that player's own stats", async ({ page }) => {
+// The Trophy Room's table carries each player's streaks, as now / best: Tyler has gone 9 weeks in a row with a win (best 23) and none 2-0 right now (best 5).
+test("Trophy room: the table shows each player's streaks", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/trophy-room");
+  await page.getByRole("button", { name: "Other Stats" }).click();   // the streaks are in the second view of the table
+  const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
+  await expect(row.getByLabel("Consecutive Donut Free Weeks: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Consecutive 2-0 Weeks: 0 now, 5 best")).toBeVisible();
+  const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
+  await expect(noPicks.getByLabel("Consecutive Donut Free Weeks: none yet")).toBeVisible();
+});
+
+// The second view of the table: streaks, games decided by half a point (wins, losses and hit rate) and pushes picked, ranked on the sorted column with
+// ties sharing a place (Ron, Al, Dana and Zac have no streaks, so they are all tied for 5th).
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Trophy room: the Other Stats view at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day");
+    await serve(page, "healthy");
+    await page.goto("/trophy-room");
+    const table = page.locator(".trophy-table");
+    await expect(table).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Other Stats" }).click();
+    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Consecutive Donut Free Weeks ▼", "Consecutive 2-0 Weeks", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
+    expect(await rankOf("Tyler")).toBe("1");
+    expect(await rankOf("Ron")).toBe("T5");
+    expect(await rankOf("Zac")).toBe("T5");
+    const tyler = table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
+    await expect(tyler.locator("td").nth(3)).toHaveText("6");   // half-point wins
+    await expect(tyler.locator("td").nth(4)).toHaveText("4");   // half-point losses
+    await expect(tyler.locator("td").nth(5)).toHaveText(".600");   // half-point hit rate: 6 wins in 10 games
+    await expect(tyler.locator("td").nth(6)).toHaveText("3");   // pushes picked
+    await table.getByRole("button", { name: /^Pushes picked/ }).click();
+    expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Connor");   // 4 pushes
+    await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
+    await expect(page.locator("#all-time")).toBeVisible();
+    await expect(page.locator("section[aria-labelledby=all-time]")).toHaveScreenshot(`commissioner-trophy-room-more-${label}.png`);
+  });
+}
+
+// Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
+test("Performance: the dropdown shows the league or one player's own stats", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await page.goto("/admin/trophy-room");
-  const section = page.locator("[aria-labelledby=player-stats-title]");
-  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
-  await expect(section.locator(".pool-stats-tiles").first()).toContainText("612–498");
-  await section.getByRole("button", { name: "Connor" }).click();
-  await expect(section.getByRole("button", { name: "Connor" })).toHaveAttribute("aria-pressed", "true");
-  await expect(section.getByRole("button", { name: "Gary" })).toHaveAttribute("aria-pressed", "false");
+  await page.goto("/admin");
+  await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
+  await page.locator(".commissioner-panel-tab").nth(1).click();
+  const section = page.locator("[aria-labelledby=pool-stats-title]");
+  await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
+  await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
+  await expect(section.getByText("Neutral site")).toHaveCount(0);
+  await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();   // the league has its seasons too
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
+  await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();
+  await section.getByRole("button", { name: /^Picked/ }).click();
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
+  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Home, Away
+  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Home", "Away"]);
+  await section.getByLabel("Show").selectOption({ label: "Rick" });
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
+});
+
+// Performance: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.
+for (const width of [390, 560, 768, 1280]) {
+  test(`Performance: the tables fit their cards without scrolling sideways at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day");
+    await serve(page, "healthy");
+    await page.goto("/admin");
+    await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
+    await page.locator(".commissioner-panel-tab").nth(1).click();
+    const section = page.locator("[aria-labelledby=pool-stats-title]");
+    await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 30_000 });
+    const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
+    expect(overflowing, "no table wider than its card").toBe(0);
+  });
+}
+
+// Record / Other Stats is a two-way switch: tapping either half flips to the other view, and the halves are exactly the same size.
+test("either half of the Record / Other Stats switch flips the All-Time Table", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/trophy-room");
+  const switcher = page.getByRole("group", { name: "Table view" });
+  const record = switcher.getByRole("button", { name: "Record" }), other = switcher.getByRole("button", { name: /Other\s*Stats/ });
+  await expect(record).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  const [a, b] = [await record.boundingBox(), await other.boundingBox()];
+  expect([Math.round(a!.width), Math.round(a!.height)], "the halves are the same size").toEqual([Math.round(b!.width), Math.round(b!.height)]);
+  await record.click();   // the half that is already chosen: flips to the other view
+  await expect(other).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".trophy-table")).toHaveAttribute("data-view", "more");
+  await other.click();
+  await expect(record).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".trophy-table")).toHaveAttribute("data-view", "record");
 });

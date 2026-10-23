@@ -103,14 +103,14 @@
 /* The Super Bowl round has one pick per row and room for it: keep the pick and its W or L on one line. */
 .pickem-ledger-grid[data-picks="1"] .pickem-ledger-pick > span { white-space: nowrap; }
 /* Give the first pick a quiet visual gutter after the player-name lane. */
-.pickem-ledger-row td:nth-child(3) { padding-left: .5rem; }
+.pickem-ledger-row .pickem-ledger-player + td { padding-left: .5rem; }
 @media (min-width: 640px) {
   .pickem-ledger-masthead { margin-bottom: .7rem; padding: .76rem .2rem .65rem; }
   .pickem-ledger-row td { padding: .32rem .38rem; }
   .pickem-ledger-wins { font-size: 1.25rem; }
   .pickem-ledger-pick { font-size: 1.05rem; }
   .pickem-ledger-pick .pickem-ledger-spread { font-size: .96rem; }
-  .pickem-ledger-row td:nth-child(3) { padding-left: .68rem; }
+  .pickem-ledger-row .pickem-ledger-player + td { padding-left: .68rem; }
 }
 html[data-theme="night"] .pickem-ledger {
   --ledger-ink: #ede6d9;

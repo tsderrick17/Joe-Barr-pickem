@@ -98,6 +98,9 @@ export const SCENARIOS = {
   "regular-hidden-rows": { ...base, hidePickemEliminatedRows: true, hideSurvivorEliminatedRows: true, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // Survivor has a champion: the section is gone for everyone.
   "regular-complete": { ...base, survivorComplete: true, survivorChampionPlayerId: "p0", survivorChampionName: "Gary", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }).map((row) => ({ ...row, status: "complete" })) },
+  // Survivor has a champion and the viewer is that champion: their entry is still "active" in the database, but the competition is over, so the
+  // ticket is Pick'em only and owes two selections, not three.
+  "regular-complete-champion": { ...base, survivorComplete: true, survivorChampionPlayerId: "p2", survivorChampionName: "Tyler", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: null }).map((row) => (row.playerId === "p2" ? row : { ...row, status: "eliminated", requiredThisPeriod: false })) },
   // Wild Card weekend: six picks each, Survivor is over.
   "playoff-wildcard": { ...base, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
   // Divisional round: four picks each.

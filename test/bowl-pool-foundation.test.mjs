@@ -45,7 +45,7 @@ test("Claiming a seat controls the whole selection card", async () => {
   assert.match(page, /aria-label="Spread"/);
   assert.match(page, /Select underdog team/);
   assert.match(page, /bowl-team-pick/);
-  assert.match(page, /<BowlPennant side="left"/);
+  assert.match(page, /<BowlMegaphone side="left"/);
   assert.match(page, /!gameLocked\(game\)/);
   assert.match(page, /type="button">SUBMIT<\/button>/);
   assert.doesNotMatch(page, /SUBMITTING…/);

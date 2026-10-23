@@ -231,11 +231,19 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-stamp { font-size: 2.4rem; }
 
 /* ---- Pull down to refresh (the app added to a home screen) ----
-   A drop of bright water swells from the top edge of the header as the page is pulled, lets go and falls when the pull is far
-   enough, and a ripple spreads where it lands. The colour is used for nothing else. The words are for screen readers only. */
+   A first-down chain along the foot of the header: the lead rod is carried in from above and drags the chain taut as the page is pulled,
+   and its rubber foot plants on the turf when the pull is far enough (release). The strip behind it matches the header, so on a page with no
+   header it is a dark bar and on every other page it is invisible. The words are for screen readers only. */
 html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: contain; }
-.pull-drip {
-  --drip: oklch(0.84 0.16 205);
+.pull-chain {
+  --marker: oklch(0.7 0.2 48);
+  --steel: oklch(0.84 0.01 250);
+  --rubber: oklch(0.36 0 0);
+  --turf: oklch(0.5 0.12 150);
+  --leather: oklch(0.42 0.1 45);
+  --chalk: oklch(0.95 0.01 90);
+  --clip: oklch(0.6 0.2 25);
+  background: oklch(0.2 0.004 286);
   left: 0;
   overflow: hidden;
   pointer-events: none;
@@ -244,14 +252,36 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
   top: 0;
   z-index: 60;
 }
-.pull-drip svg { display: block; left: 50%; position: absolute; top: 0; transform: translateX(-50%); }
-.pull-drip-line { background: var(--drip); box-shadow: 0 0 8px var(--drip); display: block; height: 2px; left: 0; position: absolute; right: 0; top: 0; }
-.pull-drip-water { fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); }
-.pull-drip-ripple { animation: pull-drip-ripple .5s ease-out .3s forwards; fill: none; opacity: 0; stroke: var(--drip); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; }
-.pull-drip-fall { animation: pull-drip-fall .34s cubic-bezier(.5, 0, 1, .6) forwards; fill: var(--drip); filter: drop-shadow(0 0 3px var(--drip)); transform-box: fill-box; transform-origin: center; }
-.pull-drip[data-phase="refreshing"] .pull-drip-fall { animation: pull-drip-fall .55s cubic-bezier(.5, 0, 1, .6) infinite; }
-.pull-drip[data-phase="refreshing"] .pull-drip-ripple { animation: pull-drip-ripple .55s ease-out .27s infinite; }
-@keyframes pull-drip-fall { 0% { transform: translateY(0) scale(.3, .3); } 12% { transform: translateY(0) scale(1, 1.15); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(var(--drip-fall)) scale(.85, 1.25); } }
-@keyframes pull-drip-ripple { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(5, 3); } }
-.pull-drip-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
-@media (prefers-reduced-motion: reduce) { .pull-drip-fall, .pull-drip-ripple { animation: none; opacity: 1; } }
+.pull-chain svg { display: block; left: 0; position: absolute; top: 0; }
+.pull-chain-ground { fill: var(--turf); }
+.pull-chain-sideline { fill: var(--chalk); }
+.pull-chain-yardline { fill: var(--chalk); opacity: 0.85; }
+.pull-chain-hash { fill: none; stroke: var(--chalk); stroke-width: 2.2; }
+.pull-chain-ball { fill: url(#pull-chain-leather); }
+.pull-chain-leather-hi { stop-color: oklch(0.55 0.11 50); }
+.pull-chain-leather-mid { stop-color: oklch(0.42 0.1 45); }
+.pull-chain-leather-lo { stop-color: oklch(0.28 0.07 40); }
+.pull-chain-ball-shadow { fill: var(--gray-00); opacity: 0.35; }
+.pull-chain-ball-stripe { fill: var(--chalk); }
+.pull-chain-ball-gloss { fill: var(--chalk); opacity: 0.2; }
+.pull-chain-ball-seam { fill: none; stroke: var(--gray-00); stroke-linecap: round; stroke-width: 1.3; }
+.pull-chain-ball-lace { fill: none; stroke: var(--chalk); stroke-linecap: round; stroke-width: 1.5; }
+.pull-chain-ball-outline { fill: none; stroke: var(--gray-00); stroke-linejoin: round; stroke-width: 1.2; }
+.pull-chain-rod { fill: var(--marker); }
+.pull-chain-ring { fill: none; stroke: var(--gray-00); stroke-width: 2.6; }
+.pull-chain-strap { fill: none; stroke: var(--gray-00); stroke-width: 0.5; }
+.pull-chain-chevron { fill: none; stroke: var(--gray-00); stroke-linejoin: miter; stroke-width: 1.1; }
+.pull-chain-chevron-white { fill: none; stroke: var(--chalk); stroke-linejoin: miter; stroke-width: 1.1; }
+.pull-chain-foot { fill: var(--rubber); }
+.pull-chain-link { fill: none; stroke: var(--steel); stroke-width: 1.1; }
+.pull-chain-link-edge { fill: var(--steel); }
+.pull-chain-clip { fill: var(--clip); }
+.pull-chain-dust { fill: var(--chalk); }
+.pull-counter-frame { fill: oklch(0.26 0.01 260); stroke: oklch(0.14 0.01 260); stroke-width: 1.5; }
+.pull-counter-panel { fill: oklch(0.22 0.04 255); }
+.pull-counter-label { fill: oklch(0.12 0.01 260); }
+.pull-counter-post { fill: oklch(0.14 0.01 260); }
+.pull-counter-digit { fill: oklch(0.62 0.21 38); paint-order: stroke; stroke: var(--chalk); stroke-linejoin: round; stroke-width: 2.2; }
+.pull-counter-seam { fill: none; stroke: oklch(0.12 0.02 255); stroke-width: 0.7; }
+.pull-refresh-cover { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 55; }
+.pull-chain-label { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }

@@ -1,11 +1,12 @@
-// The display table: a hand-made mahogany table whose top is cut tight around three landing pads, one per trophy. Each pad is the
-// outline of its trophy's base (a raised moulded step with a velvet inset), and the top flows round them in smooth curves, with
-// satinwood stringing, a marquetry compass star in the middle, a carved apron, a carved urn pedestal and three cabriole legs ending
+// The display table: a hand-made mahogany table whose top is cut tight around three identical landing pads, one per trophy, 120 degrees
+// apart, so the whole table is exactly three-fold symmetric. Each pad is a raised moulded step with a velvet inset, and the top flows round them in smooth curves, with
+// satinwood stringing round the edge, a marquetry compass rose in the middle, a carved apron and nothing beneath it (the top floats)
 // in brass claw-and-ball feet. Table units: the top surface is y = 0.
 import { THREE, mesh, profile, revolveMod, fbm } from "/lib.js";
 
 export const RADIUS = 48;        // distance from the centre to each landing pad
 export const PAD_TOP = 1.8;      // height of a pad's velvet above the table top
+export const PAD_RADIUS = 12.2;  // every pad is this round velvet disc: just big enough for the widest trophy base (the Survivor and Pick'em corners)
 const STEP_H = 1.45;             // height of the pad's raised moulded step
 
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
@@ -81,13 +82,18 @@ export function mahoganyTable(m, footprints = []) {
 
   // world-plane outline of each pad's table-top edge: the trophy base grown by 6.5
   const pads = [0, 1, 2].map((k) => {
-    const phi = (k / 3) * Math.PI * 2, cx = Math.sin(phi) * RADIUS, cz = Math.cos(phi) * RADIUS, fp = footprints[k] ?? { type: "circle", r: 11 };
+    const phi = (k / 3) * Math.PI * 2, cx = Math.sin(phi) * RADIUS, cz = Math.cos(phi) * RADIUS, fp = footprints[k] ?? { type: "circle", r: PAD_RADIUS };
     const toWorld = (p) => new THREE.Vector2(cx + p.x * Math.cos(phi) + p.y * Math.sin(phi), cz - p.x * Math.sin(phi) + p.y * Math.cos(phi));
     return { phi, cx, cz, fp, world: (offset) => footprintPoints(fp, offset).map(toWorld) };
   });
   const topPolys = pads.map((p) => p.world(6.5));
   // the table top is the smooth union of a central disc and the three pad outlines; a blend distance of 16 gives deep, flowing curves between them
-  const field = (x, y) => topPolys.reduce((d, poly) => smin(d, polygonSdf(poly, x, y), 16), Math.hypot(x, y) - 24);
+  // The blend is not associative (joining A then B differs slightly from B then A), so it is averaged over every order the three pads can be
+  // joined in: the outline then comes out exactly the same at every pad.
+  const field = (x, y) => {
+    const disc = Math.hypot(x, y) - 24, [a, b, c] = topPolys.map((poly) => polygonSdf(poly, x, y));
+    return [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]].reduce((sum, order) => sum + order.reduce((d, v) => smin(d, v, 16), disc), 0) / 6;
+  };
   const outline = (inset = 0) => Array.from({ length: 1440 }, (_, i) => {
     const a = (i / 1440) * Math.PI * 2, sx = Math.sin(a), sy = Math.cos(a);
     let r = 110; while (r > 0 && field(sx * r, sy * r) > -inset) r -= 0.7;   // walk in from outside until the edge (offset by `inset`) is crossed
@@ -103,19 +109,31 @@ export function mahoganyTable(m, footprints = []) {
     const curve = new THREE.CatmullRomCurve3(outline(inset).map((p) => new THREE.Vector3(p.x, 0.02, p.y)), true);
     table.add(mesh(new THREE.TubeGeometry(curve, 1440, r, 8, true), mat, { cast: false }));
   }
-  // marquetry in the middle: a twelve-point compass star of satinwood and ebony inside a satinwood ring
-  for (let k = 0; k < 24; k++) {
-    const a = (k / 24) * Math.PI * 2, long = k % 2 === 0, len = long ? 13 : 7.5, w = long ? 1.7 : 1.2;
-    const s = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(-w, len * 0.22), new THREE.Vector2(0, len), new THREE.Vector2(w, len * 0.22)]);
-    const g = new THREE.ShapeGeometry(s); g.rotateX(-Math.PI / 2);
-    const piece = new THREE.Mesh(g, long ? (k % 4 === 0 ? satin : ebony) : satin); piece.rotation.y = a; piece.position.y = 0.03; piece.receiveShadow = true; table.add(piece);
+  // marquetry in the middle: a compass rose. Eight points (four long cardinal ones, four shorter ones between), each split down its middle into a light
+  // satinwood half and a dark ebony half so it reads as faceted, inside two satinwood rings with a ring of ebony tick marks between them and a small
+  // boss at the centre. The pieces overlap and lie almost flat on the top, and the renderer's depth buffer cannot tell a hundredth of a unit apart at
+  // this distance, so which piece "won" used to change with every angle and the colours blended as the table turned. Each layer is pushed forward by
+  // the depth-offset instead (short points, long points, ticks, rings, boss), which orders them the same way from every angle. They are matte (no
+  // clear coat), so the ebony stays dark and the satinwood cream when the top catches the light at a low angle.
+  const inlay = (material, layer) => { const copy = material.clone(); copy.clearcoat = 0; copy.roughness = 0.6; copy.envMapIntensity = 0.12; copy.polygonOffset = true; copy.polygonOffsetFactor = -layer; copy.polygonOffsetUnits = -layer; return copy; };
+  const ebonyInlay = (layer) => { const copy = inlay(ebony, layer); copy.color.set(0x0c0504); return copy; };
+  const flat = (points, material) => {
+    const geometry = new THREE.ShapeGeometry(new THREE.Shape(points.map(([x, y]) => new THREE.Vector2(x, y)))); geometry.rotateX(-Math.PI / 2);
+    const piece = new THREE.Mesh(geometry, material); piece.position.y = 0.03; piece.receiveShadow = true; table.add(piece);
+  };
+  const toward = (angle, distance, across = 0) => [Math.sin(angle) * distance + Math.cos(angle) * across, Math.cos(angle) * distance - Math.sin(angle) * across];
+  for (let k = 0; k < 8; k++) {
+    const angle = (k * Math.PI) / 4, cardinal = k % 2 === 0, length = cardinal ? 12.4 : 8.4, half = cardinal ? 1.9 : 1.35, layer = cardinal ? 3 : 2;
+    flat([[0, 0], toward(angle, length), toward(angle, length * 0.24, -half)], inlay(satin, layer));
+    flat([[0, 0], toward(angle, length), toward(angle, length * 0.24, half)], ebonyInlay(layer));
   }
-  for (const [r, w] of [[15, 0.5], [16.2, 0.18]]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + w, 160), satin); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; table.add(ring); }
+  for (let k = 0; k < 32; k++) { const angle = (k / 32) * Math.PI * 2, wide = 0.11; flat([toward(angle, 13.7, -wide), toward(angle, 14.8, -wide), toward(angle, 14.8, wide), toward(angle, 13.7, wide)], ebonyInlay(4)); }
+  for (const [r, w] of [[13.3, 0.22], [15, 0.5]]) { const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + w, 160), inlay(satin, 5)); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.receiveShadow = true; table.add(ring); }
+  for (const [r, layer, material] of [[1.6, 6, inlay(satin, 6)], [0.7, 7, ebonyInlay(7)]]) { const boss = new THREE.Mesh(new THREE.CircleGeometry(r, 48), material); boss.rotation.x = -Math.PI / 2; boss.position.y = 0.03; boss.receiveShadow = true; table.add(boss); }
 
   // a carved apron under the edge, following the outline
   const apron = new THREE.ExtrudeGeometry(new THREE.Shape(outline(4)), { depth: 3.2, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4, bevelSegments: 3, curveSegments: 4 });
   apron.rotateX(Math.PI / 2); apron.translate(0, -3.6, 0); table.add(mesh(apron, wood));
-  { const curve = new THREE.CatmullRomCurve3(outline(3.7).map((p) => new THREE.Vector3(p.x, -5.4, p.y)), true); table.add(mesh(new THREE.TubeGeometry(curve, 1440, 0.35, 10, true), m.gold)); }
 
   // the landing pads: a moulded step in the shape of the base, with satinwood stringing, a gold bead edge and a velvet inset
   const beadGeo = new THREE.SphereGeometry(0.17, 12, 8);
@@ -134,20 +152,6 @@ export function mahoganyTable(m, footprints = []) {
     table.add(g);
   }
 
-  // the pedestal: a carved urn column under the centre, and three cabriole legs sweeping out under the lobes to claw-and-ball feet
-  table.add(mesh(revolveMod(profile([[9, -3.6], [7.5, -5], [5, -7], [4.2, -10], [6.5, -14], [7.2, -17], [6, -20], [3.6, -24], [3.4, -27], [5.6, -29], [6.2, -31]], 80), 120, (theta, t, y, r) => r * (1 + 0.06 * Math.cos(16 * theta) * (y < -13 && y > -21 ? 1 : 0))), wood));
-  for (const y of [-7.2, -20.2, -28.6]) { const ring = mesh(new THREE.TorusGeometry(y === -7.2 ? 5 : y === -20.2 ? 6 : 5.4, 0.28, 10, 80), m.gold); ring.rotation.x = Math.PI / 2; ring.position.y = y; table.add(ring); }
-  for (let k = 0; k < 3; k++) {
-    const phi = (k / 3) * Math.PI * 2, dir = new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi));
-    const P = (r, y) => dir.clone().multiplyScalar(r).setY(y);
-    const curve = new THREE.CatmullRomCurve3([P(4.5, -27), P(9, -29.5), P(16, -30.5), P(22, -33), P(25.5, -38.5), P(26.5, -42)]);
-    table.add(mesh(taperedTube(curve, (t) => 2.7 - 1.3 * t + 0.6 * Math.exp(-Math.pow((t - 0.35) / 0.12, 2))), wood));
-    const ball = mesh(new THREE.SphereGeometry(1.7, 28, 20), m.gold); ball.position.copy(P(26.7, -43.5)); table.add(ball);
-    for (let toe = -1; toe <= 1; toe++) {
-      const side = new THREE.Vector3(dir.z, 0, -dir.x);
-      const tc = new THREE.CatmullRomCurve3([P(26.3, -42).addScaledVector(side, toe * 0.5), P(27.6, -42.6).addScaledVector(side, toe * 1.2), P(28.2, -44.2).addScaledVector(side, toe * 1.3)]);
-      table.add(mesh(taperedTube(tc, (t) => 0.55 - 0.3 * t, 24, 10), m.gold));
-    }
-  }
+  // no pedestal or legs: the top floats
   return table;
 }

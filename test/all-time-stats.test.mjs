@@ -139,3 +139,37 @@ test("a Bowl Pool champion recorded only in the shared ledger is named, and neve
   });
   assert.deepEqual(both.trophies[0].bowl.map((entry) => entry.name), ["Bob", "Cy"], "recorded in both places: listed once; a co-champion still appears");
 });
+
+test("half-point games and pushes picked are counted from the final score against the locked spread", () => {
+  const gameRows = [
+    { id: "a", kickoff_at: "2026-09-10T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },   // home wins by 4
+    { id: "b", kickoff_at: "2026-09-11T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+    { id: "c", kickoff_at: "2026-09-12T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+    { id: "d", kickoff_at: "2026-09-13T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+  ];
+  const lineRows = [
+    { game_id: "a", favorite_team_id: "H", locked_spread: 3.5 },   // home -3.5 wins by 4: covers by half a point
+    { game_id: "b", favorite_team_id: "H", locked_spread: 4.5 },   // home -4.5 wins by 4: misses by half a point
+    { game_id: "c", favorite_team_id: "H", locked_spread: 4 },     // lands exactly on the number: a push (graded as a loss)
+    { game_id: "d", favorite_team_id: "H", locked_spread: 3 },     // covers by a point
+  ];
+  const pickRows = [
+    { id: "1", player_id: "ann", game_id: "a", scoring_period_id: "p26", selected_team_id: "H", result: "win" },
+    { id: "2", player_id: "ann", game_id: "b", scoring_period_id: "p26", selected_team_id: "H", result: "loss" },
+    { id: "3", player_id: "ann", game_id: "c", scoring_period_id: "p26", selected_team_id: "H", result: "loss" },
+    { id: "4", player_id: "ann", game_id: "d", scoring_period_id: "p26", selected_team_id: "H", result: "win" },
+    { id: "5", player_id: "bob", game_id: "b", scoring_period_id: "p26", selected_team_id: "A", result: "win" },   // the underdog at +4.5 covers by half a point
+  ];
+  const { players: rows } = buildAllTimeStats({ players, seasons, periods, games: gameRows, lines: lineRows, picks: pickRows });
+  const ann = rows.find((row) => row.playerId === "ann"), bob = rows.find((row) => row.playerId === "bob");
+  assert.deepEqual([ann.halfWins, ann.halfLosses, ann.pushes], [1, 1, 1]);
+  assert.deepEqual([bob.halfWins, bob.halfLosses, bob.pushes], [1, 0, 0]);
+});
+
+test("without a score or a spread nothing is counted as a half-point game or a push", () => {
+  const { players: rows } = buildAllTimeStats({
+    players, seasons, periods, games: [{ id: "a", kickoff_at: "2026-09-10T00:00:00Z" }], lines: [{ game_id: "a", favorite_team_id: null }],
+    picks: [{ id: "1", player_id: "ann", game_id: "a", scoring_period_id: "p26", selected_team_id: "H", result: "win" }],
+  });
+  assert.deepEqual([rows[0].halfWins, rows[0].halfLosses, rows[0].pushes], [0, 0, 0]);
+});

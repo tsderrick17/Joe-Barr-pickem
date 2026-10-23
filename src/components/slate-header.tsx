@@ -25,31 +25,35 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
         <h1 className="whitespace-nowrap font-serif text-3xl font-bold sm:text-4xl">
           The Slate
         </h1>
-        <label
-          className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
-          htmlFor="week-selector"
-        >
-          VIEW WEEK
-        </label>
+        <div className="slate-week-row">
+          <div className="slate-week-picker">
+          <label
+            className="mt-4 block text-xs font-bold tracking-[0.16em] text-slate-600"
+            htmlFor="week-selector"
+          >
+            VIEW WEEK
+          </label>
 
-        <select
-          className="mt-1 border border-(color:--themed-border-10) bg-(color:--themed-bg-26) px-3 py-1.5 text-sm font-semibold text-(color:--themed-text-18)"
-          id="week-selector"
-          onChange={onChooseWeek}
-          value={week.id}
-        >
-          {availableWeeks.map((period) => (
-            <option key={period.id} value={period.id}>
-              {period.display_name}
-              {period.status === "complete" ? " — Final" : ""}
-          </option>
-        ))}
-        </select>
+          <select
+            className="mt-1 border border-(color:--themed-border-10) bg-(color:--themed-bg-26) px-3 py-1.5 text-sm font-semibold text-(color:--themed-text-18)"
+            id="week-selector"
+            onChange={onChooseWeek}
+            value={week.id}
+          >
+            {availableWeeks.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.display_name}
+                {period.status === "complete" ? " — Final" : ""}
+            </option>
+          ))}
+          </select>
+          </div>
 
-        <div className="slate-view-switch-slot">
-          <div aria-label="Slate display" className="slate-view-switch" role="group">
-            <button aria-pressed={!actionOnlyActive} className={!actionOnlyActive ? "is-active" : ""} onClick={() => { if (actionOnlyActive) onToggleDisplay(); }} type="button">All<br />games</button>
-            <button aria-pressed={actionOnlyActive} className={actionOnlyActive ? "is-active" : ""} onClick={() => { if (!actionOnlyActive) onToggleDisplay(); }} type="button">Pool<br />action</button>
+          <div className="slate-view-switch-slot">
+            <div aria-label="Slate display" className="slate-view-switch" role="group">
+              <button aria-pressed={!actionOnlyActive} className={!actionOnlyActive ? "is-active" : ""} onClick={onToggleDisplay} type="button">All<br />games</button>
+              <button aria-pressed={actionOnlyActive} className={actionOnlyActive ? "is-active" : ""} onClick={onToggleDisplay} type="button">Pool<br />action</button>
+            </div>
           </div>
         </div>
       </div>
@@ -57,7 +61,7 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
       <aside className="border-t border-(color:--themed-border-12) pt-4 text-left text-xs leading-5 text-slate-700 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
         {readOnly ? null : <div className={`slate-action-instructions ${survivorHelp ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 border-(color:--themed-border-10) bg-(color:--themed-bg-16) px-3 py-2.5 text-[11px] leading-4 text-[#17354d] md:text-xs ${survivorHelp ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
           <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
-          {survivorHelp ? <p><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose a team.</p> : null}
+          {survivorHelp ? <p className="slate-action-survivor"><strong className="block text-[10px] tracking-[0.12em] text-[#00756e]">SURVIVOR</strong>Click a poker chip to choose a team.</p> : null}
         </div>
         }
         <div className="slate-how-to-grid mt-2 grid gap-3 border-t border-(color:--themed-border-12) pt-3 md:gap-0">
