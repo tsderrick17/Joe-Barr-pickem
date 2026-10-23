@@ -3,12 +3,13 @@
  * ten-yard chain, as wide as the page and no taller than the header: a deep strip of turf with hash marks, a football spotted at the right, a down
  * counter standing off in the distance, and only the bottom third of the lead pole showing (its top is above the header).
  *
- * Pulling has two stages. In the first (`PUFF_AT` of the pull) the lead pole comes down foot first with the chain always taut: the chain runs
- * straight from its fixed end at the left edge of the page, rising about 15 degrees above the ground at the start, so the pole's ring hangs in the
- * air before and above the ball. As the pole lowers the chain angle falls to nothing and its reach grows (reach is the chain's length times the
- * cosine of its angle), so the ring arrives at the ball only when the foot lands; at the same time the pole, leaning with its foot leading,
- * straightens up. The foot lands upright with a puff of dust (the measurement), then swings once a little past upright and settles. In the
- * second stage the down counter slides from 4 to 1, following the finger; when it has fully turned to 1 the pull is complete (refresh armed).
+ * Pulling has two stages. In the first (`PUFF_AT` of the pull) the lead pole is pulled out and then stamped down. It first comes out with the chain
+ * slack: part of the chain lies in humps on the turf and the rest rises to the pole's ring, the pole leaning with its foot leading. The pole is drawn
+ * outward at that height and that lean until the slack is used up and the chain is stretched to its full length (the chain gives one slight twang
+ * as it comes taut). Then the pole drops, turning about the chain's fixed end at the left edge of the page, so the chain stays taut and its angle
+ * falls to nothing while the pole straightens up, and the foot lands upright, exactly at the ball, with a puff of dust (the measurement). The foot
+ * stays where it lands: it does not squash or bounce, and the pole does not swing. In the second stage the down counter slides from 4 to 1, following
+ * the finger; when it has fully turned to 1 the pull is complete (refresh armed).
  * Kept as plain functions so the picture can be checked without a browser.
  */
 export const FOOT = 6;               // the rubber stopper at the bottom of a pole, in the pole's own units
@@ -114,22 +115,19 @@ export function fieldMarks(lay) {
   return { lines: lines.filter(inView), hashes: hashes.filter(inView) };
 }
 
-/** How the rubber foot looks `since` ms after it planted (1 is uncompressed): fully squashed at contact, then easing back up. It touches down once and
- *  never bounces, so it never goes past its resting height. */
-export function footSquash(since) {
-  return 1 - 0.4 * Math.exp(-since / 120);
-}
-
 // ---------------------------------------------------------------------------------------------------------------------------------
 // The pull: the pole's descent, the landing, and the counter.
 
 /** How far through the pull (0 to 1) the foot lands and the dust puffs; the counter turns over the rest. */
 export const PUFF_AT = 0.5;
-const CHAIN_START_DEGREES = 15;      // the chain's angle above the ground when the pole first comes into view
+const CHAIN_START_DEGREES = 8;       // the chain's angle above the ground when the pole first comes into view
 const LEAN_START_DEGREES = 22;       // how far the pole leans, its foot leading, as it first comes in
-const OVERSHOOT_DEGREES = 3;         // how far past upright it swings once when it lands
-const OVERSHOOT_MS = 130;            // and how soon it has swung farthest
+const STRETCH_END = 0.5;             // how much of the descent is spent drawing the slack chain out (the rest is the drop)
+const START_OUT = 0.5;               // how far out the pole starts, as a fraction of its full-stretch distance, with the chain slack
+const TWANG_PX = 2.2;                // the slightest boing of the chain as it comes taut: how far it bows at first
+const TWANG_MS = 85;                 // one wobble of it
 
+export { STRETCH_END };
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 const smooth = (value) => value * value * (3 - 2 * value);
 
@@ -146,26 +144,32 @@ export const chainAnchor = (lay, groundY) => ({ x: lay.anchorX, y: groundY - RIN
 export const chainReach = (lay) => lay.leadTo - lay.anchorX;
 
 /**
- * The pole while it is coming down (`descent` 0 to 1). The chain is straight and taut the whole way, turning about its fixed end: it rises
- * `CHAIN_START_DEGREES` at the start and lies flat at the ring's own height when the foot lands, its reach growing as the cosine of its angle.
- * The pole leans with its foot leading and straightens as it lowers. Returns the ring (where the chain is fastened), the pole's top (which the
- * drawing turns about) and its foot, and `lean` (degrees, the foot ahead of the top when positive).
+ * The pole while it is coming down (`descent` 0 to 1). First the slack chain is drawn out: the pole moves outward at one height, leaning with its foot
+ * leading, from `START_OUT` of the way until the chain is stretched to its full length. Then the pole drops, turning about the chain's fixed end, so the chain
+ * stays taut: it rises `CHAIN_START_DEGREES` where the drop begins and lies flat at the ring's own height when the foot lands, and the pole straightens
+ * as it lowers. Returns the ring (where the chain is fastened), the pole's top (which the drawing turns about) and its foot, and `lean` (degrees, the foot
+ * ahead of the top when positive).
  */
 export function descentPose(descent, lay, groundY) {
   const anchor = chainAnchor(lay, groundY), reach = chainReach(lay);
-  const angle = (CHAIN_START_DEGREES * (1 - descent) * Math.PI) / 180;
-  const ring = { x: anchor.x + reach * Math.cos(angle), y: anchor.y - reach * Math.sin(angle) };
-  const lean = LEAN_START_DEGREES * (1 - smooth(descent));
+  const stretch = smooth(clamp01(descent / STRETCH_END)), drop = clamp01((descent - STRETCH_END) / (1 - STRETCH_END));
+  const angle = (CHAIN_START_DEGREES * (1 - drop) * Math.PI) / 180;
+  const outward = lerp(START_OUT, 1, stretch);
+  const ring = { x: anchor.x + reach * Math.cos(angle) * outward, y: anchor.y - reach * Math.sin(angle) };
+  const lean = LEAN_START_DEGREES * (1 - smooth(drop));
   return poseFromRing(ring, lean, lay);
 }
 
-/** The pole once its foot has landed: the foot stays exactly where it touched down, and the pole swings about it (`lean` in degrees). `sink` (px) lowers
- *  the whole pole as the rubber foot compresses. */
-export function plantedPose(lean, lay, groundY, sink = 0) {
-  const radians = (lean * Math.PI) / 180, direction = { x: Math.sin(radians), y: Math.cos(radians) };   // from the top toward the foot
-  const foot = { x: lay.leadTo, y: groundY + sink };
-  const ring = { x: foot.x - RING * lay.zoom * direction.x, y: foot.y - RING * lay.zoom * direction.y };
-  return poseFromRing(ring, lean, lay);
+/** The slight boing of the chain `since` ms after it came taut (px of bow at its middle): one small wobble that dies away, at the instant it is fully stretched. */
+export function chainTwang(since) {
+  if (since <= 0) return 0;
+  return TWANG_PX * Math.exp(-since / (TWANG_MS * 1.6)) * Math.sin((Math.PI * 2 * since) / TWANG_MS);
+}
+
+/** The pole once its foot has landed: upright, its foot exactly where it touched down, and it stays there. */
+export function plantedPose(lay, groundY) {
+  const foot = { x: lay.leadTo, y: groundY };
+  return poseFromRing({ x: foot.x, y: foot.y - RING * lay.zoom }, 0, lay);
 }
 
 function poseFromRing(ring, lean, lay) {
@@ -179,13 +183,6 @@ function poseFromRing(ring, lean, lay) {
   };
 }
 
-/** How far past upright the pole is (degrees, negative: its top ahead of its foot) `since` ms after the foot landed: it swings out once, a little, and
- *  settles back, never again past upright (a single rise and fall, no ringing). */
-export function landingLean(since) {
-  const k = Math.max(0, since) / OVERSHOOT_MS;
-  return -OVERSHOOT_DEGREES * k * Math.exp(1 - k) + 0;   // (+ 0 keeps the instant of landing a plain zero)
-}
-
 /** How far each slat of the down counter has slid (0 to 1) when the counter has turned `progress` of the way: every other slat leads, the ones
  *  between follow once it is done, so halfway there the panel reads 1, 4, 1, 4 down its height. */
 export function slatOffsets(progress, slats) {
@@ -193,12 +190,12 @@ export function slatOffsets(progress, slats) {
   return Array.from({ length: slats }, (_, index) => (index % 2 === 1 ? smooth(clamp01(turned / 0.5)) : smooth(clamp01((turned - 0.5) / 0.5))));
 }
 
-/** The down counter is 168 units tall: a 104-unit marker on a long 64-unit pole. */
-export const COUNTER_TALL = 168;
+/** The down counter is 138 units tall: a 104-unit marker on a 34-unit pole. */
+export const COUNTER_TALL = 138;
 
 /** Where the down counter stands: well to the right of the ball, small for being far away, with its pole planted just off the field, on the sideline. */
 export function counterSpot(lay, headerHeight) {
   const ground = headerHeight - TURF;
-  const scale = Math.min(0.36, (ground - 3) / COUNTER_TALL);
+  const scale = Math.min(0.5, (ground - 3) / COUNTER_TALL);
   return { x: lay.leadTo + lay.yard * 0.42, ground, scale };
 }

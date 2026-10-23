@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Pull to refresh: the chain is stretched first, the foot is planted and stays
+
+- Decision: the pole no longer starts with the chain taut. It is drawn out leaning, at one height, with the chain slack in humps on the turf, until the chain is stretched to its full length (one slight boing, `chainTwang`); only then does it drop, straightening, and land with the dust. The foot, once planted, does not squash, bounce or swing: the pole stands upright and still. The down counter is a little larger (shorter post). Supersedes the 2026-10-21 rules that the chain is taut throughout and that the pole swings once past upright.
+- Why: owner feedback after using it: the first motion should read as stretching a chain, and the old landing bounced off the ground and hovered.
+
 ## 2026-10-21 - Source-text tests, stage 2 (third slice): Grading route, season ladder, Bowl Pool entry rules
 
 - Decision: the Grading dashboard's route is run against a scripted database (`grading-dashboard-route.test.mjs`: refused before any read unless Commissioner; the answer carries every field the dashboard draws; every worker's latest run is read), the season ladder's paging is run (`season-ladder-loader.test.mjs`), and the Bowl Pool's entry rules run through the real submit route (`bowl-pool-entry-rules.test.mjs`: entry and opt-out close at the first kickoff, a seat holder can still pick open games, a kicked-off game is never saved, a pick must be one of the game's teams). The Bowl Pool's player flow is a browser test (`bowl-flow.visual.spec.ts`: claim a seat, choose, submit, opt out). Their text twins were deleted. Each test was mutation-checked.
