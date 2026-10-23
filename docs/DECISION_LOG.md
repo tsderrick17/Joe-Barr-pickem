@@ -9,6 +9,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: `TROPHY_ROOM_PLAYER_OPENS_AT` is 2026-10-23T12:00Z, so every active player can open the Trophy Room (and sees its link in the name menu) from that time, for good; the Commissioner always could. Supersedes the plan to open it with the Bowl Pool on 2026-12-07.
 - Why: owner decision after the trophy, banners, tables, phone memory and speed work. The data is built once a minute for everyone (decision of 2026-10-21), so the opening costs little CPU.
 
+## 2026-10-23 - Other Stats column labels are centred on one another
+
+- Decision: the column labels of the Other Stats heading (Player, the streaks, Wins, Losses, Hit rate, Pushes picked) are vertically centred on one another instead of sitting on a common bottom line. Refines the 2026-10-23 entry that bottom-aligned them.
+- Why: owner review on a phone: one-line labels beside three-line ones looked low.
+
 ## 2026-10-23 - Trophy Room: no places on Other Stats, A to Z by default, no visible heading over the trophies
 
 - Decision: the Other Stats table has no rank column or tie marks; it opens sorted A to Z by player name, the Player heading is a sort button (a second tap reverses), and choosing a column sorts by it. The Record table keeps its places. The "The trophies" heading above the turntable is no longer shown (it stays for screen readers).

@@ -696,9 +696,9 @@ html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.gradi
 .trophy-table tbody tr { border-top: 1px solid var(--club-line); }
 .trophy-table thead th { background: var(--club-forest); color: var(--sand-93); font: 700 .6rem/1.5 Arial, sans-serif; letter-spacing: .1em; padding-block: .85rem; text-transform: uppercase; }
 /* The headings breathe: a group heading sits well clear of the top and of its gold rule, and the column headings clear of the rule above them. */
-/* Every column label sits on the bottom row of the heading, Player and Rank with the rest, level with one another; the group headings above carry their rules. */
+/* Every column label is on the one row of the heading, Player with the rest, centred on one another vertically; the group headings above carry their rules. */
 .trophy-table thead tr:first-child th { padding-block: 1.05rem .5rem; }
-.trophy-table .trophy-subheads th { padding-block: .45rem .9rem; vertical-align: bottom; }
+.trophy-table .trophy-subheads th { padding-block: .45rem .9rem; vertical-align: middle; }
 .trophy-table .trophy-player-head { padding-left: .5rem; text-align: left; }
 /* Each group heading carries its own short gold rule, with a gap between neighbours so the two read as separate sections. */
 .trophy-table thead th[colspan] { padding-inline: .35rem; }
