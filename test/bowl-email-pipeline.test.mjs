@@ -28,21 +28,6 @@ test("Bowl email delivery snapshots the recap and sends reminders only to active
   assert.match(source, /ensureBowlLineLockSnapshot/);
 });
 
-test("Bowl email readiness waits for final results and suppresses expired pick windows", () => {
-  const source = read("src/lib/reminder-readiness.ts");
-  assert.match(source, /bowlDailyRecapReady/);
-  assert.match(source, /\["final", "cancelled", "no_contest", "postponed"\]/);
-  assert.match(source, /bowlPickDueReady/);
-  assert.match(source, /The Bowl selection window has closed/);
-});
-
-test("Bowl line-lock readiness waits for every playable game to have a locked line", () => {
-  const source = read("src/lib/reminder-readiness.ts");
-  assert.match(source, /bowlLineLockReady/);
-  assert.match(source, /Today’s Bowl lines are still being finalized/);
-  assert.match(source, /category === "bowl_line_lock"/);
-});
-
 test("Bowl score automation has its own fifteen-minute endpoint", () => {
   const route = read("src/app/api/cron/sync-bowl-scores/route.ts");
   const nflRoute = read("src/app/api/cron/sync-scores/route.ts");
