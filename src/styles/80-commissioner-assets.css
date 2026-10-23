@@ -239,7 +239,6 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
   --marker: oklch(0.7 0.2 48);
   --steel: oklch(0.84 0.01 250);
   --iron: oklch(0.2 0.005 260);
-  --iron-hi: oklch(0.5 0.01 260);
   --turf: oklch(0.5 0.12 150);
   --leather: oklch(0.42 0.1 45);
   --chalk: oklch(0.95 0.01 90);
@@ -277,7 +276,6 @@ html.has-pull-refresh, html.has-pull-refresh body { overscroll-behavior-y: conta
 .pull-chain-chevron { fill: none; stroke: var(--gray-00); stroke-linejoin: miter; stroke-width: 1.1; }
 .pull-chain-chevron-white { fill: none; stroke: var(--chalk); stroke-linejoin: miter; stroke-width: 1.1; }
 .pull-chain-iron { fill: var(--iron); }
-.pull-chain-iron-hi { fill: var(--iron-hi); }
 .pull-chain-clasp { fill: var(--steel); }
 .pull-chain-link { fill: none; stroke: var(--steel); stroke-width: 1.1; }
 .pull-chain-link-edge { fill: var(--steel); }

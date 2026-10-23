@@ -31,8 +31,8 @@ as superseded and records the current contract rather than rewriting history.
 
 ## 2026-10-23 - The refresh pole's foot is a black cuff, post and small flange
 
-- Decision: the foot of the first-down pole is drawn after the real marker: a black cuff where the orange banner ends, a narrow black post, and a small flat flange at the bottom, with a steel clasp where the chain is fastened. It replaces the single grey rubber stopper. The spotted football is unchanged (an attempt to redraw it with pebbled leather and a seam was rejected as worse).
-- Why: owner request, with a photo of the real marker as the reference; the first flange was too wide, and the round bolt on the post was dropped.
+- Decision: the foot of the first-down pole is drawn after the real marker: a black cuff where the orange banner ends, a narrow black post, and a small flat flange at the bottom, with a steel clasp where the chain is fastened (plain black, no highlight). It replaces the single grey rubber stopper. The spotted football is unchanged (an attempt to redraw it with pebbled leather and a seam was rejected as worse).
+- Why: owner request, with a photo of the real marker as the reference; the first flange was too wide, and the round bolt and the shine on the post were dropped.
 
 ## 2026-10-23 - The refresh chain runs ten yards back, and the flag is clipped to the pole
 
