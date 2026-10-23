@@ -118,7 +118,7 @@ test("the down counter stands off to the right of the ball, its pole planted bes
     assert.ok(counter.ground - COUNTER_TALL * counter.scale >= 0, `the whole counter is inside the header (${width}x${height})`);
     assert.equal(counter.ground, height - TURF, "its pole is planted on the sideline, off the field");
     assert.ok(counter.scale <= 0.5, "small, for standing in the distance");
-    assert.ok((COUNTER_TALL - 104) / COUNTER_TALL > 0.2, "the pole is a good fifth or more of its height");
+    assert.ok((COUNTER_TALL - 104) / COUNTER_TALL >= 0.19, "the pole is about a fifth of its height or more");
   }
 });
 

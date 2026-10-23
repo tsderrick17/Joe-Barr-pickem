@@ -90,7 +90,9 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
   };
   const count = Math.max(2, Math.round(chainLength / (LINK_PITCH * linkZoom)));
   const links = Array.from({ length: count }, (_, index) => ({ ...at(((index + 0.5) / count) * total), edge: index % 2 === 1 }));
-  return { links, clip: at(total / 2), slack, taut };
+  // the flag hangs from the middle of a face-on link near the middle of the chain
+  const middle = links.filter((link) => !link.edge).reduce((best, link) => (Math.abs(link.x - at(total / 2).x) < Math.abs(best.x - at(total / 2).x) ? link : best));
+  return { links, clip: { x: middle.x, y: middle.y, angle: middle.angle }, slack, taut };
 }
 
 /**
@@ -196,12 +198,12 @@ export function slatOffsets(progress, slats) {
   return Array.from({ length: slats }, (_, index) => (index % 2 === 1 ? smooth(clamp01(turned / 0.5)) : smooth(clamp01((turned - 0.5) / 0.5))));
 }
 
-/** The down counter is 138 units tall: a 104-unit marker on a 34-unit pole. */
-export const COUNTER_TALL = 138;
+/** The down counter is 130 units tall: a 104-unit marker on a 26-unit pole. */
+export const COUNTER_TALL = 130;
 
 /** Where the down counter stands: well to the right of the ball, small for being far away, with its pole planted just off the field, on the sideline. */
 export function counterSpot(lay, headerHeight) {
   const ground = headerHeight - TURF;
-  const scale = Math.min(0.5, (ground - 3) / COUNTER_TALL);
+  const scale = Math.min(0.5, (ground - 1.5) / COUNTER_TALL);
   return { x: lay.leadTo + lay.yard * 0.42, ground, scale };
 }

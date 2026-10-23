@@ -133,10 +133,10 @@ export default function PullChainScene({ width, height, progress, landed, since,
       {marks.hashes.map((x) => <path className="pull-chain-hash" d={`M${x} ${turfTop + 2}v5M${x} ${height - 5}v5`} key={`h${x}`} />)}
       <DownCounter ground={counter.ground} progress={stages.counter} scale={counter.scale} x={counter.x} />
       <Ball spot={ballSpot(lay, height)} />
+      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={5.2 * lay.linkZoom} rx={0.5} width={2.2 * lay.linkZoom} x={clip.x - 1.1 * lay.linkZoom} y={clip.y} /> : null}
       {shown.map((link, index) => (
         <ellipse className={link.edge ? "pull-chain-link-edge" : "pull-chain-link"} cx={link.x} cy={link.y} key={index} rx={linkW} ry={link.edge ? linkH * 0.47 : linkH} transform={`rotate(${link.angle} ${link.x} ${link.y})`} />
       ))}
-      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={5.4 * lay.linkZoom} rx={0.5} width={2.2 * lay.linkZoom} x={clip.x - 1.1 * lay.linkZoom} y={clip.y - 1.5 * lay.linkZoom} transform={`rotate(${clip.angle} ${clip.x} ${clip.y})`} /> : null}
       <Rod tilt={-pose.lean} x={pose.top.x} y={pose.top.y} zoom={lay.zoom} />
       {landed && dust < 1 ? (
         <g className="pull-chain-dust" opacity={0.55 * (1 - dust)}>
