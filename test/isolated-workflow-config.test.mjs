@@ -28,7 +28,7 @@ test("Dependabot checks both application packages and GitHub Actions weekly", ()
 
 test("the isolated workflow keeps the Supabase CLI's container images, keyed on the CLI version it installs", async () => {
   const integration = await readFile(new URL("../.github/workflows/isolated-integration.yml", import.meta.url), "utf8");
-  const version = integration.match(/supabase\/setup-cli@v2\s+with:\s+version: ([\d.]+)/)?.[1];
+  const version = integration.match(/supabase\/setup-cli@v\d+\s+with:\s+version: ([\d.]+)/)?.[1];
   assert.ok(version, "the CLI version is pinned");
   const keys = [...integration.matchAll(/key: supabase-cli-images-([\d.]+)/g)].map((match) => match[1]);
   assert.equal(keys.length, 2, "restored and saved under the same key");
