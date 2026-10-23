@@ -140,13 +140,8 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
       c.textAlign = "center"; c.lineWidth = 2.2; c.strokeStyle = "#2a1405"; c.strokeText(name, WIDTH / 2, nameY);
       c.fillStyle = "#fbe7a1"; c.fillText(name, WIDTH / 2, nameY);
       c.font = "12px Georgia, serif"; c.fillStyle = "#f8e29a"; c.fillText("★", WIDTH / 2, nameY + 21);
-      // the years: the name's own serif in bold, a little larger than the old block capitals, each between two small gold diamonds
-      c.font = `700 34px ${cormorant}`;
-      lettered.forEach((year, i) => {
-        const y = yearY + 22 + i * YEAR_ROW;
-        spaced(year, y + 1, 3.2, "#fff3cf", { color: "#2a1405", width: 2.6 });
-        for (const side of [-1, 1]) { const x = WIDTH / 2 + side * 41; c.fillStyle = "#e6c46e"; c.beginPath(); c.moveTo(x, y - 7); c.lineTo(x + 3, y - 4); c.lineTo(x, y - 1); c.lineTo(x - 3, y - 4); c.closePath(); c.fill(); }
-      });
+      c.font = `23px ${graduate}`;
+      lettered.forEach((year, i) => spaced(year, yearY + 22 + i * YEAR_ROW, 1.5, "#fff6d8", { color: "#1d0a05", width: 2.2 }));
 
       const hardware = layer();
       fixtures = hardware.made;

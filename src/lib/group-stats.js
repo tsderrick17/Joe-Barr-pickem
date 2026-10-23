@@ -128,10 +128,10 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
 
 /**
  * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
- * { longest, current, endedAt }. Only the periods and picks are needed.
+ * { longest, current, endedAt }; the 2-0 streak also carries `total`, how many perfect (2-0) weeks the player has had in all. Only the periods and picks are needed.
  * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
  * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string> }} input
- * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
+ * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null, total: number }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
  */
 export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set() }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
@@ -140,7 +140,7 @@ export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new 
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
   return new Map([...weeksByPlayer].map(([playerId, weeks]) => {
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return [playerId, { sweeps: summary(runs(weeks, (week) => week.wins === 2)), noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
   }));
 }
 
@@ -173,7 +173,7 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
 
   const streakRows = [...weeksByPlayer].map(([playerId, weeks]) => {
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return { playerId, name: nameById.get(playerId) ?? "Former player", weeks: weeks.length, sweeps: runs(weeks, (week) => week.wins === 2), noDonut: runs(weeks, (week) => week.wins > 0) };
+    return { playerId, name: nameById.get(playerId) ?? "Former player", weeks: weeks.length, perfectWeeks: weeks.filter((week) => week.wins === 2).length, sweeps: runs(weeks, (week) => week.wins === 2), noDonut: runs(weeks, (week) => week.wins > 0) };
   });
   // Each player's own full set: the same record, histogram, streaks and splits from just their picks.
   const picksByPlayer = new Map();
@@ -186,7 +186,7 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
       name: nameById.get(playerId) ?? "Former player",
       ...recordsFor(picksByPlayer.get(playerId) ?? [], lookups),
       weeks: histogramOf(weeksByPlayer.get(playerId) ?? []),
-      streaks: { sweeps: summary(streaksByPlayer.get(playerId)?.sweeps), noDonut: summary(streaksByPlayer.get(playerId)?.noDonut) },
+      streaks: { sweeps: { ...summary(streaksByPlayer.get(playerId)?.sweeps), total: streaksByPlayer.get(playerId)?.perfectWeeks ?? 0 }, noDonut: summary(streaksByPlayer.get(playerId)?.noDonut) },
     }))
     .filter((player) => player.graded > 0 || player.weeks.total > 0)
     .sort((a, b) => a.name.localeCompare(b.name));

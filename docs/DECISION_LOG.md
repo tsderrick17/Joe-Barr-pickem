@@ -6,7 +6,7 @@ as superseded and records the current contract rather than rewriting history.
 
 ## 2026-10-23 - Trophy Room polish before it opens to players
 
-- Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder, and its years are set in the name's serif in bold between small gold diamonds; Consecutive Donut Free Weeks is now Weeks in a Row With a Win; the Record table gains a sortable Titles column (Pick'em championships; the table stays Pick'em only, so Survivor and Bowl Pool titles are not counted in it).
+- Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder (the years keep their lettering); Consecutive Donut Free Weeks is now Shutout Free Streak and Consecutive 2-0 Weeks is now Perfect Weeks in a Row; the Record table gains a sortable Perfect Weeks column, the count of 2-0 weeks in all, as its last column (`streaks.sweeps.total`).
 - Why: owner review ahead of opening the Trophy Room to every player.
 
 ## 2026-10-23 - Pull to refresh: the chain is stretched first, the foot is planted and stays
