@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Other Stats: Player and Rank sit on the label row
+
+- Decision: in the Other Stats heading the group headings (with their gold rules) have a row to themselves, and Player and Rank are in the row of column labels with everything else, all bottom-aligned, instead of spanning both rows and floating between them.
+- Why: owner review on a phone: Player sat in the middle of the heading, level with nothing.
+
 ## 2026-10-23 - Trophy Room polish before it opens to players
 
 - Decision: the Other Stats headings have more room; the spin arrows are more visible (darker disc, brighter outline, 80% opacity); a banner's title (PICK'EM CHAMPION and the others) always wraps onto two lines and is larger and bolder (the years keep their lettering); Consecutive Donut Free Weeks is now Shutout Free Streak and Consecutive 2-0 Weeks is now Perfect Weeks in a Row; the Record table gains a sortable Perfect Weeks column, the count of 2-0 weeks in all, as its last column (`streaks.sweeps.total`).

@@ -131,11 +131,12 @@ export default function TrophyRoomPage() {
                   {view === "record" ? (
                     <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}{header("perfect", "Perfect Weeks", 1)}</tr>
                   ) : <>
-                    <tr>
-                      <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" rowSpan={2} scope="col">Player</th>
+                    <tr className="trophy-groups">
+                      <th aria-hidden="true" /><th aria-hidden="true" />
                       <th colSpan={2} scope="colgroup"><span className="trophy-group">Regular Season Streaks</span></th><th colSpan={3} scope="colgroup"><span className="trophy-group">Decided by a half point</span></th><th aria-hidden="true" />
                     </tr>
                     <tr className="trophy-subheads">
+                      <th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>
                       {header("donut", <>Shutout Free <br />Streak</>, 1)}{header("sweeps", <>Perfect Weeks <br />in a Row</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
                     </tr>
                   </>}

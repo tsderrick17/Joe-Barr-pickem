@@ -281,7 +281,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
     await page.getByRole("button", { name: "Other Stats" }).click();
-    await expect(table.locator("thead th")).toHaveText(["Rank", "Player", "Regular Season Streaks", "Decided by a half point", "", "Shutout Free Streak ▼", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    await expect(table.locator("thead th")).toHaveText(["", "", "Regular Season Streaks", "Decided by a half point", "", "Rank", "Player", "Shutout Free Streak ▼", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
     const rankOf = async (name: string) => (await table.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name, exact: true }) }).locator(".trophy-rank").innerText()).replace(/\s+/g, "");
     expect(await rankOf("Tyler")).toBe("1");
     expect(await rankOf("Ron")).toBe("T5");
