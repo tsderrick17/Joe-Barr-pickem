@@ -21,16 +21,17 @@ const LINK_ZOOM = 2.4;               // the same for chain links
 const LINK_PITCH = 4.4;              // link spacing, in link units
 const FLOOR = 2.2;                   // how high a link lying on the turf sits above the ground line (link units)
 const HEAP_CAP = 4.6;                // the tallest hump of slack chain lying on the turf (link units)
+const CHAIN_YARDS = 10;              // a first-down chain is ten yards long: its far pole stands that far behind the lead pole, far off the page to the left
 const BALL = { length: 44, height: 24 };   // px: about 1.8 long to 1 across, a full-bodied football
 const NOSE_INCHES = 2.5;             // how far the ball's nose is past the pole's far edge: a couple of inches
 
 const lerp = (from, to, amount) => from + (to - from) * amount;
 
-/** Where everything stands for a page this wide: three yards across, the lead pole planted toward the right, the chain ten yards long. */
+/** Where everything stands for a page this wide: three yards across, the lead pole planted toward the right, the chain's fixed end ten yards behind it. */
 export function layout(width) {
   const yard = width / 3;
   const leadTo = Math.round(width * 0.74);
-  return { width, yard, inch: yard / 36, leadTo, anchorX: -8, zoom: ZOOM, linkZoom: LINK_ZOOM };
+  return { width, yard, inch: yard / 36, leadTo, anchorX: leadTo - CHAIN_YARDS * yard, zoom: ZOOM, linkZoom: LINK_ZOOM };
 }
 
 /** The whole height of a drawn pole, foot included, in px: far taller than the header, whose top it is cropped by. */
@@ -43,10 +44,10 @@ export const groundOf = (headerHeight) => headerHeight - 3;
  * The chain as a line of links, plus the spot for the clip at its middle. It lies on the turf, paying out from a heap far off to the left: the
  * part still on the ground lies in tight humps (more slack, more humps, never taller than a few pixels), and the rest runs straight from where
  * it leaves the turf up to the lead pole's ring. As the pole moves out the slack is used up and the lifted part grows until the chain is a
- * straight, taut line. `twang` (px) bows the taut chain like a plucked string.
+ * straight, taut line. `twang` (px) bows the taut chain like a plucked string. `clipBack` (px) is how far back along the chain from the lead pole the flag hangs.
  * @returns {{ links: { x: number, y: number, angle: number, edge: boolean }[], clip: { x: number, y: number, angle: number }, slack: number, taut: boolean }}
  */
-export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOOM, twang = 0 }) {
+export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOOM, twang = 0, clipBack = 120 }) {
   const floorY = groundY - FLOOR * linkZoom;
   const height = Math.max(0, floorY - to.y);
   const through = (leaves) => (leaves - from.x) + Math.hypot(to.x - leaves, height);   // chain used if it leaves the turf at x = leaves
@@ -90,8 +91,9 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
   };
   const count = Math.max(2, Math.round(chainLength / (LINK_PITCH * linkZoom)));
   const links = Array.from({ length: count }, (_, index) => ({ ...at(((index + 0.5) / count) * total), edge: index % 2 === 1 }));
-  // the flag hangs from the middle of a face-on link near the middle of the chain
-  const middle = links.filter((link) => !link.edge).reduce((best, link) => (Math.abs(link.x - at(total / 2).x) < Math.abs(best.x - at(total / 2).x) ? link : best));
+  // the flag hangs from the middle of a face-on link, the one nearest a spot a little way back from the lead pole (the true middle of the chain is yards off the page)
+  const spot = at(Math.max(0, total - clipBack));
+  const middle = links.filter((link) => !link.edge).reduce((best, link) => (Math.abs(link.x - spot.x) < Math.abs(best.x - spot.x) ? link : best));
   return { links, clip: { x: middle.x, y: middle.y, angle: middle.angle }, slack, taut };
 }
 
@@ -128,10 +130,10 @@ export function fieldMarks(lay) {
 
 /** How far through the pull (0 to 1) the foot lands and the dust puffs; the counter turns over the rest. */
 export const PUFF_AT = 0.5;
-const CHAIN_START_DEGREES = 8;       // the chain's angle above the ground when the pole first comes into view
+const CHAIN_START_DEGREES = 2;       // the chain's angle above the ground where the drop begins: ten yards of chain climb gently, not steeply
 const LEAN_START_DEGREES = 22;       // how far the pole leans, its foot leading, as it first comes in
 const STRETCH_END = 0.5;             // how much of the descent is spent drawing the slack chain out (the rest is the drop)
-const START_OUT = 0.5;               // how far out the pole starts, as a fraction of its full-stretch distance, with the chain slack
+const START_OUT = 0.35;              // how far out the pole starts, as a fraction of the way from the page's left edge to the ball, with the chain slack
 const TWANG_PX = 2.2;                // the slightest boing of the chain as it comes taut: how far it bows at first
 const TWANG_MS = 85;                 // one wobble of it
 
@@ -162,7 +164,8 @@ export function descentPose(descent, lay, groundY) {
   const anchor = chainAnchor(lay, groundY), reach = chainReach(lay);
   const stretch = smooth(clamp01(descent / STRETCH_END)), drop = clamp01((descent - STRETCH_END) / (1 - STRETCH_END));
   const angle = (CHAIN_START_DEGREES * (1 - drop) * Math.PI) / 180;
-  const outward = lerp(START_OUT, 1, stretch);
+  const startOut = (lay.leadTo * START_OUT - anchor.x) / (reach * Math.cos((CHAIN_START_DEGREES * Math.PI) / 180));   // the pole comes in at a visible spot, not ten yards back
+  const outward = lerp(startOut, 1, stretch);
   const ring = { x: anchor.x + reach * Math.cos(angle) * outward, y: anchor.y - reach * Math.sin(angle) };
   const lean = LEAN_START_DEGREES * (1 - smooth(drop));
   return poseFromRing(ring, lean, lay);

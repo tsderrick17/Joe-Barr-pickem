@@ -19,6 +19,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the per-active-player cost in `src/lib/vercel-usage-estimate.js` goes from 22 to 18.3 seconds a day so the model reproduces Vercel's meter, 2 h 55 m for the 30 days ending 2026-10-23 with 11 active players (the background jobs are unchanged at about 2.5 minutes a day).
 - Why: the dashboard still read higher than Vercel after the 2026-10-19 calibration (3 h 16 m); the meter keeps falling as polling has slowed. The Trophy Room opened to players on 2026-10-23: its data is built once a minute for everyone, so watch the meter over the next weeks and recalibrate if it moves.
 
+## 2026-10-23 - The refresh chain runs ten yards back, and the flag is clipped to the pole
+
+- Decision: the chain's fixed end is ten yards behind the lead pole (it was a few pixels off the left edge), so the chain climbs at about 2 degrees instead of 8 and the pole first shows about a third of the way across. The flag hangs on a link a little way back from the lead pole (the true middle of a ten-yard chain is off the page). The chevrons on the orange banner are clipped to the banner's outline, so they can no longer poke past its edges.
+- Why: owner feedback. A real chain is ten yards long and the picture is zoomed in on its last three, so the far end is yards away and the slope must be shallow. The chevrons' stroke and mitred corners overshot the tapering banner by a hair.
+
 ## 2026-10-23 - The Trophy Room opens to every player
 
 - Decision: `TROPHY_ROOM_PLAYER_OPENS_AT` is 2026-10-23T12:00Z, so every active player can open the Trophy Room (and sees its link in the name menu) from that time, for good; the Commissioner always could. Supersedes the plan to open it with the Bowl Pool on 2026-12-07.
