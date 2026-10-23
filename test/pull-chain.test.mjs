@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { COUNTER_TALL, PUFF_AT, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
+import { COUNTER_TALL, PUFF_AT, STRETCH_END, chainTwang, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, FOOT, groundOf, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
 
 const HEIGHT = 60, GROUND = groundOf(HEIGHT);
 const PHONE = layout(390);
@@ -34,58 +34,61 @@ test("a pull has two stages: the pole comes down for the first half, then the co
   assert.ok(Math.abs(pullStages(0.75).counter - 0.5) < 1e-9 && pullStages(0.75).descent === 1, "and the pole stays down while the counter turns");
 });
 
-test("the chain is always straight and taut, rising about 15 degrees at the start and lying flat when the foot lands, and its reach grows as it lowers", () => {
+test("the chain starts slack on the ground, is drawn out until it is stretched to its full length, and from then on stays taut, falling flat as the foot lands", () => {
   const anchor = chainAnchor(PHONE, GROUND), reach = chainReach(PHONE);
-  let previousReach = 0, previousHeight = Infinity;
-  for (const descent of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
-    const { pose, links } = chainAt(descent);
-    const length = Math.hypot(pose.ring.x - anchor.x, pose.ring.y - anchor.y);
-    assert.ok(Math.abs(length - reach) < 1e-6, `the chain keeps its length at ${descent}: the ring turns about the fixed end`);
-    const slope = (pose.ring.y - anchor.y) / (pose.ring.x - anchor.x);
-    for (const link of links) assert.ok(Math.abs(link.y - (anchor.y + slope * (link.x - anchor.x))) < 1e-6, "every link on the straight line (taut: no slack, nothing dragging)");
-    const horizontal = pose.ring.x - anchor.x, height = anchor.y - pose.ring.y;
-    assert.ok(horizontal > previousReach, "the reach grows as the pole lowers");
-    assert.ok(height < previousHeight, "and the ring comes down");
-    previousReach = horizontal; previousHeight = height;
+  const lengthAt = (descent) => { const { pose } = chainAt(descent); return Math.hypot(pose.ring.x - anchor.x, pose.ring.y - anchor.y); };
+  const slackAt = (descent) => chainAt(descent).slack;
+  assert.ok(slackAt(0) > 0.2 * reach, `it begins with slack, not taut (${slackAt(0).toFixed(0)} px of slack)`);
+  assert.equal(chainAt(0).taut, false);
+  let previous = Infinity;
+  for (const descent of [0, 0.1, 0.2, 0.3, 0.4, STRETCH_END]) {
+    assert.ok(slackAt(descent) <= previous + 1e-6, "drawing it out only ever uses up slack");
+    previous = slackAt(descent);
   }
-  const start = chainAt(0).pose.ring;
-  const degrees = (Math.atan2(anchor.y - start.y, start.x - anchor.x) * 180) / Math.PI;
-  assert.ok(Math.abs(degrees - 15) < 0.01, `rising 15 degrees at the start (${degrees.toFixed(2)})`);
-  assert.ok(start.x < PHONE.leadTo - 5, "the ring hangs short of the ball, and above it");
+  assert.ok(Math.abs(lengthAt(STRETCH_END) - reach) < 1e-6 && chainAt(STRETCH_END).taut, "fully stretched exactly when the pull-out ends");
+  for (const descent of [STRETCH_END, 0.6, 0.7, 0.8, 0.9, 1]) {
+    const { pose, links } = chainAt(descent);
+    assert.ok(Math.abs(lengthAt(descent) - reach) < 1e-6, `the chain keeps its full length at ${descent}: the ring turns about the fixed end`);
+    const slope = (pose.ring.y - anchor.y) / (pose.ring.x - anchor.x);
+    for (const link of links) assert.ok(Math.abs(link.y - (anchor.y + slope * (link.x - anchor.x))) < 1e-6, "straight and taut once stretched");
+  }
+  const degrees = (descent) => { const ring = chainAt(descent).pose.ring; return (Math.atan2(anchor.y - ring.y, ring.x - anchor.x) * 180) / Math.PI; };
+  assert.ok(Math.abs(degrees(STRETCH_END) - 8) < 0.01, `rising 8 degrees where the drop begins (${degrees(STRETCH_END).toFixed(2)})`);
   const end = chainAt(1).pose.ring;
   assert.ok(Math.abs(end.y - anchor.y) < 1e-9 && Math.abs(end.x - PHONE.leadTo) < 1e-9, "flat, and the ring arrives at the ball only as the foot lands");
 });
 
-test("the pole comes in foot first from above the header, straightening as it lowers, and lands exactly at the ball, upright", () => {
-  const start = descentPose(0, PHONE, GROUND), middle = descentPose(0.5, PHONE, GROUND), end = descentPose(1, PHONE, GROUND);
-  assert.ok(start.foot.y <= 1, "at the start even the foot is at or above the top edge of the header: it comes in from above");
+test("the chain gives one slight boing the moment it is stretched, which dies away", () => {
+  assert.equal(chainTwang(0), 0, "no bow before it comes taut");
+  let biggest = 0, lastBig = 0;
+  for (let since = 1; since <= 1500; since += 1) { const bow = Math.abs(chainTwang(since)); biggest = Math.max(biggest, bow); if (bow > 0.3) lastBig = since; }
+  assert.ok(biggest > 1 && biggest < 3, `slight (${biggest.toFixed(2)} px at most)`);
+  assert.ok(lastBig < 600, `and gone within a moment (${lastBig} ms)`);
+  assert.ok(Math.abs(chainTwang(3000)) < 0.01);
+});
+
+test("the pole comes in foot first from above the header, keeps its lean while the chain is drawn out, then straightens as it drops and lands exactly at the ball, upright", () => {
+  const start = descentPose(0, PHONE, GROUND), pulled = descentPose(STRETCH_END, PHONE, GROUND), middle = descentPose(0.75, PHONE, GROUND), end = descentPose(1, PHONE, GROUND);
   assert.ok(start.lean > 15 && start.foot.x > start.top.x, "leaning, the foot ahead of the top");
-  assert.ok(start.lean > middle.lean && middle.lean > end.lean, "straightening as it lowers, not afterwards");
-  for (const [a, b] of [[0, 0.25], [0.25, 0.5], [0.5, 0.75], [0.75, 1]]) assert.ok(descentPose(b, PHONE, GROUND).foot.y > descentPose(a, PHONE, GROUND).foot.y, "the foot only ever goes down");
+  assert.ok(start.foot.y > 0 && start.foot.y < GROUND, "and while the chain is drawn out the foot is inside the header, where it can be seen");
+  for (const descent of [0, 0.1, 0.25, 0.4, STRETCH_END]) {
+    const pose = descentPose(descent, PHONE, GROUND);
+    assert.equal(pose.lean, start.lean, "the original lean is held until the chain is fully stretched");
+    assert.ok(Math.abs(pose.foot.y - start.foot.y) < 1e-9, "the pole is drawn outward at one height");
+  }
+  assert.ok(pulled.foot.x > start.foot.x + 40, "pulled out a good way to stretch the chain");
+  assert.ok(pulled.lean > middle.lean && middle.lean > end.lean, "straightening as it drops");
+  for (const [a, b] of [[STRETCH_END, 0.625], [0.625, 0.75], [0.75, 0.875], [0.875, 1]]) assert.ok(descentPose(b, PHONE, GROUND).foot.y > descentPose(a, PHONE, GROUND).foot.y, "once the drop begins the foot only ever goes down");
   assert.ok(Math.abs(end.lean) < 1e-9, "upright when it lands");
   assert.ok(Math.abs(end.foot.x - PHONE.leadTo) < 1e-9 && Math.abs(end.foot.y - GROUND) < 1e-9, "its foot is on the ground at the ball");
 });
 
-test("the landing: the pole swings once a little past upright and settles, the foot never moves, and the foot is squashed at contact and eases back up", () => {
-  assert.equal(landingLean(0), 0, "upright at the instant of landing");
-  let farthest = 0, previous = 0, turned = false;
-  for (let since = 5; since <= 2000; since += 5) {
-    const lean = landingLean(since);
-    assert.ok(lean <= 1e-12, "only ever past upright (its top ahead), never swaying back the other way");
-    if (Math.abs(lean) > Math.abs(farthest)) farthest = lean;
-    if (Math.abs(lean) < Math.abs(previous)) turned = true;
-    else assert.ok(!turned, `one swing out and one swing back (${since} ms)`);
-    previous = lean;
-  }
-  assert.ok(farthest < -2 && farthest > -4, `a tad, not a lurch (${farthest.toFixed(2)} degrees)`);
-  assert.ok(Math.abs(landingLean(3000)) < 0.01, "and it settles");
-  for (const since of [0, 40, 130, 400, 1500]) {
-    const pose = plantedPose(landingLean(since), PHONE, GROUND);
-    assert.ok(Math.abs(pose.foot.x - PHONE.leadTo) < 1e-9 && Math.abs(pose.foot.y - GROUND) < 1e-9, `the foot has not moved ${since} ms after landing`);
-  }
-  assert.ok(Math.abs(footSquash(0) - 0.6) < 1e-9 && Math.abs(footSquash(3000) - 1) < 1e-3);
-  let before = footSquash(0);
-  for (let since = 5; since <= 1500; since += 5) { const now = footSquash(since); assert.ok(now >= before - 1e-12 && now <= 1); before = now; }
+test("the landing: the foot is planted exactly where it came down and stays there, with no bounce, no squash and no swing", () => {
+  const landed = plantedPose(PHONE, GROUND), arrival = descentPose(1, PHONE, GROUND);
+  assert.deepEqual(landed.foot, { x: PHONE.leadTo, y: GROUND });
+  assert.equal(landed.lean, 0);
+  assert.ok(Math.abs(landed.foot.x - arrival.foot.x) < 1e-9 && Math.abs(landed.foot.y - arrival.foot.y) < 1e-9, "the same place the drop arrived at");
+  assert.ok(Math.abs(landed.top.x - arrival.top.x) < 1e-9 && Math.abs(landed.top.y - arrival.top.y) < 1e-9, "and the same upright pole: nothing jumps at the landing");
 });
 
 test("the links alternate face-on and edge-on, and there are always the same number", () => {
@@ -114,8 +117,8 @@ test("the down counter stands off to the right of the ball, its pole planted bes
     assert.ok(counter.x + 38 * counter.scale < width, "inside the page");
     assert.ok(counter.ground - COUNTER_TALL * counter.scale >= 0, `the whole counter is inside the header (${width}x${height})`);
     assert.equal(counter.ground, height - TURF, "its pole is planted on the sideline, off the field");
-    assert.ok(counter.scale <= 0.36, "small, for standing in the distance");
-    assert.ok((COUNTER_TALL - 104) / COUNTER_TALL > 0.35, "the pole is more than a third of its height");
+    assert.ok(counter.scale <= 0.5, "small, for standing in the distance");
+    assert.ok((COUNTER_TALL - 104) / COUNTER_TALL >= 0.19, "the pole is about a fifth of its height or more");
   }
 });
 

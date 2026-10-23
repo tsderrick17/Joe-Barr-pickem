@@ -1,12 +1,12 @@
 import { useId } from "react";
-import { ballSpot, chainAnchor, chainLinks, chainReach, COUNTER_TALL, counterSpot, descentPose, fieldMarks, footSquash, FOOT, groundOf, landingLean, layout, plantedPose, POLE, pullStages, slatOffsets, TURF } from "@/lib/pull-chain.js";
+import { ballSpot, chainAnchor, chainLinks, chainReach, COUNTER_TALL, counterSpot, chainTwang, descentPose, fieldMarks, FOOT, groundOf, layout, plantedPose, POLE, pullStages, slatOffsets, TURF } from "@/lib/pull-chain.js";
 
 /**
  * The picture for pull to refresh: a first-down chain zoomed in on its last three yards, as wide as the page and no taller than the header. The
- * turf is a deep strip with hash marks; a football is spotted at the right; a down counter stands off in the distance beyond it; and the chain, always
- * taut, runs in from the left edge of the page to the lead pole, of which only the bottom third shows (its top is above the header). The pull has two
- * stages (see src/lib/pull-chain.js): the pole comes down foot first, straightening, and lands beside the ball with a puff of dust (it compresses,
- * then swings once a little past upright, for `since` ms); then the counter's slats slide up from 4 to 1. The ball is behind the pole, its nose poking
+ * turf is a deep strip with hash marks; a football is spotted at the right; a down counter stands off in the distance beyond it; and the chain runs in
+ * from the left edge of the page to the lead pole, of which only the bottom third shows (its top is above the header). The pull has two stages (see
+ * src/lib/pull-chain.js): the pole is drawn out with the chain slack on the turf until the chain is stretched (one slight boing), then comes down foot
+ * first, straightening, and is stamped beside the ball with a puff of dust, its foot staying exactly where it lands; then the counter's slats slide up from 4 to 1. The ball is behind the pole, its nose poking
  * out a couple of inches past the pole's foot: a first down. Pure: no state. */
 const DISC = 6.2;          // the round target on top of a rod
 const BANNER_TOP = 13;     // where the tapered banner starts under the disc
@@ -15,7 +15,7 @@ const CHEVRONS = 4;
 
 /** One first-down marker, as the chain crew carries it: a target disc on top, a long padded orange banner that tapers to the foot with
  *  black-and-white chevrons pointing down, and a black rubber foot that the chain is fastened to. */
-function Rod({ x, y, tilt = 0, squash = 1, zoom }: { x: number; y: number; tilt?: number; squash?: number; zoom: number }) {
+function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zoom: number }) {
   const rod = POLE;
   const half = (at: number) => (TOP_WIDTH + (BOTTOM_WIDTH - TOP_WIDTH) * ((at - BANNER_TOP) / (rod - BANNER_TOP))) / 2;
   const step = (rod - BANNER_TOP) / (CHEVRONS + 1);
@@ -36,7 +36,7 @@ function Rod({ x, y, tilt = 0, squash = 1, zoom }: { x: number; y: number; tilt?
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC} />
       <circle className="pull-chain-ring" cx={0} cy={DISC} r={DISC * 0.64} />
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC * 0.4} />
-      <path className="pull-chain-foot" d={`M-1.6 0H1.6L3.1 ${FOOT - 1.2}Q3.1 ${FOOT} 2 ${FOOT}H-2Q-3.1 ${FOOT} -3.1 ${FOOT - 1.2}Z`} transform={`translate(0 ${rod}) scale(1 ${squash})`} />
+      <path className="pull-chain-foot" d={`M-1.6 0H1.6L3.1 ${FOOT - 1.2}Q3.1 ${FOOT} 2 ${FOOT}H-2Q-3.1 ${FOOT} -3.1 ${FOOT - 1.2}Z`} transform={`translate(0 ${rod})`} />
     </g>
   );
 }
@@ -65,7 +65,7 @@ function Ball({ spot }: { spot: ReturnType<typeof ballSpot> }) {
 
 /** The down counter: a thick foam frame round a dark panel of horizontal slats that carry the digit. Each slat is a window on a little strip with its slice
  *  of the 4 above and its slice of the 1 below; sliding the strip up swaps one for the other, so a panel part-way through reads 1, 4, 1, 4 down its height. */
-const SLATS = 12, PANEL = { width: 60, height: 84 };
+const SLATS = 6, PANEL = { width: 60, height: 84 };
 const FOUR = "M36 6L50 6L50 50L58 50L58 64L50 64L50 78L34 78L34 64L4 64L4 52ZM34 24L34 50L17 50Z";
 const ONE = "M26 6L44 6L44 78L28 78L28 26L10 36L10 22Z";
 function DownCounter({ x, ground, scale, progress }: { x: number; ground: number; scale: number; progress: number }) {
@@ -98,16 +98,16 @@ function DownCounter({ x, ground, scale, progress }: { x: number; ground: number
   );
 }
 
-export default function PullChainScene({ width, height, progress, landed, since }: { width: number; height: number; progress: number; landed: boolean; since: number }) {
+export default function PullChainScene({ width, height, progress, landed, since, stretchedSince }: { width: number; height: number; progress: number; landed: boolean; since: number; stretchedSince: number | null }) {
   const lay = layout(width);
   const ground = groundOf(height);
   const stages = pullStages(progress);
-  const squash = landed ? footSquash(since) : 1;
-  const sink = (1 - squash) * FOOT * lay.zoom;   // the pole sinks as the rubber compresses, so the foot stays on the turf
-  // coming down it turns about its top; once landed it swings about its foot, which stays exactly where it touched down
-  const pose = landed ? plantedPose(landingLean(since), lay, ground, sink) : descentPose(stages.descent, lay, ground);
+  // coming down it turns about its top; once landed it stands upright with its foot exactly where it touched down, and stays there
+  const pose = landed ? plantedPose(lay, ground) : descentPose(stages.descent, lay, ground);
   const anchor = chainAnchor(lay, ground);
-  const { links, clip } = chainLinks(anchor, pose.ring, { chainLength: chainReach(lay), groundY: ground, linkZoom: lay.linkZoom });
+  // the slightest boing of the chain as it comes taut (a small wobble that dies away)
+  const twang = stretchedSince !== null && !landed ? chainTwang(stretchedSince) : 0;
+  const { links, clip } = chainLinks(anchor, pose.ring, { chainLength: chainReach(lay), groundY: ground, linkZoom: lay.linkZoom, twang });
   const dust = landed ? Math.min(1, since / 380) : 1;
   const marks = fieldMarks(lay);
   const turfTop = height - TURF;
@@ -117,6 +117,7 @@ export default function PullChainScene({ width, height, progress, landed, since 
   return (
     <svg aria-hidden="true" height={height} viewBox={`0 0 ${width} ${height}`} width={width}>
       <defs>
+        <linearGradient id="pull-chain-far" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#000" stopOpacity="0.28" /><stop offset="1" stopColor="#000" stopOpacity="0" /></linearGradient>
         <linearGradient id="pull-chain-leather" x1="0" x2="0" y1="0" y2="1">
           <stop className="pull-chain-leather-hi" offset="0" />
           <stop className="pull-chain-leather-mid" offset="0.55" />
@@ -124,16 +125,19 @@ export default function PullChainScene({ width, height, progress, landed, since 
         </linearGradient>
       </defs>
       <rect className="pull-chain-ground" height={TURF} width={width} y={turfTop} />
+      {marks.stripes.filter((stripe) => stripe.dark).map((stripe) => <rect className="pull-chain-stripe" height={TURF} key={`s${stripe.x}`} width={stripe.width} x={stripe.x} y={turfTop} />)}
+      <rect className="pull-chain-farshade" height={TURF} width={width} y={turfTop} />
       <rect className="pull-chain-sideline" height={2} width={width} y={turfTop} />
+      <rect className="pull-chain-sideline" height={2} width={width} y={height - 2} />
       {marks.lines.map((x) => <rect className="pull-chain-yardline" height={TURF - 2} key={`l${x}`} width={3} x={x - 1.5} y={turfTop + 2} />)}
       {marks.hashes.map((x) => <path className="pull-chain-hash" d={`M${x} ${turfTop + 2}v5M${x} ${height - 5}v5`} key={`h${x}`} />)}
       <DownCounter ground={counter.ground} progress={stages.counter} scale={counter.scale} x={counter.x} />
       <Ball spot={ballSpot(lay, height)} />
+      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={5.2 * lay.linkZoom} rx={0.5} width={2.2 * lay.linkZoom} x={clip.x - 1.1 * lay.linkZoom} y={clip.y} /> : null}
       {shown.map((link, index) => (
         <ellipse className={link.edge ? "pull-chain-link-edge" : "pull-chain-link"} cx={link.x} cy={link.y} key={index} rx={linkW} ry={link.edge ? linkH * 0.47 : linkH} transform={`rotate(${link.angle} ${link.x} ${link.y})`} />
       ))}
-      {clip.x > -10 && clip.x < width + 10 ? <rect className="pull-chain-clip" height={4.4 * lay.linkZoom} width={2.6 * lay.linkZoom} x={clip.x - 1.3 * lay.linkZoom} y={clip.y - 2.2 * lay.linkZoom} transform={`rotate(${clip.angle} ${clip.x} ${clip.y})`} /> : null}
-      <Rod squash={squash} tilt={-pose.lean} x={pose.top.x} y={pose.top.y} zoom={lay.zoom} />
+      <Rod tilt={-pose.lean} x={pose.top.x} y={pose.top.y} zoom={lay.zoom} />
       {landed && dust < 1 ? (
         <g className="pull-chain-dust" opacity={0.55 * (1 - dust)}>
           <circle cx={lay.leadTo - 14 - 26 * dust} cy={ground - 3} r={3 + 7 * dust} />

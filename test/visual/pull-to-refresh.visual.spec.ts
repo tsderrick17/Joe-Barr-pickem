@@ -36,9 +36,13 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   const buzzes = () => page.evaluate(() => (window as unknown as { buzzes: number }).buzzes);
   const strip = { clip: { x: 0, y: 0, width: 390, height: 110 } };
   // a pull of D px of finger travel is D x 0.6 of pull; the pole lands (the dust puff) at half of 76, the counter has turned to 1 at all of it
-  await drag(page, 100, 132, false);   // a quarter of the way: the pole is coming down, its foot leading and the chain taut and slanting up
+  await drag(page, 100, 113, false);   // a tenth of the way: the pole is drawn out, leaning, the chain slack with humps lying on the turf
+  await expect(page).toHaveScreenshot("pull-to-refresh-slack.png", strip);
+  await drag(page, 100, 132, false);   // a quarter of the way: the chain is stretched to its full length, still leaning, taut and slanting up
+  await expect(page).toHaveScreenshot("pull-to-refresh-stretched.png", strip);
+  await drag(page, 100, 148, false);   // three eighths: dropping, its foot leading, the chain taut and coming down
   await expect(page.locator(".pull-chain")).toContainText("Pull to refresh");
-  await expect(page).toHaveScreenshot("pull-to-refresh-descending.png", strip);
+  await expect(page).toHaveScreenshot("pull-to-refresh-dropping.png", strip);
   await drag(page, 100, 163, false);   // halfway: the foot has landed upright beside the ball, and the counter still says 4
   await expect(page).toHaveScreenshot("pull-to-refresh-landed.png", strip);
   await drag(page, 100, 195, false);   // three quarters: the counter is half way through, its slats reading 1, 4, 1, 4
