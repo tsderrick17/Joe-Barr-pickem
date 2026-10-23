@@ -1,10 +1,9 @@
 /**
- * When the Trophy Room opens to every player, as an ISO time. It is null while the Trophy Room is the Commissioner's alone, which is how it
- * is now. To open it to players later, set this (for example to bowlPoolLaunchAt(2026), the moment the Bowl Pool first launches); it then
+ * When the Trophy Room opens to every player, as an ISO time (null would keep it the Commissioner's alone). It opened on 2026-10-23 and then
  * stays open for good.
  * @type {string | null}
  */
-export const TROPHY_ROOM_PLAYER_OPENS_AT = null;
+export const TROPHY_ROOM_PLAYER_OPENS_AT = "2026-10-23T12:00:00.000Z";
 
 /**
  * @param {number} now milliseconds since the epoch
