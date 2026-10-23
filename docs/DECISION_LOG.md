@@ -29,6 +29,11 @@ as superseded and records the current contract rather than rewriting history.
 - Decision: the per-active-player cost in `src/lib/vercel-usage-estimate.js` goes from 22 to 18.3 seconds a day so the model reproduces Vercel's meter, 2 h 55 m for the 30 days ending 2026-10-23 with 11 active players (the background jobs are unchanged at about 2.5 minutes a day).
 - Why: the dashboard still read higher than Vercel after the 2026-10-19 calibration (3 h 16 m); the meter keeps falling as polling has slowed. The Trophy Room opened to players on 2026-10-23: its data is built once a minute for everyone, so watch the meter over the next weeks and recalibrate if it moves.
 
+## 2026-10-23 - The screenshot suite runs on four workers and is skipped when a pull request cannot change a screen
+
+- Decision: CI runs the screenshot suite (`visual`) with four Playwright workers (two locally), and a `changes` job skips it on pull requests whose changed files are all outside `src/`, `public/`, the screenshot/e2e/helper/email-artwork tests and the build, dependency and quality-workflow configuration. Pushes to `main` always run it.
+- Why: each merge reruns the next pull request's checks, and `visual` (about ten minutes of a twelve-minute wait) dominated it. Test-only, docs, migration and script changes cannot alter a screenshot. Four cores are what GitHub gives a public repository on `ubuntu-24.04`; images are unoptimized in CI, which was the original reason for two.
+
 ## 2026-10-23 - Playoff recap, email plans and season turnover are tested by running them
 
 - Decision: `test/playoff-recap-behavior.test.mjs` runs the real playoff-day recap builder against a scripted database (the game day it covers, scheduled-games scoping, an unsettled day refused, champions named only on the round's last day) and renders the recap email (champion, co-champions, eliminations). `email-plans.visual.spec.ts` clicks Essentials, Regular and Full Card on the Notifications page and checks the playoff toggles. `test/season-rollover-behavior.test.mjs` runs the annual boundary and cleanup steps and the bootstrap status reader. The matching source-text assertions were removed from `playoff-email-policy`, `annual-season-turnover`; the SQL/migration contracts and the two reveal-snapshot source rules stay.

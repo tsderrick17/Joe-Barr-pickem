@@ -338,6 +338,7 @@ baselines are recorded with its browser, and Dependabot ignores minor and major 
 updates (upgrade the package and both container tags together, then re-record the baselines
 with the visual-baselines workflow; a test fails if they differ). `npm audit` at high severity
 gates `verify`; Next.js is exact-pinned and moves with its security releases.
+The screenshot job (`visual`, the slowest check, about ten minutes) runs on four workers and is skipped on a pull request that touches only tests, docs, migrations or scripts: a small `changes` job lists the changed files, and anything under `src/`, `public/`, the screenshot, e2e, helper and email-artwork tests, or the build, dependency and quality-workflow configuration runs it (every push to `main` runs it too). A skipped job counts as passing; `visual` is not a required check, `verify` and `database-lifecycle` are.
 
 Pull requests run an isolated Chromium player flow in addition to the database
 lifecycle rehearsal. The browser creates a disposable commissioner, signs in

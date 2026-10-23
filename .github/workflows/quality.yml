@@ -13,6 +13,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Whether a pull request can change what a player sees. The screenshot suite is the slowest check (about ten minutes), so a pull request that only
+  # touches tests, documentation, database migrations or scripts skips it. Anything under src/ or public/, the screenshot tests and baselines, the
+  # email artwork tests, and the build, dependency and workflow configuration always run it, and so does every push to main.
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then echo "ui=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "origin/$BASE...HEAD")
+          echo "$files"
+          if echo "$files" | grep -Eq '^(src/|public/|test/visual/|test/e2e/|test/helpers/|test/email-artwork|package(-lock)?\.json$|next\.config|postcss|tailwind|tsconfig|playwright|\.github/workflows/quality\.yml$)'; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui=false" >> "$GITHUB_OUTPUT"
+            echo "No file that can change what a player sees: the screenshot suite is skipped."
+          fi
+
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -43,6 +70,8 @@ jobs:
   # Exact-match screenshots of every view, state, width and theme, in the same
   # pinned browser image the Linux baselines were recorded in.
   visual:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     container: mcr.microsoft.com/playwright:v1.63.0-noble
