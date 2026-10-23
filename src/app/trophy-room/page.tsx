@@ -128,10 +128,10 @@ export default function TrophyRoomPage() {
                   : <colgroup><col className="trophy-col-rank" /><col className="trophy-col-player" /><col className="trophy-col-donut" /><col className="trophy-col-sweeps" /><col className="trophy-col-wins" /><col className="trophy-col-losses" /><col className="trophy-col-rate" /><col className="trophy-col-pushes" /></colgroup>}
                 <thead>
                   {view === "record" ? (
-                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
+                    <tr><th scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" scope="col">Player</th>{header("wins", "Wins", 1)}{header("rate", "Hit rate", 1)}</tr>
                   ) : <>
                     <tr>
-                      <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th rowSpan={2} scope="col">Player</th>
+                      <th rowSpan={2} scope="col"><span className="sr-only">Rank</span></th><th className="trophy-player-head" rowSpan={2} scope="col">Player</th>
                       <th colSpan={2} scope="colgroup"><span className="trophy-group">Regular Season Streaks</span></th><th colSpan={3} scope="colgroup"><span className="trophy-group">Decided by a half point</span></th><th aria-hidden="true" />
                     </tr>
                     <tr>

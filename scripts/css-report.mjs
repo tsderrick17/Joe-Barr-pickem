@@ -1,5 +1,6 @@
 // Measures the stylesheet: how many rules, how many selectors are defined more than once,
-// how many `!important`, how many hard-coded hex colors outside the token file, and which
+// how many `!important`, how many selectors that pick an element by its position (`:nth-child(3)`, not odd/even striping), how many hard-coded
+// hex colors outside the token file, and which
 // media widths are in use. Reads src/app/globals.css plus every file under src/styles/.
 //
 //   node scripts/css-report.mjs            print a report
@@ -29,12 +30,12 @@ export function measure() {
   const perFile = {};
   const definitions = new Map();
   const widths = new Map();
-  const totals = { rules: 0, duplicateSelectors: 0, important: 0, hexColors: 0, nightRules: 0 };
+  const totals = { rules: 0, duplicateSelectors: 0, important: 0, hexColors: 0, nightRules: 0, indexSelectors: 0 };
 
   for (const file of stylesheetFiles()) {
     const css = readFileSync(file, "utf8");
     const tokenFile = /00-tokens\.css$/.test(file);
-    const entry = { rules: 0, important: 0, hexColors: 0, nightRules: 0 };
+    const entry = { rules: 0, important: 0, hexColors: 0, nightRules: 0, indexSelectors: 0 };
     postcss.parse(css, { from: file }).walk((node) => {
       if (node.type === "rule") {
         if (node.parent?.type === "atrule" && /keyframes$/i.test(node.parent.name)) return;
@@ -43,6 +44,8 @@ export function measure() {
         for (const selector of node.selectors) {
           const normalized = selector.replace(/\s+/g, " ").trim();
           if (normalized.startsWith('html[data-theme="night"]')) entry.nightRules += 1;
+          // an element picked by its place in a list: give it a class of its own instead (odd/even striping and `n` are fine)
+          if (/:nth-(?:last-)?(?:child|of-type)\((?!\s*(?:odd|even|n)\s*\))[^)]*\)/.test(normalized)) entry.indexSelectors += 1;
           const key = `${context}::${normalized}`;
           definitions.set(key, (definitions.get(key) ?? 0) + 1);
         }
@@ -54,7 +57,7 @@ export function measure() {
       }
     });
     perFile[file.slice(root.length).replaceAll("\\", "/")] = entry;
-    for (const key of ["rules", "important", "hexColors", "nightRules"]) totals[key] += entry[key];
+    for (const key of ["rules", "important", "hexColors", "nightRules", "indexSelectors"]) totals[key] += entry[key];
   }
   totals.duplicateSelectors = [...definitions.values()].filter((count) => count > 1).length;
   return { totals, perFile, widths: Object.fromEntries([...widths].sort()), duplicates: [...definitions].filter(([, count]) => count > 1).map(([key, count]) => ({ key, count })) };
