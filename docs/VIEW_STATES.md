@@ -100,6 +100,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Week Archive | `archive` (four weeks), `archive-empty` |
 | Rehearsal preview (`/preview`) | default |
 | Rehearsal walk-through: the six scenarios in all four views (behavior test, `rehearsal-walkthrough.visual.spec.ts`; no screenshots) | `/preview` |
+| Email plans on Notifications: Essentials, Regular and Full Card set the playoff toggles (behavior test, `email-plans.visual.spec.ts`; no screenshots) | `/profile` |
 | `/survivor` | redirects to `/board#slate-matchups`; no screen of its own |
 
 ## Email images — `test/email-artwork-baseline.test.mjs`
