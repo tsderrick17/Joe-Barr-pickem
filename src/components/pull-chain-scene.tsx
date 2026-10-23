@@ -38,7 +38,13 @@ function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zo
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC} />
       <circle className="pull-chain-ring" cx={0} cy={DISC} r={DISC * 0.64} />
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC * 0.4} />
-      <path className="pull-chain-foot" d={`M-1.6 0H1.6L3.1 ${FOOT - 1.2}Q3.1 ${FOOT} 2 ${FOOT}H-2Q-3.1 ${FOOT} -3.1 ${FOOT - 1.2}Z`} transform={`translate(0 ${rod})`} />
+      <g transform={`translate(0 ${rod})`}>
+        <path className="pull-chain-iron" d="M-1.3 0H1.3V1Q1.3 1.5 0.9 1.5H-0.9Q-1.3 1.5 -1.3 1Z" />
+        <rect className="pull-chain-iron" height={FOOT - 1.4 - 0.3} width={1.1} x={-0.55} y={1.4} />
+        <rect className="pull-chain-iron-hi" height={FOOT - 3} opacity={0.5} width={0.2} x={-0.4} y={1.7} />
+        <path className="pull-chain-iron" d={`M-1.5 ${FOOT - 0.3}Q-1.5 ${FOOT - 0.4} -1.3 ${FOOT - 0.4}H1.3Q1.5 ${FOOT - 0.4} 1.5 ${FOOT - 0.3}V${FOOT - 0.1}Q1.5 ${FOOT} 1.3 ${FOOT}H-1.3Q-1.5 ${FOOT} -1.5 ${FOOT - 0.1}Z`} />
+        <rect className="pull-chain-clasp" height={0.7} rx={0.35} width={2} x={-2.6} y={FOOT - 3.5 - 0.35} />
+      </g>
     </g>
   );
 }

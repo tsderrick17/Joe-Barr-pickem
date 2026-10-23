@@ -102,7 +102,7 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
  * front of its nose, and the tip pokes out a couple of inches past the pole's foot. Past the line to gain, by inches: a first down.
  */
 export function ballSpot(lay, headerHeight) {
-  const footHalf = 3.1 * lay.zoom;
+  const footHalf = 1.5 * lay.zoom;   // half the width of the flange at the pole's foot
   const nose = lay.leadTo + footHalf + NOSE_INCHES * lay.inch;
   return { x: nose - BALL.length / 2, y: headerHeight - TURF + 12.5, length: BALL.length, height: BALL.height, nose };
 }
