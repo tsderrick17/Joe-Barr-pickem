@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - The reminder-schedule job is tested by running it
+
+- Decision: `test/reminder-schedule-maintenance.test.mjs` runs the real `/api/cron/maintain-reminders` route and `maintainAutomaticReminderSchedule` with the reconcilers and lease scripted (auth, off-season gate, `reminder_schedule` lease, order of the three reconcilers, busy-lease skip, 500 with the reason). The text assertions on the maintenance module and route were removed; the SQL and migration contract tests in `critical-automation-reproducibility.test.mjs` stay.
+- Why: the gating SQL itself can only be proven by the isolated database workflow, so it stays a contract test; the TypeScript side was text-matching behavior. Mutation-checked: wrong lease name, gate removed, auth inverted, a reconciler dropped.
+
 ## 2026-10-23 - Period rollover is tested by running it, and the app-calls-RPC rules live with the architecture rules
 
 - Decision: `test/advance-scoring-periods.test.mjs` runs the real `advanceScoringPeriods` against a scripted database (earliest due period, blocked/waiting outcomes, the pending Pick'em and Survivor gates, rollover only after `weekRolloverAt`). The "app calls the atomic function" and ESPN Bowl protected-path source rules moved from `atomic-grading-and-line-lock.test.mjs` to `test/architecture-rules.test.mjs`; the season-year and retry-ladder checks now import the modules. SQL contract tests stay in place.
