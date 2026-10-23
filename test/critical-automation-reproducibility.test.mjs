@@ -65,18 +65,12 @@ test("reminder delivery calls Vercel only when the claim would find work", async
   assert.match(sql, /to_regprocedure\('cron\.schedule\(text,text,text\)'\) is not null/);
 });
 
+// What the slower schedule job does (and its gates) is run for real in reminder-schedule-maintenance.test.mjs; these two pin only that delivery stays out of it.
 test("five-minute reminder delivery no longer reconciles future schedules", async () => {
-  const [worker, maintenance, route, migration] = await Promise.all([
+  const [worker, migration] = await Promise.all([
     readFile(new URL("../src/lib/reminder-worker.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/automatic-reminder-maintenance.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/api/cron/maintain-reminders/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql", import.meta.url), "utf8"),
   ]);
   assert.doesNotMatch(worker, /ensureAutomaticEmailPlanMessages|ensureAutomaticWeeklyRecap|ensureAutomaticBowlPoolEmails/);
-  assert.match(maintenance, /ensureAutomaticEmailPlanMessages\(\)/);
-  assert.match(maintenance, /ensureAutomaticWeeklyRecap\(\)/);
-  assert.match(maintenance, /ensureAutomaticBowlPoolEmails\(\)/);
-  assert.match(route, /runWithAutomationLease\("reminder_schedule"/);
   assert.match(migration, /reconcile-pickem-email-schedule-every-fifteen-minutes/);
 });
-
