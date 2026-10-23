@@ -82,6 +82,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 | Reminders | scheduled, sent, cancelled-with-reason |
 | Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
 | Slate display switch (All games / Pool action): two equal halves, and tapping either half flips to the other option (behavior test, `slate-flow.visual.spec.ts`) | `upcoming-unpicked`, phone |
+| Bowl Pool player flow: claim a seat (the selection card appears), choose a team (the receipt says changed), submit (saved), opt out (the claim card returns) (behavior test, `bowl-flow.visual.spec.ts`) | `not-joined`, phone |
 | Standings and Slate load failures: a hung or failed first load is retried once by itself (no error shown); two failures show the error with Try again; coming back to the tab reloads at once (behavior tests, `load-retry.visual.spec.ts`) | `commissioner-playoff` and `upcoming-unpicked`, phone |
 | Name menu: a Trophy Room link between the name and Notifications for whoever the Trophy Room is open to (today the Commissioner); absent for a player (behavior test, `slate-flow.visual.spec.ts`) | the Slate |
 | Trophy Room while it is the Commissioner's alone: a player who goes to its address is told it is not open yet (behavior test) | `/trophy-room` |

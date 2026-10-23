@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-21 - Source-text tests, stage 2 (third slice): Grading route, season ladder, Bowl Pool entry rules
+
+- Decision: the Grading dashboard's route is run against a scripted database (`grading-dashboard-route.test.mjs`: refused before any read unless Commissioner; the answer carries every field the dashboard draws; every worker's latest run is read), the season ladder's paging is run (`season-ladder-loader.test.mjs`), and the Bowl Pool's entry rules run through the real submit route (`bowl-pool-entry-rules.test.mjs`: entry and opt-out close at the first kickoff, a seat holder can still pick open games, a kicked-off game is never saved, a pick must be one of the game's teams). The Bowl Pool's player flow is a browser test (`bowl-flow.visual.spec.ts`: claim a seat, choose, submit, opt out). Their text twins were deleted. Each test was mutation-checked.
+- Why: the Bowl Pool opens to all players on 2026-12-07; its entry rules and flow now fail when broken, instead of passing on the words in the source.
+
 ## 2026-10-23 - Playwright is upgraded on purpose, not by Dependabot
 
 - Decision: Dependabot ignores minor and major updates of `@playwright/test`. A test checks that the package version and the Playwright container tags in `quality.yml` and `visual-baselines.yml` are one version. An upgrade bumps all three together and re-records the Linux baselines.
