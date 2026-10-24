@@ -519,83 +519,44 @@ button.slate-team-side:not(:disabled)::after {
 /* Commissioner cards and form controls should not retain their light-mode
    browser surfaces once the desk is viewed at night. */
 
-html[data-theme="night"] input,
-html[data-theme="night"] textarea {
-  border-color: var(--blue-40);
-  background-color: #101c24;
-  color: #f0f5f1;
-  color-scheme: dark;
-}
-
-html[data-theme="night"] input::placeholder,
-html[data-theme="night"] textarea::placeholder {
-  color: #90a6ad;
-}
-
-html[data-theme="night"] input:focus,
-html[data-theme="night"] textarea:focus {
-  border-color: #7ee1d2;
-  outline: 2px solid rgba(126, 225, 210, 0.35);
-  outline-offset: 2px;
-}
-
-html[data-theme="night"] .slate-receipt-strip {
-  --receipt-paper: #132129;
-  --receipt-ink: #eaf0ed;
-  --receipt-rule: #4f7478;
-  --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
-  --receipt-label-ink: #96c4c1;
-  --receipt-link-ink: #d6e2df;
-  --receipt-link-hover-bg: #29343a;
-  --receipt-link-hover-ink: var(--gray-100);
-  --receipt-strip-bg: #1b2527;
-  --receipt-link-line: rgba(234, 247, 244, .5);
-  --receipt-chip-bg: #f8d8e7;
-  --receipt-chip-edge: #ec81ba;
-  --receipt-chip-rail: #ad235f;
-  --receipt-chip-draft-rail: #ad235f;
-  --receipt-chip-ink: var(--gray-07);
-  --receipt-chip-small-ink: var(--gray-07);
-  --receipt-chip-official-ink: #66d8cc;
-  --receipt-sealed-bg: linear-gradient(135deg, #17383a, #142e32);
-  --receipt-sealed-edge: #66b9b1;
-  --receipt-sealed-rail: #72ddd1;
-  --receipt-sealed-small-ink: var(--teal-95);
-  --receipt-note-ink: #afc2c7;
-  --receipt-note-done-ink: #afc2c7;
-  --receipt-note-unsaved-ink: #afc2c7;
-  --receipt-strong-ink: var(--teal-95);
-  --receipt-metrics-edge: var(--blue-40);
-  --receipt-metric-text: var(--teal-95);
-  --receipt-metric-ink: var(--teal-95);
-  --receipt-metric-label-ink: #a8c1c4;
-  --receipt-metric-due-ink: #ffaaa1;
-  --receipt-metric-divider: var(--blue-40);
-}
-
 @media (max-width: 767px) {
   .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
 }
 
-html[data-theme="night"] select {
-  border-color: #6ed7ca;
-  background-color: var(--blue-15);
-  color: #f0f5f1;
-  color-scheme: dark;
-}
+/* Form fields at night: the roles come from the night block in 00-tokens.css and do not exist by day, where each
+   declaration reverts to the layers below. The layer sits after Tailwind's utilities and below every hand-written rule,
+   so a desk or Slate field that styles itself reads the same roles (with its own day colour as the fallback). */
+@layer fields {
+  input, textarea {
+    border-color: var(--field-edge, revert-layer);
+    background-color: var(--field-bg, revert-layer);
+    color: var(--field-ink, revert-layer);
+  }
 
-html[data-theme="night"] select:focus {
-  outline: 2px solid #7ee1d2;
-  outline-offset: 2px;
-}
+  input::placeholder, textarea::placeholder { color: var(--field-placeholder, revert-layer); }
 
-html[data-theme="night"] select option {
-  background-color: var(--blue-15);
-  color: #f0f5f1;
-}
+  input:focus, textarea:focus {
+    border-color: var(--field-focus-edge, revert-layer);
+    outline: var(--field-focus-outline, revert-layer);
+    outline-offset: var(--field-focus-offset, revert-layer);
+  }
 
-/* The Bowl picks board's buttons take the board's night ink (its other colours are roles on #bowl-selections). */
-html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--teal-95); }
+  select {
+    border-color: var(--select-edge, revert-layer);
+    background-color: var(--select-bg, revert-layer);
+    color: var(--field-ink, revert-layer);
+  }
+
+  select:focus {
+    outline: var(--select-focus-outline, revert-layer);
+    outline-offset: var(--field-focus-offset, revert-layer);
+  }
+
+  select option {
+    background-color: var(--select-bg, revert-layer);
+    color: var(--field-ink, revert-layer);
+  }
+}
 
 /* On a phone the team name (the Pick'em tap) and the poker chip beside it (the Survivor tap) sat almost touching. A margin
    (not padding, so it is not part of either button) keeps a clear gap between the two targets. */

@@ -264,8 +264,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--
 
 /* ---- Bowl Pool: opt out, instructions, names, and the player rows */
 .bowl-optout { margin: 1rem auto 0; max-width: 72rem; text-align: right; }
-.bowl-optout button { background: transparent; border: 0; color: var(--bowl-muted); cursor: pointer; font-size: .78rem; font-weight: 700; padding: 0 .1rem .2rem; text-decoration: underline; text-underline-offset: 3px; }
-.bowl-optout button:hover { color: var(--bowl-ink); }
+.bowl-optout button { background: transparent; border: 0; color: var(--bowl-optout-ink, var(--bowl-muted)); cursor: pointer; font-size: .78rem; font-weight: 700; padding: 0 .1rem .2rem; text-decoration: underline; text-underline-offset: 3px; }
+.bowl-optout button:hover { color: var(--bowl-optout-ink, var(--bowl-ink)); }
 .bowl-pool-page #bowl-selections .bowl-rules-compact { color: var(--bowl-muted); display: grid; font-size: .8rem; gap: .25rem; line-height: 1.45; list-style: none; margin: .9rem auto 0; max-width: 28rem; padding: 0; text-align: left; }
 .bowl-pool-page #bowl-selections .bowl-rules-compact li { padding-left: 1.1rem; position: relative; }
 .bowl-pool-page #bowl-selections .bowl-rules-compact li::before { background: var(--bowl-gold); content: ""; height: .32rem; left: .2rem; position: absolute; top: .55em; transform: rotate(45deg); width: .32rem; }

@@ -222,6 +222,44 @@
   --bowl-sel-ink-950: var(--color-slate-950);
   --bowl-sel-legend-bg: var(--themed-bg-25);
   --bowl-sel-field-bg: var(--themed-bg-26);
+  /* Receipt (Slate strip) colours; the Bowl board's receipt reads the same roles. */
+  --receipt-paper: var(--pool-surface);
+  --receipt-ink: var(--blue-22);
+  --receipt-rule: #b7aea0;
+  --receipt-shadow: drop-shadow(0 7px 13px rgba(37, 30, 18, .1));
+  --receipt-label-ink: #42516a;
+  --receipt-link-ink: #1d3551;
+  --receipt-link-line: currentColor;
+  --receipt-link-hover-bg: transparent;
+  --receipt-link-hover-ink: var(--receipt-link-ink);
+  --receipt-chip-bg: #fffaf3;
+  --receipt-chip-edge: #c8b8a0;
+  --receipt-chip-rail: #cf2879;
+  --receipt-chip-draft-rail: #a84c85;
+  --receipt-chip-ink: #18364d;
+  --receipt-chip-small-ink: #243248;
+  --receipt-chip-official-ink: var(--official-line-color);
+  --receipt-sealed-bg: #eef4f1;
+  --receipt-sealed-edge: #8aa7a1;
+  --receipt-sealed-rail: var(--teal-26);
+  --receipt-sealed-small-ink: var(--receipt-chip-small-ink);
+  --receipt-note-ink: var(--gray-40);
+  --receipt-note-done-ink: var(--green-25);
+  --receipt-note-unsaved-ink: #a86008;
+  --receipt-metrics-edge: var(--receipt-chip-edge);
+  --receipt-metric-ink: #18364d;
+  --receipt-metric-label-ink: #596579;
+  --receipt-metric-due-ink: var(--red-39);
+  --receipt-metric-divider: var(--receipt-rule);
+  /* Ticket (My ticket) colours. */
+  --ticket-paper: repeating-linear-gradient(0deg, rgba(46, 39, 30, .025) 0 1px, transparent 1px 4px), #f3ead6;
+  --ticket-edge: #756b5b;
+  --ticket-heavy-rule: var(--brown-13);
+  --ticket-dash-rule: var(--brown-53);
+  --ticket-dot-rule: #9b907e;
+  --ticket-small-ink: var(--brown-36);
+  --ticket-open-ink: var(--themed-text-7);
+  --ticket-bar: var(--brown-13);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -419,6 +457,60 @@ html[data-theme="night"] {
   --bowl-sel-ink-950: var(--teal-95);
   --bowl-sel-legend-bg: #1b3038;
   --bowl-sel-field-bg: #132129;
+  /* Receipt colours at night. */
+  --receipt-paper: #132129;
+  --receipt-ink: #eaf0ed;
+  --receipt-rule: #4f7478;
+  --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
+  --receipt-label-ink: #96c4c1;
+  --receipt-link-ink: #d6e2df;
+  --receipt-link-hover-bg: #29343a;
+  --receipt-link-hover-ink: var(--gray-100);
+  --receipt-strip-bg: #1b2527;
+  --receipt-link-line: rgba(234, 247, 244, .5);
+  --receipt-chip-bg: #f8d8e7;
+  --receipt-chip-edge: #ec81ba;
+  --receipt-chip-rail: #ad235f;
+  --receipt-chip-draft-rail: #ad235f;
+  --receipt-chip-ink: var(--gray-07);
+  --receipt-chip-small-ink: var(--gray-07);
+  --receipt-chip-official-ink: #66d8cc;
+  --receipt-sealed-bg: linear-gradient(135deg, #17383a, #142e32);
+  --receipt-sealed-edge: #66b9b1;
+  --receipt-sealed-rail: #72ddd1;
+  --receipt-sealed-small-ink: var(--teal-95);
+  --receipt-note-ink: #afc2c7;
+  --receipt-note-done-ink: #afc2c7;
+  --receipt-note-unsaved-ink: #afc2c7;
+  --receipt-strong-ink: var(--teal-95);
+  --receipt-metrics-edge: var(--blue-40);
+  --receipt-metric-text: var(--teal-95);
+  --receipt-metric-ink: var(--teal-95);
+  --receipt-metric-label-ink: #a8c1c4;
+  --receipt-metric-due-ink: #ffaaa1;
+  --receipt-metric-divider: var(--blue-40);
+  /* Form fields at night. Day sets none of these, so fields keep their own look by day; the fields layer and the desk's own
+     field rules read them. */
+  --field-edge: var(--blue-40);
+  --field-bg: #101c24;
+  --field-ink: #f0f5f1;
+  --field-placeholder: #90a6ad;
+  --field-focus-edge: #7ee1d2;
+  --field-focus-outline: 2px solid rgba(126, 225, 210, 0.35);
+  --field-focus-offset: 2px;
+  --select-edge: #6ed7ca;
+  --select-bg: var(--blue-15);
+  --select-focus-outline: 2px solid #7ee1d2;
+  --bowl-optout-ink: var(--teal-95);
+  /* Ticket colours at night. */
+  --ticket-paper: repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px), #29251f;
+  --ticket-edge: #897e6b;
+  --ticket-heavy-rule: #d1c4aa;
+  --ticket-dash-rule: #756b5b;
+  --ticket-dot-rule: #756b5b;
+  --ticket-small-ink: #bdb19b;
+  --ticket-open-ink: #bdb19b;
+  --ticket-bar: var(--sand-89);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,
