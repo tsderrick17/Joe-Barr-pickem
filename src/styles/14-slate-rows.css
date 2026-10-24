@@ -556,32 +556,31 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-ink: #eaf0ed;
   --receipt-rule: #4f7478;
   --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
+  --receipt-label-ink: #96c4c1;
+  --receipt-link-ink: #eaf7f4;
+  --receipt-link-line: rgba(234, 247, 244, .5);
+  --receipt-chip-bg: #f8d8e7;
+  --receipt-chip-edge: #ec81ba;
+  --receipt-chip-rail: #ad235f;
+  --receipt-chip-draft-rail: #ad235f;
+  --receipt-chip-ink: var(--gray-07);
+  --receipt-chip-small-ink: var(--gray-07);
+  --receipt-chip-official-ink: #66d8cc;
+  --receipt-sealed-bg: linear-gradient(135deg, #17383a, #142e32);
+  --receipt-sealed-edge: #66b9b1;
+  --receipt-sealed-rail: #72ddd1;
+  --receipt-sealed-small-ink: var(--teal-95);
+  --receipt-note-ink: #afc2c7;
+  --receipt-note-done-ink: #afc2c7;
+  --receipt-note-unsaved-ink: #afc2c7;
+  --receipt-strong-ink: var(--teal-95);
+  --receipt-metrics-edge: var(--blue-40);
+  --receipt-metric-text: var(--teal-95);
+  --receipt-metric-ink: var(--teal-95);
+  --receipt-metric-label-ink: #a8c1c4;
+  --receipt-metric-due-ink: #ffaaa1;
+  --receipt-metric-divider: var(--blue-40);
 }
-
-html[data-theme="night"] .slate-receipt-strip > * {
-  background-color: transparent;
-}
-
-html[data-theme="night"] .slate-receipt-ticket > span,
-html[data-theme="night"] .slate-receipt-pool > span { color: #96c4c1; }
-html[data-theme="night"] .slate-receipt-ticket a { color: #eaf7f4; text-decoration-color: rgba(234, 247, 244, .5); }
-html[data-theme="night"] .slate-receipt-selection-chip {
-  background: #f8d8e7;
-  border-color: #ec81ba;
-  border-left-color: #ad235f;
-  color: var(--gray-07);
-}
-html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
-  background: linear-gradient(135deg, #17383a, #142e32);
-  border-color: #66b9b1;
-  border-left-color: #72ddd1;
-}
-html[data-theme="night"] .slate-receipt-selection-chip small { color: var(--gray-07); }
-html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
-html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small { color: var(--teal-95); }
-html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small.is-official { color: #66d8cc; }
-html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
-html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: var(--teal-95); }
 
 html[data-theme="night"] .selection-chip {
   border-left-color: #ad235f;
@@ -675,12 +674,6 @@ html[data-theme="night"] select option {
 
 /* Bowl Pool surfaces use explicit light Tailwind utilities in the markup;
    restate them here so the entire competition remains legible in night mode. */
-html[data-theme="night"] .bowl-receipt-metrics { border-color: var(--blue-40); }
-html[data-theme="night"] .bowl-receipt-metric { color: var(--teal-95); }
-html[data-theme="night"] .bowl-receipt-metric + .bowl-receipt-metric { border-left-color: var(--blue-40); }
-html[data-theme="night"] .bowl-receipt-metric strong { color: var(--teal-95); }
-html[data-theme="night"] .bowl-receipt-metric small { color: #a8c1c4; }
-html[data-theme="night"] .bowl-receipt-metric.is-due strong { color: #ffaaa1; }
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
   color: var(--teal-95);
 }
