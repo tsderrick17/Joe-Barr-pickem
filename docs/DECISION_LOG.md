@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-24 - Survivor rows and the Pick'em pad take their night look from roles
+
+- Decision: the Survivor table's row colours (header, body, alternate, your own row, and the ring around it), the Pick'em pad's ink, paper and ruled-line colours, and the playoff board's viewer row are global role tokens in `00-tokens.css` (`--survivor-*`, `--viewer-*`, `--pad-*`, `--playoff-viewer-bg`) with the night values in the existing night block; the day rules in `41-survivor-table.css`, `12-survivor-chip.css` and `13-pickem-pad.css` read them. The IN / OUT and name colours of the Survivor table's sticky cells were Tailwind text classes that your own row restated at night, so they are now `is-in`, `is-out` and `is-inactive` classes in the markup and CSS, with `--viewer-in-ink`, `--viewer-out-ink`, `--viewer-muted-ink` and `--viewer-name-ink` for your own row. Deleted as dead or redundant: a night rule for `td` cells that the Survivor table (divs, not a table) has never had, the sticky cells' night background (the row variable already gives it), and the pad row's night `border-color` (the day rule already reads the same variable). Night rules 46 to 36, hex colours 202 to 184.
+- Why: same as the earlier slices, one place to read each piece's night look. Checked by the Standings, Slate and Bowl suites (234 states, day and night) against baselines recorded from `main`, then CI. Not covered by a screenshot: an OUT or inactive player's own row at night.
+
 ## 2026-10-23 - Commissioner toggles and tables, and the page's night base, take their night look from roles
 
 - Decision: the pool display toggle (`--pool-toggle-*`: ink, edge, background and their hover and focus values) and the provider chart and grading worker tables' rules (`--chart-head-rule`, `--chart-row-rule`) are global role tokens in `00-tokens.css`, with the night values in the existing night block; the five night repaint rules in `50-commissioner.css` are gone. The page's night base (`--background`, `--foreground`, `color-scheme: dark`) moved from `14-slate-rows.css` into that same night block. Night rules 53 to 46, hex colours 217 to 202.

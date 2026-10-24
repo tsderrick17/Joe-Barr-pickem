@@ -175,6 +175,23 @@
   --pool-toggle-hover-ink: var(--teal-20);
   --chart-head-rule: #d4d4d8;
   --chart-row-rule: var(--gray-95);
+  --pad-ink: #1d1d1f;
+  --pad-muted: #516076;
+  --pad-paper: var(--sand-95);
+  --pad-rule: #9bb9de;
+  --pad-margin: #c76862;
+  --survivor-header-bg: #ebe3d4;
+  --survivor-body-bg: var(--sand-93);
+  --survivor-alt-bg: #f0eadf;
+  --viewer-row-bg: #e6f2ee;
+  --viewer-row-edge: rgba(22, 135, 127, .18);
+  --survivor-viewer-bg: #dff0eb;
+  --survivor-viewer-ring: inset 0 0 0 2px rgba(22, 135, 127, .3);
+  --playoff-viewer-bg: rgba(220, 241, 235, .78);
+  --viewer-in-ink: var(--color-green-800);
+  --viewer-out-ink: var(--color-red-700);
+  --viewer-muted-ink: var(--color-slate-500);
+  --viewer-name-ink: currentcolor;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -325,6 +342,23 @@ html[data-theme="night"] {
   --pool-toggle-hover-ink: var(--gray-100);
   --chart-head-rule: #3f3f46;
   --chart-row-rule: #27272a;
+  --pad-ink: #ede6d9;
+  --pad-muted: #b7c4d3;
+  --pad-paper: #252722;
+  --pad-rule: #55769a;
+  --pad-margin: #b86d68;
+  --survivor-header-bg: #17242c;
+  --survivor-body-bg: #101c24;
+  --survivor-alt-bg: #13232b;
+  --viewer-row-bg: var(--teal-16);
+  --viewer-row-edge: rgba(126, 225, 210, .28);
+  --survivor-viewer-bg: var(--teal-16);
+  --survivor-viewer-ring: inset 0 0 0 1px rgba(126, 225, 210, .28);
+  --playoff-viewer-bg: var(--teal-16);
+  --viewer-in-ink: #e8f5f1;
+  --viewer-out-ink: #e8f5f1;
+  --viewer-muted-ink: #e8f5f1;
+  --viewer-name-ink: #e8f5f1;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,

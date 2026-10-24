@@ -364,14 +364,14 @@
 /* Pick'em is the pool's long-running scorebook: deliberately more like a
    compact ballpark ledger than the Survivor grid beside it. */
 .pickem-ledger {
-  --ledger-ink: #1d1d1f;
-  --ledger-muted: #516076;
+  --ledger-ink: var(--pad-ink);
+  --ledger-muted: var(--pad-muted);
   /* A quiet scorepad parchment: warm enough to feel tactile, still light
      enough that the blue ruling and red margin remain crisp. */
-  --ledger-paper: var(--sand-95);
+  --ledger-paper: var(--pad-paper);
   --ledger-hand-font: var(--font-architects-daughter), "Segoe Print", "Bradley Hand", cursive;
-  --scorepad-blue: #9bb9de;
-  --scorepad-red: #c76862;
+  --scorepad-blue: var(--pad-rule);
+  --scorepad-red: var(--pad-margin);
 }
 /* A hand-kept weekly pad should feel compact in a broad browser, while still
    using every available pixel on a phone. */
