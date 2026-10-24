@@ -44,21 +44,22 @@ for (const theme of ["day", "night"]) {
       await serve(page);
       await page.goto("/");
       const chat = page.locator(".pool-chat");
+      // The colour emoji artwork (the picker's buttons and the smiley that opens it) settles a few pixels differently from
+      // one run to the next, so those glyphs are masked: each button's place and size are still checked.
+      const emojiButton = chat.getByRole("button", { name: "Choose an emoji" });
       await expect(chat.locator("article")).toHaveCount(4, { timeout: 30_000 });
       await page.evaluate(() => document.fonts.ready);
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       await chat.scrollIntoViewIfNeeded();
-      await expect(chat).toHaveScreenshot(`chat-${theme}-${label}.png`);
+      await expect(chat).toHaveScreenshot(`chat-${theme}-${label}.png`, { mask: [emojiButton] });
 
-      await chat.getByRole("button", { name: "Choose an emoji" }).click();
+      await emojiButton.click();
       await expect(chat.getByRole("group").first()).toBeVisible();
-      // The colour emoji artwork settles a few pixels differently from one run to the next, so the glyphs are masked: each
-      // button's place and size are still checked.
-      await expect(chat).toHaveScreenshot(`chat-emoji-${theme}-${label}.png`, { mask: [chat.getByRole("group").locator("button")] });
+      await expect(chat).toHaveScreenshot(`chat-emoji-${theme}-${label}.png`, { mask: [emojiButton, chat.getByRole("group").locator("button")] });
 
-      await chat.getByRole("button", { name: "Choose an emoji" }).click();
+      await emojiButton.click();
       await chat.locator("#pool-chat-message").fill("Anyone else on the Chiefs?");
-      await expect(chat).toHaveScreenshot(`chat-typing-${theme}-${label}.png`);
+      await expect(chat).toHaveScreenshot(`chat-typing-${theme}-${label}.png`, { mask: [emojiButton] });
     });
   }
 }
