@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Commissioner toggles and tables, and the page's night base, take their night look from roles
+
+- Decision: the pool display toggle (`--pool-toggle-*`: ink, edge, background and their hover and focus values) and the provider chart and grading worker tables' rules (`--chart-head-rule`, `--chart-row-rule`) are global role tokens in `00-tokens.css`, with the night values in the existing night block; the five night repaint rules in `50-commissioner.css` are gone. The page's night base (`--background`, `--foreground`, `color-scheme: dark`) moved from `14-slate-rows.css` into that same night block. Night rules 53 to 46, hex colours 217 to 202.
+- Why: same as the earlier slices: one place to read each piece's night look. What is left as night rules is night-only by nature: native form controls and the Slate instruction cards (no day rule exists, the day look is the browser's or Tailwind classes in the markup), the pool chat's Tailwind-class repaints, the Bowl palette block, and the Survivor viewer-row variables. Checked by the Commissioner, Standings, Slate and Bowl suites against baselines recorded from the previous branch tip, then CI.
+
 ## 2026-10-23 - The ticket, the Pick'em viewer row, the playoff paper and the chat dock take their night look from roles
 
 - Decision: the Standings ticket (`.my-ticket`) keeps its paper, edge, heavy rule, dashed rule, dotted rule, small ink, open ink and barcode in `--ticket-*` roles on `20-ticket.css`; one `html[data-theme="night"] .my-ticket` block sets them, and the day rules for the race and footer rules, picks, selection, survivor, open, instructions, completion and barcode read them. The Pick'em viewer-row teal glow and rail are `--viewer-glow` and `--viewer-rail`, the playoff board's ruled paper is `--playoff-grid-rule`, `--playoff-margin-rule` and `--playoff-paper`, and the chat dock background is `--chat-dock-bg`, all in `00-tokens.css` with the night values in the existing night block. The matching night repaint rules are gone (night rules 72 to 53, hex colours 221 to 217, duplicate selectors 82 to 81).
