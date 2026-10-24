@@ -29,13 +29,7 @@
   /* A single translucent, textbook-pink highlighter pass: a touch of
      denser pink at the nib melts immediately into the familiar marker
      body, with no second block or visible seam between them. */
-  background: linear-gradient(90deg,
-    rgba(191, 20, 104, .58) 0%,
-    rgba(220, 45, 133, .54) 1.5%,
-    rgba(241, 78, 158, .48) 4%,
-    rgba(250, 113, 182, .43) 8%,
-    rgba(255, 151, 204, .39) 14%,
-    rgba(255, 174, 216, .37) 100%);
+  background: var(--team-marker-gradient);
   /* One broad chisel pass: matching angled entry and exit, with enough
      overscan to read as a marker stroke rather than a text background. */
   clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
@@ -518,7 +512,7 @@ button.slate-team-side:not(:disabled)::after {
 }
 
 .selection-chip small { color: var(--gray-07); }
-.selection-chip small.is-official { color: var(--official-line-color); }
+.selection-chip small.is-official { color: var(--selection-chip-official-ink); }
 
 /* A restrained late-night sportsbook palette. Page components retain their
    newspaper proportions; the theme only swaps paper, ink, and line colors. */
@@ -557,7 +551,10 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-rule: #4f7478;
   --receipt-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
   --receipt-label-ink: #96c4c1;
-  --receipt-link-ink: #eaf7f4;
+  --receipt-link-ink: #d6e2df;
+  --receipt-link-hover-bg: #29343a;
+  --receipt-link-hover-ink: var(--gray-100);
+  --receipt-strip-bg: #1b2527;
   --receipt-link-line: rgba(234, 247, 244, .5);
   --receipt-chip-bg: #f8d8e7;
   --receipt-chip-edge: #ec81ba;
@@ -582,40 +579,10 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-metric-divider: var(--blue-40);
 }
 
-html[data-theme="night"] .selection-chip {
-  border-left-color: #ad235f;
-}
-
 html[data-theme="night"] .selection-chip button:hover {
   background-color: #472d35;
   color: #ffb4bd;
 }
-html[data-theme="night"] .selection-chip small { color: var(--gray-07); }
-html[data-theme="night"] .selection-chip small.is-official { color: var(--teal-26); }
-
-html[data-theme="night"] .slate-team-selection {
-  box-shadow: none;
-}
-
-html[data-theme="night"] .slate-team-label--selected {
-  background: transparent;
-}
-
-html[data-theme="night"] .slate-team-label--selected::before,
-html[data-theme="night"] .slate-team-label--selected:not(.slate-team-label--chips) > span::before {
-  background: linear-gradient(90deg,
-    rgba(232, 31, 139, .70) 0%,
-    rgba(244, 59, 160, .64) 1.5%,
-    rgba(251, 91, 181, .58) 4%,
-    rgba(255, 124, 197, .52) 8%,
-    rgba(255, 156, 214, .48) 14%,
-    rgba(255, 178, 224, .44) 100%);
-}
-
-html[data-theme="night"] .slate-team-label--selected::after {
-  display: none;
-}
-
 /* The instructional action cards use a deliberately dark paper surface in
    night mode; restate their hard-coded light-mode ink so the instructions do
    not disappear into the background. */
@@ -641,15 +608,6 @@ html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
   border-color: #536f75;
 }
 
-html[data-theme="night"] .slate-mini-nav { border-color: #6d746c; }
-@media (max-width: 767px) {
-  html[data-theme="night"] .slate-mini-nav { background: #1b2527; }
-}
-html[data-theme="night"] .slate-mini-nav a { color: #d6e2df; }
-html[data-theme="night"] .slate-mini-nav a + a { border-color: #6d746c; }
-html[data-theme="night"] .slate-mini-nav a:hover,
-html[data-theme="night"] .slate-mini-nav a:focus-visible { background: #29343a; color: var(--gray-100); }
-html[data-theme="night"] .slate-action-empty { border-color: #6d746c; }
 
 @media (max-width: 767px) {
   .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }

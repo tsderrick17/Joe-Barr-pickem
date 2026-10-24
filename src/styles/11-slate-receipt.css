@@ -138,8 +138,8 @@
 .slate-receipt-ticket a::after { content: "›"; font-size: .88rem; line-height: 0; margin-left: .22rem; }
 .slate-receipt-ticket a:hover,
 .slate-receipt-ticket a:focus-visible {
-  background: transparent;
-  color: var(--receipt-link-ink);
+  background: var(--receipt-link-hover-bg);
+  color: var(--receipt-link-hover-ink);
 }
 
 .slate-receipt-print {
@@ -631,7 +631,7 @@
 .slate-view-switch button:focus-visible { outline: 2px solid var(--pool-teal); outline-offset: -3px; }
 
 .slate-action-empty {
-  border-block: 1px solid #c8c1b5;
+  border-block: 1px solid var(--action-empty-edge);
   color: var(--themed-text-39);
   font-size: .8rem;
   font-weight: 600;
