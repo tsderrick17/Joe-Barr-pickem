@@ -85,7 +85,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:visual
-      - run: npm test -- --test-name-pattern="email artwork baseline"
+      # Only the email artwork test, run from its own file: `npm test` with a name pattern still starts every test file (a minute and a half).
+      - run: node --test test/email-artwork-baseline.test.mjs
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
