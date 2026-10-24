@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - The Bowl email scheduler and score route are tested by running them
+
+- Decision: `test/automatic-bowl-emails.test.mjs` runs `ensureAutomaticBowlPoolEmails` against a scripted database: one lines-are-set email per game day at the day's earliest line lock, one pick-due reminder per scheduled game three hours before kickoff (none once that time has passed or the game is postponed), each day's recap only from 5 AM Eastern the next morning, a duplicate (23505) skipped without counting, any other queueing error or a missing Commissioner a failure. `test/sync-bowl-scores-route.test.mjs` runs the `sync-bowl-scores` route: 500 without the secret, 401 on a wrong token, the Bowl season gate, the `bowl_scores` lease, a busy lease as a skip, any other failure as a 500 with its message. The matching text checks in `bowl-email-pipeline.test.mjs` are gone; the NFL-route and migration rules stay.
+- Why: the text checks passed whenever the words were in the file. Mutation-checked: duplicate code, reminder cut-off, recap time, postponed filter, game ids, lease name, gate kind, token check, 500 status. The remaining Bowl text tests are SQL contracts or the ESPN source rule.
+
 ## 2026-10-23 - The rehearsal is checked by walking it
 
 - Decision: `test/visual/rehearsal-walkthrough.visual.spec.ts` opens `/preview` and walks the six scenarios in the four views (Ticket, Slate, Pick'em Pad, Email): blank ticket, the Week 5 handoff, Monday's W/L stamps and the Pad's win counts, no win counted before its game is final, the playoff round's sealed picks, and which sample image each email carries. It replaces `rehearsal-ticket-lifecycle.test.mjs`, which matched the page's source text. No screenshots are compared; the Account "preview" state still covers how it looks.

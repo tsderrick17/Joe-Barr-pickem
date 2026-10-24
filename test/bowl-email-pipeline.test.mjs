@@ -6,17 +6,6 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
-test("Bowl email worker queues immutable daily recaps and game-specific pick reminders", () => {
-  const source = read("src/lib/automatic-bowl-pool-emails.ts");
-  assert.match(source, /bowlDailyRecapAt\(day\)/);
-  assert.match(source, /unpickedBowlReminderAt\(game\.kickoff_at\)/);
-  assert.match(source, /bowl:\$\{season\.id\}:daily-recap/);
-  assert.match(source, /bowl:\$\{season\.id\}:pick-due/);
-  assert.match(source, /source_game_ids: dayGames\.map/);
-  assert.match(source, /category: "bowl_line_lock"/);
-  assert.match(source, /bowl:\$\{season\.id\}:line-lock/);
-});
-
 test("Bowl email delivery snapshots the recap and sends reminders only to active unpicked entries", () => {
   const source = read("src/lib/email-reminders.ts");
   assert.match(source, /ensureBowlDailyRecapSnapshot/);
@@ -28,11 +17,10 @@ test("Bowl email delivery snapshots the recap and sends reminders only to active
   assert.match(source, /ensureBowlLineLockSnapshot/);
 });
 
+// The route itself runs in test/sync-bowl-scores-route.test.mjs; the scheduler in test/automatic-bowl-emails.test.mjs.
 test("Bowl score automation has its own fifteen-minute endpoint", () => {
-  const route = read("src/app/api/cron/sync-bowl-scores/route.ts");
   const nflRoute = read("src/app/api/cron/sync-scores/route.ts");
   const migration = read("supabase/migrations/20260928020000_reduce_automation_dispatch_work.sql");
-  assert.match(route, /runWithAutomationLease\("bowl_scores", syncBowlPool\)/);
   assert.doesNotMatch(nflRoute, /syncBowlPool/);
   assert.match(migration, /refresh-bowl-pool-every-fifteen-minutes/);
   assert.match(migration, /public\.dispatch_bowl_sync_if_due\(\)/);
