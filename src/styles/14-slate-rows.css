@@ -573,36 +573,6 @@ html[data-theme="night"] .slate-receipt-strip {
   --receipt-metric-divider: var(--blue-40);
 }
 
-html[data-theme="night"] .selection-chip button:hover {
-  background-color: #472d35;
-  color: #ffb4bd;
-}
-/* The instructional action cards use a deliberately dark paper surface in
-   night mode; restate their hard-coded light-mode ink so the instructions do
-   not disappear into the background. */
-html[data-theme="night"] .slate-header-grid > aside {
-  color: #cbd9df;
-}
-
-html[data-theme="night"] .slate-header-grid > aside > div {
-  border-color: #5f7d82;
-  background-color: #1b2a31;
-  color: #d9e7e8;
-}
-
-html[data-theme="night"] .slate-header-grid > aside strong {
-  color: #63e1d3;
-}
-
-html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid {
-  border-color: #536f75;
-}
-
-html[data-theme="night"] .slate-header-grid > aside .slate-how-to-grid > div {
-  border-color: #536f75;
-}
-
-
 @media (max-width: 767px) {
   .mobile-primary-nav a { font-size: .83rem; white-space: nowrap; }
 }
@@ -624,12 +594,7 @@ html[data-theme="night"] select option {
   color: #f0f5f1;
 }
 
-/* Bowl Pool surfaces use explicit light Tailwind utilities in the markup;
-   restate them here so the entire competition remains legible in night mode. */
-html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  color: var(--teal-95);
-}
-html[data-theme="night"] .bowl-pool-page #bowl-selections { --color-slate-600: #a8c1c4; --color-slate-700: #a8c1c4; --color-slate-950: var(--teal-95); }
+/* The Bowl picks board's buttons take the board's night ink (its other colours are roles on #bowl-selections). */
 html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--teal-95); }
 
 /* On a phone the team name (the Pick'em tap) and the poker chip beside it (the Survivor tap) sat almost touching. A margin

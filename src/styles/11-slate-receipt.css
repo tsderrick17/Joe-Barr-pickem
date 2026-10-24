@@ -345,7 +345,7 @@
   margin-left: auto;
   padding: 0 .03rem;
 }
-.slate-receipt-selection-chip button:hover { color: #9d1e1e; }
+.slate-receipt-selection-chip button:hover { background-color: var(--chip-remove-hover-bg); color: var(--chip-remove-hover-ink); }
 .slate-receipt-lock-mark {
   color: var(--teal-26);
   flex: 0 0 auto;
@@ -534,6 +534,21 @@
   .slate-mini-nav strong { font-size: .64rem; }
   .slate-mini-nav em { font-size: .5rem; }
 }
+
+/* The instruction cards: ink, card and rules are roles (00-tokens.css), day and night. */
+.slate-instructions { color: var(--slate-help-ink); }
+.slate-action-instructions {
+  background-color: var(--slate-card-bg);
+  border-color: var(--slate-card-edge);
+  color: var(--slate-card-ink);
+}
+.slate-action-instructions strong { color: var(--slate-help-accent); }
+.slate-how-to-grid {
+  background-color: var(--slate-howto-bg);
+  border-color: var(--slate-howto-rule);
+  color: var(--slate-howto-ink);
+}
+.slate-how-to-grid > div { border-color: var(--slate-howto-rule); }
 
 @media (min-width: 768px) {
 

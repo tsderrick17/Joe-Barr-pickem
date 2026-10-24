@@ -206,6 +206,22 @@
   --chat-input-focus-edge: #00756e;
   --chat-input-ink: currentcolor;
   --chat-placeholder-ink: var(--color-slate-500);
+  --slate-help-ink: var(--color-slate-700);
+  --slate-card-edge: var(--themed-border-10);
+  --slate-card-bg: var(--themed-bg-16);
+  --slate-card-ink: #17354d;
+  --slate-help-accent: #00756e;
+  --slate-howto-rule: var(--themed-border-12);
+  --slate-howto-bg: transparent;
+  --slate-howto-ink: currentcolor;
+  --chip-remove-hover-bg: transparent;
+  --chip-remove-hover-ink: #9d1e1e;
+  --bowl-sel-ink: currentcolor;
+  --bowl-sel-ink-600: var(--color-slate-600);
+  --bowl-sel-ink-700: var(--color-slate-700);
+  --bowl-sel-ink-950: var(--color-slate-950);
+  --bowl-sel-legend-bg: var(--themed-bg-25);
+  --bowl-sel-field-bg: var(--themed-bg-26);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -387,6 +403,22 @@ html[data-theme="night"] {
   --chat-input-focus-edge: #96978d;
   --chat-input-ink: #f2ede2;
   --chat-placeholder-ink: #aeb5ae;
+  --slate-help-ink: #cbd9df;
+  --slate-card-edge: #5f7d82;
+  --slate-card-bg: #1b2a31;
+  --slate-card-ink: #d9e7e8;
+  --slate-help-accent: #63e1d3;
+  --slate-howto-rule: #536f75;
+  --slate-howto-bg: var(--slate-card-bg);
+  --slate-howto-ink: var(--slate-card-ink);
+  --chip-remove-hover-bg: #472d35;
+  --chip-remove-hover-ink: #ffb4bd;
+  --bowl-sel-ink: var(--teal-95);
+  --bowl-sel-ink-600: #a8c1c4;
+  --bowl-sel-ink-700: #a8c1c4;
+  --bowl-sel-ink-950: var(--teal-95);
+  --bowl-sel-legend-bg: #1b3038;
+  --bowl-sel-field-bg: #132129;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,
@@ -396,7 +428,3 @@ html[data-theme="night"] {
     rgba(255, 178, 224, .44) 100%);
 }
 
-html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  --themed-bg-25: #1b3038;
-  --themed-bg-26: #132129;
-}
