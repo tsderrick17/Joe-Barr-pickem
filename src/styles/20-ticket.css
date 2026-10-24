@@ -3,7 +3,7 @@
 /* Thermal race ticket: intentionally compact, ink-heavy, and lightweight. */
 .my-ticket {
   background:
-    var(--themed-bg-38);
+    var(--themed-bg-31);
   border: 1px solid #756b5b;
   box-shadow: var(--themed-shadow-3);
   color: var(--themed-text-6);
@@ -165,7 +165,7 @@
 .my-ticket-result.is-w { color: #16834e; }
 .my-ticket-result.is-l { color: #bd3028; }
 .my-ticket-selection small {
-  color: var(--themed-text-54);
+  color: var(--brown-36);
   font: 700 .55rem/1.2 Arial, sans-serif;
   margin-top: .16rem;
 }
@@ -179,7 +179,7 @@
   font-size: .9rem;
 }
 .my-ticket-open {
-  color: var(--themed-text-55);
+  color: var(--themed-text-7);
   font: 900 .84rem/1 "Courier New", monospace;
   letter-spacing: .12em;
 }
@@ -193,7 +193,7 @@
   display: grid;
 }
 .my-ticket-survivor-pick small {
-  color: var(--themed-text-54);
+  color: var(--brown-36);
   font: 800 .5rem/1.2 Arial, sans-serif;
   letter-spacing: .1em;
 }
@@ -216,7 +216,7 @@
 }
 .my-ticket-instructions {
   border-top: 1px dashed var(--brown-53);
-  color: var(--themed-text-54);
+  color: var(--brown-36);
   font: 700 .58rem/1.35 Arial, sans-serif;
   margin-top: .3rem;
   padding-top: .45rem;
@@ -244,7 +244,7 @@
 }
 .my-ticket-completion {
   align-self: stretch;
-  color: var(--themed-text-54);
+  color: var(--themed-text-42);
   display: grid;
   gap: .16rem;
 }
@@ -268,7 +268,7 @@
 }
 .my-ticket-footer small {
   align-self: start;
-  color: var(--themed-text-54);
+  color: var(--brown-36);
   font-size: .46rem;
   font-weight: 800;
   letter-spacing: .09em;
@@ -284,7 +284,7 @@
   align-self: end;
   grid-column: 3;
   justify-self: end;
-  background: var(--themed-bg-39);
+  background: var(--themed-bg-32);
   border-inline: 1px solid var(--brown-13);
   height: 1.28rem;
   opacity: .9;
@@ -301,6 +301,13 @@ html[data-theme="night"] .my-ticket-section + .my-ticket-section,
 html[data-theme="night"] .my-ticket-picks li,
 html[data-theme="night"] .my-ticket-survivor-state {
   border-color: #756b5b;
+}
+html[data-theme="night"] .my-ticket-selection small,
+html[data-theme="night"] .my-ticket-survivor-pick small,
+html[data-theme="night"] .my-ticket-footer small,
+html[data-theme="night"] .my-ticket-open,
+html[data-theme="night"] .my-ticket-instructions {
+  color: #bdb19b;
 }
 html[data-theme="night"] .my-ticket-instructions { border-color: #756b5b; }
 html[data-theme="night"] .my-ticket-barcode {

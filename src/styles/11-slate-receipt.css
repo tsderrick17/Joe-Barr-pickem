@@ -107,7 +107,7 @@
 
 .slate-receipt-ticket > span,
 .slate-receipt-pool > span {
-  color: var(--themed-text-41);
+  color: #42516a;
   font-size: .54rem;
   font-weight: 900;
   letter-spacing: .14em;
@@ -123,7 +123,7 @@
 
 .slate-receipt-ticket a {
   align-self: start;
-  color: var(--themed-text-42);
+  color: #1d3551;
   display: inline-block;
   font-size: .66rem;
   font-weight: 900;
@@ -306,10 +306,10 @@
 
 .slate-receipt-selection-chip {
   align-items: center;
-  background: var(--themed-bg-31);
+  background: #fffaf3;
   border: 1px solid #c8b8a0;
   border-left: 3px solid #cf2879;
-  color: var(--themed-text-43);
+  color: var(--themed-text-40);
   display: flex;
   font-size: .68rem;
   font-weight: 800;
@@ -320,18 +320,18 @@
 
 .slate-receipt-selection-chip.is-draft { border-left-color: #a84c85; }
 .slate-receipt-selection-chip.is-sealed {
-  background: var(--themed-bg-32);
-  border-color: var(--themed-border-27);
+  background: #eef4f1;
+  border-color: #8aa7a1;
   border-left-color: var(--teal-26);
   box-shadow: var(--themed-shadow-1);
 }
 .slate-receipt-selection-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slate-receipt-selection-chip small {
-  color: var(--themed-text-44);
+  color: #243248;
   font-size: inherit;
   font-weight: 900;
 }
-.slate-receipt-selection-chip small.is-official { color: var(--themed-text-45); }
+.slate-receipt-selection-chip small.is-official { color: var(--official-line-color); }
 .slate-receipt-selection-chip button {
   background: transparent;
   border: 0;
@@ -353,7 +353,7 @@
 }
 
 .slate-receipt-pool > em {
-  color: var(--themed-text-46);
+  color: var(--themed-text-41);
   font-size: .48rem;
   font-style: normal;
   font-weight: 900;
@@ -387,21 +387,21 @@
 }
 .bowl-receipt-metric + .bowl-receipt-metric { border-left: 1px dashed var(--receipt-rule); }
 .bowl-receipt-metric strong {
-  color: var(--themed-text-51);
+  color: #18364d;
   font-family: "Courier New", monospace;
   font-size: .92rem;
   font-weight: 900;
   line-height: 1;
 }
 .bowl-receipt-metric small {
-  color: var(--themed-text-52);
+  color: #596579;
   font-family: Arial, Helvetica, sans-serif;
   font-size: .43rem;
   font-weight: 900;
   letter-spacing: .11em;
   line-height: 1.1;
 }
-.bowl-receipt-metric.is-due strong { color: var(--themed-text-53); }
+.bowl-receipt-metric.is-due strong { color: var(--red-39); }
 
 .bowl-receipt-strip button:disabled { cursor: default; }
 
@@ -517,7 +517,7 @@
   /* This lives outside the Slate header so it can remain in view while a
      player works through a long mobile slate. */
   .slate-mini-nav {
-    background: var(--themed-bg-35);
+    background: var(--pool-surface);
     box-shadow: 0 5px 14px rgba(35, 30, 23, .18), 0 1px 0 rgba(255, 255, 255, .88) inset;
     margin-left: -.5rem;
     margin-right: -.5rem;

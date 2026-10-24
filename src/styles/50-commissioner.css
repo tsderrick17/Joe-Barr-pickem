@@ -162,8 +162,8 @@
 
 .pool-display-toggle {
   border: 1px solid #77746e;
-  background: var(--themed-bg-42);
-  color: var(--themed-text-56);
+  background: var(--pool-surface);
+  color: #34415a;
   font-size: .62rem;
   font-weight: 900;
   letter-spacing: .08em;
@@ -171,9 +171,10 @@
   text-transform: uppercase;
   transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
 }
-.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: var(--themed-bg-44); border-color: var(--themed-border-30); color: var(--themed-text-58); }
+.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: #e7f2ee; border-color: #167d75; color: var(--teal-20); }
 .pool-display-toggle:disabled { cursor: wait; opacity: .6; }
-html[data-theme="night"] .pool-display-toggle { border-color: #788482; }
+html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
+html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: var(--gray-100); }
 
 /* Keep the Bowl Pool identity columns above the moving game matrix. The
    explicit stacking and edge shadow prevent later game cells from painting

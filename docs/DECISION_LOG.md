@@ -4,10 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
-## 2026-10-23 - Night mode: 40 more colour overrides become theme-pair tokens
+## 2026-10-23 - Night mode: ten colour overrides become theme-pair tokens, only where the cascade proves it safe
 
-- Decision: a night rule that only swapped a colour (text, background, border colour, box shadow) for an element whose day rule sets the same property is gone. The day rule now reads a role token (`--themed-text-N`, `--themed-bg-N`, `--themed-border-N`, `--themed-shadow-N`) and `00-tokens.css` holds the day and night value of each in one place. Night rules 152 to 112, hard-coded hex colours 238 to 190 (budgets lowered). Rules that change layout or other properties, that use `!important`, that have no matching day rule, or whose colour comes from a variable defined on a component, stay as night rules.
-- Why: a night override has more weight than the day rule it changes, so editing the day rule could silently do nothing at night. A token pair cannot drift. Checked by the Linux screenshot suites in both themes, which must match without re-recording.
+- Decision: a night rule that only swapped a colour (text, background, border colour, box shadow) is replaced by a role token (`--themed-text-N`, `--themed-bg-N`, `--themed-border-N`, `--themed-shadow-N`) read by the day rule, with the day and night value together in `00-tokens.css`, but only when no other rule that matches the same element and sets the same property would now win over the day rule (a night override beats every day rule; a token does not). Night rules 152 to 142, hard-coded hex colours 238 to 227 (budgets lowered). A first pass converted 40 rules without that check; the screenshot suite caught it on the Bowl picks pressed box at night (a generic night rule for the same box now won), so the check was added and the pass redone. The other night rules stay as they are: layout or non-colour changes, `!important`, no matching day rule, colours from component-scoped variables, or a competing rule on the same element.
+- Why: a night override has more weight than the day rule it changes, so editing the day rule could silently do nothing at night. Converting where it is provably equivalent removes that trap; the remaining 142 would need their day rules reordered or re-scoped, which is a design change, not a mechanical one. Checked by the Linux screenshot suites in both themes, which must match without re-recording.
 
 ## 2026-10-23 - The Bowl email scheduler and score route are tested by running them
 
