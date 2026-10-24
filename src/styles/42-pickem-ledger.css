@@ -18,38 +18,8 @@
   background-color: var(--themed-bg-3);
   box-shadow: none;
 }
-.playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78); }
+.playoff-scoreboard .viewer-row { background: var(--playoff-viewer-bg); }
 .survivor-ledger-masthead h2 { margin: 0; }
-/* Keep the sticky player identity cells and the scrollable Survivor cells as
-   one continuous active row in night mode. */
-html[data-theme="night"] .survivor-standings-row.viewer-row > td {
-  background-color: var(--teal-16);
-  color: #e8f5f1;
-}
-html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-status,
-html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-name {
-  background-color: var(--teal-16);
-  color: #e8f5f1;
-}
-/* Your own scorecard row gets a quiet teal ticket treatment in night mode,
-   instead of disappearing into the alternating table surfaces. */
-html[data-theme="night"] .viewer-row {
-  --survivor-row-bg: var(--teal-16);
-  background-color: var(--teal-16);
-  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
-}
-html[data-theme="night"] .survivor-standings-header {
-  --survivor-row-bg: #17242c;
-}
-html[data-theme="night"] .survivor-standings-row {
-  --survivor-row-bg: #101c24;
-}
-html[data-theme="night"] .survivor-standings-row.is-alt {
-  --survivor-row-bg: #13232b;
-}
-html[data-theme="night"] .survivor-standings-row.viewer-row {
-  --survivor-row-bg: var(--teal-16);
-}
 /* Survivor expands to the same wide reading surface as the Bowl Card. Its
    collapsed state returns to the compact Pick'em rail so minimized modules
    remain visually consistent across the Standings page. */

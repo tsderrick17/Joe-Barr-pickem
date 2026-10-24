@@ -112,14 +112,6 @@
   .pickem-ledger-pick .pickem-ledger-spread { font-size: .96rem; }
   .pickem-ledger-row .pickem-ledger-player + td { padding-left: .68rem; }
 }
-html[data-theme="night"] .pickem-ledger {
-  --ledger-ink: #ede6d9;
-  --ledger-muted: #b7c4d3;
-  --ledger-paper: #252722;
-  --scorepad-blue: #55769a;
-  --scorepad-red: #b86d68;
-}
-html[data-theme="night"] .pickem-ledger-row { border-color: var(--scorepad-blue); }
 .pickem-eliminated-stamp {
   border: 3px solid var(--red-40);
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25), 0 1px 1px rgba(127, 29, 29, .12);
