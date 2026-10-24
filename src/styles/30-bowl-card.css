@@ -21,14 +21,8 @@
 /* Bowl Pool identity: a restrained gold postseason treatment keeps the same
    ledger mechanics as NFL Pick'em while making the competition immediately
    legible as its own event. Heading rules match the rest of the page. */
-.bowl-pool-page #bowl-selections {
-  border-color: #e0d2a8;
-  border-top: 3px solid #b8892b;
-  background-color: var(--pool-surface);
-  background-image: none;
-}
 .bowl-pool-page #bowl-selections .bowl-schedule > :not(.bowl-legend-row) {
-  border-color: #ece3c8;
+  border-color: var(--bowl-row-line);
 }
 /* The Bowl Card's heading line matches the other standings headings (the
    ledger ink rule from .pickem-ledger-masthead), minimized or open. */
@@ -61,10 +55,6 @@
 /* One quiet, continuous viewer rail: the row owns the highlight, not each
    individual result cell. This keeps the name, score and game columns aligned. */
 
-html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  border-color: #7a6a3a;
-  background: #1b1a16;
-}
 
 /* Survivor Table and Bowl Card share one width contract with the Pick'em Pad above them.
    Collapsed, each is exactly as wide as the pad and centered on it; expanded, it grows to
