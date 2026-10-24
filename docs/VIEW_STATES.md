@@ -53,6 +53,16 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 
 Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `bowl-claim-open`, `off-season`.
 
+## Pool chat (the box at the foot of every player page) — `chat.visual.spec.ts`
+
+Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Four messages: an ordinary one, the Commissioner's (moderator bar), a removed one, and one you can delete.
+
+| State | Screenshot |
+| --- | --- |
+| Open, message field empty | `chat-{day,night}-{phone-390,desktop-1280}` |
+| Emoji picker open (the emoji pictures are masked; their places are checked) | `chat-emoji-…` |
+| Message field focused with a draft typed | `chat-typing-…` |
+
 ## Bowl picks (`/bowl-pool`) — `bowl.visual.spec.ts`
 
 | State | Scenario |

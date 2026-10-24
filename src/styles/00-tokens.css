@@ -192,6 +192,20 @@
   --viewer-out-ink: var(--color-red-700);
   --viewer-muted-ink: var(--color-slate-500);
   --viewer-name-ink: currentcolor;
+  --chat-bg: var(--themed-bg-20);
+  --chat-edge: var(--themed-border-10);
+  --chat-ink: currentcolor;
+  --chat-form-rule: var(--themed-border-12);
+  --chat-note-ink: var(--color-slate-500);
+  --chat-empty-ink: var(--color-slate-600);
+  --chat-body-ink: var(--color-slate-700);
+  --chat-message-rule: #ddd5c7;
+  --chat-moderator-rule: #b88a19;
+  --chat-input-bg: var(--themed-bg-26);
+  --chat-input-edge: #9b9284;
+  --chat-input-focus-edge: #00756e;
+  --chat-input-ink: currentcolor;
+  --chat-placeholder-ink: var(--color-slate-500);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -359,6 +373,20 @@ html[data-theme="night"] {
   --viewer-out-ink: #e8f5f1;
   --viewer-muted-ink: #e8f5f1;
   --viewer-name-ink: #e8f5f1;
+  --chat-bg: #22231f;
+  --chat-edge: #918d81;
+  --chat-ink: #f2ede2;
+  --chat-form-rule: #817d72;
+  --chat-note-ink: #cfd4ca;
+  --chat-empty-ink: #cfd4ca;
+  --chat-body-ink: #cfd4ca;
+  --chat-message-rule: #716d64;
+  --chat-moderator-rule: #716d64;
+  --chat-input-bg: #2d2f2a;
+  --chat-input-edge: #96978d;
+  --chat-input-focus-edge: #96978d;
+  --chat-input-ink: #f2ede2;
+  --chat-placeholder-ink: #aeb5ae;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,

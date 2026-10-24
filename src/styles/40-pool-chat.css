@@ -1,31 +1,21 @@
-html[data-theme="night"] .pool-chat {
-  background: #22231f;
-  border-color: #918d81;
-  color: #f2ede2;
+/* The chat's colours, day and night, are roles (00-tokens.css); the markup carries layout only. The input rules
+   name .pool-chat first so they outrank the page-wide night rules for form fields. */
+.pool-chat {
+  background-color: var(--chat-bg);
+  border-color: var(--chat-edge);
+  color: var(--chat-ink);
 }
-
-html[data-theme="night"] .pool-chat > div,
-html[data-theme="night"] .pool-chat form {
-  border-color: #817d72;
+.pool-chat-composer { border-color: var(--chat-form-rule); }
+.pool-chat-note { color: var(--chat-note-ink); }
+.pool-chat-empty { color: var(--chat-empty-ink); }
+.pool-chat-body { color: var(--chat-body-ink); }
+.pool-chat .pool-chat-input {
+  background-color: var(--chat-input-bg);
+  border-color: var(--chat-input-edge);
+  color: var(--chat-input-ink);
 }
-
-html[data-theme="night"] .pool-chat .text-slate-500,
-html[data-theme="night"] .pool-chat .text-slate-600,
-html[data-theme="night"] .pool-chat .text-slate-700 {
-  color: #cfd4ca;
-}
-
-html[data-theme="night"] .pool-chat article {
-  border-color: #716d64;
-}
-
-html[data-theme="night"] .pool-chat input {
-  background: #2d2f2a;
-  border-color: #96978d;
-  color: #f2ede2;
-}
-
-html[data-theme="night"] .pool-chat input::placeholder { color: #aeb5ae; }
+.pool-chat .pool-chat-input::placeholder { color: var(--chat-placeholder-ink); }
+.pool-chat .pool-chat-input:focus { border-color: var(--chat-input-focus-edge); }
 
 .pool-chat-dock {
   background: var(--chat-dock-bg);

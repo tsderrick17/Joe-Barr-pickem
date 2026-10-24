@@ -37,13 +37,13 @@
 }
 
 .pool-chat-message {
-  border-bottom: 1px solid #ddd5c7;
+  border-bottom: 1px solid var(--chat-message-rule);
   padding: .46rem 0 .42rem;
 }
 
 .pool-chat-message:last-child { border-bottom: 0; }
 .pool-chat-message.is-deleted { color: #7b7368; font-style: italic; }
-.pool-chat-message.is-moderator { border-left: 3px solid #b88a19; padding-left: .55rem; }
+.pool-chat-message.is-moderator { border-left: 3px solid var(--chat-moderator-rule); padding-left: .55rem; }
 
 .pool-chat-message-meta {
   align-items: baseline;
