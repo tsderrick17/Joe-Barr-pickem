@@ -4,17 +4,8 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("a failed scoring-period read is not a missing week", async () => {
-  const picks = await read("src/app/api/picks/route.ts");
-  assert.match(picks, /if \(periodError\) return NextResponse\.json\([^\n]*status: 503/);
-  assert.ok(picks.indexOf("if (periodError)") < picks.indexOf("if (!period)"));
-});
-
-test("a successful sign-in still reports a failure to clear old PIN attempts", async () => {
-  const login = await read("src/app/api/login/route.ts");
-  assert.match(login, /const \{ error: clearError \} = await supabaseAdmin\.rpc\("clear_failed_pin_logins"/);
-  assert.match(login, /if \(clearError\) console\.error\(/);
-});
+// A failed scoring-period read answering 503, not 404, runs in picks-route-read-failures.test.mjs; a sign-in that cannot clear old PIN attempts still succeeds but
+// reports it, in pin-login-route.test.mjs; what the gate answers for an outage or an ordinary player runs in player-access-result.test.mjs.
 
 test("the Bowl sync stops on a failed database read instead of looking like an empty season", async () => {
   const bowl = await read("src/lib/sync-bowl-pool.ts");
@@ -27,14 +18,11 @@ test("react and react-dom are the same version", async () => {
   assert.equal(pkg.dependencies["react-dom"], pkg.dependencies.react);
 });
 
-test("the commissioner gate reads the profile with retries and answers an outage as 503, never as lost access", async () => {
+test("rule: the commissioner gate goes through the shared player authentication, which reads the profile with retries", async () => {
   const gate = await read("src/lib/require-commissioner.ts");
   assert.match(gate, /authenticateActivePlayer\(request, \{ profile: "named", requireCommissioner: true \}\)/);
   const auth = await read("src/lib/authenticate-active-player.ts");
   assert.match(auth, /retrySafeRead\(\(\) => players\(\)/);
-  const policy = await read("src/lib/player-access-result.js");
-  assert.match(policy, /if \(profile\.error\) return \{ ok: false, status: 503, code: "profile_unavailable" \};/);
-  assert.match(policy, /commissioner_required/, "still fails closed for an ordinary player");
 });
 
 test("the Bowl dispatcher uses the same Eastern August 1 season year as the app", async () => {

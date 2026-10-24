@@ -50,14 +50,10 @@ test("playoff snapshots require the actual game day and reconciled prior games",
 });
 
 test("reminder claims are bounded and only receipt-free stale claims recover", async () => {
-  const [sql, lease] = await Promise.all([
-    readFile(migrationUrl, "utf8"),
-    readFile(new URL("../src/lib/automation-execution-lease.ts", import.meta.url), "utf8"),
-  ]);
+  const sql = await readFile(migrationUrl, "utf8");   // the worker's own ten-minute lease runs in automation-lease-retry.test.mjs
   assert.match(sql, /processing_started_at < clock_timestamp\(\) - interval '20 minutes'/);
   assert.match(sql, /not exists \([\s\S]*email_reminder_deliveries/);
   assert.match(sql, /limit 3\s+for update skip locked/);
-  assert.match(lease, /reminders: { leaseSeconds: 600,/);
 });
 
 // The cooldown arithmetic itself is run against the real database in test/integration/pin-login-cooldown.test.mjs;

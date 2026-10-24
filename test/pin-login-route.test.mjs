@@ -73,8 +73,14 @@ test("a correct PIN returns the session and clears the source's earlier failures
   assert.deepEqual(ok.body, { session: { access_token: "access", refresh_token: "refresh" } });
   assert.equal(rpc("clear_failed_pin_logins").length, 1);
   assert.equal(rpc("record_failed_pin_login").length, 0, "no failure is recorded for a correct PIN");
-  const stillOk = await login("4821", { result: pass, clear: { code: "XX000" } });
-  assert.equal(stillOk.status, 200, "a bookkeeping failure never blocks a correct PIN");
+  const logged = [], realError = console.error;
+  console.error = (...args) => logged.push(args.join(" "));
+  try {
+    const stillOk = await login("4821", { result: pass, clear: { code: "XX000" } });
+    assert.equal(stillOk.status, 200, "a bookkeeping failure never blocks a correct PIN");
+  } finally { console.error = realError; }
+  assert.equal(logged.length, 1, "but it is reported, not swallowed");
+  assert.ok(!logged[0].includes("4821"), "without the PIN in the report");
 });
 
 test("when the failure cannot be recorded the answer is unavailable, not a false 'wrong PIN'", async () => {
