@@ -6,7 +6,7 @@
     repeating-linear-gradient(0deg, rgba(46, 39, 30, .025) 0 1px, transparent 1px 4px),
     #f3ead6;
   border: 1px solid #756b5b;
-  box-shadow: 0 4px 14px rgba(44, 36, 24, .14);
+  box-shadow: var(--themed-shadow-3);
   color: var(--themed-text-6);
   margin-left: auto;
   margin-right: auto;
@@ -303,7 +303,6 @@ html[data-theme="night"] .my-ticket {
     repeating-linear-gradient(0deg, rgba(225, 210, 178, .035) 0 1px, transparent 1px 4px),
     #29251f;
   border-color: #897e6b;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
 }
 html[data-theme="night"] .my-ticket-race,
 html[data-theme="night"] .my-ticket-footer {

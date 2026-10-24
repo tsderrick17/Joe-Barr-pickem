@@ -461,7 +461,5 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 .bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
 .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
 /* The empty corners over Games remaining and over Tiebreaker are the page itself, in day and night. */
-section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter { background: var(--sand-93); box-shadow: inset -1px 0 0 var(--bowl-gold); }
-section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--sand-93); }
-html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter,
-html[data-theme="night"] section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--background); }
+section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter { background: var(--themed-bg-30); box-shadow: inset -1px 0 0 var(--bowl-gold); }
+section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--themed-bg-30); }
