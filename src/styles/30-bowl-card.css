@@ -84,7 +84,7 @@
   width: min(100%, 53rem);
   scroll-padding-left: calc(var(--bowl-tile-col) + var(--bowl-name-col));
   scroll-snap-type: x mandatory;
-  scrollbar-color: #a69f93 transparent;
+  scrollbar-color: var(--bowl-scroll-thumb) transparent;
   scrollbar-width: thin;
   --bowl-game-width: 7.5rem;
   /* The frozen player rail: the games-left tile, then the name. */
@@ -148,15 +148,12 @@
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {
-  background: #a69f93;
+  background: var(--bowl-scroll-thumb);
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
 }
-.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: var(--themed-bg-4); background-clip: padding-box; }
-html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 transparent; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background-clip: padding-box; }
+.bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: var(--bowl-scroll-hover); background-clip: padding-box; }
 
 /* Ticket results stay deliberately simple: solid upright letters, identical
    sizing for wins and losses, and no surrounding badge or stamp outline. */

@@ -212,50 +212,10 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
   opacity: 1;
 }
 .bowl-standings-game-cell > .bowl-standings-bowl-name {
-  border-bottom: 1px solid #b8c0ca;
+  border-bottom: 1px solid var(--bowl-name-rule);
   box-sizing: border-box;
   padding: 0 .1rem;
 }
-
-/* The Bowl Card uses a bespoke grid with intentionally light paper colors in
-   its markup.  Restyle every surface explicitly for night mode so muted text
-   never lands on parchment-colored cells. */
-html[data-theme="night"] .bowl-card-section .bowl-standings-scroll {
-  background: #111c24;
-  border-color: #6b8790;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-summary-cell,
-html[data-theme="night"] .bowl-card-section .bowl-standings-tiebreaker-header {
-  background: var(--bowl-navy-lift);
-  border-color: #6b8790;
-  color: #dcebed;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-game-cell {
-  background: #1c2c36;
-  border-color: #6b8790;
-  color: #dcebed;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-bowl-name {
-  border-color: #637b84;
-  color: #f6f7f2;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-line { color: #e3bf91; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row {
-  background: var(--blue-15);
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt { background: #20323f; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > span {
-  color: #e9f1f3;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row .bowl-standings-sticky {
-  background: var(--blue-15);
-  color: #f4f7f6;
-}
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row.is-alt .bowl-standings-sticky { background: #20323f; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-win { color: #80e4ac; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-loss { color: #ffaaa6; }
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-open,
-html[data-theme="night"] .bowl-card-section .bowl-standings-player-row > .bowl-cell-locked { color: #aebfca; }
 
 /* Commissioner desk: the Clubhouse. Forest felt, a gilt hairline frame, cream paper cards, one cognac leather band. Colors come from
    the --club-* tokens, which carry their own night values, so nothing here needs a night rule. */
