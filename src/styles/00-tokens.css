@@ -167,6 +167,14 @@
   --playoff-grid-rule: rgba(75, 126, 183, .18);
   --playoff-margin-rule: rgba(183, 65, 61, .12);
   --playoff-paper: #fbf8ef;
+  --pool-toggle-bg: var(--pool-surface);
+  --pool-toggle-edge: #77746e;
+  --pool-toggle-ink: #34415a;
+  --pool-toggle-hover-bg: #e7f2ee;
+  --pool-toggle-hover-edge: #167d75;
+  --pool-toggle-hover-ink: var(--teal-20);
+  --chart-head-rule: #d4d4d8;
+  --chart-row-rule: var(--gray-95);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -177,6 +185,9 @@
 }
 
 html[data-theme="night"] {
+  --background: #0b1117;
+  --foreground: #e8ece7;
+  color-scheme: dark;
   --page-cream: #0b1117;
   --ink-faint: #b7c3cb;
   --ink-faint-zinc: #b7c3cb;
@@ -306,6 +317,14 @@ html[data-theme="night"] {
   --playoff-grid-rule: rgba(96, 178, 198, .14);
   --playoff-margin-rule: rgba(220, 123, 125, .16);
   --playoff-paper: #172027;
+  --pool-toggle-bg: #252c2d;
+  --pool-toggle-edge: #788482;
+  --pool-toggle-ink: #d8e2df;
+  --pool-toggle-hover-bg: #2d4c4b;
+  --pool-toggle-hover-edge: #80d4ca;
+  --pool-toggle-hover-ink: var(--gray-100);
+  --chart-head-rule: #3f3f46;
+  --chart-row-rule: #27272a;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,

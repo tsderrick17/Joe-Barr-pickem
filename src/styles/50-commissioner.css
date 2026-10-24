@@ -161,9 +161,9 @@
 }
 
 .pool-display-toggle {
-  border: 1px solid #77746e;
-  background: var(--pool-surface);
-  color: #34415a;
+  border: 1px solid var(--pool-toggle-edge);
+  background: var(--pool-toggle-bg);
+  color: var(--pool-toggle-ink);
   font-size: .62rem;
   font-weight: 900;
   letter-spacing: .08em;
@@ -171,10 +171,8 @@
   text-transform: uppercase;
   transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
 }
-.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: #e7f2ee; border-color: #167d75; color: var(--teal-20); }
+.pool-display-toggle:hover:not(:disabled), .pool-display-toggle:focus-visible { background: var(--pool-toggle-hover-bg); border-color: var(--pool-toggle-hover-edge); color: var(--pool-toggle-hover-ink); }
 .pool-display-toggle:disabled { cursor: wait; opacity: .6; }
-html[data-theme="night"] .pool-display-toggle { background: #252c2d; border-color: #788482; color: #d8e2df; }
-html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-theme="night"] .pool-display-toggle:focus-visible { background: #2d4c4b; border-color: #80d4ca; color: var(--gray-100); }
 
 /* Keep the Bowl Pool identity columns above the moving game matrix. The
    explicit stacking and edge shadow prevent later game cells from painting
@@ -368,19 +366,17 @@ html[data-theme="night"] .pool-display-toggle:hover:not(:disabled), html[data-th
 .provider-chart-table { border-collapse: collapse; color: var(--themed-text-13); }
 .provider-chart-table thead th {
   background: var(--themed-bg-10);
-  border-bottom: 1px solid #d4d4d8;
+  border-bottom: 1px solid var(--chart-head-rule);
   color: var(--themed-text-14);
   font-weight: 700;
   position: sticky;
   top: 0;
   z-index: 1;
 }
-.provider-chart-table tbody tr { border-top: 1px solid var(--gray-95); }
+.provider-chart-table tbody tr { border-top: 1px solid var(--chart-row-rule); }
 .provider-chart-table tbody tr:nth-child(even) { background: var(--themed-bg-11); }
 .provider-chart-table th:not(:first-child),
 .provider-chart-table td:not(:first-child) { text-align: right; }
-html[data-theme="night"] .provider-chart-table thead th { border-bottom-color: #3f3f46; }
-html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #27272a; }
 /* Worker activity. The prefix outranks the dashboard's generic table rules
    (which force one-line cells and a pill on every second column). */
 [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
@@ -393,7 +389,7 @@ html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #272
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody { display: block; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) thead,
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) colgroup { display: none; }
-  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid var(--gray-95); border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
+  [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { align-items: center; border: 1px solid var(--chart-row-rule); border-radius: .55rem; display: grid; gap: .3rem .5rem; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: .45rem; padding: .65rem .75rem; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td:is(.grading-worker-name, .grading-worker-state, .grading-worker-started, .grading-worker-finished) { border: 0; border-radius: 0; overflow-wrap: normal; padding: 0; width: auto; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) .grading-worker-status { white-space: nowrap; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-started,
@@ -401,7 +397,6 @@ html[data-theme="night"] .provider-chart-table tbody tr { border-top-color: #272
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-started::before { content: "Started  "; font-weight: 700; }
   [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody td.grading-worker-finished::before { content: "Finished  "; font-weight: 700; }
 }
-html[data-theme="night"] [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) tbody tr { border-color: #27272a; }
 .grading-worker-status { display: inline-flex; max-width: 100%; align-items: center; border-radius: 999px; background: #f4f4f5; padding: .16rem .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
 [aria-labelledby="grading-dashboard-title"] ol { border-left: 2px solid var(--gray-90); margin-left: .25rem; padding-left: 1rem; }
 [aria-labelledby="grading-dashboard-title"] ol li { position: relative; padding-top: .75rem; padding-bottom: .75rem; }

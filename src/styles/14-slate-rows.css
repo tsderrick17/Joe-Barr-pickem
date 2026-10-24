@@ -516,12 +516,6 @@ button.slate-team-side:not(:disabled)::after {
 
 /* A restrained late-night sportsbook palette. Page components retain their
    newspaper proportions; the theme only swaps paper, ink, and line colors. */
-html[data-theme="night"] {
-  --background: #0b1117;
-  --foreground: #e8ece7;
-  color-scheme: dark;
-}
-
 /* Commissioner cards and form controls should not retain their light-mode
    browser surfaces once the desk is viewed at night. */
 
