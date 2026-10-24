@@ -109,6 +109,8 @@
   --receipt-label-ink: #42516a;
   --receipt-link-ink: #1d3551;
   --receipt-link-line: currentColor;
+  --receipt-link-hover-bg: transparent;
+  --receipt-link-hover-ink: var(--receipt-link-ink);
   --receipt-chip-bg: #fffaf3;
   --receipt-chip-edge: #c8b8a0;
   --receipt-chip-rail: #cf2879;
@@ -150,6 +152,9 @@
 .slate-mini-nav.slate-receipt-strip {
   background: transparent;
   box-shadow: none;
+}
+@media (max-width: 767px) {
+  .slate-mini-nav.slate-receipt-strip { background: var(--receipt-strip-bg, transparent); }
 }
 
 

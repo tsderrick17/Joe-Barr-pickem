@@ -159,6 +159,15 @@
   --themed-shadow-4: inset 4px 0 0 var(--teal-31), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
   --themed-shadow-5: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
   --themed-bg-30: var(--sand-93);
+  --selection-chip-official-ink: var(--official-line-color);
+  --action-empty-edge: #c8c1b5;
+  --team-marker-gradient: linear-gradient(90deg,
+    rgba(191, 20, 104, .58) 0%,
+    rgba(220, 45, 133, .54) 1.5%,
+    rgba(241, 78, 158, .48) 4%,
+    rgba(250, 113, 182, .43) 8%,
+    rgba(255, 151, 204, .39) 14%,
+    rgba(255, 174, 216, .37) 100%);
 }
 
 html[data-theme="night"] {
@@ -283,6 +292,15 @@ html[data-theme="night"] {
   --themed-shadow-4: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
   --themed-shadow-5: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
   --themed-bg-30: var(--background);
+  --selection-chip-official-ink: var(--teal-26);
+  --action-empty-edge: #6d746c;
+  --team-marker-gradient: linear-gradient(90deg,
+    rgba(232, 31, 139, .70) 0%,
+    rgba(244, 59, 160, .64) 1.5%,
+    rgba(251, 91, 181, .58) 4%,
+    rgba(255, 124, 197, .52) 8%,
+    rgba(255, 156, 214, .48) 14%,
+    rgba(255, 178, 224, .44) 100%);
 }
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
