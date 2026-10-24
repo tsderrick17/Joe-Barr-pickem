@@ -420,6 +420,7 @@
 .grading-rail h2 { color: var(--sand-89); font-weight: 400; }
 .grading-rail-note { color: var(--club-gold-lt); letter-spacing: .16em; text-transform: uppercase; }
 .grading-rail-control { background: rgba(255, 255, 255, .06); border: 1px solid rgba(179, 150, 98, .6); border-radius: 2px; color: var(--sand-93); }
+select.grading-rail-control { background-color: var(--select-bg, rgba(255, 255, 255, .06)); border-color: var(--select-edge, rgba(179, 150, 98, .6)); color: var(--field-ink, var(--sand-93)); }
 .grading-rail-primary { background: var(--club-gold); border-radius: 2px; color: var(--club-forest); }
 .grading-rail-primary:hover:not(:disabled) { background: var(--club-gold-lt); }
 .kpi-forest { background: var(--club-forest-2); }
@@ -443,6 +444,7 @@
 @media (max-width: 900px) { .at-glance { grid-template-columns: minmax(0, 1fr); } }
 .desk-button { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); transition: background .18s ease, border-color .18s ease; }
 .desk-button:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
+select.desk-button { background-color: var(--select-bg, transparent); border-color: var(--select-edge, var(--club-gold-dk)); color: var(--field-ink, var(--club-ink)); }
 /* The desk's own controls and notices, used by every tool on the Season, Bowl Pool, Players and Email screens: a forest button, a quiet
    paper panel, and status boxes that mark ok / warning / alert with a left bar in the desk's three signal colours. */
 .desk-button-solid { background: var(--club-forest); border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--sand-93); letter-spacing: .02em; transition: background .18s ease, border-color .18s ease; }
@@ -456,8 +458,8 @@
 .desk-rule-top { border-top: 1px solid var(--club-line); }
 .desk-rule-bottom { border-bottom: 1px solid var(--club-gold-dk); }
 .desk-rule-y { border-block: 1px solid var(--club-gold-dk); }
-.desk-input { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); }
-.desk-input:focus { border-color: var(--club-forest-2); box-shadow: 0 0 0 1px var(--club-forest-2); }
+.desk-input { background: var(--field-bg, var(--club-paper)); border: 1px solid var(--field-edge, var(--club-line)); border-radius: 2px; color: var(--field-ink, var(--club-ink)); }
+.desk-input:focus { border-color: var(--field-focus-edge, var(--club-forest-2)); box-shadow: 0 0 0 1px var(--club-forest-2); }
 .grading-status { align-items: center; border: 1px solid; border-radius: .75rem; display: grid; gap: .9rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin-top: 1rem; padding: .9rem 1rem; }
 .grading-status { background: var(--club-paper-2); border-color: var(--club-line); border-left-width: 3px; }
 .grading-status.is-clear { border-left-color: var(--club-ok); }
@@ -743,4 +745,4 @@
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
 .pool-select { align-items: center; display: flex; gap: 0.7rem; }
 .pool-select span { color: var(--club-muted); font: 700 0.62rem Arial, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; }
-.pool-select select { background: var(--club-paper); border: 1px solid var(--club-line); color: var(--club-ink); font: 700 1rem Georgia, serif; min-height: 2.75rem; min-width: 12rem; padding: 0.35rem 0.9rem; }
+.pool-select select { background: var(--select-bg, var(--club-paper)); border: 1px solid var(--select-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); font: 700 1rem Georgia, serif; min-height: 2.75rem; min-width: 12rem; padding: 0.35rem 0.9rem; }

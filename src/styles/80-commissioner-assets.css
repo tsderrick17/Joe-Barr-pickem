@@ -199,6 +199,8 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-replay { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); font: 700 .7rem/1 Arial, sans-serif; justify-self: start; letter-spacing: .08em; padding: .45rem .8rem; text-transform: uppercase; }
 .asset-replay:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
 .asset-replay:disabled { opacity: .45; }
+/* This card sits outside a receipt strip, so it has never had the strip's paper and rule colours; keep it that way now that they are global roles. */
+.asset-submit { --receipt-paper: initial; --receipt-rule: initial; }
 .asset-submit .slate-receipt-print { width: 8rem; }
 .asset-card.is-wide { column-span: all; }
 .asset-chip { display: inline-flex; height: 3rem; width: 3rem; }
@@ -216,7 +218,9 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-choice > div { display: flex; flex-wrap: wrap; gap: .25rem; }
 .asset-choice button { border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); font-size: .68rem; padding: .2rem .55rem; }
 .asset-choice button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-gold-dk); color: var(--sand-93); }
-.asset-select, .asset-text { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); font: inherit; font-size: .78rem; min-width: 0; padding: .3rem .45rem; width: 100%; }
+.asset-select, .asset-text { border: 1px solid; border-radius: 2px; font: inherit; font-size: .78rem; min-width: 0; padding: .3rem .45rem; width: 100%; }
+input.asset-text { background: var(--field-bg, var(--club-paper)); border-color: var(--field-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); }
+select.asset-select { background: var(--select-bg, var(--club-paper)); border-color: var(--select-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); }
 .asset-knob input[type="range"] { accent-color: var(--club-forest-2); }
 .workshop-heading { margin: .25rem 0 1.4rem; max-width: 46rem; }
 .workshop-heading h2 { font: 400 clamp(1.9rem, 3vw, 2.5rem)/1.1 Georgia, serif; margin: .3rem 0 .5rem; }

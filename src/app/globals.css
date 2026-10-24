@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Tailwind declares theme, base, components and utilities; the night form-field skin sits above them (and below every rule written by hand). */
+@layer theme, base, components, utilities, fields;
 @import "../styles/00-tokens.css";
 @import "../styles/01-base.css";
 @import "../styles/10-slate.css";
