@@ -145,12 +145,12 @@
   font-weight: 400;
   letter-spacing: .14em;
 }
-.bowl-pool-page #bowl-selections .bowl-selection-game-row { background-color: var(--bowl-paper); border-color: var(--themed-border-27); }
+.bowl-pool-page #bowl-selections .bowl-selection-game-row { background-color: var(--bowl-paper); border-color: #e7dfcb; }
 .bowl-pool-page #bowl-selections .bowl-selection-game-row:nth-child(odd) { background-color: var(--bowl-paper-alt); }
 .bowl-pool-page .bowl-game-name { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .04em; }
 .bowl-pool-page .bowl-game-line { color: var(--bowl-navy); font-family: var(--font-graduate), Georgia, serif; font-size: 1rem; letter-spacing: .03em; }
 .bowl-pool-page .bowl-game-line.is-official { color: var(--official-teal); }
-.bowl-pool-page #bowl-selections .bowl-schedule-note { border-color: var(--themed-border-27); }
+.bowl-pool-page #bowl-selections .bowl-schedule-note { border-color: #e7dfcb; }
 
 /* ---- Standings: the Bowl Card */
 .bowl-card-section { background: transparent; }
@@ -194,6 +194,8 @@ html[data-theme="night"] .bowl-claim-stub button { background: var(--bowl-gold);
 html[data-theme="night"] .bowl-pool-page .bowl-game-line { color: var(--sand-91); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-legend-row { background: var(--bowl-navy); border-color: var(--bowl-navy-lift); color: var(--bowl-gold-soft); }
 /* The day rules draw the schedule's row lines in a pale cream; at night they are the theme's rule colour. */
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-selection-game-row,
+html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-schedule-note { border-color: var(--blue-40); }
 html[data-theme="night"] .bowl-pool-page #bowl-selections { border-top-color: var(--bowl-rule); }
 html[data-theme="night"] .bowl-pool-page .bowl-game-line.is-official { color: var(--official-teal); }
 html[data-theme="night"] .bowl-megaphone { filter: drop-shadow(0 0 1px rgba(244, 236, 217, .7)); }
@@ -459,5 +461,5 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pr
 .bowl-score-tile.is-large .bowl-flap { height: 2.9rem; width: 1.8rem; }
 .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 2.15rem; }
 /* The empty corners over Games remaining and over Tiebreaker are the page itself, in day and night. */
-section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter { background: var(--themed-bg-34); box-shadow: inset -1px 0 0 var(--bowl-gold); }
-section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--themed-bg-34); }
+section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter { background: var(--themed-bg-30); box-shadow: inset -1px 0 0 var(--bowl-gold); }
+section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--themed-bg-30); }

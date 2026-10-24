@@ -145,7 +145,9 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
    texts without creating a separate source of truth from the regular board. */
 .playoff-scoreboard {
   background:
-    var(--themed-bg-30);
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(75, 126, 183, .18) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(183, 65, 61, .12) 0 2px, transparent 2px),
+    #fbf8ef;
   border-left: 1px solid rgba(167, 62, 55, .3);
   --pad-section: .5rem;
   padding-left: .5rem;
@@ -220,6 +222,12 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick { padding-left: 0; padding-right: clamp(.35rem, 2.4vw - .7rem, 1.25rem); white-space: nowrap; }
   .playoff-scoreboard .pickem-ledger-row td.pickem-ledger-player + td { padding-left: .5rem; }
   .playoff-scoreboard .pickem-ledger-row td.playoff-scoreboard-pick:last-child { padding-right: .5rem; }
+}
+html[data-theme="night"] .playoff-scoreboard {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2.1rem, rgba(96, 178, 198, .14) 2.1rem 2.16rem),
+    linear-gradient(90deg, rgba(220, 123, 125, .16) 0 2px, transparent 2px),
+    #172027;
 }
 
 /* The four pieces of the Standings page are one reading surface: ticket,

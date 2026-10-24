@@ -569,6 +569,7 @@ html[data-theme="night"] .slate-receipt-selection-chip {
   background: #f8d8e7;
   border-color: #ec81ba;
   border-left-color: #ad235f;
+  color: var(--gray-07);
 }
 html[data-theme="night"] .slate-receipt-selection-chip.is-sealed {
   background: linear-gradient(135deg, #17383a, #142e32);
@@ -579,6 +580,7 @@ html[data-theme="night"] .slate-receipt-selection-chip small { color: var(--gray
 html[data-theme="night"] .slate-receipt-selection-chip small.is-official { color: #66d8cc; }
 html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small { color: var(--teal-95); }
 html[data-theme="night"] .slate-receipt-selection-chip.is-sealed small.is-official { color: #66d8cc; }
+html[data-theme="night"] .slate-receipt-pool > em { color: #afc2c7; }
 html[data-theme="night"] .slate-receipt-survivor-pick > strong { color: var(--teal-95); }
 
 html[data-theme="night"] .selection-chip {

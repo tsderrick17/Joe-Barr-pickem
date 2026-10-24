@@ -309,7 +309,7 @@
   background: #fffaf3;
   border: 1px solid #c8b8a0;
   border-left: 3px solid #cf2879;
-  color: var(--themed-text-40);
+  color: #18364d;
   display: flex;
   font-size: .68rem;
   font-weight: 800;
@@ -353,7 +353,7 @@
 }
 
 .slate-receipt-pool > em {
-  color: var(--themed-text-41);
+  color: var(--gray-40);
   font-size: .48rem;
   font-style: normal;
   font-weight: 900;

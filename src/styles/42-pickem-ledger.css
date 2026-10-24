@@ -111,3 +111,5 @@ html[data-theme="night"] .survivor-standings-row.viewer-row {
 }
 .pool-chat-hide:hover, .pool-chat-hide:focus-visible { color: var(--teal-20); text-decoration: underline; }
 
+html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
+
