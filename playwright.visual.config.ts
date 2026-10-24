@@ -15,9 +15,10 @@ export default defineConfig({
   testDir: "./test/visual",
   timeout: 60_000,
   // CI serves a production build, which is far faster and steadier than compiling
-  // pages on demand in development. Two workers: more makes the first image
-  // optimizations pile up and pages time out.
-  workers: 2,
+  // pages on demand in development. Locally two workers (a dev server compiling on
+  // demand times out with more); on CI four, the cores a standard runner has on a
+  // public repository, with images unoptimized so nothing piles up.
+  workers: process.env.CI ? 4 : 2,
   reporter: [["list"]],
   expect: { toHaveScreenshot: { maxDiffPixels: 0, animations: "disabled", caret: "hide" } },
   use: { baseURL: "http://127.0.0.1:3130" },
