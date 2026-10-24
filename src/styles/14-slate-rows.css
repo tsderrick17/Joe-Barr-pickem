@@ -594,12 +594,7 @@ html[data-theme="night"] select option {
   color: #f0f5f1;
 }
 
-/* Bowl Pool surfaces use explicit light Tailwind utilities in the markup;
-   restate them here so the entire competition remains legible in night mode. */
-html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  color: var(--teal-95);
-}
-html[data-theme="night"] .bowl-pool-page #bowl-selections { --color-slate-600: #a8c1c4; --color-slate-700: #a8c1c4; --color-slate-950: var(--teal-95); }
+/* The Bowl picks board's buttons take the board's night ink (its other colours are roles on #bowl-selections). */
 html[data-theme="night"] .bowl-pool-page #bowl-selections button { color: var(--teal-95); }
 
 /* On a phone the team name (the Pick'em tap) and the poker chip beside it (the Survivor tap) sat almost touching. A margin
