@@ -154,10 +154,17 @@
 
 /* ---- Picks page */
 .bowl-pool-page #bowl-selections {
+  /* The markup's Tailwind utilities read these, so restating them here (day: the root's own values) re-inks the board at night. */
+  --color-slate-600: var(--bowl-sel-ink-600);
+  --color-slate-700: var(--bowl-sel-ink-700);
+  --color-slate-950: var(--bowl-sel-ink-950);
+  --themed-bg-25: var(--bowl-sel-legend-bg);
+  --themed-bg-26: var(--bowl-sel-field-bg);
   background: var(--bowl-board-bg);
   border: 1px solid var(--bowl-board-edge);
   border-top-color: var(--bowl-rule);
   box-shadow: 0 10px 24px rgba(30, 24, 12, .08);
+  color: var(--bowl-sel-ink);
   position: relative;
 }
 .bowl-pool-page #bowl-selections::before { border: 1px solid var(--bowl-gold-soft); content: ""; inset: 5px; pointer-events: none; position: absolute; }

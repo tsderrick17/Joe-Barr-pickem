@@ -216,6 +216,12 @@
   --slate-howto-ink: currentcolor;
   --chip-remove-hover-bg: transparent;
   --chip-remove-hover-ink: #9d1e1e;
+  --bowl-sel-ink: currentcolor;
+  --bowl-sel-ink-600: var(--color-slate-600);
+  --bowl-sel-ink-700: var(--color-slate-700);
+  --bowl-sel-ink-950: var(--color-slate-950);
+  --bowl-sel-legend-bg: var(--themed-bg-25);
+  --bowl-sel-field-bg: var(--themed-bg-26);
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -407,6 +413,12 @@ html[data-theme="night"] {
   --slate-howto-ink: var(--slate-card-ink);
   --chip-remove-hover-bg: #472d35;
   --chip-remove-hover-ink: #ffb4bd;
+  --bowl-sel-ink: var(--teal-95);
+  --bowl-sel-ink-600: #a8c1c4;
+  --bowl-sel-ink-700: #a8c1c4;
+  --bowl-sel-ink-950: var(--teal-95);
+  --bowl-sel-legend-bg: #1b3038;
+  --bowl-sel-field-bg: #132129;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,
@@ -416,7 +428,3 @@ html[data-theme="night"] {
     rgba(255, 178, 224, .44) 100%);
 }
 
-html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  --themed-bg-25: #1b3038;
-  --themed-bg-26: #132129;
-}
