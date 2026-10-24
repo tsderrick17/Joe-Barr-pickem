@@ -49,24 +49,16 @@ test("Commissioner-safe worker messages identify the affected responsibility", (
   );
 });
 
-test("worker receipts stay constant-size and the public route remains opaque", async () => {
-  const [migration, lease, route, sharedHealth, healthRoute] = await Promise.all([
+// The lease's started / success / failed / skipped receipts run in automation-lease-retry.test.mjs, and the public route's 200 / 503 answers, its ten-minute
+// allowance and its opaque body in critical-worker-health-route.test.mjs. What remains is the receipts table's SQL contract and how the health check reads the pool.
+test("worker receipts stay constant-size, and the health check reads only what it needs", async () => {
+  const [migration, sharedHealth] = await Promise.all([
     readFile(new URL("../supabase/migrations/20260820011000_add_critical_worker_heartbeats.sql", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/automation-execution-lease.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/api/health/workers/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/critical-worker-health.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/critical-worker-health-route.ts", import.meta.url), "utf8"),
   ]);
   assert.match(migration, /job_name text primary key/);
   assert.match(migration, /on conflict \(job_name\) do update/);
   assert.match(migration, /revoke all.*public, anon, authenticated/is);
-  assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "started"\)/);
-  assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "success"\)/);
-  assert.match(lease, /recordAutomationWorkerHeartbeat\(job, "failed"\)/);
-  assert.match(healthRoute, /status: debouncedHealthy \? 200 : 503/);
-  assert.match(route, /respondToCriticalWorkerHealth/);
-  assert.match(healthRoute, /checkCriticalWorkerHealth/);
-  assert.match(healthRoute, /health_probe_states/);
   assert.match(sharedHealth, /lineLocksDue/);
   assert.match(sharedHealth, /line_lock_at/);
   assert.match(sharedHealth, /scoring_period_id/);
@@ -74,5 +66,4 @@ test("worker receipts stay constant-size and the public route remains opaque", a
   assert.match(sharedHealth, /from\("game_lines"\)/);
   assert.match(sharedHealth, /from\("score_check_backoff"\)/);
   assert.match(sharedHealth, /FIRST_SCORE_CHECK_DELAY_MINUTES \+ 20/);
-  assert.doesNotMatch(route, /NextResponse\.json\([^)]*(job_name|last_succeeded_at|problems)/s);
 });

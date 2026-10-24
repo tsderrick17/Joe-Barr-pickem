@@ -80,3 +80,9 @@ test("a task that fails still releases the lease and the error reaches the calle
   assert.deepEqual(heartbeats(), ["started", "failed"]);
   mock.restoreAll();
 });
+
+test("the reminder worker claims a ten-minute lease, long enough for a batch and never shorter than its own timeout", async () => {
+  reset();
+  await runWithAutomationLease("reminders", async () => "sent");
+  assert.deepEqual(claims()[0].args, { target_job_name: "reminders", lease_seconds: 600 });
+});
