@@ -4,6 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-23 - Night mode: 40 more colour overrides become theme-pair tokens
+
+- Decision: a night rule that only swapped a colour (text, background, border colour, box shadow) for an element whose day rule sets the same property is gone. The day rule now reads a role token (`--themed-text-N`, `--themed-bg-N`, `--themed-border-N`, `--themed-shadow-N`) and `00-tokens.css` holds the day and night value of each in one place. Night rules 152 to 112, hard-coded hex colours 238 to 190 (budgets lowered). Rules that change layout or other properties, that use `!important`, that have no matching day rule, or whose colour comes from a variable defined on a component, stay as night rules.
+- Why: a night override has more weight than the day rule it changes, so editing the day rule could silently do nothing at night. A token pair cannot drift. Checked by the Linux screenshot suites in both themes, which must match without re-recording.
+
 ## 2026-10-23 - The Bowl email scheduler and score route are tested by running them
 
 - Decision: `test/automatic-bowl-emails.test.mjs` runs `ensureAutomaticBowlPoolEmails` against a scripted database: one lines-are-set email per game day at the day's earliest line lock, one pick-due reminder per scheduled game three hours before kickoff (none once that time has passed or the game is postponed), each day's recap only from 5 AM Eastern the next morning, a duplicate (23505) skipped without counting, any other queueing error or a missing Commissioner a failure. `test/sync-bowl-scores-route.test.mjs` runs the `sync-bowl-scores` route: 500 without the secret, 401 on a wrong token, the Bowl season gate, the `bowl_scores` lease, a busy lease as a skip, any other failure as a 500 with its message. The matching text checks in `bowl-email-pipeline.test.mjs` are gone; the NFL-route and migration rules stay.

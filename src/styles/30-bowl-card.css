@@ -22,7 +22,7 @@
    ledger mechanics as NFL Pick'em while making the competition immediately
    legible as its own event. Heading rules match the rest of the page. */
 .bowl-pool-page #bowl-selections {
-  border-color: #e0d2a8;
+  border-color: var(--themed-border-28);
   border-top: 3px solid #b8892b;
   background-color: var(--pool-surface);
   background-image: none;
@@ -62,7 +62,6 @@
    individual result cell. This keeps the name, score and game columns aligned. */
 
 html[data-theme="night"] .bowl-pool-page #bowl-selections {
-  border-color: #7a6a3a;
   background: #1b1a16;
 }
 
@@ -158,15 +157,13 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections {
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {
-  background: #a69f93;
+  background: var(--themed-bg-40);
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
 }
 .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background: var(--themed-bg-4); background-clip: padding-box; }
 html[data-theme="night"] .bowl-standings-scroll { scrollbar-color: #708090 transparent; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb { background: #708090; background-clip: padding-box; }
-html[data-theme="night"] .bowl-standings-scroll::-webkit-scrollbar-thumb:hover { background-clip: padding-box; }
 
 /* Ticket results stay deliberately simple: solid upright letters, identical
    sizing for wins and losses, and no surrounding badge or stamp outline. */

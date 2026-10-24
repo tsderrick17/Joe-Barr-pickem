@@ -7,7 +7,7 @@
 }
 
 .slate-mini-nav a {
-  color: var(--blue-22);
+  color: var(--themed-text-48);
   display: grid;
   gap: .16rem;
   min-width: 0;
@@ -20,8 +20,8 @@
 
 .slate-mini-nav a:hover,
 .slate-mini-nav a:focus-visible {
-  background: #ede6d8;
-  color: #171719;
+  background: var(--themed-bg-37);
+  color: var(--themed-text-50);
 }
 
 .slate-mini-nav > a > span {

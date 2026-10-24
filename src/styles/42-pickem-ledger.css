@@ -4,30 +4,18 @@
    field, a left-hand rail, and a complete row outline. */
 .pickem-standings-row.viewer-row > td {
   background-color: var(--themed-bg-5);
-  box-shadow: inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+  box-shadow: var(--themed-shadow-4);
 }
 .pickem-standings-row.viewer-row > td:first-child {
-  box-shadow: inset 4px 0 0 var(--teal-31), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+  box-shadow: var(--themed-shadow-5);
 }
 .pickem-standings-row.viewer-row > td:last-child {
-  box-shadow: inset -1px 0 0 rgba(22, 135, 127, .3), inset 0 2px 0 rgba(22, 135, 127, .3), inset 0 -2px 0 rgba(22, 135, 127, .3);
+  box-shadow: var(--themed-shadow-6);
 }
 /* The Pick'em Pad stays impartial: its ruled paper should not color a
    player's whole line. Survivor retains its stronger personal marker. */
 .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
   background-color: var(--themed-bg-3);
-  box-shadow: none;
-}
-html[data-theme="night"] .pickem-standings-row.viewer-row > td {
-  box-shadow: inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-html[data-theme="night"] .pickem-standings-row.viewer-row > td:first-child {
-  box-shadow: inset 4px 0 0 #8be9dc, inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-html[data-theme="night"] .pickem-standings-row.viewer-row > td:last-child {
-  box-shadow: inset -1px 0 0 rgba(126, 225, 210, .35), inset 0 2px 0 rgba(126, 225, 210, .35), inset 0 -2px 0 rgba(126, 225, 210, .35);
-}
-html[data-theme="night"] .pickem-scoreboard-ledger:not(.playoff-scoreboard) .pickem-standings-row.viewer-row > td {
   box-shadow: none;
 }
 .playoff-scoreboard .viewer-row { background: rgba(220, 241, 235, .78); }
@@ -48,7 +36,6 @@ html[data-theme="night"] .survivor-standings-row.viewer-row .survivor-sticky-nam
 html[data-theme="night"] .viewer-row {
   --survivor-row-bg: var(--teal-16);
   background-color: var(--teal-16);
-  box-shadow: inset 0 0 0 1px rgba(126, 225, 210, 0.28);
 }
 html[data-theme="night"] .survivor-standings-header {
   --survivor-row-bg: #17242c;
@@ -61,12 +48,6 @@ html[data-theme="night"] .survivor-standings-row.is-alt {
 }
 html[data-theme="night"] .survivor-standings-row.viewer-row {
   --survivor-row-bg: var(--teal-16);
-}
-html[data-theme="night"] .viewer-row .survivor-sticky-status {
-  box-shadow: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
-}
-html[data-theme="night"] .viewer-row .survivor-sticky-name {
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
 }
 /* Survivor expands to the same wide reading surface as the Bowl Card. Its
    collapsed state returns to the compact Pick'em rail so minimized modules
@@ -116,6 +97,4 @@ html[data-theme="night"] .viewer-row .survivor-sticky-name {
   text-transform: uppercase;
 }
 .pool-chat-hide:hover, .pool-chat-hide:focus-visible { color: var(--teal-20); text-decoration: underline; }
-
-html[data-theme="night"] .pool-chat-dock { background: #1b1d1b; }
 
