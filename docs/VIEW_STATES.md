@@ -6,7 +6,7 @@ with its fixture scenario and screenshots in the same pull request, and a row in
 this file.** Only the Linux screenshots (`-linux`, recorded and checked in CI; see "Refreshing
 baselines" below) are committed. Local runs use personal, untracked baselines.
 
-Widths: phone 360, phone 390, tablet 700, desktop 1280 (the Slate also 900).
+Widths: phone 360, phone 390, tablet 700, desktop 1280 (the Slate also 900). The Commissioner desk is shot at phone 390 and desktop 1280 only, day and night; its tablet-width layout is held by the "tables fit their cards" behavior tests.
 Themes: day at every width; night at 390 and 1280 only. Fixed sample data,
 fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 
