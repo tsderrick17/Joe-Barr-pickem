@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse } from "./standings-fixtures.mjs";
 
 // The Survivor Table and the Bowl Card scroll sideways on a phone, and an iPhone lets them be pulled past their edge. What shows in that gap is whatever
-// is the scroller's own background, so it must be the page's colour. No screenshots are compared.
+// is the scroller's own background, so it must be the colour of whatever is behind it: the page's main area (not `body`, which sits under it in another colour). No
+// screenshots are compared.
 const SCENARIO = "bowl-results";
 
 async function open(page: Page, theme: string) {
@@ -31,9 +32,14 @@ for (const theme of ["day", "night"]) {
       await expect(scroller, selector).toBeVisible({ timeout: 30_000 });
       // It really is a sideways scroller here, so there is an edge to pull past.
       expect(await scroller.evaluate((element) => element.scrollWidth > element.clientWidth), `${selector} scrolls sideways at phone width`).toBe(true);
-      const paint = await scroller.evaluate((element) => ({ colour: getComputedStyle(element).backgroundColor, image: getComputedStyle(element).backgroundImage, page: getComputedStyle(document.body).backgroundColor }));
-      expect(paint.page, "the page has a colour of its own").not.toBe("rgba(0, 0, 0, 0)");
-      expect(paint, `${selector} is the page's colour, so nothing paler shows past its edge`).toEqual({ colour: paint.page, image: "none", page: paint.page });
+      const paint = await scroller.evaluate((element) => {
+        // What shows past the scroller's edge: the first colour found walking up from it.
+        let behind = element.parentElement;
+        while (behind && getComputedStyle(behind).backgroundColor === "rgba(0, 0, 0, 0)") behind = behind.parentElement;
+        return { colour: getComputedStyle(element).backgroundColor, image: getComputedStyle(element).backgroundImage, behind: behind ? getComputedStyle(behind).backgroundColor : "none found" };
+      });
+      expect(paint.behind, "something behind the scroller has a colour").not.toBe("none found");
+      expect(paint, `${selector} is the colour behind it, so nothing paler shows past its edge`).toEqual({ colour: paint.behind, image: "none", behind: paint.behind });
     }
   });
 }
