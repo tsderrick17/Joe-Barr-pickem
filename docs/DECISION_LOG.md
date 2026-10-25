@@ -4,11 +4,11 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
-## 2026-10-25 - The Survivor Table and Bowl Card paint nothing behind their rows, so a sideways pull shows the page
+## 2026-10-25 - The Survivor Table and Bowl Card are the page's colour behind their rows, so a sideways pull shows the page
 
-- Decision: `.survivor-standings-scroll` and `.bowl-standings-scroll` have no background of their own (the base rule, the Bowl Card section's override and the unused `--bowl-card-bg` role are gone). Each row, header and sticky cell paints its own colour. A new behaviour test (`table-edges.visual.spec.ts`) checks that both scrollers compute to a transparent background in day and night at phone width, where they scroll sideways.
-- Why: on an iPhone a table that scrolls sideways can be pulled past its edge, and the gap shows whatever the scroller itself paints. These two painted the pool's pale paper, so the gap read as a white panel beside a beige page. Transparent, the gap is the page. Plain text inside a scroller with no background is anti-aliased in greyscale rather than with coloured fringes, so a few dozen text pixels differ in Windows screenshots (none on a phone, which always uses greyscale).
-- Do not: give a sideways-scrolling table (or any scroller a phone can pull past its edge) its own paper colour again; put the colour on the rows instead.
+- Decision: `.survivor-standings-scroll` and `.bowl-standings-scroll` use the page's own background (`var(--themed-bg-28)`, the same value as `body`) instead of the pool's pale paper (`--pool-paper`, `--bowl-card-bg`; the Bowl Card section's override and the unused `--bowl-card-bg` role are gone). Each row, header and sticky cell paints its own colour, so nothing in the normal view changes (all 106 Standings screenshots are identical). A new behaviour test (`table-edges.visual.spec.ts`) checks that both scrollers compute to the page's background colour, day and night, at phone width where they scroll sideways.
+- Why: on an iPhone a table that scrolls sideways can be pulled past its edge, and the gap shows the scroller's own background. These two had the pool's pale paper, so the gap read as a white panel beside a beige page. Making them transparent was tried first, but it changes how text inside them is smoothed (a few thousand pixels across 54 screenshots); the page colour gives the same result with no change to the pictures.
+- Do not: give a sideways-scrolling table (or any scroller a phone can pull past its edge) a different paper colour than the page behind it; put the colour on the rows instead.
 
 ## 2026-10-25 - The Bowl Pool megaphone is centred in its box, its lettering is larger, and the sound arcs are gone
 

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse } from "./standings-fixtures.mjs";
 
 // The Survivor Table and the Bowl Card scroll sideways on a phone, and an iPhone lets them be pulled past their edge. What shows in that gap is whatever
-// is behind the scroller, so the scroller must paint nothing of its own: the page's colour then fills the gap. No screenshots are compared.
+// is the scroller's own background, so it must be the page's colour. No screenshots are compared.
 const SCENARIO = "bowl-results";
 
 async function open(page: Page, theme: string) {
@@ -24,15 +24,16 @@ async function open(page: Page, theme: string) {
 }
 
 for (const theme of ["day", "night"]) {
-  test(`the Survivor Table and Bowl Card paint no background of their own behind their rows (${theme})`, async ({ page }) => {
+  test(`the Survivor Table and Bowl Card are the page colour behind their rows, so a sideways pull shows the page (${theme})`, async ({ page }) => {
     await open(page, theme);
     for (const selector of [".survivor-standings-scroll", ".bowl-standings-scroll"]) {
       const scroller = page.locator(selector).first();
       await expect(scroller, selector).toBeVisible({ timeout: 30_000 });
       // It really is a sideways scroller here, so there is an edge to pull past.
       expect(await scroller.evaluate((element) => element.scrollWidth > element.clientWidth), `${selector} scrolls sideways at phone width`).toBe(true);
-      const paint = await scroller.evaluate((element) => ({ colour: getComputedStyle(element).backgroundColor, image: getComputedStyle(element).backgroundImage }));
-      expect(paint, `${selector} paints nothing, so the page shows through past its edge`).toEqual({ colour: "rgba(0, 0, 0, 0)", image: "none" });
+      const paint = await scroller.evaluate((element) => ({ colour: getComputedStyle(element).backgroundColor, image: getComputedStyle(element).backgroundImage, page: getComputedStyle(document.body).backgroundColor }));
+      expect(paint.page, "the page has a colour of its own").not.toBe("rgba(0, 0, 0, 0)");
+      expect(paint, `${selector} is the page's colour, so nothing paler shows past its edge`).toEqual({ colour: paint.page, image: "none", page: paint.page });
     }
   });
 }
