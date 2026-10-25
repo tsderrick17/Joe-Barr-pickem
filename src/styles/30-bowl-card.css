@@ -146,6 +146,11 @@
 .bowl-crest-ornament span:first-child { transform-origin: right center; }
 .bowl-crest-ornament span:last-child { transform-origin: left center; }
 
+/* On a touch screen the scroll indicator floats over the table's bottom edge, and the frozen name cells (each on a layer of its own) cover it as it passes
+   beneath them. A strip of clear space under the last row gives the indicator a place of its own; a mouse's scrollbar already has one. */
+@media (hover: none) and (pointer: coarse) {
+  div.bowl-standings-scroll { padding-bottom: .5rem; }
+}
 .bowl-standings-scroll::-webkit-scrollbar { height: .6rem; }
 .bowl-standings-scroll::-webkit-scrollbar-track { background: transparent; }
 .bowl-standings-scroll::-webkit-scrollbar-thumb {

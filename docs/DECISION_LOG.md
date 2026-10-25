@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - A touch screen's scroll indicator gets its own strip under the Survivor Table and Bowl Card
+
+- Decision: on a touch screen (`(hover: none) and (pointer: coarse)`), `div.bowl-standings-scroll` and `div.survivor-standings-scroll` have `.5rem` of padding under the last row. With a mouse nothing changes (those scrollbars already take their own room), so every desktop and phone-width screenshot, which is taken with a mouse, is unchanged. `table-edges.visual.spec.ts` checks the strip with touch emulation and checks that a mouse gets none.
+- Why: on an iPhone the horizontal scroll indicator floats over the bottom edge of the scroller, and the frozen name cells (sticky, each on its own layer) are drawn over it, so the indicator seemed to slide under the names. This was read from the owner's screenshots, not reproduced (no iOS in the test tools), so if the indicator still goes under the names the cause is something else.
+- Do not: take the strip off to save a few pixels, or add it for mouse users (a classic scrollbar already has room).
+
 ## 2026-10-25 - The Survivor Table and Bowl Card are the page's colour behind their rows, so a sideways pull shows the page
 
 - Decision: `.survivor-standings-scroll` and `.bowl-standings-scroll` use the colour of the page's main area (`var(--themed-bg-18)`, what `main` paints; day `#f5f0e6`, night `#121b22`) instead of the pool's pale paper (`--pool-paper`, `--bowl-card-bg`; the Bowl Card section's override and the unused `--bowl-card-bg` role are gone). Each row, header and sticky cell paints its own colour, so nothing in the normal view changes (all 106 Standings screenshots are identical). A new behaviour test (`table-edges.visual.spec.ts`) checks that both scrollers compute to the colour of whatever is behind them (the first coloured ancestor), day and night, at phone width where they scroll sideways.
