@@ -120,10 +120,10 @@
 }
 
 /* A picked team's box shows a cheerleader's megaphone in the school's colors, lettered with its name. Every megaphone is the same size; when a
-   team is newly picked it swings up from the mouthpiece and gives a cheer (three sound arcs by the bell). */
-.bowl-megaphone { display: inline-flex; filter: var(--bowl-megaphone-glow); height: 2.3rem; position: relative; vertical-align: middle; width: 6.1rem; }
+   team is newly picked it swings up from the mouthpiece. The box is the drawing's outline once tilted (the svg's viewBox), so it centres in its pick box. */
+.bowl-megaphone { display: inline-flex; filter: var(--bowl-megaphone-glow); height: 2.3rem; position: relative; vertical-align: middle; width: 4.65rem; }
 .bowl-megaphone svg { display: block; height: 100%; overflow: visible; width: 100%; }
-.bowl-megaphone-art { transform: rotate(-7deg); transform-origin: 10% 55%; }
+.bowl-megaphone-art { transform: rotate(-7deg); transform-origin: 12px 25.85px; }
 .bowl-megaphone-body { fill: var(--megaphone-primary); }
 .bowl-megaphone-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linejoin: round; stroke-width: .9; }
 .bowl-megaphone-trim { fill: var(--megaphone-secondary); }
@@ -132,25 +132,16 @@
 .bowl-megaphone-rim { fill: none; stroke: var(--megaphone-secondary); stroke-width: 2.4; }
 .bowl-megaphone-handle { fill: none; stroke: var(--megaphone-secondary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.6; }
 .bowl-megaphone-handle-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.2; }
-.bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .06em; paint-order: stroke; stroke: rgba(0, 0, 0, .25); stroke-width: .5px; text-anchor: middle; }
-.bowl-megaphone-waves path { fill: none; opacity: 0; stroke: var(--megaphone-primary); stroke-linecap: round; stroke-width: 2.2; }
+.bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; paint-order: stroke; stroke: rgba(0, 0, 0, .25); stroke-width: .5px; text-anchor: middle; }
 .bowl-team-pick { display: inline-block; max-width: 100%; }
 .bowl-team-pick.is-new .bowl-megaphone-art { animation: bowl-megaphone-raise var(--megaphone-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; }
-.bowl-team-pick.is-new .bowl-megaphone-waves path { animation: bowl-megaphone-cheer 700ms ease-out both; animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55); }
-.bowl-team-pick.is-new .bowl-megaphone-waves path:nth-child(2) { animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55 + 110ms); }
-.bowl-team-pick.is-new .bowl-megaphone-waves path:nth-child(3) { animation-delay: calc(var(--megaphone-raise-ms, 620ms) * .55 + 220ms); }
 @keyframes bowl-megaphone-raise {
   from { opacity: 0; transform: translateY(.55rem) rotate(-36deg) scale(.45); }
   55% { opacity: 1; transform: rotate(-1deg) scale(1.1); }
   78% { transform: rotate(-9deg) scale(.97); }
   to { opacity: 1; transform: rotate(-7deg); }
 }
-@keyframes bowl-megaphone-cheer {
-  from { opacity: 0; transform: translateX(-4px); }
-  35% { opacity: .85; }
-  to { opacity: 0; transform: translateX(4px); }
-}
-@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-megaphone-art, .bowl-team-pick.is-new .bowl-megaphone-waves path { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bowl-team-pick.is-new .bowl-megaphone-art { animation: none; } }
 
 /* ---- Picks page */
 .bowl-pool-page #bowl-selections {
@@ -297,7 +288,7 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--
   .bowl-pool-page .bowl-game-name { hyphens: auto; }
 }
 @media (max-width: 639px) {
-  .bowl-megaphone { width: 4.6rem; }
+  .bowl-megaphone { height: 1.87rem; width: 3.78rem; }
 }
 .bowl-claim-main p.bowl-claim-note { border-top: 1px dotted var(--bowl-rule); color: var(--bowl-ink); font-size: .78rem; font-weight: 700; margin: .6rem 0 0; padding-top: .5rem; }
 /* The title stays centered; the show/hide control sits just beside it. */

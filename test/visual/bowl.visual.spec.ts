@@ -9,7 +9,8 @@ const ALL_PICKS = { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2", "bowl-3": "h
 type Scenario = { build: () => ReturnType<typeof bowlResponse>; now?: string; click?: string; fullGuess?: boolean };
 const SCENARIOS: Record<string, Scenario> = {
   "not-joined": { build: () => bowlResponse({ optedIn: false, entryOpen: true }) },
-  "picked": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1", "bowl-2": "h2", "bowl-3": "h3" } }) },
+  // Georgia Southern and Ohio State are the two-line names: their lettering must stay inside the megaphone's cone, clear of its band.
+  "picked": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1", "bowl-2": "a2", "bowl-3": "a3" } }) },
   // Two games have kicked off: their buttons are locked, the rest are open.
   "games-started": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: ALL_PICKS }), now: "2026-12-20T20:00:00Z" },
   // Every game picked and the tiebreaker saved: the receipt reads complete.
