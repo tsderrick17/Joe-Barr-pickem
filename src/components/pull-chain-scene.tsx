@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { ballSpot, chainAnchor, chainLinks, chainReach, COUNTER_TALL, counterSpot, chainTwang, descentPose, fieldMarks, FOOT, groundOf, layout, plantedPose, POLE, pullStages, slatOffsets, TURF } from "@/lib/pull-chain.js";
+import { ballSpot, chainAnchor, chainLinks, chainReach, COUNTER_TALL, counterSpot, chainTwang, descentPose, fieldMarks, FOOT, groundOf, layout, plantedPose, POLE, pullStages, slatOffsets, TIP_HALF, TURF } from "@/lib/pull-chain.js";
 
 /**
  * The picture for pull to refresh: a first-down chain zoomed in on its last three yards, as wide as the page and no taller than the header. The
@@ -14,7 +14,7 @@ const TOP_WIDTH = 10, BOTTOM_WIDTH = 2.6;
 const CHEVRONS = 4;
 
 /** One first-down marker, as the chain crew carries it: a target disc on top, a long padded orange banner that tapers to the foot with
- *  black-and-white chevrons pointing down, and a black rubber foot that the chain is fastened to. */
+ *  black-and-white chevrons pointing down, and a skinny black pole below it (no foot plate) that the chain is fastened to. */
 function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zoom: number }) {
   const rod = POLE;
   const half = (at: number) => (TOP_WIDTH + (BOTTOM_WIDTH - TOP_WIDTH) * ((at - BANNER_TOP) / (rod - BANNER_TOP))) / 2;
@@ -40,8 +40,7 @@ function Rod({ x, y, tilt = 0, zoom }: { x: number; y: number; tilt?: number; zo
       <circle className="pull-chain-rod" cx={0} cy={DISC} r={DISC * 0.4} />
       <g transform={`translate(0 ${rod})`}>
         <path className="pull-chain-iron" d="M-1.3 0H1.3V1Q1.3 1.5 0.9 1.5H-0.9Q-1.3 1.5 -1.3 1Z" />
-        <rect className="pull-chain-iron" height={FOOT - 1.4 - 0.3} width={1.1} x={-0.55} y={1.4} />
-        <path className="pull-chain-iron" d={`M-1.5 ${FOOT - 0.3}Q-1.5 ${FOOT - 0.4} -1.3 ${FOOT - 0.4}H1.3Q1.5 ${FOOT - 0.4} 1.5 ${FOOT - 0.3}V${FOOT - 0.1}Q1.5 ${FOOT} 1.3 ${FOOT}H-1.3Q-1.5 ${FOOT} -1.5 ${FOOT - 0.1}Z`} />
+        <rect className="pull-chain-iron" height={FOOT - 1.4} width={TIP_HALF * 2} x={-TIP_HALF} y={1.4} />
         <rect className="pull-chain-clasp" height={0.7} rx={0.35} width={2} x={-2.6} y={FOOT - 3.5 - 0.35} />
       </g>
     </g>
