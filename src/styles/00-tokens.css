@@ -201,6 +201,10 @@
   --chat-body-ink: var(--color-slate-700);
   --chat-message-rule: #ddd5c7;
   --chat-moderator-rule: #b88a19;
+  --chat-name-ink: #34415a;
+  --chat-mod-badge-ink: #8c6612;
+  --chat-deleted-ink: #7b7368;
+  --chat-delete-button-ink: #7f858d;
   --chat-input-bg: var(--themed-bg-26);
   --chat-input-edge: #9b9284;
   --chat-input-focus-edge: #00756e;
@@ -435,7 +439,11 @@ html[data-theme="night"] {
   --chat-empty-ink: #cfd4ca;
   --chat-body-ink: #cfd4ca;
   --chat-message-rule: #716d64;
-  --chat-moderator-rule: #716d64;
+  --chat-moderator-rule: #d4a72c;
+  --chat-name-ink: #b7c6e3;
+  --chat-mod-badge-ink: #e6bd4a;
+  --chat-deleted-ink: #a39c8e;
+  --chat-delete-button-ink: #a6adb6;
   --chat-input-bg: #2d2f2a;
   --chat-input-edge: #96978d;
   --chat-input-focus-edge: #96978d;

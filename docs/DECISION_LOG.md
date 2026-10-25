@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - Pool chat is readable at night: names, moderator bar and small text get night colours
+
+- Decision: the chat's player names, MOD tag, moderator side bar, removed-message text and Delete link read colour roles (`--chat-name-ink`, `--chat-mod-badge-ink`, `--chat-moderator-rule`, `--chat-deleted-ink`, `--chat-delete-button-ink`) defined in `00-tokens.css`. Day values are the old colours, so day is pixel-identical. At night the names are a light blue (`#b7c6e3`), the moderator bar and MOD tag are gold like day, and the removed-message and Delete text are lighter. No new night rule was added (the budget stays at 6).
+- Why: at night the names were dark blue (`#34415a`) on a dark box and the moderator bar was grey, so a player's name and who is a moderator were hard to see. The owner approved the look from before and after pictures.
+- Do not: put chat colours back as literals in `42-pickem-ledger.css`, or add a night override for them; change the role values in the night block instead.
+
 ## 2026-10-24 - A postponed game holds the weekly handoff, and says so
 
 - Decision: while a game in the active week is `postponed`, `advanceScoringPeriods` answers `blocked` with "A postponed game is still open: wait for it to be played, or record it as cancelled or no contest." and never calls `complete_scoring_period_atomically`. The week hands off at its normal time once the game is played, or recorded as cancelled or no contest. Cancelled and no-contest games still settle the week as before.
