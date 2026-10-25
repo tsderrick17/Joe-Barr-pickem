@@ -27,7 +27,8 @@
    vertical scrollbar. Its height is content-driven; only narrow viewports
    may need the intentional horizontal scroll. */
 .survivor-standings-scroll {
-  background: var(--pool-paper);
+  /* The page's own colour, like the Bowl Card table: a sideways pull past the edge shows the page. */
+  background: var(--themed-bg-28);
   overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
