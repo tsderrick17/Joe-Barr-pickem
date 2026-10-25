@@ -51,14 +51,19 @@ for (const theme of ["day", "night"]) {
       await page.evaluate(() => document.fonts.ready);
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       await chat.scrollIntoViewIfNeeded();
+      // The pointer is parked outside the box for every shot: an emoji button lifts a pixel when it is hovered, and whether the pointer (left
+      // where the smiley was clicked) had been counted as over one when the picker opened changed from run to run.
+      await page.mouse.move(0, 0);
       await expect(chat).toHaveScreenshot(`chat-${theme}-${label}.png`, { mask: [emojiButton] });
 
       await emojiButton.click();
       await expect(chat.getByRole("group").first()).toBeVisible();
+      await page.mouse.move(0, 0);
       await expect(chat).toHaveScreenshot(`chat-emoji-${theme}-${label}.png`, { mask: [emojiButton, chat.getByRole("group").locator("button")] });
 
       await emojiButton.click();
       await chat.locator("#pool-chat-message").fill("Anyone else on the Chiefs?");
+      await page.mouse.move(0, 0);
       await expect(chat).toHaveScreenshot(`chat-typing-${theme}-${label}.png`, { mask: [emojiButton] });
     });
   }
