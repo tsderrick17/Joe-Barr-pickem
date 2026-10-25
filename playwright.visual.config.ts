@@ -19,6 +19,9 @@ export default defineConfig({
   // demand times out with more); on CI four, the cores a standard runner has on a
   // public repository, with images unoptimized so nothing piles up.
   workers: process.env.CI ? 4 : 2,
+  // Every test is independent (its own page and mocked answers), so tests are spread one by one across workers and CI shards, not a file at a time:
+  // the commissioner file alone holds a quarter of the suite.
+  fullyParallel: true,
   reporter: [["list"]],
   expect: { toHaveScreenshot: { maxDiffPixels: 0, animations: "disabled", caret: "hide" } },
   use: { baseURL: "http://127.0.0.1:3130" },

@@ -69,12 +69,20 @@ jobs:
 
   # Exact-match screenshots of every view, state, width and theme, in the same
   # pinned browser image the Linux baselines were recorded in.
+  #
+  # The suite runs as four shards in parallel (each builds the site and runs a quarter of the tests), so the check takes a few minutes instead of ten
+  # or more. The repository is public, so the extra runners cost nothing. Nothing requires this check by name; the job names are "visual (1/4)" to "visual (4/4)".
   visual:
     needs: changes
     if: needs.changes.outputs.ui == 'true'
+    name: visual (${{ matrix.shard }}/4)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     container: mcr.microsoft.com/playwright:v1.63.0-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -84,12 +92,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run test:visual
+      - run: npm run test:visual -- --shard=${{ matrix.shard }}/4
       # Only the email artwork test, run from its own file: `npm test` with a name pattern still starts every test file (a minute and a half).
-      - run: node --test test/email-artwork-baseline.test.mjs
+      - if: matrix.shard == 1
+        run: node --test test/email-artwork-baseline.test.mjs
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: visual-diffs
+          name: visual-diffs-${{ matrix.shard }}
           path: test-results/
           retention-days: 7
