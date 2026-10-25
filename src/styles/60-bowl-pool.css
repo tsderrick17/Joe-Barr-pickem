@@ -25,7 +25,6 @@
   --bowl-tile-bg: var(--bowl-paper);
   --bowl-tile-edge: var(--bowl-gold-soft);
   --bowl-tile-seam: rgba(22, 34, 58, .14);
-  --bowl-card-bg: var(--bowl-paper);
   --bowl-head-edge: var(--bowl-navy);
   --bowl-head-ink: var(--bowl-gold-soft);
   --bowl-cell-ink: var(--sand-91);
@@ -182,7 +181,7 @@
 .bowl-card-section { background: transparent; }
 .bowl-card-section .bowl-crest { margin-bottom: .7rem; }
 .bowl-card-section .survivor-title-toggle { background: transparent; border-color: var(--bowl-gold); color: var(--bowl-gold); }
-.bowl-card-section .bowl-standings-scroll { background: var(--bowl-card-bg); border-bottom: 2px solid var(--bowl-navy); box-shadow: none; }
+.bowl-card-section .bowl-standings-scroll { border-bottom: 2px solid var(--bowl-navy); box-shadow: none; }
 /* Dates, games, and lines read like a scoreboard header. */
 .bowl-card-section .bowl-standings-head-row > span {
   background: var(--bowl-navy);
@@ -226,7 +225,6 @@ html[data-theme="night"] .bowl-card-section {
   --bowl-tile-edge: #4d4a3e;
   --bowl-tile-seam: rgba(255, 255, 255, .12);
   --bowl-megaphone-glow: drop-shadow(0 0 1px rgba(244, 236, 217, .7));
-  --bowl-card-bg: #111c24;
   --bowl-head-edge: #6b8790;
   --bowl-head-ink: #dcebed;
   --bowl-cell-ink: #dcebed;
