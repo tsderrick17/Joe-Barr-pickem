@@ -43,3 +43,29 @@ for (const theme of ["day", "night"]) {
     }
   });
 }
+
+// On a touch screen the scroll indicator floats over the table's bottom edge and the frozen name cells cover it, so the last row needs clear space beneath it.
+// A mouse's scrollbar takes its own room already, so the space is only added on touch (and the desktop and phone-width screenshots, taken with a mouse, are unchanged).
+test.describe("touch screen", () => {
+  test.use({ hasTouch: true, isMobile: true });
+  for (const theme of ["day", "night"]) {
+    test(`the Survivor Table and Bowl Card leave room under the last row for the scroll indicator (${theme})`, async ({ page }) => {
+      await open(page, theme);
+      for (const selector of [".survivor-standings-scroll", ".bowl-standings-scroll"]) {
+        const scroller = page.locator(selector).first();
+        await expect(scroller, selector).toBeVisible({ timeout: 30_000 });
+        const room = await scroller.evaluate((element) => parseFloat(getComputedStyle(element).paddingBottom));
+        expect(room, `${selector} has clear space under its last row`).toBeGreaterThanOrEqual(8);
+      }
+    });
+  }
+});
+
+test("with a mouse the tables add no extra space under the last row", async ({ page }) => {
+  await open(page, "day");
+  for (const selector of [".survivor-standings-scroll", ".bowl-standings-scroll"]) {
+    const scroller = page.locator(selector).first();
+    await expect(scroller, selector).toBeVisible({ timeout: 30_000 });
+    expect(await scroller.evaluate((element) => getComputedStyle(element).paddingBottom), selector).toBe("0px");
+  }
+});

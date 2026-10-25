@@ -32,6 +32,10 @@
   overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
+/* The same clear strip under the last row as the Bowl Card table, for the touch screen's scroll indicator (see 30-bowl-card.css). */
+@media (hover: none) and (pointer: coarse) {
+  div.survivor-standings-scroll { padding-bottom: .5rem; }
+}
 .survivor-standings-grid > .survivor-standings-header,
 .survivor-standings-grid > .survivor-standings-row {
   grid-template-columns: 2.3rem 5.5rem repeat(18, minmax(2.2rem, 1fr));
