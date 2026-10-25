@@ -73,6 +73,20 @@ test("a week with an unsettled game waits; pending Pick'em picks or pending Surv
   assert.equal(database.rpcCalls.length, 0, "a blocked week is never completed");
 });
 
+test("a postponed game holds the handoff with a reason, and nothing is sent to the database to complete the week", async () => {
+  const postponed = { id: "g2", kickoff_at: "2026-10-12T00:30:00Z", status: "postponed", finalized_at: null };
+  setup({ games: [...settled(), postponed] });
+  const held = await run(new Date(Date.parse(ROLLOVER) + 60_000).toISOString());
+  assert.deepEqual({ action: held.action, rolloverAt: held.rolloverAt }, { action: "blocked", rolloverAt: null });
+  assert.match(held.reason, /postponed game is still open/);
+  assert.equal(database.rpcCalls.length, 0, "the week is not completed while a game is postponed");
+  // Recorded as cancelled, the same week is settled and completes at its handoff time.
+  setup({ games: [...settled(), { ...postponed, status: "cancelled" }] });
+  const released = await run(new Date(Date.parse(ROLLOVER) + 60_000).toISOString());
+  assert.equal(released.action, "completed");
+  assert.deepEqual(database.rpcCalls.map((call) => call.name), ["complete_scoring_period_atomically"]);
+});
+
 test("a fully graded week keeps showing until the scheduled handoff time, then completes into the next week", async () => {
   setup();
   const early = await run(new Date(Date.parse(ROLLOVER) - 60_000).toISOString());

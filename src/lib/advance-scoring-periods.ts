@@ -119,11 +119,13 @@ export async function advanceScoringPeriods(
   }
 
   const activeGames = games as GameRow[];
-  // Disrupted games are terminal, audited outcomes unless the schedule
+  // Cancelled and no-contest games are terminal, audited outcomes unless the schedule
   // provider reschedules them first. A reschedule changes the game back to
   // scheduled and naturally returns it to this unfinished check.
   // They settle their affected picks through the disruption workflow instead
-  // of waiting forever for a box score that will never exist.
+  // of waiting forever for a box score that will never exist. A postponed game
+  // voids its picks the same way but stays open until it is played or recorded
+  // as cancelled, so it is held separately below.
   const unfinishedGames = activeGames.filter(
     (game) => !isSettledGameStatus(game.status),
   );
@@ -135,6 +137,18 @@ export async function advanceScoringPeriods(
       nextWeek: nextPeriod?.display_name ?? null,
       rolloverAt: null,
       reason: "Waiting for every game in the active week to be settled.",
+    };
+  }
+
+  // The database will not close a week while a game is still postponed (only final, cancelled and no-contest games settle it), so the handoff
+  // is held here with a reason the Commissioner can act on, rather than failing the whole score sync every run when the handoff time arrives.
+  if (activeGames.some((game) => game.status === "postponed")) {
+    return {
+      action: "blocked",
+      currentWeek: activePeriod.display_name,
+      nextWeek: nextPeriod?.display_name ?? null,
+      rolloverAt: null,
+      reason: "A postponed game is still open: wait for it to be played, or record it as cancelled or no contest.",
     };
   }
 
@@ -186,7 +200,7 @@ export async function advanceScoringPeriods(
   const settlementTimes = activeGames
     .map((game) =>
       game.finalized_at ??
-      (["postponed", "cancelled", "no_contest"].includes(game.status)
+      (["cancelled", "no_contest"].includes(game.status)
         ? game.kickoff_at
         : null),
     )
