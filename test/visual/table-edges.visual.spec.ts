@@ -6,18 +6,22 @@ import { BOWL_BY_SCENARIO, bowlResponse, homeResponse } from "./standings-fixtur
 // screenshots are compared.
 const SCENARIO = "bowl-results";
 
-async function open(page: Page, theme: string) {
+async function open(page: Page, theme: string, options: { width?: number; gameName?: string } = {}) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
   const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
   const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
   const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
   await page.addInitScript(([value, mode]) => { window.localStorage.setItem("sb-placeholder-auth-token", value as string); window.localStorage.setItem("pickem-theme", mode as string); }, [JSON.stringify(session), theme]);
-  await page.setViewportSize({ width: 390, height: 900 });
+  await page.setViewportSize({ width: options.width ?? 390, height: 900 });
   const home = homeResponse(SCENARIO);
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/home**", (route) => route.fulfill({ json: home }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
-  await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowlResponse((BOWL_BY_SCENARIO as Record<string, Parameters<typeof bowlResponse>[0]>)[SCENARIO]) }));
+  await page.route("**/api/bowl-pool**", (route) => {
+    const body = bowlResponse((BOWL_BY_SCENARIO as Record<string, Parameters<typeof bowlResponse>[0]>)[SCENARIO]);
+    if (options.gameName) for (const game of body.games) game.bowl_name = options.gameName;
+    return route.fulfill({ json: body });
+  });
   await page.route("**/api/season-snapshot**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(home.serverTime) });
@@ -69,3 +73,29 @@ test("with a mouse the tables add no extra space under the last row", async ({ p
     expect(await scroller.evaluate((element) => getComputedStyle(element).paddingBottom), selector).toBe("0px");
   }
 });
+
+// The Bowl Card's game headings are in a narrow column (the column is 116px on a phone, 120px on a tablet, less its padding), and "Championship" is wider than
+// that. The word must spill into the cell's own padding, not stretch the column or run under the next one, where it was cut off ("CHAMPIONSHIF").
+for (const width of [360, 390, 700]) {
+  test(`a long game name such as National Championship stays inside its Bowl Card column at ${width}px`, async ({ page }) => {
+    await open(page, "day", { gameName: "National Championship", width });
+    const headings = page.locator(".bowl-card-section .bowl-standings-bowl-name");
+    await expect(headings.first()).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    const fit = await headings.evaluateAll((elements) => elements.map((heading) => {
+      const cell = heading.parentElement!.getBoundingClientRect();
+      const text = document.createRange();
+      text.selectNodeContents(heading);
+      const ink = text.getBoundingClientRect();
+      const box = heading.getBoundingClientRect();
+      // The cell's own left border is not room for text.
+      return { cellLeft: cell.left + 1, cellRight: cell.right, inkLeft: ink.left, inkRight: ink.right, boxRight: box.right };
+    }));
+    expect(fit.length, "every game has a heading").toBeGreaterThan(1);
+    for (const [index, item] of fit.entries()) {
+      expect(item.boxRight, `heading ${index} does not stretch past its cell`).toBeLessThanOrEqual(item.cellRight + 0.5);
+      expect(item.inkLeft, `the name in column ${index} starts inside its cell`).toBeGreaterThanOrEqual(item.cellLeft - 0.5);
+      expect(item.inkRight, `the name in column ${index} ends inside its cell`).toBeLessThanOrEqual(item.cellRight + 0.5);
+    }
+  });
+}

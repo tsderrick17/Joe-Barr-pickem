@@ -197,7 +197,8 @@
   color: var(--bowl-cell-ink);
   font-size: .69rem;
 }
-.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-size: .8rem; font-weight: 400; letter-spacing: .06em; line-height: 1.1rem; }
+/* min-width 0: a heading with a long word ("Championship") must not stretch its column wider than the cell and run under the next one; the word spills evenly into the cell's side padding. */
+.bowl-card-section .bowl-standings-bowl-name { color: var(--bowl-gold-soft) !important; font-family: var(--font-graduate), Georgia, serif; font-size: .8rem; font-weight: 400; letter-spacing: .06em; line-height: 1.1rem; min-width: 0; }
 .bowl-card-section .bowl-standings-team { color: var(--sand-91) !important; }
 .bowl-card-section .bowl-standings-games-row .bowl-standings-line { color: var(--bowl-line-ink); font-family: var(--font-graduate), Georgia, serif; font-weight: 400; letter-spacing: .03em; }
 .bowl-card-section .bowl-standings-summary-cell { color: var(--bowl-head-ink); }
