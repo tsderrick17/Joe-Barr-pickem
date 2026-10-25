@@ -46,8 +46,10 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
   league-impact notice.
 - **Postponed or cancelled / declared no contest:** record the verified game
   exception. Affected selections are void, not losses. Eligible future
-  selections stay changeable, Survivor does not advance, and the disruption
-  does not hold the weekly handoff when no replacement remains.
+  selections stay changeable and Survivor does not advance. A cancelled or
+  no-contest game does not hold the weekly handoff. A postponed game does: the
+  week stays open ("A postponed game is still open") until the game is played,
+  or you record it as cancelled or no contest.
 - **Moved kickoff:** allow canonical schedule reconciliation to apply an
   unlocked timing-only move. The new lock time governs availability;
   previously selected eligible picks remain attached and may be changed while

@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-24 - A postponed game holds the weekly handoff, and says so
+
+- Decision: while a game in the active week is `postponed`, `advanceScoringPeriods` answers `blocked` with "A postponed game is still open: wait for it to be played, or record it as cancelled or no contest." and never calls `complete_scoring_period_atomically`. The week hands off at its normal time once the game is played, or recorded as cancelled or no contest. Cancelled and no-contest games still settle the week as before.
+- Why: the app, the runbooks and the project reference counted a postponed game as settled, but the database function (migration `20260809007000`) only accepts final, cancelled and no-contest games, so at the handoff time the call failed and the app threw "The weekly handoff could not be completed safely." The throw sat early in the score sync, so it failed the whole sync on every run until the Commissioner acted. The Operations map already told the Commissioner a postponed game "requires review before week handoff". The database contract is the highest authority, so the app and the docs now match it.
+- Do not: release a postponed game from the handoff in the app alone (the database would still refuse), or make the handoff throw again. Releasing postponed games from the hold needs a new migration and a decision from the owner: a game that moves past the week boundary would otherwise keep the whole pool on the old week until it is played.
+
 ## 2026-10-24 - The Commissioner desk is shot at two widths, not four
 
 - Decision: `commissioner.visual.spec.ts` shoots every desk page at phone 390 and desktop 1280, day and night. The day shots at phone 360 and tablet 700 (22 images) and their baselines are gone. The behavior tests that check the Performance tables fit their cards at 560, 768 and 1280 px stay.

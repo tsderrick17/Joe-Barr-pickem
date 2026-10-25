@@ -350,8 +350,11 @@ across daylight-saving changes.
    available in the archive/week selector.
 
 Period completion is fail-closed for missing lines, pending grades, or other
-unresolved competitive records. Verified postponed, cancelled, and no-contest
-games settle as void disruptions and do not indefinitely hold the handoff.
+unresolved competitive records. Verified cancelled and no-contest games settle
+as void disruptions and do not hold the handoff. A postponed game voids its
+affected picks but stays open: it holds the handoff (the app answers `blocked`,
+the database refuses to complete the week) until it is played or recorded as
+cancelled or no contest.
 
 ## Playoff eligibility
 

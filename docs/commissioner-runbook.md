@@ -149,8 +149,11 @@ Never overwrite the original audit event or type an estimated score.
    replaceable only while a legal future game exists.
 4. A disruption never advances Survivor and is not graded as a loss. If no
    legal replacement remains, it does not eliminate the entry.
-5. Once the verified status is recorded and the picks are void, the disruption
-   is settled and does not hold the automatic week handoff.
+5. Once a cancelled or no-contest status is recorded and the picks are void,
+   the disruption is settled and does not hold the automatic week handoff. A
+   postponed game does hold it: the week stays open, and the Operations map
+   flags it for review, until the game is played or you record it as cancelled
+   or no contest.
 
 ## Official line did not lock
 
