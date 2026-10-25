@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
-const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
+// The desk is one person's tool, used on a phone and a desktop: those two widths, day and night. (It was also shot at 360 and 700 wide by day, which
+// added about 22 images of 1 MB each and caught nothing the 390 and 1280 shots did not.)
+const WIDTHS = { "phone-390": 390, "desktop-1280": 1280 } as const;
 
 /** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
 async function signIn(page: Page, theme: string) {
@@ -61,7 +63,6 @@ for (const panel of PANELS) {
   for (const state of panel.states) {
     for (const theme of ["day", "night"]) {
       for (const [label, width] of Object.entries(WIDTHS)) {
-        if (theme === "night" && width !== 390 && width !== 1280) continue;
         test(`Commissioner ${panel.id} ${state} ${theme} at ${label}`, async ({ page }) => {
           await page.setViewportSize({ width, height: 900 });
           await signIn(page, theme);
@@ -100,7 +101,6 @@ for (const panel of PANELS) {
 for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/trophy-room", "table"]] as const) {
   for (const theme of ["day", "night"]) {
     for (const [label, width] of Object.entries(WIDTHS)) {
-      if (theme === "night" && width !== 390 && width !== 1280) continue;
       test(`Commissioner ${name} ${theme} at ${label}`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         await signIn(page, theme);
