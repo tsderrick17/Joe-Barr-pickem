@@ -80,7 +80,7 @@
      complete game columns. The schedule itself remains horizontally scrollable. */
   max-width: 100%;
   /* The page's own colour, not a paler panel: a phone lets the table be pulled past its edge, and what shows there must match the page. The rows paint themselves. */
-  background: var(--themed-bg-28);
+  background: var(--themed-bg-18);
   overscroll-behavior-x: contain;
   width: min(100%, 53rem);
   scroll-padding-left: calc(var(--bowl-tile-col) + var(--bowl-name-col));

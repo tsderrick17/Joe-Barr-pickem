@@ -28,7 +28,7 @@
    may need the intentional horizontal scroll. */
 .survivor-standings-scroll {
   /* The page's own colour, like the Bowl Card table: a sideways pull past the edge shows the page. */
-  background: var(--themed-bg-28);
+  background: var(--themed-bg-18);
   overflow-y: hidden;
   overscroll-behavior-x: contain;
 }
