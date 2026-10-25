@@ -42,7 +42,7 @@
 }
 
 .pool-chat-message:last-child { border-bottom: 0; }
-.pool-chat-message.is-deleted { color: #7b7368; font-style: italic; }
+.pool-chat-message.is-deleted { color: var(--chat-deleted-ink); font-style: italic; }
 .pool-chat-message.is-moderator { border-left: 3px solid var(--chat-moderator-rule); padding-left: .55rem; }
 
 .pool-chat-message-meta {
@@ -55,9 +55,9 @@
   margin-top: .14rem;
 }
 
-.pool-chat-message-meta strong { color: #34415a; font-size: .76rem; letter-spacing: 0; }
-.pool-chat-message-meta span { color: #8c6612; font-size: .5rem; font-weight: 900; letter-spacing: .11em; }
-.pool-chat-message-meta button { color: #7f858d; font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
+.pool-chat-message-meta strong { color: var(--chat-name-ink); font-size: .76rem; letter-spacing: 0; }
+.pool-chat-message-meta span { color: var(--chat-mod-badge-ink); font-size: .5rem; font-weight: 900; letter-spacing: .11em; }
+.pool-chat-message-meta button { color: var(--chat-delete-button-ink); font-size: .56rem; font-weight: 800; letter-spacing: .08em; margin-left: auto; }
 .pool-chat-message-meta button:hover { color: var(--red-39); text-decoration: underline; }
 
 .pool-chat-hide {

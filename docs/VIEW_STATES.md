@@ -57,7 +57,7 @@ Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `b
 
 ## Pool chat (the box at the foot of every player page) — `chat.visual.spec.ts`
 
-Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Four messages: an ordinary one, the Commissioner's (moderator bar), a removed one, and one you can delete.
+Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Four messages: an ordinary one, the Commissioner's (moderator bar), a removed one, and one you can delete. At night the player names are light blue and the moderator bar and MOD tag gold.
 
 | State | Screenshot |
 | --- | --- |
