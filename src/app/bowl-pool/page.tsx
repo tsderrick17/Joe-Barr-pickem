@@ -218,7 +218,7 @@ export default function BowlPoolPage() {
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-base font-bold text-slate-700">National Championship tiebreaker<span className="text-sm font-normal leading-5 text-slate-600">Guess the total points both teams will score in the title game (for example, 52). The closest guess breaks a tie at the end.</span><input aria-label="Total points in the National Championship" className="w-[6rem] border border-slate-400 bg-(color:--themed-bg-26) px-3 py-2 text-lg font-normal disabled:cursor-not-allowed disabled:bg-(color:--themed-bg-25)" disabled={championshipLocked} inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => { setSubmissionError(""); setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3)); }} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-base font-bold text-slate-700">Tiebreaker<span className="text-sm font-normal leading-5 text-slate-600">Predict total points scored in National Championship game, closest to the final wins.</span><input aria-label="Total points in the National Championship" className="w-[6rem] border border-slate-400 bg-(color:--themed-bg-26) px-3 py-2 text-lg font-normal disabled:cursor-not-allowed disabled:bg-(color:--themed-bg-25)" disabled={championshipLocked} inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => { setSubmissionError(""); setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3)); }} /></label>
         </section> : null}
         </>
       ) : null}
