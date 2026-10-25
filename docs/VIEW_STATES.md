@@ -71,7 +71,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | --- | --- |
 | Loading (the Bowl Pool still arriving: spinning football alone) | phone |
 | Entry open, not joined | `not-joined` |
-| Some picks made | `picked` |
+| Some picks made (one one-line school, Troy, and two two-line schools, Georgia Southern and Ohio State, so the megaphone lettering is checked both ways) | `picked` |
 | Two games kicked off (locked buttons) | `games-started` |
 | Everything picked, tiebreaker saved | `complete-saved` |
 | A team chosen, not yet submitted | `unsaved-change` |

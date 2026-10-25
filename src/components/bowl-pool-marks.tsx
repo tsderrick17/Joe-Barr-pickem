@@ -21,7 +21,9 @@ const half = (x: number) => 4.2 + ((x - 14) / 78) * 16.8;
 const across = (x: number) => ({ top: 23.5 - half(x), bottom: 23.5 + half(x), rx: half(x) * 0.31, ry: half(x) });
 const BAND = (() => { const a = across(77), b = across(83.5); return `M77 ${a.top}A${a.rx} ${a.ry} 0 0 0 77 ${a.bottom}L83.5 ${b.bottom}A${b.rx} ${b.ry} 0 0 1 83.5 ${b.top}Z`; })();
 
-/** Rough width of a line of the lettering at font size 1 (Graduate capitals), so only a name that would overrun the cone is condensed to fit. */
+/** Rough width of a line of the lettering at font size 1 (Graduate capitals), so only a name that would overrun the cone is condensed to fit. The lettering
+ * adds `LETTER_SPACING` em after every letter on top of the squeeze, so a squeezed line is made that much shorter to land on the room it was given. */
+const LETTER_SPACING = 0.06;
 const WIDTH: Record<string, number> = { I: 0.36, J: 0.5, L: 0.6, T: 0.62, F: 0.6, E: 0.62, M: 0.9, W: 0.95, " ": 0.3, "'": 0.25, ".": 0.25, "-": 0.4 };
 const lineWidth = (line: string, size: number) => [...line].reduce((sum, char) => sum + (WIDTH[char] ?? 0.68), 0) * size;
 
@@ -31,8 +33,8 @@ const CONE = "M9 19.3H14L92 2.5V44.5L14 27.7H9Z";
 /**
  * A cheerleader's megaphone in a school's own colors, lettered with its name: a short narrow mouthpiece ending in a rounded, swollen lip, a
  * stout cone that flares to a wide bell with a dark inside, a band near the bell and a small handle underneath. When a team is picked it
- * swings up and gives a cheer (three little sound arcs by the bell). The same size for every school. Decorative: the pick itself is announced by
- * the button's pressed state.
+ * swings up into place. The same size for every school. Decorative: the pick itself is announced by the button's pressed state.
+ * The viewBox is the drawing's own outline once it is tilted (see `.bowl-megaphone-art`), so the megaphone sits in the middle of whatever box holds it.
  */
 export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" | "right" }) {
   const colors = bowlPennantColors(team);
@@ -44,23 +46,20 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
       className={`bowl-megaphone is-${side}`}
       style={{ "--megaphone-primary": colors.primary, "--megaphone-secondary": colors.secondary, "--megaphone-ink": colors.ink } as CSSProperties}
     >
-      <svg focusable="false" viewBox="0 0 120 47">
+      <svg focusable="false" viewBox="1 -8.6 98.5 48.7">
         <defs>
           <clipPath id={cone}><path d={CONE} /></clipPath>
           <linearGradient id={`${cone}-shade`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".26" /><stop offset=".5" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".24" /></linearGradient>
           <linearGradient id={`${cone}-inside`} x1="0" x2="1" y1="0" y2="0"><stop offset="0" stopColor="#000" stopOpacity=".72" /><stop offset=".6" stopColor="#000" stopOpacity=".5" /><stop offset="1" stopColor="#000" stopOpacity=".3" /></linearGradient>
         </defs>
-        <g className="bowl-megaphone-waves">
-          <path d="M101.5 13Q107.5 23.5 101.5 34" /><path d="M105.5 8.5Q113.5 23.5 105.5 38.5" /><path d="M109.5 4Q119.5 23.5 109.5 43" />
-        </g>
         <g className="bowl-megaphone-art">
           <path className="bowl-megaphone-handle-edge" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
           <path className="bowl-megaphone-handle" d="M30 29.8V36.5Q30 40.5 34 40.5H42Q46 40.5 46 36.5V33.4" />
           <path className="bowl-megaphone-body" d={CONE} />
           <g className="bowl-megaphone-print">
             {lines.map((line, index) => {
-              const size = lines.length > 1 ? 7.4 : 8.6, room = lines.length > 1 ? 30 : 36, fits = lineWidth(line, size) <= room;
-              return <text className="bowl-megaphone-name" fontSize={size} key={index} x={lines.length > 1 ? 54 : 51} y={lines.length > 1 ? 18.6 + index * 8.4 : 22.6} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room })}>{line}</text>;
+              const size = lines.length > 1 ? 8.4 : 10.2, room = lines.length > 1 ? 33 : 41, spacing = LETTER_SPACING * size * line.length, fits = lineWidth(line, size) + spacing <= room;
+              return <text className="bowl-megaphone-name" fontSize={size} key={index} letterSpacing={`${LETTER_SPACING}em`} x={lines.length > 1 ? 54.5 : 50.5} y={lines.length > 1 ? 18.3 + index * 9.4 : 22.6} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room - spacing })}>{line}</text>;
             })}
           </g>
           <g clipPath={`url(#${cone})`}>

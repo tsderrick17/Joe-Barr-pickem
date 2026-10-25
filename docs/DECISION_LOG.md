@@ -4,6 +4,14 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - The Bowl Pool megaphone is centred in its box, its lettering is larger, and the sound arcs are gone
+
+- Decision: the picked-team megaphone no longer draws the three sound arcs, and its swing-up no longer ends in a cheer. The svg's viewBox is now the drawing's own outline once tilted (`1 -8.6 98.5 48.7`), so the megaphone sits in the middle of its pick box; the old viewBox reserved room for the arcs on the right and let the tilted bell stick out of the top, which put it about 3 to 5 px left of and 3 to 4 px above centre. The tilt's pivot is fixed in drawing units (`transform-origin: 12px 25.85px`) so the swing-up is unchanged. The lettering is about 20% larger on one line (10.2 against 8.6) and 13% on two lines (8.4 against 7.4). The size is the same on screen as before to within 3% (2.3rem tall on desktop, 3.78rem wide on phones).
+- Why: the owner liked the megaphone but found it off-centre, the school name too quiet, and the sound arcs distracting. This supersedes the 2026-10-19 detail that a newly picked megaphone "gives a cheer".
+- Lettering fit: `LETTER_SPACING` (0.06em) is now set by the component and counted when a line is checked or squeezed. Before, a squeezed line (such as a long school name) ran about one letter-space per letter past the room it was given, so it could touch the band. Lines are centred at x 50.5 (one line) or 54.5 (two lines) so they clear the band.
+- Screenshots: the `picked` Bowl state now picks Georgia Southern and Ohio State (two-line names) as well as Troy, so both layouts are in the baselines.
+- Do not: put sound arcs or any extra drawing outside the outline back without widening the viewBox symmetrically; set the pivot in percentages again (it moves with the viewBox).
+
 ## 2026-10-25 - Pool chat is readable at night: names, moderator bar and small text get night colours
 
 - Decision: the chat's player names, MOD tag, moderator side bar, removed-message text and Delete link read colour roles (`--chat-name-ink`, `--chat-mod-badge-ink`, `--chat-moderator-rule`, `--chat-deleted-ink`, `--chat-delete-button-ink`) defined in `00-tokens.css`. Day values are the old colours, so day is pixel-identical. At night the names are a light blue (`#b7c6e3`), the moderator bar and MOD tag are gold like day, and the removed-message and Delete text are lighter. No new night rule was added (the budget stays at 6).
