@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { COUNTER_TALL, PUFF_AT, STRETCH_END, chainTwang, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, FOOT, groundOf, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
+import { COUNTER_TALL, PUFF_AT, STRETCH_END, chainTwang, ballSpot, chainAnchor, chainLinks, chainReach, counterSpot, descentPose, fieldMarks, FOOT, TIP_HALF, groundOf, layout, plantedPose, poleLength, pullStages, slatOffsets, TURF } from "../src/lib/pull-chain.js";
 
 const HEIGHT = 60, GROUND = groundOf(HEIGHT);
 const PHONE = layout(390);
@@ -126,7 +126,7 @@ test("the down counter stands off to the right of the ball, its pole planted bes
 test("the football is spotted at the lead pole and its tip pokes out a couple of inches past the pole's foot: a first down", () => {
   for (const width of [320, 390, 430]) {
     const lay = layout(width), ball = ballSpot(lay, HEIGHT);
-    const footFarEdge = lay.leadTo + 1.5 * lay.zoom;   // the flange at the foot is 3 units wide
+    const footFarEdge = lay.leadTo + TIP_HALF * lay.zoom;   // the pole's tip is skinny: there is no foot plate
     const inches = (ball.nose - footFarEdge) / lay.inch;
     assert.ok(ball.nose > footFarEdge, "past the pole's foot");
     assert.ok(inches > 1.5 && inches < 4, `a couple of inches, not feet (${inches.toFixed(1)} in at ${width} px)`);

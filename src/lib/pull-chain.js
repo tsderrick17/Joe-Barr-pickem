@@ -12,7 +12,8 @@
  * the finger; when it has fully turned to 1 the pull is complete (refresh armed).
  * Kept as plain functions so the picture can be checked without a browser.
  */
-export const FOOT = 6;               // the rubber stopper at the bottom of a pole, in the pole's own units
+export const FOOT = 6;               // the bare tip of a pole below the banner, in the pole's own units (no foot plate: just the skinny black pole)
+export const TIP_HALF = 0.55;        // half the width of that pole, in its own units
 export const POLE = 44;              // the pole above the foot, in its own units (the target disc, the banner)
 export const TURF = 26;              // the strip of turf along the foot of the header: the field, seen from the sideline
 const RING = 3.5;                    // the chain is fastened this far above the bottom of a pole (pole units)
@@ -102,8 +103,7 @@ export function chainLinks(from, to, { chainLength, groundY, linkZoom = LINK_ZOO
  * front of its nose, and the tip pokes out a couple of inches past the pole's foot. Past the line to gain, by inches: a first down.
  */
 export function ballSpot(lay, headerHeight) {
-  const footHalf = 1.5 * lay.zoom;   // half the width of the flange at the pole's foot
-  const nose = lay.leadTo + footHalf + NOSE_INCHES * lay.inch;
+  const nose = lay.leadTo + TIP_HALF * lay.zoom + NOSE_INCHES * lay.inch;
   return { x: nose - BALL.length / 2, y: headerHeight - TURF + 12.5, length: BALL.length, height: BALL.height, nose };
 }
 

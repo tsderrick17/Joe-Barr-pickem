@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - The pull-to-refresh pole has no foot plate: just the skinny black pole
+
+- Decision: the first-down marker in the pull-to-refresh scene ends in a bare skinny black pole (`TIP_HALF` 0.55 units either side) instead of the small black rubber foot plate (3 units wide) it had. The chain clasp, the banner and the landing (the pole's bottom end lands exactly at the ball, with the dust puff) are unchanged. The football is spotted relative to the pole's tip (`ballSpot`), so it moved about a pixel closer to the pole; its drawing is unchanged.
+- Why: the owner found the base unnecessary; a plain pole reads cleaner against the ball.
+- Do not: draw a plate or flange back on the pole without asking; `FOOT` (the length of the bare pole below the banner) still sets where the pole meets the turf.
+
 ## 2026-10-25 - A touch screen's scroll indicator gets its own strip under the Survivor Table and Bowl Card
 
 - Decision: on a touch screen (`(hover: none) and (pointer: coarse)`), `div.bowl-standings-scroll` and `div.survivor-standings-scroll` have `.5rem` of padding under the last row. With a mouse nothing changes (those scrollbars already take their own room), so every desktop and phone-width screenshot, which is taken with a mouse, is unchanged. `table-edges.visual.spec.ts` checks the strip with touch emulation and checks that a mouse gets none.
