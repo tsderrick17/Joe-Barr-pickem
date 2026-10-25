@@ -79,7 +79,7 @@
   /* Keep the initial desktop view compact: frozen player columns plus six
      complete game columns. The schedule itself remains horizontally scrollable. */
   max-width: 100%;
-  background: var(--bowl-paper);
+  /* No background of its own: a phone lets the table be pulled past its edge, and what shows there must be the page, not a paler panel. The rows paint themselves. */
   overscroll-behavior-x: contain;
   width: min(100%, 53rem);
   scroll-padding-left: calc(var(--bowl-tile-col) + var(--bowl-name-col));

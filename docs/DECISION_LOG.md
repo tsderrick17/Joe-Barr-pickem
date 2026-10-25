@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - The Survivor Table and Bowl Card paint nothing behind their rows, so a sideways pull shows the page
+
+- Decision: `.survivor-standings-scroll` and `.bowl-standings-scroll` have no background of their own (the base rule, the Bowl Card section's override and the unused `--bowl-card-bg` role are gone). Each row, header and sticky cell paints its own colour. A new behaviour test (`table-edges.visual.spec.ts`) checks that both scrollers compute to a transparent background in day and night at phone width, where they scroll sideways.
+- Why: on an iPhone a table that scrolls sideways can be pulled past its edge, and the gap shows whatever the scroller itself paints. These two painted the pool's pale paper, so the gap read as a white panel beside a beige page. Transparent, the gap is the page. Plain text inside a scroller with no background is anti-aliased in greyscale rather than with coloured fringes, so a few dozen text pixels differ in Windows screenshots (none on a phone, which always uses greyscale).
+- Do not: give a sideways-scrolling table (or any scroller a phone can pull past its edge) its own paper colour again; put the colour on the rows instead.
+
 ## 2026-10-25 - The Bowl Pool megaphone is centred in its box, its lettering is larger, and the sound arcs are gone
 
 - Decision: the picked-team megaphone no longer draws the three sound arcs, and its swing-up no longer ends in a cheer. The svg's viewBox is now the drawing's own outline once tilted (`1 -8.6 98.5 48.7`), so the megaphone sits in the middle of its pick box; the old viewBox reserved room for the arcs on the right and let the tilted bell stick out of the top, which put it about 3 to 5 px left of and 3 to 4 px above centre. The tilt's pivot is fixed in drawing units (`transform-origin: 12px 25.85px`) so the swing-up is unchanged. The lettering is about 20% larger on one line (10.2 against 8.6) and 13% on two lines (8.4 against 7.4). The size is the same on screen as before to within 3% (2.3rem tall on desktop, 3.78rem wide on phones).

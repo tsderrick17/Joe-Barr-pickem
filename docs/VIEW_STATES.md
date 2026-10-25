@@ -52,6 +52,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Bowl Card minimized | `bowl-minimized` |
 | Display choices (hide the Survivor Table): shown at once, not undone by a refresh that lands while the save is out, a second tap ignored while saving, a failed save puts the old choice back (behavior tests, `display-preference.visual.spec.ts`) | `regular-in` |
 | The page waits behind the loading shell for the Bowl Card's first load, shown anyway after 2.5 seconds, and at once when the card answers (behavior tests, `display-preference.visual.spec.ts`, frozen clock) | `regular-in` |
+| The Survivor Table and Bowl Card paint no background of their own, so pulling them sideways past their edge on a phone shows the page, not a paler panel (behavior test, `table-edges.visual.spec.ts`, day and night at phone width) | `bowl-results` |
 
 Night mode: `regular-in`, `playoff-wildcard`, `commissioner`, `bowl-results`, `bowl-claim-open`, `off-season`.
 
