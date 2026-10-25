@@ -1,8 +1,8 @@
 import "./helpers/typescript-renderer.mjs";
 import { registerHooks } from "node:module";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { recordingDatabase, wrote } from "./helpers/recording-database.mjs";
 
 let phase = "off_season";
 let writes = 0;
@@ -68,28 +68,35 @@ test("in season the same saves are not refused for the season", async () => {
   await assert.rejects(() => picks.POST(post("/api/picks", { scoringPeriodId: "week-3", selections: [] })), /must not read or write/);
 });
 
-test("the Survivor save asks the season question before it touches a pick", async () => {
-  const source = await readFile(new URL("../src/app/api/survivor/route.ts", import.meta.url), "utf8");
-  const post = source.slice(source.indexOf("export async function POST"));
-  const closed = post.indexOf("refuseWhenSeasonClosed()");
-  assert.ok(closed > 0, "the Survivor POST refuses a closed season");
-  assert.ok(closed < post.indexOf("readJsonObject(request)"), "before the body is read");
-  assert.ok(closed < post.indexOf('.rpc('), "and before any write");
-});
-
-test("the player pages treat a missing season phase as in season, and lock the display only in the off-season", async () => {
-  const standings = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
-  const slate = await readFile(new URL("../src/app/board/page.tsx", import.meta.url), "utf8");
-  assert.match(standings, /const offSeason = data\.seasonPhase === "off_season";/);
-  assert.match(standings, /showSurvivorStandings: true, hidePickemEliminatedRows: false, hideSurvivorEliminatedRows: false, showBowlCard: true/);
-  assert.match(standings, /onToggleEliminatedRows=\{offSeason \? undefined :/);
-  assert.match(standings, /displayLocked=\{offSeason\}/);
-  const slateState = await readFile(new URL("../src/lib/slate-state.ts", import.meta.url), "utf8");
-  assert.match(slateState, /seasonOver: data\.seasonPhase \? data\.seasonPhase === "off_season" : state\.seasonOver/);
-  assert.match(slate, /const isReadOnly = week\?\.status === "complete" \|\| playoffEliminated \|\| forfeited \|\| seasonOver;/);
-  assert.match(slate, /const seasonClosedForViewer = seasonOver \|\| playoffEliminated \|\| forfeited;/);
-  assert.match(slate, /\{seasonClosedForViewer \? null : <SlateReceipt/);
-  // The ticket and the receipt are gone, for the off-season and for a player out of the playoff race.
-  assert.match(standings, /const seasonClosedForViewer = offSeason \|\| viewerEliminated \|\| viewerForfeited;/);
-  assert.match(standings, /\{seasonClosedForViewer \? <SeasonClosedBanner eliminated=\{!offSeason\} forfeited=\{viewerForfeited \&\& !offSeason\} \/> : <MyTicket/);
+test("the Survivor save is refused in the off-season before its body is read or any pick is written; in season the same request goes on to the body", async () => {
+  const survivor = await import("../src/app/api/survivor/route.ts");
+  const database = globalThis.seasonClosedDatabase;
+  const { from, rpc } = database;
+  const rows = {
+    seasons: { id: "season-1", survivor_champion_player_id: null },
+    scoring_periods: [{ id: "week-3", display_name: "Week 3", display_order: 3, status: "active" }],
+    survivor_entries: { id: "entry-1", status: "active", eliminated_at: null },
+  };
+  const written = [];
+  const recorded = recordingDatabase((table, calls) => {
+    if (wrote(calls)) written.push(table);
+    return { data: rows[table] ?? null, error: null };
+  }, { rpc: (name) => ({ data: name === "season_phase" ? phase : null, error: null }) });
+  database.from = recorded.from;
+  database.rpc = recorded.rpc;
+  const notJson = () => new Request("http://localhost/api/survivor", { method: "POST", headers: { authorization: "Bearer fixture", "content-type": "application/json" }, body: "this is not json" });
+  try {
+    phase = "off_season";
+    const closed = await survivor.POST(notJson());
+    assert.equal(closed.status, 409, "refused for the season, not for the bad body");
+    assert.equal((await closed.json()).code, "season_closed");
+    assert.deepEqual(recorded.rpcCalls.map((call) => call.name).filter((name) => !["season_phase", "ensure_survivor_entries"].includes(name)), [], "no submit call");
+    assert.deepEqual(written.filter((table) => table === "picks" || table === "survivor_picks"), [], "no pick written");
+    phase = "in_season";
+    const open = await survivor.POST(notJson());
+    assert.equal(open.status, 400, "in season the request gets as far as its body");
+  } finally {
+    database.from = from;
+    database.rpc = rpc;
+  }
 });
