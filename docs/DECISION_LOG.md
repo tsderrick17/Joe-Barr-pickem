@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-26 - Rarely changing pictures are kept by the phone for a day
+
+- Decision: the trophy turntable frames (`/trophies/*`, 124 files), the team logos (`/team-logos/*`) and the loading football (`/football-spin.webp`, 630 KB) are served with `Cache-Control: public, max-age=86400, stale-while-revalidate=2592000` (`next.config.ts`). Pages, data, the manifest and the service worker keep the default (re-checked every time).
+- Why: Vercel serves files in `public/` with `max-age=0, must-revalidate`, so a phone re-asked for every one of these on every page view (a round trip each, before it could draw them). Kept a day, repeat visits draw them at once; after a day they refresh in the background.
+- Trade-off: a re-rendered trophy (a new champion) or a changed logo can take up to a day to show on a phone that already has the old one.
+- Do not: give pages, `/api/*`, the manifest or `sw.js` a long cache (grades and app changes must show at once).
+
 ## 2026-10-26 - Add to Home Screen: one tap from every page, for every player, on every phone and Chromebook
 
 - Decision: a phone that is not running the Home Screen app is offered the install everywhere: a slim banner under the header of every page and a card on the Notifications page. Android and Chromebooks get Chrome's own one-tap Install when it offers one, and the menu steps until then; every iPhone browser gets one tap on "Show me how" and its own steps (Safari, or Chrome/Edge/Firefox's own Share button); a page open inside another app's window (Facebook, Instagram, Gmail, the Google app) is sent to Safari or Chrome first, with Copy link. "Not now" keeps the banner away 14 days, "I already have it" 180 days; the card is always there. A computer, the installed app and an Android phone known to have the app see no banner. The banner is for everyone, unlike the notification controls, which stay Commissioner-only until the pool opens them.
