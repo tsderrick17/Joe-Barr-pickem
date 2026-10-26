@@ -186,17 +186,13 @@ test("a week counts for the streaks once every game in it is final, without wait
     { scoring_period_id: "d", status: "cancelled" },
   ];
   assert.deepEqual([...settledPeriods(games)].sort(), ["a", "c"], "b still has a game to play; d has nothing playable; a postponed game does not hold a week open");
-  // an active (not yet complete) week counts when it is settled
+  // an active (not yet complete) week counts for everyone when it is settled: Ann made one pick and it won, so the week is 1-1
   const active = [week("s26", 1, "active")];
-  const weekGame = game("s26-w1"), other = game("s26-w1");
-  const own = [
-    { id: "x1", player_id: "ann", game_id: weekGame, scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
-    { id: "x2", player_id: "ann", game_id: other, scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
-  ];
+  const own = [{ id: "x1", player_id: "ann", game_id: game("s26-w1"), scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" }];
   const without = weeklyStreaks({ seasons, periods: active, picks: own });
   const withSettled = weeklyStreaks({ seasons, periods: active, picks: own, settledPeriodIds: new Set(["s26-w1"]) });
-  assert.equal(without.has("ann"), false, "an unfinished, unsettled week is not counted");
-  assert.deepEqual(withSettled.get("ann").sweeps.longest, 1);
+  assert.equal(without.has("ann"), false, "an unfinished, unsettled week with one pick graded is not counted: the second pick could still be made");
+  assert.deepEqual([withSettled.get("ann").sweeps.total, withSettled.get("ann").noDonut.longest], [0, 1]);
 });
 
 test("the perfect-week streak also counts every 2-0 week the player has had, not just the longest run", async () => {
@@ -211,4 +207,33 @@ test("the perfect-week streak also counts every 2-0 week the player has had, not
   assert.equal(streaks.get("ann").sweeps.total, 3);
   assert.equal(streaks.get("ann").sweeps.longest, 2);
   assert.equal(streaks.get("bob").sweeps.total, 0);
+});
+
+test("a week still being played counts for a player once both of their own picks are graded, not only when the whole week is final", () => {
+  const seasons = [{ id: "s1", year: 2026 }];
+  const periods = [
+    { id: "w1", season_id: "s1", display_order: 1, period_type: "regular", status: "complete", max_picks: 2 },
+    { id: "w2", season_id: "s1", display_order: 2, period_type: "regular", status: "active", max_picks: 2 },
+  ];
+  const own = (player, period, results) => results.map((result, index) => ({ id: `${player}-${period}-${index}`, player_id: player, scoring_period_id: period, game_id: `${period}-${index}`, selected_team_id: "fav", result }));
+  const picks = [
+    ...own("ann", "w1", ["win", "win"]), ...own("ann", "w2", ["win", "win"]),      // 2-0 and 2-0: the second is already certain
+    ...own("bob", "w1", ["loss", "loss"]), ...own("bob", "w2", ["win", "pending"]), // Bob's week is not decided yet
+    ...own("cat", "w2", ["loss"]),                                                 // one graded pick and one not made (it could still be made)
+    ...own("dan", "w1", ["win", "win"]), ...own("dan", "w2", ["win", "loss"]),     // 1-1: decided, and not a donut
+    ...own("eve", "w1", ["win", "win"]), ...own("eve", "w2", ["loss", "loss"]),    // 0-2: decided, and it ends her perfect run
+  ];
+  const mid = weeklyStreaks({ seasons, periods, picks });
+  assert.deepEqual(mid.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 2 }, total: 2 }, "Ann's decided 2-0 week counts now");
+  assert.equal(mid.get("bob").sweeps.total, 0); assert.equal(mid.get("bob").noDonut.current, 0, "Bob's 0-2 week 1 stands; his week 2 (a win and a pending pick) is left out");
+  assert.equal(mid.has("cat"), false, "a week with a pick still to be graded or made is not counted yet");
+  assert.deepEqual([mid.get("dan").sweeps.total, mid.get("dan").sweeps.current, mid.get("dan").noDonut.current], [1, 0, 2], "a 1-1 week extends the shutout-free streak and ends the perfect run");
+  assert.deepEqual([mid.get("eve").sweeps.total, mid.get("eve").sweeps.current, mid.get("eve").noDonut.current], [1, 0, 0], "a 0-2 week is a shutout: it ends both streaks");
+  // the group's own figures use the same weeks
+  const group = buildGroupStats({ players: [{ id: "ann", first_name: "Ann" }, { id: "bob", first_name: "Bob" }, { id: "cat", first_name: "Cat" }, { id: "dan", first_name: "Dan" }, { id: "eve", first_name: "Eve" }], seasons, periods, games: [], lines: [], picks });
+  assert.deepEqual(group.weeks, { total: 7, donut: 2, split: 1, sweep: 4 }, "w1: Ann, Dan, Eve 2-0 and Bob 0-2; w2: Ann 2-0, Dan 1-1, Eve 0-2");
+  // once the whole week is final, the missing pick is a loss and the week counts for everyone whose picks are all graded
+  const settled = weeklyStreaks({ seasons, periods, picks, settledPeriodIds: new Set(["w2"]) });
+  assert.deepEqual([settled.get("cat").sweeps.total, settled.get("cat").noDonut.current], [0, 0], "Cat's graded loss and her pick not made is a 0-2 week");
+  assert.equal(settled.get("bob").noDonut.current, 0, "a pick that is still pending leaves the week out even after the week settles");
 });
