@@ -11,7 +11,7 @@ export function scorePollingMode(isPlayoff: boolean): ScorePollingMode {
   return isPlayoff ? "playoff" : "regular";
 }
 
-export function scorePollingDelayMinutes(
+function scorePollingDelayMinutes(
   attempts: number,
   isPlayoff: boolean,
 ) {

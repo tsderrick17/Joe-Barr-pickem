@@ -280,7 +280,7 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
 // The last `days` Eastern calendar dates, including the point's date. Weight by games,
 // not by slate, so a single-game Thursday does not count like a Sunday slate.
 const easternDayFormatter = dateFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
-export function rollingCreditsPerGame(points, index, days) {
+function rollingCreditsPerGame(points, index, days) {
   if (points[index]?.creditsPerGame == null) return null;
   const day = (value) => {
     const parts = easternDayFormatter.formatToParts(new Date(value));

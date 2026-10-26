@@ -5,8 +5,8 @@ import { idValue, integerValue, oneOf, optional, textValue, type JsonObject } fr
  * typed fields or null; the route answers 400 with its own wording on null. None of them touches the database.
  */
 
-export const GAME_DISRUPTION_STATUSES = ["postponed", "cancelled", "no_contest"] as const;
-export const BOWL_EXCEPTION_STATUSES = ["postponed", "cancelled", "no_contest", "rescheduled"] as const;
+const GAME_DISRUPTION_STATUSES = ["postponed", "cancelled", "no_contest"] as const;
+const BOWL_EXCEPTION_STATUSES = ["postponed", "cancelled", "no_contest", "rescheduled"] as const;
 
 export function parseGameDisruption(input: JsonObject) {
   const gameId = idValue(input.gameId);

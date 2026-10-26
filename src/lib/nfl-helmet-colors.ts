@@ -1,5 +1,5 @@
 // Default home helmet shell colors for the current season. Review before each season.
-export const NFL_HELMET_SHELL_COLORS: Record<string, string> = {
+const NFL_HELMET_SHELL_COLORS: Record<string, string> = {
   ARI: "#ffffff", ATL: "#111111", BAL: "#111111", BUF: "#ffffff",
   CAR: "#bfc0bf", CHI: "#0b162a", CIN: "#fb4f14", CLE: "#ff3c00",
   DAL: "#b0b7bc", DEN: "#0a2343", DET: "#0076b6", GB: "#ffb612",
@@ -10,13 +10,13 @@ export const NFL_HELMET_SHELL_COLORS: Record<string, string> = {
   SF: "#b3995d", TB: "#5b6062", TEN: "#0c2340", WAS: "#5a1414",
 };
 
-export function helmetShellColor(abbreviation: string, fallback = "#111111") {
+function helmetShellColor(abbreviation: string, fallback = "#111111") {
   return NFL_HELMET_SHELL_COLORS[abbreviation] ?? fallback;
 }
 
 // These accents power the Survivor poker chips. Keep the logo itself official
 // and untouched; the colors only form the chip's outer edge.
-export const NFL_TEAM_CHIP_ACCENTS: Record<string, { primary: string; secondary: string }> = {
+const NFL_TEAM_CHIP_ACCENTS: Record<string, { primary: string; secondary: string }> = {
   ARI: { primary: "#97233f", secondary: "#ffffff" }, ATL: { primary: "#a71930", secondary: "#111111" }, BAL: { primary: "#241773", secondary: "#9e7c0c" }, BUF: { primary: "#00338d", secondary: "#c60c30" },
   CAR: { primary: "#0085ca", secondary: "#101820" }, CHI: { primary: "#0b162a", secondary: "#c83803" }, CIN: { primary: "#fb4f14", secondary: "#111111" }, CLE: { primary: "#ff3c00", secondary: "#311d00" },
   DAL: { primary: "#003594", secondary: "#b0b7bc" }, DEN: { primary: "#fb4f14", secondary: "#0a2343" }, DET: { primary: "#0076b6", secondary: "#b0b7bc" }, GB: { primary: "#203731", secondary: "#ffb612" },
