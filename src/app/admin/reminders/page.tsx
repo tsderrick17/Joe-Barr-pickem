@@ -4,6 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { dateFormat } from "@/lib/date-format.js";
 
 const EmailArtworkStudio = dynamic(
   () => import("@/components/email-artwork-studio").then((module) => module.EmailArtworkStudio),
@@ -16,7 +17,7 @@ const easternTimeZone = "America/New_York";
 
 
 function easternDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -107,7 +108,7 @@ export default function ReminderAdminPage() {
 
   function reminderCard(reminder: Reminder, canCancel: boolean) {
     return <article className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3 desk-panel p-3 sm:p-4" key={reminder.id}>
-      <div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-wide text-(color:--themed-text-28)">{reminder.category.replaceAll("_", " ")} · {reminder.audience.replaceAll("_", " ")}</p><h3 className="mt-1 truncate font-bold">{reminder.title}</h3><p className="mt-1 line-clamp-2 text-sm text-(color:--themed-text-29)">{reminder.body}</p>{reminder.suppressionReason ? <p className="mt-2 text-sm font-semibold text-[#075f58]">No email needed: {reminder.suppressionReason}</p> : null}<p className="mt-2 text-xs text-(color:--themed-text-28)">Scheduled {easternDateTime(reminder.scheduledFor)} · {reminder.emailDelivered} delivered · {reminder.emailFailed} failed · {reminder.emailSuppressed} suppressed</p></div>
+      <div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-wide text-(color:--themed-text-28)">{reminder.category.replaceAll("_", " ")} · {reminder.audience.replaceAll("_", " ")}</p><h3 className="mt-1 truncate font-bold">{reminder.title}</h3><p className="mt-1 line-clamp-2 text-sm text-(color:--themed-text-29)">{reminder.body}</p>{reminder.suppressionReason ? <p className="mt-2 text-sm font-semibold text-(color:--themed-text-10)">No email needed: {reminder.suppressionReason}</p> : null}<p className="mt-2 text-xs text-(color:--themed-text-28)">Scheduled {easternDateTime(reminder.scheduledFor)} · {reminder.emailDelivered} delivered · {reminder.emailFailed} failed · {reminder.emailSuppressed} suppressed</p></div>
       <div className="col-span-2"><button className="min-h-11 font-bold underline" type="button" onClick={() => openEmailStudio(reminder.id)}>View email images</button></div>
       <div className="flex w-24 shrink-0 justify-end pt-0.5">{canCancel ? <button className="h-fit border border-(color:--themed-border-25) px-3 py-2 text-sm font-bold text-red-800 disabled:opacity-50" disabled={saving} onClick={() => void cancel(reminder.id)} type="button">Cancel</button> : <span className="text-right text-[11px] font-black uppercase tracking-wide text-(color:--themed-text-27)">{reminder.status.replaceAll("_", " ")}</span>}</div>
     </article>;

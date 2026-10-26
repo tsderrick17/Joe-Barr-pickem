@@ -1,3 +1,5 @@
+import { dateFormat } from "./date-format.js";
+
 /**
  * @param {{
  *   health: any,
@@ -74,7 +76,7 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       detail: `${incident.attempted_pins} different invalid PINs were tried from one privacy-safe source fingerprint within 15 minutes. No raw PINs, network addresses, or player picks were stored in the alert.`,
     });
   }
-  const eastern = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" })
+  const eastern = dateFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" })
     .formatToParts(now);
   const month = Number(eastern.find((part) => part.type === "month")?.value);
   const day = Number(eastern.find((part) => part.type === "day")?.value);
@@ -110,7 +112,7 @@ export function isWatchdogRepeatNotificationDue(lastNotifiedAt, now = new Date()
 }
 
 function easternDayKey(value) {
-  return new Intl.DateTimeFormat("en-CA", {
+  return dateFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",

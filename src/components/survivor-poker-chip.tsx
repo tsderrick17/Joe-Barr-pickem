@@ -53,7 +53,7 @@ export type TossRange = { leanMin: number; leanMax: number; msMin: number; msMax
 export const TOSS_DEFAULTS: TossRange = { leanMin: 0, leanMax: 0, msMin: 900, msMax: 900 };
 
 /** Each toss is a little different, like a real one: the spin axis leans a few degrees either way and the flip runs a bit faster or slower. */
-export function randomToss(range: TossRange = TOSS_DEFAULTS) {
+function randomToss(range: TossRange = TOSS_DEFAULTS) {
   const between = (low: number, high: number) => low + Math.random() * (high - low);
   const lean = between(range.leanMin, range.leanMax) * (Math.random() < 0.5 ? -1 : 1);
   return { "--toss-axis": `${lean.toFixed(1)}deg`, "--toss-ms": `${Math.round(between(range.msMin, range.msMax))}ms` } as CSSProperties;

@@ -1,7 +1,7 @@
 /** The pool's first Survivor champion, crowned the season before the app tracked champions. */
-export const INAUGURAL_SURVIVOR_YEAR = 2025;
+const INAUGURAL_SURVIVOR_YEAR = 2025;
 /** The one season (the launch season) that shows the inaugural champion before its own champion is crowned. */
-export const LAUNCH_SEASON_YEAR = 2026;
+const LAUNCH_SEASON_YEAR = 2026;
 
 type ChampionshipRecord = { player_id: string; pool: string; season_year: number };
 

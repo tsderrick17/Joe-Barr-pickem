@@ -28,12 +28,11 @@ test("the server credential is the service-role key first, the secret key only a
 });
 
 // ---- Atomic writes, recorded outcomes and the Bowl sync's protected paths (moved from atomic-grading-and-line-lock.test.mjs)
-const finalScoresPromise = source("src/lib/sync-final-scores.ts"), bowlSyncPromise = source("src/lib/sync-bowl-pool.ts"), lineLockPromise = source("src/lib/lock-due-lines.ts");
-const watchdogPromise = source("src/lib/automation-watchdog.ts"), syncRunPromise = source("src/lib/sync-run.ts");
-const bootstrapPromise = source("src/lib/full-schedule-bootstrap.ts"), reconciliationPromise = source("src/lib/full-schedule-reconciliation.ts");
+const AUTOMATION_FILES = { finalScores: "sync-final-scores", bowlSync: "sync-bowl-pool", lineLock: "lock-due-lines", watchdog: "automation-watchdog", syncRun: "sync-run", bootstrap: "full-schedule-bootstrap", reconciliation: "full-schedule-reconciliation" };
+const automationSources = Promise.all(Object.entries(AUTOMATION_FILES).map(async ([name, file]) => [name, await source(`src/lib/${file}.ts`)])).then(Object.fromEntries);
 
 test("the application calls the atomic functions instead of writing step by step", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { finalScores, bowlSync, lineLock } = await automationSources;
   assert.match(finalScores, /rpc\("recover_pending_ats_grades"\)/);
   assert.doesNotMatch(finalScores, /from\("picks"\)\s*\.update\(\{ result \}\)/);
   assert.doesNotMatch(finalScores, /gradeAtsPick/);
@@ -52,7 +51,7 @@ test("the application calls the atomic functions instead of writing step by step
 
 
 test("run outcomes are recorded through one checked helper that retries and reports", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { finalScores, watchdog, syncRun, bootstrap, reconciliation } = await automationSources;
   assert.match(syncRun, /attempt < 2/);
   assert.match(syncRun, /console\.error\("A sync run outcome could not be recorded\."/);
   for (const [name, source] of [["sync-final-scores", finalScores], ["full-schedule-bootstrap", bootstrap], ["full-schedule-reconciliation", reconciliation], ["automation-watchdog", watchdog]]) {
@@ -63,7 +62,7 @@ test("run outcomes are recorded through one checked helper that retries and repo
 
 
 test("a watchdog alert is not sent unless its attempt time was saved", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { watchdog } = await automationSources;
   const attempt = watchdog.indexOf("notification_attempted_at: now.toISOString()");
   const guard = watchdog.indexOf("so the alert was not sent");
   const send = watchdog.indexOf("await notifyCommissioners(signal)");
@@ -79,7 +78,7 @@ test("a watchdog alert is not sent unless its attempt time was saved", async () 
 
 
 test("the ESPN Bowl sync never replaces a locked official line", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { bowlSync } = await automationSources;
   assert.match(bowlSync, /ignoreDuplicates: true/);
   assert.match(bowlSync, /\.eq\("game_id", saved\.id\)\.is\("locked_at", null\)/);
   assert.doesNotMatch(bowlSync, /bowl_pool_game_lines"\)\.upsert\(\{ game_id: saved\.id/);
@@ -87,7 +86,7 @@ test("the ESPN Bowl sync never replaces a locked official line", async () => {
 
 
 test("the ESPN Bowl refresh links games and fixes timing but keeps curated names and order", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { bowlSync } = await automationSources;
   assert.match(bowlSync, /function existingGameUpdate/);
   assert.match(bowlSync, /const \{ season_id: _season, bowl_name: _name, order_index: _order, \.\.\.provider \} = row;/);
   assert.match(bowlSync, /update\(existingGameUpdate\(row\)\)/);
@@ -96,7 +95,7 @@ test("the ESPN Bowl refresh links games and fixes timing but keeps curated names
 
 
 test("a Bowl game already linked to its ESPN event stays on the protected update path", async () => {
-  const [finalScores, bowlSync, lineLock, watchdog, syncRun, bootstrap, reconciliation] = await Promise.all([finalScoresPromise, bowlSyncPromise, lineLockPromise, watchdogPromise, syncRunPromise, bootstrapPromise, reconciliationPromise]);
+  const { bowlSync } = await automationSources;
   assert.match(bowlSync, /candidate\.provider_game_id === `espn:\$\{event\.id\}`/);
   assert.match(bowlSync, /const gameId = matched\?\.id;/);
   assert.match(bowlSync, /matched\.kickoff_at !== kickoff/);

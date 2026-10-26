@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium, expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 
 // "Add to Home Screen": the slim banner under the header of every page and the card on the Notifications page. The browser is made to look like each kind of
 // phone and browser (Safari, Chrome and Facebook's window on an iPhone; Chrome, Samsung Internet, Firefox and Facebook's window on Android, with and
@@ -33,16 +34,6 @@ const PHONES: Record<Phone, Script & { help: string }> = {
   desktop: { help: "none" },
 };
 
-async function signIn(page: Page, theme: string) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
-  await page.addInitScript(([value, mode]) => {
-    window.localStorage.setItem("sb-placeholder-auth-token", value as string);
-    window.localStorage.setItem("pickem-theme", mode as string);
-  }, [JSON.stringify(session), theme]);
-}
 
 type Planted = { dismissedDaysAgo?: number; haveItDaysAgo?: number; openedAsAppBefore?: boolean };
 

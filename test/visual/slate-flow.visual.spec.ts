@@ -1,13 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 import { boardResponse } from "./slate-fixtures.mjs";
 
-async function signIn(page: Page) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "visual-player", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "visual-player", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" } };
-  await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
-}
 
 async function serve(page: Page, picksHandler: (route: import("@playwright/test").Route) => Promise<void>, boardAfterSave?: () => object) {
   const board = boardResponse("upcoming-unpicked");
@@ -23,7 +17,7 @@ async function serve(page: Page, picksHandler: (route: import("@playwright/test"
 
 test("choose a team, submit, and the receipt says saved", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
   await page.goto("/board");
   const receipt = page.locator("[aria-label='Your weekly receipt']");
@@ -37,7 +31,7 @@ test("choose a team, submit, and the receipt says saved", async ({ page }) => {
 
 test("a failed save keeps the pick and shows the reason", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   await serve(page, (route) => route.fulfill({ status: 400, json: { error: "Your picks could not be saved: fixture." } }));
   await page.goto("/board");
   const receipt = page.locator("[aria-label='Your weekly receipt']");
@@ -50,7 +44,7 @@ test("a failed save keeps the pick and shows the reason", async ({ page }) => {
 
 test("a save whose answer is lost is confirmed from the server, so nothing is left to resubmit", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   let chosen: { gameId: string; teamId: string } | null = null;
   await serve(page, async (route) => {
     chosen = JSON.parse(route.request().postData() ?? "{}").selections?.[0] ?? null;
@@ -67,7 +61,7 @@ test("a save whose answer is lost is confirmed from the server, so nothing is le
 
 test("a third team with full picks asks which pick to replace, and replacing swaps it in", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
   await page.goto("/board");
   const receipt = page.locator("[aria-label='Your weekly receipt']");
@@ -91,7 +85,7 @@ test("a third team with full picks asks which pick to replace, and replacing swa
 // Forfeit: three separate clicks on three different questions; only the third sends anything, and "never mind" backs out at any point.
 test("forfeit takes three clicks and only the last one sends", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   const board = boardResponse("playoff-upcoming");
   const sent: unknown[] = [];
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
@@ -131,7 +125,7 @@ test("forfeit takes three clicks and only the last one sends", async ({ page }) 
 for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcoming", true], ["playoff-forfeited", false], ["playoff-eliminated", false], ["off-season", false]] as const) {
   test(`the Forfeit link ${shown ? "is" : "is not"} on the Slate (${scenario})`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     const board = boardResponse(scenario);
     await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
     await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
@@ -150,7 +144,7 @@ for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcomin
 for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
   test(`the header does not change height when the player's name loads (${label})`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     const board = boardResponse("upcoming-unpicked");
     let release: () => void = () => undefined;
     const held = new Promise<void>((resolve) => { release = resolve; });
@@ -179,7 +173,7 @@ for (const [label, width] of [["phone", 390], ["desktop", 1280]] as const) {
 for (const [open, label] of [[true, "is in"], [false, "is not in"]] as const) {
   test(`the Trophy Room link ${label} the name menu`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     const board = boardResponse("upcoming-unpicked");
     await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
     await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
@@ -198,7 +192,7 @@ for (const [open, label] of [[true, "is in"], [false, "is not in"]] as const) {
 // A player who opens the Trophy Room's address while it is the Commissioner's alone is told it is not open, not shown an error.
 test("the Trophy Room says it is not open yet to a player", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ status: 404, json: { error: "Not found" } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, trophyRoomOpen: false, showPoolChat: false } }));
@@ -212,7 +206,7 @@ test("the Trophy Room says it is not open yet to a player", async ({ page }) => 
 // All games / Pool action is a two-way switch: tapping either half flips to the other, and the halves are exactly the same size.
 test("either half of the All games / Pool action switch flips to the other", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page);
+  await signIn(page, "day", "visual-player");
   await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
   await page.goto("/board");
   const group = page.getByRole("group", { name: "Slate display" });

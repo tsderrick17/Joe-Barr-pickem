@@ -1,5 +1,5 @@
 /** The first nine retry windows are charted; the last three (the 60-, 120- and 240-minute emergency windows) are one count below. */
-export const CHARTED_WINDOWS = 9;
+const CHARTED_WINDOWS = 9;
 
 /**
  * @param {Array<{ rung: number, windowMinutes: number, newFinals: number }>} items every retry window, in order

@@ -6,6 +6,7 @@ import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import SurvivorTable from "@/components/survivor-table";
 import { rememberBowlCard, startBowlPrefetch } from "@/lib/bowl-prefetch";
+import { dateFormat } from "@/lib/date-format.js";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -32,12 +33,12 @@ function StandingsLoadingShell() {
 
 function ticketKickoff(value: string | null | undefined) {
   if (!value) return "Kickoff to be announced";
-  const date = new Intl.DateTimeFormat("en-US", {
+  const date = dateFormat("en-US", {
     timeZone: "America/New_York",
     month: "short",
     day: "numeric",
   }).format(new Date(value));
-  const time = new Intl.DateTimeFormat("en-US", {
+  const time = dateFormat("en-US", {
     timeZone: "America/New_York",
     hour: "numeric",
     minute: "2-digit",
@@ -326,6 +327,7 @@ export default function HomePage() {
     {revealed ? null : <StandingsLoadingShell />}
     <div className={revealed ? undefined : "h-0 overflow-hidden"} inert={!revealed}>
     <main className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+      <h1 className="sr-only">Standings</h1>
       <div className="standings-stack mx-auto max-w-5xl px-4 sm:px-5 md:px-10">
         {errorMessage ? (
           <div className="mb-5 flex flex-col gap-3 border-2 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">

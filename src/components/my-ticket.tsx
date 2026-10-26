@@ -63,7 +63,7 @@ export default function MyTicket({
   return (
     <section className="my-ticket" aria-label={`Your current ticket for ${week}`} id="my-ticket">
       {survivorPick ? (
-        <span className="my-ticket-survivor-chip" aria-label={`Survivor selection: ${survivorPick.team}`}>
+        <span className="my-ticket-survivor-chip" role="img" aria-label={`Survivor selection: ${survivorPick.team}`}>
           <SurvivorPokerChip
             abbreviation={survivorPick.abbreviation}
             size="ticket"

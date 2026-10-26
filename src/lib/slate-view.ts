@@ -1,4 +1,5 @@
 import { shouldShowPoolActionMatchup } from "@/lib/pool-action-visibility";
+import { dateFormat } from "./date-format.js";
 
 // The Slate page's rules and derived views, with no React in them: what a click on a team
 // does, which games show, and what the receipt lists. The page keeps the state and applies
@@ -28,7 +29,7 @@ export const SEALED_MESSAGE = "That game has kicked off. Its submitted pick is s
 const hasKickedOff = (game: SlateGame, now: number) => new Date(game.kickoffAt).getTime() <= now;
 
 export function easternDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(new Date(value));
+  return dateFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(new Date(value));
 }
 
 /** What choosing a team does to the Pick'em selection (the page applies it with the matching update). */
