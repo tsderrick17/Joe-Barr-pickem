@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { AddToHomeScreen } from "@/components/add-to-home-screen";
 import { PhoneNotifications } from "@/components/phone-notifications";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
@@ -156,6 +157,7 @@ export default function ProfilePage() {
 
   return <main className="min-h-screen bg-(color:--themed-bg-18) px-4 py-8 text-(color:--themed-text-18) sm:px-6 sm:py-12"><div className="mx-auto max-w-3xl">
     <h1 className="font-serif text-4xl font-bold">Notifications</h1>
+    <AddToHomeScreen variant="card" />
     {profile?.isCommissioner ? <PhoneNotifications /> : null}
     <form className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" onSubmit={save}>
       <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>

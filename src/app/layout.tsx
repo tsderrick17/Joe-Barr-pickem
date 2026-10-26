@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SiteNav from "@/components/site-nav";
+import { AddToHomeScreen } from "@/components/add-to-home-screen";
 import PoolChatDock from "@/components/pool-chat-dock";
 import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body className={`${architectsDaughter.variable} ${graduate.variable} ${cormorant.variable}`}>
         <PullToRefresh />
         <SiteNav />
+        <AddToHomeScreen variant="banner" />
         {children}
         <PoolChatDock />
         <Analytics />

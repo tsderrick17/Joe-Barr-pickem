@@ -304,6 +304,14 @@ measure database requests or end-to-end route time.
   `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
   the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
   at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. For now only the Commissioner sees the section.
+- Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen, where it opens
+  like an app and can receive notifications. A slim banner under the header of every page shows on a phone that is not already running the Home Screen app:
+  on Android it is the browser's own one-tap Install (the offer, `beforeinstallprompt`, is kept from the moment the page loads); on an iPhone in Safari one tap on
+  "Show me how" opens the three steps (Share, Add to Home Screen, Add); on an iPhone in Chrome or another browser it sends the player to Safari, because
+  the Home Screen app that can get notifications is the one added from Safari. "Not now" hides the banner for 14 days (a note in the phone's own storage);
+  a computer, and the installed app, never see it. Android without the one-tap offer (Firefox, or already installed) gets no banner so nobody who installed is
+  nagged from a browser tab. The Notifications page carries the same help as a card for everyone, always, with a "✓ on your Home Screen" line when it is installed.
+  Nothing records who has installed it.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,
   monitoring checks schedule integrity even before first kickoff. Verified

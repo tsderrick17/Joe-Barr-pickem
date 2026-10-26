@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-26 - Add to Home Screen: one tap from every page, for every player
+
+- Decision: a phone that is not running the Home Screen app is offered the install everywhere: a slim banner under the header of every page and a card on the Notifications page. Android gets the browser's own one-tap Install; an iPhone in Safari gets one tap on "Show me how" and the three steps; an iPhone in Chrome (or another browser) is told to open the pool in Safari first. "Not now" keeps the banner away 14 days; the card is always there. A computer and the installed app see neither. The banner is for everyone, unlike the notification controls, which stay Commissioner-only until the pool opens them.
+- Why: the owner wants every player to have the pool as an app (and notifications need it on an iPhone), with players on both Android and Safari, and asked for one click everywhere. An iPhone has no install button for a web page, so the steps are the nearest thing to one tap; the Safari advice is because only the app added from Safari is known to get notifications.
+- Do not: show the banner on a computer or in the installed app, nag an Android player who has no one-tap offer (they may already have installed it), or bring the banner back sooner than 14 days after "Not now".
+
 ## 2026-10-26 - Phone notifications (Web Push): the foundation, Commissioner-only first
 
 - Decision: the pool can send notifications to a phone added to the Home Screen. This first step is the foundation only: the service worker (`public/sw.js`), the key store (`push_vapid_keys`, made by the server on first use, so no Vercel setup), the saved subscriptions (the existing `push_subscriptions` table, unused since July), the routes `/api/push/key`, `/api/push/subscription` (PUT, DELETE) and `/api/push/test`, and a "Notifications on this phone" section on the Notifications page with turn on, send a test and turn off. Only the Commissioner sees it until reminders are sent this way. The reminders, the icon badge and opening it to every player come next. Passkeys were considered and dropped by the owner.
