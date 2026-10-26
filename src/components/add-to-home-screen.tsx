@@ -50,7 +50,10 @@ if (typeof window !== "undefined") {
   const lookup = (navigator as { getInstalledRelatedApps?: () => Promise<unknown[]> }).getInstalledRelatedApps;
   if (!standalone && typeof lookup === "function") {
     related = "checking";
-    lookup.call(navigator).then((apps) => { related = apps.length > 0 ? "installed" : "not-installed"; }, () => { related = "unknown"; }).finally(announce);
+    // The answer normally comes back at once; if it never does, the banner must not wait forever.
+    const giveUp = window.setTimeout(() => { if (related === "checking") { related = "unknown"; announce(); } }, 2000);
+    lookup.call(navigator).then((apps) => { if (related === "checking") related = apps.length > 0 ? "installed" : "not-installed"; }, () => { if (related === "checking") related = "unknown"; })
+      .finally(() => { window.clearTimeout(giveUp); announce(); });
   }
 }
 
@@ -143,7 +146,7 @@ function Steps({ help, userAgent, copyClass }: { help: Help; userAgent: string; 
   const list = "mt-3 list-decimal space-y-2 pl-6 leading-6";
   if (help === "iphone-safari") return <ol className={list}>
     <li>Tap the Share button <ShareIcon />. (Don’t see it? Tap <strong>•••</strong> first.)</li>
-    <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+    <li>Scroll down and tap <strong>Add to Home Screen</strong>. (Not there? Open this page in the Safari app first.)</li>
     <li>Tap <strong>Add</strong>. {OPEN_IT} and sign in with your PIN.</li>
   </ol>;
   if (help === "iphone-browser") return <ol className={list}>
@@ -176,7 +179,7 @@ function Steps({ help, userAgent, copyClass }: { help: Help; userAgent: string; 
     <li>Tap <strong>Add</strong>. {OPEN_IT}.</li>
   </ol>;
   return <ol className={list}>
-    <li>Tap the menu button <strong>⋮</strong> at the top right.</li>
+    <li>Tap the menu button <strong>⋮</strong> at the top right. (If you see <strong>Open in Chrome</strong>, tap that first.)</li>
     <li>Tap <strong>Add to Home screen</strong> (or <strong>Install app</strong>).</li>
     <li>Tap <strong>Install</strong>. {OPEN_IT}.</li>
   </ol>;

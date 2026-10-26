@@ -13,8 +13,8 @@ const CROS = "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko)";
 
 type Phone = "iphone-safari" | "iphone-chrome" | "iphone-facebook" | "android-prompt" | "android-chrome" | "android-samsung" | "android-firefox" | "android-facebook"
-  | "android-installed" | "chromebook-prompt" | "chromebook" | "chromebook-installed" | "installed" | "desktop";
-type Script = { userAgent?: string; platform?: string; standalone?: boolean; related?: "installed" | "not-installed" };
+  | "android-installed" | "android-silent" | "chromebook-prompt" | "chromebook" | "chromebook-installed" | "installed" | "desktop";
+type Script = { userAgent?: string; platform?: string; standalone?: boolean; related?: "installed" | "not-installed" | "never-answers" };
 const PHONES: Record<Phone, Script & { help: string }> = {
   "iphone-safari": { userAgent: `${IOS} Version/18.0 Mobile/15E148 Safari/604.1`, platform: "iPhone", help: "iphone-safari" },
   "iphone-chrome": { userAgent: `${IOS} CriOS/130.0.6723.90 Mobile/15E148 Safari/604.1`, platform: "iPhone", help: "iphone-browser" },
@@ -25,6 +25,7 @@ const PHONES: Record<Phone, Script & { help: string }> = {
   "android-firefox": { userAgent: "Mozilla/5.0 (Android 14; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0", platform: "Linux armv81", help: "android-steps" },
   "android-facebook": { userAgent: `${ANDROID} Chrome/130.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/480.0.0.40.104;]`, platform: "Linux armv81", help: "android-in-app" },
   "android-installed": { userAgent: `${ANDROID} Chrome/130.0.0.0 Mobile Safari/537.36`, platform: "Linux armv81", related: "installed", help: "installed-tab" },
+  "android-silent": { userAgent: `${ANDROID} Chrome/130.0.0.0 Mobile Safari/537.36`, platform: "Linux armv81", related: "never-answers", help: "android-steps" },
   "chromebook-prompt": { userAgent: CROS, platform: "Linux x86_64", help: "chromebook-prompt" },
   chromebook: { userAgent: CROS, platform: "Linux x86_64", help: "chromebook-steps" },
   "chromebook-installed": { userAgent: CROS, platform: "Linux x86_64", related: "not-installed", help: "installed-tab" },
@@ -54,7 +55,7 @@ async function scriptPhone(page: Page, phone: Phone, planted: Planted = {}) {
     if (platform) Object.defineProperty(navigator, "platform", { get: () => platform, configurable: true });
     if (standalone) Object.defineProperty(navigator, "standalone", { value: true, configurable: true });
     // Chrome on Android answers whether the app is on the phone; other browsers have no way to ask.
-    if (related) Object.defineProperty(navigator, "getInstalledRelatedApps", { value: async () => related === "installed" ? [{ platform: "webapp" }] : [], configurable: true });
+    if (related) Object.defineProperty(navigator, "getInstalledRelatedApps", { value: () => related === "never-answers" ? new Promise(() => {}) : Promise.resolve(related === "installed" ? [{ platform: "webapp" }] : []), configurable: true });
     else delete (Navigator.prototype as { getInstalledRelatedApps?: unknown }).getInstalledRelatedApps;
     const copied: string[] = [];
     (window as unknown as { copied: string[] }).copied = copied;
@@ -219,6 +220,11 @@ test("on Android, a browser that cannot ask (Firefox) still knows the app was op
 test("opening the Home Screen app leaves a note that a browser tab on the same Android phone reads", async ({ page }) => {
   await open(page, "installed");
   expect(await page.evaluate(() => window.localStorage.getItem("pickem-home-screen-installed"))).not.toBeNull();
+});
+
+test("if Android never answers whether the app is installed, the banner still shows after a moment", async ({ page }) => {
+  const { banner } = await open(page, "android-silent");
+  await expect(banner).toHaveAttribute("data-home-screen-help", "android-steps", { timeout: 6_000 });
 });
 
 test("the banner is on every page, not only Notifications", async ({ page }) => {
