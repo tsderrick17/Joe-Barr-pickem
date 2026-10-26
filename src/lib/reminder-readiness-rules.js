@@ -3,7 +3,7 @@ import {
   isSettledGameStatus,
 } from "./game-status-policy.js";
 
-export function isTerminalGameStatus(status) {
+function isTerminalGameStatus(status) {
   return isSettledGameStatus(status);
 }
 

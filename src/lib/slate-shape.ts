@@ -38,7 +38,7 @@ export type SlateSurvivor = {
   usedTeamIds: string[];
 };
 
-export function atsResultForTeam(game: GameRow, lockedLine: LockedLineRow | undefined, teamId: string): "win" | "loss" | null {
+function atsResultForTeam(game: GameRow, lockedLine: LockedLineRow | undefined, teamId: string): "win" | "loss" | null {
   if (game.status !== "final" || !lockedLine) return null;
 
   const result = gradeAtsPick({

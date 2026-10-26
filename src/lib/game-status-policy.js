@@ -1,4 +1,3 @@
-export const PICKABLE_GAME_STATUSES = new Set(["scheduled"]);
 export const SETTLED_GAME_STATUSES = new Set([
   "final",
   "postponed",

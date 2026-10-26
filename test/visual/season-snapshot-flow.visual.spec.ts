@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 import { homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
 // Behavior of the Season Snapshot (the back of the Pick'em Pad), driven in a real browser against fixtures.
@@ -6,13 +7,6 @@ import { homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
 const SCENARIO = "commissioner-playoff";
 
-async function signIn(page: Page) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" } };
-  await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
-}
 
 /** The fixture snapshot, stretched to nine regular weeks so the six-week window has something to scroll. */
 function nineWeekSnapshot() {

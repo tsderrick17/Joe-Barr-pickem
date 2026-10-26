@@ -10,7 +10,7 @@ export type GameStatus = (typeof GAME_STATUSES)[number];
 export const PERIOD_STATUSES = ["upcoming", "active", "complete"] as const;
 export type PeriodStatus = (typeof PERIOD_STATUSES)[number];
 
-export const PERIOD_TYPES = ["regular", "playoff"] as const;
+const PERIOD_TYPES = ["regular", "playoff"] as const;
 export type PeriodType = (typeof PERIOD_TYPES)[number];
 
 /** Narrows a database value. A value the constraint does not allow is a bug, so it fails loudly. */
