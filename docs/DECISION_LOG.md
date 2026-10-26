@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-26 - Accessibility sweep: screen-reader names and two unreadable night colors
+
+- Decision: an automated accessibility check (axe-core, WCAG 2 A/AA) of Standings, the Slate, Notifications, sign-in, the Trophy Room and the Commissioner desk, day and night, led to: the Survivor chip on the ticket is announced as an image with its label; the Survivor Table and Bowl Card scrollers can be reached and scrolled with a keyboard and are named; Standings has a (hidden) page heading; the Grading period picker keeps its name on a phone, where its visible label is hidden; at night the Grading tab's LIVE tag keeps dark ink on its light amber paper (it was light on light, contrast 1.3:1), and the Reminders "No email needed" note uses the night teal (it was dark teal on dark, 2:1). Day mode is pixel-identical.
+- Left as is (owner's call): a few muted labels sit just under the 4.5:1 guideline (eliminated players' struck-through names 4.0:1, small teal labels on the Slate 4.4:1, the chat Hide button at night 4.2:1).
+- Do not: give the LIVE tag a themed ink again while its paper stays light, or hide a form label without another name on the control.
+
 ## 2026-10-26 - Date formatters are built once and reused
 
 - Decision: every `new Intl.DateTimeFormat(...)` in `src/` (21 files) goes through `dateFormat(locale, options)` in `src/lib/date-format.js`, which builds each distinct format once and reuses it (`eastern-time.js` already kept its own). Output is identical.
