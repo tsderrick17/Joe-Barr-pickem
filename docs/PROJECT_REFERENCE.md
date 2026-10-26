@@ -297,6 +297,13 @@ measure database requests or end-to-end route time.
   the following day after that gameday's results are terminal. Recaps may
   contain the entire day's slate; immutable snapshots and keyed delivery
   receipts make retries safe and prevent duplicate messages.
+- Phone notifications (Web Push) are a second delivery path beside email, for the pool added to a phone's Home Screen. A player turns them on from
+  the Notifications page ("Notifications on this phone": the phone asks permission, subscribes with the pool's own key, and the server saves the
+  subscription in `push_subscriptions`); the same page sends a test and turns them off. An iPhone browser tab cannot receive them (only the app
+  added to the Home Screen can), and the page says so. The signing key pair (VAPID) is made by the server the first time it is needed and kept in
+  `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
+  the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
+  at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. For now only the Commissioner sees the section.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,
   monitoring checks schedule integrity even before first kickoff. Verified

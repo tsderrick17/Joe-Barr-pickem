@@ -1687,6 +1687,27 @@ export type Database = {
           },
         ]
       }
+      push_vapid_keys: {
+        Row: {
+          created_at: string
+          id: boolean
+          private_key: string
+          public_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: boolean
+          private_key: string
+          public_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: boolean
+          private_key?: string
+          public_key?: string
+        }
+        Relationships: []
+      }
       reminder_templates: {
         Row: {
           body: string

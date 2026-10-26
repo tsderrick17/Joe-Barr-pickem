@@ -114,6 +114,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Rehearsal preview (`/preview`) | default |
 | Rehearsal walk-through: the six scenarios in all four views (behavior test, `rehearsal-walkthrough.visual.spec.ts`; no screenshots) | `/preview` |
 | Email plans on Notifications: Essentials, Regular and Full Card set the playoff toggles (behavior test, `email-plans.visual.spec.ts`; no screenshots) | `/profile` |
+| "Notifications on this phone" on Notifications (the Commissioner's alone for now): `off`, `on`, `blocked`, `iphone-tab` (an iPhone browser tab, told to add the app to the Home Screen) and `no-support`, day at phone and desktop width, plus `on` at night; behavior tests follow the taps (turn on: permission, key, save; test; turn off) and show the section to the Commissioner only (`phone-notifications.visual.spec.ts`) | `/profile` |
 | `/survivor` | redirects to `/board#slate-matchups`; no screen of its own |
 
 ## Email images — `test/email-artwork-baseline.test.mjs`
