@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - The Other Stats column "Shutout Free Streak" is now "Shutout Free Weeks in a Row"
+
+- Decision: the Trophy Room's Other Stats heading (and the cell's spoken label, "Shutout Free Weeks in a Row: 9 now, 23 best") reads "Shutout Free Weeks in a Row" instead of "Shutout Free Streak". The figures (best run, current run beneath) are unchanged.
+- Why: the owner asked for that name; the column counts weeks in a row, matching Perfect Weeks in a Row beside it.
+- Do not: rename it back, or reword the neighbouring "Perfect Weeks in a Row" heading, without asking.
+
 ## 2026-10-25 - A player's week counts for Perfect Weeks and the streaks as soon as both of their picks are graded
 
 - Decision: the weekly figures on both Trophy Room views (Perfect Weeks, Shutout Free Streak, Perfect Weeks in a Row, and the group's weekly histogram) count a regular week for a player once both of that player's picks are graded (a win or a loss), without waiting for the whole week to be final. A finished week (complete, or every game final) still counts for everyone, with a pick not made as a loss; a week with a pending or voided pick is still left out. `playerWeeks` in `src/lib/group-stats.js`.

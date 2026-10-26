@@ -315,7 +315,7 @@ measure database requests or end-to-end route time.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
   appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
-  view: Shutout Free Streak and Perfect Weeks in a Row (best run, current run beneath), games decided by a half point (wins, losses, hit
+  view: Shutout Free Weeks in a Row and Perfect Weeks in a Row (best run, current run beneath), games decided by a half point (wins, losses, hit
   rate) and pushes picked; A to Z by default, no places, every column sorts. The two views are one two-way switch.
 - Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
