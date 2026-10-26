@@ -88,7 +88,7 @@ export default function TrophyRoomPage() {
           <td className="trophy-avg">{formatAverage(row.avg)}</td>
           <td>{row.streaks ? row.streaks.sweeps.total ?? 0 : "—"}</td>
         </> : <>
-          {streakCell(own?.noDonut, "Shutout Free Streak")}
+          {streakCell(own?.noDonut, "Shutout Free Weeks in a Row")}
           {streakCell(own?.sweeps, "Perfect Weeks in a Row")}
           <td>{count(row, row.halfWins)}</td>
           <td>{count(row, row.halfLosses)}</td>
@@ -143,7 +143,7 @@ export default function TrophyRoomPage() {
                     </tr>
                     <tr className="trophy-subheads">
                       {playerHead()}
-                      {header("donut", <>Shutout Free <br />Streak</>, 1)}{header("sweeps", <>Perfect Weeks <br />in a Row</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
+                      {header("donut", <>Shutout Free Weeks <br />in a Row</>, 1)}{header("sweeps", <>Perfect Weeks <br />in a Row</>, 1)}{header("halfW", "Wins", 1)}{header("halfL", "Losses", 1)}{header("halfRate", "Hit rate", 1)}{header("pushes", "Pushes picked", 1)}
                     </tr>
                   </>}
                 </thead>

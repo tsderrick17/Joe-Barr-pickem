@@ -264,10 +264,10 @@ test("Trophy room: the table shows each player's streaks", async ({ page }) => {
   await page.goto("/trophy-room");
   await page.getByRole("button", { name: "Other Stats" }).click();   // the streaks are in the second view of the table
   const row = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Tyler" }) });
-  await expect(row.getByLabel("Shutout Free Streak: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
+  await expect(row.getByLabel("Shutout Free Weeks in a Row: 9 now, 23 best")).toBeVisible({ timeout: 30_000 });
   await expect(row.getByLabel("Perfect Weeks in a Row: 0 now, 5 best")).toBeVisible();
   const noPicks = page.locator(".trophy-table tbody tr").filter({ has: page.getByRole("rowheader", { name: "Zac" }) });
-  await expect(noPicks.getByLabel("Shutout Free Streak: none yet")).toBeVisible();
+  await expect(noPicks.getByLabel("Shutout Free Weeks in a Row: none yet")).toBeVisible();
 });
 
 // The second view of the table: streaks, games decided by half a point (wins, losses and hit rate) and pushes picked, ranked on the sorted column with
@@ -281,7 +281,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     const table = page.locator(".trophy-table");
     await expect(table).toBeVisible({ timeout: 30_000 });
     await page.getByRole("button", { name: "Other Stats" }).click();
-    await expect(table.locator("thead th")).toHaveText(["", "Regular Season Streaks", "Decided by a half point", "", "Player ▲", "Shutout Free Streak", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
+    await expect(table.locator("thead th")).toHaveText(["", "Regular Season Streaks", "Decided by a half point", "", "Player ▲", "Shutout Free Weeks in a Row", "Perfect Weeks in a Row", "Wins", "Losses", "Hit rate", "Pushes picked"]);
     // no places on this page: players are listed A to Z until a column is chosen
     await expect(table.locator(".trophy-rank")).toHaveCount(0);
     expect(await table.locator("tbody th[scope=row]").allInnerTexts()).toEqual(["Al", "Connor", "Dana", "Gary", "Rick", "Ron", "Tyler", "Zac"]);
@@ -292,7 +292,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
     await expect(tyler.locator("td").nth(5)).toHaveText("3");   // pushes picked
     await table.getByRole("button", { name: /^Pushes picked/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Connor");   // 4 pushes
-    await table.getByRole("button", { name: /^Shutout Free Streak/ }).click();
+    await table.getByRole("button", { name: /^Shutout Free Weeks in a Row/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Tyler");   // best run 23
     await table.getByRole("button", { name: /^Player/ }).click();
     expect(await table.locator("tbody th[scope=row]").first().innerText()).toBe("Al");   // back to A to Z
