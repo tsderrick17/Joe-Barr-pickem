@@ -326,6 +326,7 @@ export default function HomePage() {
     {revealed ? null : <StandingsLoadingShell />}
     <div className={revealed ? undefined : "h-0 overflow-hidden"} inert={!revealed}>
     <main className="min-h-screen bg-(color:--themed-bg-18) text-(color:--themed-text-18)">
+      <h1 className="sr-only">Standings</h1>
       <div className="standings-stack mx-auto max-w-5xl px-4 sm:px-5 md:px-10">
         {errorMessage ? (
           <div className="mb-5 flex flex-col gap-3 border-2 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
