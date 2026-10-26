@@ -1,10 +1,11 @@
 import { providerRequestCost } from "./provider-efficiency.js";
 import { getLineLock } from "./schedule-time.js";
+import { dateFormat } from "./date-format.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 const DEFAULT_SCORE_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
 function dateKeyInZone(value, timeZone) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = dateFormat("en-US", {
     timeZone,
     year: "numeric",
     month: "2-digit",
@@ -185,7 +186,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     const day = daysByKey.get(dateKeyInZone(new Date(minute * 60000), timeZone));
     if (day) day.forecastLockFetches += 1;
   }
-  const todayRefreshPending = Number(new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hour12: false }).format(now)) < 7;
+  const todayRefreshPending = Number(dateFormat("en-US", { timeZone, hour: "numeric", hour12: false }).format(now)) < 7;
   for (const day of allDays) {
     const key = day.date.slice(0, 10);
     if (key > todayKey || (key === todayKey && todayRefreshPending)) day.forecastRefreshes = 1;
@@ -278,7 +279,7 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
 
 // The last `days` Eastern calendar dates, including the point's date. Weight by games,
 // not by slate, so a single-game Thursday does not count like a Sunday slate.
-const easternDayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
+const easternDayFormatter = dateFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
 export function rollingCreditsPerGame(points, index, days) {
   if (points[index]?.creditsPerGame == null) return null;
   const day = (value) => {

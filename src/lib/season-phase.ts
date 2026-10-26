@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { EASTERN_TIME_ZONE } from "@/lib/season";
 import type { SeasonPhase } from "@/lib/api-contracts";
+import { dateFormat } from "./date-format.js";
 
 export type { SeasonPhase };
 
@@ -24,7 +25,7 @@ export function seasonPhaseFromRows(season: { state: string } | null, periods: A
 }
 
 function easternMonth(at: Date) {
-  const month = new Intl.DateTimeFormat("en-US", { timeZone: EASTERN_TIME_ZONE, month: "numeric" }).formatToParts(at).find((part) => part.type === "month")?.value;
+  const month = dateFormat("en-US", { timeZone: EASTERN_TIME_ZONE, month: "numeric" }).formatToParts(at).find((part) => part.type === "month")?.value;
   return Number(month);
 }
 
