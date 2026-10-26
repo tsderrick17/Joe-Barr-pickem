@@ -7,8 +7,9 @@
  *
  * Weekly records (regular season only): a regular week has two picks, so a player's week is 2-0, 1-1 or 0-2 (a "donut"). A pick not made
  * is a loss, so a week with one pick and one win is 1-1, and a week with none is a donut. A week with a voided pick is left out entirely
- * (it neither counts nor breaks a streak), and only weeks the pool has completed are counted. A player's weeks begin with the first week
- * they made a pick in a season, so nobody is charged for weeks before they joined.
+ * (it neither counts nor breaks a streak). A week the pool has completed (or whose every game is final) counts for everyone; a week still
+ * being played counts for a player the moment both of their picks are graded, because nothing left in the week can change their 2-0, 1-1 or
+ * 0-2. A player's weeks begin with the first week they made a pick in a season, so nobody is charged for weeks before they joined.
  *
  * Streaks run in order of play across seasons with no reset between them, so a streak still alive at the end of a season carries into the
  * next one. "Longest" is the best run ever; "Now" is the run the player is on at their latest counted week.
@@ -92,8 +93,10 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
 }
 
 /**
- * Regular-season weeks the pool has completed, two picks each, per player: { seasonYear, week, wins }. A week with a voided or unsettled pick
- * is left out; a pick not made is a loss; a player's weeks begin with the first week they made a pick in a season.
+ * Regular-season weeks, two picks each, per player: { seasonYear, week, wins }. A finished week (complete, or every game final) counts for every
+ * player; a week still being played counts only for a player whose two picks are both graded, since their week is already decided. A week with a
+ * voided or unsettled pick is left out; a pick not made is a loss once the week is finished; a player's weeks begin with the first week they
+ * made a pick in a season.
  */
 function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds = new Set() }) {
   const picksByPlayerPeriod = new Map();
@@ -106,8 +109,9 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
     const joinKey = `${pick.player_id}|${period.season_id}`;
     weeksOfPlayerInSeason.set(joinKey, Math.min(weeksOfPlayerInSeason.get(joinKey) ?? Infinity, period.display_order));
   }
+  const finished = (period) => period.status === "complete" || settledPeriodIds.has(period.id);
   const counted = periods
-    .filter((period) => period.period_type === "regular" && (period.status === "complete" || settledPeriodIds.has(period.id)) && period.max_picks === WEEK_PICKS && yearBySeason.has(period.season_id))
+    .filter((period) => period.period_type === "regular" && period.max_picks === WEEK_PICKS && yearBySeason.has(period.season_id))
     .sort((a, b) => yearBySeason.get(a.season_id) - yearBySeason.get(b.season_id) || a.display_order - b.display_order);
   const histogram = { donut: 0, split: 0, sweep: 0 };
   const weeksByPlayer = new Map();
@@ -117,6 +121,7 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
       if (period.season_id !== seasonId || period.display_order < firstWeek) continue;
       const own = picksByPlayerPeriod.get(`${playerId}|${period.id}`) ?? [];
       if (own.some((pick) => pick.result === "void" || pick.result === "pending")) continue;   // a voided or unsettled pick leaves the week out
+      if (!finished(period) && own.filter(isDecided).length < WEEK_PICKS) continue;   // a week still in play counts once this player's own two picks are graded
       const weekWins = own.filter((pick) => pick.result === "win").length;   // a pick not made is a loss, so losses are whatever is left of the two
       const week = { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: Math.min(WEEK_PICKS, weekWins) };
       weeksByPlayer.set(playerId, [...(weeksByPlayer.get(playerId) ?? []), week]);

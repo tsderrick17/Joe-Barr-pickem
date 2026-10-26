@@ -319,7 +319,9 @@ measure database requests or end-to-end route time.
   rate) and pushes picked; A to Z by default, no places, every column sorts. The two views are one two-way switch.
 - Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
-- A week counts toward a streak once every game in it is final, not only once the pool has advanced.
+- A week counts toward the weekly figures (Perfect Weeks, both streaks) once every game in it is final, not only once the pool has advanced, and
+  a player's own week counts sooner still: as soon as both of their picks are graded, since nothing left in the week can change their 2-0,
+  1-1 or 0-2. A week with a pick still pending or voided is left out; a pick not made is a loss only once the whole week is final.
 
 ## Weekly lifecycle
 

@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-25 - A player's week counts for Perfect Weeks and the streaks as soon as both of their picks are graded
+
+- Decision: the weekly figures on both Trophy Room views (Perfect Weeks, Shutout Free Streak, Perfect Weeks in a Row, and the group's weekly histogram) count a regular week for a player once both of that player's picks are graded (a win or a loss), without waiting for the whole week to be final. A finished week (complete, or every game final) still counts for everyone, with a pick not made as a loss; a week with a pending or voided pick is still left out. `playerWeeks` in `src/lib/group-stats.js`.
+- Why: the owner saw Wins and Hit rate move on game day but Perfect Weeks and the streaks stay put until Monday night's game ended, even though a player's 2-0, 1-1 or 0-2 week was already certain. Wins come from graded picks; the weekly figures were the only ones gated on the whole week. A one-pick week is not counted early: the second pick could still be made before its kickoff.
+- Do not: count a week early for a player with a pick still pending, or treat a not-yet-made pick as a loss before the week is final.
+
 ## 2026-10-25 - A long game name on the Bowl Card spills into its cell, not under the next column
 
 - Decision: the Bowl Card's game heading has `min-width: 0` (`60-bowl-pool.css`). A word wider than the column ("Championship", about 110px, in a 99px usable cell on a phone, 103px on a tablet) used to stretch the heading's grid track to its own width: the heading ran past the cell's right edge, its rule ran into the border, and the next column painted over the last letter ("NATIONAL CHAMPIONSHIF" on the owner's iPhone). Now the heading keeps the cell's width and the word spills evenly into the cell's side padding, clear of both borders.

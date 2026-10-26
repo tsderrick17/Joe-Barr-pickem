@@ -62,7 +62,8 @@ async function buildTrophyRoom() {
       return year === undefined ? [] : [{ season_year: year, player_id: record.player_id }];
     }),
   });
-  // a week counts for the streaks as soon as every game in it is final, not only once the pool has moved on to the next week
+  // a week counts for the streaks as soon as every game in it is final, not only once the pool has moved on to the next week; a player's own week
+  // counts sooner still, as soon as both of their picks are graded (see playerWeeks)
   const settledPeriodIds = settledPeriods(games.data ?? []);
   const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [], settledPeriodIds });
   return { ...stats, players: stats.players.map((row: { playerId: string }) => ({ ...row, streaks: streaks.get(row.playerId) ?? null })) };
