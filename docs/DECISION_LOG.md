@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-26 - Phone notifications (Web Push): the foundation, Commissioner-only first
+
+- Decision: the pool can send notifications to a phone added to the Home Screen. This first step is the foundation only: the service worker (`public/sw.js`), the key store (`push_vapid_keys`, made by the server on first use, so no Vercel setup), the saved subscriptions (the existing `push_subscriptions` table, unused since July), the routes `/api/push/key`, `/api/push/subscription` (PUT, DELETE) and `/api/push/test`, and a "Notifications on this phone" section on the Notifications page with turn on, send a test and turn off. Only the Commissioner sees it until reminders are sent this way. The reminders, the icon badge and opening it to every player come next. Passkeys were considered and dropped by the owner.
+- Why: the owner asked for push and an icon badge as quality-of-life features. Email reminders stay; push is a second path, not a replacement. Browser push was built on 2026-07-28 and made email-only the same evening; that build left only the table, and nothing from it is reused except the table.
+- Safety: the server posts to the subscription's address, so only https addresses on Apple, Google, Mozilla and Microsoft push services are accepted; a notification can only open a page on this site; a phone belongs to the player signed in on it; ten devices at most per player.
+- Do not: put the private key anywhere but the database, accept a subscription address from another host, or send a push that carries a pick before kickoff.
+
 ## 2026-10-25 - The Other Stats column "Shutout Free Streak" is now "Shutout Free Weeks in a Row"
 
 - Decision: the Trophy Room's Other Stats heading (and the cell's spoken label, "Shutout Free Weeks in a Row: 9 now, 23 best") reads "Shutout Free Weeks in a Row" instead of "Shutout Free Streak". The figures (best run, current run beneath) are unchanged.

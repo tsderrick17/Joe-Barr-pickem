@@ -218,6 +218,16 @@ queries paginate past PostgREST's 1,000-row cap, and activity timestamps are
 best-effort and throttled to one write per player per 15 minutes per warm app
 instance. Chat and settings reads do not write activity.
 
+## Phone notification keys
+
+Web Push is signed with one key pair (VAPID) that the server makes the first time anyone turns phone notifications on, and keeps in
+`public.push_vapid_keys` (one row; only the service role can read it). Nothing is set in Vercel. Never copy the private key into source, logs
+or a chat. To rotate the pair, delete that row: the next request makes a new one, but every phone's subscription was made against the old
+public key, so each player must turn notifications off and on again on their phone. Do not rotate without a reason.
+
+A phone the push service reports gone (HTTP 404 or 410) is removed from `push_subscriptions` the next time anything is sent to it; a temporary
+failure leaves it in place.
+
 ## Quiet operations watchdog
 
 The watchdog evaluates operations every ten minutes (migration
