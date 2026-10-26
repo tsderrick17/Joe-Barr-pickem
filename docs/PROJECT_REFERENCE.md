@@ -304,6 +304,19 @@ measure database requests or end-to-end route time.
   `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
   the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
   at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. For now only the Commissioner sees the section.
+- Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen,
+  where it opens like an app and can receive notifications. A slim banner under the header of every page shows on any phone that is not running the
+  Home Screen app, with the steps for that phone and browser one tap away ("Show me how"): Safari on an iPhone (Share, Add to Home Screen, leave Open as
+  Web App on, Add, sign in with your PIN: the app keeps its own sign-in), Chrome, Edge or Firefox on an iPhone (their own Share button; they can add web
+  apps since iOS 16.4), a link opened inside another app's window such as Facebook, Instagram, Gmail or the Google app (open it in Safari or Chrome first,
+  with Copy link), the Android menus of Chrome, Samsung Internet and Firefox, and Chrome on a Chromebook (installed, it opens in its own window from
+  the launcher). When the browser (Android, Chromebook) offers its own install (`beforeinstallprompt`,
+  kept from the moment the page loads; Chrome waits for a tap and 30 seconds on the site) the button becomes one-tap Install. "Not now" hides the banner
+  14 days and "I already have it" 180 days (notes in the phone's own storage). It never shows on a computer or in the installed app, nor on an Android
+  phone known to have the app: Chrome answers that itself (`getInstalledRelatedApps`, from `related_applications` in the manifest, which also notices the
+  app being removed), and in other browsers a note left when the app was last opened counts (the app and the browser share storage on Android; an iPhone's
+  Safari cannot see its Home Screen app, hence "I already have it"). The Notifications page carries the same help as a card for everyone, always. The
+  manifest (`src/app/manifest.ts`) states `id: "/"`, the identity browsers already computed for earlier installs. Nothing records who has installed it.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,
   monitoring checks schedule integrity even before first kickoff. Verified
