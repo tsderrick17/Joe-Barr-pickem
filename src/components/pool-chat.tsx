@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { dateFormat } from "@/lib/date-format.js";
 
 type Message = {
   id: string;
@@ -32,7 +33,7 @@ const EMOJI_GROUPS = [
 function messageDateTime(value: string) {
   const timestamp = new Date(value);
   if (Number.isNaN(timestamp.getTime())) return "Time unavailable";
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",

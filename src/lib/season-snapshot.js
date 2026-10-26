@@ -2,7 +2,7 @@
  * season-snapshot-freshness.js), and from then on, including the playoffs. A new
  * season (Aug 1) starts with every period upcoming, so it disappears again until
  * that season's Week 6 settles. */
-export const SNAPSHOT_RELEASE_WEEK = 6;
+const SNAPSHOT_RELEASE_WEEK = 6;
 const isOpen = (period) => ["active", "complete"].includes(period.status);
 const isReleaseWeek = (period) => period.period_type === "regular" && period.display_order === SNAPSHOT_RELEASE_WEEK;
 

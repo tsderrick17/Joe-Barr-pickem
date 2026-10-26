@@ -1,6 +1,8 @@
+import { dateFormat } from "./date-format.js";
+
 /** @param {string | Date} value */
 function easternDay(value) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = dateFormat("en-US", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",

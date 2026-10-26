@@ -1,5 +1,7 @@
+import { dateFormat } from "./date-format.js";
+
 function easternDateLabel(value) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     timeZone: "America/New_York",
     month: "long",
     day: "numeric",
@@ -7,7 +9,7 @@ function easternDateLabel(value) {
 }
 
 function easternPlayoffDayLabel(value) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     timeZone: "America/New_York",
     weekday: "long",
     month: "short",

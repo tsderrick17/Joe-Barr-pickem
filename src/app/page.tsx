@@ -6,6 +6,7 @@ import PickemScoreboard from "@/components/pickem-scoreboard";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import SurvivorTable from "@/components/survivor-table";
 import { rememberBowlCard, startBowlPrefetch } from "@/lib/bowl-prefetch";
+import { dateFormat } from "@/lib/date-format.js";
 import {
   fetchWithSession,
   SessionUnavailableError,
@@ -32,12 +33,12 @@ function StandingsLoadingShell() {
 
 function ticketKickoff(value: string | null | undefined) {
   if (!value) return "Kickoff to be announced";
-  const date = new Intl.DateTimeFormat("en-US", {
+  const date = dateFormat("en-US", {
     timeZone: "America/New_York",
     month: "short",
     day: "numeric",
   }).format(new Date(value));
-  const time = new Intl.DateTimeFormat("en-US", {
+  const time = dateFormat("en-US", {
     timeZone: "America/New_York",
     hour: "numeric",
     minute: "2-digit",

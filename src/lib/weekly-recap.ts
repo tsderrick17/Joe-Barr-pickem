@@ -8,6 +8,7 @@ import { crownedInRecapWeek, recapSurvivorStatus } from "@/lib/survivor-recap-st
 import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 import { readAllPages } from "@/lib/read-all-pages";
 import { onlyRowsWithPublicPicks, publicPickLabel, revealPickLabels, type LockedGameLine } from "@/lib/reveal-rows";
+import { dateFormat } from "./date-format.js";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -287,11 +288,11 @@ export async function buildWeeklyRecapSnapshot(targetPeriodId?: string | null): 
 }
 
 function easternDayLabel(value: Date) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(value);
+  return dateFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(value);
 }
 
 function easternTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value)).replace(" AM", " AM ET").replace(" PM", " PM ET");
+  return dateFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value)).replace(" AM", " AM ET").replace(" PM", " PM ET");
 }
 
 export async function ensureGameDaySlateSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {

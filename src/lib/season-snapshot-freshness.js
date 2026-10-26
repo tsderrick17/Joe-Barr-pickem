@@ -14,8 +14,8 @@ import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
  * kickoff, because they could still add one. That is the cautious direction:
  * the chart never plots a week that could still change.
  */
-export const HOLD_MS = 60 * 60 * 1000;
-export const WAITING_FOR_GRADES_MS = 2 * 60 * 1000;
+const HOLD_MS = 60 * 60 * 1000;
+const WAITING_FOR_GRADES_MS = 2 * 60 * 1000;
 export const CLOSED_CHART_MS = 5 * 60 * 1000;
 const FINAL_DELAY_MS = FIRST_SCORE_CHECK_DELAY_MINUTES * 60 * 1000;
 

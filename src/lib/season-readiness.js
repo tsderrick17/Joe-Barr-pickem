@@ -1,3 +1,5 @@
+import { dateFormat } from "./date-format.js";
+
 const SETTLED_GAME_STATUSES = new Set(["final", "postponed", "cancelled", "no_contest"]);
 
 function check(id, label, detail, state = "pass") {
@@ -5,7 +7,7 @@ function check(id, label, detail, state = "pass") {
 }
 
 function gameweekKey(value) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = dateFormat("en-US", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",

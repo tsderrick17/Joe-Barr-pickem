@@ -2,11 +2,12 @@ import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bo
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
+import { dateFormat } from "./date-format.js";
 
 type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string };
 
 function displayDay(day: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric",
   }).format(new Date(`${day}T12:00:00-05:00`));
 }

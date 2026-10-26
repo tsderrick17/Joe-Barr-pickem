@@ -1,15 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn as signInAs } from "./session";
 import { homeResponse } from "./standings-fixtures.mjs";
 import { boardResponse } from "./slate-fixtures.mjs";
 
 // A first load that fails (iPhone Safari cuts a request off when the tab is backgrounded; a cold start can run long) is tried once more by itself, so a player is
 // not shown "taking too long" for a blip; a second failure shows the error, and coming back to the tab loads again at once. No screenshots are compared.
 async function signIn(page: Page) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" } };
-  await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
+  await signInAs(page, "day");
   await page.setViewportSize({ width: 390, height: 900 });
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));

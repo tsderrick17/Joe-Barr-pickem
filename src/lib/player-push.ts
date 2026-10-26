@@ -20,7 +20,7 @@ type Send = typeof webpush.sendNotification;
 const VAPID_SUBJECT = "https://pickemjb.vercel.app";
 
 /** "gone" means the push service no longer knows the device (404 or 410), so the subscription should be deleted. */
-export async function sendWebPush(subscription: Subscription, payload: PushPayload, send: Send = webpush.sendNotification.bind(webpush)): Promise<"sent" | "gone" | "failed"> {
+async function sendWebPush(subscription: Subscription, payload: PushPayload, send: Send = webpush.sendNotification.bind(webpush)): Promise<"sent" | "gone" | "failed"> {
   const keys = await vapidKeys();
   try {
     await send(

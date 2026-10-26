@@ -1,3 +1,5 @@
+import { dateFormat } from "./date-format.js";
+
 /**
  * NFL pool years turn over on August 1 in the league's canonical time zone.
  * This intentionally derives the active season at runtime so the application
@@ -6,7 +8,7 @@
 const EASTERN_TIME_ZONE = "America/New_York";
 
 export function seasonYearAt(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = dateFormat("en-US", {
     timeZone: EASTERN_TIME_ZONE,
     year: "numeric",
     month: "numeric",
