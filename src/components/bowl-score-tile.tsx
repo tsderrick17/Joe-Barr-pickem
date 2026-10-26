@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type Feel = { pace: number; start: number; extra: number };
 
 /** Graduate draws its zero with a dot in the middle; its capital O is the same shape without one. */
-export const tileGlyph = (digit: number) => (digit === 0 ? "O" : String(digit));
+const tileGlyph = (digit: number) => (digit === 0 ? "O" : String(digit));
 
 // A falling flap speeds up like something dropping; a landing flap hits its
 // stop, kicks back a little, and settles.

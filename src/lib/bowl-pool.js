@@ -86,12 +86,3 @@ export function bowlTeamName(team) {
   return bowlTeamDisplayLabel(team);
 }
 
-/** Both names for one matchup; the full names if the short ones collide. */
-export function bowlMatchupTeamNames(first, second) {
-  const firstName = bowlTeamName(first);
-  const secondName = bowlTeamName(second);
-  if (firstName.toLowerCase() !== secondName.toLowerCase()) return [firstName, secondName];
-  const firstFull = typeof first?.full_name === "string" && first.full_name.trim() ? first.full_name.trim() : firstName;
-  const secondFull = typeof second?.full_name === "string" && second.full_name.trim() ? second.full_name.trim() : secondName;
-  return firstFull.toLowerCase() !== secondFull.toLowerCase() ? [firstFull, secondFull] : [`${firstName} (1)`, `${secondName} (2)`];
-}

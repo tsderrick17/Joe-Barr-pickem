@@ -70,7 +70,7 @@ const PLOT_RIGHT = 14;
 const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
-export const WINDOW_WEEKS = 6;
+const WINDOW_WEEKS = 6;
 
 function SnapshotChart({
   title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false,
@@ -166,7 +166,7 @@ function SnapshotChart({
 }
 
 /** The chart and its player key. Kept separate from loading so it renders from plain data. */
-export function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs" }) {
+function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs" }) {
   // Once the playoffs begin the chart can show either half; before then, only the regular season.
   const showPlayoffs = view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0;
   const phase = showPlayoffs ? "playoffs" : "regular";

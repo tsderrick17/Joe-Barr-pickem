@@ -1,19 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 import { boardResponse, SCENARIOS } from "./slate-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-900": 900, "desktop-1280": 1280 } as const;
-
-/** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
-async function signIn(page: Page) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "visual-player", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "visual-player", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
-  await page.addInitScript((value) => {
-    window.localStorage.setItem("sb-placeholder-auth-token", value);
-    window.localStorage.setItem("pickem-theme", "day");
-  }, JSON.stringify(session));
-}
 
 async function serve(page: Page, scenario: string) {
   const board = boardResponse(scenario);
@@ -31,7 +20,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
   for (const [label, width] of Object.entries(WIDTHS)) {
     test(`Slate ${scenario} at ${label}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await signIn(page);
+      await signIn(page, "day", "visual-player");
       await serve(page, scenario);
       // First visit caches fonts and images; the capture is the reload, the way a
       // returning player sees it. (Completed rows measure their picker names
@@ -64,7 +53,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Slate receipt warning at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     await serve(page, "upcoming-picked");
     await page.goto("/board");
     await expect(page.locator(".slate-game-row").first()).toBeVisible({ timeout: 30_000 });
@@ -91,7 +80,7 @@ for (const width of [360, 390, 700, 1280]) {
   for (const scenario of ["upcoming-unpicked", "upcoming-no-survivor"]) {
     test(`Slate early-lock note keeps the line level and tidy (${scenario}, ${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await signIn(page);
+      await signIn(page, "day", "visual-player");
       await serve(page, scenario);
       await page.goto("/board");
       const note = page.locator(".slate-lock-note").first();
@@ -129,7 +118,7 @@ for (const width of [360, 390, 700, 1280]) {
 for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-survivor", false]] as const) {
   test(`Slate Survivor instruction ${shown ? "shows" : "is gone"} (${scenario})`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     await serve(page, scenario);
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
@@ -143,7 +132,7 @@ for (const width of [360, 390, 700]) {
   for (const [scenario, pick] of [["upcoming-unpicked", true], ["upcoming-picked", false], ["live-survivor", false]] as const) {
     test(`Slate ticket status line is one line (${scenario}${pick ? ", one team picked" : ""}, ${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await signIn(page);
+      await signIn(page, "day", "visual-player");
       await serve(page, scenario);
       await page.goto("/board");
       await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
@@ -164,7 +153,7 @@ for (const width of [360, 390, 700]) {
 for (const width of [390, 1280]) {
   test(`Slate ticket starts flush under the menu (${width})`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await signIn(page);
+    await signIn(page, "day", "visual-player");
     await serve(page, "upcoming-unpicked");
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });

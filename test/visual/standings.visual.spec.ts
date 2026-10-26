@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
 // The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
@@ -13,18 +14,6 @@ async function settled(page: Page) {
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
 const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season"]);
-
-/** A stored, far-future session so the page treats the browser as signed in. Never sent anywhere real. */
-async function signIn(page: Page, theme: string) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
-  await page.addInitScript(([value, mode]) => {
-    window.localStorage.setItem("sb-placeholder-auth-token", value as string);
-    window.localStorage.setItem("pickem-theme", mode as string);
-  }, [JSON.stringify(session), theme]);
-}
 
 async function serve(page: Page, scenario: string) {
   const home = homeResponse(scenario);
