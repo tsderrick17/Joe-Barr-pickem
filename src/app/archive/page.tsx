@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import { getFreshSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
 import { supabase } from "@/lib/supabase";
+import { dateFormat } from "@/lib/date-format.js";
 
 type Period = { id: string; display_name: string; display_order: number; period_type: "regular" | "playoff"; starts_at: string | null };
 
 function easternDate(value: string | null) {
-  return value ? new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" }).format(new Date(value)) : "Date pending";
+  return value ? dateFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" }).format(new Date(value)) : "Date pending";
 }
 
 export default function ArchivePage() {

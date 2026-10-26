@@ -8,6 +8,7 @@ import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
 import { isSurvivorTeamUsed } from "@/lib/survivor-availability.js";
+import { dateFormat } from "@/lib/date-format.js";
 
 export type SlateGameRowData = {
   id: string;
@@ -33,7 +34,7 @@ export type SlateGameRowData = {
 };
 
 function easternTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     timeZone: "America/New_York",
     hour: "numeric",
     minute: "2-digit",
@@ -42,12 +43,12 @@ function easternTime(value: string) {
 }
 
 function easternShortDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" }).format(new Date(value));
+  return dateFormat("en-US", { timeZone: "America/New_York", month: "numeric", day: "numeric" }).format(new Date(value));
 }
 
 /** The early-lock note is two short lines: the day, then the time. */
 function easternLockParts(value: string) {
-  const time = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value));
+  const time = dateFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(new Date(value));
   return { date: easternShortDate(value), time: time.replace(":00", "").toUpperCase() };
 }
 

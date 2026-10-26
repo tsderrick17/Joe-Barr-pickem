@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { dateFormat } from "@/lib/date-format.js";
 
 function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POST") {
   void import("@sentry/nextjs").then((Sentry) => {
@@ -37,7 +38,7 @@ function lastActiveLabel(value: string | null | undefined) {
   if (elapsedMinutes < 60) return `Last active ${elapsedMinutes}m ago`;
   const elapsedHours = Math.floor(elapsedMinutes / 60);
   if (elapsedHours < 24) return `Last active ${elapsedHours}h ago`;
-  return `Last active ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value))}`;
+  return `Last active ${dateFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value))}`;
 }
 
 export default function PlayerManagementPage() {

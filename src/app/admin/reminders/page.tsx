@@ -4,6 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+import { dateFormat } from "@/lib/date-format.js";
 
 const EmailArtworkStudio = dynamic(
   () => import("@/components/email-artwork-studio").then((module) => module.EmailArtworkStudio),
@@ -16,7 +17,7 @@ const easternTimeZone = "America/New_York";
 
 
 function easternDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",

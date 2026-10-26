@@ -9,6 +9,7 @@ import { takeBowlPrefetch } from "@/lib/bowl-prefetch";
 import { fetchWithSession } from "@/lib/auth-session";
 import { bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
+import { dateFormat } from "@/lib/date-format.js";
 
 type BowlStandingsData = {
   season?: { season_year: number };
@@ -27,7 +28,7 @@ type BowlMatrixGame = BowlStandingsData["games"][number];
 
 /** One spin per player per Eastern day: remembered in this browser. */
 function scoreSpinKey(playerId: string | undefined) {
-  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+  const day = dateFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
   return `bowl-scores-spun:${playerId ?? "anon"}:${day}`;
 }
 function scoresSpunToday(playerId: string | undefined) {
@@ -165,8 +166,8 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
     const frame = window.requestAnimationFrame(() => {
       const container = bowlScrollRef.current;
       if (!container) return;
-      const todayKey = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date());
-      const currentDayIndex = bowlGames.findIndex((game) => game.kickoff_at && new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" }).format(new Date(game.kickoff_at)) === todayKey);
+      const todayKey = dateFormat("en-US", { timeZone: "America/New_York" }).format(new Date());
+      const currentDayIndex = bowlGames.findIndex((game) => game.kickoff_at && dateFormat("en-US", { timeZone: "America/New_York" }).format(new Date(game.kickoff_at)) === todayKey);
       if (currentDayIndex < 0) {
         container.scrollLeft = 0;
         return;

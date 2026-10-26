@@ -1,4 +1,6 @@
 import { easternParts } from "./eastern-time.js";
+import { dateFormat } from "./date-format.js";
+
 const EASTERN_ZONE = "America/New_York";
 
 const weekdayIndex = {
@@ -13,7 +15,7 @@ const weekdayIndex = {
 
 function easternWallTime(year, month, day, hour, minute = 0) {
   const noonUtc = new Date(Date.UTC(year, month - 1, day, 12));
-  const zoneName = new Intl.DateTimeFormat("en-US", {
+  const zoneName = dateFormat("en-US", {
     timeZone: EASTERN_ZONE,
     timeZoneName: "shortOffset",
   }).formatToParts(noonUtc).find((part) => part.type === "timeZoneName")?.value ?? "GMT-5";

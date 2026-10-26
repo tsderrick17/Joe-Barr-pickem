@@ -1,7 +1,9 @@
+import { dateFormat } from "./date-format.js";
+
 const competitiveMonths = new Set([1, 2, 8, 9, 10, 11, 12]);
 
 export function easternCalendarDate(now = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
+  const parts = dateFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",
