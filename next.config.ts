@@ -81,6 +81,12 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true,
   widenClientFileUpload: true,
+  // Leave out recorder parts this site never uses: debug logging and the recording of iframes and shadow DOM.
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+  },
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },

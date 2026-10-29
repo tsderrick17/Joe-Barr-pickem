@@ -14,8 +14,11 @@ test("Sentry keeps production errors actionable and privacy-safe", () => {
   assert.match(browser, /tracesSampleRate:\s*0\.05/);
   assert.match(browser, /replaysSessionSampleRate:\s*0/);
   assert.match(browser, /replaysOnErrorSampleRate:\s*1/);
-  assert.match(browser, /maskAllText:\s*true/);
-  assert.match(browser, /blockAllMedia:\s*true/);
+  const replay = read("src/lib/sentry-replay.ts");
+  assert.match(replay, /maskAllText:\s*true/);
+  assert.match(replay, /blockAllMedia:\s*true/);
+  assert.doesNotMatch(browser, /replayIntegration/, "the recording loads after the page appears, not in the first download");
+  assert.match(browser, /import\("@\/lib\/sentry-replay"\)/);
   assert.match(server, /prepareSentryEvent/);
   assert.match(edge, /prepareSentryEvent/);
   assert.match(filter, /app\.route/);
