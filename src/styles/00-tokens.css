@@ -281,6 +281,8 @@ html[data-theme="night"] {
   --ink-faint: #b7c3cb;
   --ink-faint-zinc: #b7c3cb;
   --official-teal: #8fd8cc;
+  /* Official Slate lines: a teal bright enough to read on the dark rows (the day teal is only 3.6:1 there; this is 5.7:1 or better). */
+  --official-line-color: #26b3a5;
   /* Tailwind's own greys, greens and reds as night sees them: text in these shades is one soft colour, a border in them one rule colour. */
   --color-slate-500: #b7c3cb;
   --color-slate-600: #b7c3cb;
@@ -398,7 +400,7 @@ html[data-theme="night"] {
   --themed-shadow-4: inset 4px 0 0 #7ee1d2, inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
   --themed-shadow-5: inset 0 1px 1px rgba(0, 0, 0, .3), inset 0 -1px 1px rgba(0, 0, 0, .3);
   --themed-bg-30: var(--background);
-  --selection-chip-official-ink: var(--teal-26);
+  --selection-chip-official-ink: var(--official-line-color);
   --action-empty-edge: #6d746c;
   --viewer-glow: rgba(126, 225, 210, .35);
   --viewer-rail: #8be9dc;
