@@ -15,7 +15,8 @@ Sentry.init({
 
 // The screen recording is the heaviest part of the error recorder, so it loads after the page has appeared and the browser is idle.
 // It only keeps a short buffer and uploads it when an error happens (replaysOnErrorSampleRate).
-if (typeof window !== "undefined") {
+// With no DSN (screenshot tests, local work) nothing can be sent, so nothing is recorded either.
+if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   const startReplay = () => {
     const whenIdle = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 2000));
     whenIdle(() => void import("@/lib/sentry-replay").then((replay) => replay.startErrorReplay()));
