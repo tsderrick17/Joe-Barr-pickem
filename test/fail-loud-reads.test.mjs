@@ -37,8 +37,9 @@ test("the Bowl dispatcher uses the same Eastern August 1 season year as the app"
 
 test("Sentry uses one SDK version with its own replay, and unused packages are gone", async () => {
   const client = await read("instrumentation-client.ts");
-  assert.match(client, /Sentry\.replayIntegration\(\{/);
-  assert.doesNotMatch(client, /@sentry\/replay|as unknown as/);
+  const replay = await read("src/lib/sentry-replay.ts");
+  assert.match(replay, /Sentry\.replayIntegration\(\{/);
+  assert.doesNotMatch(client + replay, /@sentry\/replay|as unknown as/);
   const pkg = JSON.parse(await read("package.json"));
   assert.equal(pkg.dependencies["@sentry/replay"], undefined);
   assert.equal(pkg.dependencies["js-yaml"], undefined);
