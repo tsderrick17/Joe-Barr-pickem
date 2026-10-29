@@ -12,6 +12,10 @@ The official (teal) spread lines, the "Teal lines" note and the selection-chip l
 
 The Sentry screen recording (kept for errors only, all text masked) was part of every page's first download: about 38 KB gzip, 365 KB down to 327 KB on the login page. It now loads from `src/lib/sentry-replay.ts` once the page has finished loading and the browser is idle, so the first download no longer carries it. Trade-off, accepted by the owner: an error in the first moments of a visit is still reported but has no recording. `bundleSizeOptimizations` also drops debug logging and iframe/shadow-DOM recording the site never uses. The recording stays error-only and fully masked; nothing about what is collected changed.
 
+## 2026-10-29 - Phone notifications mirror the emails
+
+The owner asked that phone notifications "very clearly mirror the exact details and timing of the emails". They are not a second schedule: they ride on the email delivery. `deliverEmailReminder` notifies the phones of every player whose email it just sent, with the email's subject and message and the page the email's button opens (shared `reminderDestinationPath`). Consequences, chosen on purpose: the on/off choices are the email choices (a player gets a phone notification only for the emails their plan sends them, so email notifications must be on); an already-sent email never re-notifies on a repeat run; a retried email notifies when it finally goes out; a phone failure is only logged. Reminder categories added to email later notify with no extra work. Still Commissioner-only until the owner has seen it on a phone; the icon badge count and opening it to every player come next.
+
 ## 2026-10-26 - Rarely changing pictures are kept by the phone for a day
 
 - Decision: the trophy turntable frames (`/trophies/*`, 124 files), the team logos (`/team-logos/*`) and the loading football (`/football-spin.webp`, 630 KB) are served with `Cache-Control: public, max-age=86400, stale-while-revalidate=2592000` (`next.config.ts`). Pages, data, the manifest and the service worker keep the default (re-checked every time).

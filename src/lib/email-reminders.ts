@@ -5,6 +5,8 @@ import {
   type ReminderCategory,
 } from "@/lib/reminder-audience";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
+import { sendPushToPlayers } from "@/lib/player-push";
+import { reminderDestinationPath, reminderPushMessage } from "@/lib/reminder-push.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { renderEmailArtwork, type EmailArtworkSnapshot } from "@/lib/email-artwork";
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
@@ -117,7 +119,8 @@ export function messageHtml(reminder: Reminder) {
         : "";
   const isRecap = reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "bowl_daily_recap";
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
-  const destination = reminder.category === "bowl_line_lock" || reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due" ? `${siteUrl}/bowl-pool` : isRecap || isPublicReceipt ? siteUrl : `${siteUrl}/board`;
+  const path = reminderDestinationPath(reminder.category);
+  const destination = path === "/" ? siteUrl : `${siteUrl}${path}`;
   const callToAction = reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
@@ -413,6 +416,20 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
   }
 }
 
+/**
+ * The phone notification that mirrors an email: the same subject and message, to the phones of exactly the players whose email just went out,
+ * at that moment. A repeat run never sends it twice (it follows only emails sent now), and a problem here never touches the email.
+ */
+async function sendPhoneNotifications(reminder: Reminder, playerIds: string[]) {
+  if (!playerIds.length) return;
+  try {
+    const extraLines = [playoffChampionCopy(reminder.recap_snapshot), playoffEliminationCopy(reminder.recap_snapshot), bowlRecapCopy(reminder.recap_snapshot)].filter(Boolean);
+    await sendPushToPlayers(playerIds, reminderPushMessage({ id: reminder.id, category: reminder.category, title: reminder.title, body: reminder.body, extraLines }));
+  } catch (reason) {
+    console.warn("Phone notifications for a reminder could not be sent.", { reminderId: reminder.id, message: reason instanceof Error ? reason.message : "unknown" });
+  }
+}
+
 export async function deliverEmailReminder(reminder: Reminder, limitedRecipients?: EmailRecipient[]) {
   let recipients: EmailRecipient[];
   try {
@@ -464,14 +481,17 @@ export async function deliverEmailReminder(reminder: Reminder, limitedRecipients
   let skipped = 0;
   let retryableFailed = 0;
   const errors: string[] = [];
+  const emailedNow: string[] = [];
   for (const recipient of recipients) {
     const result = await recordAndSend(reminder, recipient);
+    if (result.sent) emailedNow.push(recipient.playerId);
     sent += Number(result.sent);
     failed += Number(result.failed);
     skipped += Number(result.skipped);
     retryableFailed += Number(result.failed && result.retryable);
     if (result.errorMessage) errors.push(result.errorMessage);
   }
+  await sendPhoneNotifications(reminder, emailedNow);
   return { recipients: recipients.length, sent, failed, skipped, retryableFailed, errors, suppressed: false, suppressionReason: null };
 }
 
