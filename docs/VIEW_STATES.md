@@ -27,6 +27,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Off-season: "See you next season!" banner instead of the receipt, read-only, no how-to copy | `off-season` |
 | Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
 | Forfeited the playoffs: "You forfeited, thanks for playing." banner, no receipt | `playoff-forfeited` |
+| Night mode Slate: official (teal) lines and chips are readable on the dark rows; every one is checked to 4.5:1 contrast (behavior test) | `night-upcoming-picked`, `night-live-survivor`, phone 390 and desktop 1280 |
 | The Forfeit link at the foot of every playoff Slate (`playoff-upcoming`, `playoff-six-picks`, `playoff-live`), and its three questions, one at a time | `forfeit-step-1/2/3-phone-390` (behavior test in `slate-flow.visual.spec.ts`; the link is absent from regular weeks, forfeited, eliminated and off-season Slates) |
 
 ## Standings (`/`) — `standings.visual.spec.ts`, fixtures `standings-fixtures.mjs`

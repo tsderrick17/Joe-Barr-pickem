@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-29 - Night mode official Slate lines are a brighter teal
+
+The official (teal) spread lines, the "Teal lines" note and the selection-chip lines were only 2.9:1 to 4.2:1 against the dark night rows (AA needs 4.5:1). Night mode now sets its own `--official-line-color` (`#26b3a5`, 5.7:1 or better on every night row); the selection chip uses it too instead of the dark day teal. Day mode is unchanged. A browser test checks every official line on the night Slate to 4.5:1, since the screenshot gate's per-pixel tolerance cannot see a colour shift this small.
+
 ## 2026-10-26 - Rarely changing pictures are kept by the phone for a day
 
 - Decision: the trophy turntable frames (`/trophies/*`, 124 files), the team logos (`/team-logos/*`) and the loading football (`/football-spin.webp`, 630 KB) are served with `Cache-Control: public, max-age=86400, stale-while-revalidate=2592000` (`next.config.ts`). Pages, data, the manifest and the service worker keep the default (re-checked every time).
