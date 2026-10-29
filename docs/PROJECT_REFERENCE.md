@@ -304,6 +304,11 @@ measure database requests or end-to-end route time.
   `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
   the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
   at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. For now only the Commissioner sees the section.
+  A phone notification **mirrors its email**: when the reminder worker sends a player's email (`deliverEmailReminder`), that player's phones get a notification with the
+  email's subject as the title, its message (plus the champion or elimination line, when it has one) as the body, and the same destination page (one shared
+  `reminderDestinationPath`). Same audience, same moment, same choices: the recipients are exactly the players the email's choices selected, and only emails
+  sent in that run notify (a repeat run, or an email that failed, sends none; a retried email that finally goes out notifies then), so a phone never gets a
+  message twice or one its email choices did not allow. A phone problem is logged and never changes the email result.
 - Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen,
   where it opens like an app and can receive notifications. A slim banner under the header of every page shows on any phone that is not running the
   Home Screen app, with the steps for that phone and browser one tap away ("Show me how"): Safari on an iPhone (Share, Add to Home Screen, leave Open as

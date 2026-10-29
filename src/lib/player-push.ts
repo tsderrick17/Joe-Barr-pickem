@@ -37,7 +37,13 @@ async function sendWebPush(subscription: Subscription, payload: PushPayload, sen
 
 /** Sends one notification to every device the player turned notifications on for, and forgets the devices the push service says are gone. */
 export async function sendPushToPlayer(playerId: string, payload: PushPayload, send?: Send) {
-  const { data, error } = await supabaseAdmin.from("push_subscriptions").select("id, endpoint, p256dh, auth").eq("player_id", playerId);
+  return sendPushToPlayers([playerId], payload, send);
+}
+
+/** The same notification to every device of several players, with one read of the saved devices. */
+export async function sendPushToPlayers(playerIds: string[], payload: PushPayload, send?: Send) {
+  if (!playerIds.length) return { devices: 0, sent: 0, failed: 0, removed: 0 };
+  const { data, error } = await supabaseAdmin.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("player_id", playerIds);
   if (error) throw new Error("The player's devices could not be read.");
   const outcomes = await Promise.all((data ?? []).map(async (subscription) => ({ subscription, outcome: await sendWebPush(subscription, payload, send) })));
   const gone = outcomes.filter((result) => result.outcome === "gone").map((result) => result.subscription.id);
