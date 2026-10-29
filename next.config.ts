@@ -48,7 +48,13 @@ const nextConfig: NextConfig = {
   // logo the first time it is asked for and can stall pages under load. Never set in production.
   ...(process.env.NEXT_IMAGE_UNOPTIMIZED === "1" ? { images: { unoptimized: true } } : {}),
   async headers() {
+    // The pictures that rarely change (trophy turntable frames, the loading football, team logos) are kept by the phone for a day and then
+    // refreshed in the background, instead of being re-checked one by one on every page view. A re-rendered trophy shows within a day.
+    const keptForADay = [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=2592000" }];
     return [
+      { source: "/trophies/:path*", headers: keptForADay },
+      { source: "/team-logos/:path*", headers: keptForADay },
+      { source: "/football-spin.webp", headers: keptForADay },
       {
         source: "/:path*",
         headers: [

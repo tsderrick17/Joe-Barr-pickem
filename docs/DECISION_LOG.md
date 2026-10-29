@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-26 - Rarely changing pictures are kept by the phone for a day
+
+- Decision: the trophy turntable frames (`/trophies/*`, 124 files), the team logos (`/team-logos/*`) and the loading football (`/football-spin.webp`, 630 KB) are served with `Cache-Control: public, max-age=86400, stale-while-revalidate=2592000` (`next.config.ts`). Pages, data, the manifest and the service worker keep the default (re-checked every time).
+- Why: Vercel serves files in `public/` with `max-age=0, must-revalidate`, so a phone re-asked for every one of these on every page view (a round trip each, before it could draw them). Kept a day, repeat visits draw them at once; after a day they refresh in the background.
+- Trade-off: a re-rendered trophy (a new champion) or a changed logo can take up to a day to show on a phone that already has the old one.
+- Do not: give pages, `/api/*`, the manifest or `sw.js` a long cache (grades and app changes must show at once).
+
 ## 2026-10-26 - Accessibility sweep: screen-reader names and two unreadable night colors
 
 - Decision: an automated accessibility check (axe-core, WCAG 2 A/AA) of Standings, the Slate, Notifications, sign-in, the Trophy Room and the Commissioner desk, day and night, led to: the Survivor chip on the ticket is announced as an image with its label; the Survivor Table and Bowl Card scrollers can be reached and scrolled with a keyboard and are named; Standings has a (hidden) page heading; the Grading period picker keeps its name on a phone, where its visible label is hidden; at night the Grading tab's LIVE tag keeps dark ink on its light amber paper (it was light on light, contrast 1.3:1), and the Reminders "No email needed" note uses the night teal (it was dark teal on dark, 2:1). Day mode is pixel-identical.
