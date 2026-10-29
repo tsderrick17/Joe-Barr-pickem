@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings 0",
     "typecheck": "tsc --noEmit && npm run typecheck:policy",
     "typecheck:policy": "tsc -p tsconfig.policy.json --noEmit",
     "test": "node --test \"test/**/*.test.mjs\"",

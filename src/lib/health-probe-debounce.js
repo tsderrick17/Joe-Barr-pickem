@@ -1,4 +1,4 @@
-export const CRITICAL_WORKER_DEBOUNCE_MINUTES = 10;
+const CRITICAL_WORKER_DEBOUNCE_MINUTES = 10;
 
 /**
  * @param {{ healthy: boolean, unhealthySince: string | null }} probe

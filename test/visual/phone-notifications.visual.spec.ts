@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 
 // "Notifications on this phone" on the Notifications page (for now the Commissioner's alone). The browser's notification features are replaced with a
 // scripted phone, so the page can be shown as it reads on a phone that has them off, on, blocked, or cannot have them at all, and the taps (turn on, send a
@@ -8,16 +9,6 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebK
 
 type Phone = "off" | "on" | "blocked" | "iphone-tab" | "no-support";
 
-async function signIn(page: Page, theme: string) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
-  await page.addInitScript(([value, mode]) => {
-    window.localStorage.setItem("sb-placeholder-auth-token", value as string);
-    window.localStorage.setItem("pickem-theme", mode as string);
-  }, [JSON.stringify(session), theme]);
-}
 
 /** Replaces the browser's notification features with a scripted phone, before the page runs. */
 async function scriptPhone(page: Page, phone: Phone) {

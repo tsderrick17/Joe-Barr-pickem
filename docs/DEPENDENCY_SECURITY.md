@@ -11,11 +11,14 @@ never apply to a production dependency or to code that processes untrusted
 runtime input. Remove an exception as soon as the supported dependency chain
 contains a fix.
 
-## Current reviewed exception
+## Current reviewed exceptions
+
+None. (2026-10-26: the `braces` advisory GHSA-vfj7-8cjw-p6xm no longer appears in `npm audit`, and the development-only `zod` advisory GHSA-mrhx-c7xc-m3w5, reached through `eslint-config-next` → `eslint-plugin-react-hooks`, was fixed by `npm audit fix` within the same major version. `npm audit` reports 0 vulnerabilities.)
+
+An exception, when one is needed, is a row in this table; `test/security-headers.test.mjs` fails once its review date has passed.
 
 | Advisory | Scope | Exposure and decision | Owner | Review by |
 | --- | --- | --- | --- | --- |
-| `GHSA-vfj7-8cjw-p6xm` (`braces` stack exhaustion) | Development-only path through `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` | ESLint receives repository-controlled file patterns during CI; it is not shipped or passed player input. npm's proposed fix downgrades `eslint-config-next` across major versions and is incompatible with the current Next.js toolchain. Keep Dependabot enabled and remove this exception when the supported Next.js chain updates `braces`. | Repository owner | 2026-11-03 |
 
 The review command is:
 

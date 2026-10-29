@@ -24,6 +24,11 @@ test("CI blocks high production advisories and documents dev-only exceptions", a
 
   assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
   assert.match(workflow, /npm audit --audit-level=critical/);
-  assert.match(policy, /GHSA-vfj7-8cjw-p6xm/);
-  assert.match(policy, /2026-11-03/);
+  // Every listed exception names an advisory and a review date that has not passed.
+  const exceptions = policy.split(/\r?\n/).filter((line) => line.startsWith("| `GHSA-"));
+  for (const row of exceptions) {
+    const reviewBy = row.match(/\| (\d{4}-\d{2}-\d{2}) \|\s*$/)?.[1];
+    assert.ok(reviewBy, `exception without a review date: ${row}`);
+    assert.ok(reviewBy >= new Date().toISOString().slice(0, 10), `exception past its review date: ${row}`);
+  }
 });

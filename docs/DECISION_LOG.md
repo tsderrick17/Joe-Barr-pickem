@@ -11,6 +11,18 @@ as superseded and records the current contract rather than rewriting history.
 - Trade-off: a re-rendered trophy (a new champion) or a changed logo can take up to a day to show on a phone that already has the old one.
 - Do not: give pages, `/api/*`, the manifest or `sw.js` a long cache (grades and app changes must show at once).
 
+## 2026-10-26 - Accessibility sweep: screen-reader names and two unreadable night colors
+
+- Decision: an automated accessibility check (axe-core, WCAG 2 A/AA) of Standings, the Slate, Notifications, sign-in, the Trophy Room and the Commissioner desk, day and night, led to: the Survivor chip on the ticket is announced as an image with its label; the Survivor Table and Bowl Card scrollers can be reached and scrolled with a keyboard and are named; Standings has a (hidden) page heading; the Grading period picker keeps its name on a phone, where its visible label is hidden; at night the Grading tab's LIVE tag keeps dark ink on its light amber paper (it was light on light, contrast 1.3:1), and the Reminders "No email needed" note uses the night teal (it was dark teal on dark, 2:1). Day mode is pixel-identical.
+- Left as is (owner's call): a few muted labels sit just under the 4.5:1 guideline (eliminated players' struck-through names 4.0:1, small teal labels on the Slate 4.4:1, the chat Hide button at night 4.2:1).
+- Do not: give the LIVE tag a themed ink again while its paper stays light, or hide a form label without another name on the control.
+
+## 2026-10-26 - Date formatters are built once and reused
+
+- Decision: every `new Intl.DateTimeFormat(...)` in `src/` (21 files) goes through `dateFormat(locale, options)` in `src/lib/date-format.js`, which builds each distinct format once and reuses it (`eastern-time.js` already kept its own). Output is identical.
+- Why: building a formatter costs about 80 µs and using one about 5 µs, and several were built inside loops. The playoff eligibility math (run by Standings, the Slate and every pick save during the playoffs) built one per pick and per game: a full season with 12 players took about 290 ms of server time per call, now about 23 ms. The unit suite went from 51 to 34 seconds. It also trims the Slate's per-game date labels on phones.
+- Do not: write `new Intl.DateTimeFormat` in a function that runs per row or per request; use `dateFormat` (or `eastern-time.js` for Eastern parts).
+
 ## 2026-10-26 - Add to Home Screen: one tap from every page, for every player, on every phone and Chromebook
 
 - Decision: a phone that is not running the Home Screen app is offered the install everywhere: a slim banner under the header of every page and a card on the Notifications page. Android and Chromebooks get Chrome's own one-tap Install when it offers one, and the menu steps until then; every iPhone browser gets one tap on "Show me how" and its own steps (Safari, or Chrome/Edge/Firefox's own Share button); a page open inside another app's window (Facebook, Instagram, Gmail, the Google app) is sent to Safari or Chrome first, with Copy link. "Not now" keeps the banner away 14 days, "I already have it" 180 days; the card is always there. A computer, the installed app and an Android phone known to have the app see no banner. The banner is for everyone, unlike the notification controls, which stay Commissioner-only until the pool opens them.

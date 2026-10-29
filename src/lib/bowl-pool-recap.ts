@@ -1,5 +1,6 @@
 import { bowlRecapCopy } from "@/lib/bowl-recap-copy.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { dateFormat } from "./date-format.js";
 
 export type BowlDailyRecapSnapshot = {
   kind: "bowl_daily_recap";
@@ -33,7 +34,7 @@ export async function ensureBowlLineLockSnapshot(reminderId: string, current: un
   const playable = games.filter((game) => !["postponed", "cancelled", "no_contest"].includes(game.status));
   const snapshot: BowlLineLockSnapshot = {
     kind: "bowl_line_lock",
-    day: new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date(games[0].kickoff_at)),
+    day: dateFormat("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date(games[0].kickoff_at)),
     games: playable.map((game) => {
       // Only a locked line is official; a preliminary one is not shown in the official-lines email.
       const line = [game.bowl_pool_game_lines].flat().find((candidate) => candidate?.locked_at);
@@ -95,7 +96,7 @@ export async function ensureBowlDailyRecapSnapshot(reminderId: string, current: 
   }));
   const eliminatedToday = rows.filter((row) => row.wins + remainingGames < leaderWins && !previouslyEliminated.has(row.name)).map((row) => row.name);
   const recapText = bowlRecapCopy({ eliminated: eliminatedToday, remaining: rows.length - eliminatedToday.length, champions: championsCrowned } as { eliminated: string[]; remaining: number; champions: string[] });
-  const snapshot: BowlDailyRecapSnapshot = { kind: "bowl_daily_recap", day: new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date((games![0] as unknown as BowlGame).kickoff_at)), games: gamesView, rows, eliminatedToday, remaining: rows.length - eliminatedToday.length, championsCrowned, copy: recapText };
+  const snapshot: BowlDailyRecapSnapshot = { kind: "bowl_daily_recap", day: dateFormat("en-US", { month: "long", day: "numeric", timeZone: "America/New_York" }).format(new Date((games![0] as unknown as BowlGame).kickoff_at)), games: gamesView, rows, eliminatedToday, remaining: rows.length - eliminatedToday.length, championsCrowned, copy: recapText };
   if (!persist) return snapshot;
   const { error: updateError } = await supabaseAdmin.from("push_reminders").update({ recap_snapshot: snapshot, recap_snapshot_at: new Date().toISOString() }).eq("id", reminderId);
   if (updateError) throw new Error("The Bowl recap snapshot could not be preserved.");

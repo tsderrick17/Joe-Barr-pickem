@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn } from "./session";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
 // The pool chat sits at the foot of every player page. The other suites keep it hidden or empty, so this one opens it
@@ -13,16 +14,6 @@ const MESSAGES = [
   { id: "m4", body: "Nice week, Connor.", canDelete: true, createdAt: "2026-10-03T22:30:00Z", isDeleted: false, isModerator: false, playerName: "Tyler" },
 ];
 
-async function signIn(page: Page, theme: string) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
-  const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
-  const session = { access_token: accessToken, refresh_token: "visual", token_type: "bearer", expires_in: 3600, expires_at: expiresAt, user: { id: "p2", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
-  await page.addInitScript(([value, mode]) => {
-    window.localStorage.setItem("sb-placeholder-auth-token", value as string);
-    window.localStorage.setItem("pickem-theme", mode as string);
-  }, [JSON.stringify(session), theme]);
-}
 
 async function serve(page: Page) {
   const home = homeResponse("regular-in");

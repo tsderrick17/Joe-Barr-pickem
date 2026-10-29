@@ -12,7 +12,7 @@ export async function skipOutsideSeason(window: "season" | "bowl"): Promise<Next
   return NextResponse.json({ success: true, skipped: true, reason: window === "bowl" ? "bowl_closed" : "off_season", message: window === "bowl" ? "The Bowl Pool is outside its window." : "The season is over; this worker is idle until August 1." });
 }
 
-export const SEASON_CLOSED_MESSAGE = "The season is over. The next season opens August 1.";
+const SEASON_CLOSED_MESSAGE = "The season is over. The next season opens August 1.";
 
 /** A player-facing save refused in the off-season. Returns the response to send, or null to carry on. */
 export async function refuseWhenSeasonClosed(): Promise<NextResponse | null> {
