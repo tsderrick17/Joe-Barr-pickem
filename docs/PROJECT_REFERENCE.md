@@ -303,12 +303,15 @@ measure database requests or end-to-end route time.
   added to the Home Screen can), and the page says so. The signing key pair (VAPID) is made by the server the first time it is needed and kept in
   `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
   the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
-  at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. For now only the Commissioner sees the section.
+  at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. Every player sees the section (an iPhone browser tab is told to add the app to the Home Screen first).
   A phone notification **mirrors its email**: when the reminder worker sends a player's email (`deliverEmailReminder`), that player's phones get a notification with the
   email's subject as the title, its message (plus the champion or elimination line, when it has one) as the body, and the same destination page (one shared
   `reminderDestinationPath`). Same audience, same moment, same choices: the recipients are exactly the players the email's choices selected, and only emails
   sent in that run notify (a repeat run, or an email that failed, sends none; a retried email that finally goes out notifies then), so a phone never gets a
   message twice or one its email choices did not allow. A phone problem is logged and never changes the email result.
+  The number on the app icon is the player's **picks still to make this week** (`picksStillToMake`, `src/lib/picks-to-make-rule.js`): the Pick'em picks the week allows minus those made (never more than the open,
+  unpicked games), plus one while they are still in Survivor and have not picked; zero when nothing is open. It is set three ways: by each mirrored notification (so it is right with the app
+  closed), when the Home Screen app opens or is returned to (`/api/badge`, at most once a minute), and right after picks are saved. Bowl Pool picks are not counted yet.
 - Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen,
   where it opens like an app and can receive notifications. A slim banner under the header of every page shows on any phone that is not running the
   Home Screen app, with the steps for that phone and browser one tap away ("Show me how"): Safari on an iPhone (Share, Add to Home Screen, leave Open as

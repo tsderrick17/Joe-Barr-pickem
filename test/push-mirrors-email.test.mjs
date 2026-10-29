@@ -6,11 +6,11 @@ import test from "node:test";
 // Phone notifications mirror the emails, run for real: the production delivery code with the email provider scripted and the database an
 // in-memory stand-in. A phone is notified for exactly the players whose email went out now, with the email's subject and message.
 const fixture = globalThis.mirrorFixture = { sentPush: [], emailStatus: 200, emails: [] };
-const tables = { push_subscriptions: [], email_reminder_deliveries: [] };
+const tables = { push_subscriptions: [], email_reminder_deliveries: [], scoring_periods: [], games: [], picks: [], seasons: [], survivor_entries: [], survivor_picks: [] };
 
 function from(table) {
   const state = { op: "select", filters: [], row: null };
-  const matching = () => tables[table].filter((row) => state.filters.every(([kind, column, value]) => (kind === "eq" ? row[column] === value : value.includes(row[column]))));
+  const matching = () => tables[table].filter((row) => state.filters.every(([kind, column, value]) => (kind === "eq" ? row[column] === value : kind === "neq" ? row[column] !== value : value.includes(row[column]))));
   const run = () => {
     if (state.op === "insert") {
       if (table === "email_reminder_deliveries" && tables[table].some((row) => row.reminder_id === state.row.reminder_id && row.player_id === state.row.player_id)) return { data: null, error: { code: "23505" } };
@@ -29,6 +29,9 @@ function from(table) {
     delete() { state.op = "delete"; return builder; },
     eq(column, value) { state.filters.push(["eq", column, value]); return builder; },
     in(column, value) { state.filters.push(["in", column, value]); return builder; },
+    neq(column, value) { state.filters.push(["neq", column, value]); return builder; },
+    order() { return builder; },
+    limit() { return builder; },
     maybeSingle() { const result = run(); return Promise.resolve({ data: result.data?.[0] ?? null, error: result.error }); },
     then(resolve, reject) { return Promise.resolve(run()).then(resolve, reject); },
   };
@@ -59,7 +62,7 @@ const { reminderPushMessage, reminderDestinationPath } = await import("../src/li
 const reminder = (overrides = {}) => ({ id: "r1", category: "custom", audience: "all_active", title: "Sunday early games lock soon", body: "You still have picks to make.", ...overrides });
 const recipients = [{ playerId: "p1", email: "one@example.com" }, { playerId: "p2", email: "two@example.com" }, { playerId: "p3", email: "three@example.com" }];
 const phone = (playerId, n = 1) => ({ player_id: playerId, endpoint: `https://web.push.apple.com/${playerId}-${n}`, p256dh: "k".repeat(87), auth: "a".repeat(22), id: `${playerId}-${n}` });
-const reset = () => { fixture.sentPush = []; fixture.emails = []; fixture.emailStatus = 200; tables.email_reminder_deliveries = []; tables.push_subscriptions = [phone("p1"), phone("p1", 2), phone("p3")]; };
+const reset = () => { tables.scoring_periods = []; tables.games = []; tables.picks = []; tables.seasons = []; tables.survivor_entries = []; tables.survivor_picks = []; fixture.sentPush = []; fixture.emails = []; fixture.emailStatus = 200; tables.email_reminder_deliveries = []; tables.push_subscriptions = [phone("p1"), phone("p1", 2), phone("p3")]; };
 
 test("each phone gets the email's subject and message when the email goes out", async () => {
   reset();
@@ -120,4 +123,22 @@ test("the notification carries the email's extra lines and sends the tap to the 
   assert.equal(reminderPushMessage({ id: "r", category: "custom", title: "t", body: "b".repeat(5000) }).body.length, 600);
   const destinations = { bowl_line_lock: "/bowl-pool", bowl_daily_recap: "/bowl-pool", bowl_pick_due: "/bowl-pool", weekly_recap: "/", playoff_day_recap: "/", playoff_public_reveal: "/", sunday_early_reveal: "/", sunday_late_reveal: "/", featured_window_reveal: "/", weekly: "/board", final_lines: "/board", sunday_final_lines: "/board", early_lock: "/board", pick_due: "/board" };
   for (const [category, path] of Object.entries(destinations)) assert.equal(reminderDestinationPath(category), path, category);
+});
+
+test("each phone's icon number is that player's picks still to make this week", async () => {
+  reset();
+  const future = new Date(Date.now() + 3_600_000).toISOString();
+  const past = new Date(Date.now() - 3_600_000).toISOString();
+  tables.scoring_periods = [{ id: "w1", season_id: "s1", max_picks: 2, period_type: "regular", status: "active", display_order: 1 }];
+  tables.seasons = [{ id: "s1", survivor_champion_player_id: null }];
+  tables.games = [{ id: "g1", scoring_period_id: "w1", kickoff_at: future, status: "scheduled" }, { id: "g2", scoring_period_id: "w1", kickoff_at: future, status: "scheduled" }, { id: "g3", scoring_period_id: "w1", kickoff_at: past, status: "final" }];
+  // p1 picked one open game; p3 picked nothing; p2 has no phone.
+  tables.picks = [{ player_id: "p1", game_id: "g1", scoring_period_id: "w1", result: null }];
+  tables.survivor_entries = [{ id: "e1", player_id: "p1", season_id: "s1", status: "active" }, { id: "e3", player_id: "p3", season_id: "s1", status: "active" }];
+  tables.survivor_picks = [{ survivor_entry_id: "e1", scoring_period_id: "w1", result: null }];
+  await deliverEmailReminder(reminder(), recipients);
+  const badgeOf = (endpoint) => fixture.sentPush.find((sent) => sent.endpoint === endpoint).message.badge;
+  assert.equal(badgeOf("https://web.push.apple.com/p1-1"), 1, "one more pick; Survivor already picked");
+  assert.equal(badgeOf("https://web.push.apple.com/p1-2"), 1, "every phone of the same player shows the same number");
+  assert.equal(badgeOf("https://web.push.apple.com/p3-1"), 3, "two picks and a Survivor pick");
 });

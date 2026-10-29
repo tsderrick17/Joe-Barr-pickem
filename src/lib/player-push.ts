@@ -13,7 +13,7 @@ export type PushPayload = {
   tag?: string;
 };
 
-type Subscription = { id: string; endpoint: string; p256dh: string; auth: string };
+type Subscription = { id: string; player_id: string; endpoint: string; p256dh: string; auth: string };
 type Send = typeof webpush.sendNotification;
 
 /** Whoever the push services see as the sender: a web address for the pool. */
@@ -41,11 +41,11 @@ export async function sendPushToPlayer(playerId: string, payload: PushPayload, s
 }
 
 /** The same notification to every device of several players, with one read of the saved devices. */
-export async function sendPushToPlayers(playerIds: string[], payload: PushPayload, send?: Send) {
+export async function sendPushToPlayers(playerIds: string[], payload: PushPayload | ((playerId: string) => PushPayload), send?: Send) {
   if (!playerIds.length) return { devices: 0, sent: 0, failed: 0, removed: 0 };
-  const { data, error } = await supabaseAdmin.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("player_id", playerIds);
+  const { data, error } = await supabaseAdmin.from("push_subscriptions").select("id, player_id, endpoint, p256dh, auth").in("player_id", playerIds);
   if (error) throw new Error("The player's devices could not be read.");
-  const outcomes = await Promise.all((data ?? []).map(async (subscription) => ({ subscription, outcome: await sendWebPush(subscription, payload, send) })));
+  const outcomes = await Promise.all((data ?? []).map(async (subscription) => ({ subscription, outcome: await sendWebPush(subscription, typeof payload === "function" ? payload(subscription.player_id) : payload, send) })));
   const gone = outcomes.filter((result) => result.outcome === "gone").map((result) => result.subscription.id);
   if (gone.length) await supabaseAdmin.from("push_subscriptions").delete().in("id", gone);
   return {

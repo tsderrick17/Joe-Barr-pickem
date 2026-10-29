@@ -25,6 +25,7 @@ import ForfeitPanel from "@/components/forfeit-panel";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
 import { initialSlateState, slateReducer, type SelectedPick } from "@/lib/slate-state";
 import { FootballLoadingScreen } from "@/components/football-loader";
+import { PICKS_SAVED_EVENT } from "@/lib/app-badge.js";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
@@ -524,6 +525,7 @@ export default function BoardPage() {
       }
 
       dispatch({ type: "submit-succeeded", picks: sentPicks, survivor: sentSurvivor });
+      window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
     } catch (error) {
       if (error instanceof SessionUnavailableError) {
         window.location.replace("/login");
