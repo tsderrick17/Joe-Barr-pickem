@@ -264,7 +264,8 @@ export const PIECES: Piece[] = [
     tapToPlay: true,
     knobGroup: "pennant",
     style: (settings) => cssVars("pennant", settings.knobs),
-    draw: ({ settings: { pennantTeam }, plays }) => <span className="bowl-team-pick is-new" key={`${plays}-${pennantTeam}`}><BowlMegaphone side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>,
+    // At rest it is already up, as a picked team's is; it raises when tapped (an animation running on load also drew its lettering unevenly).
+    draw: ({ settings: { pennantTeam }, plays }) => <span className={`bowl-team-pick ${plays > 0 ? "is-new" : ""}`} key={`${plays}-${pennantTeam}`}><BowlMegaphone side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>,
     controls: ({ pennantTeam }, update) => (
       <label className="asset-choice">
         <span>School</span>

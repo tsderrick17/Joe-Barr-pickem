@@ -218,3 +218,12 @@ test("the Bowl Card's two split-flap styles are two cards, each tuned on its own
   await page.getByRole("button", { name: /^Menu/ }).click();
   await expect(page.locator(".workshop-settings pre")).toHaveText("Time per flip (paceWins): 250ms, live 140ms");
 });
+
+test("the megaphone rests raised and raises again only when tapped", async ({ page }) => {
+  await openBoard(page);
+  await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(0);
+  const megaphone = await nearestMiddle(page, "Play the bowl pool megaphone");
+  await megaphone.click();
+  await expect(megaphone.locator(".bowl-team-pick.is-new")).toHaveCount(1);
+  await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(1);
+});
