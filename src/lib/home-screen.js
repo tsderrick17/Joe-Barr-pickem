@@ -56,8 +56,8 @@ export function androidBrowser(userAgent) {
   return "chrome";
 }
 
-/** @param {number | null} at @param {number} now @param {number} days */
-function stillQuiet(at, now, days) {
+/** Whether a "Not now" tapped at `at` still keeps a banner away. @param {number | null} at @param {number} now @param {number} days */
+export function stillQuiet(at, now, days) {
   if (at === null) return false;
   const since = now - at;
   // A tap a moment after the page loaded is a moment ahead of `now`; a time more than a day ahead means the phone's clock was moved,

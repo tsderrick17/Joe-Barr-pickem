@@ -304,6 +304,10 @@ measure database requests or end-to-end route time.
   `push_vapid_keys` (one row, service role only), so nothing is configured in Vercel; the service worker is `public/sw.js` (notifications and
   the icon badge only, no fetch handler, so nothing is cached). Subscriptions must be on a known push service (Apple, Google, Mozilla, Microsoft),
   at most ten devices a player, and a device the push service reports gone (404 or 410) is deleted. Every player sees the section (an iPhone browser tab is told to add the app to the Home Screen first).
+  Inside the Home Screen app a signed-in player whose notifications are not on yet also gets a one-tap banner under the header ("Get pool reminders on
+  this phone", Turn on), so adding the app and turning notifications on needs no hunting: one tap asks the phone and saves it, through the same
+  `turnOnPhoneNotifications` as the Notifications page. Not on the sign-in or Notifications pages, never once on or blocked, and Not now keeps it away 14
+  days (`notificationsBannerVisible`, `src/lib/phone-push.js`).
   A phone notification **mirrors its email**: when the reminder worker sends a player's email (`deliverEmailReminder`), that player's phones get a notification with the
   email's subject as the title, its message (plus the champion or elimination line, when it has one) as the body, and the same destination page (one shared
   `reminderDestinationPath`). Same audience, same moment, same choices: the recipients are exactly the players the email's choices selected, and only emails
