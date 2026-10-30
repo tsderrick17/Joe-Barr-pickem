@@ -180,8 +180,8 @@ async function checkWatchdogHeartbeat(): Promise<LaunchPreflightCheck> {
     "Internal automation heartbeat",
     heartbeat.healthy,
     heartbeat.healthy
-      ? "An authenticated, leased watchdog invocation recorded its durable receipt within the last 20 minutes."
-      : "No authenticated, leased watchdog invocation has recorded its durable receipt within the last 20 minutes.",
+      ? "An authenticated, leased watchdog invocation recorded its durable receipt within the last 35 minutes."
+      : "No authenticated, leased watchdog invocation has recorded its durable receipt within the last 35 minutes.",
     "schedules",
   );
 }

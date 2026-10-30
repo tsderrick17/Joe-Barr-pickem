@@ -56,13 +56,14 @@ test("current operating docs follow the latest score schedule and Bowl provider"
   const [reference, operations, schedule, bowlSync] = await Promise.all([
     readFile(path.join(root, "docs", "PROJECT_REFERENCE.md"), "utf8"),
     readFile(path.join(root, "docs", "OPERATIONS.md"), "utf8"),
-    readFile(path.join(root, "supabase", "migrations", "20261001010000_watchdog_every_ten_minutes.sql"), "utf8"),
+    readFile(path.join(root, "supabase", "migrations", "20261030030000_background_job_cadence.sql"), "utf8"),
     readFile(path.join(root, "src", "lib", "sync-bowl-pool.ts"), "utf8"),
   ]);
 
-  assert.match(schedule, /refresh-final-nfl-scores-every-ten-minutes/);
-  assert.match(reference, /NFL score worker wakes every ten minutes/);
-  assert.match(operations, /NFL score worker and watchdog wake every ten minutes/);
+  assert.match(schedule, /refresh-final-nfl-scores-every-ten-minutes', '\*\/10 \* \* \* \*', 'select public\.dispatch_score_sync_if_due\(\);'/);
+  assert.match(reference, /NFL score worker is called by a database gate only when it has work/);
+  assert.match(operations, /the score gate checks every ten minutes/);
+  assert.match(operations, /the watchdog runs every 15 minutes/);
   assert.match(bowlSync, /site\.api\.espn\.com/);
   assert.match(reference, /ESPN is the default NCAA Bowl Pool/);
   assert.doesNotMatch(reference, /CollegeFootballData/);
