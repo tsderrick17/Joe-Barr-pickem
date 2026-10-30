@@ -2,10 +2,11 @@ import { androidPattern, hapticKind, iphoneTicksOnTap, VIBRATION_KEY, vibrationW
 
 const isIPhone = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const hasVibrate = () => typeof navigator.vibrate === "function";
+const isAndroid = () => /Android/i.test(navigator.userAgent);
 
 /** What this device can do: a vibration motor (Android), the iPhone switch tick, or nothing (a computer). */
 export function hapticsAvailable() {
-  return hapticKind({ hasVibrate: hasVibrate(), isIPhone: isIPhone() });
+  return hapticKind({ hasVibrate: hasVibrate(), isIPhone: isIPhone(), isAndroid: isAndroid() });
 }
 
 const vibrationListeners = new Set<() => void>();

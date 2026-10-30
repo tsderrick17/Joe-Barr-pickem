@@ -8,6 +8,7 @@ async function installedApp(page: Page) {
     window.localStorage.setItem("pickem-theme", "day");
     // record the haptic buzzes: a light notch each time the counter drops a down (4 to 3, 3 to 2), then the firmer lock-in when it reaches 1
     (window as unknown as { buzzes: number[][] }).buzzes = [];
+    Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
     navigator.vibrate = (pattern) => { (window as unknown as { buzzes: number[][] }).buzzes.push([pattern].flat() as number[]); return true; };
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));

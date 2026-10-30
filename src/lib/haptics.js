@@ -60,10 +60,11 @@ export function pullNotch(counter) {
 
 /**
  * Which kind of haptics this device has, from what the page can read about it.
- * @param {{ hasVibrate: boolean, isIPhone: boolean }} facts
+ * Chrome on a computer also has `navigator.vibrate` (it does nothing without a motor), so a phone with a motor is told by being an Android device too.
+ * @param {{ hasVibrate: boolean, isIPhone: boolean, isAndroid: boolean }} facts
  * @returns {"android" | "iphone" | "none"}
  */
-export function hapticKind({ hasVibrate, isIPhone }) {
-  if (hasVibrate) return "android";
+export function hapticKind({ hasVibrate, isIPhone, isAndroid }) {
+  if (hasVibrate && isAndroid) return "android";
   return isIPhone ? "iphone" : "none";
 }

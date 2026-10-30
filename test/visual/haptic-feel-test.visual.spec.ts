@@ -13,6 +13,7 @@ async function scriptDevice(page: Page, kind: Kind) {
     if (device === "android") Object.defineProperty(navigator, "vibrate", { value: (pattern: number[]) => { state.vibrations.push([...pattern]); return true; }, configurable: true });
     else delete (Navigator.prototype as { vibrate?: unknown }).vibrate;
     if (device === "iphone") Object.defineProperty(navigator, "userAgent", { get: () => iphone, configurable: true });
+    if (device === "android") Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
     // Every flip of the hidden switch is one tick.
     document.addEventListener("change", (event) => { if ((event.target as HTMLElement)?.hasAttribute?.("switch")) state.ticks += 1; }, true);
   }, [kind, IPHONE]);

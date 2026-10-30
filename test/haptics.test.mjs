@@ -16,9 +16,10 @@ test("an iPhone only gets a feel at the tap itself: a tick for every choice, not
 });
 
 test("a device is Android-like if it can vibrate, an iPhone if it cannot but is one, and otherwise has no haptics", () => {
-  assert.equal(hapticKind({ hasVibrate: true, isIPhone: false }), "android");
-  assert.equal(hapticKind({ hasVibrate: false, isIPhone: true }), "iphone");
-  assert.equal(hapticKind({ hasVibrate: false, isIPhone: false }), "none");
+  assert.equal(hapticKind({ hasVibrate: true, isIPhone: false, isAndroid: true }), "android");
+  assert.equal(hapticKind({ hasVibrate: false, isIPhone: true, isAndroid: false }), "iphone");
+  assert.equal(hapticKind({ hasVibrate: false, isIPhone: false, isAndroid: false }), "none");
+  assert.equal(hapticKind({ hasVibrate: true, isIPhone: false, isAndroid: false }), "none", "Chrome on a computer has a vibrate function that does nothing");
 });
 
 test("only an explicit off turns Vibration off, and the pull passes three notches that end at the lock-in", async () => {
