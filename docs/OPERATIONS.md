@@ -212,6 +212,12 @@ the Slate's first request has the Standings' 15-second limit.
 
 The Trophy Room's data is built once a minute and shared by every page open.
 
+The functions run in Vercel's Portland region (`pdx1`, set in `vercel.json`), next
+to the Supabase database (West US, Oregon). A player request makes 8 to 16
+database calls, partly one after another; from Vercel's default Washington DC
+region each call crossed the country (about 65 ms). Keep the two in the same
+region if either ever moves.
+
 Fluid Active CPU is modelled in `src/lib/vercel-usage-estimate.js` and calibrated
 to Vercel's meter (Hobby limit 4 hours a month): over 4 hours on 2026-10-02, 3 h 16 m
 on 2026-10-19 and 2 h 55 m on 2026-10-23, with 11 active players. After a large change
