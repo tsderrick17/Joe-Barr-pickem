@@ -3,5 +3,6 @@
   "github": {
     "autoJobCancellation": false
   },
-  "ignoreCommand": "node scripts/vercel-ignore-build.mjs"
+  "ignoreCommand": "node scripts/vercel-ignore-build.mjs",
+  "regions": ["pdx1"]
 }
