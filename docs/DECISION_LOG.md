@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Standings and Slate reads wait on the database fewer times
+
+`/api/home` waited on the database 7 times in a row (12 in a playoff round) and `/api/board?bootstrap=1` 8 times (11), because each read waited for the one before it even when it needed nothing from it. Independent reads now run together: the Standings in 4 rounds (6), the Slate in 5 (7). The requests are the same and the responses identical (checked across every fixture scenario); failures are still judged in the order the pages have always reported them, and reads a page might not reach are guarded so an early answer never leaves a failure unhandled. The fake database counts rounds and the route budgets hold them exactly. This matters most while the functions and the database sit far apart, and still saves a round trip per round after they share a region.
+
 ## 2026-10-30 - The app badge re-reads at most every five minutes
 
 Coming back to the Home Screen app re-read the picks-to-make number at most once a minute, and each read costs about seven database requests (the sign-in check, the player, the active week, its games, picks, season and Survivor rows). The number only changes when picks are saved (that refreshes it at once, unchanged) or a game kicks off, so a return now re-reads it at most every five minutes.

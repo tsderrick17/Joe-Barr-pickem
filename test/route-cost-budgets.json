@@ -1,53 +1,61 @@
 {
-  "_comment": "Ceilings for one read of each route, set from `npm run measure:routes` with 15% headroom. A deliberate increase edits this file in the same pull request, with the reason in the decision log. Deterministic counts and bytes only; latency is reported, never gated.",
+  "_comment": "Ceilings for one read of each route, set from `npm run measure:routes` with 15% headroom. A deliberate increase edits this file in the same pull request, with the reason in the decision log. Rounds (times a read waits on the database one after another) are exact, with no headroom. Deterministic counts and bytes only; latency is reported, never gated.",
   "budgets": {
     "home/early_regular": {
       "requests": 15,
       "rows": 247,
       "databaseBytes": 22179,
-      "responseBytes": 8903
+      "responseBytes": 8903,
+      "rounds": 4
     },
     "board/early_regular": {
       "requests": 18,
       "rows": 205,
       "databaseBytes": 22189,
-      "responseBytes": 14221
+      "responseBytes": 14221,
+      "rounds": 5
     },
     "home/late_regular": {
       "requests": 15,
       "rows": 531,
       "databaseBytes": 32010,
-      "responseBytes": 8915
+      "responseBytes": 8915,
+      "rounds": 4
     },
     "board/late_regular": {
       "requests": 18,
       "rows": 205,
       "databaseBytes": 22296,
-      "responseBytes": 14242
+      "responseBytes": 14242,
+      "rounds": 5
     },
     "home/playoff_round": {
       "requests": 19,
       "rows": 638,
       "databaseBytes": 41751,
-      "responseBytes": 16514
+      "responseBytes": 16514,
+      "rounds": 6
     },
     "board/playoff_round": {
       "requests": 18,
       "rows": 181,
       "databaseBytes": 18047,
-      "responseBytes": 8440
+      "responseBytes": 8440,
+      "rounds": 7
     },
     "home/multi_season": {
       "requests": 15,
       "rows": 531,
       "databaseBytes": 32010,
-      "responseBytes": 8915
+      "responseBytes": 8915,
+      "rounds": 4
     },
     "board/multi_season": {
       "requests": 18,
       "rows": 205,
       "databaseBytes": 22296,
-      "responseBytes": 14242
+      "responseBytes": 14242,
+      "rounds": 5
     }
   }
 }

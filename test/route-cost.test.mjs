@@ -19,6 +19,14 @@ test("no route read exceeds its request, row, database-byte or response-byte bud
   }
 });
 
+test("no route read waits on the database more times in a row than its budget allows", () => {
+  // Independent reads run together: the Standings wait 4 times (6 in a playoff round), the Slate 5 (7), where they
+  // waited 7 (12) and 8 (11) when every read waited for the one before it.
+  for (const [name, result] of Object.entries(results)) {
+    assert.ok(result.rounds <= budgets[name].rounds, `${name}: waits on the database ${result.rounds} times in a row, over the budget of ${budgets[name].rounds}.`);
+  }
+});
+
 test("older seasons on file add nothing to a read: history is scoped to the current season", () => {
   for (const route of ["home", "board"]) {
     const { requests, rows, databaseBytes } = results[`${route}/multi_season`];

@@ -90,6 +90,15 @@ fails a pull request that exceeds one, and also guards that history stays scoped
 the file in the same pull request and say why in the decision log. An optimization should tighten them (the Standings
 read's change did).
 
+### Rounds (October 30, 2026)
+
+The harness also counts **rounds**: how many times a read waits on the database one after another (the fake database
+answers every query started in the same turn together, like one round trip). Each round costs a full trip to the
+database, so rounds, not request counts, decide how long a player waits. Running independent reads together took the
+Standings from 7 rounds to 4 (12 to 6 in a playoff round) and the Slate's first load from 8 to 5 (11 to 7), with
+identical responses and the same requests. `test/route-cost-budgets.json` holds the round counts exactly, without
+headroom.
+
 ### Production observation (October 7, 2026, read-only)
 
 Five sequential requests each to two public endpoints from one machine: `/api/health` answered in 0.26 to 0.46 s
