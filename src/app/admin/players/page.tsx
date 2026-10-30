@@ -160,9 +160,9 @@ export default function PlayerManagementPage() {
   }
 
   return (
-    <main className="commissioner-subpage min-h-screen px-5 py-8 text-(color:--themed-text-31) md:px-10">
+    <main className="commissioner-subpage min-h-screen px-5 py-6 text-(color:--themed-text-31) md:px-10">
       <div className="mx-auto max-w-5xl">
-        <header className="desk-rule-bottom pb-7">
+        <header className="desk-rule-bottom pb-5">
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-sm font-bold tracking-[0.24em] text-slate-600">
@@ -198,7 +198,7 @@ export default function PlayerManagementPage() {
             </p>
 
             <form
-              className="mt-5 desk-rule-y py-5"
+              className="mt-4 desk-rule-y py-4"
               onSubmit={addPlayer}
             >
               <label
@@ -215,12 +215,12 @@ export default function PlayerManagementPage() {
                 maxLength={40}
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
-                className="mt-2 w-full desk-input px-4 py-3 text-lg outline-none"
+                className="mt-2 w-full desk-input px-4 py-2.5 text-lg outline-none"
                 placeholder="Mike"
               />
 
               <label
-                className="mt-5 block text-sm font-bold tracking-wide"
+                className="mt-4 block text-sm font-bold tracking-wide"
                 htmlFor="pin"
               >
                 FOUR-DIGIT PIN
@@ -240,7 +240,7 @@ export default function PlayerManagementPage() {
                     event.target.value.replace(/\D/g, "").slice(0, 4),
                   )
                 }
-                className="mt-2 w-full desk-input px-4 py-3 text-center text-2xl tracking-[0.45em] outline-none"
+                className="mt-2 w-full desk-input px-4 py-2.5 text-center text-2xl tracking-[0.45em] outline-none"
                 placeholder="0000"
               />
 
@@ -263,7 +263,7 @@ export default function PlayerManagementPage() {
                   pin.length !== 4 ||
                   isSubmitting
                 }
-                className="mt-5 w-full desk-button-solid px-5 py-4 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-4 w-full desk-button-solid px-5 py-3 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? "Adding player..." : "Add Player"}
               </button>
