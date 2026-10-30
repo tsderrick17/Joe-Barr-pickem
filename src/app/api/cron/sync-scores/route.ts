@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncFinalScores } from "@/lib/sync-final-scores";
 import { skipOutsideSeason } from "@/lib/off-season-gate";
 import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/automation-execution-lease";
+import { recordNextScoreWork } from "@/lib/score-worker-schedule";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const nfl = await runWithAutomationLease("scores", syncFinalScores);
-    return NextResponse.json({ success: true, nfl });
+    // The database gate wakes the worker again at its next time-based duty (week handoff, Survivor deadline, playoff day).
+    const nextDueAt = await recordNextScoreWork(nfl.weekRollover);
+    return NextResponse.json({ success: true, nfl, nextDueAt });
   } catch (error) {
     if (error instanceof AutomationAlreadyRunningError) {
       return NextResponse.json({ success: true, skipped: true, message: error.message });
