@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Session tokens are verified locally
+
+Every signed-in API call asked Supabase Auth to confirm the session (`auth.getUser`), a network round trip on top of the player lookup. The project signs sessions with an asymmetric key (ES256, public key set at `/auth/v1/.well-known/jwks.json`), so `authenticateActivePlayer` now verifies the token locally with `auth.getClaims` (signature and expiry) on one client per server instance, which keeps the key set for ten minutes. A token signed with a symmetric or unknown key still goes to Supabase Auth. Accepted trade-off, owner-approved as part of the efficiency plan: a session that was signed out stays usable until its token expires (at most an hour). Deactivating a player still takes effect at once, because `players.active` is read on every request. Tests sign real ES256 tokens: valid, expired, forged, not a token, an unknown key, and a deactivated player.
+
 ## 2026-10-30 - Efficiency audit: what was looked at and deliberately left alone
 
 The 2026-10-30 efficiency audit (Vercel and Supabase numbers, plus local measurements) also reviewed these and changed nothing, so they are not reopened without new evidence:

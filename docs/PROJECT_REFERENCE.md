@@ -102,8 +102,12 @@ measure database requests or end-to-end route time.
   (directly, or through `commissionerAccess` and `profilePlayerAccess`): 401 for a
   missing or invalid session, 403 for an inactive player or a missing role, 503 for
   a sign-in or database outage (never reported as lost access), 500 for missing
-  configuration, each with a stable `code`. Nothing is cached and only safe reads are
-  retried.
+  configuration, each with a stable `code`. No identity or permission is cached and
+  only safe reads are retried. The session token is verified locally against the
+  project's public ES256 signing key (signature and expiry; the key set is kept ten
+  minutes per server instance) instead of a round trip to Supabase Auth on every
+  request, so a signed-out session stays usable until its token expires (at most an
+  hour); `players.active` is read on every request, so deactivation is immediate.
 - **Bodies are validated before use.** Routes read JSON with `readJsonObject` and
   take fields through the parsers in `src/lib/request-bodies.ts`; a malformed, null,
   array or mistyped body is a 400 before any pool data is read or written.

@@ -19,6 +19,17 @@ export type Access<T> =
 
 type Options = { requireCommissioner?: boolean };
 
+// One sign-in checker per server instance, so the project's public signing keys (JWKS) are fetched once and kept for
+// ten minutes. The project signs sessions with an asymmetric key (ES256), so a session token is verified locally
+// (signature and expiry) instead of with a round trip to Supabase Auth on every request. The trade-off: a session that
+// was signed out stays valid until its token expires (at most an hour); `players.active` is still read on every request,
+// so a deactivated player is refused at once. A symmetric or unknown key falls back to asking Supabase Auth.
+let tokenVerifier: ReturnType<typeof createClient> | null = null;
+function sessionVerifier(url: string, publishableKey: string) {
+  tokenVerifier ??= createClient(url, publishableKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  return tokenVerifier;
+}
+
 /**
  * One server authentication result for every protected route: a verified active player, or why not. 401 is a
  * missing or invalid session, 403 an inactive player or one without the needed role, 503 a sign-in or database
@@ -43,10 +54,9 @@ export async function authenticateActivePlayer(
     configured: Boolean(url && publishableKey && serverKey),
     requireCommissioner: options.requireCommissioner,
     verifyToken: async (token) => {
-      const client = createClient(url!, publishableKey!, {
-        global: { headers: { Authorization: authorization! } },
-      });
-      return retrySafeRead(() => client.auth.getUser(token));
+      const verified = await retrySafeRead(() => sessionVerifier(url!, publishableKey!).auth.getClaims(token));
+      if (verified.error) return { error: verified.error };
+      return { data: { user: verified.data?.claims.sub ? { id: verified.data.claims.sub } : null } };
     },
     loadPlayer: async (userId) => {
       // Import only after configuration is checked so a missing server key
