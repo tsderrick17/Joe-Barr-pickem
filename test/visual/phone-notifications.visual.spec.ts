@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
 
-// "Notifications on this phone" on the Notifications page (for now the Commissioner's alone). The browser's notification features are replaced with a
+// "Notifications on this phone" on the Notifications page (every player sees it). The browser's notification features are replaced with a
 // scripted phone, so the page can be shown as it reads on a phone that has them off, on, blocked, or cannot have them at all, and the taps (turn on, send a
 // test, turn off) can be followed to the requests they make. No real notification is ever asked for or sent.
 const WIDTHS = { "phone-390": 390, "desktop-1280": 1280 } as const;
@@ -80,7 +80,7 @@ test("Notifications on this phone at night", async ({ page }) => {
   await expect(section).toHaveScreenshot("phone-notifications-on-night-phone-390.png");
 });
 
-test("only the Commissioner sees the phone notifications section for now", async ({ page }) => {
+test("every player sees the phone notifications section, not only the Commissioner", async ({ page }) => {
   await signIn(page, "day");
   await scriptPhone(page, "off");
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
@@ -88,8 +88,8 @@ test("only the Commissioner sees the phone notifications section for now", async
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { notificationEmail: "", senderEmail: "", emailNotificationsEnabled: false, firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator("[data-phone-notifications]")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("[data-phone-notifications]")).toHaveCount(1);
 });
 
 test("turning notifications on asks the phone, subscribes with the pool's key and saves the phone; the test and turning off follow", async ({ page }) => {

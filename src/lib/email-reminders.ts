@@ -6,6 +6,7 @@ import {
 } from "@/lib/reminder-audience";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
 import { sendPushToPlayers } from "@/lib/player-push";
+import { picksStillToMakeFor } from "@/lib/picks-to-make";
 import { reminderDestinationPath, reminderPushMessage } from "@/lib/reminder-push.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { renderEmailArtwork, type EmailArtworkSnapshot } from "@/lib/email-artwork";
@@ -424,7 +425,10 @@ async function sendPhoneNotifications(reminder: Reminder, playerIds: string[]) {
   if (!playerIds.length) return;
   try {
     const extraLines = [playoffChampionCopy(reminder.recap_snapshot), playoffEliminationCopy(reminder.recap_snapshot), bowlRecapCopy(reminder.recap_snapshot)].filter(Boolean);
-    await sendPushToPlayers(playerIds, reminderPushMessage({ id: reminder.id, category: reminder.category, title: reminder.title, body: reminder.body, extraLines }));
+    const message = reminderPushMessage({ id: reminder.id, category: reminder.category, title: reminder.title, body: reminder.body, extraLines });
+    // The number on the icon rides along (picks still to make, per player). If it cannot be worked out, the notification still goes without it.
+    const badges = await picksStillToMakeFor(playerIds).catch(() => new Map<string, number>());
+    await sendPushToPlayers(playerIds, (playerId) => (badges.has(playerId) ? { ...message, badge: badges.get(playerId) } : message));
   } catch (reason) {
     console.warn("Phone notifications for a reminder could not be sent.", { reminderId: reminder.id, message: reason instanceof Error ? reason.message : "unknown" });
   }
