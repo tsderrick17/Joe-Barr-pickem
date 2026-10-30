@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { executeAuthenticatedRequest } from "@/lib/authenticated-request";
 import { createSharedReadCache } from "@/lib/shared-read-cache";
+import { takeEarlyRead } from "@/lib/early-read.js";
 
 const SESSION_REFRESH_WINDOW_MS = 60_000;
 const TRANSIENT_READ_RETRY_DELAY_MS = 650;
@@ -106,6 +107,14 @@ export async function fetchWithSession(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
+  // The page's first read may already be on its way, started in <head> before this code arrived (see early-read.js).
+  const early = takeEarlyRead(input, init);
+  if (early) {
+    try {
+      const response = await early;
+      if (response.ok) return response;
+    } catch { /* fall back to the page's own request */ }
+  }
   return sharedReads.run(input, init, () => fetchWithSessionOnce(input, init));
 }
 

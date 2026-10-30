@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { preload } from "react-dom";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -11,6 +10,8 @@ import TurnOnNotifications from "@/components/turn-on-notifications";
 import PoolChatDock from "@/components/pool-chat-dock";
 import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
+import { earlyReadScript, sessionStorageKey } from "@/lib/early-read.js";
+import FootballWarmup from "@/components/football-warmup";
 import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
 
@@ -50,13 +51,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // The loading football's frames start downloading with the page, so the ball is already there when a loading screen shows.
-  preload("/football-spin.webp", { as: "image", type: "image/webp", fetchPriority: "low" });
   return (
     <html lang="en" suppressHydrationWarning>
       {/* Decides the optional header tabs before the first paint, so they never slide in later (see nav-tabs.ts). */}
-      <head><script dangerouslySetInnerHTML={{ __html: navTabsScript(Date.parse(bowlPoolLaunchAt(currentSeasonYear()))) }} /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: navTabsScript(Date.parse(bowlPoolLaunchAt(currentSeasonYear()))) }} />
+        {/* Starts the Standings' or the Slate's first data read before the page's code has arrived (see early-read.js). */}
+        <script dangerouslySetInnerHTML={{ __html: earlyReadScript(sessionStorageKey(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")) }} />
+      </head>
       <body className={`${architectsDaughter.variable} ${graduate.variable} ${cormorant.variable}`}>
+        <FootballWarmup />
         <PullToRefresh />
         <SiteNav />
         <AddToHomeScreen variant="banner" />

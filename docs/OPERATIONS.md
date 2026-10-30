@@ -208,6 +208,16 @@ the Slate's first request has the Standings' 15-second limit.
 
 The Trophy Room's data is built once a minute and shared by every page open.
 
+The Standings' and the Slate's first data read starts before the page's code has
+arrived: a small inline script in `<head>` (`src/lib/early-read.js`) reads the
+signed-in session and starts exactly the request the page will make, and the page
+takes that answer instead of asking again (one request either way; anything
+unusual falls back to the page's own request). The loading football's picture is
+fetched once the page has started (`FootballWarmup`), not preloaded from `<head>`
+where it competed with the page's code on a slow connection.
+`node scripts/measure-board-vitals.mjs` measures the Slate's load, layout shift and
+tap response on an emulated slow phone (see `docs/RESPONSE_COST_BASELINE.md`).
+
 Fluid Active CPU is modelled in `src/lib/vercel-usage-estimate.js` and calibrated
 to Vercel's meter (Hobby limit 4 hours a month): over 4 hours on 2026-10-02, 3 h 16 m
 on 2026-10-19 and 2 h 55 m on 2026-10-23, with 11 active players. After a large change
