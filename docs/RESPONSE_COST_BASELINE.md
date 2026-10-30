@@ -90,6 +90,18 @@ fails a pull request that exceeds one, and also guards that history stays scoped
 the file in the same pull request and say why in the decision log. An optimization should tighten them (the Standings
 read's change did).
 
+### Slate page in the browser (October 30, 2026, lab)
+
+`node scripts/measure-board-vitals.mjs` loads the Slate in Chromium as a returning player on an emulated slow phone
+(4x CPU, slow 4G) against a production build, with every `/api` answer delayed 600 ms, and reports when the first game
+row is drawn, Largest Contentful Paint (and its element), Cumulative Layout Shift and the slowest interaction when a
+team is tapped. Vercel Speed Insights had the Slate at a desktop score of 85 over 22 visits; Hobby does not show which
+metric. The lab says layout shift (0.003) and taps (56 ms) are already good and the wait is loading. Before and after
+starting the first read from `<head>` and moving the football's preload: data requested at 631 ms then 230 ms after
+navigation, first row drawn at 2,302 ms then 2,072 ms on a returning visit (LCP is the loading football at about
+0.4 s either way), and 4,886 ms then 4,562 ms on a first visit with nothing cached. The rest of the wait is the phone
+running the page's code; the server's own answer is what the region and rounds changes shorten.
+
 ### Rounds (October 30, 2026)
 
 The harness also counts **rounds**: how many times a read waits on the database one after another (the fake database
