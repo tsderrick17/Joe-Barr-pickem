@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The Add to Home Screen banner closes one way
+
+Owner found the banner had three ways to make it go away (Hide, the ✕ and "I already have it") and that the iPhone step "Not there? Open this page in the Safari app first" confused more than it helped (it showed in Safari itself). Now the ✕ is the only way to close it and keeps it away 14 days, as before; "Show me how" gives way to the steps instead of turning into Hide; "I already have it" (180 days) and the Safari aside are gone. Supersedes the "I already have it" detail of the Home Screen entries below. The notifications banner is unchanged (its ✕ also waits 14 days).
+
 ## 2026-10-30 - Haptics start with a Commissioner-only Feel test
 
 Owner wants a thoughtful, satisfying haptic layer but cannot test every phone (only an iPhone). The plan is five feels with one meaning each, used the same everywhere (see PROJECT_REFERENCE). Because iPhone support is a workaround that is unproven inside a Home Screen app, step 1 ships only a Commissioner-only "Feel test" on the Notifications page: a button per feel, a pretend pull-chain (a notch per count, a lock-in on letting go) and, on an iPhone, experiments (a tick one second after a tap, three quick ticks, success as a tick) so the owner can feel what an iPhone actually allows. The Android patterns are untested by the owner (no Android phone): they are conventional short patterns, kept in one table in `src/lib/haptics.js` for tuning. Rolling the feels out to the rest of the app, with a Vibration on/off switch, waits until the owner has felt this.

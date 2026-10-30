@@ -1,7 +1,7 @@
 import "./helpers/typescript-renderer.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BANNER_QUIET_DAYS, HAVE_IT_QUIET_DAYS, androidBrowser, homeScreenBannerVisible, homeScreenHelp } from "../src/lib/home-screen.js";
+import { BANNER_QUIET_DAYS, androidBrowser, homeScreenBannerVisible, homeScreenHelp } from "../src/lib/home-screen.js";
 
 // What a visitor needs in order to put the pool on their Home Screen: which kind of phone and browser it is, when the slim banner shows, and the
 // manifest every phone reads when it installs the app. The browser names are real ones as each browser sends them.
@@ -99,13 +99,6 @@ test("'Not now' keeps the banner away for two weeks, then it comes back", () => 
   assert.equal(visible("iphone-safari", { dismissedAt: NOW - 13 * DAY }), false);
   assert.equal(visible("iphone-safari", { dismissedAt: NOW - 14 * DAY }), true);
   assert.equal(visible("iphone-safari", { dismissedAt: NOW + 3 * DAY }), true, "a time well in the future (the phone's clock was moved) does not hide the banner for good");
-});
-
-test("'I already have it' keeps the banner away for six months (Safari on an iPhone cannot see the Home Screen app)", () => {
-  assert.equal(HAVE_IT_QUIET_DAYS, 180);
-  assert.equal(visible("iphone-safari", { haveItAt: NOW - 179 * DAY }), false);
-  assert.equal(visible("iphone-safari", { haveItAt: NOW - 180 * DAY }), true);
-  assert.equal(visible("iphone-safari", { haveItAt: NOW - 200 * DAY, dismissedAt: NOW - DAY }), false, "either one keeps it away");
 });
 
 test("the manifest has everything a phone needs to install the app, keeps the identity earlier installs have, and lets Android check for it", async () => {

@@ -326,11 +326,11 @@ measure database requests or end-to-end route time.
   apps since iOS 16.4), a link opened inside another app's window such as Facebook, Instagram, Gmail or the Google app (open it in Safari or Chrome first,
   with Copy link), the Android menus of Chrome, Samsung Internet and Firefox, and Chrome on a Chromebook (installed, it opens in its own window from
   the launcher). When the browser (Android, Chromebook) offers its own install (`beforeinstallprompt`,
-  kept from the moment the page loads; Chrome waits for a tap and 30 seconds on the site) the button becomes one-tap Install. "Not now" hides the banner
-  14 days and "I already have it" 180 days (notes in the phone's own storage). It never shows on a computer or in the installed app, nor on an Android
+  kept from the moment the page loads; Chrome waits for a tap and 30 seconds on the site) the button becomes one-tap Install. Its ✕ ("Not now", the only
+  way to close it; opening the steps replaces "Show me how" rather than adding a Hide) hides the banner 14 days (a note in the phone's own storage). It never shows on a computer or in the installed app, nor on an Android
   phone known to have the app: Chrome answers that itself (`getInstalledRelatedApps`, from `related_applications` in the manifest, which also notices the
   app being removed), and in other browsers a note left when the app was last opened counts (the app and the browser share storage on Android; an iPhone's
-  Safari cannot see its Home Screen app, hence "I already have it"). The Notifications page carries the same help as a card for everyone, always. The
+  Safari cannot see its Home Screen app, so there the ✕ is the answer). The Notifications page carries the same help as a card for everyone, always. The
   manifest (`src/app/manifest.ts`) states `id: "/"`, the identity browsers already computed for earlier installs. Nothing records who has installed it.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,

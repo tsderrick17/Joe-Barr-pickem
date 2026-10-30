@@ -7,7 +7,7 @@ import { signIn } from "./session";
 // "Add to Home Screen": the slim banner under the header of every page and the card on the Notifications page. The browser is made to look like each kind of
 // phone and browser (Safari, Chrome and Facebook's window on an iPhone; Chrome, Samsung Internet, Firefox and Facebook's window on Android, with and
 // without the browser's one-tap Install; the installed app; a computer), so every state can be shown as it reads and the taps (Show me how, Install,
-// Copy link, Not now, I already have it) can be followed. Nothing is ever really installed.
+// Copy link, Not now) can be followed. Nothing is ever really installed.
 const WIDTHS = { "phone-360": 360, "phone-390": 390 } as const;
 const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)";
 const CROS = "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
@@ -35,13 +35,13 @@ const PHONES: Record<Phone, Script & { help: string }> = {
 };
 
 
-type Planted = { dismissedDaysAgo?: number; haveItDaysAgo?: number; openedAsAppBefore?: boolean };
+type Planted = { dismissedDaysAgo?: number; openedAsAppBefore?: boolean };
 
 /** Makes the browser look like one kind of phone, before the page runs, with any earlier taps planted in its storage. */
 async function scriptPhone(page: Page, phone: Phone, planted: Planted = {}) {
   await page.addInitScript(([script, earlier]) => {
     const { userAgent, platform, standalone, related } = script as Script;
-    const { dismissedDaysAgo, haveItDaysAgo, openedAsAppBefore } = earlier as Planted;
+    const { dismissedDaysAgo, openedAsAppBefore } = earlier as Planted;
     if (userAgent) Object.defineProperty(navigator, "userAgent", { get: () => userAgent, configurable: true });
     if (platform) Object.defineProperty(navigator, "platform", { get: () => platform, configurable: true });
     if (standalone) Object.defineProperty(navigator, "standalone", { value: true, configurable: true });
@@ -53,7 +53,6 @@ async function scriptPhone(page: Page, phone: Phone, planted: Planted = {}) {
     Object.defineProperty(navigator, "clipboard", { value: { writeText: async (text: string) => { copied.push(text); } }, configurable: true });
     const daysAgo = (days: number) => String(Date.now() - days * 86_400_000);
     if (typeof dismissedDaysAgo === "number") window.localStorage.setItem("pickem-home-screen-dismissed", daysAgo(dismissedDaysAgo));
-    if (typeof haveItDaysAgo === "number") window.localStorage.setItem("pickem-home-screen-have-it", daysAgo(haveItDaysAgo));
     if (openedAsAppBefore) window.localStorage.setItem("pickem-home-screen-installed", daysAgo(3));
   }, [PHONES[phone], planted]);
 }
@@ -223,17 +222,16 @@ test("the banner is on every page, not only Notifications", async ({ page }) => 
   await expect(banner).toBeVisible({ timeout: 30_000 });
 });
 
-test("on an iPhone one tap on Show me how opens the steps and another closes them", async ({ page }) => {
+test("on an iPhone one tap on Show me how opens the steps, and the ✕ is then the only button: one way to close it", async ({ page }) => {
   const { banner } = await open(page, "iphone-safari");
-  const toggle = banner.getByRole("button", { name: "Show me how" });
-  await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(banner.getByRole("listitem")).toHaveCount(0);
-  await toggle.click();
+  await banner.getByRole("button", { name: "Show me how" }).click();
   await expect(banner.getByRole("listitem")).toHaveCount(3);
   await expect(banner).toContainText("Add to Home Screen");
   await expect(banner).toContainText("sign in with your PIN");
-  await banner.getByRole("button", { name: "Hide" }).click();
-  await expect(banner.getByRole("listitem")).toHaveCount(0);
+  await expect(banner.getByRole("button")).toHaveCount(1);
+  await banner.getByRole("button", { name: "Not now" }).click();
+  await expect(banner).toHaveCount(0);
 });
 
 test("inside Facebook's window the steps send the player to Safari, and Copy link copies the pool's address", async ({ page }) => {
@@ -272,17 +270,7 @@ test("Not now hides the banner, and it stays hidden after the page is reloaded",
   await expect(banner).toHaveCount(0);
 });
 
-test("I already have it hides the banner, and it stays hidden after the page is reloaded", async ({ page }) => {
-  const { banner } = await open(page, "iphone-safari");
-  await banner.getByRole("button", { name: "Show me how" }).click();
-  await banner.getByRole("button", { name: "I already have it" }).click();
-  await expect(banner).toHaveCount(0);
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
-  await expect(banner).toHaveCount(0);
-});
-
-for (const [planted, shown] of [[{ dismissedDaysAgo: 13 }, false], [{ dismissedDaysAgo: 15 }, true], [{ haveItDaysAgo: 179 }, false], [{ haveItDaysAgo: 181 }, true]] as const) {
+for (const [planted, shown] of [[{ dismissedDaysAgo: 13 }, false], [{ dismissedDaysAgo: 15 }, true]] as const) {
   test(`${JSON.stringify(planted)}: the banner is ${shown ? "back" : "still away"}`, async ({ page }) => {
     const { banner } = await open(page, "iphone-safari", planted);
     await expect(banner).toHaveCount(shown ? 1 : 0);
