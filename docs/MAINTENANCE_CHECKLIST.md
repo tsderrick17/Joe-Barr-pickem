@@ -11,7 +11,8 @@ records.
   exception, before its review deadline.
 - Confirm UptimeRobot has exactly one monitor for production, automation
   heartbeat, line-lock workers, score workers, reminder workers, Bowl Pool,
-  critical workers, and encrypted backup.
+  critical workers, encrypted backup, settlement freshness, official lines,
+  weekly recap, week handoff, and home page content.
 - Review unresolved Commissioner incidents; do not delete open or unresolved
   records.
 - Run `npm run test:all`, `npm run lint`, and `npm run build` before a release.
