@@ -23,6 +23,10 @@ test("a healthy probe answer may sit in the CDN for its own window; a failing on
   assert.ok(HEALTH_CDN_SECONDS.settlement < 6 * 3600);
   assert.ok(HEALTH_CDN_SECONDS.bowlPool <= 3600);
   assert.ok(HEALTH_CDN_SECONDS.backup < 8 * 86400);
+  // The pool-integrity probes stay inside the grace each one enforces itself (20 minutes, 3 hours, 2 hours).
+  assert.ok(HEALTH_CDN_SECONDS.lines < 20 * 60);
+  assert.ok(HEALTH_CDN_SECONDS.recap < 3 * 3600);
+  assert.ok(HEALTH_CDN_SECONDS.weekHandoff < 2 * 3600);
 });
 
 test("rule: every cached probe takes its Cache-Control from the shared helper with its own window", () => {
@@ -32,6 +36,7 @@ test("rule: every cached probe takes its Cache-Control from the shared helper wi
     "src/app/api/health/bowl-pool/route.ts": "HEALTH_CDN_SECONDS.bowlPool",
     "src/app/api/health/backup/route.ts": "HEALTH_CDN_SECONDS.backup",
     "src/lib/critical-worker-health-route.ts": "criticalWorkerCdnSeconds(worker)",
+    "src/lib/pool-integrity-route.ts": "healthProbeCacheControl(outcome.healthy, cdnSeconds)",
   };
   for (const [file, key] of Object.entries(probes)) assert.ok(read(file).includes(`healthProbeCacheControl(`) && read(file).includes(key), file);
 });

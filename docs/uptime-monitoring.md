@@ -1,8 +1,9 @@
 # Uptime monitoring
 
-UptimeRobot is an independent alarm system. It monitors eight selected public,
-opaque health contracts; the app also exposes an aggregate worker contract for
-deployment smoke checks. Additional page monitors do not replace these.
+UptimeRobot is an independent alarm system. It monitors eleven selected public,
+opaque health contracts and one page-content check; the app also exposes an
+aggregate worker contract for deployment smoke checks. The page-content check
+does not replace the health contracts.
 The live monitor count is shown under **Commissioner → Connected systems**,
 while UptimeRobot remains the source of truth for exact monitor names, URLs,
 contacts, and current incidents.
@@ -19,12 +20,18 @@ contacts, and current incidents.
 | PickemJB encrypted backup | `https://pickemjb.vercel.app/api/health/backup` | The latest encrypted-backup workflow completed successfully and passed its restore check within eight days | GitHub Actions → **Encrypted database backup** |
 | PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
 | PickemJB settlement freshness | `https://pickemjb.vercel.app/api/health/settlement` | No game remains unsettled more than six hours after kickoff | **Commissioner → Automation Health** and score-worker logs |
+| PickemJB official lines | `https://pickemjb.vercel.app/api/health/lines` | Every game past its lock time has an official line, and no game locking within three hours is without a captured line (it would lock as a pick'em) | **Commissioner → Automation Health**, the line-lock worker logs and the odds provider quota |
+| PickemJB weekly recap | `https://pickemjb.vercel.app/api/health/recap` | The Tuesday recap for the latest fully settled week was sent (or deliberately cancelled) within three hours of its due time | **Commissioner → Reminders** and reminder-worker logs |
+| PickemJB week handoff | `https://pickemjb.vercel.app/api/health/week-handoff` | A fully settled and graded week handed over to the next one within two hours of its scheduled time (a postponed game or a game still being played is a documented hold and does not alarm) | **Commissioner → Automation Health** and score-worker logs |
+| PickemJB home page content | `https://pickemjb.vercel.app/` (keyword monitor) | The home page is served and still contains the text "Lead Pipe Locks"; alerts when the text is missing | Vercel deployment and the latest production build |
 
 Use HTTP/S monitors and treat a non-200 response, timeout, or missed heartbeat
 as down. Check intervals: five minutes for the core production, line-lock,
 score and reminder monitors; fifteen minutes for the automation heartbeat;
-thirty minutes for settlement and Bowl Pool; sixty minutes for the backup
-(each well inside its own grace window; every check that reaches a function
+thirty minutes for settlement, Bowl Pool and the three pool-integrity monitors
+(official lines, weekly recap, week handoff); sixty minutes for the backup;
+five minutes for the home page content check, which is a static page served
+by the CDN (each well inside its own grace window; every check that reaches a function
 costs Vercel CPU, and on 2026-10-30 the probes were 36% of it). Configure both outage and recovery
 notifications. Keep the Commissioner alert destination current.
 
@@ -33,14 +40,15 @@ at Vercel's CDN, so most five-minute checks never start a function: automation
 heartbeat for 20 minutes, the line-lock worker probe (and the all-workers probe)
 for 10 minutes, the reminder worker probe for 15, the score worker probe for 25
 (each inside its own 12, 20 and 45-minute grace), settlement and Bowl Pool for an
-hour, and backup for six hours. Vercel's CDN keeps a copy per region and the
+hour, backup for six hours, official lines for 15 minutes, the weekly recap for an
+hour and the week handoff for 30 minutes. Vercel's CDN keeps a copy per region and the
 monitors check from several places, so a window saves fewer calls than its
 length suggests. Each window sits well inside that
 probe's own grace period. A failing (503) answer is never cached, and the core
 `/api/health` probe always runs live. A newly failing signal can therefore show
 up to one cache window later than before.
 
-All eight endpoints deliberately return only HTTP 200 or 503. They never expose
+All eleven endpoints deliberately return only HTTP 200 or 503. They never expose
 database names, worker details, GitHub details, application secrets, or player
 information. Do not weaken that opacity to make an external status page more
 descriptive.
@@ -70,6 +78,14 @@ and returns to HTTP 200 on the first healthy evaluation.
   restore check; it does not replace a deliberate isolated restore rehearsal.
 - The Bowl Pool heartbeat proves the Bowl Pool contract is available; before
   the launch gate it intentionally stays healthy with placeholder data.
+- The three pool-integrity monitors prove outcomes, not jobs: that games got
+  their official lines, that the Tuesday recap went out, and that a finished
+  week moved on. They stay healthy when there is nothing to check (off-season,
+  a week still being played), and they report only after the work was due plus
+  a grace (20 minutes for a line, 3 hours for the recap, 2 hours for the
+  handoff) so a late provider or one missed job run never wakes the
+  Commissioner. Their detail is written to the server log, never to the
+  monitor; read it in Vercel's logs for `Pool integrity check`.
 
 This separation matters: one red monitor should identify the failed layer
 without turning an ordinary provider delay into a whole-site outage.
