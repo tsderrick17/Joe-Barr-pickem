@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The scheduler's run log is pruned weekly
+
+pg_cron records every run in `cron.job_run_details` and never removes them; with the every-minute line-lock gate that is about 2,200 rows a day, and by 2026-10-30 the log was 113 MB of the database's 160 MB (Free plan limit 500 MB, reached around mid-2027 at that pace). The weekly `prune_operational_storage` now also deletes run-log rows older than 7 days (it reports them as `cron_run_log`), and the migration clears the backlog once. The cron schema is reached through dynamic SQL only where it exists, and a missing privilege is a warning, so neither the weekly cleanup nor the annual turnover that calls it can fail because of the log.
+
 ## 2026-10-30 - Functions run next to the database
 
 An efficiency audit read Vercel and Supabase directly. Supabase is in West US (Oregon), but the functions ran in Vercel's default region, Washington DC (`iad1`), so every database call crossed the country, and a player request makes 8 to 16 of them, partly in sequence. `vercel.json` now pins the functions to Portland (`pdx1`). Before numbers, for the later comparison: Fluid Active CPU 2 h 17 m for Sep 30 to Oct 30 (64K invocations); last 12 h 888 invocations and 90.5 s of CPU (crons 51%, health probes 36%, players and admin 13%); `/api/health` answered in 0.37 to 0.53 s from Portland against 0.06 s for a static page; database 159.78 MB of 500 MB, 113 MB of it the pg_cron run log; Speed Insights `/board` desktop score 85. The rest of the audit's changes follow in their own pull requests.
