@@ -323,7 +323,7 @@ measure database requests or end-to-end route time.
   message twice or one its email choices did not allow. A phone problem is logged and never changes the email result.
   The number on the app icon is the player's **picks still to make this week** (`picksStillToMake`, `src/lib/picks-to-make-rule.js`): the Pick'em picks the week allows minus those made (never more than the open,
   unpicked games), plus one while they are still in Survivor and have not picked; zero when nothing is open. It is set three ways: by each mirrored notification (so it is right with the app
-  closed), when the Home Screen app opens or is returned to (`/api/badge`, at most once a minute), and right after picks are saved. Bowl Pool picks are not counted yet.
+  closed), when the Home Screen app opens or is returned to (`/api/badge`, at most once every five minutes), and right after picks are saved. Bowl Pool picks are not counted yet.
 - Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen,
   where it opens like an app and can receive notifications. A slim banner under the header of every page shows on any phone that is not running the
   Home Screen app, with the steps for that phone and browser one tap away ("Show me how"): Safari on an iPhone (Share, Add to Home Screen, leave Open as

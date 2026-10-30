@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { executeAuthenticatedRequest } from "@/lib/authenticated-request";
 import { createSharedReadCache } from "@/lib/shared-read-cache";
+import { takeEarlyRead, untilAborted } from "@/lib/early-read.js";
 
 const SESSION_REFRESH_WINDOW_MS = 60_000;
 const TRANSIENT_READ_RETRY_DELAY_MS = 650;
@@ -106,6 +107,21 @@ export async function fetchWithSession(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
+  // The page's first read may already be on its way, started in <head> before this code arrived (see early-read.js).
+  const early = takeEarlyRead(input, init);
+  if (early) {
+    // Still start the sign-in client now, as the page's own request would have: the page's next request (the Bowl
+    // Card's, the navigation's) then finds the session ready instead of waiting for it to start.
+    void getFreshSession().catch(() => undefined);
+    try {
+      const response = await untilAborted(early, init.signal);
+      if (response.ok) return response;
+    } catch (error) {
+      // The page gave up waiting (a hung request on a backgrounded phone): it retries by itself, as with its own request.
+      if (init.signal?.aborted) throw error;
+      /* otherwise fall back to the page's own request */
+    }
+  }
   return sharedReads.run(input, init, () => fetchWithSessionOnce(input, init));
 }
 

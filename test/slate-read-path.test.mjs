@@ -13,5 +13,6 @@ test("Slate loads do not wait on pool-wide maintenance or unpublished picks", as
   assert.doesNotMatch(route, /await eliminateSurvivorNoPicks\(\)/);
   assert.match(route, /const startedGameIds = \(games\)/);
   assert.match(route, /\.in\("game_id", startedGameIds\)/);
-  assert.match(route, /if \(period\.period_type !== "playoff"\)/);
+  // Survivor is read only outside the playoffs.
+  assert.match(route, /period\.period_type !== "playoff" \? readSurvivorSelection\(/);
 });

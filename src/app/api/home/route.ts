@@ -45,7 +45,11 @@ export async function GET(request: NextRequest) {
   );
   const viewer = access.player;
 
-  const [seasonResult, playersResult] = await Promise.all([
+  // The reads run in as few rounds as their dependencies allow (each round waits on the database once): the season,
+  // the players and the championship ledger; then the season's weeks; then everything that needs only the weeks
+  // (picks, Survivor, the snapshot's release week, playoff eligibility); then the labels for this week's picks.
+  // Failures are still judged in the order the page has always reported them.
+  const [seasonResult, playersResult, championshipsResult] = await Promise.all([
     supabaseAdmin
       .from("seasons")
       .select("id, year, state")
@@ -56,6 +60,10 @@ export async function GET(request: NextRequest) {
       .select("id, first_name")
       .eq("active", true)
       .order("first_name"),
+    supabaseAdmin
+      .from("pool_championships")
+      .select("player_id, pool, season_year")
+      .order("season_year", { ascending: false }),
   ]);
 
   if (seasonResult.error) {
@@ -77,11 +85,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: periods, error: periodsError } = await supabaseAdmin
-    .from("scoring_periods")
-    .select("id, display_name, display_order, status, period_type, max_picks")
-    .eq("season_id", season.id)
-    .order("display_order");
+  const [{ data: periods, error: periodsError }, { data: championSeason }] = await Promise.all([
+    supabaseAdmin
+      .from("scoring_periods")
+      .select("id, display_name, display_order, status, period_type, max_picks")
+      .eq("season_id", season.id)
+      .order("display_order"),
+    // A trophy is decorative, never a reason to make the whole pool
+    // unavailable while a production migration is still catching up.
+    supabaseAdmin
+      .from("seasons")
+      .select("survivor_champion_player_id")
+      .eq("id", season.id)
+      .maybeSingle(),
+  ]);
 
   if (periodsError || !periods?.length) {
     return NextResponse.json(
@@ -101,14 +118,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // A trophy is decorative, never a reason to make the whole pool
-  // unavailable while a production migration is still catching up.
-  const { data: championSeason } = await supabaseAdmin
-    .from("seasons")
-    .select("survivor_champion_player_id")
-    .eq("id", season.id)
-    .maybeSingle();
-
   const periodIds = periods.map((period) => period.id);
 
   const { data: players, error: playersError } = playersResult;
@@ -119,6 +128,51 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  const playoffWeek = currentWeek.period_type === "playoff";
+  const forfeitsRead = playoffWeek
+    ? loadForfeitedPlayerIds(season.id).then((ids) => ({ ok: true as const, ids }), () => ({ ok: false as const }))
+    : null;
+  const eligibilityRead = playoffWeek && currentWeek.status === "active"
+    ? loadPlayoffEligibility(season.id, currentWeek.id, players).then((eligibility) => ({ ok: true as const, eligibility }), () => ({ ok: false as const }))
+    : null;
+  const survivorRead = Promise.all([
+    supabaseAdmin
+      .from("survivor_entries")
+      .select("id, player_id, status, eliminated_at, eliminated_scoring_period_id")
+      .eq("season_id", season.id),
+    readAllPages((from, to) => supabaseAdmin
+      .from("survivor_picks")
+      .select("survivor_entry_id, game_id, selected_team_id, scoring_period_id, result")
+      .in("scoring_period_id", periodIds)
+      .neq("result", "void")
+      .order("id")
+      .range(from, to)),
+  ]).then(async ([entriesResult, picksResult]) => {
+    if (entriesResult.error || picksResult.error) return { entriesResult, picksResult, labels: null };
+    const survivorGameIds = [...new Set((picksResult.data ?? []).map((pick) => pick.game_id))];
+    const survivorTeamIds = [...new Set((picksResult.data ?? []).map((pick) => pick.selected_team_id))];
+    const labels = await Promise.all([
+      survivorGameIds.length
+        ? supabaseAdmin.from("games").select("id, kickoff_at").in("id", survivorGameIds)
+        : Promise.resolve({ data: [], error: null }),
+      survivorTeamIds.length
+        ? supabaseAdmin.from("teams").select("id, full_name, abbreviation").in("id", survivorTeamIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    return { entriesResult, picksResult, labels };
+  });
+  // During Week 6 the snapshot opens once every Week 6 Pick'em pick has settled. This one extra read happens only then.
+  const releaseWeek = snapshotReleaseWeek(periods);
+  // Promise.resolve starts a query now (a query only runs once something waits on it).
+  const releaseGamesRead = releaseWeek
+    ? Promise.resolve(supabaseAdmin.from("games").select("id, kickoff_at").eq("scoring_period_id", releaseWeek.id))
+    : null;
+  const releasePicksRead = releaseWeek && releaseWeek.id !== currentWeek.id
+    ? readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, result").eq("scoring_period_id", releaseWeek.id).neq("result", "void").order("id").range(from, to))
+    : null;
+  // A page that returns early never waits on these; an unexpected failure must not go unhandled.
+  for (const read of [survivorRead, releaseGamesRead, releasePicksRead]) read?.catch(() => undefined);
 
   // Two narrow reads instead of one wide one: this week's picks in full (the pad shows them), and only the winning
   // picks' player ids for the season totals. The totals never needed the other columns, or the losses.
@@ -188,10 +242,7 @@ export async function GET(request: NextRequest) {
   }
 
   // A missing decorative ledger must never take down the real standings.
-  const { data: championshipRows, error: championshipsError } = await supabaseAdmin
-    .from("pool_championships")
-    .select("player_id, pool, season_year")
-    .order("season_year", { ascending: false });
+  const { data: championshipRows, error: championshipsError } = championshipsResult;
   if (championshipsError) {
     console.warn("Championship history is unavailable.", { code: championshipsError.code });
   }
@@ -208,16 +259,15 @@ export async function GET(request: NextRequest) {
 
   let playoffEliminatedPlayerIds = new Set<string>();
   let forfeitedPlayerIds = new Set<string>();
-  if (currentWeek.period_type === "playoff") {
-    try { forfeitedPlayerIds = await loadForfeitedPlayerIds(season.id); } catch { return NextResponse.json({ error: "Playoff forfeits could not be loaded safely." }, { status: 503 }); }
+  if (forfeitsRead) {
+    const forfeits = await forfeitsRead;
+    if (!forfeits.ok) return NextResponse.json({ error: "Playoff forfeits could not be loaded safely." }, { status: 503 });
+    forfeitedPlayerIds = forfeits.ids;
   }
-  if (currentWeek.period_type === "playoff" && currentWeek.status === "active") {
-    try {
-      const eligibility = await loadPlayoffEligibility(season.id, currentWeek.id, players);
-      playoffEliminatedPlayerIds = eligibility.eliminatedPlayerIds;
-    } catch {
-      return NextResponse.json({ error: "Playoff eligibility could not be calculated safely." }, { status: 503 });
-    }
+  if (eligibilityRead) {
+    const eligibility = await eligibilityRead;
+    if (!eligibility.ok) return NextResponse.json({ error: "Playoff eligibility could not be calculated safely." }, { status: 503 });
+    playoffEliminatedPlayerIds = eligibility.eligibility.eliminatedPlayerIds;
   }
 
   const survivorChampionPlayerId = survivorChampionDisplayId({
@@ -301,22 +351,9 @@ export async function GET(request: NextRequest) {
   let survivorGames: GameRow[] = [];
 
   {
-    const [
-      { data: survivorEntries, error: survivorEntriesError },
-      { data: survivorPicks, error: survivorPicksError },
-    ] = await Promise.all([
-      supabaseAdmin
-        .from("survivor_entries")
-        .select("id, player_id, status, eliminated_at, eliminated_scoring_period_id")
-        .eq("season_id", season.id),
-      readAllPages((from, to) => supabaseAdmin
-        .from("survivor_picks")
-        .select("survivor_entry_id, game_id, selected_team_id, scoring_period_id, result")
-        .in("scoring_period_id", periodIds)
-        .neq("result", "void")
-        .order("id")
-        .range(from, to)),
-    ]);
+    const survivor = await survivorRead;
+    const { data: survivorEntries, error: survivorEntriesError } = survivor.entriesResult;
+    const { data: survivorPicks, error: survivorPicksError } = survivor.picksResult;
 
     if (survivorEntriesError || survivorPicksError) {
       survivorAvailable = false;
@@ -327,29 +364,10 @@ export async function GET(request: NextRequest) {
         picksCode: survivorPicksError?.code,
       });
     } else {
-      const survivorGameIds = [
-        ...new Set((survivorPicks ?? []).map((pick) => pick.game_id)),
-      ];
-      const survivorTeamIds = [
-        ...new Set((survivorPicks ?? []).map((pick) => pick.selected_team_id)),
-      ];
       const [
         { data: survivorGameRows, error: survivorGamesError },
         { data: survivorTeams, error: survivorTeamsError },
-      ] = await Promise.all([
-        survivorGameIds.length
-          ? supabaseAdmin
-              .from("games")
-              .select("id, kickoff_at")
-              .in("id", survivorGameIds)
-          : Promise.resolve({ data: [], error: null }),
-        survivorTeamIds.length
-          ? supabaseAdmin
-              .from("teams")
-              .select("id, full_name, abbreviation")
-              .in("id", survivorTeamIds)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
+      ] = survivor.labels!;
 
       if (survivorGamesError || survivorTeamsError) {
         survivorAvailable = false;
@@ -443,15 +461,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // During Week 6 the snapshot opens once every Week 6 Pick'em pick has settled. This one extra read happens only then.
   let snapshotReleased = seasonSnapshotReleased(periods);
-  const releaseWeek = snapshotReleaseWeek(periods);
-  if (releaseWeek) {
+  if (releaseWeek && releaseGamesRead) {
     const [weekGames, weekPicks] = await Promise.all([
-      supabaseAdmin.from("games").select("id, kickoff_at").eq("scoring_period_id", releaseWeek.id),
-      releaseWeek.id === currentWeek.id
-        ? Promise.resolve({ data: currentWeekPicks, error: null })
-        : readAllPages((from, to) => supabaseAdmin.from("picks").select("player_id, game_id, result").eq("scoring_period_id", releaseWeek.id).neq("result", "void").order("id").range(from, to)),
+      releaseGamesRead,
+      releasePicksRead ?? Promise.resolve({ data: currentWeekPicks, error: null }),
     ]);
     // Unknown is closed: a failed read keeps the snapshot hidden, never takes down the Standings.
     snapshotReleased = !weekGames.error && !weekPicks.error && activeWeekState({

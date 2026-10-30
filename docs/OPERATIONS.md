@@ -213,6 +213,16 @@ the Slate's first request has the Standings' 15-second limit.
 
 The Trophy Room's data is built once a minute and shared by every page open.
 
+The Standings' and the Slate's first data read starts before the page's code has
+arrived: a small inline script in `<head>` (`src/lib/early-read.js`) reads the
+signed-in session and starts exactly the request the page will make, and the page
+takes that answer instead of asking again (one request either way; anything
+unusual falls back to the page's own request). The loading football's picture is
+fetched once the page has started (`FootballWarmup`), not preloaded from `<head>`
+where it competed with the page's code on a slow connection.
+`node scripts/measure-board-vitals.mjs` measures the Slate's load, layout shift and
+tap response on an emulated slow phone (see `docs/RESPONSE_COST_BASELINE.md`).
+
 The functions run in Vercel's Portland region (`pdx1`, set in `vercel.json`), next
 to the Supabase database (West US, Oregon). A player request makes 8 to 16
 database calls, partly one after another; from Vercel's default Washington DC
