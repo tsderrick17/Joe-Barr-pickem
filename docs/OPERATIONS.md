@@ -37,7 +37,11 @@ backup unless recovery is genuinely required.
 Retention policy: scoring, official picks, locks, seasons, championships, final
 save receipts, and email receipts are never automatically deleted. A weekly
 database-local guardrail removes only `sync_runs` and resolved
-watchdog/schedule-review operational records after 180 days. At the certified
+watchdog/schedule-review operational records after 180 days, and pg_cron's own
+run log (`cron.job_run_details`, about 2,200 rows a day, which had grown to
+113 MB) after 7 days. Postgres reuses the freed space at once; the reported
+database size drops only after a one-off `vacuum full cron.job_run_details;` in
+the Supabase SQL editor. At the certified
 August 1 turnover, earlier pre-kickoff pick-save snapshots that a later save
 replaced and redundant preliminary spread snapshots are removed; the final
 snapshot and every official competition record remain. It never calls a
@@ -217,6 +221,12 @@ fetched once the page has started (`FootballWarmup`), not preloaded from `<head>
 where it competed with the page's code on a slow connection.
 `node scripts/measure-board-vitals.mjs` measures the Slate's load, layout shift and
 tap response on an emulated slow phone (see `docs/RESPONSE_COST_BASELINE.md`).
+
+The functions run in Vercel's Portland region (`pdx1`, set in `vercel.json`), next
+to the Supabase database (West US, Oregon). A player request makes 8 to 16
+database calls, partly one after another; from Vercel's default Washington DC
+region each call crossed the country (about 65 ms). Keep the two in the same
+region if either ever moves.
 
 Fluid Active CPU is modelled in `src/lib/vercel-usage-estimate.js` and calibrated
 to Vercel's meter (Hobby limit 4 hours a month): over 4 hours on 2026-10-02, 3 h 16 m
