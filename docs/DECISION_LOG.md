@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - iPhone haptics: the finger must flip the switch
+
+The owner's iPhone (iPhone 16, iOS 26.6.1, Home Screen app, System Haptics on) felt nothing in the Feel test. Cause: in iOS 26.5 Apple stopped the switch tick when a page flips the switch from code (WebKit only ticks for a real finger's click; the open-source ios-haptics library documents the same break). Updating iOS does not help. What still works is an invisible label with a hidden switch laid over the button, so the finger's own tap flips it (`src/components/haptic-tap.tsx`, the approach ios-haptics 3.2 adopted). That allows exactly one tick per tap and none after a wait or mid-drag, so on an iPhone the choices tick and success, warning, ratchet and the pull's lock-in stay silent; the Feel test's timing experiments were removed and a plain switch added to compare. Android is unchanged. If even this stops working in a later iOS, iPhone haptics are dropped and Android keeps them.
+
 ## 2026-10-30 - Haptics start with a Commissioner-only Feel test
 
 Owner wants a thoughtful, satisfying haptic layer but cannot test every phone (only an iPhone). The plan is five feels with one meaning each, used the same everywhere (see PROJECT_REFERENCE). Because iPhone support is a workaround that is unproven inside a Home Screen app, step 1 ships only a Commissioner-only "Feel test" on the Notifications page: a button per feel, a pretend pull-chain (a notch per count, a lock-in on letting go) and, on an iPhone, experiments (a tick one second after a tap, three quick ticks, success as a tick) so the owner can feel what an iPhone actually allows. The Android patterns are untested by the owner (no Android phone): they are conventional short patterns, kept in one table in `src/lib/haptics.js` for tuning. Rolling the feels out to the rest of the app, with a Vibration on/off switch, waits until the owner has felt this.
