@@ -7,6 +7,7 @@ import "./globals.css";
 import SiteNav from "@/components/site-nav";
 import { AddToHomeScreen } from "@/components/add-to-home-screen";
 import AppBadge from "@/components/app-badge";
+import TurnOnNotifications from "@/components/turn-on-notifications";
 import PoolChatDock from "@/components/pool-chat-dock";
 import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
@@ -59,6 +60,7 @@ export default function RootLayout({
         <PullToRefresh />
         <SiteNav />
         <AddToHomeScreen variant="banner" />
+        <TurnOnNotifications />
         <AppBadge />
         {children}
         <PoolChatDock />

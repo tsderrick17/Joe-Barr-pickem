@@ -2,27 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import { applicationServerKey, phoneNotificationStatus } from "@/lib/phone-push.js";
+import { phoneNotificationStatus } from "@/lib/phone-push.js";
+import { currentSubscription, failureMessage, forgetSubscription, readPhoneFacts, saveSubscription, turnOnPhoneNotifications } from "@/lib/phone-push-client";
 
 type Status = "checking" | "unsupported" | "not-installed" | "blocked" | "on" | "off";
-
-const jsonHeaders = { "Content-Type": "application/json" };
-
-function readFacts() {
-  const hasPush = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-  const isIPhone = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const standalone = (navigator as { standalone?: boolean }).standalone === true || window.matchMedia("(display-mode: standalone)").matches;
-  return { hasPush, isIPhone, standalone, permission: hasPush ? Notification.permission : "default" };
-}
-
-async function currentSubscription() {
-  const registration = await navigator.serviceWorker.getRegistration("/");
-  return (await registration?.pushManager.getSubscription()) ?? null;
-}
-
-async function failureMessage(response: Response, fallback: string) {
-  try { return ((await response.json()) as { error?: string }).error ?? fallback; } catch { return fallback; }
-}
 
 const buttonClass = "min-h-12 px-5 py-3 font-bold transition disabled:opacity-50";
 const primary = `${buttonClass} bg-[#007e72] text-white shadow-[0_2px_0_#07564f] hover:bg-[#086f66]`;
@@ -38,12 +21,12 @@ export function PhoneNotifications() {
   useEffect(() => {
     let active = true;
     void (async () => {
-      const facts = readFacts();
+      const facts = readPhoneFacts();
       const subscription = facts.hasPush ? await currentSubscription().catch(() => null) : null;
       if (!active) return;
       setStatus(phoneNotificationStatus({ ...facts, subscribed: subscription !== null }));
       // Keep the saved copy of this phone's subscription fresh (a browser can replace it without telling anyone).
-      if (subscription && facts.permission === "granted") void fetchWithSession("/api/push/subscription", { method: "PUT", headers: jsonHeaders, body: JSON.stringify(subscription.toJSON()) }).catch(() => undefined);
+      if (subscription && facts.permission === "granted") void saveSubscription(subscription).catch(() => undefined);
     })();
     return () => { active = false; };
   }, []);
@@ -57,19 +40,9 @@ export function PhoneNotifications() {
   }
 
   const turnOn = () => run(async () => {
-    // The permission question has to be asked straight from the tap, before anything else is waited on.
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") { setStatus(permission === "denied" ? "blocked" : "off"); return; }
-    const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-    await navigator.serviceWorker.ready;
-    const keyResponse = await fetchWithSession("/api/push/key");
-    if (!keyResponse.ok) throw new Error(await failureMessage(keyResponse, "Notifications are not available right now."));
-    const { publicKey } = await keyResponse.json() as { publicKey: string };
-    const subscription = (await registration.pushManager.getSubscription()) ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey(publicKey) });
-    const saved = await fetchWithSession("/api/push/subscription", { method: "PUT", headers: jsonHeaders, body: JSON.stringify(subscription.toJSON()) });
-    if (!saved.ok) throw new Error(await failureMessage(saved, "Notifications could not be turned on."));
-    setStatus("on");
-    setMessage("Notifications are on for this phone.");
+    const outcome = await turnOnPhoneNotifications();
+    setStatus(outcome);
+    if (outcome === "on") setMessage("Notifications are on for this phone.");
   }, "Notifications could not be turned on.");
 
   const turnOff = () => run(async () => {
@@ -77,7 +50,7 @@ export function PhoneNotifications() {
     if (subscription) {
       const { endpoint } = subscription;
       await subscription.unsubscribe();
-      await fetchWithSession("/api/push/subscription", { method: "DELETE", headers: jsonHeaders, body: JSON.stringify({ endpoint }) });
+      await forgetSubscription(endpoint);
     }
     setStatus("off");
     setMessage("Notifications are off for this phone.");

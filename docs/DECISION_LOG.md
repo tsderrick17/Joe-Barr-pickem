@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Notifications are one tap away inside the app
+
+Owner: adding the app and turning on notifications must be effortless for players who are not comfortable with phones. After adding the app, a player used to have to find the name menu, then Notifications, then the button. Now the Home Screen app shows a one-tap banner in the same place and navy/gold look as the Add to Home Screen banner (which never shows inside the app, so they never meet): Turn on asks the phone straight from the tap and saves the subscription. A phone that says no gets a plain "you can turn them on any time under Notifications" and is not asked again; Not now waits 14 days, like the install banner.
+
 ## 2026-10-29 - Night mode official Slate lines are a brighter teal
 
 The official (teal) spread lines, the "Teal lines" note and the selection-chip lines were only 2.9:1 to 4.2:1 against the dark night rows (AA needs 4.5:1). Night mode now sets its own `--official-line-color` (`#26b3a5`, 5.7:1 or better on every night row); the selection chip uses it too instead of the dark day teal. Day mode is unchanged. A browser test checks every official line on the night Slate to 4.5:1, since the screenshot gate's per-pixel tolerance cannot see a colour shift this small.
