@@ -37,7 +37,11 @@ backup unless recovery is genuinely required.
 Retention policy: scoring, official picks, locks, seasons, championships, final
 save receipts, and email receipts are never automatically deleted. A weekly
 database-local guardrail removes only `sync_runs` and resolved
-watchdog/schedule-review operational records after 180 days. At the certified
+watchdog/schedule-review operational records after 180 days, and pg_cron's own
+run log (`cron.job_run_details`, about 2,200 rows a day, which had grown to
+113 MB) after 7 days. Postgres reuses the freed space at once; the reported
+database size drops only after a one-off `vacuum full cron.job_run_details;` in
+the Supabase SQL editor. At the certified
 August 1 turnover, earlier pre-kickoff pick-save snapshots that a later save
 replaced and redundant preliminary spread snapshots are removed; the final
 snapshot and every official competition record remain. It never calls a
