@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AddToHomeScreen } from "@/components/add-to-home-screen";
+import { HapticFeelTest } from "@/components/haptic-feel-test";
 import { PhoneNotifications } from "@/components/phone-notifications";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
@@ -159,6 +160,7 @@ export default function ProfilePage() {
     <h1 className="font-serif text-4xl font-bold">Notifications</h1>
     <AddToHomeScreen variant="card" />
     <PhoneNotifications />
+    {profile?.isCommissioner ? <HapticFeelTest /> : null}
     <form className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" onSubmit={save}>
       <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
       <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-3 py-2 outline-none focus:border-[#007e72]" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
