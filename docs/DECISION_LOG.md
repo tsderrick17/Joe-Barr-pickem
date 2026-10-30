@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The app badge re-reads at most every five minutes
+
+Coming back to the Home Screen app re-read the picks-to-make number at most once a minute, and each read costs about seven database requests (the sign-in check, the player, the active week, its games, picks, season and Survivor rows). The number only changes when picks are saved (that refreshes it at once, unchanged) or a game kicks off, so a return now re-reads it at most every five minutes.
+
 ## 2026-10-30 - Uptime probes reach a function less often
 
 The probes were 36% of Vercel CPU on 2026-10-30: the three worker probes ran about 100 times each in 12 hours despite a 10-minute CDN window, because the CDN keeps a copy per region and the monitors check from several places. Each worker probe now keeps a healthy answer for its own grace window: line locks 10 minutes (12-minute grace, unchanged), reminders 15 (20-minute grace), scores 25 (45-minute grace). The slow monitors are checked less often in UptimeRobot (automation 15 minutes, settlement and Bowl Pool 30, backup 60); that setting lives in UptimeRobot, not in code. A failing answer is still never cached, and the core `/api/health` probe still runs live every time.
