@@ -12,6 +12,17 @@ function parseColumns(text) {
 
 export function createFakeDatabase(tables, { rpc = {} } = {}) {
   const requests = [];
+  // Every query answers on the next turn of the event loop, together with every other query started in the same
+  // turn, like a database that answers concurrent queries in one round trip. `rounds` counts those turns: how many
+  // times a read had to wait on the database one after another.
+  let rounds = 0;
+  let waiting = [];
+  function answerLater(answer) {
+    return new Promise((resolve) => {
+      if (waiting.length === 0) setImmediate(() => { rounds += 1; const ready = waiting; waiting = []; for (const finish of ready) finish(); });
+      waiting.push(() => resolve(answer()));
+    });
+  }
 
   function record(entry) {
     requests.push(entry);
@@ -43,7 +54,7 @@ export function createFakeDatabase(tables, { rpc = {} } = {}) {
       update() { state.write = "update"; return builder; },
       upsert() { state.write = "upsert"; return builder; },
       delete() { state.write = "delete"; return builder; },
-      then(resolve, reject) { return Promise.resolve(run()).then(resolve, reject); },
+      then(resolve, reject) { return answerLater(run).then(resolve, reject); },
     };
 
     function run() {
@@ -68,13 +79,16 @@ export function createFakeDatabase(tables, { rpc = {} } = {}) {
 
   return {
     requests,
+    get rounds() { return rounds; },
     client: {
       from,
       rpc(name, args) {
         const handler = rpc[name];
-        const data = typeof handler === "function" ? handler(args) : (handler ?? null);
-        record({ kind: "rpc", table: name, op: "rpc", rows: Array.isArray(data) ? data.length : data == null ? 0 : 1, bytes: JSON.stringify(data ?? null).length });
-        return Promise.resolve({ data, error: null });
+        return answerLater(() => {
+          const data = typeof handler === "function" ? handler(args) : (handler ?? null);
+          record({ kind: "rpc", table: name, op: "rpc", rows: Array.isArray(data) ? data.length : data == null ? 0 : 1, bytes: JSON.stringify(data ?? null).length });
+          return { data, error: null };
+        });
       },
       auth: { admin: {} },
     },
