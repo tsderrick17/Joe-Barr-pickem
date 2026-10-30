@@ -44,10 +44,10 @@
 .bowl-crest { text-align: center; }
 .bowl-crest-ornament { align-items: center; display: flex; gap: .9rem; justify-content: center; }
 .bowl-crest-ornament span { background: var(--bowl-gold); flex: 1; height: 1px; max-width: 9rem; }
-/* The gold rules sit in place when a page loads; only the Assets page draws them out (to tune the motion). */
-.asset-card .bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 2840ms) cubic-bezier(.22, .61, .36, 1) var(--crest-rule-delay, 1000ms) both; }
+/* The gold rules sit in place when a page loads; only the Workshop draws them out (to tune the motion). */
+.workshop-stage .bowl-crest-ornament span { animation: bowl-rule-draw var(--crest-rule-ms, 2840ms) var(--crest-rule-ease, cubic-bezier(.22, .61, .36, 1)) var(--crest-rule-delay, 1000ms) both; }
 @media (prefers-reduced-motion: reduce) {
-  .asset-card .bowl-crest-ornament span { animation: none; }
+  .workshop-stage .bowl-crest-ornament span { animation: none; }
 }
 .bowl-crest-ornament i { color: var(--bowl-gold); font-size: .72rem; font-style: normal; letter-spacing: .5em; padding-left: .5em; }
 .bowl-crest-title {
@@ -133,7 +133,7 @@
 .bowl-megaphone-handle-edge { fill: none; stroke: rgba(0, 0, 0, .38); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.2; }
 .bowl-megaphone-name { dominant-baseline: central; fill: var(--megaphone-ink); font-family: var(--font-graduate), Georgia, serif; paint-order: stroke; stroke: rgba(0, 0, 0, .25); stroke-width: .5px; text-anchor: middle; }
 .bowl-team-pick { display: inline-block; max-width: 100%; }
-.bowl-team-pick.is-new .bowl-megaphone-art { animation: bowl-megaphone-raise var(--megaphone-raise-ms, 620ms) cubic-bezier(.18, .8, .2, 1) both; }
+.bowl-team-pick.is-new .bowl-megaphone-art { animation: bowl-megaphone-raise var(--megaphone-raise-ms, 620ms) var(--megaphone-raise-ease, cubic-bezier(.18, .8, .2, 1)) both; }
 @keyframes bowl-megaphone-raise {
   from { opacity: 0; transform: translateY(.55rem) rotate(-36deg) scale(.45); }
   55% { opacity: 1; transform: rotate(-1deg) scale(1.1); }
