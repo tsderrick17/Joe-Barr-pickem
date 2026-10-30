@@ -31,8 +31,11 @@ export default function SiteNav() {
     const frame = window.requestAnimationFrame(() => {
       setIsNightMode(nightMode);
     });
+    // Another switch (the Workshop's) changed the theme: show the same here.
+    const follow = () => setIsNightMode(document.documentElement.dataset.theme === "night");
+    window.addEventListener("pickem-theme-change", follow);
 
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("pickem-theme-change", follow); };
   }, []);
 
   useEffect(() => {

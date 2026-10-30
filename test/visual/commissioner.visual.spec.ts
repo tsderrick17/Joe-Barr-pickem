@@ -45,7 +45,6 @@ const PANELS: Array<{ id: string; tab: number; states: string[]; open?: string[]
   { id: "performance", tab: 1, states: ["healthy"] },
   { id: "season", tab: 2, states: ["healthy"] },
   { id: "bowl-pool", tab: 3, states: ["healthy", "attention"] },
-  { id: "workshop", tab: 4, states: ["healthy"] },
 ];
 
 for (const panel of PANELS) {
@@ -75,10 +74,6 @@ for (const panel of PANELS) {
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
           await page.waitForLoadState("networkidle");
-          // The loading football is stepped by script, which a screenshot cannot pause: hold it on its first frame.
-          if (panel.id === "workshop") await page.addStyleTag({ content: ".football-loader-sheet { animation: none !important; transform: none !important; }" });
-          // The split-flap tiles are driven by timers, which a screenshot cannot pause: wait until they have landed.
-          if (panel.id === "workshop") await page.waitForFunction(() => [...document.querySelectorAll(".bowl-score-tile")].every((tile) => tile.getAttribute("data-settled") === "true"), undefined, { timeout: 15_000 });
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }
@@ -143,7 +138,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
-// The desk has five tabs, each with one job; repair and health tools sit in drawers on Today, and the season's checks live on Season.
+// The desk has five tabs, each with one job (the fifth, Workshop, opens full screen at its own address); repair and health tools sit in drawers on Today, and the season's checks live on Season.
 test("Commissioner desk has five tabs, with repair and health in drawers on Today", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await signIn(page, "day");
@@ -157,46 +152,6 @@ test("Commissioner desk has five tabs, with repair and health in drawers on Toda
   await expect(page.locator("summary").filter({ hasText: "Season readiness checks" })).toBeVisible();
 });
 
-
-// The Workshop: every piece can be handled. Football: pause on a chosen frame and the ball sits on it; settings can be reset to live and
-// copied; typed words and numbers reach the pieces; the chip has every NFL team.
-test("Workshop pieces respond to hands: scrub the football, reset and copy settings, type words, pick teams", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await signIn(page, "day");
-  await serve(page, "healthy");
-  await settle(page, ".commissioner-panel-tab");
-  await page.locator(".commissioner-panel-tab").nth(4).click();
-  await expect(page.getByRole("heading", { name: "Workshop" })).toBeVisible({ timeout: 30_000 });
-
-  // Football: paused on frame 10, the ball's animation is parked at that frame's moment of the turn.
-  const football = page.locator(".asset-card", { hasText: "Loading football" });
-  await football.getByRole("button", { name: "Pause" }).click();
-  await football.getByLabel("Football frame").fill("10");
-  await expect(football.locator("output").first()).toHaveText("10/108");
-  const delay = await football.locator(".football-loader-sheet").evaluate((sheet) => parseFloat(getComputedStyle(sheet).animationDelay));
-  expect(delay).toBeCloseTo(-((108 - 10 + 0.5) / 108) * 1.8, 1);
-  await football.getByRole("button", { name: "Step on" }).click();
-  await expect(football.locator("output").first()).toHaveText("11/108");
-  await football.getByRole("button", { name: "Play" }).click();
-  await expect(football.locator("output").first()).toHaveText("playing");
-
-  // Settings: change one, see it in Your settings, copy text names it, reset to live clears it.
-  const settings = page.locator(".asset-settings pre");
-  await expect(settings).toHaveText("Every setting is at its live value.");
-  await football.locator(".asset-knob", { hasText: "Time per turn" }).locator("input").fill("3");
-  await expect(settings).toContainText("Time per turn (--football-spin-s): 3s, live 1.8s");
-  await football.getByRole("button", { name: "Live values" }).click();
-  await expect(settings).toHaveText("Every setting is at its live value.");
-
-  // Typed words reach the pieces.
-  await page.locator(".asset-card", { hasText: "Pick highlight" }).locator("input.asset-text").fill("Rams");
-  await expect(page.locator(".asset-highlight")).toContainText("Rams");
-  await page.locator(".asset-card", { hasText: "Bowl crest" }).locator("input.asset-text").first().fill("Rose Bowl");
-  await expect(page.locator(".asset-card", { hasText: "Bowl crest" })).toContainText("ROSE BOWL");
-
-  // The chip has every team.
-  await expect(page.locator(".asset-card", { hasText: "Survivor poker chip" }).locator("select option")).toHaveCount(32);
-});
 
 // On a phone the five tabs wrap into two even rows: none sits off screen or is clipped, at the narrowest and a usual width.
 for (const width of [360, 390]) {

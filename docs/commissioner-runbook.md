@@ -48,7 +48,7 @@ player route. Do not change player records or issue a new PIN to work around
 an outage.
 
 The desk has five tabs: **Today**, **Performance**, **Season**, **Bowl Pool**, and
-**Workshop**. Start at **Today**. The live operations map is the first place to
+**Workshop** (which opens full screen; **Desk** at its top left comes back). Start at **Today**. The live operations map is the first place to
 check schedule, selections, line locks, scoring, recap readiness, and week/round
 handoff; select a stage for the exact hold and next safe action. Below it are the
 game pipeline, the key counts, and what is up next. The repair and health tools
