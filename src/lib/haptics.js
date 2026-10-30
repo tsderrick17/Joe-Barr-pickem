@@ -38,12 +38,33 @@ export function iphoneTicksOnTap(feel) {
   return feel === "tick" || feel === "lightTick" || feel === "lockIn";
 }
 
+/** The key this device's Vibration switch is kept under. Missing means on: only an explicit "off" turns haptics off. */
+export const VIBRATION_KEY = "pickem-vibration";
+
+/**
+ * Whether haptics are wanted on this device, from what the Vibration switch stored.
+ * @param {string | null | undefined} stored
+ */
+export function vibrationWanted(stored) {
+  return stored !== "off";
+}
+
+/**
+ * The notch to feel while pulling: the pull's down counter runs 4, 3, 2, 1 as it turns, so it passes three notches (to 3, to 2, to 1) and the last
+ * one is the lock-in. 0 until the counter has turned a third of the way.
+ * @param {number} counter how far the counter has turned, 0 to 1 (`pullStages(...).counter`)
+ */
+export function pullNotch(counter) {
+  return Math.min(3, Math.floor(Math.max(0, counter) * 3 + 1e-9));
+}
+
 /**
  * Which kind of haptics this device has, from what the page can read about it.
- * @param {{ hasVibrate: boolean, isIPhone: boolean }} facts
+ * Chrome on a computer also has `navigator.vibrate` (it does nothing without a motor), so a phone with a motor is told by being an Android device too.
+ * @param {{ hasVibrate: boolean, isIPhone: boolean, isAndroid: boolean }} facts
  * @returns {"android" | "iphone" | "none"}
  */
-export function hapticKind({ hasVibrate, isIPhone }) {
-  if (hasVibrate) return "android";
+export function hapticKind({ hasVibrate, isIPhone, isAndroid }) {
+  if (hasVibrate && isAndroid) return "android";
   return isIPhone ? "iphone" : "none";
 }

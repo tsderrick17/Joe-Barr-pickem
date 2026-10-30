@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Haptics roll out to every tappable place, behind a Vibration switch
+
+The owner felt Tick, Light tick and Lock-in on an iPhone (identical, since an iPhone has one tick), so the rollout went ahead. Every tap that picks, saves or turns something gives its feel (the places are listed in the project reference). Rules kept: an iPhone ticks only from the finger's own tap, so the tap layer must stay mounted through the tap (a layer that unmounted or a button that was re-keyed by the same click gave no tick: found when the Slate's team button was re-keyed on every pick, so the animation key moved to the button's content), and a disabled button's layer lets taps through. Players can turn it all off with a Vibration switch on the Notifications page (kept per device; the Feel test ignores it). Left out on purpose: scrolling, loads, animations, arriving notifications and the Commissioner desk.
+
 ## 2026-10-30 - The Players page shows who has the app, notifications and when they were last here
 
 Owner wanted, for each player: emails, the app, notifications, last login, visits over the last week, and phone or computer and browser, with a tidier page. The page is now one card per player with a figures strip on top. New data is deliberately coarse and cheap: the visits are one row per player per Eastern day (a count of days out of seven, not every page view), the device is a fixed label made from the User-Agent (the raw text is not stored), and "has the app" is known only once the installed app has made a request (it marks them with `X-Pickem-App`), so it reads "not yet" until then. An iPhone cannot tell the website about its Home Screen app from a Safari tab, so the page says what was last seen, not what is installed.

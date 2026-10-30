@@ -9,6 +9,8 @@ import { bowlReceiptSummary, bowlSelectionsEqual } from "@/lib/bowl-receipt.js";
 import { fetchWithSession } from "@/lib/auth-session";
 import { currentSeasonYear } from "@/lib/season";
 import { FootballLoadingScreen } from "@/components/football-loader";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
 
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
@@ -115,10 +117,12 @@ export default function BowlPoolPage() {
   function chooseTeam(gameId: string, side: "favorite" | "underdog") {
     setSubmissionError("");
     if (selections[gameId] === side) {
+      haptic("lightTick");
       setSelections((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== gameId)));
       setSelectionFeedback(null);
       return;
     }
+    haptic("tick");
     setSelections((current) => ({ ...current, [gameId]: side }));
     setSelectionFeedback({ gameId, side, token: Date.now() });
   }
@@ -137,9 +141,11 @@ export default function BowlPoolPage() {
         const payload = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(payload?.error ?? "Your Bowl Pool selections could not be saved.");
       }
+      haptic("success");
       setSavedSelections(selections);
       setSavedChampionshipTotalGuess(championshipTotalGuess);
     } catch (error) {
+      haptic("warning");
       setSubmissionError(error instanceof Error ? error.message : "Your Bowl Pool selections could not be saved.");
     } finally { setIsSubmitting(false); }
   }
@@ -182,7 +188,7 @@ export default function BowlPoolPage() {
           {optedIn === true ? <div className="bowl-receipt-frame"><div className="bowl-receipt-frame-inner"><section className="bowl-receipt-strip slate-mini-nav slate-receipt-strip is-pickem-only" aria-label="Your Bowl Pool receipt">
             <div className="slate-receipt-ticket">
               <span>BOWL RECEIPT</span>
-              <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => void submitSelections()} type="button">SUBMIT</button>
+              <button className={`slate-receipt-print ${hasUnsavedChanges ? "needs-attention" : ""}`} disabled={isSubmitting} onClick={() => { haptic("tick"); void submitSelections(); }} type="button">SUBMIT<HapticTap /></button>
               <span aria-live="polite" className={`receipt-printing-status ${isSubmitting ? "is-printing" : ""}`} role="status">
                 <span aria-hidden="true" className="receipt-printing-marks"><i /><i /><i /></span>
                 <span>{isSubmitting ? "PRINTING" : ""}</span>
@@ -212,9 +218,9 @@ export default function BowlPoolPage() {
               <div className={`bowl-selection-game-row grid min-h-16 grid-cols-[3.25rem_minmax(5rem,1.45fr)_minmax(3.75rem,1fr)_1.75rem_minmax(3.75rem,1fr)] items-center border-t border-slate-200 px-1 pb-1.5 pt-2 text-slate-600 sm:grid-cols-[minmax(6rem,0.7fr)_minmax(11rem,1.3fr)_minmax(8rem,1fr)_minmax(5rem,0.55fr)_minmax(8rem,1fr)] sm:gap-x-3 sm:px-4 sm:py-0 ${index % 2 ? "bg-(color:--themed-bg-25)" : "bg-(color:--themed-bg-26)"}`} key={game.id}>
                 <span className="text-[11px] leading-4 sm:text-xs sm:leading-5">{game.kickoff_at ? new Date(game.kickoff_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : "Date TBD"}<br />{game.time_confirmed === false ? "Time TBD" : game.kickoff_at ? shortKickoffTime(game.kickoff_at) : ""}</span>
                 <span className="min-w-0"><strong className="bowl-game-name flex min-h-8 items-center truncate text-[11px] text-slate-700 sm:text-sm sm:whitespace-normal">{displayBowlName(game)}</strong><small className="block truncate">{game.venue_city && game.venue_state ? `${game.venue_city}, ${game.venue_state}` : "Location TBD"}</small></span>
-                <button aria-label={`Select favorite team${teamForSide(game, "favorite")?.full_name ? `: ${teamForSide(game, "favorite")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "favorite"} className={`bowl-pick-box min-w-0 overflow-hidden text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} title={teamForSide(game, "favorite")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "favorite" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlMegaphone side="left" team={teamForSide(game, "favorite")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "favorite"))}</span>}</button>
+                <button aria-label={`Select favorite team${teamForSide(game, "favorite")?.full_name ? `: ${teamForSide(game, "favorite")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "favorite"} className={`bowl-pick-box relative min-w-0 overflow-hidden text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "favorite" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "favorite")} title={teamForSide(game, "favorite")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "favorite" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "favorite" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlMegaphone side="left" team={teamForSide(game, "favorite")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "favorite"))}</span>}<HapticTap /></button>
                 <span className={`bowl-game-line text-center text-xs sm:text-sm ${game.line?.locked_at ? "is-official" : ""}`} aria-label="Spread">{bowlSpreadLabel(game.line?.locked_spread)}</span>
-                <button aria-label={`Select underdog team${teamForSide(game, "underdog")?.full_name ? `: ${teamForSide(game, "underdog")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "underdog"} className={`bowl-pick-box min-w-0 overflow-hidden text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "underdog" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} title={teamForSide(game, "underdog")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "underdog" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlMegaphone side="left" team={teamForSide(game, "underdog")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "underdog"))}</span>}</button>
+                <button aria-label={`Select underdog team${teamForSide(game, "underdog")?.full_name ? `: ${teamForSide(game, "underdog")?.full_name}` : ""}`} aria-pressed={selections[game.id] === "underdog"} className={`bowl-pick-box relative min-w-0 overflow-hidden text-center text-[11px] text-slate-950 disabled:cursor-not-allowed disabled:text-slate-950 disabled:opacity-100 sm:text-sm ${selections[game.id] === "underdog" ? "bowl-team-selection" : ""}`} disabled={gameLocked(game)} onClick={() => chooseTeam(game.id, "underdog")} title={teamForSide(game, "underdog")?.full_name ?? "Team TBD"} type="button">{selections[game.id] === "underdog" ? <span className={`bowl-team-pick ${selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? "is-new" : ""}`} key={selectionFeedback?.gameId === game.id && selectionFeedback.side === "underdog" ? `${game.id}-${selectionFeedback.token}` : game.id}><BowlMegaphone side="left" team={teamForSide(game, "underdog")} /></span> : <span className="bowl-team-label block truncate">{bowlTeamName(teamForSide(game, "underdog"))}</span>}<HapticTap /></button>
               </div>
             ))}
           </div>

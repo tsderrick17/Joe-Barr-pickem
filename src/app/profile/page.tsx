@@ -3,7 +3,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AddToHomeScreen } from "@/components/add-to-home-screen";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
+import { HapticTap } from "@/components/haptic-tap";
 import { PhoneNotifications } from "@/components/phone-notifications";
+import { VibrationSwitch } from "@/components/vibration-switch";
+import { haptic } from "@/lib/haptics-client";
+import { useHapticsKind, useVibrationOn } from "@/lib/use-haptics";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type NotificationChoices = {
@@ -60,16 +64,24 @@ function paceFor(preferences: NotificationChoices): NotificationPace {
   return "custom";
 }
 
+/** The page's tick boxes. With Vibration on, an iPhone shows them as its own switch, so flipping one gives the system tick; elsewhere they are plain boxes. */
+function TickBox({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  const iphone = useHapticsKind() === "iphone";
+  const wanted = useVibrationOn();
+  const asSwitch = iphone && wanted;
+  return <input checked={checked} className={`mt-1 ${asSwitch ? "shrink-0" : "size-4 accent-[#007e72]"}`} onChange={(event) => { haptic("tick"); onChange(event.target.checked); }} type="checkbox" {...(asSwitch ? { switch: "" } : {})} />;
+}
+
 function Choice({ checked, note, onChange, title }: { checked: boolean; note: string; onChange: (checked: boolean) => void; title: string }) {
-  return <label className="flex items-start gap-3 px-2 py-3 text-sm transition hover:bg-(color:--themed-bg-16)"><input checked={checked} className="mt-1 size-4 accent-[#007e72]" onChange={(event) => onChange(event.target.checked)} type="checkbox" /><span><strong className="block text-(color:--themed-text-18)">{title}</strong><span className="block leading-5 text-slate-600">{note}</span></span></label>;
+  return <label className="flex items-start gap-3 px-2 py-3 text-sm transition hover:bg-(color:--themed-bg-16)"><TickBox checked={checked} onChange={onChange} /><span><strong className="block text-(color:--themed-text-18)">{title}</strong><span className="block leading-5 text-slate-600">{note}</span></span></label>;
 }
 
 function PaceCard({ active, detail, onChoose, recommended = false, title }: { active: boolean; detail: string; onChoose: () => void; recommended?: boolean; title: string }) {
-  return <button aria-pressed={active} className={`relative min-h-32 border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007e72] ${active ? "border-2 border-[#007e72] bg-[#e8f4f0] shadow-[inset_6px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={onChoose} type="button">{recommended ? <span className="absolute right-3 top-3 rounded-full bg-[#007e72] px-2 py-1 text-[10px] font-black tracking-[.1em] text-white">RECOMMENDED</span> : null}<strong className="block pr-24 text-base">{title}</strong><span className="mt-2 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-3 block text-xs font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "✓ YOUR PLAN" : "CHOOSE THIS PLAN"}</span></button>;
+  return <button aria-pressed={active} className={`relative min-h-32 border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007e72] ${active ? "border-2 border-[#007e72] bg-[#e8f4f0] shadow-[inset_6px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={() => { haptic("tick"); onChoose(); }} type="button">{recommended ? <span className="absolute right-3 top-3 rounded-full bg-[#007e72] px-2 py-1 text-[10px] font-black tracking-[.1em] text-white">RECOMMENDED</span> : null}<strong className="block pr-24 text-base">{title}</strong><span className="mt-2 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-3 block text-xs font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "✓ YOUR PLAN" : "CHOOSE THIS PLAN"}</span><HapticTap /></button>;
 }
 
 function FinalLinesChoice({ active, detail, onChoose, title }: { active: boolean; detail: string; onChoose: () => void; title: string }) {
-  return <button aria-pressed={active} className={`min-h-24 border px-4 py-3 text-left transition ${active ? "border-[#007e72] bg-[#e8f4f0] shadow-[inset_4px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={onChoose} type="button"><strong className="block">{title}</strong><span className="mt-1 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-2 block text-[10px] font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "SELECTED" : "CHOOSE"}</span></button>;
+  return <button aria-pressed={active} className={`relative min-h-24 border px-4 py-3 text-left transition ${active ? "border-[#007e72] bg-[#e8f4f0] shadow-[inset_4px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={() => { haptic("tick"); onChoose(); }} type="button"><strong className="block">{title}</strong><span className="mt-1 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-2 block text-[10px] font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "SELECTED" : "CHOOSE"}</span><HapticTap /></button>;
 }
 
 export default function ProfilePage() {
@@ -160,11 +172,12 @@ export default function ProfilePage() {
     <h1 className="font-serif text-4xl font-bold">Notifications</h1>
     <AddToHomeScreen variant="card" />
     <PhoneNotifications />
+    <VibrationSwitch />
     {profile?.isCommissioner ? <HapticFeelTest /> : null}
     <form className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" onSubmit={save}>
       <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
       <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-3 py-2 outline-none focus:border-[#007e72]" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
-      <label className="mt-5 flex items-start gap-3 border-y border-zinc-300 py-5 text-sm"><input checked={enabled} className="mt-1 size-4 accent-[#007e72]" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" /><span><strong className="block">Send pool emails to this address</strong>You can change the pace below whenever you like.</span></label>
+      <label className="mt-5 flex items-start gap-3 border-y border-zinc-300 py-5 text-sm"><TickBox checked={enabled} onChange={setEnabled} /><span><strong className="block">Send pool emails to this address</strong>You can change the pace below whenever you like.</span></label>
       {enabled ? <div className="mt-7 space-y-8">
         <section><h2 className="text-sm font-black tracking-[.14em]">CHOOSE YOUR EMAIL PLAN</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><PaceCard active={pace === "essentials"} detail="Selection reminders and the Tuesday recap." onChoose={() => setPreferences(essentials)} title="Essentials" /><PaceCard active={pace === "regular"} detail="Essentials, plus the Slate, final lines, Int’l locks, and playoff recaps." onChoose={() => setPreferences(regular)} recommended title="Regular" /><PaceCard active={pace === "full"} detail="Everything in Regular, plus every public pick reveal." onChoose={() => setPreferences(full)} title="Full Card" /></div></section>
 

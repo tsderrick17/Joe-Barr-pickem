@@ -33,7 +33,7 @@ export function HapticFeelTest() {
   const pull = useRef<{ startY: number; notches: number } | null>(null);
   const kind = typeof navigator === "undefined" ? "none" : hapticsAvailable();
 
-  const give = (feel: Feel) => setLast(`${FEEL_LABELS[feel].name}: ${haptic(feel)}`);
+  const give = (feel: Feel) => setLast(`${FEEL_LABELS[feel].name}: ${haptic(feel, { always: true })}`);
 
   function pullStart(event: React.PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -47,13 +47,13 @@ export function HapticFeelTest() {
     if (notches > state.notches) {
       state.notches = notches;
       setDown(NOTCHES - notches);
-      setLast(`Ratchet (notch ${notches}): ${haptic("ratchet")}`);
+      setLast(`Ratchet (notch ${notches}): ${haptic("ratchet", { always: true })}`);
     }
   }
   function pullEnd() {
     const state = pull.current;
     pull.current = null;
-    if (state && state.notches === NOTCHES) setLast(`Lock-in (let go at the bottom): ${kind === "iphone" ? "nothing (an iPhone only ticks at the tap itself)" : haptic("lockIn")}`);
+    if (state && state.notches === NOTCHES) setLast(`Lock-in (let go at the bottom): ${kind === "iphone" ? "nothing (an iPhone only ticks at the tap itself)" : haptic("lockIn", { always: true })}`);
     setDown(NOTCHES);
   }
 
@@ -64,7 +64,7 @@ export function HapticFeelTest() {
       {FEELS.map((feel) => <button className={`${secondary} relative text-left`} key={feel} onClick={() => give(feel)} type="button">
         <span className="block">{FEEL_LABELS[feel].name}</span>
         <span className="block text-sm font-normal text-slate-600">{FEEL_LABELS[feel].meaning}</span>
-        {iphoneTicksOnTap(feel) ? <HapticTap /> : null}
+        {iphoneTicksOnTap(feel) ? <HapticTap always /> : null}
       </button>)}
     </div>
     <h3 className="mt-6 text-sm font-black tracking-[.1em]">PRETEND PULL</h3>

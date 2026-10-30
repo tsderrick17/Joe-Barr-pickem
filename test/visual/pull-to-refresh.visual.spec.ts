@@ -6,9 +6,10 @@ async function installedApp(page: Page) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "standalone", { value: true });
     window.localStorage.setItem("pickem-theme", "day");
-    // count the haptic buzzes: there must be exactly one, when the counter has fully turned to 1
-    (window as unknown as { buzzes: number }).buzzes = 0;
-    navigator.vibrate = () => { (window as unknown as { buzzes: number }).buzzes += 1; return true; };
+    // record the haptic buzzes: a light notch each time the counter drops a down (4 to 3, 3 to 2), then the firmer lock-in when it reaches 1
+    (window as unknown as { buzzes: number[][] }).buzzes = [];
+    Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
+    navigator.vibrate = (pattern) => { (window as unknown as { buzzes: number[][] }).buzzes.push([pattern].flat() as number[]); return true; };
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
@@ -33,7 +34,7 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
   await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);   // the pull is wired up only after the page has hydrated
-  const buzzes = () => page.evaluate(() => (window as unknown as { buzzes: number }).buzzes);
+  const buzzes = () => page.evaluate(() => (window as unknown as { buzzes: number[][] }).buzzes);
   const strip = { clip: { x: 0, y: 0, width: 390, height: 110 } };
   // a pull of D px of finger travel is D x 0.6 of pull; the pole lands (the dust puff) at half of 76, the counter has turned to 1 at all of it
   await drag(page, 100, 113, false);   // a tenth of the way: the pole is drawn out, leaning, the chain slack with humps lying on the turf
@@ -48,10 +49,10 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   await drag(page, 100, 195, false);   // three quarters: the counter is half way through, its slats reading 1, 4, 1, 4
   await expect(page.locator(".pull-chain")).toContainText("Pull to refresh");
   await expect(page).toHaveScreenshot("pull-to-refresh-counter-halfway.png", strip);
-  expect(await buzzes(), "no buzz until the counter has fully turned").toBe(0);
+  expect(await buzzes(), "no buzz while the pole is still coming down; one light notch when the counter drops to 3").toEqual([[8]]);
   await drag(page, 100, 260, false);
   await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
-  expect(await buzzes(), "one buzz, when the counter reaches 1").toBe(1);
+  expect(await buzzes(), "a notch for each down the counter drops (3, then 2), and one firm lock-in when it reaches 1").toEqual([[8], [8], [8], [26]]);
   await expect(page).toHaveScreenshot("pull-to-refresh-ready.png", strip);
   // The chain is drawn inside the header's height and never below it (a page without a header keeps to the 96 px cap).
   const drop = await page.locator(".pull-chain").boundingBox();

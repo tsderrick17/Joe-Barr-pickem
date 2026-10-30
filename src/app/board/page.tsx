@@ -26,6 +26,7 @@ import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScori
 import { initialSlateState, slateReducer, type SelectedPick } from "@/lib/slate-state";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import { PICKS_SAVED_EVENT } from "@/lib/app-badge.js";
+import { haptic } from "@/lib/haptics-client";
 
 // A pick save can briefly wait behind database work that is already in
 // progress. Keep the request alive long enough for that safe, serialized save
@@ -399,18 +400,21 @@ export default function BoardPage() {
     const choice = decidePickChoice({ picks: selectedPicks, games, gameId, teamId, now: currentTime, limit: selectionLimit });
     switch (choice.kind) {
       case "sealed":
+        haptic("warning");
         dispatch({ type: "warned", message: choice.warning });
         return;
       case "limit":
         // Full: ask which open pick to replace, rather than making the player remove one first.
-        if (selectedTeams.some((team) => team.canRemove)) setPendingSwap({ gameId, teamId });
-        else dispatch({ type: "warned", message: choice.warning });
+        if (selectedTeams.some((team) => team.canRemove)) { haptic("tick"); setPendingSwap({ gameId, teamId }); }
+        else { haptic("warning"); dispatch({ type: "warned", message: choice.warning }); }
         return;
       case "remove":
+        haptic("lightTick");
         dispatch({ type: "pick-removed", gameId, clearFeedback: true });
         return;
       case "swap":
       case "add":
+        haptic("tick");
         dispatch({ type: "pick-added", gameId, teamId });
         return;
     }
@@ -422,10 +426,12 @@ export default function BoardPage() {
     const choice = decideSurvivorChoice({ games, gameId, teamId, now: currentTime, current: survivorPick, saved: savedSurvivorPick, usedTeamIds: survivorUsedTeamIds });
     if (choice.kind === "ignore") return;
     if (choice.kind === "warn") {
+      haptic("warning");
       dispatch({ type: "warned", message: choice.warning });
       return;
     }
 
+    haptic("lockIn");
     dispatch({ type: "survivor-chosen", pick: { gameId, teamId } });
   }
 
@@ -520,10 +526,12 @@ export default function BoardPage() {
       };
 
       if (!response.ok) {
+        haptic("warning");
         dispatch({ type: "submit-failed", message: data.error ?? "Your picks could not be saved. Please try again." });
         return;
       }
 
+      haptic("success");
       dispatch({ type: "submit-succeeded", picks: sentPicks, survivor: sentSurvivor });
       window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
     } catch (error) {
@@ -533,6 +541,7 @@ export default function BoardPage() {
         return;
       }
 
+      haptic("warning");
       dispatch({ type: "submit-failed", message: "Your picks are taking too long to save. Please try again." });
       // The save may have gone through even though its answer never arrived. Read what the server holds before
       // offering another submission: if it matches what was sent, the save worked and nothing is left unsaved.

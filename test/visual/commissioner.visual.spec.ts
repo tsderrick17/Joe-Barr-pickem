@@ -333,9 +333,13 @@ for (const width of [390, 560, 768, 1280]) {
     await serve(page, "healthy");
     await page.goto("/admin");
     await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
-    await page.locator(".commissioner-panel-tab").nth(1).click();
     const section = page.locator("[aria-labelledby=pool-stats-title]");
-    await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 30_000 });
+    // A tab tapped before the page has finished loading its handlers does nothing, and on a busy machine that left this waiting out its whole time
+    // limit: tap again until the Performance tab answers (choosing a tab twice is harmless).
+    await expect(async () => {
+      await page.locator(".commissioner-panel-tab").nth(1).click();
+      await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 4_000 });
+    }).toPass({ timeout: 30_000 });
     const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
     expect(overflowing, "no table wider than its card").toBe(0);
   });
