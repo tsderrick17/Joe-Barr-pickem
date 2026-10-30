@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The scheduler's run log is pruned weekly
+
+pg_cron records every run in `cron.job_run_details` and never removes them; with the every-minute line-lock gate that is about 2,200 rows a day, and by 2026-10-30 the log was 113 MB of the database's 160 MB (Free plan limit 500 MB, reached around mid-2027 at that pace). The weekly `prune_operational_storage` now also deletes run-log rows older than 7 days (it reports them as `cron_run_log`), and the migration clears the backlog once. The cron schema is reached through dynamic SQL only where it exists, and a missing privilege is a warning, so neither the weekly cleanup nor the annual turnover that calls it can fail because of the log.
+
 ## 2026-10-30 - The Workshop gains the pull-to-refresh strip, the trophy banners and more to adjust
 
 Second step of the endless Workshop board. Added the real pull-to-refresh scene (chain, pole, dust, Dial-A-Down; a slider pulls it by hand and a tap plays a whole pull) and the three trophy banners (Pick'em, Bowl Pool, Survivor: title, name, years, and three colour knobs that turn the cloth's hue, lightness and strength). The easing of the pick highlight, megaphone and crest rules became settings (a variable with today's curve as its default, so players see no change), and every piece can be shown larger or smaller in its tile (the Workshop's own view, not a setting to copy). Menu > Play everything plays every piece at once. Not added: the trophy turntable (120 pictures to fetch, too heavy to repeat across an endless board), the app badge and Home Screen banner (they live on the phone itself, not on anything the page draws), and chat typing dots (no such piece exists). Also fixed: the crest's gold rules were scoped to the old card wrapper and so stopped drawing in the new board.
