@@ -345,8 +345,10 @@ measure database requests or end-to-end route time.
   "not open yet" / 404 and the name-menu link is absent.
 - It shows three trophies (Pick'em, Bowl Pool, Survivor) on a turning table, built from 120 rendered pictures (3 degrees apart) drawn
   on a canvas, with three sharp resting views; a phone gets the same 120 views at 660 wide (the full set is more than an iPhone page
-  can hold). The champions of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won
-  (a person's banner is drawn at the screen's full resolution and moves with a smooth swing and wave).
+  can hold). Only the arrows at its sides (and the arrow keys) turn it, one trophy at a time; it cannot be dragged or swiped. The champions
+  of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won (a person's banner is drawn at the
+  screen's full resolution and moves with a smooth swing and wave). Until the champions have loaded the rafters stay bare; "No ... champion
+  yet" shows only for a trophy nobody has won.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
   appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
