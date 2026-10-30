@@ -26,7 +26,6 @@ import PoolStats from "@/components/pool-stats";
 const BowlPoolReadiness = dynamic(() => import("@/components/bowl-pool-readiness"));
 const GradingDashboard = dynamic(() => import("@/components/grading-dashboard"));
 const PlayerSignInHardening = dynamic(() => import("@/components/player-sign-in-hardening"));
-const CommissionerAssets = dynamic(() => import("@/components/commissioner-assets"));
 
 type Spread = {
   team: string;
@@ -92,8 +91,10 @@ const commissionerPanels = [
   ["performance", "Performance", "Provider cost, polling, and account capacity.", "02"],
   ["season", "Season", "Preseason setup, schedule changes, and the season's checks.", "03"],
   ["bowl-pool", "Bowl Pool", "Bowl schedule, lines, entries, and settlement exceptions.", "04"],
-  ["workshop", "Workshop", "Every custom piece of the pool, live and adjustable.", "05"],
 ] as const;
+
+// The Workshop opens full screen at its own address, so its tab is a link.
+const WORKSHOP_TAB = ["Workshop", "Every custom piece of the pool, live and adjustable.", "05"] as const;
 
 type CommissionerPanel = (typeof commissionerPanels)[number][0];
 
@@ -281,6 +282,9 @@ export default function AdminPage() {
               <span>{number}</span>{label}
             </button>
           ))}
+          <Link aria-label={`${WORKSHOP_TAB[0]}. ${WORKSHOP_TAB[1]}`} className="commissioner-panel-tab" href="/admin/workshop">
+            <span>{WORKSHOP_TAB[2]}</span>{WORKSHOP_TAB[0]}
+          </Link>
           </div>
         </nav>
 
@@ -322,8 +326,6 @@ export default function AdminPage() {
           <PoolStats />
           <AccountCapacityPanel />
         </> : null}
-
-        {activePanel === "workshop" ? <CommissionerAssets /> : null}
 
         {activePanel === "bowl-pool" ? <>
           <BowlPoolReadiness />
