@@ -48,9 +48,9 @@ descriptive.
 The settlement monitor allows six hours after kickoff for score-provider and
 grading delay. The worker freshness windows include bounded cron-delivery grace: 12 minutes
 for line locks, 45 minutes for score checks, and 20 minutes for reminders. The
-watchdog heartbeat allows 35 minutes: that absorbs bounded scheduler and
-serverless delivery jitter while still reporting a genuinely stopped scheduler
-within seven five-minute monitor intervals.
+watchdog runs every fifteen minutes and its heartbeat allows 35 minutes: that absorbs one missed run
+and bounded scheduler and serverless delivery jitter while still reporting a genuinely stopped
+scheduler within seven five-minute monitor intervals.
 
 The critical-worker public probe also uses a ten-minute failure debounce. A
 single transient unhealthy evaluation is recorded but remains HTTP 200; the
