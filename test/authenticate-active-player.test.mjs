@@ -10,10 +10,10 @@ let transientProfile = false;
 let selectedColumns = [];
 globalThis.activePlayerAuthFixture = () => ({
   auth: {
-    async getUser() {
+    async getClaims() {
       authAttempts += 1;
-      if (transientAuth && authAttempts === 1) return { data: { user: null }, error: { status: 503 } };
-      return { data: { user: { id: "auth-1" } }, error: null };
+      if (transientAuth && authAttempts === 1) return { data: null, error: { status: 503 } };
+      return { data: { claims: { sub: "auth-1" } }, error: null };
     },
   },
 });
