@@ -28,17 +28,14 @@ export function androidPattern(feel) {
 }
 
 /**
- * An iPhone cannot vibrate. Since iOS 18 a switch on a page gives the system's light tick when it is flipped by a tap, and nothing later:
- * so the iPhone only gets a feel at the moment of the tap itself (a lock-in is two quick ticks, to feel heavier). Success, warning and ratchet come
- * after a wait or in mid-drag, so they stay silent there, unless `tryAll` asks for one tick anyway (the Feel test does, to find out what an iPhone allows).
+ * An iPhone cannot vibrate. A switch on a page gives the system's light tick when a finger flips it, and since iOS 26.5 only a real finger: a page
+ * can no longer flip it from code (tested on the owner's iPhone, iOS 26.6). So the tick comes from a hidden switch laid over the button, exactly one
+ * per tap. The choices (tick, light tick, lock-in) get it; success, warning and ratchet come after a wait or in mid-drag, so they stay silent there.
  * @param {Feel} feel
- * @param {boolean} [tryAll]
- * @returns {{ ticks: number, gapMs: number }}
+ * @returns {boolean}
  */
-export function iphoneTickPlan(feel, tryAll = false) {
-  if (feel === "tick" || feel === "lightTick") return { ticks: 1, gapMs: 0 };
-  if (feel === "lockIn") return { ticks: 2, gapMs: 35 };
-  return { ticks: tryAll ? 1 : 0, gapMs: 0 };
+export function iphoneTicksOnTap(feel) {
+  return feel === "tick" || feel === "lightTick" || feel === "lockIn";
 }
 
 /**

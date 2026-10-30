@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FEELS, type Feel } from "@/lib/haptics.js";
-import { haptic, hapticsAvailable, iphoneExperiment } from "@/lib/haptics-client";
+import { HapticTap } from "@/components/haptic-tap";
+import { FEELS, iphoneTicksOnTap, type Feel } from "@/lib/haptics.js";
+import { haptic, hapticsAvailable } from "@/lib/haptics-client";
 
 const FEEL_LABELS: Record<Feel, { name: string; meaning: string }> = {
   tick: { name: "Tick", meaning: "a team or choice is picked" },
@@ -15,7 +16,7 @@ const FEEL_LABELS: Record<Feel, { name: string; meaning: string }> = {
 
 const DEVICE_LINE = {
   android: "This phone can vibrate: you should feel every one of these.",
-  iphone: "This is an iPhone: only the light tick, at the moment you tap, is possible. Tap Tick, Light tick and Lock-in; the rest are shown as the app will do them (nothing) and then as experiments, so we learn what an iPhone allows.",
+  iphone: "This is an iPhone: it gives one light tick at the moment your finger taps Tick, Light tick or Lock-in. The others are shown as the app will do them (nothing). The switch at the bottom is a plain iPhone switch, to compare.",
   none: "This device has no haptics (a computer, most likely). Try this on a phone.",
 } as const;
 
@@ -25,14 +26,14 @@ const secondary = `${buttonClass} border border-zinc-500 bg-(color:--themed-bg-2
 const NOTCH_DISTANCE = 36;   // pixels of pulling per notch
 const NOTCHES = 4;
 
-/** Commissioner-only: one button for every feel, a pretend pull-chain, and iPhone experiments, so each can be felt on a real phone before players get any. */
+/** Commissioner-only: one button for every feel, a pretend pull-chain, and on an iPhone a plain switch to compare, so each can be felt on a real phone before players get any. */
 export function HapticFeelTest() {
   const [last, setLast] = useState("");
   const [down, setDown] = useState(NOTCHES);
   const pull = useRef<{ startY: number; notches: number } | null>(null);
   const kind = typeof navigator === "undefined" ? "none" : hapticsAvailable();
 
-  const give = (feel: Feel, tryAll = false) => setLast(`${FEEL_LABELS[feel].name}: ${haptic(feel, { tryAll })}`);
+  const give = (feel: Feel) => setLast(`${FEEL_LABELS[feel].name}: ${haptic(feel)}`);
 
   function pullStart(event: React.PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -46,13 +47,13 @@ export function HapticFeelTest() {
     if (notches > state.notches) {
       state.notches = notches;
       setDown(NOTCHES - notches);
-      setLast(`Ratchet (notch ${notches}): ${haptic("ratchet", { tryAll: true })}`);
+      setLast(`Ratchet (notch ${notches}): ${haptic("ratchet")}`);
     }
   }
   function pullEnd() {
     const state = pull.current;
     pull.current = null;
-    if (state && state.notches === NOTCHES) setLast(`Lock-in (let go at the bottom): ${haptic("lockIn")}`);
+    if (state && state.notches === NOTCHES) setLast(`Lock-in (let go at the bottom): ${kind === "iphone" ? "nothing (an iPhone only ticks at the tap itself)" : haptic("lockIn")}`);
     setDown(NOTCHES);
   }
 
@@ -60,22 +61,22 @@ export function HapticFeelTest() {
     <h2 className="text-sm font-black tracking-[.14em]" id="haptic-feel-test-title">FEEL TEST (COMMISSIONER ONLY)</h2>
     <p className="mt-3 text-sm leading-5 text-slate-600">{DEVICE_LINE[kind]}</p>
     <div className="mt-4 grid gap-2 sm:grid-cols-2">
-      {FEELS.map((feel) => <button className={`${secondary} text-left`} key={feel} onClick={() => give(feel)} type="button">
+      {FEELS.map((feel) => <button className={`${secondary} relative text-left`} key={feel} onClick={() => give(feel)} type="button">
         <span className="block">{FEEL_LABELS[feel].name}</span>
         <span className="block text-sm font-normal text-slate-600">{FEEL_LABELS[feel].meaning}</span>
+        {iphoneTicksOnTap(feel) ? <HapticTap /> : null}
       </button>)}
     </div>
     <h3 className="mt-6 text-sm font-black tracking-[.1em]">PRETEND PULL</h3>
     <p className="mt-2 text-sm leading-5 text-slate-600">Put a finger on the box, drag down slowly and let go at the bottom. One notch for each count, a heavier tap when you let go.</p>
     <div aria-label="Pretend pull: drag down here" className="mt-3 flex min-h-40 touch-none select-none items-center justify-center border-2 border-dashed border-zinc-500 text-6xl font-black" data-pull-count={down} onPointerCancel={pullEnd} onPointerDown={pullStart} onPointerMove={pullMove} onPointerUp={pullEnd} role="img">{down}</div>
     {kind === "iphone" ? <>
-      <h3 className="mt-6 text-sm font-black tracking-[.1em]">IPHONE EXPERIMENTS</h3>
-      <p className="mt-2 text-sm leading-5 text-slate-600">An iPhone may refuse a tick that is not at the exact moment of a tap. Tell me which of these you feel.</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button className={secondary} onClick={() => setLast(`One tick, 1 second later: ${iphoneExperiment(1000)}`)} type="button">One tick, 1 second later</button>
-        <button className={secondary} onClick={() => setLast(`Three quick ticks: ${iphoneExperiment(0, 3, 60)}`)} type="button">Three quick ticks</button>
-        <button className={secondary} onClick={() => give("success", true)} type="button">One tick for success</button>
-      </div>
+      <h3 className="mt-6 text-sm font-black tracking-[.1em]">A PLAIN IPHONE SWITCH</h3>
+      <p className="mt-2 text-sm leading-5 text-slate-600">Flip this switch with your finger. If it ticks but the buttons above do not, tell me.</p>
+      <label className="mt-3 inline-flex min-h-12 items-center gap-3 font-bold">
+        <input className="size-6" type="checkbox" {...{ switch: "" }} />
+        Compare switch
+      </label>
     </> : null}
     <p aria-live="polite" className="mt-4 min-h-6 font-semibold text-green-800" role="status">{last ? `Sent — ${last}` : ""}</p>
   </section>;

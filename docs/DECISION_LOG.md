@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - iPhone haptics: the finger must flip the switch
+
+The owner's iPhone (iPhone 16, iOS 26.6.1, Home Screen app, System Haptics on) felt nothing in the Feel test. Cause: in iOS 26.5 Apple stopped the switch tick when a page flips the switch from code (WebKit only ticks for a real finger's click; the open-source ios-haptics library documents the same break). Updating iOS does not help. What still works is an invisible label with a hidden switch laid over the button, so the finger's own tap flips it (`src/components/haptic-tap.tsx`, the approach ios-haptics 3.2 adopted). That allows exactly one tick per tap and none after a wait or mid-drag, so on an iPhone the choices tick and success, warning, ratchet and the pull's lock-in stay silent; the Feel test's timing experiments were removed and a plain switch added to compare. Android is unchanged. If even this stops working in a later iOS, iPhone haptics are dropped and Android keeps them.
+
 ## 2026-10-30 - The Add to Home Screen banner closes one way
 
 Owner found the banner had three ways to make it go away (Hide, the ✕ and "I already have it") and that the iPhone step "Not there? Open this page in the Safari app first" confused more than it helped (it showed in Safari itself). Now the ✕ is the only way to close it and keeps it away 14 days, as before; "Show me how" gives way to the steps instead of turning into Hide; "I already have it" (180 days) and the Safari aside are gone. Supersedes the "I already have it" detail of the Home Screen entries below. The notifications banner is unchanged (its ✕ also waits 14 days).

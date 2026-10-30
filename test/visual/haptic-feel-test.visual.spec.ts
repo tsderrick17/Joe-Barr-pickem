@@ -63,25 +63,47 @@ test("on Android every button vibrates its own pattern and says what it sent", a
   }
 });
 
-test("on an iPhone the tap buttons flip the hidden switch (one tick, two for a lock-in) and the rest are shown as nothing", async ({ page }) => {
+test("on an iPhone the finger's tap on a choice flips the hidden switch over it, one tick a tap, and the button still answers exactly once", async ({ page }) => {
   const { section } = await open(page, "iphone");
-  await section.getByRole("button", { name: /^Tick/ }).click();
-  expect((await read(page)).ticks).toBe(1);
-  await section.getByRole("button", { name: /^Light tick/ }).click();
-  expect((await read(page)).ticks).toBe(2);
-  await section.getByRole("button", { name: /^Lock-in/ }).click();
-  await expect.poll(async () => (await read(page)).ticks).toBe(4);
+  // Count the clicks that reach the Feel test: one per tap means the switch's own echo of the click is stopped.
+  await section.evaluate((element) => { (window as unknown as { clicks: number }).clicks = 0; element.addEventListener("click", () => { (window as unknown as { clicks: number }).clicks += 1; }); });
+  const clicks = () => page.evaluate(() => (window as unknown as { clicks: number }).clicks);
+  for (const [index, name] of ["Tick", "Light tick", "Lock-in"].entries()) {
+    const button = section.getByRole("button", { name: new RegExp(`^${name}`) });
+    // The finger lands on the invisible switch label laid over the button, not on code.
+    await button.scrollIntoViewIfNeeded();
+    const box = (await button.boundingBox())!;
+    expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.hasAttribute("data-haptic-tap") ?? false, [box.x + box.width / 2, box.y + box.height / 2])).toBe(true);
+    await button.click();
+    expect((await read(page)).ticks, name).toBe(index + 1);
+    expect(await clicks(), `${name} answers once`).toBe(index + 1);
+    await expect(section.getByRole("status")).toContainText(`${name}: one iPhone tick, from your tap`);
+  }
   await section.getByRole("button", { name: /^Success/ }).click();
   await section.getByRole("button", { name: /^Warning/ }).click();
-  expect((await read(page)).ticks, "success and warning are silent on an iPhone").toBe(4);
+  expect((await read(page)).ticks, "success and warning are silent on an iPhone").toBe(3);
   await expect(section.getByRole("status")).toContainText("Warning: nothing");
-  // The experiments try a tick anyway, so the Commissioner can feel what the iPhone allows.
-  await section.getByRole("button", { name: "One tick for success" }).click();
-  expect((await read(page)).ticks).toBe(5);
-  await section.getByRole("button", { name: "Three quick ticks" }).click();
-  await expect.poll(async () => (await read(page)).ticks).toBe(8);
-  await section.getByRole("button", { name: "One tick, 1 second later" }).click();
-  await expect.poll(async () => (await read(page)).ticks, { timeout: 5000 }).toBe(9);
+  // The plain switch to compare against.
+  await section.getByRole("checkbox", { name: "Compare switch" }).click();
+  expect((await read(page)).ticks).toBe(4);
+});
+
+test("on an iPhone the pretend pull stays silent (an iPhone only ticks at a tap)", async ({ page }) => {
+  const { section } = await open(page, "iphone");
+  const box = section.getByRole("img", { name: /Pretend pull/ });
+  await box.scrollIntoViewIfNeeded();
+  const frame = (await box.boundingBox())!;
+  await page.mouse.move(frame.x + frame.width / 2, frame.y + 5);
+  await page.mouse.down();
+  await page.mouse.move(frame.x + frame.width / 2, frame.y + 5 + 170, { steps: 8 });
+  await page.mouse.up();
+  expect((await read(page)).ticks).toBe(0);
+  await expect(section.getByRole("status")).toContainText("Lock-in (let go at the bottom): nothing");
+});
+
+test("no hidden switch is added on an Android phone", async ({ page }) => {
+  const { section } = await open(page, "android");
+  await expect(section.locator("[data-haptic-tap]")).toHaveCount(0);
 });
 
 test("the pretend pull ticks a notch each time the count drops and lets go with a lock-in", async ({ page }) => {
