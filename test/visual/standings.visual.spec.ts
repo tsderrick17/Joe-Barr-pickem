@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { chromium, expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 
@@ -88,6 +88,37 @@ for (const scenario of Object.keys(SCENARIOS)) {
         }
       });
     }
+  }
+}
+
+// The 6 Wk window needs more than six weeks to scroll, so this state serves a nine-week season. The position rail sits
+// beneath the week numbers in the pad's own colors; the screenshot guards both. Headless Chromium hides scroll bars
+// everywhere else, so this is the one place the browser is launched with them drawn: a scroll bar returning would show.
+for (const theme of ["day", "night"]) {
+  for (const label of ["phone-390", "desktop-1280"] as const) {
+    test(`Season Snapshot 6 Wk ${theme} at ${label}`, async ({ baseURL }) => {
+      const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
+      try {
+        const page = await (await browser.newContext({ baseURL })).newPage();
+        await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+        await signIn(page, theme);
+        await serve(page, "commissioner-playoff");
+        await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 9) }));
+        await settle(page);
+        await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+        await page.getByRole("button", { name: "Season", exact: true }).click();
+        await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+        await page.waitForTimeout(1500);
+        await settled(page);
+        // Nothing of the plot sits beneath a scroll bar: the browser's own is hidden and the page's rail takes its place.
+        const plot = page.locator(".season-snapshot-plot-scroll");
+        expect(await plot.evaluate((element) => (element as HTMLElement).offsetHeight - element.clientHeight), "no scroll bar eats into the plot").toBe(0);
+        expect(await plot.evaluate((element) => element.scrollHeight - element.clientHeight), "the week numbers are all inside the plot").toBeLessThanOrEqual(0);
+        await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-${theme}-flipped-sixweek-${label}.png`);
+      } finally {
+        await browser.close();
+      }
+    });
   }
 }
 

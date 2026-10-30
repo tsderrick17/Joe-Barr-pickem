@@ -250,15 +250,19 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  scrollbar-color: #9bb9de transparent;
-  scrollbar-width: thin;
 }
+/* The browser's own scroll bar would sit on the week numbers and look nothing like the pad: it is hidden, and the
+   position rail beneath the chart takes its place. */
 .season-snapshot-plot-scroll.is-windowed {
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding-bottom: 6px; /* keeps the scrollbar off the week numbers */
   scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 }
+.season-snapshot-plot-scroll.is-windowed::-webkit-scrollbar { display: none; }
+.season-snapshot-rail { cursor: pointer; margin: .1rem 0 0 30px; padding: .4rem 0; touch-action: none; }
+.season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 5px; position: relative; }
+.season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; cursor: grab; position: absolute; top: 0; }
 .season-snapshot-plot-scroll:focus-visible { outline: 2px solid var(--blue-50); outline-offset: 2px; }
 .season-snapshot-plot-track { position: relative; }
 .season-snapshot-plot-track svg { display: block; max-width: none; }
