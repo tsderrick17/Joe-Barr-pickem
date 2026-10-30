@@ -110,6 +110,9 @@ export async function fetchWithSession(
   // The page's first read may already be on its way, started in <head> before this code arrived (see early-read.js).
   const early = takeEarlyRead(input, init);
   if (early) {
+    // Still start the sign-in client now, as the page's own request would have: the page's next request (the Bowl
+    // Card's, the navigation's) then finds the session ready instead of waiting for it to start.
+    void getFreshSession().catch(() => undefined);
     try {
       const response = await untilAborted(early, init.signal);
       if (response.ok) return response;
