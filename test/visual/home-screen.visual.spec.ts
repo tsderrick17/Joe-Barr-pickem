@@ -288,3 +288,26 @@ for (const [planted, shown] of [[{ dismissedDaysAgo: 13 }, false], [{ dismissedD
     await expect(banner).toHaveCount(shown ? 1 : 0);
   });
 }
+
+test("on Android one Install tap also turns notifications on: the phone is asked right after installing and saved", async ({ page }) => {
+  const saved: string[] = [];
+  await page.addInitScript(() => {
+    const state = { permission: "default", asked: 0, subscription: null as null | object };
+    (window as unknown as { phone: typeof state }).phone = state;
+    const subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/SCRIPTED", toJSON() { return { endpoint: "https://fcm.googleapis.com/fcm/send/SCRIPTED", keys: { p256dh: "B".padEnd(87, "x"), auth: "a".padEnd(22, "y") } }; } };
+    Object.defineProperty(window, "PushManager", { value: function PushManager() {}, configurable: true });
+    Object.defineProperty(window, "Notification", { value: { get permission() { return state.permission; }, async requestPermission() { state.asked += 1; state.permission = "granted"; return "granted"; } }, configurable: true });
+    const registration = { pushManager: { async getSubscription() { return state.subscription; }, async subscribe() { state.subscription = subscription; return subscription; } } };
+    Object.defineProperty(navigator, "serviceWorker", { value: { async getRegistration() { return registration; }, async register() { return registration; }, ready: Promise.resolve(registration) }, configurable: true });
+  });
+  const { banner } = await open(page, "android-prompt");
+  // Registered after the page's catch-all answers, so these win.
+  await page.route("**/api/push/**", (route) => {
+    saved.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`);
+    return route.fulfill(route.request().url().endsWith("/api/push/key") ? { json: { publicKey: "AQID_-8" } } : { json: { ok: true } });
+  });
+  await banner.getByRole("button", { name: "Install" }).click();
+  expect(await page.evaluate(() => (window as unknown as { installAsked?: number }).installAsked)).toBe(1);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { phone: { asked: number } }).phone.asked)).toBe(1);
+  await expect.poll(() => saved).toEqual(["GET /api/push/key", "PUT /api/push/subscription"]);
+});

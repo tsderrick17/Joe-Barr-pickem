@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { androidBrowser, homeScreenBannerVisible, homeScreenHelp } from "@/lib/home-screen.js";
+import { turnOnAfterInstall } from "@/lib/phone-push-client";
 
 /** The browser's own one-tap Install (Chrome and most Android browsers hand it over once the page qualifies). */
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -94,7 +95,9 @@ function useHomeScreen() {
     announce();
     try {
       await offer.prompt();
-      await offer.userChoice;
+      const choice = await offer.userChoice;
+      // One tap does both: once installed, ask for notifications straight away (the in-app banner asks later if this does not happen).
+      void turnOnAfterInstall(choice.outcome);
     } catch { /* the phone closed it; the steps are still there */ }
   }
 
