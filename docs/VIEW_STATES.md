@@ -45,6 +45,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
 | Viewer forfeited the playoffs: banner instead of the ticket, FORFEITED stamp on their row (every playoff state also shows one other player's stamp) | `playoff-viewer-forfeited` |
 | Season Snapshot in the playoffs: a Season / Playoffs switch beside the title (opens on Playoffs); Season shows the 6 Wk / All range | `commissioner-playoff` (flipped, both halves) |
+| Season Snapshot, Season half, 6 Wk range (nine weeks, so the chart scrolls): the position rail beneath the week numbers, in the pad's own colors, with the browser's scroll bar hidden; the browser is launched with scroll bars drawn so one returning would show; behavior test drags the rail and presses its track (`season-snapshot-flow.visual.spec.ts`) | `commissioner-playoff` (`flipped-sixweek`, the chart only, day and night, phone-390 and desktop-1280) |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
 | Bowl Card with a champion crowned | `bowl-champion` |

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotX } from "@/lib/season-snapshot-chart.js";
 
@@ -71,6 +71,60 @@ const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
+
+/**
+ * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad and never lies
+ * on top of the week numbers. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
+ * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
+ */
+function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
+  const [thumb, setThumb] = useState({ left: 0, width: 1 });
+  // While a drag is on, how far along the thumb the pointer took hold (0 to 1 of the track).
+  const grab = useRef<number | null>(null);
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const update = () => {
+      const next = { left: element.scrollLeft / element.scrollWidth, width: element.clientWidth / element.scrollWidth };
+      setThumb((current) => current.left === next.left && current.width === next.width ? current : next);
+    };
+    update();
+    element.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    if (element.firstElementChild) observer.observe(element.firstElementChild);
+    return () => {
+      element.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [scroller]);
+  const along = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    return (event.clientX - box.left) / box.width;
+  };
+  const moveTo = (fraction: number) => {
+    const element = scroller.current;
+    if (element && grab.current !== null) element.scrollTo({ left: (fraction - grab.current) * element.scrollWidth });
+  };
+  const release = () => { grab.current = null; };
+  return <div
+    aria-hidden="true"
+    className="season-snapshot-rail"
+    onPointerCancel={release}
+    onPointerDown={(event) => {
+      const fraction = along(event);
+      grab.current = fraction >= thumb.left && fraction <= thumb.left + thumb.width ? fraction - thumb.left : thumb.width / 2;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      moveTo(fraction);
+    }}
+    onPointerMove={(event) => moveTo(along(event))}
+    onPointerUp={release}
+  >
+    <div className="season-snapshot-rail-track">
+      <span className="season-snapshot-rail-thumb" style={{ left: `${thumb.left * 100}%`, width: `${thumb.width * 100}%` }} />
+    </div>
+  </div>;
+}
 
 function SnapshotChart({
   title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false,
@@ -162,6 +216,7 @@ function SnapshotChart({
       </div>
     </div>
     <p aria-hidden="true" className="season-snapshot-week-label">Week</p>
+    {scrolls ? <SnapshotRail scroller={scrollRef} /> : null}
   </section>;
 }
 

@@ -139,11 +139,11 @@ export function homeResponse(name) {
 }
 
 /** Cumulative wins by week for the Season Snapshot, in a fixed order. */
-export function seasonSnapshotResponse(scenario = "") {
-  const scores = NAMES.map((_, playerIndex) => Array.from({ length: 5 }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
+export function seasonSnapshotResponse(scenario = "", weekCount = 5) {
+  const scores = NAMES.map((_, playerIndex) => Array.from({ length: weekCount }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
   return {
-    regular: Array.from({ length: 5 }, (_, week) => ({
-      id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < 4,
+    regular: Array.from({ length: weekCount }, (_, week) => ({
+      id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < weekCount - 1,
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
     playoffs: scenario === "commissioner-playoff"

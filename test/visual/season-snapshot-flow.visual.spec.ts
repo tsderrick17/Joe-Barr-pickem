@@ -81,6 +81,43 @@ test("6 Wk windows the chart to six weeks that scroll; All fits the whole season
   await expect(plot).not.toHaveClass(/is-windowed/);
 });
 
+test("in the 6 Wk view a rail beneath the chart shows the window and moves it; All has no rail", async ({ page }) => {
+  await open(page);
+  await flipButton(page).click();
+  await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
+  const weeks = page.getByRole("group", { name: "Weeks shown" });
+  await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
+  await weeks.getByRole("button", { name: "6 Wk" }).click();
+  const plot = page.locator(".season-snapshot-plot-scroll");
+  const track = page.locator(".season-snapshot-rail-track");
+  const thumb = page.locator(".season-snapshot-rail-thumb");
+  const scrollLeft = () => plot.evaluate((element) => element.scrollLeft);
+  const boxes = async () => ({ track: (await track.boundingBox())!, thumb: (await thumb.boundingBox())! });
+
+  // It opens on the latest six of nine weeks: the thumb is two thirds of the track, at its right end.
+  let { track: bar, thumb: grip } = await boxes();
+  expect(grip.width / bar.width).toBeCloseTo(2 / 3, 1);
+  expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
+
+  // Dragging the thumb to the left end scrolls the chart back to the first weeks.
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bar.x, grip.y + grip.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(scrollLeft).toBe(0);
+  ({ track: bar, thumb: grip } = await boxes());
+  expect(grip.x).toBeCloseTo(bar.x, 0);
+
+  // Pressing the track near its right end brings back the latest weeks.
+  await page.mouse.click(bar.x + bar.width - 2, bar.y + bar.height / 2);
+  await expect.poll(scrollLeft).toBeGreaterThan(0);
+  ({ track: bar, thumb: grip } = await boxes());
+  expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
+
+  await weeks.getByRole("button", { name: "All" }).click();
+  await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
+});
+
 test("hiding a player removes their line and rescales the axis; nobody's color moves; Show all restores", async ({ page }) => {
   await open(page);
   await flipButton(page).click();
