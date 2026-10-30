@@ -546,8 +546,10 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Reminder workers claim at most three due messages per pass. An interrupted
   claim is reclaimed only after 20 minutes and only when no recipient receipt
   exists, preventing both a stranded queue and uncertain duplicate delivery.
-- The NFL score worker wakes every ten minutes and spends no provider credit
-  unless a game's durable retry time is due. Regular-season and playoff games
+- The NFL score worker is called by a database gate only when it has work (a
+  final due, a week to open, picks to settle, its recorded next handoff,
+  Survivor or playoff day-start time, or the hourly safety run) and spends no
+  provider credit unless a game's durable retry time is due. Regular-season and playoff games
   become eligible 170 minutes after official kickoff and use the same fixed
   10/10/10/10/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
   the final 240-minute window reserved for emergencies.
