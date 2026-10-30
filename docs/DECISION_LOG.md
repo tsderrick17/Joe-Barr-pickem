@@ -4,6 +4,16 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Efficiency audit: what was looked at and deliberately left alone
+
+The 2026-10-30 efficiency audit (Vercel and Supabase numbers, plus local measurements) also reviewed these and changed nothing, so they are not reopened without new evidence:
+- Sentry. On the server it adds about 15 ms to a cold start and nothing measurable to a warm request. In the browser, `bundleSizeOptimizations.excludeTracing` (with the browser `tracesSampleRate` removed) left every page's first-load JavaScript the same size (358, 349 and 327 KB gzip for the Standings, the Slate and sign-in), because this Turbopack build does not apply that option. Error reports, replays on error and the 5% trace sample stay as they are.
+- The Trophy Room's turntable frames load progressively (a phone gets the 4.4 MB small set) and the browser keeps them for a day.
+- The 46 KB gzip global stylesheet: splitting it per page is a large refactor for little gain once it is cached.
+- Database indexes: the pool's tables are tiny (hundreds to a few thousand rows), so sequential scans are the fastest plan.
+- Fonts: not touched (owner rule). Not preloading the Bowl Pool lettering on pages that do not use it is a possible later change, for the owner to decide.
+- A function wakes in about 200 ms of CPU and then answers in about 4 ms, and supabase-js costs about 1 ms of CPU per query, so the number of calls (background schedules, health checks, the badge) is what was cut, not code speed.
+
 ## 2026-10-30 - The Workshop gains the pull-to-refresh strip, the trophy banners and more to adjust
 
 Second step of the endless Workshop board. Added the real pull-to-refresh scene (chain, pole, dust, Dial-A-Down; a slider pulls it by hand and a tap plays a whole pull) and the three trophy banners (Pick'em, Bowl Pool, Survivor: title, name, years, and three colour knobs that turn the cloth's hue, lightness and strength). The easing of the pick highlight, megaphone and crest rules became settings (a variable with today's curve as its default, so players see no change), and every piece can be shown larger or smaller in its tile (the Workshop's own view, not a setting to copy). Menu > Play everything plays every piece at once. Not added: the trophy turntable (120 pictures to fetch, too heavy to repeat across an endless board), the app badge and Home Screen banner (they live on the phone itself, not on anything the page draws), and chat typing dots (no such piece exists). Also fixed: the crest's gold rules were scoped to the old card wrapper and so stopped drawing in the new board.
