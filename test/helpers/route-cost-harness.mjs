@@ -40,6 +40,7 @@ export async function measureRoute({ route, tables, rpc = {}, player, query = ""
     status: response.status,
     responseBytes: Buffer.byteLength(body),
     requests: db.requests.length,
+    rounds: db.rounds,
     rows: db.requests.reduce((sum, request) => sum + request.rows, 0),
     databaseBytes: db.requests.reduce((sum, request) => sum + request.bytes, 0),
     byTable,
