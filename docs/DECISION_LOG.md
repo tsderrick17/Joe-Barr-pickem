@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The app badge re-reads at most every five minutes
+
+Coming back to the Home Screen app re-read the picks-to-make number at most once a minute, and each read costs about seven database requests (the sign-in check, the player, the active week, its games, picks, season and Survivor rows). The number only changes when picks are saved (that refreshes it at once, unchanged) or a game kicks off, so a return now re-reads it at most every five minutes.
+
 ## 2026-10-30 - The Workshop gains the pull-to-refresh strip, the trophy banners and more to adjust
 
 Second step of the endless Workshop board. Added the real pull-to-refresh scene (chain, pole, dust, Dial-A-Down; a slider pulls it by hand and a tap plays a whole pull) and the three trophy banners (Pick'em, Bowl Pool, Survivor: title, name, years, and three colour knobs that turn the cloth's hue, lightness and strength). The easing of the pick highlight, megaphone and crest rules became settings (a variable with today's curve as its default, so players see no change), and every piece can be shown larger or smaller in its tile (the Workshop's own view, not a setting to copy). Menu > Play everything plays every piece at once. Not added: the trophy turntable (120 pictures to fetch, too heavy to repeat across an endless board), the app badge and Home Screen banner (they live on the phone itself, not on anything the page draws), and chat typing dots (no such piece exists). Also fixed: the crest's gold rules were scoped to the old card wrapper and so stopped drawing in the new board.

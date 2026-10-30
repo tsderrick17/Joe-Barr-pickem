@@ -28,8 +28,8 @@ test("nothing open means nothing to make; Survivor counts only while it applies 
   assert.equal(picksStillToMake(week({ maxPicks: 6, openGameIds: ["a", "b", "c"], pickedGameIds: ["a"], survivorPicked: true })), 2);
 });
 
-test("coming back to the app re-reads the number at most once a minute, and again if the clock moved back", () => {
-  assert.equal(badgeRefreshDue(0, 59_999), false);
-  assert.equal(badgeRefreshDue(0, 60_000), true);
+test("coming back to the app re-reads the number at most once every five minutes, and again if the clock moved back", () => {
+  assert.equal(badgeRefreshDue(0, 299_999), false);
+  assert.equal(badgeRefreshDue(0, 300_000), true);
   assert.equal(badgeRefreshDue(100_000, 50_000), true);
 });
