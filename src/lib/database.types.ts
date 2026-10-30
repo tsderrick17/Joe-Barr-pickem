@@ -1174,9 +1174,33 @@ export type Database = {
         }
         Relationships: []
       }
+      player_visit_days: {
+        Row: {
+          day: string
+          player_id: string
+        }
+        Insert: {
+          day: string
+          player_id: string
+        }
+        Update: {
+          day?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_visit_days_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           active: boolean
+          app_seen_at: string | null
           auth_user_id: string | null
           created_at: string
           email_ats_due_enabled: boolean
@@ -1203,6 +1227,9 @@ export type Database = {
           id: string
           is_commissioner: boolean
           last_active_at: string | null
+          last_browser: string | null
+          last_device: string | null
+          last_via_app: boolean | null
           login_pin: string | null
           notification_email: string | null
           notification_preferences_updated_at: string | null
@@ -1221,6 +1248,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          app_seen_at?: string | null
           auth_user_id?: string | null
           created_at?: string
           email_ats_due_enabled?: boolean
@@ -1247,6 +1275,9 @@ export type Database = {
           id?: string
           is_commissioner?: boolean
           last_active_at?: string | null
+          last_browser?: string | null
+          last_device?: string | null
+          last_via_app?: boolean | null
           login_pin?: string | null
           notification_email?: string | null
           notification_preferences_updated_at?: string | null
@@ -1265,6 +1296,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          app_seen_at?: string | null
           auth_user_id?: string | null
           created_at?: string
           email_ats_due_enabled?: boolean
@@ -1291,6 +1323,9 @@ export type Database = {
           id?: string
           is_commissioner?: boolean
           last_active_at?: string | null
+          last_browser?: string | null
+          last_device?: string | null
+          last_via_app?: boolean | null
           login_pin?: string | null
           notification_email?: string | null
           notification_preferences_updated_at?: string | null

@@ -703,6 +703,14 @@ per player per 15 minutes per warm function, with a database-side cutoff to
 coalesce concurrent instances. Chat, settings, snapshot, and Home reads do not
 update activity; successful sign-in and player actions do. Board and Survivor
 reads can also refresh activity, subject to the same throttle.
+The Players page (Commissioner only) shows for each player: emails on or off, whether they have ever opened the installed app, whether a phone
+or computer is subscribed to notifications, the days they visited in the last seven (`player_visit_days`: one row per player per Eastern day,
+written once a day per warm function), when and on what they were last seen (a short fixed label such as "iPhone · Home Screen app" or
+"Windows computer · Chrome", made on the server from the browser's User-Agent; the raw text is never stored), and totals across the pool.
+The installed app marks its requests with an `X-Pickem-App` header, which is how "has the app" is known; it reads "not yet" until the player
+opens the app once. The device and visit figures ride on the same throttled activity write, and a device change is written even inside the
+15-minute window. If the visit or notification records cannot be read the list still loads and that figure says "Unknown" or is left out,
+never a false zero.
 Monthly credit usage runs from the first UTC day through today, with daily and
 cumulative views of recorded provider costs (charged failures included).
 Provider-reported quota snapshots remain separate from logged costs. Receipt

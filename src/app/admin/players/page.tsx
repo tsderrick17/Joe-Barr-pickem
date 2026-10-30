@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import { dateFormat } from "@/lib/date-format.js";
+import { lastSeenLabel, playerTotals, visitsLabel } from "@/lib/player-presence.js";
 
 function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POST") {
   void import("@sentry/nextjs").then((Sentry) => {
@@ -29,17 +29,15 @@ type Player = {
   emailNotificationsEnabled: boolean;
   createdAt?: string;
   lastActiveAt?: string | null;
+  hasApp: boolean;
+  /** `null` when the notification records could not be read. */
+  notificationsOn: boolean | null;
+  /** Days with a visit in the last seven; `null` when the visit records could not be read. */
+  visitDays: number | null;
+  lastSeenOn: string | null;
 };
 
-function lastActiveLabel(value: string | null | undefined) {
-  if (!value) return "Not yet signed in";
-  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
-  if (elapsedMinutes < 1) return "Last active just now";
-  if (elapsedMinutes < 60) return `Last active ${elapsedMinutes}m ago`;
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-  if (elapsedHours < 24) return `Last active ${elapsedHours}h ago`;
-  return `Last active ${dateFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value))}`;
-}
+type Sort = "name" | "seen";
 
 export default function PlayerManagementPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -50,6 +48,12 @@ export default function PlayerManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reinstating, setReinstating] = useState<string | null>(null);
+  const [sort, setSort] = useState<Sort>("name");
+  /** When the list was loaded: "2h ago" is counted from here. */
+  const [loadedAt, setLoadedAt] = useState(0);
+  const totals = useMemo(() => playerTotals(players), [players]);
+  const quiet = useMemo(() => players.filter((player) => player.active && player.visitDays === 0), [players]);
+  const shown = useMemo(() => sort === "name" ? players : [...players].sort((a, b) => (b.lastActiveAt ? Date.parse(b.lastActiveAt) : -1) - (a.lastActiveAt ? Date.parse(a.lastActiveAt) : -1)), [players, sort]);
 
   const loadPlayers = useCallback(async () => {
     setErrorMessage("");
@@ -65,6 +69,7 @@ export default function PlayerManagementPage() {
       }
 
       setPlayers(data.players ?? []);
+      setLoadedAt(Date.now());
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) {
         setErrorMessage("Please sign in before managing players.");
@@ -165,12 +170,11 @@ export default function PlayerManagementPage() {
               </p>
 
               <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-                Player Setup
+                Players
               </h1>
 
               <p className="mt-3 text-lg text-(color:--themed-text-29)">
-                Add each player and assign their private PIN. Use a last initial only when two players share a first name.
-            
+                Who is in the pool, what they get, and when they were last here.
               </p>
             </div>
 
@@ -183,19 +187,18 @@ export default function PlayerManagementPage() {
           </div>
         </header>
 
-        <div className="grid gap-6 py-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <section>
+        <div className="players-layout">
+          <section className="players-add">
             <h2 className="font-serif text-3xl font-bold">
               Add a Player
             </h2>
 
             <p className="mt-2 text-(color:--themed-text-29)">
-              Choose a unique four-digit PIN and give it directly to
-              the player.
+              Give each player their own four-digit PIN. Add a last initial only when two players share a first name.
             </p>
 
             <form
-              className="mt-6 desk-rule-y py-6"
+              className="mt-5 desk-rule-y py-5"
               onSubmit={addPlayer}
             >
               <label
@@ -217,7 +220,7 @@ export default function PlayerManagementPage() {
               />
 
               <label
-                className="mt-6 block text-sm font-bold tracking-wide"
+                className="mt-5 block text-sm font-bold tracking-wide"
                 htmlFor="pin"
               >
                 FOUR-DIGIT PIN
@@ -260,21 +263,21 @@ export default function PlayerManagementPage() {
                   pin.length !== 4 ||
                   isSubmitting
                 }
-                className="mt-6 w-full desk-button-solid px-5 py-4 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-5 w-full desk-button-solid px-5 py-4 text-lg font-bold disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? "Adding player..." : "Add Player"}
               </button>
             </form>
 
             <p className="mt-4 text-sm text-(color:--themed-text-28)">
-PINs are unique login identifiers and may be viewed here at any time.
+              PINs are unique login identifiers and may be viewed here at any time.
             </p>
           </section>
 
-          <section>
+          <section className="players-roster">
             <div className="flex items-end justify-between gap-4">
               <h2 className="font-serif text-3xl font-bold">
-                Players
+                The Pool
               </h2>
 
               <p className="text-sm font-bold text-slate-600">
@@ -295,33 +298,62 @@ PINs are unique login identifiers and may be viewed here at any time.
               </div>
             ) : null}
 
-            <div className="mt-4 desk-rule-y">
-              {isLoading ? (
-                <p className="py-5 text-(color:--themed-text-28)">
-                  Loading players...
-                </p>
-              ) : players.length === 0 ? (
-                <p className="py-5 text-(color:--themed-text-28)">
-                  No players have been added.
-                </p>
-              ) : (
-                players.map((player) => (
-                  <div
-                    className="flex items-center justify-between gap-4 border-b border-slate-400 py-2.5 last:border-b-0"
-                    key={player.id}
-                  >
-                    <div>
-                      <span className="font-serif text-2xl">
-                        {player.firstName}
-                      </span>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <p className="text-xs font-semibold text-slate-600">
-                          {lastActiveLabel(player.lastActiveAt)}
-                        </p>
-                        <span className={`text-[10px] font-bold uppercase tracking-[0.08em] ${player.emailNotificationsEnabled ? "text-emerald-800" : "text-slate-500"}`}>
-                          {player.emailNotificationsEnabled ? "Emails on" : "Emails off"}
-                        </span>
+            {isLoading ? (
+              <p className="py-5 text-(color:--themed-text-28)">
+                Loading players...
+              </p>
+            ) : players.length === 0 ? (
+              <p className="py-5 text-(color:--themed-text-28)">
+                No players have been added.
+              </p>
+            ) : (
+              <>
+                <dl className="players-totals">
+                  <div><dt>Active players</dt><dd>{totals.players}</dd></div>
+                  <div><dt>Have the app</dt><dd>{totals.withApp}<span> of {totals.players}</span></dd></div>
+                  <div><dt>Get notifications</dt><dd>{totals.withNotifications}<span> of {totals.players}</span></dd></div>
+                  <div><dt>Get emails</dt><dd>{totals.withEmails}<span> of {totals.players}</span></dd></div>
+                </dl>
+
+                {quiet.length > 0 ? (
+                  <p className="players-quiet">
+                    Not here in the last 7 days: <strong>{quiet.map((player) => player.firstName).join(", ")}</strong>
+                  </p>
+                ) : null}
+
+                <div className="players-sort" role="group" aria-label="Order the players">
+                  <span>Order by</span>
+                  <button aria-pressed={sort === "name"} className="desk-button" onClick={() => setSort("name")} type="button">Name</button>
+                  <button aria-pressed={sort === "seen"} className="desk-button" onClick={() => setSort("seen")} type="button">Last seen</button>
+                </div>
+
+                <ul className="players-list">
+                  {shown.map((player) => (
+                    <li className="player-card" key={player.id}>
+                      <div className="player-card-head">
+                        <h3 className="player-name">
+                          {player.firstName}
+                          {player.isCommissioner || !player.active ? (
+                            <span className="player-role">{player.isCommissioner ? "Commissioner" : "Inactive"}</span>
+                          ) : null}
+                        </h3>
+                        <p className="player-pin">{player.loginPin ?? "----"}</p>
                       </div>
+
+                      <ul className="player-flags" aria-label={`What ${player.firstName} has turned on`}>
+                        <li className={`player-flag${player.emailNotificationsEnabled ? " is-on" : ""}`}>Emails {player.emailNotificationsEnabled ? "on" : "off"}</li>
+                        <li className={`player-flag${player.hasApp ? " is-on" : ""}`}>App {player.hasApp ? "installed" : "not yet"}</li>
+                        {player.notificationsOn === null ? null : (
+                          <li className={`player-flag${player.notificationsOn ? " is-on" : ""}`}>Notifications {player.notificationsOn ? "on" : "off"}</li>
+                        )}
+                      </ul>
+
+                      <dl className="player-facts">
+                        <div><dt>Last seen</dt><dd>{lastSeenLabel(player.lastActiveAt, loadedAt)}</dd></div>
+                        <div><dt>This week</dt><dd>{visitsLabel(player.visitDays) ?? "Unknown"}</dd></div>
+                        <div><dt>Last on</dt><dd>{player.lastSeenOn ?? "Not recorded yet"}</dd></div>
+                      </dl>
+
                       {player.forfeited ? (
                         <p className="player-forfeit">
                           <span className="player-forfeit-tag">Forfeited the Pick’em playoffs</span>
@@ -335,25 +367,11 @@ PINs are unique login identifiers and may be viewed here at any time.
                           )}
                         </p>
                       ) : null}
-                    </div>
-
-<div className="text-right">
-  <p className="font-mono text-lg font-bold tracking-[0.18em]">
-    {player.loginPin ?? "----"}
-  </p>
-
-  <p className="mt-1 text-xs font-bold tracking-wide text-slate-600">
-    {player.isCommissioner
-      ? "COMMISSIONER"
-      : player.active
-        ? "ACTIVE"
-        : "INACTIVE"}
-  </p>
-</div>
-                  </div>
-                ))
-              )}
-            </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
         </div>
       </div>

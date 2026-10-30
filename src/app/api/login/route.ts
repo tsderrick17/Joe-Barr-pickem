@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, supabaseServerKey } from "@/lib/supabase-admin";
-import { recordPlayerActivity } from "@/lib/player-activity";
+import { activityDetails, recordPlayerActivity } from "@/lib/player-activity";
 import { authenticatePlayerPin } from "@/lib/player-pin-authentication";
 import { playerAuthPepper } from "@/lib/player-auth-config";
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     .select("id")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
-  if (player) await recordPlayerActivity(player.id);
+  if (player) await recordPlayerActivity(player.id, activityDetails(request));
 
   return response({
     session: {

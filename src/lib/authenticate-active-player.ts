@@ -4,7 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { resolvePlayerAccess } from "@/lib/player-access-result";
 import { retrySafeRead } from "@/lib/retry-safe-read";
 import { countsAsActivity } from "@/lib/activity-rule.js";
-import { recordPlayerActivity } from "@/lib/player-activity";
+import { activityDetails, recordPlayerActivity } from "@/lib/player-activity";
 
 type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
 type BasicPlayer = Pick<PlayerRow, "id" | "active" | "is_commissioner">;
@@ -74,7 +74,8 @@ export async function authenticateActivePlayer(
   // Using any page counts as being active (the write is throttled to once per 15 minutes per player, and runs after the response).
   if (countsAsActivity(access, options)) {
     const playerId = (access as { ok: true; player: { id: string } }).player.id;
-    try { after(() => recordPlayerActivity(playerId)); } catch { void recordPlayerActivity(playerId); }
+    const details = activityDetails(request);
+    try { after(() => recordPlayerActivity(playerId, details)); } catch { void recordPlayerActivity(playerId, details); }
   }
   return access;
 }

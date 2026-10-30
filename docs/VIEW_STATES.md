@@ -92,7 +92,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Workshop (every custom piece, live: submit button, pick highlight, chips, megaphones, split-flap tiles, loading football, result stamps, Bowl crest, season-closed banners) | `healthy`; animations are captured at rest |
 | Five tabs, with the repair and health drawers on Today (behavior test) | `healthy` |
 | Workshop pieces respond to hands: football pause, scrub and step; reset to live; copy settings; typed words; all 32 chip teams (behavior test) | `healthy` |
-| Players | one roster: commissioner, active, inactive, never signed in, and one player who forfeited the playoffs (tag and Reinstate) |
+| Players (add form beside the roster; a figures strip, who has not visited in 7 days, Name / Last seen order, and a card per player: emails, app and notifications markers, last seen, days this week, last device) | one roster: commissioner, active, inactive, never signed in, one player with the app and notifications on, and one who forfeited the playoffs (tag and Reinstate); phone and desktop, day and night |
 | Reminders | scheduled, sent, cancelled-with-reason |
 | Trophy room (the three trophies on the turning table with one banner per champion of the front trophy under it, carrying every year they won, in cloth (red for Pick'em, blue for the Bowl Pool, green for Survivor); the All-Time Table (Wins and Hit rate, and a champion with no pick history)) | `healthy`, phone, tablet and desktop, day and night |
 | Slate display switch (All games / Pool action): two equal halves, and tapping either half flips to the other option (behavior test, `slate-flow.visual.spec.ts`) | `upcoming-unpicked`, phone |

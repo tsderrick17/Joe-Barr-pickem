@@ -120,11 +120,23 @@ export function commissionerApi(state) {
   };
 }
 
+/** What the Players page shows beside each player: the app, notifications, days visited in the last week, and where they were last seen. */
+const PLAYER_PRESENCE = {
+  p0: { hasApp: true, notificationsOn: true, visitDays: 6, lastSeenOn: "iPhone · Home Screen app" },
+  p1: { hasApp: true, notificationsOn: true, visitDays: 5, lastSeenOn: "Android phone · Home Screen app" },
+  p2: { hasApp: true, notificationsOn: true, visitDays: 7, lastSeenOn: "Windows computer · Chrome" },
+  p3: { hasApp: false, notificationsOn: false, visitDays: 1, lastSeenOn: "iPhone · Safari" },
+  p4: { hasApp: false, notificationsOn: false, visitDays: 3, lastSeenOn: "Mac · Safari" },
+  p5: { hasApp: false, notificationsOn: false, visitDays: 0, lastSeenOn: "Windows computer · Edge" },
+  p6: { hasApp: false, notificationsOn: false, visitDays: 0, lastSeenOn: null },
+  p7: { hasApp: false, notificationsOn: false, visitDays: 0, lastSeenOn: null },
+};
+
 export const PLAYERS = {
   players: [
     ["p0", "Gary", true, true, true, 0.2], ["p1", "Connor", true, false, true, 2], ["p2", "Tyler", true, true, true, 0.1], ["p3", "Rick", true, false, false, 30],
     ["p4", "Zac", true, false, true, 5], ["p5", "Ron", true, false, true, 70], ["p6", "Al", false, false, false, 900], ["p7", "Dana", true, false, true, null],
-  ].map(([id, firstName, active, isCommissioner, emailNotificationsEnabled, hoursAgo]) => ({ id, firstName, loginPin: id === "p7" ? null : "0000", active, isCommissioner, emailNotificationsEnabled, forfeited: id === "p5", createdAt: T(2000), lastActiveAt: hoursAgo === null ? null : T(hoursAgo) })),
+  ].map(([id, firstName, active, isCommissioner, emailNotificationsEnabled, hoursAgo]) => ({ id, firstName, loginPin: id === "p7" ? null : "0000", active, isCommissioner, emailNotificationsEnabled, forfeited: id === "p5", createdAt: T(2000), lastActiveAt: hoursAgo === null ? null : T(hoursAgo), ...PLAYER_PRESENCE[id] })),
 };
 
 export const REMINDERS = {

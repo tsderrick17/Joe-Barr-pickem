@@ -93,6 +93,15 @@ export async function getFreshSession(): Promise<Session | null> {
 // path clears it at once.
 const sharedReads = createSharedReadCache({ origin: () => typeof window === "undefined" ? null : window.location.origin });
 
+/** Whether this page is the installed app (never a reason for a request to fail). */
+function runsAsApp() {
+  try {
+    return typeof window !== "undefined" && ((navigator as { standalone?: boolean }).standalone === true || window.matchMedia?.("(display-mode: standalone)").matches === true);
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchWithSession(
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -114,6 +123,8 @@ async function fetchWithSessionOnce(
     send: (accessToken) => {
       const headers = new Headers(init.headers);
       headers.set("Authorization", `Bearer ${accessToken}`);
+      // The installed app says so, so the Commissioner's Players page can tell who has it.
+      if (runsAsApp()) headers.set("X-Pickem-App", "1");
       return fetch(input, { ...init, headers });
     },
     wait: () => waitForTransientReadRetry(init.signal ?? undefined),
