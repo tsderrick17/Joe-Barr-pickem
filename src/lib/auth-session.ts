@@ -4,7 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { executeAuthenticatedRequest } from "@/lib/authenticated-request";
 import { createSharedReadCache } from "@/lib/shared-read-cache";
-import { takeEarlyRead } from "@/lib/early-read.js";
+import { takeEarlyRead, untilAborted } from "@/lib/early-read.js";
 
 const SESSION_REFRESH_WINDOW_MS = 60_000;
 const TRANSIENT_READ_RETRY_DELAY_MS = 650;
@@ -111,9 +111,13 @@ export async function fetchWithSession(
   const early = takeEarlyRead(input, init);
   if (early) {
     try {
-      const response = await early;
+      const response = await untilAborted(early, init.signal);
       if (response.ok) return response;
-    } catch { /* fall back to the page's own request */ }
+    } catch (error) {
+      // The page gave up waiting (a hung request on a backgrounded phone): it retries by itself, as with its own request.
+      if (init.signal?.aborted) throw error;
+      /* otherwise fall back to the page's own request */
+    }
   }
   return sharedReads.run(input, init, () => fetchWithSessionOnce(input, init));
 }

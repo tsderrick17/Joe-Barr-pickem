@@ -8,14 +8,36 @@
  * in localStorage and starts that page's first read at once, with exactly the request the page itself would make. When
  * the page then asks for the same URL, fetchWithSession takes the answer already on its way instead of asking again,
  * so the server sees one request either way. Anything unusual (no session, a session about to expire, a different URL,
- * an answer that is not OK, one more than 15 seconds old) falls back to the page's own request.
+ * an answer that is not OK, one more than 15 seconds old) falls back to the page's own request. On the Standings it also
+ * starts the Bowl Card's read when this device showed the card last time, the same rule as bowl-prefetch.ts.
  */
 const GLOBAL = "__pickemEarlyReads";
 const MAX_AGE_MS = 15_000;
 
 /** @param {string} storageKey where the Supabase client keeps the session (sb-<project>-auth-token) */
 export function earlyReadScript(storageKey) {
-  return `try{var p=location.pathname,u=null;if(p==="/")u="/api/home";else if(p==="/board"){var q=new URLSearchParams({bootstrap:"1"}),w=new URLSearchParams(location.search).get("week");if(w)q.set("week",w);u="/api/board?"+q}if(u){var s=JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})||"null");if(s&&s.access_token&&s.expires_at*1000-Date.now()>60000){var h={Authorization:"Bearer "+s.access_token};if(navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches))h["X-Pickem-App"]="1";var r={};r[u]={at:Date.now(),response:fetch(u,{headers:h})};window.${GLOBAL}=r}}}catch(e){}`;
+  return `try{var p=location.pathname,u=[];if(p==="/"){u.push("/api/home");if(localStorage.getItem("pickem-bowl-card-shown")==="1")u.push("/api/bowl-pool")}else if(p==="/board"){var q=new URLSearchParams({bootstrap:"1"}),w=new URLSearchParams(location.search).get("week");if(w)q.set("week",w);u.push("/api/board?"+q)}if(u.length){var s=JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})||"null");if(s&&s.access_token&&s.expires_at*1000-Date.now()>60000){var h={Authorization:"Bearer "+s.access_token};if(navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches))h["X-Pickem-App"]="1";var r={};for(var i=0;i<u.length;i++)r[u[i]]={at:Date.now(),response:fetch(u[i],{headers:h})};window.${GLOBAL}=r}}}catch(e){}`;
+}
+
+/**
+ * Wait for an early answer, but stop when the page gives up on its request (its signal aborts, as on the Slate's
+ * 15-second limit): the page then sees the same AbortError its own request would have given, and tries again itself.
+ * @param {Promise<Response>} response
+ * @param {AbortSignal | null | undefined} signal
+ * @returns {Promise<Response>}
+ */
+export function untilAborted(response, signal) {
+  if (!signal) return response;
+  const abortError = () => signal.reason ?? new DOMException("The request was cancelled.", "AbortError");
+  if (signal.aborted) return Promise.reject(abortError());
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener("abort", onAbort, { once: true });
+    response.then(
+      (value) => { signal.removeEventListener("abort", onAbort); resolve(value); },
+      (error) => { signal.removeEventListener("abort", onAbort); reject(error); },
+    );
+  });
 }
 
 /** The session's localStorage key for a Supabase project URL, the way the Supabase client names it. @param {string} supabaseUrl */
