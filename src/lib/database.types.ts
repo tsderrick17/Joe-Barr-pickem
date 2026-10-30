@@ -97,6 +97,27 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_dispatch_state: {
+        Row: {
+          job_name: string
+          last_dispatched_at: string | null
+          next_due_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          job_name: string
+          last_dispatched_at?: string | null
+          next_due_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          job_name?: string
+          last_dispatched_at?: string | null
+          next_due_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automation_execution_leases: {
         Row: {
           acquired_at: string
@@ -2312,6 +2333,7 @@ export type Database = {
       dispatch_bowl_sync_if_due: { Args: never; Returns: boolean }
       dispatch_line_lock_if_due: { Args: never; Returns: boolean }
       dispatch_reminders_if_due: { Args: never; Returns: boolean }
+      dispatch_score_sync_if_due: { Args: never; Returns: boolean }
       eliminate_survivor_no_picks: {
         Args: { evaluated_at?: string }
         Returns: {
@@ -2609,6 +2631,7 @@ export type Database = {
             }
             Returns: undefined
           }
+      score_work_is_due: { Args: { evaluated_at?: string }; Returns: boolean }
       season_phase: { Args: { evaluated_at?: string }; Returns: string }
       settle_bowl_pool_missing_picks: {
         Args: { evaluated_at?: string }

@@ -57,12 +57,12 @@ test("the core availability probe always runs live: its answer is never cached, 
   }
 });
 
-test("the operations watchdog runs every ten minutes and preflight expects it", () => {
-  const sql = read("supabase/migrations/20261001010000_watchdog_every_ten_minutes.sql");
-  assert.match(sql, /cron\.schedule\('pickem-operations-watchdog-every-ten-minutes', '\*\/10 \* \* \* \*', command_text\)/);
-  assert.match(sql, /'pickem-operations-watchdog-every-five-minutes',\s*'pickem-operations-watchdog-every-ten-minutes'/);
-  assert.match(sql, /\('pickem-operations-watchdog-every-ten-minutes', 'Operations watchdog every ten minutes', '\*\/10 \* \* \* \*', '\/api\/cron\/watchdog', null::text\)/);
+test("the operations watchdog runs every fifteen minutes and preflight expects it", () => {
+  const sql = read("supabase/migrations/20261030030000_background_job_cadence.sql");
+  assert.match(sql, /cron\.schedule\('pickem-operations-watchdog-every-fifteen-minutes', '\*\/15 \* \* \* \*', watchdog_command\)/);
+  assert.match(sql, /'pickem-operations-watchdog-every-ten-minutes',\s*'pickem-operations-watchdog-every-fifteen-minutes'/);
+  assert.match(sql, /\('pickem-operations-watchdog-every-fifteen-minutes', 'Operations watchdog every fifteen minutes', '\*\/15 \* \* \* \*', '\/api\/cron\/watchdog', null::text\)/);
   assert.match(sql, /to_regprocedure\('cron\.schedule\(text,text,text\)'\) is not null/);
-  // The weekly prune window still catches a ten-minute tick.
-  assert.match(read("src/lib/automation-watchdog.ts"), /now\.getUTCHours\(\) === 13 && now\.getUTCMinutes\(\) < 10;/);
+  // The weekly prune window catches exactly one fifteen-minute tick.
+  assert.match(read("src/lib/automation-watchdog.ts"), /now\.getUTCHours\(\) === 13 && now\.getUTCMinutes\(\) < 15;/);
 });
