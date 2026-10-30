@@ -692,6 +692,37 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 .bowl-cell-open { color: oklch(70.4% .04 256.788); }
 .bowl-cell-pick { color: var(--color-slate-950); }
 
+/* ---- The Players page: the add form beside the roster, a figures strip, and one card per player ---- */
+.players-layout { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr); padding-block: 1.75rem; }
+.players-add { order: 2; }
+@media (min-width: 900px) { .players-layout { align-items: start; grid-template-columns: 17.5rem minmax(0, 1fr); gap: 2.5rem; } .players-add { order: 0; } }
+.players-totals { border-block: 1px solid var(--club-gold-dk); display: grid; gap: 0 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0 0; }
+@media (min-width: 560px) { .players-totals { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.players-totals > div { padding: .75rem 0; }
+.players-totals dt, .player-facts dt { color: var(--club-muted); font: 700 .64rem Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+.players-totals dd { font: 400 2rem/1.15 Georgia, serif; margin: .15rem 0 0; }
+.players-totals dd span { color: var(--club-muted); font: 700 .8rem Arial, sans-serif; }
+.players-quiet { color: var(--club-ink); font-size: .95rem; margin: .8rem 0 0; }
+.players-quiet strong { color: var(--club-alert); }
+.players-sort { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 0; }
+.players-sort span { color: var(--club-muted); font: 700 .64rem Arial, sans-serif; letter-spacing: .16em; margin-right: .25rem; text-transform: uppercase; }
+.players-sort button { font: 700 .8rem Arial, sans-serif; min-height: 2.4rem; padding: .3rem .9rem; }
+.players-sort button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-gold-dk); color: var(--sand-93); }
+.players-list { border-top: 1px solid var(--club-gold-dk); list-style: none; margin: 1rem 0 0; padding: 0; }
+.player-card { border-bottom: 1px solid var(--club-line); padding: .9rem 0 1rem; }
+.player-card-head { align-items: baseline; display: flex; gap: 1rem; justify-content: space-between; }
+.player-name { font: 400 1.65rem/1.2 Georgia, serif; margin: 0; min-width: 0; }
+.player-role { color: var(--club-muted); font: 700 .64rem Arial, sans-serif; letter-spacing: .16em; margin-left: .7rem; text-transform: uppercase; vertical-align: middle; }
+.player-pin { font: 700 1.1rem ui-monospace, monospace; letter-spacing: .18em; margin: 0; }
+.player-flags { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: .6rem 0 0; padding: 0; }
+.player-flag { border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-muted); font: 700 .68rem Arial, sans-serif; letter-spacing: .08em; padding: .25rem .6rem; text-transform: uppercase; }
+.player-flag::before { content: "\2715\00a0"; }
+.player-flag.is-on { border-color: var(--club-ok); color: var(--club-ok); }
+.player-flag.is-on::before { content: "\2713\00a0"; }
+.player-facts { display: grid; gap: .55rem 1.25rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: .75rem 0 0; }
+.player-facts dd { font: 600 .92rem Arial, sans-serif; margin: .1rem 0 0; }
+@media (max-width: 559px) { .player-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .player-facts > div:last-child { grid-column: 1 / -1; } }
+
 /* ---- A forfeited player on the Players page ---- */
 .player-forfeit { align-items: center; display: flex; flex-wrap: wrap; gap: .3rem .7rem; margin: .35rem 0 0; }
 .player-forfeit-tag { color: var(--club-alert); font: 700 .68rem Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }

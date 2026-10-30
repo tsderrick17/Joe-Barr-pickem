@@ -21,7 +21,7 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "@supabase/supabase-js") return { url: "data:text/javascript,export const createClient = () => ({ auth: { signInWithPassword: (credentials) => globalThis.loginFixture.signIn(credentials) } });", shortCircuit: true };
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseServerKey = 'server-key-for-the-test';export const supabaseAdmin = new Proxy({}, { get: (_, name) => (...args) => globalThis.loginFixture.database[name](...args) });", shortCircuit: true };
-    if (specifier === "@/lib/player-activity") return { url: "data:text/javascript,export const recordPlayerActivity = async () => {};", shortCircuit: true };
+    if (specifier === "@/lib/player-activity") return { url: "data:text/javascript,export const recordPlayerActivity = async () => {}; export const activityDetails = () => ({});", shortCircuit: true };
     return nextResolve(specifier, context);
   },
 });

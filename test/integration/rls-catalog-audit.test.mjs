@@ -14,6 +14,7 @@ const sensitiveTables = [
   "audit_logs",
   "email_reminder_deliveries",
   "push_subscriptions",
+  "player_visit_days",
   "push_vapid_keys",
   "push_reminders",
   "push_reminder_deliveries",

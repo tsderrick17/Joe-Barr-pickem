@@ -8,6 +8,7 @@ import { derivePlayerAuthPassword, PLAYER_AUTH_CREDENTIAL_VERSION, playerAuthEma
 import { playerAuthPepper } from "@/lib/player-auth-config";
 import { loadForfeitedPlayerIds } from "@/lib/playoff-eligibility";
 import { currentSeasonYear } from "@/lib/season";
+import { deviceSummary, visitWindowStart } from "@/lib/player-presence.js";
 
 export async function GET(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   const { data: players, error } = await supabaseAdmin
     .from("players")
     .select(
-      "id, first_name, login_pin, active, is_commissioner, created_at, last_active_at, notification_email, email_notifications_enabled",
+      "id, first_name, login_pin, active, is_commissioner, created_at, last_active_at, notification_email, email_notifications_enabled, last_device, last_browser, last_via_app, app_seen_at",
     )
     .order("first_name");
 
@@ -35,6 +36,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "The player list could not be loaded." }, { status: 500 });
   }
 
+  // Which players have a phone or computer that gets notifications, and how many days each visited in the last week. Both are extras on
+  // the list: if either cannot be read the list still loads, and that column says nothing instead of a wrong zero.
+  const [subscriptions, visits] = await Promise.all([
+    supabaseAdmin.from("push_subscriptions").select("player_id"),
+    supabaseAdmin.from("player_visit_days").select("player_id").gte("day", visitWindowStart(Date.now())),
+  ]);
+  const withNotifications = new Set((subscriptions.data ?? []).map((row) => row.player_id));
+  const visitDays = new Map<string, number>();
+  for (const row of visits.data ?? []) visitDays.set(row.player_id, (visitDays.get(row.player_id) ?? 0) + 1);
+
   return NextResponse.json({
     players: (players ?? []).map((player) => ({
       id: player.id,
@@ -46,6 +57,10 @@ export async function GET(request: NextRequest) {
       emailNotificationsEnabled: Boolean(player.email_notifications_enabled && player.notification_email?.trim()),
       createdAt: player.created_at,
       lastActiveAt: player.last_active_at,
+      hasApp: player.app_seen_at !== null,
+      notificationsOn: subscriptions.error ? null : withNotifications.has(player.id),
+      visitDays: visits.error ? null : visitDays.get(player.id) ?? 0,
+      lastSeenOn: deviceSummary({ device: player.last_device, browser: player.last_browser, viaApp: player.last_via_app }),
     })),
   });
 }

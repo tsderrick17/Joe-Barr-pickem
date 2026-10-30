@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The Players page shows who has the app, notifications and when they were last here
+
+Owner wanted, for each player: emails, the app, notifications, last login, visits over the last week, and phone or computer and browser, with a tidier page. The page is now one card per player with a figures strip on top. New data is deliberately coarse and cheap: the visits are one row per player per Eastern day (a count of days out of seven, not every page view), the device is a fixed label made from the User-Agent (the raw text is not stored), and "has the app" is known only once the installed app has made a request (it marks them with `X-Pickem-App`), so it reads "not yet" until then. An iPhone cannot tell the website about its Home Screen app from a Safari tab, so the page says what was last seen, not what is installed.
+
 ## 2026-10-30 - iPhone haptics: the finger must flip the switch
 
 The owner's iPhone (iPhone 16, iOS 26.6.1, Home Screen app, System Haptics on) felt nothing in the Feel test. Cause: in iOS 26.5 Apple stopped the switch tick when a page flips the switch from code (WebKit only ticks for a real finger's click; the open-source ios-haptics library documents the same break). Updating iOS does not help. What still works is an invisible label with a hidden switch laid over the button, so the finger's own tap flips it (`src/components/haptic-tap.tsx`, the approach ios-haptics 3.2 adopted). That allows exactly one tick per tap and none after a wait or mid-drag, so on an iPhone the choices tick and success, warning, ratchet and the pull's lock-in stay silent; the Feel test's timing experiments were removed and a plain switch added to compare. Android is unchanged. If even this stops working in a later iOS, iPhone haptics are dropped and Android keeps them.
