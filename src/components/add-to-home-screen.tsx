@@ -9,7 +9,6 @@ type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<
 type Help = ReturnType<typeof homeScreenHelp>;
 
 const DISMISSED_KEY = "pickem-home-screen-dismissed";
-const HAVE_IT_KEY = "pickem-home-screen-have-it";
 const INSTALLED_KEY = "pickem-home-screen-installed";
 
 function readStored(key: string) {
@@ -69,9 +68,9 @@ const readFacts = () => facts ??= {
   now: Date.now(),
 };
 
-type Quiet = { dismissedAt: number | null; haveItAt: number | null; installedBefore: boolean };
+type Quiet = { dismissedAt: number | null; installedBefore: boolean };
 let quiet: Quiet | null = null;
-const readQuiet = () => quiet ??= { dismissedAt: readStored(DISMISSED_KEY), haveItAt: readStored(HAVE_IT_KEY), installedBefore: readStored(INSTALLED_KEY) !== null };
+const readQuiet = () => quiet ??= { dismissedAt: readStored(DISMISSED_KEY), installedBefore: readStored(INSTALLED_KEY) !== null };
 
 const currentOffer = () => offered;
 const currentRelated = () => related;
@@ -101,10 +100,10 @@ function useHomeScreen() {
     } catch { /* the phone closed it; the steps are still there */ }
   }
 
-  function remember(key: string, field: "dismissedAt" | "haveItAt") {
+  function dismiss() {
     const at = Date.now();
-    store(key, String(at));
-    quiet = { ...readQuiet(), [field]: at };
+    store(DISMISSED_KEY, String(at));
+    quiet = { ...readQuiet(), dismissedAt: at };
     announce();
   }
 
@@ -112,9 +111,8 @@ function useHomeScreen() {
     help,
     userAgent: phone?.userAgent ?? "",
     install,
-    dismiss: () => remember(DISMISSED_KEY, "dismissedAt"),
-    haveIt: () => remember(HAVE_IT_KEY, "haveItAt"),
-    bannerVisible: ready && homeScreenBannerVisible({ help, dismissedAt: remembered.dismissedAt, haveItAt: remembered.haveItAt, now: phone.now }),
+    dismiss,
+    bannerVisible: ready && homeScreenBannerVisible({ help, dismissedAt: remembered.dismissedAt, now: phone.now }),
   };
 }
 
@@ -149,7 +147,7 @@ function Steps({ help, userAgent, copyClass }: { help: Help; userAgent: string; 
   const list = "mt-3 list-decimal space-y-2 pl-6 leading-6";
   if (help === "iphone-safari") return <ol className={list}>
     <li>Tap the Share button <ShareIcon />. (Don’t see it? Tap <strong>•••</strong> first.)</li>
-    <li>Scroll down and tap <strong>Add to Home Screen</strong>. (Not there? Open this page in the Safari app first.)</li>
+    <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
     <li>Tap <strong>Add</strong>. {OPEN_IT} and sign in with your PIN.</li>
   </ol>;
   if (help === "iphone-browser") return <ol className={list}>
@@ -191,11 +189,11 @@ function Steps({ help, userAgent, copyClass }: { help: Help; userAgent: string; 
 /**
  * Helps every player put the pool on their phone's Home Screen (or a Chromebook's launcher), where it opens like an app and can send notifications.
  * `banner` is the slim bar under the header of every page; it shows on any phone or Chromebook that is not running the app (and not known to have it),
- * and stays away 14 days after "Not now" or 180 days after "I already have it". `card` is the always-there version on the Notifications page.
- * Where the browser offers its own one-tap Install (Android, Chromebook) that is the button; everyone else gets one tap on "Show me how" and three steps.
+ * and stays away 14 days after its ✕ (the only way to close it). `card` is the always-there version on the Notifications page. Where the browser offers
+ * its own one-tap Install (Android, Chromebook) that is the button; everyone else gets one tap on "Show me how", which gives way to three steps.
  */
 export function AddToHomeScreen({ variant }: { variant: "banner" | "card" }) {
-  const { help, userAgent, install, dismiss, haveIt, bannerVisible } = useHomeScreen();
+  const { help, userAgent, install, dismiss, bannerVisible } = useHomeScreen();
   const [open, setOpen] = useState(false);
   const device = isChromebook(help) ? "Chromebook" : "phone";
 
@@ -220,12 +218,11 @@ export function AddToHomeScreen({ variant }: { variant: "banner" | "card" }) {
       <p className="min-w-0 flex-1 text-[15px] font-bold leading-5">{isChromebook(help) ? "Get Lead Pipe Locks as an app on this Chromebook" : "Add Lead Pipe Locks to your Home Screen"}</p>
       {hasInstallButton(help)
         ? <button className={goldButton} onClick={install} type="button">Install</button>
-        : <button aria-expanded={open} className={goldButton} onClick={() => setOpen((value) => !value)} type="button">{open ? "Hide" : "Show me how"}</button>}
+        : open ? null : <button className={goldButton} onClick={() => setOpen(true)} type="button">Show me how</button>}
       <button aria-label="Not now" className="-mr-2 inline-flex size-11 shrink-0 items-center justify-center text-xl leading-none text-[#e6d6b4]" onClick={dismiss} type="button">✕</button>
     </div>
     {open && !hasInstallButton(help) ? <div className="mx-auto mt-1 max-w-3xl text-[15px] text-[#fbf8f1]">
       <Steps copyClass={goldButton} help={help} userAgent={userAgent} />
-      <p className="mt-2 leading-6">Already have it? <button className="min-h-11 font-bold text-[#e6c88f] underline underline-offset-4" onClick={haveIt} type="button">I already have it</button></p>
     </div> : null}
   </section>;
 }

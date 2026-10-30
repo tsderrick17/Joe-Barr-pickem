@@ -2,8 +2,6 @@
 
 /** How long "Not now" keeps the banner away. The card on the Notifications page is always there. */
 export const BANNER_QUIET_DAYS = 14;
-/** How long "I already have it" keeps the banner away (an iPhone's Safari cannot see the Home Screen app, so it cannot know). */
-export const HAVE_IT_QUIET_DAYS = 180;
 
 const DAY = 86_400_000;
 // Apps that open links in their own window (Facebook, Instagram, Messenger, the Google app, Gmail and the like). They cannot add anything to the Home Screen.
@@ -66,11 +64,11 @@ export function stillQuiet(at, now, days) {
 }
 
 /**
- * Whether the slim banner shows: on any phone that is not running the Home Screen app and not known to have it, unless "Not now" (14 days) or
- * "I already have it" (180 days) was tapped.
- * @param {{ help: ReturnType<typeof homeScreenHelp>, dismissedAt: number | null, haveItAt?: number | null, now: number }} facts
+ * Whether the slim banner shows: on any phone that is not running the Home Screen app and not known to have it, unless its ✕ ("Not now") was
+ * tapped in the last 14 days.
+ * @param {{ help: ReturnType<typeof homeScreenHelp>, dismissedAt: number | null, now: number }} facts
  */
-export function homeScreenBannerVisible({ help, dismissedAt, haveItAt = null, now }) {
+export function homeScreenBannerVisible({ help, dismissedAt, now }) {
   if (help === "installed" || help === "installed-tab" || help === "none") return false;
-  return !stillQuiet(dismissedAt, now, BANNER_QUIET_DAYS) && !stillQuiet(haveItAt, now, HAVE_IT_QUIET_DAYS);
+  return !stillQuiet(dismissedAt, now, BANNER_QUIET_DAYS);
 }

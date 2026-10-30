@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - The Add to Home Screen banner closes one way
+
+Owner found the banner had three ways to make it go away (Hide, the ✕ and "I already have it") and that the iPhone step "Not there? Open this page in the Safari app first" confused more than it helped (it showed in Safari itself). Now the ✕ is the only way to close it and keeps it away 14 days, as before; "Show me how" gives way to the steps instead of turning into Hide; "I already have it" (180 days) and the Safari aside are gone. Supersedes the "I already have it" detail of the Home Screen entries below. The notifications banner is unchanged (its ✕ also waits 14 days).
+
 ## 2026-10-30 - The trophy table turns only by its arrows
 
 Owner: turning the trophies only with the arrows is cleaner. Dragging, swiping and flicking the table are removed (a finger on the table now simply scrolls the page); the arrows and arrow keys turn it slowly and evenly, one trophy at a time, as before. Also, the rafters said "No Pick'em champion yet" for a moment every time the page opened, because the turntable showed before the champions had loaded: now the rafters stay bare until they arrive, and the note shows only for a trophy nobody has won.
