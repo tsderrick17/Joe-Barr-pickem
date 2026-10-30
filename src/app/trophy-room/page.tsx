@@ -116,7 +116,7 @@ export default function TrophyRoomPage() {
 
         <section aria-labelledby="trophy-display" className="desk-rule-bottom py-8">
           <h2 className="sr-only" id="trophy-display">The trophies</h2>
-          <div><TrophyTurntable seasons={data?.trophies ?? []} /></div>
+          <div><TrophyTurntable seasons={data?.trophies ?? null} /></div>
         </section>
 
         {data ? <>

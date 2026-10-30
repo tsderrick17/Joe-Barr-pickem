@@ -326,11 +326,11 @@ measure database requests or end-to-end route time.
   apps since iOS 16.4), a link opened inside another app's window such as Facebook, Instagram, Gmail or the Google app (open it in Safari or Chrome first,
   with Copy link), the Android menus of Chrome, Samsung Internet and Firefox, and Chrome on a Chromebook (installed, it opens in its own window from
   the launcher). When the browser (Android, Chromebook) offers its own install (`beforeinstallprompt`,
-  kept from the moment the page loads; Chrome waits for a tap and 30 seconds on the site) the button becomes one-tap Install. "Not now" hides the banner
-  14 days and "I already have it" 180 days (notes in the phone's own storage). It never shows on a computer or in the installed app, nor on an Android
+  kept from the moment the page loads; Chrome waits for a tap and 30 seconds on the site) the button becomes one-tap Install. Its ✕ ("Not now", the only
+  way to close it; opening the steps replaces "Show me how" rather than adding a Hide) hides the banner 14 days (a note in the phone's own storage). It never shows on a computer or in the installed app, nor on an Android
   phone known to have the app: Chrome answers that itself (`getInstalledRelatedApps`, from `related_applications` in the manifest, which also notices the
   app being removed), and in other browsers a note left when the app was last opened counts (the app and the browser share storage on Android; an iPhone's
-  Safari cannot see its Home Screen app, hence "I already have it"). The Notifications page carries the same help as a card for everyone, always. The
+  Safari cannot see its Home Screen app, so there the ✕ is the answer). The Notifications page carries the same help as a card for everyone, always. The
   manifest (`src/app/manifest.ts`) states `id: "/"`, the identity browsers already computed for earlier installs. Nothing records who has installed it.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,
@@ -345,8 +345,10 @@ measure database requests or end-to-end route time.
   "not open yet" / 404 and the name-menu link is absent.
 - It shows three trophies (Pick'em, Bowl Pool, Survivor) on a turning table, built from 120 rendered pictures (3 degrees apart) drawn
   on a canvas, with three sharp resting views; a phone gets the same 120 views at 660 wide (the full set is more than an iPhone page
-  can hold). The champions of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won
-  (a person's banner is drawn at the screen's full resolution and moves with a smooth swing and wave).
+  can hold). Only the arrows at its sides (and the arrow keys) turn it, one trophy at a time; it cannot be dragged or swiped. The champions
+  of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won (a person's banner is drawn at the
+  screen's full resolution and moves with a smooth swing and wave). Until the champions have loaded the rafters stay bare; "No ... champion
+  yet" shows only for a trophy nobody has won.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
   appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
