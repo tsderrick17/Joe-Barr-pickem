@@ -20,6 +20,11 @@ test("vercel.json runs the ignored build step", async () => {
   assert.equal(config.ignoreCommand, "node scripts/vercel-ignore-build.mjs");
 });
 
+test("functions run in Portland, next to the Supabase database in Oregon", async () => {
+  const config = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
+  assert.deepEqual(config.regions, ["pdx1"]);
+});
+
 test("the dashboards read watchdog status without bundling the reminder worker and image renderer", async () => {
   for (const route of ["admin/grading-dashboard", "admin/operations-map"]) {
     const source = await readFile(new URL(`../src/app/api/${route}/route.ts`, import.meta.url), "utf8");
