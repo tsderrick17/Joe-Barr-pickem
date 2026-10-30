@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { cellSize, glide, mergeSaved, patchSize, tileBox, visibleCopies, WORKSHOP_PATCH as PATCH, WORKSHOP_SAVED_KEY, zoomAt } from "@/lib/workshop-board.js";
-import { changedSummary, defaultSettings, KNOBS, knobsFor, liveKnobs, pieceById, SAVED_RULES, type Piece, type Settings } from "@/components/workshop-pieces";
+import { changedSummary, defaultSettings, KNOBS, knobsFor, liveEase, liveKnobs, pieceById, SAVED_RULES, ZoomControl, type Piece, type Settings } from "@/components/workshop-pieces";
 
 /**
  * The Workshop: every custom piece of the pool on one board with no edges. Drag (or swipe, or scroll) to move around; the patch of pieces
@@ -31,9 +31,10 @@ const tuneIcon = (
 );
 
 /** One copy of a piece. Tapping plays only this copy; the settings are shared with every other copy. */
-function Tile({ piece, box, settings, update, copy, labels, selected, onTune }: { piece: Piece; box: CSSProperties; settings: Settings; update: (change: (current: Settings) => Settings) => void; copy: string; labels: boolean; selected: boolean; onTune: () => void }) {
-  const [plays, setPlays] = useState(0);
-  const play = () => setPlays((count) => count + 1);
+function Tile({ piece, box, settings, update, copy, labels, selected, onTune, playAll }: { piece: Piece; box: CSSProperties; settings: Settings; update: (change: (current: Settings) => Settings) => void; copy: string; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
+  const [own, setOwn] = useState(0);
+  const plays = own + playAll;   // Menu > Play everything plays every copy at once
+  const play = () => setOwn((count) => count + 1);
   const tap = piece.tapToPlay ? {
     "aria-label": `Play the ${piece.title.toLowerCase()}`,
     onClick: play,
@@ -43,11 +44,11 @@ function Tile({ piece, box, settings, update, copy, labels, selected, onTune }: 
   } : {};
   return (
     <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} style={box}>
-      <div className={`workshop-stage ${piece.tapToPlay ? "is-playable" : ""}`} style={{ ...piece.style?.(settings), "--asset-zoom": piece.zoom ?? 1 } as CSSProperties} {...tap}>
+      <div className={`workshop-stage ${piece.tapToPlay ? "is-playable" : ""}`} style={{ ...piece.style?.(settings), "--asset-zoom": (piece.zoom ?? 1) * (settings.zoom[piece.id] ?? 1) } as CSSProperties} {...tap}>
         {piece.draw({ settings, update, plays, play, copy })}
       </div>
       {labels ? <span className="workshop-label">{piece.title}</span> : null}
-      {piece.controls || piece.knobGroup ? <button aria-label={`Tune the ${piece.title.toLowerCase()}`} className="workshop-tune" onClick={onTune} type="button">{tuneIcon}</button> : null}
+      <button aria-label={`Tune the ${piece.title.toLowerCase()}`} className="workshop-tune" onClick={onTune} type="button">{tuneIcon}</button>
     </div>
   );
 }
@@ -55,7 +56,11 @@ function Tile({ piece, box, settings, update, copy, labels, selected, onTune }: 
 /** The settings of one piece, out of the way until asked for. */
 function TunePanel({ piece, settings, update, onClose }: { piece: Piece; settings: Settings; update: (change: (current: Settings) => Settings) => void; onClose: () => void }) {
   const group = piece.knobGroup;
-  const resetGroup = () => group && update((current) => ({ ...current, knobs: { ...current.knobs, ...Object.fromEntries(KNOBS[group].map((knob) => [knob.key, knob.live])) } }));
+  const resetGroup = () => update((current) => ({
+    ...current,
+    knobs: group ? { ...current.knobs, ...Object.fromEntries(KNOBS[group].map((knob) => [knob.key, knob.live])) } : current.knobs,
+    ease: piece.easeTarget ? { ...current.ease, [piece.easeTarget]: "live" } : current.ease,
+  }));
   return (
     <aside aria-label={`${piece.title} settings`} className="workshop-panel" role="dialog">
       <header>
@@ -68,11 +73,12 @@ function TunePanel({ piece, settings, update, onClose }: { piece: Piece; setting
       <div className="workshop-panel-controls">
         {piece.controls?.(settings, update)}
         {group ? knobsFor(group, settings, update) : null}
+        <ZoomControl piece={piece} settings={settings} update={update} />
       </div>
-      {piece.actions || group ? (
+      {piece.actions || group || piece.easeTarget ? (
         <div className="asset-actions">
           {piece.actions?.(settings, update)}
-          {group ? <button className="asset-replay" onClick={resetGroup} type="button">Live values</button> : null}
+          {group || piece.easeTarget ? <button className="asset-replay" onClick={resetGroup} type="button">Live values</button> : null}
         </div>
       ) : null}
     </aside>
@@ -86,6 +92,7 @@ export default function WorkshopBoard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moved, setMoved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [playAll, setPlayAll] = useState(0);
   const [night, setNight] = useState(() => { try { return window.localStorage.getItem("pickem-theme") === "night"; } catch { return document.documentElement.dataset.theme === "night"; } });
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [copies, setCopies] = useState<Copy[]>([]);
@@ -244,7 +251,7 @@ export default function WorkshopBoard() {
   }, [tuning]);
 
   // ---- the menu ----
-  const summary = changedSummary(settings.knobs);
+  const summary = changedSummary(settings);
   const copy = async () => {
     try { await navigator.clipboard.writeText(summary.text); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { /* the text is on screen to copy by hand */ }
   };
@@ -284,6 +291,7 @@ export default function WorkshopBoard() {
                 copy={entry.key}
                 key={`${entry.key}-${place.id}`}
                 labels={settings.view.labels}
+                playAll={playAll}
                 onTune={() => { setTuning(piece.id); setMenuOpen(false); }}
                 piece={piece}
                 selected={tuning === piece.id}
@@ -315,13 +323,14 @@ export default function WorkshopBoard() {
               <input checked={night} onChange={toggleNight} type="checkbox" />
               Night
             </label>
+            <button className="asset-replay" onClick={() => { setPlayAll((count) => count + 1); setMenuOpen(false); }} type="button">Play everything</button>
             <div className="workshop-settings">
               <h2>Your settings</h2>
               <p>Anything changed from the live value. Copy it and send it over to make it the new default.</p>
               <pre>{summary.text}</pre>
               <div className="asset-actions">
                 <button className="asset-replay" disabled={!summary.count} onClick={() => void copy()} type="button">{copied ? "Copied" : "Copy settings"}</button>
-                <button className="asset-replay" disabled={!summary.count} onClick={() => update((current) => ({ ...current, knobs: liveKnobs() }))} type="button">Reset all</button>
+                <button className="asset-replay" disabled={!summary.count} onClick={() => update((current) => ({ ...current, knobs: liveKnobs(), ease: liveEase() }))} type="button">Reset all</button>
               </div>
             </div>
           </div>

@@ -227,3 +227,110 @@ test("the megaphone rests raised and raises again only when tapped", async ({ pa
   await expect(megaphone.locator(".bowl-team-pick.is-new")).toHaveCount(1);
   await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(1);
 });
+
+/** Moves the board up by arrow key, to bring the lower rows (the pull-to-refresh strip and the three banners) into view. */
+async function lookDown(page: Page, presses = 8) {
+  await page.locator(".workshop-board").focus();
+  for (let i = 0; i < presses; i += 1) await page.keyboard.press("ArrowDown");
+  await expect.poll(async () => (await camera(page))!.y).toBe(64 - 80 * presses);
+}
+
+for (const theme of ["day", "night"]) {
+  test(`Workshop lower rows: the pull-to-refresh strip and the three banners, ${theme} at desktop-1280`, async ({ page }) => {
+    await openBoard(page, { theme });
+    await lookDown(page);
+    await expect(page.locator("[data-piece=banner-bowl] canvas").first()).toBeVisible();
+    await holdStill(page);
+    await expect(page).toHaveScreenshot(`workshop-lower-${theme}-desktop-1280.png`);
+  });
+}
+
+test("the pull-to-refresh strip: slide it by hand, or tap to watch a whole pull", async ({ page }) => {
+  await openBoard(page);
+  await lookDown(page);
+  const strip = await nearestMiddle(page, "Play the pull to refresh");   // the copy on screen: a tap plays only this one
+  const scene = () => strip.locator("svg").innerHTML();
+  const planted = await scene();
+  await (await nearestMiddle(page, "Tune the pull to refresh")).click();
+  const panel = page.getByRole("dialog", { name: "Pull to refresh settings" });
+  await panel.getByLabel("How far it is pulled").fill("0");
+  const slack = await scene();
+  expect(slack, "not pulled: the pole is up and the counter still at 4").not.toBe(planted);
+  await panel.getByLabel("How far it is pulled").fill("0.3");
+  expect(await scene(), "partly pulled: somewhere in between").not.toBe(slack);
+  await panel.getByLabel("How far it is pulled").fill("1");
+  expect(await scene(), "all the way: as it was").toBe(planted);
+  // A tap plays a whole pull and ends where it started.
+  await page.getByRole("button", { name: "Close settings" }).click();
+  await strip.click();
+  await expect.poll(scene, { timeout: 5000 }).not.toBe(planted);
+  await expect.poll(scene, { timeout: 8000 }).toBe(planted);
+});
+
+test("each trophy banner has its own words and colour: turn the hue, and live puts it back", async ({ page }) => {
+  await openBoard(page);
+  await lookDown(page);
+  for (const pool of ["pickem", "bowl", "survivor"]) await expect(page.locator(`[data-piece=banner-${pool}] canvas`).first()).toBeVisible();
+  const rafters = page.locator("[data-piece=banner-bowl] .trophy-rafters").first();
+  await expect(rafters, "live colours come from the pool's own style, not from the board").not.toHaveAttribute("style", /--banner/);
+  await (await nearestMiddle(page, "Tune the bowl pool banner")).click();
+  const panel = page.getByRole("dialog", { name: "Bowl Pool banner settings" });
+  await expect(panel.getByLabel("Title")).toHaveValue("Bowl Pool champion");
+  await panel.getByLabel("Name").fill("Rick");
+  await panel.getByLabel("Years").fill("2026, 2024, abc");
+  await panel.locator(".asset-knob", { hasText: "Turn the hue" }).locator("input").fill("40");
+  await expect(rafters).toHaveAttribute("style", /--banner: oklch\(0\.400 0\.140 295\.0\)/);
+  // every copy of the banner is turned, and the menu names the change
+  for (const copy of await page.locator("[data-piece=banner-bowl] .trophy-rafters").all()) await expect(copy).toHaveAttribute("style", /--banner:/);
+  await page.getByRole("button", { name: /^Menu/ }).click();
+  await expect(page.locator(".workshop-settings pre")).toHaveText("Turn the hue (bowlHue): 40deg, live 0deg");
+  await panel.getByRole("button", { name: "Live values" }).click();
+  await expect(rafters).not.toHaveAttribute("style", /--banner/);
+});
+
+test("an animation's easing is a setting: choose one, see it on the piece and in Your settings, and Live values restores it", async ({ page }) => {
+  await openBoard(page);
+  const stage = page.locator("[data-piece=highlight] .workshop-stage").first();
+  await expect(stage).not.toHaveAttribute("style", /ease/);
+  await (await nearestMiddle(page, "Tune the pick highlight")).click();
+  const panel = page.getByRole("dialog", { name: "Pick highlight settings" });
+  await panel.getByRole("group", { name: "Easing" }).getByRole("button", { name: "Soft" }).click();
+  await expect(stage).toHaveAttribute("style", /--selection-sweep-ease: ease-in-out/);
+  await page.getByRole("button", { name: /^Menu/ }).click();
+  await expect(page.locator(".workshop-settings pre")).toHaveText("Pick highlight easing (--selection-sweep-ease): ease-in-out, live cubic-bezier(.18, .72, .18, 1)");
+  await expect(page.locator(".workshop-count")).toHaveText("1");
+  await panel.getByRole("button", { name: "Live values" }).click();
+  await expect(stage).not.toHaveAttribute("style", /ease/);
+  await expect(page.locator(".workshop-count")).toHaveCount(0);
+});
+
+test("zoom in tile enlarges one piece in the Workshop only, and is not a setting to copy", async ({ page }) => {
+  await openBoard(page);
+  const stage = page.locator("[data-piece=stamp] .workshop-stage").first();
+  await expect(stage).toHaveAttribute("style", /--asset-zoom: 2\.2/);
+  await (await nearestMiddle(page, "Tune the result stamp")).click();
+  await page.getByRole("dialog", { name: "Result stamp settings" }).getByText("Zoom in tile").locator("..").locator("input").fill("2");
+  await expect(stage).toHaveAttribute("style", /--asset-zoom: 4\.4/);
+  await expect(page.locator(".workshop-count")).toHaveCount(0);
+  await page.getByRole("button", { name: /^Menu/ }).click();
+  await expect(page.locator(".workshop-settings pre")).toHaveText("Every setting is at its live value.");
+});
+
+test("Play everything plays every copy at once", async ({ page }) => {
+  await openBoard(page);
+  await expect(page.locator(".bowl-team-pick.is-new")).toHaveCount(0);
+  await expect(page.getByLabel("Against the spread: win").first()).toBeVisible();
+  await page.getByRole("button", { name: /^Menu/ }).click();
+  await page.getByRole("button", { name: "Play everything" }).click();
+  await expect(page.locator(".bowl-team-pick.is-new").first()).toBeVisible();
+  await expect(page.getByLabel("Against the spread: loss").first()).toBeVisible();
+});
+
+test("a damaged save is ignored value by value: bad easing, zoom and pull fall back, good ones stay", async ({ page }) => {
+  await openBoard(page, { saved: JSON.stringify({ ease: { highlight: "wobbly", pennant: "soft" }, zoom: { chip: 99, stamp: 1.5 }, pullAt: "far", banners: { bowl: { name: 7, tag: "Bowl Pool champion" } } }) });
+  await expect(page.locator("[data-piece=chip] .workshop-stage").first()).toHaveAttribute("style", /--asset-zoom: 1\.5/);   // 99 is out of range: the live zoom
+  await expect(page.locator("[data-piece=stamp] .workshop-stage").first()).toHaveAttribute("style", /--asset-zoom: 3\.3/);   // 2.2 x 1.5 kept
+  await expect(page.locator("[data-piece=highlight] .workshop-stage").first()).not.toHaveAttribute("style", /ease/);
+  await expect(page.locator("[data-piece=pennant] .workshop-stage").first()).toHaveAttribute("style", /--megaphone-raise-ease: ease-in-out/);
+  await expect(page.locator(".workshop-count")).toHaveText("1");
+});

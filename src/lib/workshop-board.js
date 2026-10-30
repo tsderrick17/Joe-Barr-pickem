@@ -8,15 +8,18 @@ export const TILE_GAP = 6;
 export const WORKSHOP_SAVED_KEY = "pickem-workshop";
 
 /**
- * One patch of the board, on a grid of 6 columns by 4 rows; it repeats in every direction, every other row shifted half a patch.
+ * One patch of the board, on a grid of 6 columns by 7 rows; it repeats in every direction, every other row shifted half a patch.
  *   crest crest crest submit submit stamp
  *   ball  ball  pen   pen    mega   chip
  *   ball  ball  games wins   mega   chip
  *   over  over  over  out    out    out
+ *   pull  pull  pull  pull   pull   pull
+ *   red   red   blue  blue   green  green
+ *   red   red   blue  blue   green  green
  */
 export const WORKSHOP_PATCH = {
   cols: 6,
-  rows: 4,
+  rows: 7,
   tiles: [
     { id: "crest", col: 0, row: 0, cols: 3, rows: 1 },
     { id: "submit", col: 3, row: 0, cols: 2, rows: 1 },
@@ -29,6 +32,10 @@ export const WORKSHOP_PATCH = {
     { id: "wins", col: 3, row: 2, cols: 1, rows: 1 },
     { id: "season-over", col: 0, row: 3, cols: 3, rows: 1 },
     { id: "eliminated", col: 3, row: 3, cols: 3, rows: 1 },
+    { id: "pull", col: 0, row: 4, cols: 6, rows: 1 },
+    { id: "banner-pickem", col: 0, row: 5, cols: 2, rows: 2 },
+    { id: "banner-bowl", col: 2, row: 5, cols: 2, rows: 2 },
+    { id: "banner-survivor", col: 4, row: 5, cols: 2, rows: 2 },
   ],
 };
 

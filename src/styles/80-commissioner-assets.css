@@ -247,6 +247,10 @@ html.has-workshop, html.has-workshop body { overflow: hidden; overscroll-behavio
 .asset-highlight { display: inline-block; font-size: 1.05rem; font-weight: 700; max-width: 100%; position: relative; }
 .asset-highlight .slate-team-label { white-space: nowrap; }
 .asset-banner { width: 100%; }
+/* The pull-to-refresh strip sits in its tile instead of being fixed along the top of the page. */
+.asset-pull.pull-chain { left: auto; position: relative; right: auto; top: auto; z-index: auto; }
+/* A trophy banner on its rafters: just the hanging cloth, with the Trophy Room's own cloth colours. */
+.workshop-stage .asset-rafters { border-top: 0; overflow: visible; padding: 0; }
 .asset-banner .season-closed-banner { margin: 0; }
 .asset-knobs { display: grid; gap: .45rem; }
 .asset-knob { align-items: center; display: grid; font-size: .75rem; gap: .4rem; grid-template-columns: 6.4rem minmax(0, 1fr) 3.4rem; }

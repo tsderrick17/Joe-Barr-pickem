@@ -1,12 +1,15 @@
 "use client";
 
-import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { BowlCrest, BowlMegaphone } from "@/components/bowl-pool-marks";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import FootballLoader from "@/components/football-loader";
+import PullChainScene from "@/components/pull-chain-scene";
 import SeasonClosedBanner from "@/components/season-closed-banner";
 import SurvivorPokerChip, { TOSS_DEFAULTS } from "@/components/survivor-poker-chip";
+import TrophyBanner from "@/components/trophy-banner";
+import { PUFF_AT } from "@/lib/pull-chain.js";
 import { STROKE_JITTER_DEFAULTS, strokeJitter } from "@/lib/stroke-jitter";
 
 /**
@@ -17,8 +20,28 @@ import { STROKE_JITTER_DEFAULTS, strokeJitter } from "@/lib/stroke-jitter";
 
 export type Knob = { key: string; label: string; min: number; max: number; step: number; unit: string; live: number };
 
+/** Every piece on the board, in the order they are listed below. */
+const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "wins", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner-pickem", "banner-bowl", "banner-survivor"];
+
+/** The three trophy banners hang in the pool's colour (red Pick'em, blue Bowl, green Survivor), given here as oklch lightness, chroma and hue. */
+const CLOTH = {
+  pickem: { title: "Pick’em banner", base: [0.42, 0.18, 25], dark: [0.26, 0.12, 25], light: [0.56, 0.2, 25] },
+  bowl: { title: "Bowl Pool banner", base: [0.4, 0.14, 255], dark: [0.25, 0.1, 255], light: [0.56, 0.15, 255] },
+  survivor: { title: "Survivor banner", base: [0.36, 0.1, 160], dark: [0.24, 0.07, 160], light: [0.52, 0.12, 160] },
+} as const;
+type Pool = keyof typeof CLOTH;
+const POOLS = Object.keys(CLOTH) as Pool[];
+const bannerKnobs = (pool: Pool): Knob[] => [
+  { key: `${pool}Hue`, label: "Turn the hue", min: -180, max: 180, step: 1, unit: "deg", live: 0 },
+  { key: `${pool}Light`, label: "Lighter or darker", min: -0.2, max: 0.2, step: 0.01, unit: "", live: 0 },
+  { key: `${pool}Strength`, label: "Colour strength", min: 0, max: 2, step: 0.05, unit: "x", live: 1 },
+];
+
 // The live value of every knob is the one the app uses today; the board starts there.
 export const KNOBS: Record<string, Knob[]> = {
+  "banner-pickem": bannerKnobs("pickem"),
+  "banner-bowl": bannerKnobs("bowl"),
+  "banner-survivor": bannerKnobs("survivor"),
   submit: [{ key: "--receipt-attention-cycle", label: "Sheen + press every", min: 2, max: 30, step: 0.5, unit: "s", live: 12 }],
   highlight: [
     { key: "--selection-sweep-ms", label: "Sweep length", min: 150, max: 2000, step: 10, unit: "ms", live: 600 },
@@ -78,8 +101,32 @@ export const FOOTBALL_FRAMES = 108;
 const CHIP_STATES = [["available", "Available"], ["picked", "Picked"], ["official", "Official"], ["unavailable", "Unavailable"]] as const;
 const CHIP_SIZES = [["summary", "Small"], ["slate", "Slate"], ["ticket", "Ticket"]] as const;
 
+/** How an animation eases, for the three pieces whose easing is a setting: what they do today ("live") or another curve. */
+const EASES = [["live", "Live"], ["even", "Even"], ["soft", "Soft"], ["snappy", "Snappy"], ["bouncy", "Bouncy"]] as const;
+type EaseKey = (typeof EASES)[number][0];
+const EASE_CURVES: Record<Exclude<EaseKey, "live">, string> = { even: "linear", soft: "ease-in-out", snappy: "cubic-bezier(.05, .9, .1, 1)", bouncy: "cubic-bezier(.34, 1.56, .64, 1)" };
+const EASE_TARGETS = {
+  highlight: { label: "Pick highlight", variable: "--selection-sweep-ease", live: "cubic-bezier(.18, .72, .18, 1)" },
+  pennant: { label: "Bowl Pool megaphone", variable: "--megaphone-raise-ease", live: "cubic-bezier(.18, .8, .2, 1)" },
+  crest: { label: "Bowl crest", variable: "--crest-rule-ease", live: "cubic-bezier(.22, .61, .36, 1)" },
+} as const;
+export type EaseTarget = keyof typeof EASE_TARGETS;
+const easeTargets = Object.keys(EASE_TARGETS) as EaseTarget[];
+export const liveEase = (): Record<EaseTarget, EaseKey> => ({ highlight: "live", pennant: "live", crest: "live" });
+/** The CSS variable for a chosen easing; nothing at all while it is the live one, so the page's own curve is used. */
+const easeVars = (target: EaseTarget, settings: Settings): CSSProperties => {
+  const choice = settings.ease[target];
+  return choice === "live" ? {} : ({ [EASE_TARGETS[target].variable]: EASE_CURVES[choice] } as CSSProperties);
+};
+
 /** Everything the Commissioner can set on the board. Every copy of a piece shows the same settings. */
 export type Settings = {
+  ease: Record<EaseTarget, EaseKey>;
+  banners: Record<Pool, { tag: string; name: string; years: string }>;
+  /** How far the pull-to-refresh chain is pulled when it is at rest (0 to 1.3; the chain is planted from 0.5 and armed at 1). */
+  pullAt: number;
+  /** Showing a piece larger or smaller in its tile; only the Workshop's view, never a setting to copy. */
+  zoom: Record<string, number>;
   knobs: Values;
   chip: { team: string; state: (typeof CHIP_STATES)[number][0]; size: (typeof CHIP_SIZES)[number][0]; spinning: boolean };
   stamp: { result: "win" | "loss"; variant: "ticket" | "mark"; tilted: "yes" | "no" };
@@ -95,6 +142,14 @@ export type Settings = {
 export const liveKnobs = (): Values => Object.fromEntries(ALL_KNOBS.map((knob) => [knob.key, knob.live]));
 export const defaultSettings = (): Settings => ({
   knobs: liveKnobs(),
+  ease: liveEase(),
+  banners: {
+    pickem: { tag: "Pick’em champion", name: "Tyler", years: "2025, 2023" },
+    bowl: { tag: "Bowl Pool champion", name: "Connor", years: "2024" },
+    survivor: { tag: "Survivor champion", name: "Gary", years: "2025, 2022" },
+  },
+  pullAt: 1,
+  zoom: Object.fromEntries(PIECE_IDS.map((id) => [id, 1])),
   chip: { team: "KC", state: "available", size: "ticket", spinning: false },
   stamp: { result: "win", variant: "ticket", tilted: "no" },
   pennantTeam: "ORE",
@@ -105,30 +160,15 @@ export const defaultSettings = (): Settings => ({
   football: { paused: false, frame: 1 },
   view: { labels: false },
 });
-/** What a saved copy of the settings must fit to be used (see mergeSaved). */
-export const SAVED_RULES = {
-  limits: { ...Object.fromEntries(ALL_KNOBS.map((knob) => [`knobs.${knob.key}`, [knob.min, knob.max]])), "football.frame": [1, FOOTBALL_FRAMES] },
-  choices: {
-    "chip.team": CHIP_TEAMS.map(([key]) => key),
-    "chip.state": CHIP_STATES.map(([key]) => key),
-    "chip.size": CHIP_SIZES.map(([key]) => key),
-    "stamp.result": ["win", "loss"],
-    "stamp.variant": ["ticket", "mark"],
-    "stamp.tilted": ["yes", "no"],
-    pennantTeam: Object.keys(PENNANT_TEAMS),
-    submitState: ["unsaved", "saved"],
-  },
-} as { limits: Record<string, [number, number]>; choices: Record<string, string[]> };
-
 /** The settings changed from their live values, as the text the Commissioner copies and sends. */
-export function changedSummary(values: Values) {
-  const changed = ALL_KNOBS.filter((knob) => values[knob.key] !== knob.live);
-  return {
-    count: changed.length,
-    text: changed.length
-      ? changed.map((knob) => `${knob.label} (${knob.key}): ${cssValue(knob, values[knob.key])}, live ${cssValue(knob, knob.live)}`).join("\n")
-      : "Every setting is at its live value.",
-  };
+export function changedSummary(settings: Settings) {
+  const lines = ALL_KNOBS.filter((knob) => settings.knobs[knob.key] !== knob.live).map((knob) => `${knob.label} (${knob.key}): ${cssValue(knob, settings.knobs[knob.key])}, live ${cssValue(knob, knob.live)}`);
+  for (const target of easeTargets) {
+    const { label, variable, live } = EASE_TARGETS[target];
+    const choice = settings.ease[target];
+    if (choice !== "live") lines.push(`${label} easing (${variable}): ${EASE_CURVES[choice]}, live ${live}`);
+  }
+  return { count: lines.length, text: lines.length ? lines.join("\n") : "Every setting is at its live value." };
 }
 
 type Update = (change: (current: Settings) => Settings) => void;
@@ -145,6 +185,8 @@ export type Piece = {
   /** A tap on the tile plays it; a piece with its own button (the chip) leaves this off. */
   tapToPlay?: boolean;
   knobGroup?: string;
+  /** The piece's easing is a setting too (its choice reads and resets with the rest). */
+  easeTarget?: EaseTarget;
   style?: (settings: Settings) => CSSProperties;
   draw: (draw: Draw) => ReactNode;
   controls?: (settings: Settings, update: Update) => ReactNode;
@@ -167,6 +209,22 @@ function Knobs({ group, values, update }: { group: string; values: Values; updat
 }
 export const knobsFor = (group: string, settings: Settings, update: Update) => <Knobs group={group} update={update} values={settings.knobs} />;
 
+const easingChoice = (target: EaseTarget, ease: Settings["ease"], update: Update) => (
+  <Choice label="Easing" onChange={(choice) => update((current) => ({ ...current, ease: { ...current.ease, [target]: choice } }))} options={EASES} value={ease[target]} />
+);
+
+/** Showing this piece larger or smaller in its tile: the Workshop's own view, left out of the settings to copy. */
+export function ZoomControl({ piece, settings, update }: { piece: Piece; settings: Settings; update: Update }) {
+  const value = settings.zoom[piece.id] ?? 1;
+  return (
+    <label className="asset-knob">
+      <span>Zoom in tile</span>
+      <input max={2.5} min={0.4} onChange={(event) => { const zoom = Number(event.target.value); update((current) => ({ ...current, zoom: { ...current.zoom, [piece.id]: zoom } })); }} step={0.05} type="range" value={value} />
+      <output>{value}x</output>
+    </label>
+  );
+}
+
 function Choice<T extends string>({ label, options, value, onChange }: { label: string; options: ReadonlyArray<readonly [T, string]>; value: T; onChange: (value: T) => void }) {
   return (
     <div aria-label={label} className="asset-choice" role="group">
@@ -185,6 +243,40 @@ function TextField({ label, value, onChange, maxLength = 24, numeric = false }: 
       <input className="asset-text" inputMode={numeric ? "numeric" : undefined} maxLength={maxLength} onChange={(event) => onChange(numeric ? event.target.value.replace(/\D/g, "") : event.target.value)} type="text" value={value} />
     </label>
   );
+}
+
+const PULL_WIDTH = 390, PULL_HEIGHT = 56, PULL_MS = 1400;   // the header's own size; a full pull takes this long
+
+/** The pull-down-to-refresh scene. It sits where the slider puts it; a tap plays a whole pull, as a finger would, dust and all. */
+function PullDemo({ at, plays }: { at: number; plays: number }) {
+  const [run, setRun] = useState<{ progress: number; since: number } | null>(null);
+  useEffect(() => {
+    if (plays === 0) return;
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - started;
+      if (elapsed >= PULL_MS + 600) { setRun(null); return; }
+      setRun({ progress: Math.min(1, elapsed / PULL_MS), since: Math.max(0, elapsed - PULL_MS * PUFF_AT) });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [plays]);
+  const progress = run ? run.progress : at;
+  const landed = progress >= PUFF_AT;
+  return <PullChainScene height={PULL_HEIGHT} landed={landed} progress={progress} since={run && landed ? run.since : 1000} stretchedSince={null} width={PULL_WIDTH} />;
+}
+
+/** "2025, 2023" as years, at most six. */
+const parseYears = (text: string) => text.split(/[^0-9]+/).filter((year) => year.length >= 2 && year.length <= 4).slice(0, 6).map(Number);
+
+/** The banner's colours when they are not the pool's own: the variables its cloth reads, moved by the three knobs; none at all while they are live. */
+function clothVars(pool: Pool, knobs: Values): CSSProperties {
+  const hue = knobs[`${pool}Hue`], light = knobs[`${pool}Light`], strength = knobs[`${pool}Strength`];
+  if (!hue && !light && strength === 1) return {};
+  const tone = ([l, c, h]: readonly [number, number, number]) => `oklch(${Math.min(0.95, Math.max(0.05, l + light)).toFixed(3)} ${(c * strength).toFixed(3)} ${((h + hue + 360) % 360).toFixed(1)})`;
+  return { "--banner": tone(CLOTH[pool].base), "--banner-dark": tone(CLOTH[pool].dark), "--banner-light": tone(CLOTH[pool].light) } as CSSProperties;
 }
 
 const stepFrame = (frame: number, by: number) => ((frame - 1 + by + FOOTBALL_FRAMES) % FOOTBALL_FRAMES) + 1;
@@ -248,13 +340,17 @@ export const PIECES: Piece[] = [
     zoom: 1.4,
     tapToPlay: true,
     knobGroup: "highlight",
-    style: (settings) => cssVars("highlight", settings.knobs),
+    easeTarget: "highlight",
+    style: (settings) => ({ ...cssVars("highlight", settings.knobs), ...easeVars("highlight", settings) }),
     draw: ({ settings: { strokeText, knobs }, plays, copy }) => (
       <span className="asset-highlight" key={plays}>
         <span className="slate-team-label slate-team-label--selected slate-team-label--from-left slate-team-label--new" style={strokeJitter(`asset-${copy}-${plays}`, { x: knobs.jitterX, y: knobs.jitterY, turn: knobs.jitterTurn })}><span>{strokeText || "Chiefs"}</span></span>
       </span>
     ),
-    controls: ({ strokeText }, update) => <TextField label="Name" maxLength={18} onChange={(value) => update((current) => ({ ...current, strokeText: value }))} value={strokeText} />,
+    controls: (settings, update) => <>
+      <TextField label="Name" maxLength={18} onChange={(value) => update((current) => ({ ...current, strokeText: value }))} value={settings.strokeText} />
+      {easingChoice("highlight", settings.ease, update)}
+    </>,
   },
   {
     id: "pennant",
@@ -263,17 +359,19 @@ export const PIECES: Piece[] = [
     zoom: 2,
     tapToPlay: true,
     knobGroup: "pennant",
-    style: (settings) => cssVars("pennant", settings.knobs),
+    easeTarget: "pennant",
+    style: (settings) => ({ ...cssVars("pennant", settings.knobs), ...easeVars("pennant", settings) }),
     // At rest it is already up, as a picked team's is; it raises when tapped (an animation running on load also drew its lettering unevenly).
     draw: ({ settings: { pennantTeam }, plays }) => <span className={`bowl-team-pick ${plays > 0 ? "is-new" : ""}`} key={`${plays}-${pennantTeam}`}><BowlMegaphone side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>,
-    controls: ({ pennantTeam }, update) => (
+    controls: (settings, update) => <>
       <label className="asset-choice">
         <span>School</span>
-        <select className="asset-select" onChange={(event) => { const team = event.target.value as keyof typeof PENNANT_TEAMS; update((current) => ({ ...current, pennantTeam: team })); }} value={pennantTeam}>
+        <select className="asset-select" onChange={(event) => { const team = event.target.value as keyof typeof PENNANT_TEAMS; update((current) => ({ ...current, pennantTeam: team })); }} value={settings.pennantTeam}>
           {Object.values(PENNANT_TEAMS).map((team) => <option key={team.abbreviation} value={team.abbreviation}>{team.short_name}</option>)}
         </select>
       </label>
-    ),
+      {easingChoice("pennant", settings.ease, update)}
+    </>,
   },
   {
     id: "tile",
@@ -352,13 +450,15 @@ export const PIECES: Piece[] = [
     note: "The Bowl Pool heading: gold rules that draw out from the stars, varsity lettering, and the season. Tap it to draw the rules again.",
     tapToPlay: true,
     knobGroup: "crest",
-    style: (settings) => cssVars("crest", settings.knobs),
+    easeTarget: "crest",
+    style: (settings) => ({ ...cssVars("crest", settings.knobs), ...easeVars("crest", settings) }),
     draw: ({ settings: { crest }, plays }) => (
       <span className="asset-row" key={plays}>
         <BowlCrest seasonSuffix={crest.suffix} seasonYear={Number(crest.season) || 2026} title={crest.title || "BOWL CARD"} />
       </span>
     ),
-    controls: ({ crest }, update) => <>
+    controls: ({ crest, ease }, update) => <>
+      {easingChoice("crest", ease, update)}
       <TextField label="Title" maxLength={14} onChange={(title) => update((current) => ({ ...current, crest: { ...current.crest, title: title.toUpperCase() } }))} value={crest.title} />
       <TextField label="Season" maxLength={4} numeric onChange={(season) => update((current) => ({ ...current, crest: { ...current.crest, season } }))} value={crest.season} />
       <TextField label="Ends with" maxLength={12} onChange={(suffix) => update((current) => ({ ...current, crest: { ...current.crest, suffix } }))} value={crest.suffix} />
@@ -378,5 +478,73 @@ export const PIECES: Piece[] = [
     note: "What players see once they are out of the playoff race.",
     draw: () => <div className="asset-banner"><SeasonClosedBanner eliminated /></div>,
   },
+  {
+    id: "pull",
+    title: "Pull to refresh",
+    note: "The first-down chain that comes down when the Home Screen app is pulled to refresh: the pole drops and lands in a puff of dust, then the down counter slides from 4 to 1, the signal to let go. Slide to pull it by hand; tap to watch a whole pull.",
+    zoom: 2.2,
+    tapToPlay: true,
+    draw: ({ settings, plays }) => <div className="pull-chain asset-pull" style={{ height: PULL_HEIGHT, width: PULL_WIDTH }}><PullDemo at={settings.pullAt} plays={plays} /></div>,
+    controls: ({ pullAt }, update) => (
+      <label className="asset-knob">
+        <span>Pulled</span>
+        <input aria-label="How far it is pulled" max={1.3} min={0} onChange={(event) => { const value = Number(event.target.value); update((current) => ({ ...current, pullAt: value })); }} step={0.01} type="range" value={pullAt} />
+        <output>{pullAt.toFixed(2)}</output>
+      </label>
+    ),
+  },
+  ...POOLS.map((pool): Piece => ({
+    id: `banner-${pool}`,
+    title: CLOTH[pool].title,
+    note: "A champion's banner as it hangs over the Trophy Room's table: cut-felt lettering on a swallowtailed cloth that waves and sways. Tap it to hang it again. Change the words, or turn the cloth's colour.",
+    zoom: 1.3,
+    dark: true,
+    tapToPlay: true,
+    knobGroup: `banner-${pool}`,
+    draw: ({ settings, plays }) => {
+      const { tag, name, years } = settings.banners[pool];
+      const list = parseYears(years);
+      const look = clothVars(pool, settings.knobs);
+      return (
+        <div className="trophy-rafters asset-rafters" data-pool={pool} style={look}>
+          <div className={plays > 0 ? "trophy-banner" : undefined} key={plays} style={{ "--i": 0, width: "8.6rem" } as CSSProperties}>
+            <TrophyBanner index={POOLS.indexOf(pool)} key={`${plays}-${JSON.stringify(look)}-${tag}-${name}-${list.join()}`} name={name} tag={tag} years={list} />
+          </div>
+        </div>
+      );
+    },
+    controls: ({ banners }, update) => {
+      const set = (change: Partial<Settings["banners"][Pool]>) => update((current) => ({ ...current, banners: { ...current.banners, [pool]: { ...current.banners[pool], ...change } } }));
+      return <>
+        <TextField label="Title" maxLength={24} onChange={(tag) => set({ tag })} value={banners[pool].tag} />
+        <TextField label="Name" maxLength={14} onChange={(name) => set({ name })} value={banners[pool].name} />
+        <label className="asset-choice">
+          <span>Years</span>
+          <input className="asset-text" inputMode="numeric" maxLength={30} onChange={(event) => set({ years: event.target.value.replace(/[^0-9, ]/g, "") })} type="text" value={banners[pool].years} />
+        </label>
+      </>;
+    },
+  })),
 ];
 export const pieceById = (id: string) => PIECES.find((piece) => piece.id === id);
+
+/** What a saved copy of the settings must fit to be used (see mergeSaved). */
+export const SAVED_RULES = {
+  limits: {
+    ...Object.fromEntries(ALL_KNOBS.map((knob) => [`knobs.${knob.key}`, [knob.min, knob.max]])),
+    ...Object.fromEntries(PIECE_IDS.map((id) => [`zoom.${id}`, [0.4, 2.5]])),
+    "football.frame": [1, FOOTBALL_FRAMES],
+    pullAt: [0, 1.3],
+  },
+  choices: {
+    "chip.team": CHIP_TEAMS.map(([key]) => key),
+    "chip.state": CHIP_STATES.map(([key]) => key),
+    "chip.size": CHIP_SIZES.map(([key]) => key),
+    "stamp.result": ["win", "loss"],
+    "stamp.variant": ["ticket", "mark"],
+    "stamp.tilted": ["yes", "no"],
+    pennantTeam: Object.keys(PENNANT_TEAMS),
+    submitState: ["unsaved", "saved"],
+    ...Object.fromEntries(easeTargets.map((target) => [`ease.${target}`, EASES.map(([key]) => key)])),
+  },
+} as { limits: Record<string, [number, number]>; choices: Record<string, string[]> };
