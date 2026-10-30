@@ -86,7 +86,7 @@ async function open(page: Page, phone: Phone, options: Planted & { theme?: strin
   } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto(path);
-  if (heading) await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible({ timeout: 30_000 });
+  if (heading) await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible({ timeout: 30_000 });
   const banner = page.locator('[data-home-screen="banner"]');
   if (phone === "android-prompt" || phone === "chromebook-prompt") await expect.poll(async () => { await offerInstall(page); return banner.getAttribute("data-home-screen-help").catch(() => null); }).toBe(phone);
   await page.evaluate(() => document.fonts.ready);
@@ -267,7 +267,7 @@ test("Not now hides the banner, and it stays hidden after the page is reloaded",
   await banner.getByRole("button", { name: "Not now" }).click();
   await expect(banner).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
   await expect(page.locator('[data-home-screen="card"]')).toBeVisible();   // the card is always there
   await expect(banner).toHaveCount(0);
 });
@@ -278,7 +278,7 @@ test("I already have it hides the banner, and it stays hidden after the page is 
   await banner.getByRole("button", { name: "I already have it" }).click();
   await expect(banner).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
   await expect(banner).toHaveCount(0);
 });
 
