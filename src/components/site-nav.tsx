@@ -7,6 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
 import { forgetTabs, rememberTabs } from "@/lib/nav-tabs";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
 
 const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
 
@@ -152,6 +154,7 @@ export default function SiteNav() {
   }
 
   function toggleTheme() {
+    haptic("tick");
     const nextNightMode = !isNightMode;
     document.documentElement.dataset.theme = nextNightMode ? "night" : "day";
     window.localStorage.setItem("pickem-theme", nextNightMode ? "night" : "day");
@@ -194,13 +197,14 @@ export default function SiteNav() {
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
-            className="theme-toggle flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            className="theme-toggle relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
             data-active={isNightMode}
             onClick={toggleTheme}
             title={isNightMode ? "Use light mode" : "Use dark mode"}
             type="button"
           >
             <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
+            <HapticTap />
           </button>
 
           {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /></div> : null}
@@ -218,13 +222,14 @@ export default function SiteNav() {
           <button
             aria-label={isNightMode ? "Use light mode" : "Use dark mode"}
             aria-pressed={isNightMode}
-            className="theme-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+            className="theme-toggle relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
             data-active={isNightMode}
             onClick={toggleTheme}
             title={isNightMode ? "Use light mode" : "Use dark mode"}
             type="button"
           >
             <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
+            <HapticTap />
           </button>
           {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /> : null}
           </div>

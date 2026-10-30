@@ -20,3 +20,35 @@ test("a device is Android-like if it can vibrate, an iPhone if it cannot but is 
   assert.equal(hapticKind({ hasVibrate: false, isIPhone: true }), "iphone");
   assert.equal(hapticKind({ hasVibrate: false, isIPhone: false }), "none");
 });
+
+test("only an explicit off turns Vibration off, and the pull passes three notches that end at the lock-in", async () => {
+  const { vibrationWanted, pullNotch, VIBRATION_KEY } = await import("../src/lib/haptics.js");
+  assert.equal(VIBRATION_KEY, "pickem-vibration");
+  assert.equal(vibrationWanted(null), true);
+  assert.equal(vibrationWanted(undefined), true);
+  assert.equal(vibrationWanted("on"), true);
+  assert.equal(vibrationWanted("off"), false);
+  assert.deepEqual([0, 0.2, 1 / 3, 0.5, 2 / 3, 0.9, 1, 1.4].map(pullNotch), [0, 0, 1, 1, 2, 2, 3, 3]);
+  assert.equal(pullNotch(-1), 0);
+});
+
+test("a haptic is felt on Android, skipped when Vibration is off, and still given when the Feel test asks", async () => {
+  await import("./helpers/typescript-renderer.mjs");
+  const vibrations = [];
+  const store = new Map();
+  Object.defineProperty(globalThis, "window", { value: { localStorage: { getItem: (key) => store.get(key) ?? null, setItem: (key, value) => store.set(key, value), removeItem: (key) => store.delete(key) }, addEventListener() {}, removeEventListener() {} }, configurable: true });
+  Object.defineProperty(globalThis, "navigator", { value: { userAgent: "Android", platform: "Linux", maxTouchPoints: 5, vibrate: (pattern) => { vibrations.push(pattern); return true; } }, configurable: true });
+  const { haptic, setVibration, vibrationOn } = await import("../src/lib/haptics-client.ts");
+  assert.equal(vibrationOn(), true);
+  assert.match(haptic("tick"), /vibration 10 ms/);
+  assert.deepEqual(vibrations, [[10]]);
+  setVibration(false);
+  assert.equal(vibrationOn(), false);
+  assert.match(haptic("success"), /vibration is off/);
+  assert.deepEqual(vibrations, [[10]], "off means no buzz");
+  assert.match(haptic("success", { always: true }), /vibration 14-60-14 ms/);
+  setVibration(true);
+  assert.equal(store.has("pickem-vibration"), false, "on is stored as nothing, so a new phone starts on");
+  assert.match(haptic("warning"), /vibration 50-70-50 ms/);
+  delete globalThis.window;
+});

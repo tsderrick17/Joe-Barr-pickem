@@ -4,11 +4,14 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getFreshSession } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
+import { haptic } from "@/lib/haptics-client";
 
 export default function LoginPage() {
   const router = useRouter();
   const [pin, setPin] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  // A wrong PIN (or any answer that is not a sign-in) is felt as well as read.
+  useEffect(() => { if (errorMessage) haptic("warning"); }, [errorMessage]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {

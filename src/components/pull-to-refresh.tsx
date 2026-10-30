@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import PullChainScene from "@/components/pull-chain-scene";
-import { PUFF_AT, STRETCH_END } from "@/lib/pull-chain.js";
+import { PUFF_AT, pullStages, STRETCH_END } from "@/lib/pull-chain.js";
+import { haptic } from "@/lib/haptics-client";
+import { pullNotch } from "@/lib/haptics.js";
 
 /**
  * Pull down to refresh, for the app added to a phone's home screen (a standalone window has no browser bar, so no refresh
@@ -55,20 +57,20 @@ export default function PullToRefresh() {
   const [landedAt, setLandedAt] = useState<number | null>(null);   // when the foot landed (the puff), or null while the pole is still coming down
   const [stretchedAt, setStretchedAt] = useState<number | null>(null);   // when the chain came fully taut (its one slight boing), or null while it is slack
   const [now, setNow] = useState(0);
-  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0, landed: false, stretched: false });
+  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0, landed: false, stretched: false, notch: 0 });
 
   useEffect(() => {
     if (!isInstalledApp()) return;
     document.documentElement.classList.add("has-pull-refresh");
     const state = gesture.current;
     // However a gesture ends (a lost touchend, a reload that never happens, the page coming back from the back/forward cache), the chain goes away.
-    const reset = () => { state.active = false; state.pull = 0; state.phase = "pulling"; state.landed = false; state.stretched = false; setPull(0); setPhase("pulling"); setLandedAt(null); setStretchedAt(null); };
+    const reset = () => { state.active = false; state.pull = 0; state.phase = "pulling"; state.landed = false; state.stretched = false; state.notch = 0; setPull(0); setPhase("pulling"); setLandedAt(null); setStretchedAt(null); };
     const onStart = (event: TouchEvent) => {
       state.lastTouch = Date.now();
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
       state.startY = event.touches[0]?.clientY ?? 0;
       state.pull = 0;
-      if (state.active) { state.phase = "pulling"; state.landed = false; state.stretched = false; setLandedAt(null); setStretchedAt(null); setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
+      if (state.active) { state.phase = "pulling"; state.landed = false; state.stretched = false; state.notch = 0; setLandedAt(null); setStretchedAt(null); setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
     };
     const onMove = (event: TouchEvent) => {
       if (!state.active) return;
@@ -86,11 +88,15 @@ export default function PullToRefresh() {
       else if (progress < tautAt - 0.04 && state.stretched) { state.stretched = false; setStretchedAt(null); }
       if (progress >= PUFF_AT && !state.landed) { state.landed = true; setLandedAt(performance.now()); }
       else if (progress < PUFF_AT - 0.04 && state.landed) { state.landed = false; setLandedAt(null); }
-      // the counter has fully turned to 1: a light buzz, and this is the signal to release
+      // a notch under the finger each time the down counter drops a down (4 to 3, 3 to 2); pulling back up and down again notches again
+      const notch = pullNotch(pullStages(progress).counter);
+      if (notch > state.notch && notch < 3) haptic("ratchet");
+      state.notch = notch;
+      // the counter has fully turned to 1: a firmer buzz, and this is the signal to release
       if (progress >= 1 && state.phase === "pulling") {
         state.phase = "planted";
         setPhase("planted");
-        navigator.vibrate?.(12);
+        haptic("lockIn");
       } else if (progress < 0.96 && state.phase === "planted") {
         state.phase = "pulling";
         setPhase("pulling");

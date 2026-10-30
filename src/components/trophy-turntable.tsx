@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import TrophyBanner from "@/components/trophy-banner";
 import { championRoll } from "@/lib/trophy-roll.js";
 import { loadOrder } from "@/lib/trophy-turn.js";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
 
 /**
  * The three trophies on a mahogany table that turns. The table is a set of pictures, one for every few degrees of a full turn (rendered once, see
@@ -180,8 +182,8 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] | null 
         <Image alt="" className="trophy-turn-poster" draggable={false} height={PROFILES.full.height} priority src="/trophies/turntable/frame-000.webp" unoptimized width={PROFILES.full.width} />
         <canvas aria-hidden="true" className="trophy-turn-canvas" data-layer="move" height={profile.height} ref={moveCanvas} width={profile.width} />
         <canvas aria-hidden="true" className="trophy-turn-canvas" data-layer="rest" data-visible={atRest ? "true" : "false"} height={profile.restHeight} ref={restCanvas} width={profile.restWidth} />
-        <button aria-label="Bring the previous trophy forward" className="trophy-turn-arrow" data-side="left" onClick={() => turnBy(-1)} type="button">‹</button>
-        <button aria-label="Bring the next trophy forward" className="trophy-turn-arrow" data-side="right" onClick={() => turnBy(1)} type="button">›</button>
+        <button aria-label="Bring the previous trophy forward" className="trophy-turn-arrow" data-side="left" onClick={() => { haptic("tick"); turnBy(-1); }} type="button">‹<HapticTap /></button>
+        <button aria-label="Bring the next trophy forward" className="trophy-turn-arrow" data-side="right" onClick={() => { haptic("tick"); turnBy(1); }} type="button">›<HapticTap /></button>
         <p aria-live="polite" className="sr-only" role="status">{moving ? "Turning" : `${TROPHIES[front].label} is at the front`}</p>
       </div>
       <section aria-label={`${TROPHIES[shown].label} champions`} className="trophy-rafters" data-moving={lifting ? "true" : "false"} data-pool={TROPHIES[shown].pool} key={shown}>

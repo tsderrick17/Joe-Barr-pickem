@@ -5,6 +5,7 @@ import type { GameStatus } from "@/lib/db-statuses";
 
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
+import { HapticTap } from "@/components/haptic-tap";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
 import { isSurvivorTeamUsed } from "@/lib/survivor-availability.js";
@@ -168,10 +169,9 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
     // Keep the team/result line and picker list in one shared two-row grid at
     // every game state. This gives scores a stable column and keeps picker
     // names anchored to the same team lane instead of the row's open edge.
-    const content = <span className={`slate-final-team-stack is-${align}`}>{teamResult}</span>;
-    const key = feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id;
+    const content = <span className={`slate-final-team-stack is-${align}`} key={feedbackType ? `${team.id}-${selectionFeedback?.token}` : team.id}>{teamResult}</span>;
     const pickemControl = allowSelection && !isFinal
-      ? <button className={className} disabled={hasStarted} key={key} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}</button>
+      ? <button className={className} disabled={hasStarted} onClick={() => onChoose?.(game.id, team.id)} type="button">{content}<HapticTap /></button>
       : <div className={className}>{content}</div>;
 
     return pickemControl;
@@ -230,6 +230,7 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
         teamName={team.name}
         unavailable={survivorUnavailable}
       />
+      <HapticTap />
     </button></div>;
   };
 

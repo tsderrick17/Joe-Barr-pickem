@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { phoneNotificationStatus } from "@/lib/phone-push.js";
 import { currentSubscription, failureMessage, forgetSubscription, readPhoneFacts, saveSubscription, turnOnPhoneNotifications } from "@/lib/phone-push-client";
 
 type Status = "checking" | "unsupported" | "not-installed" | "blocked" | "on" | "off";
 
-const buttonClass = "min-h-12 px-5 py-3 font-bold transition disabled:opacity-50";
+const buttonClass = "relative min-h-12 px-5 py-3 font-bold transition disabled:opacity-50";
 const primary = `${buttonClass} bg-[#007e72] text-white shadow-[0_2px_0_#07564f] hover:bg-[#086f66]`;
 const secondary = `${buttonClass} border border-zinc-500 bg-(color:--themed-bg-26) text-(color:--themed-text-18) hover:border-[#16877f]`;
 
@@ -39,11 +41,11 @@ export function PhoneNotifications() {
     } finally { setBusy(false); }
   }
 
-  const turnOn = () => run(async () => {
+  const turnOn = () => { haptic("tick"); return run(async () => {
     const outcome = await turnOnPhoneNotifications();
     setStatus(outcome);
-    if (outcome === "on") setMessage("Notifications are on for this phone.");
-  }, "Notifications could not be turned on.");
+    if (outcome === "on") { haptic("success"); setMessage("Notifications are on for this phone."); }
+  }, "Notifications could not be turned on."); };
 
   const turnOff = () => run(async () => {
     const subscription = await currentSubscription();
@@ -68,8 +70,8 @@ export function PhoneNotifications() {
   return <section aria-labelledby="phone-notifications-title" className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" data-phone-notifications={status}>
     <h2 className="text-sm font-black tracking-[.14em]" id="phone-notifications-title">NOTIFICATIONS ON THIS PHONE</h2>
     {status === "checking" ? <p className="mt-3 text-sm text-slate-600">Checking this phone…</p> : null}
-    {status === "off" ? <><p className="mt-3 text-sm leading-5 text-slate-600">Get the same messages as your emails, at the same times, as a buzz on this phone, even when the app is closed. It follows your email choices below.</p><button className={`mt-4 ${primary}`} disabled={busy} onClick={turnOn} type="button">{busy ? "Turning on…" : "Turn on notifications"}</button></> : null}
-    {status === "on" ? <><p className="mt-3 text-sm font-semibold leading-5 text-green-800">✓ Notifications are on for this phone. It gets the same messages as your emails, at the same times, following your email choices below.</p><div className="mt-4 flex flex-wrap gap-3"><button className={primary} disabled={busy} onClick={sendTest} type="button">Send me a test</button><button className={secondary} disabled={busy} onClick={turnOff} type="button">Turn off on this phone</button></div></> : null}
+    {status === "off" ? <><p className="mt-3 text-sm leading-5 text-slate-600">Get the same messages as your emails, at the same times, as a buzz on this phone, even when the app is closed. It follows your email choices below.</p><button className={`mt-4 ${primary}`} disabled={busy} onClick={turnOn} type="button">{busy ? "Turning on…" : "Turn on notifications"}<HapticTap /></button></> : null}
+    {status === "on" ? <><p className="mt-3 text-sm font-semibold leading-5 text-green-800">✓ Notifications are on for this phone. It gets the same messages as your emails, at the same times, following your email choices below.</p><div className="mt-4 flex flex-wrap gap-3"><button className={primary} disabled={busy} onClick={() => { haptic("tick"); void sendTest(); }} type="button">Send me a test<HapticTap /></button><button className={secondary} disabled={busy} onClick={() => { haptic("tick"); void turnOff(); }} type="button">Turn off on this phone<HapticTap /></button></div></> : null}
     {status === "blocked" ? <p className="mt-3 text-sm leading-5 text-slate-600">This phone is blocking notifications for the app. Allow them in the phone’s Settings (under Notifications, Lead Pipe Locks), then come back here.</p> : null}
     {status === "not-installed" ? <p className="mt-3 text-sm leading-5 text-slate-600">To get notifications on an iPhone, add this page to your Home Screen (the Share button, then Add to Home Screen), open it from the Home Screen, and come back here.</p> : null}
     {status === "unsupported" ? <p className="mt-3 text-sm leading-5 text-slate-600">This browser can’t receive notifications. On an iPhone, use the app added to the Home Screen.</p> : null}

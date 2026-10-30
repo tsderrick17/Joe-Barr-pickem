@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { memo, type CSSProperties } from "react";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
 
 export type ReceiptTeam = {
@@ -107,10 +109,11 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           <button
             className={`slate-receipt-print ${receiptNeedsSaving ? "needs-attention" : ""}`}
             disabled={receiptIsLoading || isSubmitting}
-            onClick={onSubmit}
+            onClick={() => { haptic("tick"); onSubmit(); }}
             type="button"
           >
             SUBMIT
+            <HapticTap />
           </button>
         </div>
         <span className="slate-receipt-footnote">
