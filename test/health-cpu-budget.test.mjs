@@ -9,12 +9,17 @@ const root = path.resolve(import.meta.dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 test("a healthy probe answer may sit in the CDN for its own window; a failing one never does", async () => {
-  const { HEALTH_CDN_SECONDS, healthProbeCacheControl } = await import("../src/lib/health-cache.ts");
+  const { HEALTH_CDN_SECONDS, criticalWorkerCdnSeconds, healthProbeCacheControl } = await import("../src/lib/health-cache.ts");
   assert.equal(healthProbeCacheControl(true, 1200), "public, max-age=0, s-maxage=1200");
   assert.equal(healthProbeCacheControl(false, 1200), "no-store, max-age=0");
   // Each window is shorter than the shortest grace window its probe enforces itself (35 minutes, 12 minutes, 6 hours, 8 days).
   assert.ok(HEALTH_CDN_SECONDS.automation < 35 * 60);
   assert.ok(HEALTH_CDN_SECONDS.criticalWorkers < 12 * 60);
+  // Each worker probe keeps a healthy answer inside its own grace window (line locks 12, scores 45, reminders 20 minutes).
+  assert.ok(criticalWorkerCdnSeconds("line_locks") < 12 * 60);
+  assert.ok(criticalWorkerCdnSeconds("scores") < 45 * 60 && criticalWorkerCdnSeconds("scores") > criticalWorkerCdnSeconds("line_locks"));
+  assert.ok(criticalWorkerCdnSeconds("reminders") < 20 * 60 && criticalWorkerCdnSeconds("reminders") > criticalWorkerCdnSeconds("line_locks"));
+  assert.equal(criticalWorkerCdnSeconds(), HEALTH_CDN_SECONDS.criticalWorkers, "the all-workers probe uses the shortest window");
   assert.ok(HEALTH_CDN_SECONDS.settlement < 6 * 3600);
   assert.ok(HEALTH_CDN_SECONDS.bowlPool <= 3600);
   assert.ok(HEALTH_CDN_SECONDS.backup < 8 * 86400);
@@ -26,7 +31,7 @@ test("rule: every cached probe takes its Cache-Control from the shared helper wi
     "src/app/api/health/settlement/route.ts": "HEALTH_CDN_SECONDS.settlement",
     "src/app/api/health/bowl-pool/route.ts": "HEALTH_CDN_SECONDS.bowlPool",
     "src/app/api/health/backup/route.ts": "HEALTH_CDN_SECONDS.backup",
-    "src/lib/critical-worker-health-route.ts": "HEALTH_CDN_SECONDS.criticalWorkers",
+    "src/lib/critical-worker-health-route.ts": "criticalWorkerCdnSeconds(worker)",
   };
   for (const [file, key] of Object.entries(probes)) assert.ok(read(file).includes(`healthProbeCacheControl(`) && read(file).includes(key), file);
 });

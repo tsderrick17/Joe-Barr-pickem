@@ -102,6 +102,15 @@ navigation, first row drawn at 2,302 ms then 2,072 ms on a returning visit (LCP 
 0.4 s either way), and 4,886 ms then 4,562 ms on a first visit with nothing cached. The rest of the wait is the phone
 running the page's code; the server's own answer is what the region and rounds changes shorten.
 
+### Rounds (October 30, 2026)
+
+The harness also counts **rounds**: how many times a read waits on the database one after another (the fake database
+answers every query started in the same turn together, like one round trip). Each round costs a full trip to the
+database, so rounds, not request counts, decide how long a player waits. Running independent reads together took the
+Standings from 7 rounds to 4 (12 to 6 in a playoff round) and the Slate's first load from 8 to 5 (11 to 7), with
+identical responses and the same requests. `test/route-cost-budgets.json` holds the round counts exactly, without
+headroom.
+
 ### Production observation (October 7, 2026, read-only)
 
 Five sequential requests each to two public endpoints from one machine: `/api/health` answered in 0.26 to 0.46 s
