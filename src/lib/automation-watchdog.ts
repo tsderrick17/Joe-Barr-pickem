@@ -18,8 +18,9 @@ type ConfigurationRun = {
   details?: { checks?: LaunchPreflightCheck[] } | null;
 };
 
+// The watchdog runs every fifteen minutes, so exactly one run lands in this window each Monday.
 function isWeeklyStoragePruneDue(now: Date) {
-  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 10;
+  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 15;
 }
 
 function escapeHtml(value: string) {

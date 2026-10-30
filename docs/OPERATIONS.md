@@ -50,8 +50,9 @@ includes a read-only per-table size breakdown for review.
 
 ## Provider allowance
 
-The NFL final-score worker wakes every ten minutes but calls the provider only
-when at least one game's durable retry time is due. Regular-season delayed
+The NFL final-score worker is called only when it has work (see "Reproducible
+critical schedules" below) and calls the provider only when at least one
+game's durable retry time is due. Regular-season delayed
 finals follow the same predictable 10/10/10/10/10/10/20/20/20/60/120/240-minute
 sequence every week, with the final 240-minute window reserved for emergencies,
 and playoff delayed finals use the same ladder. Both
@@ -240,9 +241,9 @@ failure leaves it in place.
 
 ## Quiet operations watchdog
 
-The watchdog evaluates operations every ten minutes (migration
-`20261001010000_watchdog_every_ten_minutes.sql`, to stay inside the Vercel
-Fluid active-CPU allowance) but sends email only when
+The watchdog evaluates operations every fifteen minutes (migration
+`20261030030000_background_job_cadence.sql`, to stay inside the Vercel
+Fluid active-CPU allowance; its 35-minute heartbeat window absorbs one missed run) but sends email only when
 commissioner action is likely required. It opens one incident per condition,
 sends one notification for that incident, and automatically resolves the
 incident after recovery. A resolved condition can alert again if it genuinely
@@ -323,10 +324,12 @@ details or require UptimeRobot's paid push-heartbeat feature.
 
 Migration `20260818013000_rebuild_critical_automation.sql` established the
 original critical schedules. The current schedule contract is in
-`20261001010000_watchdog_every_ten_minutes.sql`: the guarded line-lock gate
-checks every minute; the NFL score worker and watchdog wake every ten minutes;
-reminder delivery is gated every five minutes; reminder schedule maintenance
-runs every 15 minutes; and the Bowl gate checks every 15 minutes. The NFL
+`20261030030000_background_job_cadence.sql`: the guarded line-lock gate
+checks every minute; the score gate checks every ten minutes; reminder delivery
+is gated every five minutes; reminder schedule maintenance runs every 30
+minutes (at :05 and :35, five minutes after the 7:00 AM Eastern spread refresh
+and the Tuesday 6:30 AM recap eligibility); the watchdog runs every 15 minutes;
+and the Bowl gate checks every 15 minutes. The NFL
 pre-lock refresh keeps two daylight/standard-safe UTC schedules, with a runtime
 Eastern-time guard so only the real 7:00 AM Eastern window spends a credit.
 
@@ -336,8 +339,18 @@ the same way as line locks: the five-minute cron runs
 scheduled reminder is due or a stale "sending" claim needs requeueing, the same
 rows `claim_due_push_reminders()` would act on. The watchdog still judges the
 reminder worker only when reminders are due, so idle skips never raise alerts.
-Score sync is deliberately not gated because each run also performs season
-rollover, week advancement, and Survivor no-pick eliminations.
+Score sync is gated too (`dispatch_score_sync_if_due()`, migration
+`20261030030000_background_job_cadence.sql`). Each run also performs season
+rollover, week advancement, Survivor no-pick eliminations and the playoff
+day-start eligibility snapshot, so the gate calls the worker when a final is due
+(170 minutes after kickoff, past any retry timer), when a week is waiting to
+open, when picks can be settled now (a no-contest game, or a final game with its
+official line), at the next time-based duty the worker recorded after its last
+run in `automation_dispatch_state.next_due_at` (the weekly handoff time, the
+active week's final kickoff for Survivor eliminations, one minute into each
+Eastern day of a playoff round, the next week's start), and at least once an
+hour as a safety run. Before this, it woke every ten minutes around the clock
+at about 180 ms of CPU a call with nothing to do.
 
 Before opening Week 1—and after any deployment or secret rotation—run
 **Commissioner → Launch preflight**. It reads rather than mutates. A passing
