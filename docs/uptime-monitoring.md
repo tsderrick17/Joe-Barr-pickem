@@ -20,14 +20,22 @@ contacts, and current incidents.
 | PickemJB Bowl Pool | `https://pickemjb.vercel.app/api/health/bowl-pool` | Bowl schedule, participation, grading, and Bowl Pool automation are available (and remains healthy with placeholders before launch) | **Commissioner → Automation Health** and Bowl Pool worker logs |
 | PickemJB settlement freshness | `https://pickemjb.vercel.app/api/health/settlement` | No game remains unsettled more than six hours after kickoff | **Commissioner → Automation Health** and score-worker logs |
 
-Use HTTP/S monitors at five-minute intervals and treat a non-200 response,
-timeout, or missed heartbeat as down. Configure both outage and recovery
+Use HTTP/S monitors and treat a non-200 response, timeout, or missed heartbeat
+as down. Check intervals: five minutes for the core production, line-lock,
+score and reminder monitors; fifteen minutes for the automation heartbeat;
+thirty minutes for settlement and Bowl Pool; sixty minutes for the backup
+(each well inside its own grace window; every check that reaches a function
+costs Vercel CPU, and on 2026-10-30 the probes were 36% of it). Configure both outage and recovery
 notifications. Keep the Commissioner alert destination current.
 
 To save Vercel CPU, a healthy answer from the slower-changing probes is cached
 at Vercel's CDN, so most five-minute checks never start a function: automation
-heartbeat for 20 minutes, the three worker probes for 10 minutes, settlement and
-Bowl Pool for an hour, and backup for six hours. Each window sits well inside that
+heartbeat for 20 minutes, the line-lock worker probe (and the all-workers probe)
+for 10 minutes, the reminder worker probe for 15, the score worker probe for 25
+(each inside its own 12, 20 and 45-minute grace), settlement and Bowl Pool for an
+hour, and backup for six hours. Vercel's CDN keeps a copy per region and the
+monitors check from several places, so a window saves fewer calls than its
+length suggests. Each window sits well inside that
 probe's own grace period. A failing (503) answer is never cached, and the core
 `/api/health` probe always runs live. A newly failing signal can therefore show
 up to one cache window later than before.

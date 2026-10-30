@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - Uptime probes reach a function less often
+
+The probes were 36% of Vercel CPU on 2026-10-30: the three worker probes ran about 100 times each in 12 hours despite a 10-minute CDN window, because the CDN keeps a copy per region and the monitors check from several places. Each worker probe now keeps a healthy answer for its own grace window: line locks 10 minutes (12-minute grace, unchanged), reminders 15 (20-minute grace), scores 25 (45-minute grace). The slow monitors are checked less often in UptimeRobot (automation 15 minutes, settlement and Bowl Pool 30, backup 60); that setting lives in UptimeRobot, not in code. A failing answer is still never cached, and the core `/api/health` probe still runs live every time.
+
 ## 2026-10-30 - The Workshop gains the pull-to-refresh strip, the trophy banners and more to adjust
 
 Second step of the endless Workshop board. Added the real pull-to-refresh scene (chain, pole, dust, Dial-A-Down; a slider pulls it by hand and a tap plays a whole pull) and the three trophy banners (Pick'em, Bowl Pool, Survivor: title, name, years, and three colour knobs that turn the cloth's hue, lightness and strength). The easing of the pick highlight, megaphone and crest rules became settings (a variable with today's curve as its default, so players see no change), and every piece can be shown larger or smaller in its tile (the Workshop's own view, not a setting to copy). Menu > Play everything plays every piece at once. Not added: the trophy turntable (120 pictures to fetch, too heavy to repeat across an endless board), the app badge and Home Screen banner (they live on the phone itself, not on anything the page draws), and chat typing dots (no such piece exists). Also fixed: the crest's gold rules were scoped to the old card wrapper and so stopped drawing in the new board.
