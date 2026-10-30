@@ -1,5 +1,5 @@
-import { fetchWithSession } from "@/lib/auth-session";
-import { applicationServerKey } from "@/lib/phone-push.js";
+import { fetchWithSession, getFreshSession } from "@/lib/auth-session";
+import { applicationServerKey, askForNotificationsAfterInstall } from "@/lib/phone-push.js";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -46,4 +46,16 @@ export async function turnOnPhoneNotifications(): Promise<"on" | "blocked" | "of
   const saved = await saveSubscription(subscription);
   if (!saved.ok) throw new Error(await failureMessage(saved, "Notifications could not be turned on."));
   return "on";
+}
+
+/**
+ * Right after the browser's one-tap Install went through: ask for notifications too, so one button does both. Quietly does nothing when it should
+ * not ask or when anything fails; the in-app banner offers it again the first time the app opens.
+ */
+export async function turnOnAfterInstall(outcome: string) {
+  const facts = readPhoneFacts();
+  if (!facts.hasPush || facts.permission !== "default") return;
+  const session = await getFreshSession().catch(() => null);
+  if (!askForNotificationsAfterInstall({ outcome, hasPush: facts.hasPush, permission: facts.permission, signedIn: session !== null })) return;
+  await turnOnPhoneNotifications().catch(() => undefined);
 }

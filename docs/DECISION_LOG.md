@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-30 - On Android one Install tap also turns notifications on
+
+Owner asked for one button where the phone allows it. Android and Chromebook browsers hand the site a one-tap Install; when the player accepts, the site now asks for notifications right away and saves the phone, so the player taps Install and then Allow and is done. iPhone cannot do this (Apple allows neither a website install button nor a notification question outside the Home Screen app), so iPhone keeps the Share steps plus the in-app one-tap banner. If the browser does not show the question straight after installing, nothing is lost: the in-app banner asks on first open.
+
 ## 2026-10-30 - Notifications are one tap away inside the app
 
 Owner: adding the app and turning on notifications must be effortless for players who are not comfortable with phones. After adding the app, a player used to have to find the name menu, then Notifications, then the button. Now the Home Screen app shows a one-tap banner in the same place and navy/gold look as the Add to Home Screen banner (which never shows inside the app, so they never meet): Turn on asks the phone straight from the tap and saves the subscription. A phone that says no gets a plain "you can turn them on any time under Notifications" and is not asked again; Not now waits 14 days, like the install banner.

@@ -29,3 +29,14 @@ test("Not now keeps it away for 14 days, and a clock moved far ahead does not hi
   assert.equal(notificationsBannerVisible(facts({ dismissedAt: now + 1000 })), false, "tapped a moment after the page loaded");
   assert.equal(notificationsBannerVisible(facts({ dismissedAt: now + 3 * DAY })), true);
 });
+
+test("the one-tap Install goes straight on to ask for notifications only when it went through and the phone has not been asked", async () => {
+  const { askForNotificationsAfterInstall } = await import("../src/lib/phone-push.js");
+  const after = (overrides = {}) => askForNotificationsAfterInstall({ outcome: "accepted", hasPush: true, permission: "default", signedIn: true, ...overrides });
+  assert.equal(after(), true);
+  assert.equal(after({ outcome: "dismissed" }), false, "the player said no to installing");
+  assert.equal(after({ hasPush: false }), false);
+  assert.equal(after({ permission: "granted" }), false, "already allowed: nothing to ask");
+  assert.equal(after({ permission: "denied" }), false, "the phone said no before: never ask again");
+  assert.equal(after({ signedIn: false }), false, "the phone could not be saved for anyone");
+});

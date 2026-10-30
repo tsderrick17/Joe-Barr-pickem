@@ -308,6 +308,8 @@ measure database requests or end-to-end route time.
   this phone", Turn on), so adding the app and turning notifications on needs no hunting: one tap asks the phone and saves it, through the same
   `turnOnPhoneNotifications` as the Notifications page. Not on the sign-in or Notifications pages, never once on or blocked, and Not now keeps it away 14
   days (`notificationsBannerVisible`, `src/lib/phone-push.js`).
+  On Android and Chromebooks the one-tap Install does both: once the browser's install goes through, the phone is asked for notifications straight
+  away and saved (`turnOnAfterInstall`; only when signed in and never asked before). If that does not happen, the in-app banner asks on first open.
   A phone notification **mirrors its email**: when the reminder worker sends a player's email (`deliverEmailReminder`), that player's phones get a notification with the
   email's subject as the title, its message (plus the champion or elimination line, when it has one) as the body, and the same destination page (one shared
   `reminderDestinationPath`). Same audience, same moment, same choices: the recipients are exactly the players the email's choices selected, and only emails

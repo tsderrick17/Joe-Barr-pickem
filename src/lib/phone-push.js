@@ -38,3 +38,13 @@ export function notificationsBannerVisible({ status, standalone, signedIn, path,
   if (path.startsWith("/login") || path.startsWith("/profile")) return false;
   return !stillQuiet(dismissedAt, now, NOTIFICATIONS_BANNER_QUIET_DAYS);
 }
+
+/**
+ * Whether installing the app from the browser's one-tap Install (Android, Chromebook) should go straight on to ask for notifications, so one tap
+ * does both. Only when the install went through, the phone can have notifications and has not been asked yet, and the player is signed in (the
+ * phone is saved for them).
+ * @param {{ outcome: string, hasPush: boolean, permission: string, signedIn: boolean }} facts
+ */
+export function askForNotificationsAfterInstall({ outcome, hasPush, permission, signedIn }) {
+  return outcome === "accepted" && hasPush && permission === "default" && signedIn;
+}
