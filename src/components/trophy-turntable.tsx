@@ -9,13 +9,13 @@ import { loadOrder } from "@/lib/trophy-turn.js";
 /**
  * The three trophies on a mahogany table that turns. The table is a set of pictures, one for every few degrees of a full turn (rendered once, see
  * tools/trophy-render). They are fetched and decoded in the background and drawn onto a canvas, so a spin never waits on an image (swapping an <img>
- * source flashes black while the next picture decodes). Dragging or swiping turns the table, a flick carries on and settles the nearest trophy at the
- * front, and the arrows at the sides bring the next one forward. A phone gets a smaller set (the same 120 pictures at 660 wide) because 120 full-size
- * decoded pictures are more than an iPhone lets a page hold: it kills the tab. Every turn shows the nearest single picture, never two laid over each other
- * (a cross-fade of neighbours makes a ghost of every trophy), and the table follows a finger with a short glide so the 3-degree steps read as motion, not as
- * ticks. Two canvases are stacked: a sharp one shown only when the table is at rest (it fades in), and a plain one drawn while it turns, so touching the
- * table never reallocates a canvas.
+ * source flashes black while the next picture decodes). Only the arrows at the sides (and the arrow keys) turn the table, slowly and evenly, one
+ * trophy at a time: no dragging or swiping (the owner found the arrows cleaner, and a finger on the table never fights scrolling). A phone gets a
+ * smaller set (the same 120 pictures at 660 wide) because 120 full-size decoded pictures are more than an iPhone lets a page hold: it kills the tab. Every turn shows the nearest single picture, never two laid over each other
+ * (a cross-fade of neighbours makes a ghost of every trophy). Two canvases are stacked: a sharp one shown only when the table is at rest (it fades in),
+ * and a plain one drawn while it turns, so a turn never reallocates a canvas.
  * When a trophy settles, its champions hang from the rafters below as cloth banners that drop in, bounce into place and then ripple and sway freely.
+ * Until the champions have arrived (`seasons` is null) the rafters stay bare: "No champion yet" is said only when it is true.
  */
 type Champion = { name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -41,7 +41,7 @@ const frontOf = (angle: number) => Math.round(wrap(angle) / REST) % TROPHIES.len
 const nearestRest = (angle: number) => Math.round(angle / REST) * REST;
 const phoneSized = () => typeof window !== "undefined" && window.matchMedia("(max-width: 820px), (pointer: coarse)").matches;
 
-export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
+export default function TrophyTurntable({ seasons }: { seasons: Season[] | null }) {
   const moveCanvas = useRef<HTMLCanvasElement>(null);
   const restCanvas = useRef<HTMLCanvasElement>(null);
   const [chosen, setChosen] = useState<Profile | null>(null);   // which picture set, decided once on the device (nothing is fetched before)
@@ -50,9 +50,6 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
   const sharp = useRef<Array<ImageBitmap | null>>([null, null, null]);   // the resting views, sharp
   const angle = useRef(0);
   const frame = useRef<number | null>(null);
-  const glide = useRef<number | null>(null);   // the frame request that carries the table toward the finger
-  const aim = useRef<number | null>(null);     // where the finger wants the table to be
-  const drag = useRef<{ startX: number; startAngle: number; samples: Array<{ t: number; x: number }> } | null>(null);
   const [front, setFront] = useState(0);        // the trophy at the front once the table has settled
   const [shown, setShown] = useState(0);        // the trophy whose banners are hanging: they stay until the table has settled on the next
   const [moving, setMoving] = useState(false);  // true while the table is being turned
@@ -131,48 +128,24 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     return () => {
       cancelled = true;
       if (frame.current !== null) cancelAnimationFrame(frame.current);
-      if (glide.current !== null) cancelAnimationFrame(glide.current);
       for (const bitmap of [...bitmaps.current, ...sharp.current]) bitmap?.close();   // hand the memory back at once
     };
   }, [chosen, draw]);
 
   const set = useCallback((next: number) => { angle.current = next; draw(); }, [draw]);
-  /** Pointer events can arrive several times a frame: the table glides toward the finger (about 45 ms behind it, never faster than 10 degrees a frame:
-   *  the fluted pedestal repeats every 22.5 degrees, so a faster turn makes its flutes appear to roll backwards) and is drawn once a frame. */
-  const follow = useCallback((next: number) => {
-    aim.current = next;
-    if (glide.current !== null) return;
-    let last = performance.now();
-    const tick = (now: number) => {
-      glide.current = null;
-      const target = aim.current;
-      if (target === null) return;
-      const elapsed = Math.min(48, now - last);
-      last = now;
-      const gap = target - angle.current;
-      angle.current += Math.max(-10, Math.min(10, gap * (1 - Math.exp(-elapsed / 45))));
-      draw();
-      if (Math.abs(target - angle.current) > 0.02) glide.current = requestAnimationFrame(tick);
-    };
-    glide.current = requestAnimationFrame(tick);
-  }, [draw]);
-  const stopGliding = useCallback(() => {
-    aim.current = null;
-    if (glide.current !== null) { cancelAnimationFrame(glide.current); glide.current = null; }
-  }, []);
 
-  /** Turn smoothly to an angle by the short way round, then report which trophy is at the front. The arrow buttons turn it slowly and evenly, easing
-   *  in and out like a heavy table; a settle after a drag or flick keeps the quicker, ease-out turn. Neither may go faster than about 10 degrees a
-   *  frame: the fluted pedestal repeats every 22.5 degrees, so a faster turn makes its flutes appear to roll backwards. */
-  const turnTo = useCallback((target: number, slow = false) => {
+  /** Turn smoothly to an angle by the short way round, then report which trophy is at the front: slowly and evenly, easing in and out like a heavy
+   *  table, never faster than about 10 degrees a frame (the fluted pedestal repeats every 22.5 degrees, so a faster turn makes its flutes appear to
+   *  roll backwards). */
+  const turnTo = useCallback((target: number) => {
     if (frame.current !== null) cancelAnimationFrame(frame.current);
     const from = angle.current, delta = ((target - from + 540) % 360) - 180;
     const finish = () => { frame.current = null; setFront(frontOf(angle.current)); setMoving(false); };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || delta === 0) { set(from + delta); finish(); return; }
     setMoving(true);
-    const start = performance.now(), duration = slow ? Math.min(1500, 400 + Math.abs(delta) * 9) : Math.min(900, 220 + Math.abs(delta) * 4);
+    const start = performance.now(), duration = Math.min(1500, 400 + Math.abs(delta) * 9);
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration), eased = slow ? 0.5 - Math.cos(Math.PI * t) / 2 : 1 - Math.pow(1 - t, 3);
+      const t = Math.min(1, (now - start) / duration), eased = 0.5 - Math.cos(Math.PI * t) / 2;
       set(from + delta * eased);
       if (t < 1) frame.current = requestAnimationFrame(tick); else finish();
     };
@@ -187,55 +160,19 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
     return () => window.clearTimeout(timer);
   }, [front, shown]);
 
-  /** A touch that ends without a release (the browser took it to scroll the page, say) must not leave the table between two trophies. */
-  const settle = useCallback(() => {
-    if (!drag.current) return;
-    drag.current = null;
-    stopGliding();
-    turnTo(nearestRest(angle.current));
-  }, [stopGliding, turnTo]);
+  const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST), [turnTo]);
 
-  const turnBy = useCallback((steps: number) => turnTo(nearestRest(angle.current) + steps * REST, true), [turnTo]);
-
-  const roll = championRoll(seasons, TROPHIES[shown].pool);
+  const roll = seasons ? championRoll(seasons, TROPHIES[shown].pool) : null;
 
   return (
     <div className="trophy-display">
       <div
-        aria-label="The trophies on their table. Drag, or use the arrow keys, to turn it."
+        aria-label="The trophies on their table. Use the arrows to turn it."
         className="trophy-turn-stage"
         data-ready={ready ? "true" : "false"}
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft") { event.preventDefault(); turnBy(-1); }
           if (event.key === "ArrowRight") { event.preventDefault(); turnBy(1); }
-        }}
-        onPointerCancel={() => settle()}
-        onLostPointerCapture={() => settle()}
-        onPointerDown={(event) => {
-          if ((event.target as HTMLElement).closest("button")) return;
-          if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
-          stopGliding();
-          drag.current = { startX: event.clientX, startAngle: angle.current, samples: [{ t: performance.now(), x: event.clientX }] };
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }}
-        onPointerMove={(event) => {
-          const current = drag.current;
-          if (!current) return;
-          const width = event.currentTarget.getBoundingClientRect().width || 1;
-          if (Math.abs(event.clientX - current.startX) > 4) setMoving(true);
-          follow(current.startAngle - ((event.clientX - current.startX) / width) * 200);   // a swipe across the picture is about 200 degrees
-          current.samples.push({ t: performance.now(), x: event.clientX });
-          if (current.samples.length > 6) current.samples.shift();
-        }}
-        onPointerUp={(event) => {
-          const current = drag.current;
-          if (!current) return;
-          drag.current = null;
-          stopGliding();
-          const width = event.currentTarget.getBoundingClientRect().width || 1, now = performance.now(), recent = current.samples.filter((sample) => now - sample.t < 90);   // only the last instant counts: a pause before letting go is not a flick
-          const first = recent[0], last = recent[recent.length - 1];
-          const velocity = first && last && last.t > first.t ? ((-(last.x - first.x) / width) * 200) / (last.t - first.t) : 0;   // degrees per millisecond
-          turnTo(nearestRest(angle.current + velocity * 180));                                                   // a flick carries on a little
         }}
         role="group"
         tabIndex={0}
@@ -249,7 +186,7 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] }) {
       </div>
       <section aria-label={`${TROPHIES[shown].label} champions`} className="trophy-rafters" data-moving={lifting ? "true" : "false"} data-pool={TROPHIES[shown].pool} key={shown}>
         <div aria-hidden="true" className="trophy-beam" />
-        {roll.length ? (
+        {roll === null ? null : roll.length ? (
           <ul className="trophy-banners">
             {roll.map((banner, index) => (
               <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>

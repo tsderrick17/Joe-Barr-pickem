@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
-// The Trophy Room's turntable: three trophies on a mahogany table that turns by drag, swipe or arrow, and the banners of the trophy at the front.
+// The Trophy Room's turntable: three trophies on a mahogany table that turns only by its arrows, and the banners of the trophy at the front.
 
-async function openTrophyRoom(page: Page, width = 900) {
+async function openTrophyRoom(page: Page, width = 900, { holdChampions = false } = {}) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
   const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
   const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
@@ -11,7 +11,7 @@ async function openTrophyRoom(page: Page, width = 900) {
   await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api\//, "");
-    if (path === "trophy-room") return route.fulfill({ json: TROPHY_ROOM });
+    if (path === "trophy-room") return holdChampions ? undefined : route.fulfill({ json: TROPHY_ROOM });   // held: the champions never arrive
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     return route.fulfill({ status: 204, body: "" });
@@ -21,6 +21,14 @@ async function openTrophyRoom(page: Page, width = 900) {
   await page.goto("/trophy-room");
   await expect(page.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
 }
+
+test("while the champions are still loading the rafters stay bare: no \"No champion yet\" for a trophy that has one", async ({ page }) => {
+  await openTrophyRoom(page, 900, { holdChampions: true });
+  await expect(page.getByText("Loading the Trophy Room…")).toBeVisible();
+  await expect(page.locator(".trophy-rafters")).toBeVisible();
+  await expect(page.locator(".trophy-banners-empty")).toHaveCount(0);
+  await expect(page.locator(".trophy-banner")).toHaveCount(0);
+});
 
 const front = (page: Page) => page.getByRole("status").filter({ hasText: "at the front" });
 
@@ -82,19 +90,16 @@ test("a desktop is sent the full set of 120 pictures", async ({ page }) => {
   expect(requested.size).toBe(120);
 });
 
-test("dragging turns the table and it settles on the nearest trophy", async ({ page }) => {
+test("only the arrows turn the table: a drag across it does nothing", async ({ page }) => {
   await openTrophyRoom(page);
   const stage = page.locator(".trophy-turn-stage");
   const box = (await stage.boundingBox())!;
   const y = box.y + box.height * 0.6;
-  // a short, slow drag is not enough to change trophy: it springs back
-  await page.mouse.move(box.x + box.width * 0.5, y); await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.5 - 40, y, { steps: 6 }); await page.waitForTimeout(250); await page.mouse.up();
-  await expect(front(page)).toHaveText("Pick’em is at the front");
-  // dragging left far enough brings the trophy on the right forward
   await page.mouse.move(box.x + box.width * 0.8, y); await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.8 - box.width * 0.6, y, { steps: 12 }); await page.waitForTimeout(250); await page.mouse.up();
-  await expect(front(page)).toHaveText("Bowl Pool is at the front");
+  await page.mouse.move(box.x + box.width * 0.8 - box.width * 0.6, y, { steps: 12 }); await page.mouse.up();
+  await page.waitForTimeout(1200);
+  await expect(front(page)).toHaveText("Pick’em is at the front");
+  await expect(page.locator(".trophy-rafters")).toHaveAttribute("data-pool", "pickem");
 });
 
 test("the table and banners at rest with the Bowl Pool at the front", async ({ page }) => {
@@ -104,20 +109,6 @@ test("the table and banners at rest with the Bowl Pool at the front", async ({ p
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.waitForTimeout(1600);
   await expect(page.locator(".trophy-display")).toHaveScreenshot("trophy-turntable-bowl-front.png");
-});
-
-// A touch the browser takes over (to scroll the page, say) ends in a pointer cancel, not a release. The table must not be left between two trophies.
-test("a cancelled drag settles on a trophy instead of sticking between two", async ({ page }) => {
-  await openTrophyRoom(page);
-  const stage = page.locator(".trophy-turn-stage");
-  const box = (await stage.boundingBox())!;
-  const y = box.y + box.height * 0.6;
-  await page.mouse.move(box.x + box.width * 0.7, y); await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.7 - box.width * 0.18, y, { steps: 8 });
-  await expect(page.getByRole("status").filter({ hasText: "Turning" })).toBeVisible();
-  await stage.dispatchEvent("pointercancel");
-  await expect(front(page)).toHaveText(/is at the front/);
-  await page.mouse.up();
 });
 
 // The banners are drawn on a canvas at the screen's full device resolution (and never scaled or rotated), so they stay sharp.

@@ -8,6 +8,10 @@ as superseded and records the current contract rather than rewriting history.
 
 Owner found the banner had three ways to make it go away (Hide, the ✕ and "I already have it") and that the iPhone step "Not there? Open this page in the Safari app first" confused more than it helped (it showed in Safari itself). Now the ✕ is the only way to close it and keeps it away 14 days, as before; "Show me how" gives way to the steps instead of turning into Hide; "I already have it" (180 days) and the Safari aside are gone. Supersedes the "I already have it" detail of the Home Screen entries below. The notifications banner is unchanged (its ✕ also waits 14 days).
 
+## 2026-10-30 - The trophy table turns only by its arrows
+
+Owner: turning the trophies only with the arrows is cleaner. Dragging, swiping and flicking the table are removed (a finger on the table now simply scrolls the page); the arrows and arrow keys turn it slowly and evenly, one trophy at a time, as before. Also, the rafters said "No Pick'em champion yet" for a moment every time the page opened, because the turntable showed before the champions had loaded: now the rafters stay bare until they arrive, and the note shows only for a trophy nobody has won.
+
 ## 2026-10-30 - Haptics start with a Commissioner-only Feel test
 
 Owner wants a thoughtful, satisfying haptic layer but cannot test every phone (only an iPhone). The plan is five feels with one meaning each, used the same everywhere (see PROJECT_REFERENCE). Because iPhone support is a workaround that is unproven inside a Home Screen app, step 1 ships only a Commissioner-only "Feel test" on the Notifications page: a button per feel, a pretend pull-chain (a notch per count, a lock-in on letting go) and, on an iPhone, experiments (a tick one second after a tap, three quick ticks, success as a tick) so the owner can feel what an iPhone actually allows. The Android patterns are untested by the owner (no Android phone): they are conventional short patterns, kept in one table in `src/lib/haptics.js` for tuning. Rolling the feels out to the rest of the app, with a Vibration on/off switch, waits until the owner has felt this.
