@@ -92,7 +92,7 @@ export async function syncAnnualSchedule(now: Date) {
     return ids[0] && ids[1] ? { away: ids[0], home: ids[1] } : null;
   }
 
-  let imported = 0; let championshipGameId: string | null = null; let inserted = 0;
+  let imported = 0; let championshipGameId: string | null = null; let inserted = 0; let kickoffMoved = false;
   const lineFor = async (gameId: string, event: EspnEvent, teams: { away: string; home: string } | null, lineLockAt: string | null) => {
     const espnSpread = event.competitions?.[0]?.odds?.find((odds) => Number.isFinite(odds.spread))?.spread;
     if (!teams || !lineLockAt || typeof espnSpread !== "number" || !Number.isFinite(espnSpread)) return;
@@ -130,6 +130,7 @@ export async function syncAnnualSchedule(now: Date) {
       if (patch.kickoff_at) await cancelQueuedBowlReminders(game.id);
       const { error } = await supabaseAdmin.from("bowl_pool_games").update(patch).eq("id", game.id);
       if (error) { console.error("A Bowl Pool game could not be updated.", { gameId: game.id, code: error.code }); continue; }
+      if (patch.kickoff_at) kickoffMoved = true;
     }
     imported += 1;
     if (headlineIsChampionship(headline)) championshipGameId = game.id;
@@ -154,8 +155,9 @@ export async function syncAnnualSchedule(now: Date) {
     await lineFor(saved.id, event, teams, lineLockAt);
   }
 
-  // New games take their place by kickoff, unless the Commissioner has curated an order of their own.
-  if (inserted && orderIsChronological(games)) {
+  // New games, and games whose kickoff ESPN just confirmed or moved, take their place by kickoff, unless the Commissioner has curated an order of their own
+  // (`games` is the list as it stood before this run, so it says whether the order was the kickoff order to begin with).
+  if ((inserted || kickoffMoved) && orderIsChronological(games)) {
     const { data: all, error: allError } = await supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, order_index").eq("season_id", season.id);
     if (allError) throw new Error("Bowl Pool games could not be loaded.");
     for (const change of chronologicalOrder(all ?? [])) {

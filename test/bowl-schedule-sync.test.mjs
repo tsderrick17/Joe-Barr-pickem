@@ -231,6 +231,38 @@ test("a game linked to ESPN that ESPN has moved by days follows ESPN: one game, 
   assert.ok(reminderCancels.some((cancel) => cancel.game === cactusGame().id));
 });
 
+const inListOrder = () => [...games].sort((a, b) => a.order_index - b.order_index);
+const cactusMovedBy = (days) => {
+  const espnCactus = feed.find((event) => espnHeadlineOf(event) === "Cactus Bowl");
+  return feed.map((event) => event === espnCactus ? { ...event, date: new Date(Date.parse(event.date) + days * 24 * 60 * 60 * 1000).toISOString() } : event);
+};
+
+test("a game ESPN moves to another day takes its place by kickoff, numbered 1 to 47 with no gaps", async () => {
+  reset();
+  await pull(feed);
+  const before = inListOrder().findIndex((game) => game.id === cactusGame().id);
+  gameWrites = [];
+  await pull(cactusMovedBy(9));
+  const after = inListOrder();
+  assert.notEqual(after.findIndex((game) => game.id === cactusGame().id), before, "it left its old place");
+  assert.deepEqual(after.map((game) => game.order_index), after.map((_, index) => index + 1));
+  assert.ok(after.every((game, index) => index === 0 || Date.parse(game.kickoff_at) >= Date.parse(after[index - 1].kickoff_at)), "the list reads in kickoff order");
+  gameWrites = [];
+  await pull(cactusMovedBy(9));
+  assert.deepEqual(gameWrites, [], "a pull that moves nothing renumbers nothing");
+});
+
+test("a move never renumbers a list the Commissioner arranged by hand", async () => {
+  reset();
+  await pull(feed);
+  const [first, last] = [inListOrder()[0], inListOrder().at(-1)];
+  [first.order_index, last.order_index] = [last.order_index, first.order_index];
+  gameWrites = [];
+  await pull(cactusMovedBy(9));
+  assert.deepEqual(gameWrites.filter((write) => "order_index" in write.patch), [], "no order_index was written");
+  assert.deepEqual([first.order_index, last.order_index], [47, 1], "the arranged places are as they were left");
+});
+
 test("the database's own timestamp format does not read as a change", async () => {
   reset();
   await pull(feed);

@@ -278,7 +278,9 @@ measure database requests or end-to-end route time.
   the first game kicks off. Their private draft remains during that withdrawal
   window and is deleted at the first kickoff.
 - Every FBS bowl and College Football Playoff game, including campus CFP games
-  and the national championship, is represented in chronological order. An
+  and the national championship, is represented in chronological order (the
+  schedule pull and a Commissioner Reschedule keep it so unless the Commissioner
+  has arranged the order by hand). An
   opted-in player may save any number of selections at once and return later;
   every individual game locks at its own kickoff and becomes public then.
 - NCAA ATS picks follow the NFL privacy and locked-line rules. A whole-number

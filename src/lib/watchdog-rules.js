@@ -3,7 +3,6 @@ import { dateFormat } from "./date-format.js";
 const BOWL_ISSUE_TITLES = {
   teams: "A Bowl Pool game is still missing a team",
   line: "A started Bowl Pool game has no official line",
-  order: "Bowl Pool games are out of date order",
   settlement: "Bowl Pool results do not reconcile",
   structure: "Bowl Pool schedule data is inconsistent",
 };

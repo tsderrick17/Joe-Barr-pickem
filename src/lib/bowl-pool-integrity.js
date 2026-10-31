@@ -29,10 +29,12 @@ export function countMissingBowlTeamSlots(games) {
 
 /**
  * Problems come back as plain sentences in `problems` and as `issues` ({ kind, message }) so the watchdog can alert on each kind on its own:
- * "structure" (duplicates, same team twice, bad status), "teams", "order" and "line".
+ * "structure" (duplicates, same team twice, bad status), "teams" and "line". Games out of kickoff order are only a `warnings` entry: the schedule pull and a Reschedule
+ * keep the list in date order on their own, so a game out of place means the Commissioner arranged it, which is worth a look but is not a failure.
  */
 export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   const issues = [];
+  const warnings = [];
   const problems = { push: (message) => issues.push({ kind: "structure", message }) };
   const add = (kind, message) => issues.push({ kind, message });
   const ordered = [...games].sort((a, b) => a.order_index - b.order_index);
@@ -52,7 +54,7 @@ export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   }
   for (let index = 1; index < ordered.length; index += 1) {
     if (new Date(ordered[index - 1].kickoff_at).getTime() > new Date(ordered[index].kickoff_at).getTime()) {
-      add("order", "Bowl Pool games are not in chronological order.");
+      warnings.push("Bowl Pool games are not in chronological order.");
       break;
     }
   }
@@ -62,5 +64,5 @@ export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   const validStatuses = new Set(["scheduled", "live", "final", "postponed", "cancelled", "no_contest"]);
   const invalidStatus = games.filter((game) => !validStatuses.has(game.status));
   if (invalidStatus.length) problems.push(`${invalidStatus.length} Bowl Pool game${invalidStatus.length === 1 ? " has" : "s have"} an invalid status.`);
-  return { healthy: issues.length === 0, problems: issues.map((issue) => issue.message), issues, missingLines: missingLines.length, gameCount: games.length };
+  return { healthy: issues.length === 0, problems: issues.map((issue) => issue.message), issues, warnings, missingLines: missingLines.length, gameCount: games.length };
 }

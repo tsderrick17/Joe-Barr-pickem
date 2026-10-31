@@ -72,6 +72,12 @@ async function startSeason(client) {
   return { token, A, B, commissioner, season, games, sides, submit, pickOf };
 }
 
+// The season's game ids by order_index; the numbers themselves must run 1, 2, 3 ... with no gap.
+async function listOrder(client, seasonId) {
+  const rows = (await client.query("select id, order_index from public.bowl_pool_games where season_id = $1 order by order_index", [seasonId])).rows;
+  return rows.map((row, index) => { assert.equal(row.order_index, index + 1); return row.id; });
+}
+
 async function inRolledBackTransaction(run) {
   const client = new pg.Client({ connectionString: process.env.PICKEM_TEST_DATABASE_URL });
   await client.connect();
@@ -145,6 +151,8 @@ test("a postponed game keeps its picks, can be rescheduled by the Commissioner o
   const eightAm = await one(client, "select (((($1::timestamptz) at time zone 'America/New_York')::date + time '08:00') at time zone 'America/New_York') as lock_at", [newKickoff]);
   assert.equal(rescheduled.line_lock_at.toISOString(), eightAm.lock_at.toISOString(), "the line locks at 8 AM Eastern on the new game day, not at kickoff");
   assert.equal((await pickOf(A, 1)).selected_team_id, sides[1].away, "the pick is kept through the reschedule");
+  assert.equal(rescheduled.order_index, 4, "the returned row carries its new place");
+  assert.deepEqual(await listOrder(client, season.id), [games[0], games[2], games[3], games[1]], "the game moved to a later day takes its place by kickoff, numbered 1 to 4");
   const line = await one(client, "select locked_spread, locked_at from public.bowl_pool_game_lines where game_id = $1", [games[1]]);
   assert.equal(Number(line.locked_spread), 3.5, "a locked line is not replaced");
   assert.ok(line.locked_at, "and stays locked");
@@ -153,6 +161,19 @@ test("a postponed game keeps its picks, can be rescheduled by the Commissioner o
   await submit(A, [[1, "home"], [2, "home"], [3, "away"]]);
   assert.equal((await pickOf(A, 1)).selected_team_id, sides[1].home, "the rescheduled game is open for changes again");
   await refuses(client, "teams_frozen", "update public.bowl_pool_games set home_team_id = $2 where id = $1", [games[1], sides[0].home], /cannot be replaced/);
+}));
+
+test("a reschedule leaves a Commissioner-arranged order alone", {
+  skip: !enabled && "Set the isolated PICKEM_TEST_* variables with PICKEM_WEEKLY_REHEARSAL=true.",
+}, () => inRolledBackTransaction(async (client) => {
+  const { commissioner, games, season } = await startSeason(client);
+  // The Commissioner put the second game first: the list is no longer in kickoff order, so nothing renumbers it.
+  await client.query("update public.bowl_pool_games set order_index = case id when $1 then 1 when $2 then 2 else order_index end where id in ($1, $2)", [games[1], games[0]]);
+  await client.query("select * from public.record_bowl_game_disruption($1, 'postponed', $2)", [games[2], commissioner]);
+  const newKickoff = (await one(client, "select ((date_trunc('day', now() at time zone 'America/New_York') + interval '6 days 19 hours') at time zone 'America/New_York') as kickoff")).kickoff.toISOString();
+  const rescheduled = await one(client, "select * from public.reschedule_bowl_game($1, $2, $3)", [games[2], newKickoff, commissioner]);
+  assert.equal(rescheduled.order_index, 3, "the rescheduled game keeps its place");
+  assert.deepEqual(await listOrder(client, season.id), [games[1], games[0], games[2], games[3]], "the arranged order is untouched");
 }));
 
 test("a cancelled game voids its picks and keeps them in view when the player saves again", {
