@@ -11,10 +11,10 @@ export type BowlIntegrityGame = {
   is_cfp?: boolean | null;
 };
 
-export type BowlIntegrityIssue = { kind: "structure" | "teams" | "order" | "line"; message: string };
+export type BowlIntegrityIssue = { kind: "structure" | "teams" | "line"; message: string };
 
 export type BowlIntegrityLine = { game_id: string };
 
 /** Pure integrity checks shared by the readiness page and automation tests. */
-export const assessBowlPoolIntegrity: (games: BowlIntegrityGame[], lines: BowlIntegrityLine[], now?: Date) => { healthy: boolean; problems: string[]; issues: BowlIntegrityIssue[]; missingLines: number; gameCount: number } = assess;
+export const assessBowlPoolIntegrity: (games: BowlIntegrityGame[], lines: BowlIntegrityLine[], now?: Date) => { healthy: boolean; problems: string[]; issues: BowlIntegrityIssue[]; warnings: string[]; missingLines: number; gameCount: number } = assess;
 export const countMissingBowlTeamSlots: (games: BowlIntegrityGame[]) => number = countMissing;

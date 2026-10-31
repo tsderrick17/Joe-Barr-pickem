@@ -25,6 +25,16 @@ test("Bowl Pool integrity catches missing teams, duplicate order, and overdue li
   assert.match(result.problems.join(" "), /have started without a locked line/);
 });
 
+test("games out of kickoff order are a warning to look at, not a failure of the Bowl Pool's health", () => {
+  const swapped = [{ ...games[0], order_index: 2 }, { ...games[1], order_index: 1 }];
+  const result = assessBowlPoolIntegrity(swapped, [{ game_id: "a" }, { game_id: "b" }], new Date("2026-12-01T00:00:00Z"));
+  assert.deepEqual(result.warnings, ["Bowl Pool games are not in chronological order."]);
+  assert.equal(result.healthy, true);
+  assert.deepEqual(result.problems, []);
+  assert.deepEqual(result.issues, []);
+  assert.deepEqual(assessBowlPoolIntegrity(games, [], new Date("2026-12-01T00:00:00Z")).warnings, []);
+});
+
 test("Bowl Pool integrity allows a postponed game without requiring a line", () => {
   const result = assessBowlPoolIntegrity([{ ...games[0], status: "postponed" }], [], new Date("2026-12-16T00:00:00Z"));
   assert.equal(result.healthy, true);
