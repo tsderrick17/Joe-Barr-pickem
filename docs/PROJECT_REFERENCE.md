@@ -474,9 +474,10 @@ playoff wins.
   `ats_pick_voided` with reason `forfeited`).
 - From then on `replace_unlocked_picks` refuses the player's saves in the
   database itself, and `/api/picks` answers 403. The Slate and Standings show
-  the same quiet "You forfeited, thanks for playing." banner an eliminated
-  player sees, and the Standings row carries a FORFEITED stamp over the final
-  score.
+  the same quiet "You have been eliminated, thanks for playing." banner an
+  eliminated player sees, and the Standings row carries the same ELIMINATED
+  stamp over the final score (a forfeit has no label of its own for players;
+  only the Commissioner's Players page says "Forfeited" so it can be reinstated).
 - Only the Commissioner can reverse a forfeit (Players page: a "Forfeited the
   Pick'em playoffs" tag with a two-step Reinstate). A reversal lets the player
   pick again for games that have not started; picks voided by the forfeit are

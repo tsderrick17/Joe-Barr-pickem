@@ -109,7 +109,7 @@ export const SCENARIOS = {
   // hide and "− OUT" buttons are gone, and a closed banner leads the page.
   "off-season": { ...base, seasonPhase: "off_season", isPlayoff: true, week: "Super Bowl", weekStatus: "complete", maxPicks: 1, serverTime: "2027-02-20T18:00:00Z", showSurvivorStandings: false, showBowlCard: false, hidePickemEliminatedRows: true, hideSurvivorEliminatedRows: true, survivorAvailable: false, rows: rows({ maxPicks: 1, playoff: true }), survivorRows: [] },
   // A player out of the playoff race mid-playoffs gets the same quiet page: banner, no ticket.
-  // The viewer forfeited the playoffs: the same quiet page, and their own row wears the FORFEITED stamp.
+  // The viewer forfeited the playoffs: the same quiet page, and their own row wears the same ELIMINATED stamp.
   "playoff-viewer-forfeited": { ...base, viewerPlayerId: "p4", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   "playoff-viewer-out": { ...base, viewerPlayerId: "p7", isPlayoff: true, week: "Divisional Round", maxPicks: 4, serverTime: "2027-01-17T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 4, playoff: true }), survivorRows: [] },
   // The Bowl Card in its other states (the Bowl data for each is BOWL_BY_SCENARIO).

@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-31 - A forfeit reads "eliminated" to players
+
+The owner did not like a separate label for forfeiting. The Standings stamp for a player who forfeited the Pick'em playoffs now reads ELIMINATED, the same as one eliminated from the race, and the Slate and Standings banner reads "You have been eliminated, thanks for playing." with "Back August 1". Nothing about the rule changes (the score stands, unstarted picks are voided, only the Commissioner can reinstate); the Commissioner's Players page still says "Forfeited the Pick'em playoffs", so the Reinstate button makes sense.
+
 ## 2026-10-31 - A Bowl worker failure is a failed run, and a game with no final is an alert for both pools
 
 The 2026-10-31 audit found that the Bowl worker recorded `success` when ESPN could not be read (both ESPN reads returned "nothing"), the readiness panel's cron health read the NFL jobs instead of `bowl_scores`, and neither pool alerted on a game that never received a final score. ESPN reads now throw a typed `ProviderUnavailable`; `syncBowlPool` lets the work that needs no ESPN finish (games going live, missing-pick losses, grading, the champion) and then ends the run as failed with the reason. Readiness reads the `bowl_scores` heartbeat. One shared rule (`src/lib/final-overdue.js`): a game still scheduled or live six hours after kickoff is overdue, shown as the Bowl health issue kind `final` and the NFL watchdog incident `final-overdue-nfl`. NFL score checks now stop explicitly 72 hours after kickoff (`FINAL_SCORE_POLLING_LIMIT_HOURS`; they already stopped through the provider look-back), and health no longer counts those older games as pending score checks. Not in this change (PR E2): treating only ESPN's `STATUS_FINAL` as final, the automatic cancel of an ESPN-cancelled bowl, and the players' "Final score pending" state.

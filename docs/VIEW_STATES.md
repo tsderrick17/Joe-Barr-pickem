@@ -26,7 +26,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff games live | `playoff-live` |
 | Off-season: "See you next season!" banner instead of the receipt, read-only, no how-to copy | `off-season` |
 | Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
-| Forfeited the playoffs: "You forfeited, thanks for playing." banner, no receipt | `playoff-forfeited` |
+| Forfeited the playoffs: the same "You have been eliminated, thanks for playing." banner as an eliminated player, no receipt | `playoff-forfeited` |
 | Night mode Slate: official (teal) lines and chips are readable on the dark rows; every one is checked to 4.5:1 contrast (behavior test) | `night-upcoming-picked`, `night-live-survivor`, phone 390 and desktop 1280 |
 | The Forfeit link at the foot of every playoff Slate (`playoff-upcoming`, `playoff-six-picks`, `playoff-live`), and its three questions, one at a time | `forfeit-step-1/2/3-phone-390` (behavior test in `slate-flow.visual.spec.ts`; the link is absent from regular weeks, forfeited, eliminated and off-season Slates) |
 
@@ -43,7 +43,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: banner instead of the ticket, every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
 | Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
-| Viewer forfeited the playoffs: banner instead of the ticket, FORFEITED stamp on their row (every playoff state also shows one other player's stamp) | `playoff-viewer-forfeited` |
+| Viewer forfeited the playoffs: banner instead of the ticket, ELIMINATED stamp on their row, the same as an eliminated player (every playoff state also shows one other player's stamp) | `playoff-viewer-forfeited` |
 | Season Snapshot in the playoffs: a Season / Playoffs switch beside the title (opens on Playoffs); Season shows the 6 Wk / All range | `commissioner-playoff` (flipped, both halves) |
 | Season Snapshot, Season half, 6 Wk range (fourteen weeks, so the chart scrolls and the axis fits the latest six, starting above zero): the position rail beneath the week numbers, in the pad's own colors, with the browser's scroll bar hidden; the browser is launched with scroll bars drawn so one returning would show; behavior tests drag the rail, press its track, and scroll back to watch the axis glide to zero on the same tick spacing (`season-snapshot-flow.visual.spec.ts`) | `commissioner-playoff` (`flipped-sixweek`, the chart only, day and night, phone-390 and desktop-1280) |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |

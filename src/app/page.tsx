@@ -342,7 +342,7 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} forfeited={viewerForfeited && !offSeason} /> : <MyTicket
+        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} /> : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}

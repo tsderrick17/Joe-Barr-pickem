@@ -602,7 +602,7 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
       <div className={`mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 sm:px-5 sm:pb-0 md:px-10 ${seasonClosedForViewer ? "pt-5 sm:pt-8" : "pt-0"}`}>
-        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} forfeited={forfeited && !seasonOver} /></div> : null}
+        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} /></div> : null}
 
         {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
