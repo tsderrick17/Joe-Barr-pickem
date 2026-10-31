@@ -1,7 +1,7 @@
 import { readJsonObject } from "@/lib/request-validation";
 import { parseTemplateSave } from "@/lib/request-bodies";
 import { NextRequest, NextResponse } from "next/server";
-import { reminderTemplate } from "@/lib/reminder-templates";
+import { editableReminderTemplate } from "@/lib/reminder-templates";
 import { commissionerAccess } from "@/lib/require-commissioner";
 import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest) {
   if (!input) return NextResponse.json({ error: "Standard email wording was incomplete." }, { status: 400 });
   const body = parseTemplateSave(input);
   const { id, title, message } = body;
-  if (!reminderTemplate(id) || !title || title.length > 80 || !message || message.length > 220) return NextResponse.json({ error: "Use a standard email, a subject up to 80 characters, and a message up to 220 characters." }, { status: 400 });
+  if (!editableReminderTemplate(id) || !title || title.length > 80 || !message || message.length > 220) return NextResponse.json({ error: "Use a standard email, a subject up to 80 characters, and a message up to 220 characters." }, { status: 400 });
   const { error } = await supabaseAdmin.from("reminder_templates").upsert({ template_id: id, title, body: message, ...(body.imageOptions ? { image_options: emailArtworkOptions(body.imageOptions) } : {}), updated_by_player_id: commissioner.id, updated_at: new Date().toISOString() });
   if (error) return NextResponse.json({ error: "Standard email wording could not be saved." }, { status: 500 });
   return NextResponse.json({ message: "Standard email wording saved." });
@@ -33,7 +33,7 @@ export async function DELETE(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
   if (!commissionerResult.ok) return accessDenied(commissionerResult);
   const id = request.nextUrl.searchParams.get("id") ?? "";
-  if (!reminderTemplate(id)) return NextResponse.json({ error: "Choose a standard email to reset." }, { status: 400 });
+  if (!editableReminderTemplate(id)) return NextResponse.json({ error: "Choose a standard email to reset." }, { status: 400 });
   const { error } = await supabaseAdmin.from("reminder_templates").delete().eq("template_id", id);
   if (error) return NextResponse.json({ error: "Standard email wording could not be reset." }, { status: 500 });
   return NextResponse.json({ message: "Standard wording restored." });

@@ -466,6 +466,10 @@ Bowl Pool. It is queued by the same sweep when it comes due (reminder `bowl:<sea
 confirmed), and who has not joined is decided when it is sent: active, pool emails on, and no Bowl entry of any kind this season (a player who joined and then
 opted out is not asked again). If the first game's time moves, its queued last call is cancelled and the sweep queues a fresh one for the new time.
 
+To see either message before players do, open the Email center, open the email image studio and choose "Bowl Pool opening announcement" or "Bowl Pool last call": it shows
+the email subject, the phone message and the email itself, worded from the real first game as the schedule stands. "Send this to my email and phone" sends it to the
+Commissioner alone (never the pool; it needs the Commissioner's own pool emails on). Their wording is fixed in the app, so there is nothing to save there.
+
 The ESPN schedule pull logs `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
 not be updated` (the database refused a matchup or kickoff that picks or a locked line hold; the Commissioner's schedule-change review lists
 what ESPN changed). The FCS playoff and the Celebration Bowl never enter the pool.

@@ -1,4 +1,5 @@
 import { idValue, integerValue, oneOf, optional, textValue, type JsonObject } from "@/lib/request-validation";
+import { BOWL_INVITATION_CATEGORIES } from "@/lib/bowl-opening-announcement.js";
 
 /**
  * One parser per mutation route that reads a JSON body. Each takes the already-read object and returns the
@@ -49,8 +50,10 @@ export function parseTemplateSave(input: JsonObject) {
   };
 }
 
+/** A test email is the plain delivery test, the selections preview, or one of the two Bowl Pool invitations. */
 export function parseTestEmail(input: JsonObject) {
-  return { selectionPreview: input.template === "selections" };
+  const bowlMessage = BOWL_INVITATION_CATEGORIES.find((category) => category === input.template) ?? null;
+  return { selectionPreview: input.template === "selections", bowlMessage };
 }
 
 const MAX_SCHEDULE_CSV_CHARACTERS = 500_000;

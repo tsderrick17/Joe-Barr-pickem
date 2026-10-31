@@ -1,4 +1,5 @@
 import type { ReminderAudience, ReminderCategory } from "@/lib/reminder-audience";
+import { BOWL_LAST_CALL_EMAIL_SUBJECT, BOWL_OPENING_EMAIL_SUBJECT } from "@/lib/bowl-opening-announcement.js";
 
 export type ReminderTemplate = {
   id: string;
@@ -7,6 +8,8 @@ export type ReminderTemplate = {
   title: string;
   body: string;
   label: string;
+  /** Worded in the app and filled in from the schedule: it can be previewed and test-sent, but its wording is not saved or edited. */
+  readOnly?: boolean;
 };
 
 export const reminderTemplates: ReminderTemplate[] = [
@@ -25,8 +28,16 @@ export const reminderTemplates: ReminderTemplate[] = [
   { id: "weekly_recap_pickem_only", category: "weekly_recap", audience: "all_active", title: "{{week}} recap", body: "The final Pick'em results and updated standings are ready to look over. Thanks for being part of the pool.", label: "Weekly recap after Survivor ends — Tuesday" },
   { id: "playoff_day_recap", category: "playoff_day_recap", audience: "all_active", title: "{{round}} playoff recap — {{date}}", body: "The completed playoff round is final and the updated Pick'em race is ready to look over. Good luck in the next round.", label: "Playoff recap — after final grades" },
   { id: "playoff_public_reveal", category: "playoff_public_reveal", audience: "all_active", title: "{{round}} picks: {{matchup}} — {{date}}", body: "This playoff game is underway. Public Pick'em receipts are ready to look over whenever you have a moment.", label: "All playoff picks — at each kickoff" },
+  { id: "bowl_pool_open", category: "bowl_pool_open", audience: "all_active", title: BOWL_OPENING_EMAIL_SUBJECT, body: "Sent once, Dec 7 at 9 AM ET, to everyone. It fills in from the real first game.", label: "Bowl Pool opening announcement — Dec 7, to everyone", readOnly: true },
+  { id: "bowl_pool_last_call", category: "bowl_pool_last_call", audience: "all_active", title: BOWL_LAST_CALL_EMAIL_SUBJECT, body: "Sent once, 24 hours before the first game, to players who have not joined. It fills in from the real first game.", label: "Bowl Pool last call — 24 hours before the first game", readOnly: true },
 ];
 
 export function reminderTemplate(id: string) {
   return reminderTemplates.find((template) => template.id === id) ?? null;
+}
+
+/** A standard email whose wording the Commissioner can save and reset. */
+export function editableReminderTemplate(id: string) {
+  const template = reminderTemplate(id);
+  return template && !template.readOnly ? template : null;
 }

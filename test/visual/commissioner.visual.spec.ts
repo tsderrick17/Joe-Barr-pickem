@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
-import { commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
+import { BOWL_OPENING_PREVIEW, commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 // The desk is one person's tool, used on a phone and a desktop: those two widths, day and night. (It was also shot at 360 and 700 wide by day, which
 // added about 22 images of 1 MB each and caught nothing the 390 and 1280 shots did not.)
@@ -104,6 +104,33 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
         await expect(page).toHaveScreenshot(`commissioner-${name}-${theme}-${label}.png`, { fullPage: true });
       });
     }
+  }
+}
+
+// The Email center with the email image studio open on the Bowl Pool opening announcement: its subject and phone message are shown as fixed words (not edit boxes),
+// beside the "Send this to my email and phone" button and the email itself.
+for (const theme of ["day", "night"]) {
+  for (const [label, width] of Object.entries(WIDTHS)) {
+    test(`Commissioner reminders Bowl announcement preview ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, "healthy");
+      await page.route("**/api/admin/reminder-templates", (route) => route.fulfill({ json: { templates: [] } }));
+      await page.route("**/api/admin/reminders/preview", async (route) => {
+        const { templateId } = route.request().postDataJSON();
+        return route.fulfill({ json: templateId === "bowl_pool_open" ? BOWL_OPENING_PREVIEW : { html: "<p>Sample</p>", images: [], source: "Sample", warning: "", templateId } });
+      });
+      await page.goto("/admin/reminders");
+      await expect(page.getByRole("heading", { name: "Email image studio" })).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.getByRole("button", { name: "Open email image studio" }).click();
+      await page.getByLabel("Email type").selectOption("bowl_pool_open");
+      await expect(page.getByText("Phone notification")).toBeVisible();
+      await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible();
+      await page.waitForTimeout(600);
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      await expect(page).toHaveScreenshot(`commissioner-reminders-bowl-message-${theme}-${label}.png`, { fullPage: true });
+    });
   }
 }
 

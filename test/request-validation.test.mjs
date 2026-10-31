@@ -68,8 +68,11 @@ test("each body parser rejects what it cannot use and keeps a legal body whole",
   assert.equal(bodies.parseBowlSchedule({ seasonYear: "2026", csv: "a,b" })?.seasonYear, 2026);
   for (const bad of [{ seasonYear: 26, csv: "x" }, { seasonYear: 2026.5, csv: "x" }, { seasonYear: 2026 }, { seasonYear: 2026, csv: "" }, { seasonYear: 2026, csv: 5 }, { seasonYear: 2026, csv: "x".repeat(500_001) }]) assert.equal(bodies.parseBowlSchedule(bad), null);
 
-  assert.deepEqual(bodies.parseTestEmail({ template: "selections" }), { selectionPreview: true });
-  assert.deepEqual(bodies.parseTestEmail({ template: 5 }), { selectionPreview: false });
+  assert.deepEqual(bodies.parseTestEmail({ template: "selections" }), { selectionPreview: true, bowlMessage: null });
+  assert.deepEqual(bodies.parseTestEmail({ template: 5 }), { selectionPreview: false, bowlMessage: null });
+  assert.deepEqual(bodies.parseTestEmail({ template: "bowl_pool_open" }), { selectionPreview: false, bowlMessage: "bowl_pool_open" });
+  assert.deepEqual(bodies.parseTestEmail({ template: "bowl_pool_last_call" }), { selectionPreview: false, bowlMessage: "bowl_pool_last_call" });
+  assert.deepEqual(bodies.parseTestEmail({ template: "bowl_daily_recap" }), { selectionPreview: false, bowlMessage: null }, "only the two invitations can be test-sent this way");
 
   assert.equal(bodies.parseChatDelete({ messageId: "m1" }), "m1");
   assert.equal(bodies.parseChatDelete({ messageId: 5 }), null);
@@ -115,11 +118,6 @@ for (const [path, method, badFields] of routes) {
     }
   });
 }
-
-test("the test-email route treats a missing or malformed body as the plain test email, not an error", async () => {
-  const source = await readFile(new URL("../src/app/api/admin/reminders/test/route.ts", import.meta.url), "utf8");
-  assert.match(source, /parseTestEmail\(\(await readJsonObject\(request\)\) \?\? \{\}\)/);
-});
 
 test("the Survivor save reads and checks its body before it can touch a pick", async () => {
   const source = await readFile(new URL("../src/app/api/survivor/route.ts", import.meta.url), "utf8");

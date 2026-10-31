@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { commissionerAccess } from "@/lib/require-commissioner";
 import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { reminderTemplate } from "@/lib/reminder-templates";
+import { reminderTemplate, type ReminderTemplate } from "@/lib/reminder-templates";
+import { BowlInvitationUnavailable, bowlInvitationMessage, type BowlInvitationCategory } from "@/lib/bowl-invitation-message";
 import { messageHtml } from "@/lib/email-reminders";
 import { emailArtworkKinds, emailArtworkOptions, emailArtworkTemplateId } from "@/lib/email-artwork-options";
 import { emailArtworkSample } from "@/lib/email-artwork-sample";
@@ -45,12 +46,30 @@ async function previewSnapshot(reminder: Reminder): Promise<EmailArtworkSnapshot
   }
 }
 
+/** The Bowl Pool opening announcement and last call: worded in the app from the real schedule, so there are no saved words, images or edits. */
+async function bowlInvitationPreview(template: ReminderTemplate) {
+  try {
+    const message = await bowlInvitationMessage(template.category as BowlInvitationCategory);
+    const html = messageHtml({ id: "preview", category: template.category, audience: template.audience, title: message.title, body: message.body, recap_snapshot: message.snapshot });
+    return NextResponse.json({
+      html, images: [], warning: "", templateId: template.id, readOnly: true,
+      source: "Current schedule · the words fill in from the real first game",
+      subject: message.emailSubject, phone: { title: message.title, body: message.body },
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) {
+    if (error instanceof BowlInvitationUnavailable) return NextResponse.json({ error: error.message }, { status: 409 });
+    console.error("bowl invitation preview failed", error instanceof Error ? error.message : "unknown");
+    return NextResponse.json({ error: "The preview could not be built. Nothing was sent." }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
   if (!commissionerResult.ok) return accessDenied(commissionerResult);
   const input = await readJsonObject(request);
   if (!input) return NextResponse.json({ error: "Choose an email to preview." }, { status: 400 });
   const template = typeof input.templateId === "string" ? reminderTemplate(input.templateId) : null;
+  if (template?.readOnly) return bowlInvitationPreview(template);
   let reminder: Reminder | null = null;
   if (typeof input.reminderId === "string") {
     const { data, error } = await supabaseAdmin.from("push_reminders").select("id, category, audience, title, body, recap_snapshot, source_scoring_period_id, source_game_ids, status").eq("id", input.reminderId).maybeSingle();

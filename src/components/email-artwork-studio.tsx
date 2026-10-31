@@ -6,7 +6,7 @@ import { reminderTemplates } from "@/lib/reminder-templates";
 import { emailArtworkOptions, type EmailArtworkOptions } from "@/lib/email-artwork-options";
 
 type Draft = { title: string; body: string; imageOptions: EmailArtworkOptions };
-type Preview = { html: string; images: Array<{ kind: string; src: string }>; source: string; warning: string; templateId: string };
+type Preview = { html: string; images: Array<{ kind: string; src: string }>; source: string; warning: string; templateId: string; subject?: string; phone?: { title: string; body: string } };
 
 export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { reminderId?: string; onCloseReceipt: () => void; onSaved: () => void }) {
   const [templateId, setTemplateId] = useState("weekly_recap");
@@ -22,6 +22,8 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   const [dirty, setDirty] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const generation = useRef(0);
+  // The Bowl Pool announcements are worded in the app from the real schedule: they are previewed and sent to the Commissioner, never edited.
+  const fixedWording = Boolean(reminderTemplates.find((item) => item.id === templateId)?.readOnly);
 
   async function render(id: string, values: Draft, receipt?: string) {
     const current = ++generation.current;
@@ -79,25 +81,36 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
     finally { setBusy(false); }
   }
 
+  async function sendTest() {
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const response = await fetchWithSession("/api/admin/reminders/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ template: templateId }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "The test could not be sent.");
+      setMessage(result.message);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "The test could not be sent."); }
+    finally { setBusy(false); }
+  }
+
   function edit(values: Partial<Draft>) { generation.current++; setDraft((current) => ({ ...current, ...values })); setDirty(true); setMessage(""); }
 
   return <section id="email-artwork-studio" className="desk-rule-bottom py-8">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black tracking-[.14em] text-[#007e72]">REVIEW BEFORE DELIVERY</p><h2 className="mt-1 font-serif text-2xl font-bold">Email image studio</h2><p className="mt-2 max-w-2xl text-sm text-(color:--themed-text-29)">See the actual generated images inside the email. Adjust the wording, refresh the preview, then save.</p></div>{reminderId ? <button type="button" className="min-h-11 font-bold underline" onClick={onCloseReceipt}>Back to template editor</button> : null}</div>
     {!reminderId ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-bold sm:col-span-2">Email type<select className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2" value={templateId} disabled={busy} onChange={(event) => choose(event.target.value)}>{reminderTemplates.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-      <label className="text-sm font-bold sm:col-span-2">Subject<input className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={80} disabled={busy} value={draft.title} onChange={(event) => edit({ title: event.target.value })} /></label>
+      {fixedWording ? <div className="text-sm sm:col-span-2"><p className="font-bold">Email subject</p><p className="mt-1">{preview?.subject ?? "…"}</p><p className="mt-3 font-bold">Phone notification</p><p className="mt-1">{preview?.phone ? `${preview.phone.title}: ${preview.phone.body}` : "…"}</p><p className="mt-3 text-xs text-(color:--themed-text-28)">This message goes out once, on its own. Its words are written in the app and fill in from the real first game, so they are not edited here. Look it over, then send it to yourself.</p></div> : <><label className="text-sm font-bold sm:col-span-2">Subject<input className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={80} disabled={busy} value={draft.title} onChange={(event) => edit({ title: event.target.value })} /></label>
       <label className="text-sm font-bold sm:col-span-2">Message<textarea className="mt-2 min-h-24 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={220} disabled={busy} value={draft.body} onChange={(event) => edit({ body: event.target.value })} /></label>
-      <p className="text-xs text-(color:--themed-text-28) sm:col-span-2">Keep week/date placeholders for automatic subjects. Standings and selections come from saved game data; correct results through Grading.</p>
+      <p className="text-xs text-(color:--themed-text-28) sm:col-span-2">Keep week/date placeholders for automatic subjects. Standings and selections come from saved game data; correct results through Grading.</p></>}
     </div> : null}
-    <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy} className="min-h-11 desk-button px-4 font-bold disabled:opacity-50" onClick={() => void render(templateId, draft, reminderId)}>{busy ? "Rendering images…" : "Refresh preview"}</button>{!reminderId ? <button type="button" disabled={busy || dirty || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void save()}>Save email changes</button> : null}</div>
-    {!reminderId ? <button type="button" disabled={busy} className="mt-2 min-h-11 text-sm font-bold underline disabled:opacity-50" onClick={() => { const original = reminderTemplates.find((item) => item.id === templateId)!; edit({ title: original.title, body: original.body }); }}>Use default wording</button> : null}
+    <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy} className="min-h-11 desk-button px-4 font-bold disabled:opacity-50" onClick={() => void render(templateId, draft, reminderId)}>{busy ? "Rendering images…" : "Refresh preview"}</button>{!reminderId && !fixedWording ? <button type="button" disabled={busy || dirty || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void save()}>Save email changes</button> : null}{fixedWording ? <button type="button" disabled={busy || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void sendTest()}>Send this to my email and phone</button> : null}</div>
+    {!reminderId && !fixedWording ? <button type="button" disabled={busy} className="mt-2 min-h-11 text-sm font-bold underline disabled:opacity-50" onClick={() => { const original = reminderTemplates.find((item) => item.id === templateId)!; edit({ title: original.title, body: original.body }); }}>Use default wording</button> : null}
     {dirty ? <p className="mt-3 text-sm font-semibold text-(color:--themed-text-21)">Changes are not previewed yet. Refresh to review them before saving.</p> : null}
     {message ? <p role="status" className="mt-3 text-sm font-semibold text-green-800">{message}</p> : null}
     {error ? <p role="alert" className="mt-3 text-sm font-semibold text-red-800">{error}</p> : null}
     {preview ? <div className="mt-5 border border-zinc-300 bg-[#e9e5dc] p-3 sm:p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-bold">{preview.source}</p>{preview.warning ? <p className="mt-1 text-sm text-(color:--themed-text-22)">{preview.warning}</p> : null}</div><div className="flex gap-1"><button className={`min-h-11 px-3 text-sm font-bold ${phone ? "desk-button-solid " : "bg-(color:--themed-bg-26)"}`} type="button" aria-pressed={phone} onClick={() => setPhone(true)}>Phone</button><button className={`min-h-11 px-3 text-sm font-bold ${!phone ? "desk-button-solid " : "bg-(color:--themed-bg-26)"}`} type="button" aria-pressed={!phone} onClick={() => setPhone(false)}>Desktop</button></div></div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-bold text-[#2a2118]">{preview.source}</p>{preview.warning ? <p className="mt-1 text-sm text-[#8a3b12]">{preview.warning}</p> : null}</div><div className="flex gap-1"><button className={`min-h-11 px-3 text-sm font-bold ${phone ? "desk-button-solid " : "bg-(color:--themed-bg-26)"}`} type="button" aria-pressed={phone} onClick={() => setPhone(true)}>Phone</button><button className={`min-h-11 px-3 text-sm font-bold ${!phone ? "desk-button-solid " : "bg-(color:--themed-bg-26)"}`} type="button" aria-pressed={!phone} onClick={() => setPhone(false)}>Desktop</button></div></div>
       <iframe ref={frame} title="Actual email and image preview" sandbox="allow-same-origin" className="mx-auto block max-w-full border-0 bg-(color:--themed-bg-26)" style={{ width: phone ? 390 : 648, height }} srcDoc={`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0}*{box-sizing:border-box}a{pointer-events:none}</style></head><body>${preview.html}</body></html>`} onLoad={() => setHeight(frame.current?.contentDocument?.body.scrollHeight ?? 700)} />
-      {preview.images.length ? <div className="mt-3 flex flex-wrap gap-4">{preview.images.map((item) => <a key={item.kind} download={`pickem-${item.kind}.png`} href={item.src} className="min-h-11 py-3 text-sm font-bold underline">Download {item.kind} image</a>)}</div> : <p className="mt-3 text-sm text-(color:--themed-text-28)">This email has no images.</p>}
+      {preview.images.length ? <div className="mt-3 flex flex-wrap gap-4">{preview.images.map((item) => <a key={item.kind} download={`pickem-${item.kind}.png`} href={item.src} className="min-h-11 py-3 text-sm font-bold underline">Download {item.kind} image</a>)}</div> : <p className="mt-3 text-sm text-[#5b5348]">This email has no images.</p>}
     </div> : busy ? <p role="status" className="mt-5 text-sm">Generating the email artwork…</p> : null}
   </section>;
 }
