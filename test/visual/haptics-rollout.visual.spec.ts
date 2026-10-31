@@ -8,7 +8,8 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebK
 type Kind = "android" | "iphone" | "computer";
 type Haptics = { vibrations: number[][]; ticks: number };
 
-async function scriptDevice(page: Page, kind: Kind, vibration: "on" | "off" = "on") {
+// `staleOff` is a phone that turned the old Vibration switch off before it was taken away: it must tick like any other.
+async function scriptDevice(page: Page, kind: Kind, staleOff = false) {
   await page.addInitScript(([device, iphone, setting]) => {
     const state: Haptics = { vibrations: [], ticks: 0 };
     (window as unknown as { haptics: Haptics }).haptics = state;
@@ -16,19 +17,19 @@ async function scriptDevice(page: Page, kind: Kind, vibration: "on" | "off" = "o
     else delete (Navigator.prototype as { vibrate?: unknown }).vibrate;
     if (device === "iphone") Object.defineProperty(navigator, "userAgent", { get: () => iphone, configurable: true });
     if (device === "android") Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
-    if (setting === "off") try { window.localStorage.setItem("pickem-vibration", "off"); } catch { /* none */ }
+    if (setting) try { window.localStorage.setItem("pickem-vibration", "off"); } catch { /* none */ }
     // Every flip of a switch is one tick.
     document.addEventListener("change", (event) => { if ((event.target as HTMLElement)?.hasAttribute?.("switch")) state.ticks += 1; }, true);
-  }, [kind, IPHONE, vibration]);
+  }, [kind, IPHONE, staleOff]);
 }
 
 const read = (page: Page) => page.evaluate(() => (window as unknown as { haptics: Haptics }).haptics);
 
-async function openSlate(page: Page, kind: Kind, { save = "ok", vibration = "on" }: { save?: "ok" | "fail"; vibration?: "on" | "off" } = {}) {
+async function openSlate(page: Page, kind: Kind, { save = "ok", staleOff = false }: { save?: "ok" | "fail"; staleOff?: boolean } = {}) {
   const board = boardResponse("upcoming-unpicked");
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day", "visual-player");
-  await scriptDevice(page, kind, vibration);
+  await scriptDevice(page, kind, staleOff);
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
   await page.route("**/api/picks", (route) => save === "ok" ? route.fulfill({ json: { message: "saved" } }) : route.fulfill({ status: 400, json: { error: "Your picks could not be saved: fixture." } }));
@@ -82,83 +83,52 @@ test("Slate on a computer: nothing vibrates and nothing is laid over the buttons
   expect(await read(page)).toEqual({ vibrations: [], ticks: 0 });
 });
 
-test("with Vibration off, an Android phone stays still and an iPhone has no tick layer", async ({ page }) => {
-  const android = await openSlate(page, "android", { vibration: "off" });
-  await android.team.click();
-  await android.receipt.getByRole("button", { name: "SUBMIT" }).click();
-  expect((await read(page)).vibrations).toEqual([]);
+test("a phone that turned the old Vibration switch off still buzzes on Android", async ({ page }) => {
+  const { team, receipt } = await openSlate(page, "android", { staleOff: true });
+  await team.click();
+  await receipt.getByRole("button", { name: "SUBMIT" }).click();
+  await expect.poll(async () => (await read(page)).vibrations).toEqual([[10], [10], [14, 60, 14]]);
 });
 
-test("with Vibration off an iPhone has no tick layer over its buttons", async ({ page }) => {
-  const { team, receipt } = await openSlate(page, "iphone", { vibration: "off" });
-  await expect(page.locator("[data-haptic-tap]")).toHaveCount(0);
+test("a phone that turned the old Vibration switch off still ticks on an iPhone", async ({ page }) => {
+  const { team, receipt } = await openSlate(page, "iphone", { staleOff: true });
+  await expect(team.locator("[data-haptic-tap]")).toHaveCount(1);
   await team.click();
   await expect(receipt).toContainText(/READY TO SAVE/);
-  expect((await read(page)).ticks).toBe(0);
+  expect((await read(page)).ticks).toBe(1);
 });
 
-async function openNotifications(page: Page, kind: Kind, { theme = "day", vibration = "on" }: { theme?: string; vibration?: "on" | "off" } = {}) {
+async function openNotifications(page: Page, kind: Kind) {
   await page.setViewportSize({ width: 390, height: 900 });
-  await signIn(page, theme);
-  await scriptDevice(page, kind, vibration);
+  await signIn(page, "day");
+  await scriptDevice(page, kind);
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { notificationEmail: "tyler@example.com", senderEmail: "pool@example.com", emailNotificationsEnabled: true, firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible({ timeout: 30_000 });
-  return page.locator("[data-vibration]");
 }
 
-for (const [kind, label] of [["android", "Android phone"], ["iphone", "iPhone"]] as const) {
-  test(`Vibration switch as it reads on an ${label}`, async ({ page }) => {
-    const section = await openNotifications(page, kind);
-    await expect(section).toHaveAttribute("data-vibration", "on");
-    await page.evaluate(() => document.fonts.ready);
-    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; }" });
-    await expect(section).toHaveScreenshot(`vibration-switch-${kind}-day-phone-390.png`);
+for (const kind of ["android", "iphone", "computer"] as const) {
+  test(`the Notifications page has no switch to turn vibration off (${kind})`, async ({ page }) => {
+    await openNotifications(page, kind);
+    await expect(page.getByText(/Vibration|tap feel/i)).toHaveCount(0);
   });
 }
 
-test("Vibration switch at night", async ({ page }) => {
-  const section = await openNotifications(page, "android", { theme: "night" });
-  await page.evaluate(() => document.fonts.ready);
-  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; }" });
-  await expect(section).toHaveScreenshot("vibration-switch-android-night-phone-390.png");
-});
-
-test("a computer has no Vibration switch to show", async ({ page }) => {
-  const section = await openNotifications(page, "computer");
-  await expect(section).toHaveCount(0);
-});
-
-test("the Vibration switch turns haptics off and on for this phone, and is remembered", async ({ page }) => {
-  const section = await openNotifications(page, "android");
-  const choice = section.getByRole("checkbox", { name: /Vibration/ });
-  await expect(choice).toBeChecked();
-  await page.getByRole("button", { name: /Regular/ }).first().click();
-  expect((await read(page)).vibrations.at(-1)).toEqual([10]);
-  const before = (await read(page)).vibrations.length;
-  await choice.uncheck();
-  await expect(section).toHaveAttribute("data-vibration", "off");
+test("on Android the Notifications choices buzz", async ({ page }) => {
+  await openNotifications(page, "android");
   await page.getByRole("button", { name: /Essentials/ }).first().click();
-  expect((await read(page)).vibrations.length, "off: no buzz for the tap or for the switch itself").toBe(before);
-  expect(await page.evaluate(() => window.localStorage.getItem("pickem-vibration"))).toBe("off");
-  await choice.check();
-  expect(await page.evaluate(() => window.localStorage.getItem("pickem-vibration"))).toBeNull();
-  expect((await read(page)).vibrations.at(-1)).toEqual([10]);
+  await expect.poll(async () => (await read(page)).vibrations.at(-1)).toEqual([10]);
 });
 
-test("on an iPhone the Notifications choices carry the tick layer and the Vibration switch is the phone's own switch", async ({ page }) => {
-  const section = await openNotifications(page, "iphone");
-  await expect(section.locator("input[switch]")).toHaveCount(1);
+test("on an iPhone the Notifications choices carry the tick layer and the tick boxes are the phone's own switches", async ({ page }) => {
+  await openNotifications(page, "iphone");
   await expect(page.locator("button[aria-pressed] [data-haptic-tap]").first()).toBeAttached();
+  await expect(page.locator("form input[type=checkbox][switch]").first()).toBeAttached();
   await page.getByRole("button", { name: /Essentials/ }).first().click();
   expect((await read(page)).ticks).toBe(1);
-  // Turning Vibration off takes the layer away and the page's boxes go back to plain ones.
-  await section.locator("input").evaluate((box: HTMLInputElement) => box.click());
-  await expect(section).toHaveAttribute("data-vibration", "off");
-  await expect(page.locator("[data-haptic-tap]")).toHaveCount(0);
 });
 
 test("a wrong PIN gives the warning buzz on Android", async ({ page }) => {

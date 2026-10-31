@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-31 - Haptics are always on: the Vibration switch is gone
+
+The owner tried every tap on an iPhone, liked them all, and decided players should not be able to turn them off. The Vibration switch on the Notifications page is removed, along with everything behind it. Phones that had turned it off before (`pickem-vibration` = "off" in `localStorage`) are deliberately ignored, so they tick and buzz like everyone else; tests cover that case. This supersedes the switch in the 2026-10-30 rollout entry. Devices without haptics still get nothing, and every button works the same either way.
+
 ## 2026-10-30 - The 6 Wk Season Snapshot axis follows the weeks in view
 
 Late in the season, a 6 Wk axis that counted from zero left the bottom half of the chart empty and squeezed every line into the top. The 6 Wk axis now fits the weeks in view: a win or more under the lowest line and over the highest, counting where a line crosses the edge of the view, so the range moves continuously with the scroll. It glides on a critically damped spring (about a third of a second, no overshoot; a range that changes again mid-glide carries the motion on), and the lines move with it. One tick spacing (1, 2, 4, 5, 10 or 20 wins, chosen so the widest window has about five ticks) holds for the whole view, so the numbers slide past like a ruler instead of all changing at once; numbers that join fade in and numbers that leave fade out. Lines and grid are clipped above the week numbers so nothing crosses them mid-glide. All keeps counting from zero as the honest overview, and the playoff chart keeps its own rule. Reduced-motion settings jump straight to the new range. Measured in a recorded drag: about 60 frames a second, the lines moving at most about 2 px per frame.

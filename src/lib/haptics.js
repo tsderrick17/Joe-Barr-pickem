@@ -38,17 +38,6 @@ export function iphoneTicksOnTap(feel) {
   return feel === "tick" || feel === "lightTick" || feel === "lockIn";
 }
 
-/** The key this device's Vibration switch is kept under. Missing means on: only an explicit "off" turns haptics off. */
-export const VIBRATION_KEY = "pickem-vibration";
-
-/**
- * Whether haptics are wanted on this device, from what the Vibration switch stored.
- * @param {string | null | undefined} stored
- */
-export function vibrationWanted(stored) {
-  return stored !== "off";
-}
-
 /**
  * The notch to feel while pulling: the pull's down counter runs 4, 3, 2, 1 as it turns, so it passes three notches (to 3, to 2, to 1) and the last
  * one is the lock-in. 0 until the counter has turned a third of the way.
