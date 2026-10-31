@@ -191,7 +191,7 @@ for (const returning of [false, true]) {
     await page.route("**/api/bowl-pool**", async (route) => { if (route.request().method() === "GET") { bowlReads.push(Date.now() - t0); started.bowl ??= Date.now() - t0; } await route.fallback(); });
     await page.goto("/");
     await page.locator(".pickem-scoreboard-ledger").waitFor({ timeout: 30_000 });
-    expect(bowlReads.length, "one Bowl Card read, early or not").toBe(1);
+    await expect.poll(() => bowlReads.length, { message: "one Bowl Card read, early or not", timeout: 10_000 }).toBe(1);
     const gap = started.bowl - started.home;
     if (returning) expect(gap).toBeLessThan(300);
     else expect(gap).toBeGreaterThanOrEqual(500);

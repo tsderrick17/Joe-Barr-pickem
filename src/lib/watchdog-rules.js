@@ -1,11 +1,19 @@
 import { dateFormat } from "./date-format.js";
 
+const BOWL_ISSUE_TITLES = {
+  teams: "A Bowl Pool game is still missing a team",
+  line: "A started Bowl Pool game has no official line",
+  order: "Bowl Pool games are out of date order",
+  settlement: "Bowl Pool results do not reconcile",
+  structure: "Bowl Pool schedule data is inconsistent",
+};
+
 /**
  * @param {{
  *   health: any,
  *   bootstrap: any,
  *   preflightChecks?: Array<{ label: string, passed: boolean }>,
- *   bowlHealth?: { configured?: boolean, healthy?: boolean, problems?: string[] } | null,
+ *   bowlHealth?: { configured?: boolean, healthy?: boolean, problems?: string[], issues?: Array<{ kind: string, message: string }> } | null,
  *   now?: Date,
  * }} input
  */
@@ -56,11 +64,15 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     });
   }
   if (bowlHealth?.configured && !bowlHealth.healthy) {
-    signals.push({
-      key: "bowl-pool-integrity-needs-review", severity: "critical",
-      title: "Bowl Pool integrity needs review",
-      detail: bowlHealth.problems.join(" ") || "Bowl Pool schedule, lines, picks, or result receipts failed reconciliation. Open Commissioner Desk → Bowl Pool readiness.",
-    });
+    // One alert per kind of problem, so a new kind (say a missing line) still alerts while an older one (a team-less game) is already open.
+    const issues = bowlHealth.issues?.length ? bowlHealth.issues : [{ kind: "integrity", message: (bowlHealth.problems ?? []).join(" ") || "Bowl Pool schedule, lines, picks, or result receipts failed reconciliation. Open Commissioner Desk → Bowl Pool readiness." }];
+    for (const kind of [...new Set(issues.map((issue) => issue.kind))]) {
+      signals.push({
+        key: `bowl-pool-${kind}-needs-review`, severity: "critical",
+        title: BOWL_ISSUE_TITLES[kind] ?? "Bowl Pool integrity needs review",
+        detail: `${issues.filter((issue) => issue.kind === kind).map((issue) => issue.message).join(" ")} Open Commissioner Desk → Bowl Pool readiness.`,
+      });
+    }
   }
   if ((health.scheduleProviderCircuit?.consecutive_failures ?? 0) >= 3) {
     signals.push({

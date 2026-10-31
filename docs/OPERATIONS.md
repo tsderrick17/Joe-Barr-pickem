@@ -477,8 +477,13 @@ the Odds provider or Brevo and cannot run with production credentials.
 The Bowl Pool has its own integrity and settlement reconciliation checks. The
 commissioner readiness panel reports missing teams or locked lines, ordering or
 status corruption, missing result receipts, pending final picks, and pick/result
-mismatches. The watchdog raises one commissioner incident for any unresolved
-problem. The public monitor contract is `GET /api/health/bowl-pool`; it returns
+mismatches. The watchdog raises one commissioner incident per kind of problem
+(`bowl-pool-teams-needs-review`, `-line-`, `-order-`, `-settlement-`, `-structure-`), so a new
+kind still alerts while an older one is open; the text names the bowl and date.
+A team-less game is a problem at once for an ordinary bowl, but a College Football
+Playoff game after the first round only within 36 hours of kickoff (it waits for
+the earlier rounds), so launch day with the later playoff rounds still open is
+healthy. The public monitor contract is `GET /api/health/bowl-pool`; it returns
 only `ok` or `unavailable` and is safe to monitor externally.
 
 The encrypted backup workflow restores and verifies the Bowl Pool tables in its

@@ -10,7 +10,7 @@ export async function checkBowlPoolHealth() {
   if (!season) return { configured: false, healthy: true, problems: [], integrity: null, settlement: null };
   const earlyResult = bowlPoolPrelaunchHealthResult(season);
   if (earlyResult) return earlyResult;
-  const { data: games, error: gamesError } = await supabaseAdmin.from("bowl_pool_games").select("id,kickoff_at,order_index,status,away_team_id,home_team_id").eq("season_id", season.id).order("kickoff_at");
+  const { data: games, error: gamesError } = await supabaseAdmin.from("bowl_pool_games").select("id,kickoff_at,order_index,status,away_team_id,home_team_id,bowl_name,is_cfp").eq("season_id", season.id).order("kickoff_at");
   if (gamesError) throw gamesError;
   if (!(games ?? []).length) return { configured: true, healthy: false, problems: ["Bowl Pool has no games after player visibility."], integrity: null, settlement: null };
   const gameIds = (games ?? []).map((game) => game.id);
@@ -26,5 +26,6 @@ export async function checkBowlPoolHealth() {
   const integrity = assessBowlPoolIntegrity(games ?? [], linesResult.data ?? []);
   const settlementGames = (games ?? []).filter((game) => game.status === "final");
   const settlement = assessBowlPoolSettlement({ games: settlementGames, entries: entries ?? [], picks: picksResult.data ?? [], results: resultsResult.data ?? [], lines: linesResult.data ?? [] });
-  return { configured: true, healthy: integrity.healthy && settlement.healthy, problems: [...integrity.problems, ...settlement.problems], integrity, settlement };
+  const issues = [...integrity.issues, ...settlement.problems.map((message: string) => ({ kind: "settlement", message }))];
+  return { configured: true, healthy: integrity.healthy && settlement.healthy, problems: [...integrity.problems, ...settlement.problems], issues, integrity, settlement };
 }
