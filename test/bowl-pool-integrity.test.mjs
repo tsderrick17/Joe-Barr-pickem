@@ -22,7 +22,7 @@ test("Bowl Pool integrity catches missing teams, duplicate order, and overdue li
   assert.equal(result.missingLines, 2);
   assert.match(result.problems.join(" "), /missing a team/);
   assert.match(result.problems.join(" "), /Duplicate Bowl Pool order index/);
-  assert.match(result.problems.join(" "), /missing a locked line/);
+  assert.match(result.problems.join(" "), /have started without a locked line/);
 });
 
 test("Bowl Pool integrity allows a postponed game without requiring a line", () => {

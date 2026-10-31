@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const { data: season, error } = await supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at").eq("season_year", currentSeasonYear()).maybeSingle();
   if (error || !season) return NextResponse.json({ error: "Bowl Pool season is not configured." }, { status: 404 });
   const [{ data: games, error: gamesError }, { data: lines }, { data: heartbeats, error: heartbeatError }, { data: entries }, { data: picks }, { data: results }, { count: openScheduleChanges }] = await Promise.all([
-    supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, order_index, away_team_id, home_team_id, status").eq("season_id", season.id).order("kickoff_at"),
+    supabaseAdmin.from("bowl_pool_games").select("id, kickoff_at, order_index, away_team_id, home_team_id, status, bowl_name, is_cfp").eq("season_id", season.id).order("kickoff_at"),
     supabaseAdmin.from("bowl_pool_game_lines").select("game_id, source, locked_at").in("game_id", (await supabaseAdmin.from("bowl_pool_games").select("id").eq("season_id", season.id)).data?.map((game) => game.id) ?? []),
     supabaseAdmin.from("automation_worker_heartbeats").select("job_name, last_status, last_succeeded_at, updated_at").in("job_name", ["schedule_refresh", "line_locks", "scores"]),
     supabaseAdmin.from("bowl_pool_entries").select("id,status").eq("season_id", season.id),
