@@ -23,6 +23,15 @@ export function parseBowlException(input: JsonObject) {
   return { gameId, status, kickoffAt: kickoffAt.value, changeId: changeId.value };
 }
 
+/** A hand-entered Bowl line: the game, its favorite (null for a pick'em) and the spread. */
+export function parseBowlLine(input: JsonObject) {
+  const gameId = idValue(input.gameId);
+  const favoriteTeamId = input.favoriteTeamId === null ? null : idValue(input.favoriteTeamId);
+  const spread = typeof input.spread === "number" ? input.spread : null;
+  if (!gameId || spread === null || (input.favoriteTeamId !== null && favoriteTeamId === null)) return null;
+  return { gameId, favoriteTeamId, spread };
+}
+
 /** The new-player form. Missing or mistyped fields become empty strings so the route's own messages apply. */
 export function parseNewPlayer(input: JsonObject) {
   return {

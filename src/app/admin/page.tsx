@@ -8,6 +8,7 @@ import { currentSeasonYear } from "@/lib/season";
 
 const GameExceptions = dynamic(() => import("@/components/game-exceptions"));
 const BowlPoolExceptions = dynamic(() => import("@/components/bowl-pool-exceptions"));
+const BowlPoolLines = dynamic(() => import("@/components/bowl-pool-lines"));
 const LineLockChecker = dynamic(() => import("@/components/line-lock-checker"));
 const ScoreSyncChecker = dynamic(() => import("@/components/score-sync-checker"));
 const AutomationHealth = dynamic(() => import("@/components/automation-health"));
@@ -329,6 +330,7 @@ export default function AdminPage() {
 
         {activePanel === "bowl-pool" ? <>
           <BowlPoolReadiness />
+          <BowlPoolLines />
           <BowlPoolExceptions />
         </> : null}
 
