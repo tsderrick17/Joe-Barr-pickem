@@ -25,9 +25,10 @@ during standard time) and retains it for 90 days (GitHub's maximum for a public
 repository; Supabase Free keeps no backups of its own). One export is a single
 encrypted file (`production-backup.tar.enc`) holding four parts: `roles.sql`
 (custom roles), `schema.sql` (tables, functions, triggers, policies),
-`data.sql` (every row of the public tables) and `auth-data.sql` (players'
-sign-in accounts from the `auth` schema, without the short-lived sessions and
-tokens, so a restore keeps every player's PIN working). Until 2026-10-31 it
+`auth-schema.sql` (the structure of Supabase's `auth` schema) and `data.sql`
+(every row of the public tables, plus players' sign-in accounts from `auth`
+without the short-lived sessions and tokens, so a restore keeps every player's
+PIN working). Until 2026-10-31 it
 held the schema only, so there was nothing to restore.
 
 The workflow proves each export before keeping it: it decrypts it, restores it
@@ -60,8 +61,9 @@ Only for genuine recovery; never restore over production first.
    `openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in production-backup.tar.enc -pass env:BACKUP_ENCRYPTION_KEY | tar -xf -`
 3. Create a new empty Supabase project (or use the isolated test project).
    Restore in this order with `psql` as the database owner: `roles.sql`
-   (role errors for roles that already exist are fine), `schema.sql`, then
-   `data.sql` and `auth-data.sql`, each run with
+   (role errors for roles that already exist are fine), `auth-schema.sql`
+   (on a project that already has an older `auth` schema, drop it first),
+   `schema.sql`, then `data.sql` run with
    `--command "set session_replication_role = replica;"` before `--file` so
    triggers and foreign keys do not fire while rows load.
 4. Check it: the row counts of players, picks, games and seasons against the

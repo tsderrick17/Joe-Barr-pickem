@@ -1,6 +1,6 @@
 // Proves a weekly backup holds real data. It counts the rows in the dump's COPY blocks, counts the same tables in the disposable database the dump was
 // restored into, and fails when a table came back with a different number of rows or when a table that must have rows has none.
-// Usage (in the backup workflow): node scripts/backup-verify.mjs <folder with data.sql and auth-data.sql>   (psql settings come from PGHOST, PGUSER, PGPASSWORD, PGDATABASE)
+// Usage (in the backup workflow): node scripts/backup-verify.mjs <folder with data.sql>   (psql settings come from PGHOST, PGUSER, PGPASSWORD, PGDATABASE)
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -57,9 +57,7 @@ function restoredCount(table) {
 
 function main(folder) {
   const expected = new Map();
-  for (const file of ["data.sql", "auth-data.sql"]) {
-    for (const [table, count] of copyRowCounts(readFileSync(join(folder, file), "utf8"))) expected.set(table, count);
-  }
+  for (const [table, count] of copyRowCounts(readFileSync(join(folder, "data.sql"), "utf8"))) expected.set(table, count);
   const restored = new Map([...expected.keys()].map((table) => [table, restoredCount(table)]));
   for (const [table, count] of [...expected].sort(([a], [b]) => a.localeCompare(b))) console.log(`${table.padEnd(44)} backup ${String(count).padStart(8)}   restored ${String(restored.get(table)).padStart(8)}`);
   const problems = backupProblems({ expected, restored });

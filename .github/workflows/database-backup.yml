@@ -54,11 +54,11 @@ jobs:
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
           supabase db dump --linked --role-only --file backup/roles.sql
           supabase db dump --linked --file backup/schema.sql
-          supabase db dump --linked --data-only --use-copy --file backup/data.sql
-          # The default dump leaves out the auth schema, where players' sign-in accounts live. Take the accounts (not the short-lived sessions and tokens).
-          supabase db dump --linked --data-only --use-copy --schema auth             --exclude auth.sessions,auth.refresh_tokens,auth.audit_log_entries,auth.flow_state,auth.one_time_tokens             --file backup/auth-data.sql
-          for part in roles schema data auth-data; do test -s "backup/$part.sql"; done
-          tar -cf production-backup.tar -C backup roles.sql schema.sql data.sql auth-data.sql
+          # The default dump leaves out the auth schema, where players' sign-in accounts live: take its structure and its accounts too (not the short-lived sessions and tokens).
+          supabase db dump --linked --schema auth --file backup/auth-schema.sql
+          supabase db dump --linked --data-only --use-copy --schema public,auth --exclude auth.sessions,auth.refresh_tokens,auth.audit_log_entries,auth.flow_state,auth.one_time_tokens --file backup/data.sql
+          for part in roles schema auth-schema data; do test -s "backup/$part.sql"; done
+          tar -cf production-backup.tar -C backup roles.sql schema.sql auth-schema.sql data.sql
           rm -r backup
       - name: Encrypt export
         run: |
@@ -80,9 +80,15 @@ jobs:
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000             -in production-backup.tar.enc -pass env:BACKUP_ENCRYPTION_KEY | tar -xf - -C restore
           # Roles may already exist in the disposable database, so a role error is reported but does not stop the check.
           psql --file restore/roles.sql || echo "Role restore reported errors (expected for roles that already exist)."
+          # The disposable image carries an older auth schema than production: replace it with the backed-up one.
+          psql --set ON_ERROR_STOP=1 --command "drop schema if exists auth cascade;"
+          psql --set ON_ERROR_STOP=1 --file restore/auth-schema.sql
           psql --set ON_ERROR_STOP=1 --file restore/schema.sql
-          psql --set ON_ERROR_STOP=1 --command "set session_replication_role = replica;" --file restore/data.sql
-          psql --set ON_ERROR_STOP=1 --command "set session_replication_role = replica;" --file restore/auth-data.sql
+          # Loading rows: this log is public, so show only the kind of error, never a row's values.
+          if ! psql --set ON_ERROR_STOP=1 --command "set session_replication_role = replica;" --file restore/data.sql >/dev/null 2>restore/errors.log; then
+            grep -E "ERROR" restore/errors.log | sed -E 's/"[^"]*"/"…"/g' | head -5
+            exit 1
+          fi
           # Count the rows in the backup and in the restored copy: a schema-only or short backup fails here.
           node scripts/backup-verify.mjs restore
       - name: Retain encrypted backup for 90 days
