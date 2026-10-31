@@ -2454,18 +2454,18 @@ export type Database = {
         Args: { target_job_name: string; target_status: string }
         Returns: undefined
       }
-      record_bowl_game_disruption: {
+      record_bowl_game_cancelled_by_espn: {
         Args: {
-          actor_player_id?: string
-          disruption_status: string
           target_game_id: string
         }
         Returns: {
           picks_voided: number
         }[]
       }
-      record_bowl_game_cancelled_by_espn: {
+      record_bowl_game_disruption: {
         Args: {
+          actor_player_id?: string
+          disruption_status: string
           target_game_id: string
         }
         Returns: {
