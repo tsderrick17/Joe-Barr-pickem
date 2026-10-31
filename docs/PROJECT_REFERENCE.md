@@ -347,6 +347,15 @@ measure database requests or end-to-end route time.
   monitoring checks schedule integrity even before first kickoff. Verified
   postponed, cancelled, and no-contest games must be recorded by the
   Commissioner so picks are handled as void disruptions.
+- A Bowl game that is not `scheduled` (postponed, cancelled, no contest) is closed to picks although its kickoff may still be in the future. The
+  Bowl page treats it as locked and leaves it out of Submit; the route skips a pick sent for it (a page opened before the Commissioner recorded it)
+  instead of refusing the player's whole Submit; and `save_bowl_pool_submission` deletes an omitted pick only on a game that is still open, so a
+  postponed game's pick survives, and a cancelled game's voided pick stays in view. The Commissioner's Reschedule (`reschedule_bowl_game`) moves a
+  postponed game back to `scheduled` with the new kickoff marked confirmed and its line locking at 8 AM Eastern on the new game day (a line already
+  locked is kept); the matchup freeze (`protect_bowl_game_identity`) lets that one step change the kickoff although the game has picks, and nothing
+  else. Rescheduling, like a moved kickoff in the schedule pull, cancels the game's queued reminders (lines-are-set, pick-due, recap) and gives up
+  their keys (`cancelQueuedBowlReminders`), so the reminder sweep queues fresh ones for the new time. Known limit: a game moved onto a day that
+  already has games is not added to that day's already-queued lines-are-set email (the page still shows its line).
 
 ## Trophy Room
 

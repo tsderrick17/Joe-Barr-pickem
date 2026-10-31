@@ -7,6 +7,7 @@ import { checkpoint, providerSignal } from "@/lib/execution-context";
 import { favoriteFromEspn, lineIsDueToLock, lockedSpreadFromOdds, lockStampFor, poolSpreadFromEspn } from "@/lib/bowl-line-policy";
 import { chronologicalOrder, espnHeadline, espnTeamIsTbd, espnTimeIsConfirmed, headlineIsCfp, headlineIsChampionship, newBowlName, noonEastern, orderIsChronological, planBowlSchedule } from "@/lib/bowl-pool-espn-schedule.js";
 import { easternDateKey } from "@/lib/eastern-time.js";
+import { cancelQueuedBowlReminders } from "@/lib/bowl-reminders";
 import { easternDateTimeToUtc } from "@/lib/schedule-time.js";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
@@ -50,13 +51,6 @@ async function teamIdFor(name: string, providerId: string, abbreviation?: string
   }
   const { data, error } = await supabaseAdmin.from("bowl_pool_teams").upsert({ provider_team_id: providerId, display_name: name, short_name: colors?.shortName?.trim() || name, abbreviation: abbreviation ?? null, primary_color: primaryColor, secondary_color: secondaryColor }, { onConflict: "provider_team_id" }).select("id").single();
   return error || !data ? null : data.id;
-}
-
-// The reminders' key is unique, so a cancelled reminder that kept its key would stop the game's new time from ever queuing a fresh one.
-async function cancelQueuedBowlReminders(gameId: string) {
-  const { error } = await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed", automation_key: null })
-    .in("category", ["bowl_pick_due", "bowl_line_lock", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [gameId]);
-  if (error) throw new Error("Reminders for a rescheduled Bowl game could not be cancelled.");
 }
 
 type OwnGameRow = { id: string; provider_game_id: string | null; bowl_name: string; kickoff_at: string; order_index: number; time_confirmed: boolean | null; line_lock_at: string | null; is_cfp: boolean | null; away_team_id: string | null; home_team_id: string | null; venue_name: string | null; venue_city: string | null; venue_state: string | null };

@@ -5,6 +5,7 @@ import { seasonYearAt } from "@/lib/season";
 import { commissionerAccess } from "@/lib/require-commissioner";
 import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { cancelQueuedBowlReminders } from "@/lib/bowl-reminders";
 
 async function seasonGames() {
   const year = seasonYearAt();
@@ -50,7 +51,8 @@ export async function POST(request: NextRequest) {
     if (!body.kickoffAt || !Number.isFinite(Date.parse(body.kickoffAt))) return NextResponse.json({ error: "A valid future kickoff is required to reschedule a Bowl game." }, { status: 400 });
     const { error } = await supabaseAdmin.rpc("reschedule_bowl_game", { target_game_id: gameId, new_kickoff_at: new Date(body.kickoffAt).toISOString(), actor_player_id: commissioner.id });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    await supabaseAdmin.from("push_reminders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), suppression_reason: "bowl_schedule_changed" }).in("category", ["bowl_pick_due", "bowl_daily_recap"]).eq("status", "scheduled").contains("source_game_ids", [gameId]);
+    // The game is already rescheduled and its picks kept; the old reminders must go, and give up their keys, so the sweep queues fresh ones for the new time.
+    try { await cancelQueuedBowlReminders(gameId); } catch { return NextResponse.json({ error: "The game was rescheduled and its picks kept, but its old reminders could not be cleared. Open the Bowl health check." }, { status: 500 }); }
     return NextResponse.json({ message: "Bowl Pool game rescheduled. Its picks were preserved and reminders will be rebuilt." });
   }
   const { data, error } = await supabaseAdmin.rpc("record_bowl_game_disruption", { target_game_id: gameId, disruption_status: status, actor_player_id: commissioner.id });

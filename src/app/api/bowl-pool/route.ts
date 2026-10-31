@@ -148,7 +148,9 @@ export async function POST(request: NextRequest) {
   const databaseSelections: Array<{ game_id: string; team_id: string }> = [];
   for (const selection of unique.values()) {
     const game = gameById.get(selection.gameId);
-    if (!game || new Date(game.kickoff_at) <= now || game.status !== "scheduled") return NextResponse.json({ error: "One of those games is no longer open for selections." }, { status: 400 });
+    if (!game || new Date(game.kickoff_at) <= now) return NextResponse.json({ error: "One of those games is no longer open for selections." }, { status: 400 });
+    // A postponed or cancelled game cannot be picked, but a pick sent for it (a page opened before the Commissioner recorded it) must not cost the player the rest of their Submit.
+    if (game.status !== "scheduled") continue;
     if (selection.teamId && (selection.teamId === game.away_team_id || selection.teamId === game.home_team_id)) {
       databaseSelections.push({ game_id: selection.gameId, team_id: selection.teamId });
     } else if (player.is_commissioner && !game.away_team_id && !game.home_team_id && (selection.side === "favorite" || selection.side === "underdog")) {
@@ -169,5 +171,5 @@ export async function POST(request: NextRequest) {
   if (saveError || !entryId) return NextResponse.json({ error: saveError?.message ?? "Your Bowl Pool selections could not be saved." }, { status: 400 });
   const { error: previewError } = await supabaseAdmin.from("bowl_pool_entries").update({ preview_selections: previewSelections }).eq("id", entryId);
   if (previewError) return NextResponse.json({ error: "Your placeholder Bowl selections could not be saved." }, { status: 400 });
-  return NextResponse.json({ optedIn: true, saved: unique.size });
+  return NextResponse.json({ optedIn: true, saved: databaseSelections.length + previewSelections.length });
 }

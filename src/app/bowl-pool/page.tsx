@@ -18,6 +18,7 @@ type BowlGame = {
   provider_game_id?: string;
   bowl_name: string;
   kickoff_at: string;
+  status?: string;
   line_lock_at?: string;
   venue_city?: string;
   venue_state?: string;
@@ -112,7 +113,8 @@ export default function BowlPoolPage() {
   const hasUnsavedChanges = !bowlSelectionsEqual(selections, savedSelections) || championshipTotalGuess !== savedChampionshipTotalGuess;
   const selectedGameCount = games.filter((game) => Boolean(selections[game.id])).length;
   const bowlReceipt = bowlReceiptSummary({ selectedCount: selectedGameCount, totalGames: games.length, tiebreaker: championshipTotalGuess, hasUnsavedChanges, isSubmitting });
-  const gameLocked = (game: BowlGame) => Boolean(game.kickoff_at) && nowMs >= new Date(game.kickoff_at).getTime();
+  // A postponed or cancelled game has a future kickoff but is not open: a pick sent for it would refuse the whole Submit.
+  const gameLocked = (game: BowlGame) => (Boolean(game.kickoff_at) && nowMs >= new Date(game.kickoff_at).getTime()) || Boolean(game.status && game.status !== "scheduled");
   const championshipLocked = Boolean(championshipGameId && games.find((game) => game.id === championshipGameId && gameLocked(game)));
   function chooseTeam(gameId: string, side: "favorite" | "underdog") {
     setSubmissionError("");
