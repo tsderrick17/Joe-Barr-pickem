@@ -2,6 +2,9 @@
 import { easternDateTimeToUtc } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
 
+/** The two one-time Bowl Pool invitations. Their words are written in the app and filled in from the Bowl schedule, not saved wording. */
+export const BOWL_INVITATION_CATEGORIES = /** @type {const} */ (["bowl_pool_open", "bowl_pool_last_call"]);
+
 /** The email's subject. The phone notification's title (and the email's heading) is the shorter "The Bowl Pool is open". */
 export const BOWL_OPENING_EMAIL_SUBJECT = "The Bowl Pool is open: claim your seat";
 export const BOWL_OPENING_TITLE = "The Bowl Pool is open";
@@ -31,6 +34,16 @@ const shortDay = inEastern({ weekday: "short", month: "short", day: "numeric" })
 const longDay = inEastern({ weekday: "long", month: "short", day: "numeric" });
 const monthDay = inEastern({ month: "short", day: "numeric" });
 const clock = inEastern({ hour: "numeric", minute: "2-digit" });
+
+/**
+ * The game the Bowl Pool opens with: the earliest game still scheduled (a postponed or cancelled game is not the first game).
+ * @template {{ status: string, kickoff_at: string }} Game
+ * @param {Game[]} games
+ * @returns {Game | undefined}
+ */
+export function firstScheduledBowlGame(games) {
+  return games.filter((game) => game.status === "scheduled").sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))[0];
+}
 
 /**
  * The words of the opening announcement, from the schedule as it stands when the announcement is queued. The phone notification is `body`;

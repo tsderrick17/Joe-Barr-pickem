@@ -319,6 +319,9 @@ measure database requests or end-to-end route time.
   days (`notificationsBannerVisible`, `src/lib/phone-push.js`).
   On Android and Chromebooks the one-tap Install does both: once the browser's install goes through, the phone is asked for notifications straight
   away and saved (`turnOnAfterInstall`; only when signed in and never asked before). If that does not happen, the in-app banner asks on first open.
+- Both Bowl Pool announcements (`bowl_pool_open` and `bowl_pool_last_call`) are previewable in the Email center (read-only entries of the email image studio) and can be
+  test-sent to the Commissioner alone: the preview and the test use `bowlInvitationMessage` (the real first game and championship date, the same words the sweep queues);
+  their wording is never saved, so the template save and reset routes refuse them.
 - The Bowl Pool's last call (`bowl_pool_last_call`, same words file) is one email and one phone notification 24 hours before the first Bowl kickoff
   ("The first game kicks off Tue, Dec 15 at 5:30 PM ET, and entry closes then. Claim your seat now."; email subject "Last call: claim your Bowl Pool seat", a
   short "How it works", and a Claim your seat button). It goes only to active players with pool emails on who have no Bowl entry of any kind this season

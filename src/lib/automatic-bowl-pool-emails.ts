@@ -1,5 +1,5 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
-import { bowlLastCallAt, bowlLastCallMessage, bowlOpeningAnnouncementAt, bowlOpeningMessage } from "@/lib/bowl-opening-announcement.js";
+import { bowlLastCallAt, bowlLastCallMessage, bowlOpeningAnnouncementAt, bowlOpeningMessage, firstScheduledBowlGame } from "@/lib/bowl-opening-announcement.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
@@ -67,7 +67,7 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
     // it stands then, and only while seats can still be claimed (no game has kicked off).
     const openingAt = typeof season.season_year === "number" ? bowlOpeningAnnouncementAt(season.season_year) : null;
     if (openingAt && season.status !== "complete" && new Date(openingAt) <= now && !games.some((game) => new Date(game.kickoff_at) <= now)) {
-      const first = games.filter((game) => game.status === "scheduled").sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))[0];
+      const first = firstScheduledBowlGame(games);
       if (first) {
         const finalGame = games.find((game) => game.id === season.championship_game_id);
         const message = bowlOpeningMessage({ seasonYear: season.season_year, firstGame: first, finalGameKickoffAt: finalGame?.kickoff_at ?? null });
@@ -80,7 +80,7 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
     }
     // The one-time "last call" email and phone notification, 24 hours before the first kickoff, for the players who have not joined. Like the opening
     // announcement it is queued when it comes due, from the first game as it stands then; it needs a confirmed kickoff time to count back from.
-    const firstGame = games.filter((game) => game.status === "scheduled").sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))[0];
+    const firstGame = firstScheduledBowlGame(games);
     if (firstGame && firstGame.time_confirmed !== false && season.status !== "complete" && !games.some((game) => new Date(game.kickoff_at) <= now)) {
       const lastCallAt = bowlLastCallAt(firstGame.kickoff_at);
       if (new Date(lastCallAt) <= now) {

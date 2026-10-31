@@ -158,6 +158,20 @@ export const REMINDERS = {
   ].map(([id, category, title, status, suppressionReason, emailDelivered, emailFailed, emailSuppressed, scheduledFor]) => ({ id, category, audience: "weekly", title, body: `${title}: sample body.`, scheduledFor, status, suppressionReason, emailDelivered, emailFailed, emailSuppressed })),
 };
 
+/** The Email center's preview of the Bowl Pool opening announcement: the subject, the phone message and a small stand-in for the email itself. */
+const OPENING_STEPS = [
+  "Claim your seat. The Bowl Pool is separate from the NFL pool, so you join it on its own.",
+  "Every correct pick against the spread is one point.",
+  "Lines lock at 8 AM Eastern on game day, and each pick locks at that game's kickoff.",
+];
+export const BOWL_OPENING_PREVIEW = {
+  html: `<div style="font:16px/1.5 Arial,sans-serif;padding:24px;color:#222"><p style="font-weight:700;letter-spacing:.1em;color:#007e72;margin:0">BOWL POOL</p><h1 style="font:700 26px Georgia,serif;margin:8px 0">The Bowl Pool is open</h1><p>The 2026–27 Bowl Pool is open. Pick every bowl and College Football Playoff game against the spread, all the way through the National Championship on Jan 25.</p><h2 style="font:700 16px Arial,sans-serif;margin:24px 0 8px">How it works</h2><ol style="margin:0;padding-left:22px">${OPENING_STEPS.map((step) => `<li style="margin:0 0 8px">${step}</li>`).join("")}</ol><p style="margin:24px 0 0"><a href="#" style="background:#007e72;color:#fff;padding:12px 20px;text-decoration:none;font-weight:700">Claim your seat</a></p></div>`,
+  images: [], warning: "", templateId: "bowl_pool_open", readOnly: true,
+  source: "Current schedule · the words fill in from the real first game",
+  subject: "The Bowl Pool is open: claim your seat",
+  phone: { title: "The Bowl Pool is open", body: "Claim your seat and pick every bowl and playoff game against the spread. First game: Tue, Dec 15." },
+};
+
 /** The Trophy Room: two crowned seasons (one with co-champions and one pool not crowned yet), and an all-time table with qualified and unqualified players. */
 const champion = (playerId, name) => ({ playerId, name });
 const exit = (averageWeek, exits) => ({ averageWeek, exits });
