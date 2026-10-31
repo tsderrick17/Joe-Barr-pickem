@@ -281,6 +281,6 @@ export async function reminderReadiness(category: ReminderCategory, sourceGameId
   if (category === "sunday_late_reveal") return sundayRevealReady("late", sourceGameIds);
   if (category === "bowl_daily_recap") return bowlDailyRecapReady(sourceGameIds);
   if (category === "bowl_pick_due") return bowlPickDueReady(sourceGameIds);
-  if (category === "bowl_pool_open") return bowlPoolOpenReady(sourceGameIds);
+  if (category === "bowl_pool_open" || category === "bowl_pool_last_call") return bowlPoolOpenReady(sourceGameIds);
   return { ready: true, reason: null };
 }

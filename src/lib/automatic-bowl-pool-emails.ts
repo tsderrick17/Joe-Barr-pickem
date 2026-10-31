@@ -1,5 +1,5 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
-import { bowlOpeningAnnouncementAt, bowlOpeningMessage } from "@/lib/bowl-opening-announcement.js";
+import { bowlLastCallAt, bowlLastCallMessage, bowlOpeningAnnouncementAt, bowlOpeningMessage } from "@/lib/bowl-opening-announcement.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
@@ -75,6 +75,20 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
           created_by_player_id: senderId, category: "bowl_pool_open", audience: "all_active",
           title: message.title, body: message.body, recap_snapshot: message.snapshot,
           scheduled_for: openingAt, source_game_ids: [first.id], automation_key: `bowl:${season.id}:open`,
+        })) created += 1;
+      }
+    }
+    // The one-time "last call" email and phone notification, 24 hours before the first kickoff, for the players who have not joined. Like the opening
+    // announcement it is queued when it comes due, from the first game as it stands then; it needs a confirmed kickoff time to count back from.
+    const firstGame = games.filter((game) => game.status === "scheduled").sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))[0];
+    if (firstGame && firstGame.time_confirmed !== false && season.status !== "complete" && !games.some((game) => new Date(game.kickoff_at) <= now)) {
+      const lastCallAt = bowlLastCallAt(firstGame.kickoff_at);
+      if (new Date(lastCallAt) <= now) {
+        const message = bowlLastCallMessage({ firstGame });
+        if (await queue({
+          created_by_player_id: senderId, category: "bowl_pool_last_call", audience: "all_active",
+          title: message.title, body: message.body, recap_snapshot: message.snapshot,
+          scheduled_for: lastCallAt, source_game_ids: [firstGame.id], automation_key: `bowl:${season.id}:last-call`,
         })) created += 1;
       }
     }

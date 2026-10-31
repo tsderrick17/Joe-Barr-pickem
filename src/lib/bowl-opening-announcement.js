@@ -30,6 +30,7 @@ const inEastern = (options) => (/** @type {string} */ iso) => dateFormat("en-US"
 const shortDay = inEastern({ weekday: "short", month: "short", day: "numeric" });
 const longDay = inEastern({ weekday: "long", month: "short", day: "numeric" });
 const monthDay = inEastern({ month: "short", day: "numeric" });
+const clock = inEastern({ hour: "numeric", minute: "2-digit" });
 
 /**
  * The words of the opening announcement, from the schedule as it stands when the announcement is queued. The phone notification is `body`;
@@ -53,6 +54,42 @@ export function bowlOpeningMessage({ seasonYear, firstGame, finalGameKickoffAt =
         "Pick now or come back later. You can change any pick until its kickoff.",
         "The tiebreaker is the total points scored in the National Championship.",
         `The first game is the ${bowlSpokenName(firstGame.bowl_name)} on ${longDay(firstGame.kickoff_at)}. You can opt out any time before then.`,
+      ],
+    },
+  };
+}
+
+/** The last call's email subject, and its phone title (and the email's heading), "Last call for the Bowl Pool". */
+export const BOWL_LAST_CALL_EMAIL_SUBJECT = "Last call: claim your Bowl Pool seat";
+export const BOWL_LAST_CALL_TITLE = "Last call for the Bowl Pool";
+
+/**
+ * When the one-time "last call" email and phone notification go out: 24 hours before the first Bowl kickoff, to the players who have not joined
+ * the Bowl Pool (entry closes at that kickoff).
+ * @param {string} firstKickoffAt
+ */
+export function bowlLastCallAt(firstKickoffAt) {
+  return new Date(Date.parse(firstKickoffAt) - 24 * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * The words of the last call, from the first game as it stands when the call is queued. The phone notification is `body`; the email is
+ * `snapshot.intro` and `snapshot.steps` under the heading "How it works", like the opening announcement.
+ * @param {{ firstGame: { bowl_name?: string | null, kickoff_at: string } }} schedule
+ */
+export function bowlLastCallMessage({ firstGame }) {
+  const at = clock(firstGame.kickoff_at);
+  return {
+    title: BOWL_LAST_CALL_TITLE,
+    emailSubject: BOWL_LAST_CALL_EMAIL_SUBJECT,
+    body: `The first game kicks off ${shortDay(firstGame.kickoff_at)} at ${at} ET, and entry closes then. Claim your seat now.`,
+    snapshot: {
+      kind: "bowl_pool_last_call",
+      intro: `The Bowl Pool's first game, the ${bowlSpokenName(firstGame.bowl_name)}, kicks off ${longDay(firstGame.kickoff_at)} at ${at} ET. You haven't claimed your seat yet, and entry closes at that kickoff.`,
+      steps: [
+        "Claim your seat. It takes one tap, and you can opt out any time before the first game.",
+        "Pick every bowl and playoff game against the spread. Every correct pick is one point.",
+        "Pick now or come back later. You can change any pick until its kickoff.",
       ],
     },
   };

@@ -15,6 +15,7 @@ export type ReminderCategory =
   | "featured_window_reveal"
   | "bowl_line_lock"
   | "bowl_pool_open"
+  | "bowl_pool_last_call"
   | "bowl_daily_recap"
   | "bowl_pick_due"
   | "ats_due"
