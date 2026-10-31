@@ -117,6 +117,10 @@ export const SCENARIOS = {
   "bowl-champion": { ...base, showBowlCard: true, serverTime: "2027-01-12T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-claim-open": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-closed-not-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  // The Bowl Card the morning the pool opens: the viewer has just claimed a seat and is the only one in it, with nothing graded.
+  "bowl-just-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  // The Bowl Card with a game postponed and another cancelled: the word stands where the line would be, and neither has a result.
+  "bowl-disrupted": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // In the playoffs the Season Snapshot gets a Regular | Playoffs switch (it opens on the playoffs).
   "commissioner-playoff": { ...base, isCommissioner: true, seasonSnapshotReleased: true, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
@@ -130,6 +134,8 @@ export const BOWL_BY_SCENARIO = {
   "bowl-champion": { graded: 6, champion: true, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2", "bowl-3": "a3", "bowl-4": "h4", "bowl-5": "a5" } },
   "bowl-claim-open": { optedIn: false, entryOpen: true },
   "bowl-closed-not-joined": { optedIn: false, entryOpen: false },
+  "bowl-just-joined": { optedIn: true, entryOpen: true, only: [2], fresh: true },
+  "bowl-disrupted": { graded: 1, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2" }, gameOverrides: { 1: { status: "postponed" }, 2: { status: "cancelled" } } },
 };
 
 export function homeResponse(name) {
@@ -171,16 +177,17 @@ const BOWL_GAMES = [
 }));
 
 /** A small Bowl Card for the scenarios that open it. */
-export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, graded = 0, champion = false, viewerPicks = {}, guess = /** @type {number | null} */ (null) } = {}) {
-  // `graded` games are final: every player has a deterministic win or loss on each.
-  const games = BOWL_GAMES.map((game, index) => ({ ...game, status: index < graded ? "final" : game.status }));
+export function bowlResponse({ optedIn = true, entryOpen = false, picks = {}, graded = 0, champion = false, viewerPicks = {}, guess = /** @type {number | null} */ (null), only = /** @type {number[] | null} */ (null), fresh = false, gameOverrides = /** @type {Record<number, object>} */ ({}) } = {}) {
+  // `graded` games are final: every player has a deterministic win or loss on each. `only` keeps just those players (by position in NAMES);
+  // `fresh` starts everyone at 0 and 0 (the pool's first morning); `gameOverrides` changes single games (by position), to show a game with no announced time, a preliminary line, or one called off.
+  const games = BOWL_GAMES.map((game, index) => ({ ...game, status: index < graded ? "final" : game.status, ...gameOverrides[index] }));
   const publicPicks = NAMES.flatMap((_, playerIndex) => games.slice(0, graded).map((game, gameIndex) => ({
     playerId: `p${playerIndex}`, game_id: game.id, selected_team_id: game.line.favorite_team_id, result: (playerIndex + gameIndex * 2) % 3 === 0 ? "loss" : "win",
   }))).filter((pick) => pick.playerId !== "p2");
   const own = { ...picks, ...viewerPicks };
   return {
     season: { season_year: 2026, championship_game_id: "bowl-3" }, optedIn, entryOpen, entry: optedIn ? { championship_total_guess: guess ?? (graded ? 51 : null) } : null, games,
-    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: 4 - (index % 4), losses: index % 3, tiebreakerTotal: graded ? 40 + index : null, trophies: champion && index === 0 ? ["Bowl Pool Champion 2026"] : [], holdsTrophy: champion && index === 0 })),
+    standings: NAMES.map((playerName, index) => ({ playerId: `p${index}`, playerName, wins: fresh ? 0 : 4 - (index % 4), losses: fresh ? 0 : index % 3, tiebreakerTotal: graded ? 40 + index : null, trophies: champion && index === 0 ? ["Bowl Pool Champion 2026"] : [], holdsTrophy: champion && index === 0 })).filter((_, index) => !only || only.includes(index)),
     championships: champion ? [{ playerId: "p0", seasonYear: 2026, playerName: NAMES[0] }] : [],
     publicPicks, ownPicks: Object.entries(own).map(([game_id, selected_team_id]) => ({ game_id, selected_team_id })), ownPreviewSelections: [], automaticResults: [], privatePickMarkers: [],
   };

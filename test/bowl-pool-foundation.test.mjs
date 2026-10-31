@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
+import { bowlDisruptionLabel, bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 import { activeBowlStandingsEntries } from "../src/lib/bowl-pool-standings-entries.js";
 
@@ -91,4 +91,9 @@ test("Bowl readiness treats preseason TBD teams as setup while preserving order 
   assert.match(route, /beforeFirstKickoff/);
   assert.match(route, /problem\.includes\("missing a team"\)/);
   assert.match(migration, /row_number\(\) over \(partition by season_id order by kickoff_at, id\)/i);
+});
+
+test("a postponed, cancelled or no-contest game says so where its line or venue would be, and any other game says nothing", () => {
+  assert.deepEqual(["postponed", "cancelled", "no_contest"].map(bowlDisruptionLabel), ["Postponed", "Cancelled", "No contest"]);
+  for (const status of ["scheduled", "in_progress", "final", "", null, undefined, "unknown"]) assert.equal(bowlDisruptionLabel(status), undefined, String(status));
 });
