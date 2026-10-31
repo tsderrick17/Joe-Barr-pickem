@@ -225,8 +225,13 @@ measure database requests or end-to-end route time.
   face hides at the edge-on moment so no mirrored text shows.
   An All / 6 Wk toggle (regular season only) sits between the title and the
   flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
-  at a time with the y-axis fixed, and always opens on the most recent six
-  weeks. Axis margins are kept tight. On phones the key is a compact
+  at a time with the y-axis standing still beside it, and always opens on the
+  most recent six weeks. Its y-axis fits the weeks in view (a win or more under
+  the lowest line and over the highest) and glides on a spring as the view
+  scrolls, the lines with it; the tick spacing stays the same for the whole
+  view, so the numbers slide past like a ruler and fade in or out at the edges.
+  All always counts from zero. A slim position rail under the "Week" label
+  replaces the browser's scroll bar. Axis margins are kept tight. On phones the key is a compact
   four-column grid. The key lists everyone in current-standings order;
   pressing a name hides or shows that person, the axis and stacking recompute
   for whoever remains, and hovering a name or line highlights one player. The

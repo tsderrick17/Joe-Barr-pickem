@@ -311,12 +311,17 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .season-snapshot-lines { animation: season-snapshot-reveal .9s cubic-bezier(.22, .7, .2, 1) both; }
 .season-snapshot-ribbon { transition: opacity .2s ease; }
 .season-snapshot-ribbon.is-dim { opacity: .14; }
+/* Axis numbers and grid lines that join the axis fade in as they slide into place; ones that leave fade out. */
+.season-snapshot-tick { animation: season-snapshot-tick-in .3s ease-out both; transition: opacity .25s ease-out; }
+.season-snapshot-tick.is-leaving { opacity: 0; }
+@keyframes season-snapshot-tick-in { from { opacity: 0; } }
 @keyframes season-snapshot-reveal {
   from { clip-path: inset(0 100% 0 0); }
   to { clip-path: inset(0 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .season-snapshot-lines { animation: none; }
+  .season-snapshot-lines,
+  .season-snapshot-tick { animation: none; transition: none; }
   .season-snapshot-ribbon,
   .season-snapshot-key-row { transition: none; }
 }
