@@ -4,7 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
 import { dateFormat } from "./date-format.js";
 
-type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string };
+type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string; time_confirmed: boolean | null };
 
 function displayDay(day: string) {
   return dateFormat("en-US", {
@@ -37,7 +37,7 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
   let created = 0;
   for (const season of seasons ?? []) {
     const { data, error } = await supabaseAdmin.from("bowl_pool_games")
-      .select("id, kickoff_at, line_lock_at, status").eq("season_id", season.id).order("kickoff_at");
+      .select("id, kickoff_at, line_lock_at, status, time_confirmed").eq("season_id", season.id).order("kickoff_at");
     if (error) throw new Error("Bowl Pool games could not be read for email scheduling.");
     const games = (data ?? []) as BowlGame[];
     for (const day of bowlGamedays(games)) {
@@ -51,7 +51,8 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
         automation_key: `bowl:${season.id}:line-lock:${day}`,
       })) created += 1;
     }
-    for (const game of games.filter((item) => item.status === "scheduled" && new Date(item.kickoff_at) > now)) {
+    // A game whose time ESPN has not announced has only a placeholder on its day: no reminder counts down to it until the real time arrives.
+    for (const game of games.filter((item) => item.status === "scheduled" && item.time_confirmed !== false && new Date(item.kickoff_at) > now)) {
       const scheduledFor = unpickedBowlReminderAt(game.kickoff_at);
       if (new Date(scheduledFor) <= now) continue;
       if (await queue({

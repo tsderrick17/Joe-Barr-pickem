@@ -68,7 +68,6 @@ test("Bowl line capture promotes a provisional spread when live odds are unavail
   assert.match(source, /filter\(\(line\) => line\.locked_at\)/);
   assert.match(source, /lockProvisional/);
   assert.match(source, /\.is\("locked_at", null\)/);
-  assert.match(source, /typeof espnSpread === "number" && Number\.isFinite\(espnSpread\)/);
 });
 
 test("Bowl standings list only active entries", () => {

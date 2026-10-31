@@ -77,26 +77,5 @@ test("a watchdog alert is not sent unless its attempt time was saved", async () 
 });
 
 
-test("the ESPN Bowl sync never replaces a locked official line", async () => {
-  const { bowlSync } = await automationSources;
-  assert.match(bowlSync, /ignoreDuplicates: true/);
-  assert.match(bowlSync, /\.eq\("game_id", saved\.id\)\.is\("locked_at", null\)/);
-  assert.doesNotMatch(bowlSync, /bowl_pool_game_lines"\)\.upsert\(\{ game_id: saved\.id/);
-});
-
-
-test("the ESPN Bowl refresh links games and fixes timing but keeps curated names and order", async () => {
-  const { bowlSync } = await automationSources;
-  assert.match(bowlSync, /function existingGameUpdate/);
-  assert.match(bowlSync, /const \{ season_id: _season, bowl_name: _name, order_index: _order, \.\.\.provider \} = row;/);
-  assert.match(bowlSync, /update\(existingGameUpdate\(row\)\)/);
-  assert.match(bowlSync, /provider_game_id: `espn:\$\{event\.id\}`/, "the ESPN id link is what lets scores match seeded games");
-});
-
-
-test("a Bowl game already linked to its ESPN event stays on the protected update path", async () => {
-  const { bowlSync } = await automationSources;
-  assert.match(bowlSync, /candidate\.provider_game_id === `espn:\$\{event\.id\}`/);
-  assert.match(bowlSync, /const gameId = matched\?\.id;/);
-  assert.match(bowlSync, /matched\.kickoff_at !== kickoff/);
-});
+// The ESPN Bowl schedule pull's rules (a locked line is never replaced, curated names and order are kept, a linked game follows ESPN) are behaviour tests in
+// bowl-schedule-sync.test.mjs and bowl-pool-espn-schedule.test.mjs.
