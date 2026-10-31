@@ -5,6 +5,7 @@ import {
   type ReminderCategory,
 } from "@/lib/reminder-audience";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
+import { BOWL_OPENING_EMAIL_SUBJECT } from "@/lib/bowl-opening-announcement.js";
 import { sendPushToPlayers } from "@/lib/player-push";
 import { picksStillToMakeFor } from "@/lib/picks-to-make";
 import { reminderDestinationPath, reminderPushMessage } from "@/lib/reminder-push.js";
@@ -102,7 +103,22 @@ function recapImage({ alt, href, kind, reminderId, style, width = 560, density =
   return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="${width}" style="${style}"></a>`;
 }
 
+/** The opening announcement's saved words: its introduction and the steps under "How it works". Anything else is not an opening message. */
+function bowlOpeningWords(snapshot: unknown): { intro: string; steps: string[] } | null {
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "bowl_pool_open") return null;
+  const { intro, steps } = snapshot as { intro?: unknown; steps?: unknown };
+  return typeof intro === "string" && Array.isArray(steps) && steps.every((step) => typeof step === "string") ? { intro, steps: steps as string[] } : null;
+}
+
+function bowlOpeningText(reminder: Reminder) {
+  const words = bowlOpeningWords(reminder.recap_snapshot);
+  const steps = words ? `How it works:\n${words.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}` : "";
+  return [BOWL_OPENING_EMAIL_SUBJECT, words?.intro ?? reminder.body, steps, `Claim your seat: ${siteUrl}/bowl-pool`, `Change your choices in Notifications: ${siteUrl}/profile`].filter(Boolean).join("\n\n");
+}
+
 export function messageHtml(reminder: Reminder) {
+  const opening = bowlOpeningWords(reminder.recap_snapshot);
+  const openingBlock = opening ? `<h2 style="font:700 16px Arial,sans-serif;margin:24px 0 8px">How it works</h2><ol style="font:15px/1.5 Arial,sans-serif;margin:0;padding-left:22px">${opening.steps.map((step) => `<li style="margin:0 0 8px">${escapeHtml(step)}</li>`).join("")}</ol>` : "";
   const recapImages = reminder.category === "bowl_line_lock"
     ? `<div style="${recapImageFrameStyle}">${recapImage({ alt: "Bowl Pool official lines", href: `${siteUrl}/bowl-pool`, kind: "bowl-lines", reminderId: reminder.id, density: reminder.imageOptions?.density, artworkUrls: reminder.artworkUrls, style: recapImageStyleNoMargin })}</div>`
     : reminder.category === "bowl_daily_recap"
@@ -122,14 +138,14 @@ export function messageHtml(reminder: Reminder) {
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
   const path = reminderDestinationPath(reminder.category);
   const destination = path === "/" ? siteUrl : `${siteUrl}${path}`;
-  const callToAction = reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
+  const callToAction = reminder.category === "bowl_pool_open" ? "Claim your seat" : reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
   const championCopy = playoffChampionCopy(reminder.recap_snapshot);
   const championBlock = championCopy ? `<p style="background:#ecfdf5;border-left:4px solid #007e72;color:#064e3b;font:700 16px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(championCopy)}</p>` : "";
   const bowlCopy = bowlRecapCopy(reminder.recap_snapshot);
   const bowlBlock = bowlCopy ? `<p style="background:#f8fafc;border-left:4px solid #475569;color:#1e293b;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(bowlCopy)}</p>` : "";
-  return `<main style="box-sizing:border-box;width:100%;background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:24px;line-height:1.15;margin:0 0 14px">${escapeHtml(reminder.title)}</h1><p style="font:16px/1.45 Arial,sans-serif;margin:0">${escapeHtml(reminder.body)}</p>${championBlock}${eliminationBlock}${bowlBlock}${recapImages}<p style="margin:20px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:24px 0 14px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0"><a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
+  return `<main style="box-sizing:border-box;width:100%;background:#fffdf8;color:#171719;font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px"><p style="font:700 12px Arial,sans-serif;letter-spacing:.16em;color:#475569;margin:0 0 8px">JOE BARR MEMORIAL ${reminder.category.startsWith("bowl_") ? "BOWL POOL" : "PICK'EM"}</p><h1 style="font-size:24px;line-height:1.15;margin:0 0 14px">${escapeHtml(reminder.title)}</h1><p style="font:16px/1.45 Arial,sans-serif;margin:0">${escapeHtml(opening?.intro ?? reminder.body)}</p>${openingBlock}${championBlock}${eliminationBlock}${bowlBlock}${recapImages}<p style="margin:20px 0 0"><a href="${destination}" style="display:inline-block;background:#007e72;border-radius:6px;color:#fff;padding:12px 18px;text-decoration:none;font:700 15px Arial,sans-serif">${callToAction}</a></p><hr style="border:0;border-top:1px solid #d6d3d1;margin:24px 0 14px"><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:0">Only winners count; pushes and ties are losers.</p><p style="font:12px/1.5 Arial,sans-serif;color:#57534e;margin:8px 0 0"><a href="${siteUrl}/profile" style="color:#57534e">Change your choices in Notifications.</a></p></main>`;
 }
 
 const EMAIL_ARTWORK_BUCKET = "email-artwork";
@@ -356,9 +372,9 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
       body: JSON.stringify({
         sender: { name: "PickemJB", email: sender },
         to: [{ email: recipient.email }],
-        subject: reminder.title,
+        subject: reminder.category === "bowl_pool_open" ? BOWL_OPENING_EMAIL_SUBJECT : reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
+        textContent: reminder.category === "bowl_pool_open" ? bowlOpeningText(reminder) : `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),

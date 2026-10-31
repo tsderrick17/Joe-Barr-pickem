@@ -1,10 +1,11 @@
 import { bowlDailyRecapAt, bowlGamedays, unpickedBowlReminderAt } from "@/lib/bowl-email-schedule.js";
+import { bowlOpeningAnnouncementAt, bowlOpeningMessage } from "@/lib/bowl-opening-announcement.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Database } from "@/lib/database.types";
 import { easternDateKey as easternDate } from "@/lib/eastern-time.js";
 import { dateFormat } from "./date-format.js";
 
-type BowlGame = { id: string; kickoff_at: string; line_lock_at: string; status: string; time_confirmed: boolean | null };
+type BowlGame = { id: string; bowl_name: string | null; kickoff_at: string; line_lock_at: string; status: string; time_confirmed: boolean | null };
 
 function displayDay(day: string) {
   return dateFormat("en-US", {
@@ -29,7 +30,7 @@ async function queue(message: Database["public"]["Tables"]["push_reminders"]["In
 /** Queue immutable Bowl emails. Delivery remains guarded by readiness checks. */
 export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
   const { data: seasons, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons")
-    .select("id, status").in("status", ["open", "live", "complete"]);
+    .select("id, status, season_year, championship_game_id").in("status", ["open", "live", "complete"]);
   if (seasonError) throw new Error("Bowl Pool season status could not be read.");
   if (!(seasons ?? []).length) return { created: 0, reason: "no_active_bowl_season" };
 
@@ -37,7 +38,7 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
   let created = 0;
   for (const season of seasons ?? []) {
     const { data, error } = await supabaseAdmin.from("bowl_pool_games")
-      .select("id, kickoff_at, line_lock_at, status, time_confirmed").eq("season_id", season.id).order("kickoff_at");
+      .select("id, bowl_name, kickoff_at, line_lock_at, status, time_confirmed").eq("season_id", season.id).order("kickoff_at");
     if (error) throw new Error("Bowl Pool games could not be read for email scheduling.");
     const games = (data ?? []) as BowlGame[];
     for (const day of bowlGamedays(games)) {
@@ -61,6 +62,21 @@ export async function ensureAutomaticBowlPoolEmails(now = new Date()) {
         scheduled_for: scheduledFor, source_game_ids: [game.id],
         automation_key: `bowl:${season.id}:pick-due:${game.id}`,
       })) created += 1;
+    }
+    // The one-time "the Bowl Pool is open" email and phone notification. It is queued the morning it is due, so its words come from the schedule as
+    // it stands then, and only while seats can still be claimed (no game has kicked off).
+    const openingAt = typeof season.season_year === "number" ? bowlOpeningAnnouncementAt(season.season_year) : null;
+    if (openingAt && season.status !== "complete" && new Date(openingAt) <= now && !games.some((game) => new Date(game.kickoff_at) <= now)) {
+      const first = games.filter((game) => game.status === "scheduled").sort((a, b) => Date.parse(a.kickoff_at) - Date.parse(b.kickoff_at))[0];
+      if (first) {
+        const finalGame = games.find((game) => game.id === season.championship_game_id);
+        const message = bowlOpeningMessage({ seasonYear: season.season_year, firstGame: first, finalGameKickoffAt: finalGame?.kickoff_at ?? null });
+        if (await queue({
+          created_by_player_id: senderId, category: "bowl_pool_open", audience: "all_active",
+          title: message.title, body: message.body, recap_snapshot: message.snapshot,
+          scheduled_for: openingAt, source_game_ids: [first.id], automation_key: `bowl:${season.id}:open`,
+        })) created += 1;
+      }
     }
     for (const day of bowlGamedays(games)) {
       const scheduledFor = bowlDailyRecapAt(day);
