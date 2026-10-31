@@ -2455,9 +2455,7 @@ export type Database = {
         Returns: undefined
       }
       record_bowl_game_cancelled_by_espn: {
-        Args: {
-          target_game_id: string
-        }
+        Args: { target_game_id: string }
         Returns: {
           picks_voided: number
         }[]
@@ -2566,6 +2564,7 @@ export type Database = {
           away_team_id: string | null
           bowl_name: string
           created_at: string
+          espn_cancelled_seen_at: string | null
           finalized_at: string | null
           home_score: number | null
           home_team_id: string | null
