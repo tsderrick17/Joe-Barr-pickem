@@ -1,0 +1,338 @@
+[
+ {
+  "provider_game_id": "bowl-2026-salute-veterans",
+  "kickoff_at": "2026-12-15T22:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Salute to Veterans",
+  "id": "game-01",
+  "order_index": 1
+ },
+ {
+  "provider_game_id": "bowl-2026-frisco-classic",
+  "kickoff_at": "2026-12-16T02:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Frisco Football Classic",
+  "id": "game-02",
+  "order_index": 2
+ },
+ {
+  "provider_game_id": "bowl-2026-boca-raton",
+  "kickoff_at": "2026-12-18T16:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Boca Raton",
+  "id": "game-03",
+  "order_index": 3
+ },
+ {
+  "provider_game_id": "bowl-2026-gasparilla",
+  "kickoff_at": "2026-12-18T19:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Gasparilla",
+  "id": "game-04",
+  "order_index": 4
+ },
+ {
+  "provider_game_id": "cfp-2026-first-round-1",
+  "kickoff_at": "2026-12-19T01:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "CFP First Round 1",
+  "id": "game-05",
+  "order_index": 5
+ },
+ {
+  "provider_game_id": "cfp-2026-first-round-2",
+  "kickoff_at": "2026-12-19T17:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "CFP First Round 2",
+  "id": "game-06",
+  "order_index": 6
+ },
+ {
+  "provider_game_id": "cfp-2026-first-round-3",
+  "kickoff_at": "2026-12-19T21:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "CFP First Round 3",
+  "id": "game-07",
+  "order_index": 7
+ },
+ {
+  "provider_game_id": "cfp-2026-first-round-4",
+  "kickoff_at": "2026-12-20T01:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "CFP First Round 4",
+  "id": "game-08",
+  "order_index": 8
+ },
+ {
+  "provider_game_id": "bowl-2026-myrtle-beach",
+  "kickoff_at": "2026-12-21T16:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Myrtle Beach",
+  "id": "game-09",
+  "order_index": 9
+ },
+ {
+  "provider_game_id": "bowl-2026-idaho-potato",
+  "kickoff_at": "2026-12-21T19:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Idaho Potato",
+  "id": "game-10",
+  "order_index": 10
+ },
+ {
+  "provider_game_id": "bowl-2026-puerto-rico",
+  "kickoff_at": "2026-12-22T18:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Puerto Rico",
+  "id": "game-11",
+  "order_index": 11
+ },
+ {
+  "provider_game_id": "bowl-2026-cure",
+  "kickoff_at": "2026-12-22T22:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Cure",
+  "id": "game-12",
+  "order_index": 12
+ },
+ {
+  "provider_game_id": "bowl-2026-independence",
+  "kickoff_at": "2026-12-23T01:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Independence",
+  "id": "game-13",
+  "order_index": 13
+ },
+ {
+  "provider_game_id": "bowl-2026-new-orleans",
+  "kickoff_at": "2026-12-23T19:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "New Orleans",
+  "id": "game-14",
+  "order_index": 14
+ },
+ {
+  "provider_game_id": "bowl-2026-armed-forces",
+  "kickoff_at": "2026-12-23T22:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Armed Forces",
+  "id": "game-15",
+  "order_index": 15
+ },
+ {
+  "provider_game_id": "bowl-2026-frisco",
+  "kickoff_at": "2026-12-24T02:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Frisco",
+  "id": "game-16",
+  "order_index": 16
+ },
+ {
+  "provider_game_id": "bowl-2026-new-mexico",
+  "kickoff_at": "2026-12-24T19:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "New Mexico",
+  "id": "game-17",
+  "order_index": 17
+ },
+ {
+  "provider_game_id": "bowl-2026-hawaii",
+  "kickoff_at": "2026-12-25T00:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Hawaiʻi",
+  "id": "game-18",
+  "order_index": 18
+ },
+ {
+  "provider_game_id": "bowl-2026-pinstripe",
+  "kickoff_at": "2026-12-26T17:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Pinstripe",
+  "id": "game-19",
+  "order_index": 19
+ },
+ {
+  "provider_game_id": "bowl-2026-fenway",
+  "kickoff_at": "2026-12-26T19:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Fenway",
+  "id": "game-20",
+  "order_index": 20
+ },
+ {
+  "provider_game_id": "bowl-2026-dukes-mayo",
+  "kickoff_at": "2026-12-26T20:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Duke's Mayo",
+  "id": "game-21",
+  "order_index": 21
+ },
+ {
+  "provider_game_id": "bowl-2026-68-ventures",
+  "kickoff_at": "2026-12-26T22:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "68 Ventures",
+  "id": "game-22",
+  "order_index": 22
+ },
+ {
+  "provider_game_id": "bowl-2026-cactus",
+  "kickoff_at": "2026-12-27T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Cactus",
+  "id": "game-23",
+  "order_index": 23
+ },
+ {
+  "provider_game_id": "bowl-2026-military",
+  "kickoff_at": "2026-12-28T19:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Military",
+  "id": "game-24",
+  "order_index": 24
+ },
+ {
+  "provider_game_id": "bowl-2026-birmingham",
+  "kickoff_at": "2026-12-29T19:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Birmingham",
+  "id": "game-25",
+  "order_index": 25
+ },
+ {
+  "provider_game_id": "bowl-2026-pop-tarts",
+  "kickoff_at": "2026-12-29T22:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Pop-Tarts",
+  "id": "game-26",
+  "order_index": 26
+ },
+ {
+  "provider_game_id": "bowl-2026-alamo",
+  "kickoff_at": "2026-12-30T02:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Alamo",
+  "id": "game-27",
+  "order_index": 27
+ },
+ {
+  "provider_game_id": "bowl-2026-gator",
+  "kickoff_at": "2026-12-30T16:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Gator",
+  "id": "game-28",
+  "order_index": 28
+ },
+ {
+  "provider_game_id": "cfp-2026-fiesta-quarterfinal",
+  "kickoff_at": "2026-12-30T17:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "Fiesta",
+  "id": "game-29",
+  "order_index": 29
+ },
+ {
+  "provider_game_id": "bowl-2026-music-city",
+  "kickoff_at": "2026-12-30T20:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Music City",
+  "id": "game-30",
+  "order_index": 30
+ },
+ {
+  "provider_game_id": "bowl-2026-reliaquest",
+  "kickoff_at": "2026-12-31T17:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "ReliaQuest",
+  "id": "game-31",
+  "order_index": 31
+ },
+ {
+  "provider_game_id": "bowl-2026-las-vegas",
+  "kickoff_at": "2026-12-31T20:45:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Las Vegas",
+  "id": "game-32",
+  "order_index": 32
+ },
+ {
+  "provider_game_id": "bowl-2026-texas",
+  "kickoff_at": "2027-01-01T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Texas",
+  "id": "game-33",
+  "order_index": 33
+ },
+ {
+  "provider_game_id": "cfp-2027-cotton-quarterfinal",
+  "kickoff_at": "2027-01-01T17:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "Cotton",
+  "id": "game-34",
+  "order_index": 34
+ },
+ {
+  "provider_game_id": "cfp-2027-peach-quarterfinal",
+  "kickoff_at": "2027-01-01T17:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "Peach",
+  "id": "game-35",
+  "order_index": 35
+ },
+ {
+  "provider_game_id": "cfp-2027-rose-quarterfinal",
+  "kickoff_at": "2027-01-01T17:00:00.000Z",
+  "time_confirmed": false,
+  "bowl_name": "Rose",
+  "id": "game-36",
+  "order_index": 36
+ },
+ {
+  "provider_game_id": "bowl-2027-citrus",
+  "kickoff_at": "2027-01-02T17:00:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Citrus",
+  "id": "game-37",
+  "order_index": 37
+ },
+ {
+  "provider_game_id": "bowl-2027-first-responder",
+  "kickoff_at": "2027-01-02T20:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "First Responder",
+  "id": "game-38",
+  "order_index": 38
+ },
+ {
+  "provider_game_id": "bowl-2027-liberty",
+  "kickoff_at": "2027-01-03T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Liberty",
+  "id": "game-39",
+  "order_index": 39
+ },
+ {
+  "provider_game_id": "cfp-2027-orange-semifinal",
+  "kickoff_at": "2027-01-15T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Orange",
+  "id": "game-40",
+  "order_index": 40
+ },
+ {
+  "provider_game_id": "cfp-2027-sugar-semifinal",
+  "kickoff_at": "2027-01-16T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "Sugar",
+  "id": "game-41",
+  "order_index": 41
+ },
+ {
+  "provider_game_id": "cfp-2027-national-championship",
+  "kickoff_at": "2027-01-26T00:30:00.000Z",
+  "time_confirmed": true,
+  "bowl_name": "National Championship",
+  "id": "game-42",
+  "order_index": 42
+ }
+]

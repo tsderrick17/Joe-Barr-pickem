@@ -457,6 +457,10 @@ responsive image. Each reminder and recap is keyed and recorded with an
 immutable source snapshot, so retries cannot duplicate a delivery or mutate a
 previously sent result.
 
+The ESPN schedule pull logs `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
+not be updated` (the database refused a matchup or kickoff that picks or a locked line hold; the Commissioner's schedule-change review lists
+what ESPN changed). The FCS playoff and the Celebration Bowl never enter the pool.
+
 Before the player-visible December launch gate, Bowl placeholders and missing
 lines are intentional and do not make the public Bowl health monitor fail. From
 player visibility onward, even before first kickoff, the endpoint checks

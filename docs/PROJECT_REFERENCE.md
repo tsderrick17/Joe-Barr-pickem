@@ -672,6 +672,18 @@ may enrich spreads but cannot override canonical schedule assignments.
   `BOWL_POOL_ODDS_API_ENABLED=true`; an existing preliminary line may lock when
   no fresh market is available. Locked lines and commissioner-curated bowl
   names, order, or exception status survive provider refreshes.
+- The ESPN schedule pull (`syncAnnualSchedule`, rules in `src/lib/bowl-pool-espn-schedule.js`) reads each bowl's name from ESPN's headline
+  (the event's own name is the matchup) and pairs it with our row **by name**: ESPN's name ends with ours ("Union Home Mortgage Gasparilla Bowl"
+  is "Gasparilla"), so a changed sponsor does not matter, and kickoff time alone never pairs two games (the four first-round games share one
+  headline and are told apart by time). A row already linked to an ESPN game keeps it. Only FBS bowls and College Football Playoff games enter
+  the pool: the FCS playoff and the Celebration Bowl (the FCS conference-champions game, left out by the owner's choice) are ignored. A game ESPN
+  lists that we lack is added, named in the seeded style, and the display order is renumbered by kickoff unless the Commissioner has curated one.
+  A kickoff replaces ours only when ESPN has confirmed the time (`timeValid`): a game with a day but no time keeps its placeholder, is marked
+  `time_confirmed = false` (players see "Time TBD") and gets no pick-due reminder; a new game with no time waits at noon Eastern on its day. The
+  database lets such a placeholder kickoff be corrected even after picks or a locked line exist (a confirmed kickoff stays frozen), because
+  otherwise an early pick would freeze the placeholder. A team ESPN still lists as "TBD" is no team: a game gets both teams or neither, never a
+  TBD team a player could pick. A kickoff that moves cancels the game's queued reminders and releases their key so the new time queues fresh
+  ones. A pull that finds nothing new writes nothing.
 
 ## Action-only watchdog
 

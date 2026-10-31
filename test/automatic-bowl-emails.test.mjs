@@ -87,6 +87,14 @@ test("a game whose reminder time has passed, or that is no longer scheduled, get
   assert.ok(keys().includes("bowl:bowl-26:pick-due:g3"));
 });
 
+test("a game whose time is not announced gets no pick-due reminder until the real time arrives", async () => {
+  await run("2026-12-01T12:00:00Z", { over: { games: GAMES.map((game) => game.id === "g2" ? { ...game, time_confirmed: false } : { ...game, time_confirmed: true }) } });
+  assert.ok(!keys().includes("bowl:bowl-26:pick-due:g2"), "a placeholder time counts down to nothing");
+  assert.ok(keys().includes("bowl:bowl-26:pick-due:g1") && keys().includes("bowl:bowl-26:pick-due:g3"), "the games with real times are reminded as ever");
+  await run("2026-12-01T12:00:00Z", { over: { games: GAMES.map((game) => ({ ...game, time_confirmed: true })) } });
+  assert.ok(keys().includes("bowl:bowl-26:pick-due:g2"), "once the time is confirmed the reminder is queued");
+});
+
 test("an email already queued is skipped without counting or failing, and any other queueing error is a failure", async () => {
   const duplicate = await run("2026-12-01T12:00:00Z", { over: { insertError: () => ({ data: null, error: { code: "23505" } }) } });
   assert.deepEqual(duplicate, { created: 0, reason: null });
