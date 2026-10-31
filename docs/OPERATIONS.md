@@ -19,10 +19,26 @@ not, merge one small commit to `main` to trigger the build.
 
 ## Backup and retention
 
-The weekly GitHub Action **Encrypted database backup** creates a complete
-encrypted database export every Monday morning at 9:17 AM Eastern during
-daylight time (8:17 AM during standard time). It retains the encrypted artifact
-for 90 days.
+The weekly GitHub Action **Encrypted database backup** creates an encrypted
+export every Monday morning at 9:17 AM Eastern during daylight time (8:17 AM
+during standard time) and retains it for 90 days (GitHub's maximum for a public
+repository; Supabase Free keeps no backups of its own). One export is a single
+encrypted file (`production-backup.tar.enc`) holding four parts: `roles.sql`
+(custom roles), `schema.sql` (tables, functions, triggers, policies),
+`auth-schema.sql` (the structure of Supabase's `auth` schema) and `data.sql`
+(every row of the public tables, plus players' sign-in accounts from `auth`
+without the short-lived sessions and tokens, so a restore keeps every player's
+PIN working). Until 2026-10-31 it
+held the schema only, so there was nothing to restore.
+
+The workflow proves each export before keeping it: it decrypts it, restores it
+into a disposable database, then `scripts/backup-verify.mjs` counts the rows of
+every table in the export and in the restored copy and fails if any table came
+back with a different count or if a table that must have rows (players,
+seasons, games, scoring periods, teams, picks, sign-in accounts) has none.
+Not backed up: Vault secrets (the cron secret; re-create them from where they
+are stored), Supabase Storage files, and the sessions players re-create by
+signing in.
 
 Before enabling it, add one GitHub repository secret:
 
@@ -33,6 +49,31 @@ The existing `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, and
 `SUPABASE_PROJECT_ID` secrets are reused. To test, open GitHub **Actions** →
 **Encrypted database backup** → **Run workflow**. Do not download or decrypt a
 backup unless recovery is genuinely required.
+
+### Restore runbook
+
+Only for genuine recovery; never restore over production first.
+
+1. Download the newest successful `pickem-production-backup-*` artifact from
+   GitHub Actions → **Encrypted database backup**, and unzip it.
+2. Decrypt and unpack (the passphrase is `BACKUP_ENCRYPTION_KEY`, kept outside
+   GitHub):
+   `openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in production-backup.tar.enc -pass env:BACKUP_ENCRYPTION_KEY | tar -xf -`
+3. Create a new empty Supabase project (or use the isolated test project).
+   Restore in this order with `psql` as the database owner: `roles.sql`
+   (role errors for roles that already exist are fine), `auth-schema.sql`
+   (on a project that already has an older `auth` schema, drop it first),
+   `schema.sql`, then `data.sql` run with
+   `--command "set session_replication_role = replica;"` before `--file` so
+   triggers and foreign keys do not fire while rows load.
+4. Check it: the row counts of players, picks, games and seasons against the
+   workflow log of the run that made the backup (it prints every table's count).
+5. Re-create what the backup does not hold: the Vault secrets and cron secret
+   (the migrations create the schedules), the Vercel environment variables if
+   the project changed, then run Launch Preflight.
+6. Players keep their PINs (sign-in accounts are restored; the PIN pepper in
+   Vercel must be unchanged). Point production at the new project only after
+   an isolated rehearsal passes.
 
 Retention policy: scoring, official picks, locks, seasons, championships, final
 save receipts, and email receipts are never automatically deleted. A weekly

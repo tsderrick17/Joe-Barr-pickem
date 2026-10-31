@@ -154,12 +154,13 @@ cron schedules, reminders, line locks, or score jobs individually.
 
 Open GitHub Actions → **Encrypted database backup**. The health endpoint is
 green only when the latest completed run succeeded recently; that workflow
-uploads its artifact only after the decrypt-and-restore check. Correct the
-reported failure, then rerun that workflow once.
+uploads its artifact only after the decrypt-restore-and-row-count check
+(`scripts/backup-verify.mjs`). Correct the reported failure, then rerun that
+workflow once.
 
 ### A backup or disaster recovery is required
 
-Follow the backup section of [OPERATIONS.md](OPERATIONS.md). Restore into an
+Follow the Restore runbook in the backup section of [OPERATIONS.md](OPERATIONS.md). Restore into an
 isolated project first, preserve the current audit trail, and treat production
 restore as a last resort.
 

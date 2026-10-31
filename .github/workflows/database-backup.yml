@@ -47,38 +47,53 @@ jobs:
           test -n "$SUPABASE_PROJECT_ID"
           test -n "$BACKUP_ENCRYPTION_KEY"
           test "$SUPABASE_PROJECT_ID" = "qtuycmgjiizrahfchsxe"
-      - name: Export production database
+      - name: Export production database (roles, schema, data and sign-in accounts)
         run: |
+          set -o pipefail
+          mkdir backup
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-          supabase db dump --linked --file production-backup.sql
+          supabase db dump --linked --role-only --file backup/roles.sql
+          supabase db dump --linked --file backup/schema.sql
+          # The default dump leaves out the auth schema, where players' sign-in accounts live: take its structure and its accounts too (not the short-lived sessions and tokens).
+          supabase db dump --linked --schema auth --file backup/auth-schema.sql
+          supabase db dump --linked --data-only --use-copy --schema public,auth --exclude auth.sessions,auth.refresh_tokens,auth.audit_log_entries,auth.flow_state,auth.one_time_tokens --file backup/data.sql
+          for part in roles schema auth-schema data; do test -s "backup/$part.sql"; done
+          tar -cf production-backup.tar -C backup roles.sql schema.sql auth-schema.sql data.sql
+          rm -r backup
       - name: Encrypt export
         run: |
-          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
-            -in production-backup.sql -out production-backup.sql.enc \
-            -pass env:BACKUP_ENCRYPTION_KEY
-          rm production-backup.sql
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000             -in production-backup.tar -out production-backup.tar.enc             -pass env:BACKUP_ENCRYPTION_KEY
+          rm production-backup.tar
       - name: Verify encrypted export can be decrypted
         run: |
           set -o pipefail
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
-            -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | sha256sum
-      - name: Restore encrypted export into a disposable database
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000             -in production-backup.tar.enc -pass env:BACKUP_ENCRYPTION_KEY | tar -tf -
+      - name: Restore encrypted export into a disposable database and check every row came back
         env:
+          PGHOST: localhost
+          PGUSER: supabase_admin
+          PGDATABASE: postgres
           PGPASSWORD: restore-check-only
         run: |
           set -o pipefail
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
-            -in production-backup.sql.enc -pass env:BACKUP_ENCRYPTION_KEY | \
-            psql --set ON_ERROR_STOP=1 --host localhost --username supabase_admin --dbname postgres
-          psql --tuples-only --no-align --host localhost --username supabase_admin --dbname postgres \
-            --command "select count(*) from pg_catalog.pg_tables where schemaname = 'public';" | grep -Eq '^[1-9][0-9]*$'
-          for table in bowl_pool_seasons bowl_pool_games bowl_pool_game_lines bowl_pool_entries bowl_pool_picks bowl_pool_game_results; do
-            psql --tuples-only --no-align --host localhost --username supabase_admin --dbname postgres \
-              --command "select count(*) from pg_catalog.pg_tables where schemaname = 'public' and tablename = '$table';" | grep -q '^1$'
-          done
+          mkdir restore
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000             -in production-backup.tar.enc -pass env:BACKUP_ENCRYPTION_KEY | tar -xf - -C restore
+          # Roles may already exist in the disposable database, so a role error is reported but does not stop the check.
+          psql --file restore/roles.sql || echo "Role restore reported errors (expected for roles that already exist)."
+          # The disposable image carries an older auth schema than production: replace it with the backed-up one.
+          psql --set ON_ERROR_STOP=1 --command "drop schema if exists auth cascade;"
+          psql --set ON_ERROR_STOP=1 --file restore/auth-schema.sql
+          psql --set ON_ERROR_STOP=1 --file restore/schema.sql
+          # Loading rows: this log is public, so show only the kind of error, never a row's values.
+          if ! psql --set ON_ERROR_STOP=1 --command "set session_replication_role = replica;" --file restore/data.sql >/dev/null 2>restore/errors.log; then
+            grep -E "ERROR" restore/errors.log | sed -E 's/"[^"]*"/"…"/g' | head -5
+            exit 1
+          fi
+          # Count the rows in the backup and in the restored copy: a schema-only or short backup fails here.
+          node scripts/backup-verify.mjs restore
       - name: Retain encrypted backup for 90 days
         uses: actions/upload-artifact@v7
         with:
           name: pickem-production-backup-${{ github.run_id }}
-          path: production-backup.sql.enc
+          path: production-backup.tar.enc
           retention-days: 90
