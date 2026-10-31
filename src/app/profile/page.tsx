@@ -5,9 +5,8 @@ import { AddToHomeScreen } from "@/components/add-to-home-screen";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
 import { HapticTap } from "@/components/haptic-tap";
 import { PhoneNotifications } from "@/components/phone-notifications";
-import { VibrationSwitch } from "@/components/vibration-switch";
 import { haptic } from "@/lib/haptics-client";
-import { useHapticsKind, useVibrationOn } from "@/lib/use-haptics";
+import { useHapticsKind } from "@/lib/use-haptics";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
 type NotificationChoices = {
@@ -64,11 +63,9 @@ function paceFor(preferences: NotificationChoices): NotificationPace {
   return "custom";
 }
 
-/** The page's tick boxes. With Vibration on, an iPhone shows them as its own switch, so flipping one gives the system tick; elsewhere they are plain boxes. */
+/** The page's tick boxes. An iPhone shows them as its own switch, so flipping one gives the system tick; elsewhere they are plain boxes. */
 function TickBox({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
-  const iphone = useHapticsKind() === "iphone";
-  const wanted = useVibrationOn();
-  const asSwitch = iphone && wanted;
+  const asSwitch = useHapticsKind() === "iphone";
   return <input checked={checked} className={`mt-1 ${asSwitch ? "shrink-0" : "size-4 accent-[#007e72]"}`} onChange={(event) => { haptic("tick"); onChange(event.target.checked); }} type="checkbox" {...(asSwitch ? { switch: "" } : {})} />;
 }
 
@@ -172,7 +169,6 @@ export default function ProfilePage() {
     <h1 className="font-serif text-4xl font-bold">Notifications</h1>
     <AddToHomeScreen variant="card" />
     <PhoneNotifications />
-    <VibrationSwitch />
     {profile?.isCommissioner ? <HapticFeelTest /> : null}
     <form className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" onSubmit={save}>
       <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
