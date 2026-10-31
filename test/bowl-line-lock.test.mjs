@@ -22,13 +22,6 @@ test("the schedule CSV import gives each Bowl game that same game-day lock inste
   assert.notEqual(rows[0].line_lock_at, rows[0].kickoff_at);
 });
 
-test("the provider sync stores a preliminary line with locked_at empty until the game-day lock, then fixes it", async () => {
-  const sync = await read("src/lib/sync-bowl-pool.ts");
-  // The ESPN schedule pull's own lines (preliminary until the lock, never replaced once locked) are run in bowl-schedule-sync.test.mjs.
-  assert.match(sync, /if \(!lineIsDueToLock\(game\.line_lock_at, now, alreadyLocked\.has\(game\.id\)\)\) continue;/);
-  assert.doesNotMatch(sync, /KNOWN DEFECT/);
-});
-
 test("the migration lets a line be preliminary and stops a preliminary line freezing the matchup", async () => {
   const sql = await read("supabase/migrations/20261007020000_bowl_provisional_lines.sql");
   assert.match(sql, /alter column locked_at drop not null/);

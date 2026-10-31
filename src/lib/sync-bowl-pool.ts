@@ -173,7 +173,8 @@ function parseScore(value: string | number | null | undefined) {
   return null;
 }
 
-async function syncScheduleAndLines(now: Date) {
+/** Matches games to the Odds API (when enabled) and locks each official line once its game-day lock time has come. Exported for tests. */
+export async function syncScheduleAndLines(now: Date) {
   const seasonYear = seasonYearAt(now);
   const { data: season, error: seasonReadError } = await supabaseAdmin.from("bowl_pool_seasons").select("id").eq("season_year", seasonYear).maybeSingle();
   if (seasonReadError) throw new Error("The Bowl Pool season could not be loaded.");
@@ -187,12 +188,15 @@ async function syncScheduleAndLines(now: Date) {
   const lineByGame = new Map((lockedLines ?? []).map((line) => [line.game_id, line]));
   const alreadyLocked = new Set((lockedLines ?? []).filter((line) => line.locked_at).map((line) => line.game_id));
   const used = new Set<string>(); let scheduleGames = 0; let linesLocked = 0;
+  // Makes a game's preliminary line official. Callers check that its lock time has come; a line that is already locked is left alone, and the history
+  // row is written only when this run really locked it (so a repeat run adds nothing).
   const lockProvisional = async (gameId: string) => {
     const provisional = lineByGame.get(gameId);
-    if (!provisional) return false;
+    if (!provisional || alreadyLocked.has(gameId)) return false;
     const lockedAt = now.toISOString();
-    const { error: fallbackError } = await supabaseAdmin.from("bowl_pool_game_lines").update({ locked_at: lockedAt }).eq("game_id", gameId).is("locked_at", null);
-    if (fallbackError) return false;
+    const { data: locked, error: fallbackError } = await supabaseAdmin.from("bowl_pool_game_lines").update({ locked_at: lockedAt }).eq("game_id", gameId).is("locked_at", null).select("game_id");
+    if (fallbackError || !locked?.length) return false;
+    alreadyLocked.add(gameId);
     const { error: historyError } = await supabaseAdmin.from("bowl_pool_spread_history").insert({ game_id: gameId, favorite_team_id: provisional.favorite_team_id, source_spread: provisional.source_spread, pool_spread: provisional.locked_spread, source: provisional.source, captured_at: provisional.source_captured_at });
     if (historyError) console.error("A Bowl Pool line-history snapshot could not be saved.", { gameId });
     linesLocked += 1;
@@ -201,7 +205,8 @@ async function syncScheduleAndLines(now: Date) {
   for (const game of games) {
     const match = events.filter((event) => !used.has(event.id)).map((event) => ({ event, distance: Math.abs(new Date(event.commence_time).getTime() - new Date(game.kickoff_at).getTime()) })).filter(({ event, distance }) => distance <= 6 * 60 * 60 * 1000 && normalizedTeamName(event.away_team) === normalizedTeamName(joinedTeamName(game.away)) && normalizedTeamName(event.home_team) === normalizedTeamName(joinedTeamName(game.home))).sort((a, b) => a.distance - b.distance)[0];
     if (!match || match.distance > 6 * 60 * 60 * 1000) {
-      await lockProvisional(game.id);
+      // No odds match (always the case while the Odds API is off): the ESPN line saved by the schedule pull becomes official only on game day.
+      if (lineIsDueToLock(game.line_lock_at, now, alreadyLocked.has(game.id))) await lockProvisional(game.id);
       continue;
     }
     used.add(match.event.id);
