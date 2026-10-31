@@ -101,7 +101,15 @@ const CAPACITY = {
   storageTables: [["picks", 4_200_000, 120_000], ["games", 2_100_000, 3_000], ["audit_log", 1_400_000, 41_000]].map(([relation_name, total_bytes, estimated_rows]) => ({ relation_name, total_bytes, table_bytes: Math.round(total_bytes * 0.7), index_bytes: Math.round(total_bytes * 0.3), estimated_rows })),
 };
 const BOWL_READINESS = (state) => ({ checkedAt: NOW, seasonYear: 2026, playerVisibleAt: "2026-11-30T05:00:00Z", firstKickoffAt: "2026-12-19T18:00:00Z", games: 42, missingTeams: state === "attention" ? 2 : 0, missingLines: state === "attention" ? 5 : 0, nextKickoffAt: "2026-12-19T18:00:00Z", openScheduleChanges: state === "attention" ? 1 : 0, cronHealth: "ok", lockedGames: 0, integrity: { healthy: true, problems: [] }, settlement: { healthy: true, problems: [] } });
-const BOWL_EXCEPTIONS = (state) => ({ games: state === "attention" ? [{ id: "b1", bowlName: "Frisco Bowl", kickoffAt: "2026-12-19T18:00:00Z", status: "scheduled", awayTeam: "Memphis", homeTeam: "Toledo" }] : [], scheduleChanges: state === "attention" ? [{ id: "s1", game_id: "b1", old_kickoff_at: "2026-12-19T18:00:00Z", new_kickoff_at: "2026-12-19T21:00:00Z", detected_at: T(5) }] : [] });
+// The real shape of the exceptions answer: games that can still be recorded, the ones already recorded, and schedule changes awaiting review.
+const BOWL_RECORDABLE = [{ id: "b1", bowlName: "Frisco Bowl", kickoffAt: "2026-12-19T18:00:00Z", status: "scheduled", awayTeam: "Memphis", homeTeam: "Toledo" }, { id: "b2", bowlName: "Cure Bowl", kickoffAt: "2026-12-20T18:00:00Z", status: "scheduled", awayTeam: "Troy", homeTeam: "Buffalo" }];
+const BOWL_EXCEPTIONS = (state) => ({
+  recordableGames: BOWL_RECORDABLE,
+  exceptions: state === "attention" ? [{ id: "b3", bowlName: "Gasparilla Bowl", kickoffAt: "2026-12-21T18:00:00Z", status: "postponed", awayTeam: "Georgia Southern", homeTeam: "Marshall" }, { id: "b4", bowlName: "Salute to Veterans", kickoffAt: "2026-12-23T18:00:00Z", status: "cancelled", awayTeam: "Ohio State", homeTeam: "Oregon" }] : [],
+  scheduleChanges: state === "attention" ? [{ id: "s1", game_id: "b1", old_kickoff_at: "2026-12-19T18:00:00Z", new_kickoff_at: "2026-12-19T21:00:00Z", detected_at: T(5) }] : [],
+});
+// Games whose line locks within a day and still have none (the healthy desk has none to show).
+const BOWL_LINES = (state) => ({ games: state === "attention" ? [{ id: "b1", bowlName: "Frisco Bowl", kickoffAt: "2026-12-19T18:00:00Z", lineLockAt: "2026-12-19T13:00:00Z", status: "scheduled", away: { id: "mem", name: "Memphis" }, home: { id: "tol", name: "Toledo" } }, { id: "b5", bowlName: "Quick Lane Bowl", kickoffAt: "2026-12-14T18:00:00Z", lineLockAt: "2026-12-14T13:00:00Z", status: "final", away: { id: "mia", name: "Miami (OH)" }, home: { id: "ohio", name: "Ohio" } }] : [] });
 const BOOTSTRAP = { seasonYear: 2026, seasonState: "active", regularPeriods: 18, loadedGames: 272, complete: true, lastRun: { status: "success", completed_at: T(500), error_message: null, details: { outcome: "loaded" } }, turnover: { status: "completed", completed_at: T(900), blockers: [], preserved_counts: { players: 8, seasons: 3 }, deleted_counts: { picks: 0 } } };
 
 /** Everything the desk calls, keyed by the endpoint's path after /api/. */
@@ -116,6 +124,7 @@ export function commissionerApi(state) {
     "admin/pool-stats": POOL_STATS,
     "admin/bowl-pool-readiness": BOWL_READINESS(state),
     "admin/bowl-pool/exceptions": BOWL_EXCEPTIONS(state),
+    "admin/bowl-pool/lines": BOWL_LINES(state),
     "admin/season-bootstrap-status": BOOTSTRAP,
   };
 }

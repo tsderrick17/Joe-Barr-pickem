@@ -365,6 +365,11 @@ measure database requests or end-to-end route time.
   their keys (`cancelQueuedBowlReminders`), so the reminder sweep queues fresh ones for the new time. Known limit: a game moved onto a day that
   already has games is not added to that day's already-queued lines-are-set email (the page still shows its line).
 
+- The Commissioner's Bowl Pool tab can Reschedule a postponed game (new Eastern date and time, `/api/admin/bowl-pool/exceptions`) and set a missing
+  line (`/api/admin/bowl-pool/lines`, `bowlManualLineProblem`): a game with teams and no line row, whose line locks within 24 hours or that is final,
+  takes a favorite and a half-point spread (or a pick'em at 0). The line is inserted already locked with `manual_override` and source "Commissioner"
+  and a history row; an existing line is never replaced by it.
+
 ## Trophy Room
 
 - The Trophy Room (`/trophy-room`) has been open to every active player since 2026-10-23 (`TROPHY_ROOM_PLAYER_OPENS_AT` in

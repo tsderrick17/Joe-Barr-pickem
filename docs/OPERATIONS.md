@@ -474,7 +474,11 @@ exceptions control so its picks are voided or retained according to the
 documented rules rather than graded as a loss. A postponed game is put back on
 the calendar with the same control (Reschedule, with the new kickoff): its picks
 stay, players can change them until the new kickoff, and its reminders are
-rebuilt for the new time. The reminders' schedule for the whole season
+rebuilt for the new time. The Commissioner does this on the Bowl Pool tab: a postponed
+game lists a date and a time (Eastern) with a Reschedule button. A game ESPN and the odds
+feed gave no line shows under "Bowl Pool lines" from the evening before its line locks (or
+once it is final); pick the favorite, type the spread with a half point (3.5, never 3), and
+Set line. That line is official at once and is never replaced by a feed. The reminders' schedule for the whole season
 (December 1 to January 27) is rehearsed by `test/bowl-season-calendar.test.mjs`,
 and the database side (games kicking off one at a time, postponement,
 cancellation, reschedule, reminder keys) by
