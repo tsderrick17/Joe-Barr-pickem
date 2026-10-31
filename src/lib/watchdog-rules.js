@@ -1,8 +1,10 @@
 import { dateFormat } from "./date-format.js";
+import { FINAL_OVERDUE_HOURS } from "./final-overdue.js";
 
 const BOWL_ISSUE_TITLES = {
   teams: "A Bowl Pool game is still missing a team",
   line: "A started Bowl Pool game has no official line",
+  final: "A Bowl Pool game is overdue for a final score",
   settlement: "Bowl Pool results do not reconcile",
   structure: "Bowl Pool schedule data is inconsistent",
 };
@@ -46,6 +48,14 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       key: "stalled-final-scores", severity: "critical",
       title: "Final-score automation is stalled",
       detail: `${affectedGames} game${affectedGames === 1 ? " needs" : "s need"} a score check and the worker has not completed successfully. Automatic retries are conserving provider credits between attempts.`,
+    });
+  }
+  const overdueFinals = health.overdueFinals ?? [];
+  if (overdueFinals.length > 0) {
+    signals.push({
+      key: "final-overdue-nfl", severity: "critical",
+      title: "An NFL game is overdue for a final score",
+      detail: `${overdueFinals.map((game) => game.label).join(", ")} ${overdueFinals.length === 1 ? "has" : "have"} no final score ${FINAL_OVERDUE_HOURS}+ hours after kickoff, and automatic checking has stopped for ${overdueFinals.length === 1 ? "it" : "them"}. Open Commissioner Desk → Grading.`,
     });
   }
   if (health.reminderHealth.overdueScheduled > 0 || health.reminderHealth.staleSending > 0) {

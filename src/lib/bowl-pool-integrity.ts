@@ -11,7 +11,7 @@ export type BowlIntegrityGame = {
   is_cfp?: boolean | null;
 };
 
-export type BowlIntegrityIssue = { kind: "structure" | "teams" | "line"; message: string };
+export type BowlIntegrityIssue = { kind: "structure" | "teams" | "line" | "final"; message: string };
 
 export type BowlIntegrityLine = { game_id: string };
 

@@ -8,6 +8,7 @@ import { favoriteFromEspn, lineIsDueToLock, lockedSpreadFromOdds, lockStampFor, 
 import { chronologicalOrder, espnHeadline, espnTeamIsTbd, espnTimeIsConfirmed, headlineIsCfp, headlineIsChampionship, newBowlName, noonEastern, orderIsChronological, planBowlSchedule } from "@/lib/bowl-pool-espn-schedule.js";
 import { easternDateKey } from "@/lib/eastern-time.js";
 import { cancelQueuedBowlReminders } from "@/lib/bowl-reminders";
+import { ProviderUnavailable } from "@/lib/provider-unavailable";
 import { easternDateTimeToUtc } from "@/lib/schedule-time.js";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
@@ -53,6 +54,18 @@ async function teamIdFor(name: string, providerId: string, abbreviation?: string
   return error || !data ? null : data.id;
 }
 
+/**
+ * ESPN's postseason scoreboard for a season. When ESPN cannot be read, or answers with something unreadable, this throws ProviderUnavailable
+ * (rather than returning no games) so the run is recorded as failed with the reason instead of as a success that did nothing.
+ */
+async function espnPostseasonEvents(seasonYear: number, purpose: string) {
+  const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(seasonYear) })}`, { signal: providerSignal(12_000), cache: "no-store" }).catch(() => null);
+  if (!response?.ok) throw new ProviderUnavailable("ESPN", `ESPN's ${purpose} could not be read.`);
+  const payload = await response.json().catch(() => null) as { events?: EspnEvent[] } | null;
+  if (!payload || !Array.isArray(payload.events)) throw new ProviderUnavailable("ESPN", `ESPN's ${purpose} came back unreadable.`);
+  return payload.events;
+}
+
 type OwnGameRow = { id: string; provider_game_id: string | null; bowl_name: string; kickoff_at: string; order_index: number; time_confirmed: boolean | null; line_lock_at: string | null; is_cfp: boolean | null; away_team_id: string | null; home_team_id: string | null; venue_name: string | null; venue_city: string | null; venue_state: string | null };
 const sameTime = (a: unknown, b: unknown) => typeof a === "string" && typeof b === "string" && Date.parse(a) === Date.parse(b);
 
@@ -67,10 +80,7 @@ export async function syncAnnualSchedule(now: Date) {
   const year = seasonYearAt(now);
   const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: `${year}-12-07T08:00:00.000Z` }, { onConflict: "season_year" }).select("id").single();
   if (seasonError || !season) return 0;
-  const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(year) })}`, { signal: providerSignal(12_000), cache: "no-store" }).catch(() => null);
-  if (!response?.ok) return 0;
-  const payload = await response.json().catch(() => null) as { events?: EspnEvent[] } | null;
-  const events = (payload?.events ?? []).filter((event) => event.season?.type === 3 && event.competitions?.[0]?.competitors?.length === 2);
+  const events = (await espnPostseasonEvents(year, "postseason schedule")).filter((event) => event.season?.type === 3 && event.competitions?.[0]?.competitors?.length === 2);
   const { data: existing, error: existingGamesError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, order_index, time_confirmed, line_lock_at, is_cfp, away_team_id, home_team_id, venue_name, venue_city, venue_state").eq("season_id", season.id).order("order_index");
   if (existingGamesError) throw new Error("Bowl Pool games could not be loaded.");
   const games = (existing ?? []) as OwnGameRow[];
@@ -248,10 +258,7 @@ async function syncScores(now: Date) {
   // ESPN is the no-cost source of truth for bowl results. The Odds API score
   // feed remains an optional fallback when explicitly enabled, but score
   // settlement must not depend on a paid NCAAF entitlement.
-  const seasonYear = seasonYearAt(now);
-  const espnResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?${new URLSearchParams({ limit: "500", seasontype: "3", dates: String(seasonYear) })}`, { signal: providerSignal(12_000), cache: "no-store" }).catch(() => null);
-  const espnPayload = espnResponse?.ok ? await espnResponse.json().catch(() => null) as { events?: EspnEvent[] } | null : null;
-  const espnEvents = espnPayload?.events ?? [];
+  const espnEvents = await espnPostseasonEvents(seasonYearAt(now), "scores");
   const oddsEvents = process.env.BOWL_POOL_ODDS_API_ENABLED === "true"
     ? await providerEvents("sports/americanfootball_ncaaf/scores", { daysFrom: "30" })
     : [];
@@ -295,12 +302,22 @@ export async function syncBowlPool(now = new Date()) {
   const evaluatedAt = now.toISOString();
   // A checkpoint before each stage lets a run past its deadline stop instead of starting more work; every stage
   // is idempotent, so the next run simply repeats what was left.
+  // ESPN being down must not stop what needs no ESPN (games going live, missing-pick losses, grading, line locks). Each ESPN stage notes the failure,
+  // the rest of the run carries on, and the run is then recorded as failed with the reason.
+  const espnProblems: ProviderUnavailable[] = [];
+  const whenEspnAnswers = async <T,>(fallback: T, stage: () => Promise<T>) => {
+    try { return await stage(); } catch (error) {
+      if (!(error instanceof ProviderUnavailable)) throw error;
+      espnProblems.push(error);
+      return fallback;
+    }
+  };
   checkpoint("annual schedule");
-  const scheduleImported = await syncAnnualSchedule(now);
+  const scheduleImported = await whenEspnAnswers(0, () => syncAnnualSchedule(now));
   checkpoint("schedule and lines");
   const provider = await syncScheduleAndLines(now);
   checkpoint("scores");
-  const finalizedGames = await syncScores(now);
+  const finalizedGames = await whenEspnAnswers(0, () => syncScores(now));
   checkpoint("kickoff transitions");
   const { data: scheduled, error: scheduleError } = await supabaseAdmin.from("bowl_pool_games").select("id").eq("status", "scheduled").lte("kickoff_at", evaluatedAt);
   if (scheduleError) throw new Error("Bowl Pool kickoff transitions could not be loaded.");
@@ -329,5 +346,6 @@ export async function syncBowlPool(now = new Date()) {
     if (championError) throw new Error("The Bowl Pool champion could not be refreshed.");
   }
   await refreshSeasonStatus(now);
+  if (espnProblems.length) throw new ProviderUnavailable("ESPN", [...new Set(espnProblems.map((problem) => problem.message))].join(" "));
   return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded, finalizedGames, ...provider };
 }

@@ -1,6 +1,8 @@
 import { checkReminderHealth } from "@/lib/reminder-health";
 import { checkCriticalWorkerHealth } from "@/lib/critical-worker-health";
-import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window";
+import { FINAL_SCORE_POLLING_LIMIT_HOURS, FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window";
+import { FINAL_OVERDUE_HOURS, finalIsOverdue } from "@/lib/final-overdue.js";
+import { dateFormat } from "@/lib/date-format.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { latestProviderCreditSnapshot } from "@/lib/provider-chart-data.js";
 
@@ -21,7 +23,9 @@ export async function checkAutomationHealth(now = new Date()) {
   const checkedAt = now.toISOString();
   const scoreDueAt = new Date(now.getTime() - (FIRST_SCORE_CHECK_DELAY_MINUTES + 20) * 60 * 1000).toISOString();
   const lineHealthDueAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-  const [runsResult, lineCandidatesResult, scoreGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult, criticalWorkerHealth] = await Promise.all([
+  const scorePollingStartsAt = new Date(now.getTime() - FINAL_SCORE_POLLING_LIMIT_HOURS * 60 * 60 * 1000).toISOString();
+  const overdueBefore = new Date(now.getTime() - FINAL_OVERDUE_HOURS * 60 * 60 * 1000).toISOString();
+  const [runsResult, lineCandidatesResult, scoreGamesResult, overdueGamesResult, reminderHealth, scheduleReviewsResult, scheduleCircuitResult, pinAttackIncidentsResult, criticalWorkerHealth] = await Promise.all([
     supabaseAdmin
       .from("sync_runs")
       .select("job_type, status, started_at, completed_at, error_message, details")
@@ -37,7 +41,13 @@ export async function checkAutomationHealth(now = new Date()) {
       .from("games")
       .select("id")
       .in("status", ["scheduled", "live"])
-      .lte("kickoff_at", scoreDueAt),
+      .lte("kickoff_at", scoreDueAt)
+      .gte("kickoff_at", scorePollingStartsAt),
+    supabaseAdmin
+      .from("games")
+      .select("id, kickoff_at, status, away_team_id, home_team_id")
+      .in("status", ["scheduled", "live"])
+      .lte("kickoff_at", overdueBefore),
     checkReminderHealth(now),
     supabaseAdmin.from("schedule_change_reviews").select("id", { count: "exact", head: true }).is("resolved_at", null),
     supabaseAdmin.from("provider_failure_circuits")
@@ -50,7 +60,7 @@ export async function checkAutomationHealth(now = new Date()) {
   ]);
 
   if (
-    runsResult.error || lineCandidatesResult.error || scoreGamesResult.error ||
+    runsResult.error || lineCandidatesResult.error || scoreGamesResult.error || overdueGamesResult.error ||
     scheduleReviewsResult.error || scheduleCircuitResult.error || pinAttackIncidentsResult.error
   ) {
     throw new Error("Automation health could not be prepared.");
@@ -143,6 +153,23 @@ export async function checkAutomationHealth(now = new Date()) {
     problems.push(`${pendingScheduleReviews} provider schedule change${pendingScheduleReviews === 1 ? " needs" : "s need"} commissioner review.`);
   }
 
+  // A game still unfinished long after kickoff: polling stopped at the limit, so this is the Commissioner's cue to enter the final by hand.
+  const overdueGames = (overdueGamesResult.data ?? []).filter((game) => finalIsOverdue(game, now));
+  const overdueTeamIds = [...new Set(overdueGames.flatMap((game) => [game.away_team_id, game.home_team_id]))];
+  const teamNames = new Map<string, string>();
+  if (overdueTeamIds.length) {
+    const { data: overdueTeams } = await supabaseAdmin.from("teams").select("id, abbreviation").in("id", overdueTeamIds);
+    for (const team of overdueTeams ?? []) teamNames.set(team.id, team.abbreviation);
+  }
+  const overdueFinals = overdueGames.map((game) => ({
+    id: game.id,
+    kickoffAt: game.kickoff_at,
+    label: `${teamNames.get(game.away_team_id) ?? "Away"} at ${teamNames.get(game.home_team_id) ?? "Home"} (${dateFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" }).format(new Date(game.kickoff_at))})`,
+  }));
+  if (overdueFinals.length) {
+    problems.push(`${overdueFinals.length} game${overdueFinals.length === 1 ? " has" : "s have"} no final score yet, more than ${FINAL_OVERDUE_HOURS} hours after kickoff.`);
+  }
+
   const retention = {
     cutoff: retentionCutoff,
     syncRuns: oldSyncRunsResult.count ?? 0,
@@ -167,6 +194,7 @@ export async function checkAutomationHealth(now = new Date()) {
     missingOfficialLines,
     scoreCandidates,
     scoreChecksDueNow,
+    overdueFinals,
     scoreProviderFailureStreak,
     scoreProviderRetryAt: scoreProviderFailureStreak > 0 ? scoreRetryTimes[0] ?? null : null,
     scoreCheckStatus,
