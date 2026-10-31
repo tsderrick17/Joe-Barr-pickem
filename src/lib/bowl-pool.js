@@ -86,3 +86,12 @@ export function bowlTeamName(team) {
   return bowlTeamDisplayLabel(team);
 }
 
+
+/**
+ * The word for a game the Commissioner has recorded as postponed, cancelled or no contest, or undefined for any other game: it stands where the
+ * venue (picks page) or the line (Bowl Card) would be, so a locked or never-graded game is never a mystery.
+ * @param {string | null | undefined} status
+ */
+export function bowlDisruptionLabel(status) {
+  return /** @type {Record<string, string>} */ ({ postponed: "Postponed", cancelled: "Cancelled", no_contest: "No contest" })[status ?? ""];
+}

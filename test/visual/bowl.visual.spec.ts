@@ -18,6 +18,10 @@ const SCENARIOS: Record<string, Scenario> = {
   "complete-saved": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: ALL_PICKS, guess: 49 }) },
   // A team is chosen but not yet submitted: the receipt shows unsaved changes.
   "unsaved-change": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1" } }), click: "bowl-0" },
+  // Games that did not go as scheduled, with the player's picks kept on them: the Cure Bowl postponed and the Gasparilla Bowl cancelled (the word
+  // stands where the venue goes and the buttons are locked), and the Rose Bowl with no announced time and a line that is still preliminary (black,
+  // not the teal of an official line).
+  "disrupted": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1", "bowl-2": "h2", "bowl-4": "a4" }, gameOverrides: { 1: { status: "postponed" }, 2: { status: "cancelled" }, 3: { time_confirmed: false, line: { favorite_team_id: "h3", locked_spread: "-3", locked_at: null } } } }) },
   // Not a participant and the first kickoff has passed: entry is closed.
   "entry-closed": { build: () => bowlResponse({ optedIn: false, entryOpen: false }), now: "2026-12-20T20:00:00Z" },
 };

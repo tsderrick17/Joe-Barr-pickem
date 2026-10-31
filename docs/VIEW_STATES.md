@@ -51,6 +51,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Bowl Card with a champion crowned | `bowl-champion` |
 | Viewer not joined, entry open ("Claim your seat") | `bowl-claim-open` |
 | Not joined, entry closed | `bowl-closed-not-joined` |
+| Bowl Card the morning the pool opens: the viewer alone in it with a zero score tile and no picks yet | `bowl-just-joined` |
+| Bowl Card with a postponed and a cancelled game: the word stands where the line would be (black, not teal), the cancelled game counts as played, and the viewer's kept pick still shows | `bowl-disrupted` |
 | Bowl Card minimized | `bowl-minimized` |
 | Display choices (hide the Survivor Table): shown at once, not undone by a refresh that lands while the save is out, a second tap ignored while saving, a failed save puts the old choice back (behavior tests, `display-preference.visual.spec.ts`) | `regular-in` |
 | The page waits behind the loading shell for the Bowl Card's first load, shown anyway after 2.5 seconds, and at once when the card answers (behavior tests, `display-preference.visual.spec.ts`, frozen clock) | `regular-in` |
@@ -78,6 +80,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Two games kicked off (locked buttons) | `games-started` |
 | Everything picked, tiebreaker saved | `complete-saved` |
 | A team chosen, not yet submitted | `unsaved-change` |
+| A postponed and a cancelled game with the picks kept (the word replaces the venue and the buttons are locked), a game with no announced time ("Time TBD") and a preliminary line (black, not teal) | `disrupted` |
 | Not a participant, first kickoff passed | `entry-closed` |
 
 ## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`; the Trophy Room at `/trophy-room` is shot here too) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
