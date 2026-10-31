@@ -467,4 +467,11 @@ player visibility onward, even before first kickoff, the endpoint checks
 schedule, locks, results, receipts, and settlement reconciliation. A cancelled,
 postponed, or no-contest game is recorded through the Commissioner Bowl
 exceptions control so its picks are voided or retained according to the
-documented rules rather than graded as a loss.
+documented rules rather than graded as a loss. A postponed game is put back on
+the calendar with the same control (Reschedule, with the new kickoff): its picks
+stay, players can change them until the new kickoff, and its reminders are
+rebuilt for the new time. The reminders' schedule for the whole season
+(December 1 to January 27) is rehearsed by `test/bowl-season-calendar.test.mjs`,
+and the database side (games kicking off one at a time, postponement,
+cancellation, reschedule, reminder keys) by
+`test/integration/bowl-pool-season-rehearsal.test.mjs` in the isolated workflow.

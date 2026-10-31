@@ -10,6 +10,8 @@ const FIRST_KICKOFF = "2026-12-20T17:00:00Z";
 const GAMES = [
   { id: "past", kickoff_at: FIRST_KICKOFF, status: "scheduled", away_team_id: "a0", home_team_id: "h0" },
   { id: "later", kickoff_at: "2026-12-28T17:00:00Z", status: "scheduled", away_team_id: "a1", home_team_id: "h1" },
+  { id: "postponed", kickoff_at: "2026-12-29T17:00:00Z", status: "postponed", away_team_id: "a2", home_team_id: "h2" },
+  { id: "cancelled", kickoff_at: "2026-12-30T17:00:00Z", status: "cancelled", away_team_id: "a3", home_team_id: "h3" },
 ];
 let entry = null;
 let player = { id: "p1", is_commissioner: false };
@@ -85,4 +87,15 @@ test("a selection must be one of the teams in that game", async () => {
   const wrong = await submit("2026-12-12T15:00:00Z", choose("later", "a0"));
   assert.equal(wrong.status, 400);
   assert.equal(saved().length, 0);
+});
+
+test("a pick sent for a postponed or cancelled game is left out, not a reason to refuse the rest of the Submit", async () => {
+  entry = { id: "entry-1", status: "active" };
+  const response = await submit("2026-12-21T12:00:00Z", {
+    optedIn: true, championshipTotalGuess: 48,
+    selections: [{ gameId: "later", teamId: "h1", side: "favorite" }, { gameId: "postponed", teamId: "a2", side: "favorite" }, { gameId: "cancelled", teamId: "h3", side: "underdog" }],
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(saved()[0].args.target_selections, [{ game_id: "later", team_id: "h1" }], "only the open game is saved");
+  assert.equal(response.body.saved, 1, "and the answer counts what was saved");
 });
