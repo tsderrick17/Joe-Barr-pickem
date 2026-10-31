@@ -6,7 +6,7 @@
  * @param {string} category
  */
 export function reminderDestinationPath(category) {
-  if (category === "bowl_line_lock" || category === "bowl_daily_recap" || category === "bowl_pick_due") return "/bowl-pool";
+  if (category === "bowl_line_lock" || category === "bowl_daily_recap" || category === "bowl_pick_due" || category === "bowl_pool_open") return "/bowl-pool";
   const recapOrReveal = ["weekly_recap", "playoff_day_recap", "bowl_daily_recap", "playoff_public_reveal", "sunday_early_reveal", "sunday_late_reveal", "featured_window_reveal"];
   return recapOrReveal.includes(category) ? "/" : "/board";
 }

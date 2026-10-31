@@ -248,6 +248,18 @@ async function bowlLineLockReady(sourceGameIds: string[]): Promise<ReminderReadi
     : { ready: false, reason: "Today’s Bowl lines are still being finalized." };
 }
 
+// The opening announcement points players to a seat they can still claim; once the first game has started that is no longer so.
+async function bowlPoolOpenReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
+  if (sourceGameIds.length !== 1) return { ready: false, terminal: true, reason: "This Bowl Pool opening message has no first game." };
+  const { data: game, error: gameError } = await supabaseAdmin.from("bowl_pool_games").select("season_id").eq("id", sourceGameIds[0]).maybeSingle();
+  if (gameError) throw new Error("The Bowl Pool opening message could not be checked.");
+  if (!game) return { ready: false, terminal: true, reason: "The first Bowl game no longer exists." };
+  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").select("first_kickoff_at").eq("id", game.season_id).maybeSingle();
+  if (seasonError || !season) throw new Error("The Bowl Pool opening message could not be checked.");
+  if (season.first_kickoff_at && new Date(season.first_kickoff_at) <= new Date()) return { ready: false, terminal: true, reason: "The first Bowl game has started; seats can no longer be claimed." };
+  return { ready: true, reason: null };
+}
+
 async function bowlPickDueReady(sourceGameIds: string[]): Promise<ReminderReadiness> {
   if (sourceGameIds.length !== 1) return { ready: false, terminal: true, reason: "This Bowl pick reminder has no single game." };
   const { data, error } = await supabaseAdmin.from("bowl_pool_games").select("kickoff_at, status").eq("id", sourceGameIds[0]).maybeSingle();
@@ -269,5 +281,6 @@ export async function reminderReadiness(category: ReminderCategory, sourceGameId
   if (category === "sunday_late_reveal") return sundayRevealReady("late", sourceGameIds);
   if (category === "bowl_daily_recap") return bowlDailyRecapReady(sourceGameIds);
   if (category === "bowl_pick_due") return bowlPickDueReady(sourceGameIds);
+  if (category === "bowl_pool_open") return bowlPoolOpenReady(sourceGameIds);
   return { ready: true, reason: null };
 }

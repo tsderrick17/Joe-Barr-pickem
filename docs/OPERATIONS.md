@@ -457,6 +457,10 @@ responsive image. Each reminder and recap is keyed and recorded with an
 immutable source snapshot, so retries cannot duplicate a delivery or mutate a
 previously sent result.
 
+The Bowl Pool's opening announcement (one email and one phone notification to everyone with pool emails on, 9:00 AM Eastern on December 7) is queued by the
+same sweep once that time comes. On December 7 check that the reminder `bowl:<season>:open` exists in the Commissioner's reminders, that it went out (it is
+sent once; it cannot be queued twice), and that its first game is the one on the schedule. If the first game starts before it goes out, it is dropped on purpose.
+
 The ESPN schedule pull logs `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
 not be updated` (the database refused a matchup or kickoff that picks or a locked line hold; the Commissioner's schedule-change review lists
 what ESPN changed). The FCS playoff and the Celebration Bowl never enter the pool.
