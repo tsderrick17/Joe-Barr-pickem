@@ -487,6 +487,15 @@ Pool raises `-final-` and the NFL raises `final-overdue-nfl` (NFL score checks s
 72 hours after kickoff, so the alert is the cue). If ESPN cannot be read the Bowl
 worker still starts games, settles and grades, then ends the run as failed with the
 reason; the readiness panel's cron health reads that `bowl_scores` run.
+Only ESPN's `STATUS_FINAL` is a result (a cancelled game's 0-0 is never graded). A game
+ESPN lists as `STATUS_CANCELED` is cancelled automatically on the second Bowl worker run
+in a row that sees it so (`espn_cancelled_seen_at` holds the first sighting and is cleared
+when ESPN stops saying it); it is the Commissioner's Cancelled button (picks voided, history,
+audit) plus an open schedule-change note ("... was cancelled automatically because ESPN lists
+it as cancelled"), which shows in the exceptions panel and the readiness "Schedule changes"
+count until marked reviewed. `STATUS_POSTPONED` is never automatic: the overdue-final alert
+names the game and the Commissioner records the postponement. Players see "Final score
+pending" on the game once it is overdue.
 A team-less game is a problem at once for an ordinary bowl, but a College Football
 Playoff game after the first round only within 36 hours of kickoff (it waits for
 the earlier rounds), so launch day with the later playoff rounds still open is

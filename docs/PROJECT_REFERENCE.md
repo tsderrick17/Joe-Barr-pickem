@@ -374,6 +374,11 @@ measure database requests or end-to-end route time.
   else. Rescheduling, like a moved kickoff in the schedule pull, cancels the game's queued reminders (lines-are-set, pick-due, recap) and gives up
   their keys (`cancelQueuedBowlReminders`), so the reminder sweep queues fresh ones for the new time. Known limit: a game moved onto a day that
   already has games is not added to that day's already-queued lines-are-set email (the page still shows its line).
+- Only ESPN's `STATUS_FINAL` settles a Bowl game; a score on a cancelled, postponed or unfinished game is never graded. ESPN's `STATUS_CANCELED`
+  cancels a game automatically on the second worker run in a row that sees it (`bowl_pool_games.espn_cancelled_seen_at` keeps the first sighting; any run
+  where ESPN stops saying it clears it), through `record_bowl_game_cancelled_by_espn`: the same cancellation as the Commissioner's button (picks voided,
+  history, results, audit with no actor) plus an open `bowl_pool_schedule_changes` row whose `reason` says so. `STATUS_POSTPONED` stays with the
+  Commissioner. A game scheduled or live six hours after kickoff reads "Final score pending" for players (`bowlGameNote`) and raises the overdue-final alert.
 
 - The Commissioner's Bowl Pool tab can Reschedule a postponed game (new Eastern date and time, `/api/admin/bowl-pool/exceptions`) and set a missing
   line (`/api/admin/bowl-pool/lines`, `bowlManualLineProblem`): a game with teams and no line row, whose line locks within 24 hours or that is final,

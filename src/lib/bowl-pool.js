@@ -1,4 +1,5 @@
 import { easternDateTimeToUtc } from "./schedule-time.js";
+import { finalIsOverdue } from "./final-overdue.js";
 
 /**
  * Return the canonical compact college label for Bowl cards.  The schedule
@@ -94,4 +95,14 @@ export function bowlTeamName(team) {
  */
 export function bowlDisruptionLabel(status) {
   return /** @type {Record<string, string>} */ ({ postponed: "Postponed", cancelled: "Cancelled", no_contest: "No contest" })[status ?? ""];
+}
+
+/**
+ * The word that stands in for the venue (picks page) or the line (Bowl Card) when a game needs one: the disruption label, or "Final score pending" for a
+ * game that kicked off hours ago and has no final yet (the same rule as the Commissioner's overdue-final alert), so a game that is taking long is never a mystery.
+ * @param {{ status?: string | null, kickoff_at?: string | null }} game
+ * @param {Date} [now]
+ */
+export function bowlGameNote(game, now = new Date()) {
+  return bowlDisruptionLabel(game.status) ?? (finalIsOverdue(game, now) ? "Final score pending" : undefined);
 }
