@@ -24,6 +24,7 @@ export function emailPreferenceColumn(category, automationKey = null) {
     featured_window_reveal: "email_featured_window_reveal_enabled",
     bowl_line_lock: "email_notifications_enabled",
     bowl_pool_open: "email_notifications_enabled",
+    bowl_pool_last_call: "email_notifications_enabled",
     bowl_daily_recap: "email_notifications_enabled",
     bowl_pick_due: "email_notifications_enabled",
     ats_due: "email_ats_due_enabled",

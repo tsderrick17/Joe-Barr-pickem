@@ -461,6 +461,11 @@ The Bowl Pool's opening announcement (one email and one phone notification to ev
 same sweep once that time comes. On December 7 check that the reminder `bowl:<season>:open` exists in the Commissioner's reminders, that it went out (it is
 sent once; it cannot be queued twice), and that its first game is the one on the schedule. If the first game starts before it goes out, it is dropped on purpose.
 
+A last call (one email and one phone notification, "Last call for the Bowl Pool") goes 24 hours before the first Bowl kickoff to the players who have not joined the
+Bowl Pool. It is queued by the same sweep when it comes due (reminder `bowl:<season>:last-call`, from the earliest scheduled game, and only if that game's time is
+confirmed), and who has not joined is decided when it is sent: active, pool emails on, and no Bowl entry of any kind this season (a player who joined and then
+opted out is not asked again). If the first game's time moves, its queued last call is cancelled and the sweep queues a fresh one for the new time.
+
 The ESPN schedule pull logs `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
 not be updated` (the database refused a matchup or kickoff that picks or a locked line hold; the Commissioner's schedule-change review lists
 what ESPN changed). The FCS playoff and the Celebration Bowl never enter the pool.

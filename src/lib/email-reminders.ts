@@ -5,7 +5,7 @@ import {
   type ReminderCategory,
 } from "@/lib/reminder-audience";
 import { emailPreferenceColumn } from "@/lib/email-plan-preferences.js";
-import { BOWL_OPENING_EMAIL_SUBJECT } from "@/lib/bowl-opening-announcement.js";
+import { BOWL_LAST_CALL_EMAIL_SUBJECT, BOWL_OPENING_EMAIL_SUBJECT } from "@/lib/bowl-opening-announcement.js";
 import { sendPushToPlayers } from "@/lib/player-push";
 import { picksStillToMakeFor } from "@/lib/picks-to-make";
 import { reminderDestinationPath, reminderPushMessage } from "@/lib/reminder-push.js";
@@ -103,17 +103,21 @@ function recapImage({ alt, href, kind, reminderId, style, width = 560, density =
   return `<a href="${href}" style="display:block;color:#007e72;text-decoration:none"><img alt="${escapeHtml(alt)}" src="${source}" width="${width}" style="${style}"></a>`;
 }
 
-/** The opening announcement's saved words: its introduction and the steps under "How it works". Anything else is not an opening message. */
+/** The invitation messages' saved words (the opening announcement and the last call): the introduction and the steps under "How it works". Anything else is not one. */
 function bowlOpeningWords(snapshot: unknown): { intro: string; steps: string[] } | null {
-  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || snapshot.kind !== "bowl_pool_open") return null;
+  if (!snapshot || typeof snapshot !== "object" || !("kind" in snapshot) || (snapshot.kind !== "bowl_pool_open" && snapshot.kind !== "bowl_pool_last_call")) return null;
   const { intro, steps } = snapshot as { intro?: unknown; steps?: unknown };
   return typeof intro === "string" && Array.isArray(steps) && steps.every((step) => typeof step === "string") ? { intro, steps: steps as string[] } : null;
 }
 
+/** The email subject of an invitation message: the opening announcement's, or the last call's. */
+const bowlInvitationSubject = (reminder: Reminder) => reminder.category === "bowl_pool_last_call" ? BOWL_LAST_CALL_EMAIL_SUBJECT : BOWL_OPENING_EMAIL_SUBJECT;
+const isBowlInvitation = (reminder: Reminder) => reminder.category === "bowl_pool_open" || reminder.category === "bowl_pool_last_call";
+
 function bowlOpeningText(reminder: Reminder) {
   const words = bowlOpeningWords(reminder.recap_snapshot);
   const steps = words ? `How it works:\n${words.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}` : "";
-  return [BOWL_OPENING_EMAIL_SUBJECT, words?.intro ?? reminder.body, steps, `Claim your seat: ${siteUrl}/bowl-pool`, `Change your choices in Notifications: ${siteUrl}/profile`].filter(Boolean).join("\n\n");
+  return [bowlInvitationSubject(reminder), words?.intro ?? reminder.body, steps, `Claim your seat: ${siteUrl}/bowl-pool`, `Change your choices in Notifications: ${siteUrl}/profile`].filter(Boolean).join("\n\n");
 }
 
 export function messageHtml(reminder: Reminder) {
@@ -138,7 +142,7 @@ export function messageHtml(reminder: Reminder) {
   const isPublicReceipt = reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" || reminder.category === "featured_window_reveal";
   const path = reminderDestinationPath(reminder.category);
   const destination = path === "/" ? siteUrl : `${siteUrl}${path}`;
-  const callToAction = reminder.category === "bowl_pool_open" ? "Claim your seat" : reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
+  const callToAction = isBowlInvitation(reminder) ? "Claim your seat" : reminder.category === "bowl_line_lock" ? "Open Bowl Pool" : reminder.category === "bowl_daily_recap" ? "Open Bowl standings" : reminder.category === "bowl_pick_due" ? "Make Bowl pick" : isRecap ? "Open Pick'em Pad" : isPublicReceipt ? "View public receipts" : "Open The Slate";
   const eliminationCopy = playoffEliminationCopy(reminder.recap_snapshot);
   const eliminationBlock = eliminationCopy ? `<p style="background:#fef2f2;border-left:4px solid #b91c1c;color:#7f1d1d;font:700 14px/1.5 Arial,sans-serif;margin:20px 0 0;padding:12px 14px">${escapeHtml(eliminationCopy)}</p>` : "";
   const championCopy = playoffChampionCopy(reminder.recap_snapshot);
@@ -213,6 +217,26 @@ async function prepareEmailArtworkUrls(reminder: Reminder): Promise<Record<strin
   return Object.keys(imageUrls).length ? imageUrls : undefined;
 }
 
+/**
+ * The last call goes to the players who have not joined the Bowl Pool: active, with pool emails on and an address, and no Bowl entry of any kind
+ * this season. A player who joined and then opted out chose to leave, so they are not asked again. The check is made when the email is sent, so
+ * someone who joins after the call is queued is left out.
+ */
+export async function bowlLastCallRecipients(reminder: Reminder) {
+  const sourceGameId = reminder.source_game_ids?.[0];
+  if (!sourceGameId) return [] as EmailRecipient[];
+  const { data: sourceGame, error: gameError } = await supabaseAdmin.from("bowl_pool_games").select("season_id").eq("id", sourceGameId).maybeSingle();
+  if (gameError) throw new Error("The Bowl Pool last call's season could not be read.");
+  if (!sourceGame) return [] as EmailRecipient[];
+  const [{ data: players, error: playersError }, { data: entries, error: entriesError }] = await Promise.all([
+    supabaseAdmin.from("players").select("id, notification_email").eq("active", true).eq("email_notifications_enabled", true).not("notification_email", "is", null),
+    supabaseAdmin.from("bowl_pool_entries").select("player_id").eq("season_id", sourceGame.season_id),
+  ]);
+  if (playersError || entriesError) throw new Error("Bowl Pool last call recipients could not be read.");
+  const joined = new Set((entries ?? []).map((entry) => entry.player_id));
+  return (players ?? []).flatMap((player) => !joined.has(player.id) && player.notification_email ? [{ playerId: player.id, email: player.notification_email }] : []);
+}
+
 async function recipientsForReminder(reminder: Reminder) {
   if (reminder.category === "bowl_line_lock" || reminder.category === "bowl_daily_recap" || reminder.category === "bowl_pick_due") {
     let seasonId: string | null = null;
@@ -235,6 +259,7 @@ async function recipientsForReminder(reminder: Reminder) {
     return selected.flatMap((entry) => entry.players?.email_notifications_enabled && entry.players.notification_email
       ? [{ playerId: entry.player_id, email: entry.players.notification_email as string }] : []);
   }
+  if (reminder.category === "bowl_pool_last_call") return bowlLastCallRecipients(reminder);
   const playerIds = await eligiblePlayerIds(reminder.audience);
   if (playerIds.length === 0) return [] as EmailRecipient[];
   if (reminder.category === "playoff_day_recap") {
@@ -372,9 +397,9 @@ async function recordAndSend(reminder: Reminder, recipient: EmailRecipient) {
       body: JSON.stringify({
         sender: { name: "PickemJB", email: sender },
         to: [{ email: recipient.email }],
-        subject: reminder.category === "bowl_pool_open" ? BOWL_OPENING_EMAIL_SUBJECT : reminder.title,
+        subject: isBowlInvitation(reminder) ? bowlInvitationSubject(reminder) : reminder.title,
         htmlContent: messageHtml(reminder),
-        textContent: reminder.category === "bowl_pool_open" ? bowlOpeningText(reminder) : `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
+        textContent: isBowlInvitation(reminder) ? bowlOpeningText(reminder) : `${reminder.title}\n\n${reminder.body}${playoffChampionCopy(reminder.recap_snapshot) ? `\n\n${playoffChampionCopy(reminder.recap_snapshot)}` : ""}${playoffEliminationCopy(reminder.recap_snapshot) ? `\n\n${playoffEliminationCopy(reminder.recap_snapshot)}` : ""}\n\nOpen Pick'em: ${reminder.category === "weekly_recap" || reminder.category === "playoff_day_recap" || reminder.category === "playoff_public_reveal" || reminder.category === "sunday_early_reveal" || reminder.category === "sunday_late_reveal" ? siteUrl : `${siteUrl}/board`}\n\nOnly winners count; pushes and ties are losers.\n\nChange your choices in Notifications: ${siteUrl}/profile`,
         tags: ["pickem-reminder", reminder.category],
       }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),

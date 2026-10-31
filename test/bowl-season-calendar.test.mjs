@@ -26,7 +26,7 @@ const added = [
 
 let games, reminders, clock;
 const respond = (table, calls) => {
-  if (table === "bowl_pool_seasons") return { data: [{ id: "bowl-26", status: "open" }], error: null };
+  if (table === "bowl_pool_seasons") return { data: [{ id: "bowl-26", status: "open", season_year: 2026, championship_game_id: null }], error: null };
   if (table === "players") return { data: { id: "commissioner-1" }, error: null };
   if (table === "bowl_pool_games") return { data: games.map((game) => ({ ...game })), error: null };
   if (table !== "push_reminders") throw new Error(`unexpected table ${table}`);
@@ -141,6 +141,16 @@ test("December 1 to January 27: every game day and game gets its reminders once,
   const sanJuan = live("bowl_pick_due").find((reminder) => reminder.source_game_ids[0] === "san-juan");
   assert.equal(sanJuan.scheduled_for, "2026-12-16T19:30:00.000Z");
   assert.equal(sanJuan.queuedAt, new Date(announce).toISOString());
+  // The two one-time invitations: "the Bowl Pool is open" the morning of December 7, and one last call 24 hours before the first kickoff, each queued
+  // once, when it fell due and while seats could still be claimed.
+  const firstGame = [...games].sort((x, y) => Date.parse(x.kickoff_at) - Date.parse(y.kickoff_at))[0];
+  for (const [category, key, due] of [["bowl_pool_open", "bowl:bowl-26:open", "2026-12-07T14:00:00.000Z"], ["bowl_pool_last_call", "bowl:bowl-26:last-call", new Date(Date.parse(firstGame.kickoff_at) - 24 * HOUR).toISOString()]]) {
+    const [invitation, ...extra] = reminders.filter((reminder) => reminder.category === category);
+    assert.equal(extra.length, 0, `${category} is queued once`);
+    assert.deepEqual([invitation.automation_key, invitation.scheduled_for, invitation.source_game_ids], [key, due, [firstGame.id]]);
+    const lateBy = Date.parse(invitation.queuedAt) - Date.parse(due);
+    assert.ok(lateBy >= 0 && lateBy < 12 * HOUR && Date.parse(invitation.queuedAt) < Date.parse(firstGame.kickoff_at), `${category} was queued when it fell due, before the first kickoff`);
+  }
   const keys = reminders.map((reminder) => reminder.automation_key).filter(Boolean);
   assert.equal(new Set(keys).size, keys.length, "no key was used twice");
 });

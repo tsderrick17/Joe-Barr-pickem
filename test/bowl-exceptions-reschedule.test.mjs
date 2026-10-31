@@ -43,7 +43,7 @@ test("rescheduling a postponed game moves it in the database, then cancels its q
   const update = called(cancellation(), "update")[0];
   assert.equal(update.status, "cancelled");
   assert.equal(update.automation_key, null, "the key is released so a fresh reminder can be queued for the new time");
-  assert.deepEqual(called(cancellation(), "in")[1], ["bowl_pick_due", "bowl_line_lock", "bowl_daily_recap"]);
+  assert.deepEqual(called(cancellation(), "in")[1], ["bowl_pick_due", "bowl_line_lock", "bowl_daily_recap", "bowl_pool_last_call"]);
   assert.deepEqual(called(cancellation(), "contains"), ["source_game_ids", ["game-1"]]);
 });
 

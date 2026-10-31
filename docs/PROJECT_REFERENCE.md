@@ -319,6 +319,11 @@ measure database requests or end-to-end route time.
   days (`notificationsBannerVisible`, `src/lib/phone-push.js`).
   On Android and Chromebooks the one-tap Install does both: once the browser's install goes through, the phone is asked for notifications straight
   away and saved (`turnOnAfterInstall`; only when signed in and never asked before). If that does not happen, the in-app banner asks on first open.
+- The Bowl Pool's last call (`bowl_pool_last_call`, same words file) is one email and one phone notification 24 hours before the first Bowl kickoff
+  ("The first game kicks off Tue, Dec 15 at 5:30 PM ET, and entry closes then. Claim your seat now."; email subject "Last call: claim your Bowl Pool seat", a
+  short "How it works", and a Claim your seat button). It goes only to active players with pool emails on who have no Bowl entry of any kind this season
+  (`bowlLastCallRecipients`, read when it is sent). The sweep queues it once that time has come, under `bowl:<season>:last-call`, from the earliest scheduled game
+  when its time is confirmed and no game has kicked off; it is dropped if the first game starts first, and cancelled and rebuilt if the first game's kickoff moves.
 - The Bowl Pool's opening announcement (`bowl_pool_open`, words in `src/lib/bowl-opening-announcement.js`) is one email and one phone notification to every
   active player with pool emails on (the phone follows the email, as for every reminder), at 9:00 AM Eastern on December 7, six hours after players first see the
   Bowl Pool. The reminder sweep queues it once that time has come, under the key `bowl:<season>:open`, from the schedule as it stands then (the season's years,
