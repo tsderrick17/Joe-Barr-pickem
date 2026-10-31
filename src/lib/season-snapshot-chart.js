@@ -114,3 +114,84 @@ export function snapshotRibbonPath(points, upper = 0, lower = 1) {
   const edge = (fraction) => points.map((point) => `${point.x},${point.top + (point.bottom - point.top) * fraction}`);
   return `M${edge(upper).join(" L")} L${edge(lower).reverse().join(" L")} Z`;
 }
+
+/**
+ * The lowest and highest totals the shown players reach between two points of the timeline, measured in weeks from the
+ * baseline (0) and allowed to fall between weeks: where a line crosses an edge of the view counts, so the range moves
+ * smoothly as the view scrolls. A week a player has no score for carries their previous total forward.
+ * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
+ * @param {Array<{ id: string }>} players
+ * @param {Record<string, number>} baseline
+ * @param {number} from
+ * @param {number} to
+ */
+export function snapshotWindowRange(weeks, players, baseline, from, to) {
+  const last = weeks.length;
+  const start = Math.max(0, Math.min(from, to, last));
+  const end = Math.min(last, Math.max(from, to, 0));
+  let min = Infinity;
+  let max = -Infinity;
+  for (const player of players) {
+    const line = [baseline[player.id] ?? 0];
+    for (const week of weeks) {
+      const score = week.scores.find((entry) => entry.playerId === player.id);
+      line.push(score ? score.wins : line[line.length - 1]);
+    }
+    const at = (point) => {
+      const below = Math.floor(point);
+      const above = Math.min(last, below + 1);
+      return line[below] + (line[above] - line[below]) * (point - below);
+    };
+    for (const value of [at(start), at(end), ...line.slice(Math.ceil(start), Math.floor(end) + 1)]) {
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+    }
+  }
+  return min === Infinity ? { min: 0, max: 0 } : { min, max };
+}
+
+/**
+ * The wins axis: whole-number ticks, about five of them, with a win of room above the top line. From zero for the whole
+ * regular season; otherwise it starts just under the lowest line, on an even number.
+ * @param {number} min
+ * @param {number} max
+ * @param {boolean} fromZero
+ */
+export function snapshotAxis(min, max, fromZero) {
+  const low = fromZero ? 0 : Math.max(0, Math.floor((Math.floor(min) - 1) / 2) * 2);
+  const high = Math.max(low + 2, Math.ceil(max)) + 1;
+  const tickStep = Math.max(1, Math.ceil((high - low) / 5));
+  const ceiling = low + Math.ceil((high - low) / tickStep) * tickStep;
+  return { low, ceiling, tickStep };
+}
+
+/**
+ * One tick spacing for every position of a scrolling window, so the numbers slide past like a ruler as the view moves
+ * instead of all changing at once. It is the round spacing (1, 2, 4, 5, 10 or 20 wins) that gives the widest window
+ * about five ticks.
+ * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
+ * @param {Array<{ id: string }>} players
+ * @param {Record<string, number>} baseline
+ * @param {number} windowWeeks
+ */
+export function snapshotWindowStep(weeks, players, baseline, windowWeeks) {
+  let span = 2;
+  for (let from = 0; from + windowWeeks <= Math.max(windowWeeks, weeks.length); from += 1) {
+    const { min, max } = snapshotWindowRange(weeks, players, baseline, from, from + windowWeeks);
+    span = Math.max(span, max - min + 2);
+  }
+  return [1, 2, 4, 5, 10, 20].find((step) => span / step <= 5) ?? 50;
+}
+
+/**
+ * The axis for a scrolling window on a fixed tick spacing: it starts a win or more under the lowest line and ends a win
+ * or more over the highest, both on a tick.
+ * @param {number} min
+ * @param {number} max
+ * @param {number} tickStep
+ */
+export function snapshotWindowAxis(min, max, tickStep) {
+  const low = Math.max(0, Math.floor((min - 1) / tickStep) * tickStep);
+  const ceiling = Math.max(low + tickStep, Math.ceil((max + 1) / tickStep) * tickStep);
+  return { low, ceiling, tickStep };
+}

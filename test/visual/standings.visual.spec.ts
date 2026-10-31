@@ -91,7 +91,8 @@ for (const scenario of Object.keys(SCENARIOS)) {
   }
 }
 
-// The 6 Wk window needs more than six weeks to scroll, so this state serves a nine-week season. The position rail sits
+// The 6 Wk window needs more than six weeks to scroll, so this state serves a fourteen-week season: late enough that the
+// axis fits the weeks in view and starts above zero. The position rail sits
 // beneath the week numbers in the pad's own colors; the screenshot guards both. Headless Chromium hides scroll bars
 // everywhere else, so this is the one place the browser is launched with them drawn: a scroll bar returning would show.
 for (const theme of ["day", "night"]) {
@@ -103,7 +104,7 @@ for (const theme of ["day", "night"]) {
         await page.setViewportSize({ width: WIDTHS[label], height: 900 });
         await signIn(page, theme);
         await serve(page, "commissioner-playoff");
-        await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 9) }));
+        await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 14) }));
         await settle(page);
         await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
         await page.getByRole("button", { name: "Season", exact: true }).click();

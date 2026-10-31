@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -245,4 +245,40 @@ test("everyone keeps a permanent color: join order decides, and hiding, leaving 
   const joined = snapshotColors([...everyone, { id: "z", firstName: "Z", wins: 0 }], order);
   for (const id of order) assert.equal(joined.get(id), full.get(id), id);
   assert.equal(joined.get("z"), full.get("a"), "the twelfth player wraps to the first hue");
+});
+
+test("the 6 Wk axis fits the weeks in view, counting where a line crosses an edge, and keeps one tick spacing as it scrolls", () => {
+  const players = [{ id: "a" }, { id: "b" }];
+  const weeks = [2, 4, 6, 8, 10, 12, 14, 16].map((wins) => ({ scores: [{ playerId: "a", wins }, { playerId: "b", wins: wins / 2 }] }));
+  // Weeks 2 to 4 (points 2..4): a has 4..8, b has 2..4.
+  assert.deepEqual(snapshotWindowRange(weeks, players, {}, 2, 4), { min: 2, max: 8 });
+  // Half way between weeks: the lines are counted where they cross the edges.
+  assert.deepEqual(snapshotWindowRange(weeks, players, {}, 2.5, 3.5), { min: 2.5, max: 7 });
+  // A hidden player no longer shapes the range; a week without a score carries the total forward.
+  assert.deepEqual(snapshotWindowRange(weeks, [{ id: "a" }], {}, 2, 4), { min: 4, max: 8 });
+  const gap = [{ scores: [{ playerId: "a", wins: 3 }] }, { scores: [] }];
+  assert.deepEqual(snapshotWindowRange(gap, [{ id: "a" }], {}, 1, 2), { min: 3, max: 3 });
+
+  const step = snapshotWindowStep(weeks, players, {}, 6);
+  assert.ok([1, 2, 4, 5, 10, 20].includes(step));
+  for (let from = 0; from <= 2; from += 0.25) {
+    const { min, max } = snapshotWindowRange(weeks, players, {}, from, from + 6);
+    const axis = snapshotWindowAxis(min, max, step);
+    assert.equal(axis.tickStep, step, "the spacing never changes while scrolling");
+    assert.equal(axis.low % step, 0);
+    assert.equal(axis.ceiling % step, 0);
+    assert.ok(axis.low <= min - 1 || axis.low === 0, "at least a win of room under the lowest line");
+    assert.ok(axis.ceiling >= max + 1, "and over the highest");
+    assert.ok((axis.ceiling - axis.low) / step <= 6, "about five ticks");
+  }
+  // Late in a long season the axis no longer starts at zero.
+  const season = Array.from({ length: 14 }, (_, index) => ({ scores: [{ playerId: "a", wins: 2 * (index + 1) }] }));
+  const late = snapshotWindowRange(season, [{ id: "a" }], {}, 8, 14);
+  assert.equal(snapshotWindowAxis(late.min, late.max, snapshotWindowStep(season, [{ id: "a" }], {}, 6)).low, 12);
+});
+
+test("the whole regular season still counts from zero, and the playoffs start just under the lowest line", () => {
+  assert.deepEqual(snapshotAxis(3, 14, true), { low: 0, ceiling: 15, tickStep: 3 });
+  assert.deepEqual(snapshotAxis(9, 14, false), { low: 8, ceiling: 16, tickStep: 2 });
+  assert.equal(snapshotAxis(0, 4, false).low, 0);
 });

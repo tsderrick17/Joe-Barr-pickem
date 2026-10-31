@@ -8,18 +8,18 @@ import { homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 const SCENARIO = "commissioner-playoff";
 
 
-/** The fixture snapshot, stretched to nine regular weeks so the six-week window has something to scroll. */
-function nineWeekSnapshot() {
+/** The fixture snapshot, stretched to nine regular weeks (or more) so the six-week window has something to scroll. */
+function nineWeekSnapshot(weekCount = 9) {
   const base = seasonSnapshotResponse(SCENARIO);
   const template = base.regular[base.regular.length - 1];
-  const regular = Array.from({ length: 9 }, (_, week) => ({
+  const regular = Array.from({ length: weekCount }, (_, week) => ({
     id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: true,
     scores: template.scores.map((score: { playerId: string; wins: number }, index: number) => ({ playerId: score.playerId, wins: Math.max(0, Math.round((week + 1) * (1.8 - index * 0.12))) })),
   }));
   return { ...base, regular };
 }
 
-async function open(page: Page) {
+async function open(page: Page, snapshot = nineWeekSnapshot()) {
   const requests = { snapshot: 0 };
   const home = homeResponse(SCENARIO);
   await signIn(page);
@@ -29,7 +29,7 @@ async function open(page: Page) {
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("**/api/bowl-pool**", (route) => route.fulfill({ status: 204, body: "" }));
-  await page.route("**/api/season-snapshot**", (route) => { requests.snapshot += 1; return route.fulfill({ json: nineWeekSnapshot() }); });
+  await page.route("**/api/season-snapshot**", (route) => { requests.snapshot += 1; return route.fulfill({ json: snapshot }); });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/");
   await expect(page.locator(".my-ticket")).toBeVisible({ timeout: 30_000 });
@@ -118,6 +118,35 @@ test("in the 6 Wk view a rail beneath the chart shows the window and moves it; A
   await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
 });
 
+test("in the 6 Wk view the axis fits the weeks in view and follows them as the chart scrolls, on one tick spacing", async ({ page }) => {
+  await open(page, nineWeekSnapshot(14));
+  await flipButton(page).click();
+  await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
+  await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+  const settledTicks = () => page.evaluate(() => [...document.querySelectorAll(".season-snapshot-yaxis .season-snapshot-tick:not(.is-leaving)")].map((text) => Number(text.textContent)));
+  const leaving = page.locator(".season-snapshot-tick.is-leaving");
+  const spacing = (ticks: number[]) => new Set(ticks.slice(1).map((tick, index) => tick - ticks[index]));
+
+  // It opens on the latest six weeks, where nobody is near zero: the axis starts higher.
+  await expect.poll(async () => (await settledTicks())[0]).toBeGreaterThan(0);
+  await expect(leaving).toHaveCount(0);
+  const latest = await settledTicks();
+  expect(spacing(latest).size, "evenly spaced").toBe(1);
+
+  // Drag the rail back to the first weeks: the axis glides down to zero, on the same spacing.
+  const bar = (await page.locator(".season-snapshot-rail-track").boundingBox())!;
+  const grip = (await page.locator(".season-snapshot-rail-thumb").boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bar.x, grip.y + grip.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => (await settledTicks())[0]).toBe(0);
+  await expect(leaving, "numbers that left the axis are gone once it settles").toHaveCount(0);
+  const first = await settledTicks();
+  expect([...spacing(first)]).toEqual([...spacing(latest)]);
+  expect(first.at(-1)!, "the first weeks need less room at the top").toBeLessThan(latest.at(-1)!);
+});
+
 test("hiding a player removes their line and rescales the axis; nobody's color moves; Show all restores", async ({ page }) => {
   await open(page);
   await flipButton(page).click();
@@ -136,7 +165,8 @@ test("hiding a player removes their line and rescales the axis; nobody's color m
   await expect(leader).toHaveAttribute("aria-pressed", "false");
   const fillsAfter = await ribbonFills(page);
   expect(fillsAfter.length).toBeLessThan(fillsBefore.length);
-  expect(await axisTicks(page), "the axis rescales to whoever remains").not.toEqual(ticksBefore);
+  // The axis glides to its new range; the numbers that leave it fade out and are gone once it settles.
+  await expect.poll(() => axisTicks(page), { message: "the axis rescales to whoever remains" }).not.toEqual(ticksBefore);
   // Everyone still on the chart keeps the color they had.
   const colorsAfter = await Promise.all(Array.from({ length: count }, (_, index) => swatchOf(index)));
   expect(colorsAfter).toEqual(colorsBefore);

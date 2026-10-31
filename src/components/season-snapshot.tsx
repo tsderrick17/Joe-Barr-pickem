@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -126,6 +126,58 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
   </div>;
 }
 
+type Axis = { low: number; ceiling: number; tickStep: number };
+const axisTicks = ({ low, ceiling, tickStep }: Axis) => Array.from({ length: Math.round((ceiling - low) / tickStep) + 1 }, (_, index) => low + index * tickStep);
+// A critically damped spring: the axis glides to each new range without overshoot, and a range that changes again
+// mid-glide (a fast scroll) carries the motion on instead of restarting it. About a third of a second to settle.
+const SPRING = 16;
+
+/**
+ * The wins axis as drawn: it follows the target range on a spring, so the lines and the numbers move together. The
+ * numbers that leave the axis stay until the glide ends, fading out as they slide.
+ */
+function useSpringAxis(target: Axis) {
+  const { low, ceiling, tickStep } = target;
+  const [shown, setShown] = useState({ low, ceiling });
+  const [leaving, setLeaving] = useState<number[]>([]);
+  const motion = useRef({ low, ceiling, lowSpeed: 0, ceilingSpeed: 0 });
+  const lastTicks = useRef(axisTicks(target));
+  useEffect(() => {
+    const ticks = axisTicks({ low, ceiling, tickStep });
+    const gone = lastTicks.current.filter((tick) => !ticks.includes(tick));
+    lastTicks.current = ticks;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0;
+    let previous = 0;
+    const advance = (now: number) => {
+      const state = motion.current;
+      if (!previous) setLeaving((current) => {
+        const next = [...new Set([...current, ...gone])].filter((tick) => !ticks.includes(tick));
+        return next.length || current.length ? next : current;
+      });
+      const seconds = previous ? Math.min(1 / 30, (now - previous) / 1000) : 0;
+      previous = now;
+      state.lowSpeed += (SPRING * SPRING * (low - state.low) - 2 * SPRING * state.lowSpeed) * seconds;
+      state.ceilingSpeed += (SPRING * SPRING * (ceiling - state.ceiling) - 2 * SPRING * state.ceilingSpeed) * seconds;
+      state.low += state.lowSpeed * seconds;
+      state.ceiling += state.ceilingSpeed * seconds;
+      const near = (ceiling - low) / 500;
+      const settled = still || (Math.abs(low - state.low) < near && Math.abs(ceiling - state.ceiling) < near && Math.abs(state.lowSpeed) < near * 10 && Math.abs(state.ceilingSpeed) < near * 10);
+      if (settled) {
+        motion.current = { low, ceiling, lowSpeed: 0, ceilingSpeed: 0 };
+        setShown({ low, ceiling });
+        setLeaving((current) => current.length ? [] : current);
+        return;
+      }
+      setShown({ low: state.low, ceiling: state.ceiling });
+      frame = requestAnimationFrame(advance);
+    };
+    frame = requestAnimationFrame(advance);
+    return () => cancelAnimationFrame(frame);
+  }, [low, ceiling, tickStep]);
+  return { ...shown, ticks: axisTicks(target), leaving };
+}
+
 function SnapshotChart({
   title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false,
 }: {
@@ -168,19 +220,40 @@ function SnapshotChart({
     if (element && scrolls) element.scrollLeft = element.scrollWidth;
   }, [scrolls, plotWidth, weeks.length]);
 
-  // Only the players still on the chart shape the axis, so hiding the leader
-  // rescales the chart to the people who remain.
-  const shownIds = new Set(players.map((player) => player.id));
-  const values = [...players.map((player) => baseline[player.id] ?? 0), ...weeks.flatMap((week) => week.scores.filter((score) => shownIds.has(score.playerId)).map((score) => score.wins))];
-  const observedValues = values.length ? values : [0];
-  const low = isPlayoff ? Math.max(0, Math.floor((Math.min(...observedValues) - 1) / 2) * 2) : 0;
-  const high = Math.max(low + 2, ...observedValues) + 1;
-  const tickStep = Math.max(1, Math.ceil((high - low) / 5));
-  const ceiling = low + Math.ceil((high - low) / tickStep) * tickStep;
+  // The part of the timeline in view, in weeks from the baseline. Kept to a twentieth of a week, so scrolling redraws
+  // only when the range could change. Until the first scroll it is the latest six weeks, where the view opens.
+  const edgesAt = (left: number) => ({
+    from: Math.round(((left - PLOT_LEFT) / step) * 20) / 20,
+    to: Math.round(((left + viewport - PLOT_LEFT) / step) * 20) / 20,
+  });
+  const [scrolled, setScrolled] = useState<{ from: number; to: number } | null>(null);
+  // Leaving the 6-week view forgets where it was: it always reopens on the latest weeks.
+  const [wasScrolling, setWasScrolling] = useState(scrolls);
+  if (wasScrolling !== scrolls) {
+    setWasScrolling(scrolls);
+    setScrolled(null);
+  }
+  const edges = scrolls ? (scrolled ?? edgesAt(plotWidth - viewport)) : { from: 0, to: weekCount };
+  const onScroll = () => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const next = edgesAt(element.scrollLeft);
+    setScrolled((current) => current && current.from === next.from && current.to === next.to ? current : next);
+  };
+
+  // Only the players still on the chart shape the axis, so hiding the leader rescales the chart to the people who
+  // remain. In the 6-week view it also fits the weeks in view and follows them as the chart scrolls; the whole regular
+  // season always counts from zero.
+  const range = snapshotWindowRange(weeks, players, baseline, edges.from, edges.to);
+  const target = scrolls
+    ? snapshotWindowAxis(range.min, range.max, snapshotWindowStep(weeks, players, baseline, WINDOW_WEEKS))
+    : snapshotAxis(range.min, range.max, !isPlayoff);
+  const { low, ceiling, ticks, leaving } = useSpringAxis(target);
   const plotHeight = height - PLOT_TOP - PLOT_BOTTOM;
   const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, PLOT_RIGHT);
   const y = (wins: number) => PLOT_TOP + plotHeight * (1 - (wins - low) / (ceiling - low));
-  const ticks = Array.from({ length: (ceiling - low) / tickStep + 1 }, (_, index) => low + index * tickStep);
+  const drawnTicks = [...ticks.map((tick) => ({ tick, gone: false })), ...leaving.map((tick) => ({ tick, gone: true }))];
+  const clip = useId().replaceAll(":", "");
   // Lines that share a path stack by who held the greater total most recently.
   // Painting runs bottom lane first so the line that was ahead most recently is on top.
   const stacked = snapshotStackOrder(weeks, players, baseline);
@@ -192,19 +265,26 @@ function SnapshotChart({
     {showTitle ? <h4 className="season-snapshot-chart-title">{title}</h4> : null}
     <div className="season-snapshot-row" ref={rowRef}>
       <svg aria-hidden="true" className="season-snapshot-yaxis" height={height} width={AXIS_WIDTH}>
-        {ticks.map((tick) => <text fill="#536077" fontFamily="Arial, sans-serif" fontSize="11" key={tick} textAnchor="end" x={AXIS_WIDTH - 4} y={y(tick) + 4}>{tick}</text>)}
+        <clipPath id={`${clip}-axis`}><rect height={height - PLOT_BOTTOM + 6} width={AXIS_WIDTH} x={0} y={0} /></clipPath>
+        <g clipPath={`url(#${clip}-axis)`}>
+          {drawnTicks.map(({ tick, gone }) => <text className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} fill="#536077" fontFamily="Arial, sans-serif" fontSize="11" key={tick} textAnchor="end" x={AXIS_WIDTH - 4} y={y(tick) + 4}>{tick}</text>)}
+        </g>
         <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(10 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
-      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
+      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>
           {scrolls ? Array.from({ length: weeks.length - WINDOW_WEEKS + 1 }, (_, index) => <span aria-hidden="true" className="season-snapshot-snap" key={index} style={{ left: index * step }} />) : null}
           <svg aria-label={`${title}, cumulative wins by week`} height={height} role="img" viewBox={`0 0 ${plotWidth} ${height}`} width={plotWidth}>
-            {ticks.map((tick) => <line key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - PLOT_RIGHT} y1={y(tick)} y2={y(tick)} />)}
+            {/* Grid and lines stay above the week numbers, even mid-glide. */}
+            <clipPath id={`${clip}-plot`}><rect height={height - PLOT_BOTTOM + 2} width={plotWidth} x={0} y={0} /></clipPath>
+            <g clipPath={`url(#${clip}-plot)`}>
+              {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - PLOT_RIGHT} y1={y(tick)} y2={y(tick)} />)}
+            </g>
             {weeks.map((week, index) => <g key={week.id}>
               <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - PLOT_BOTTOM} />
               <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5}>{shortWeek(week.label)}</text>
             </g>)}
-            <g className="season-snapshot-lines">
+            <g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
               {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
                 <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
                 <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
