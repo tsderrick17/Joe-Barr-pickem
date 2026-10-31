@@ -131,5 +131,7 @@ test("every Bowl stage has a checkpoint and every Bowl provider request carries 
     assert.ok(source.includes(`checkpoint("${stage}")`), stage);
   }
   assert.equal(source.match(/AbortSignal\.timeout\(/g), null, "no request uses a bare timeout that a cancelled run would ignore");
-  assert.equal((source.match(/providerSignal\(/g) ?? []).length, 3);
+  const requests = (source.match(/fetch\(/g) ?? []).length;
+  assert.ok(requests > 0);
+  assert.equal((source.match(/providerSignal\(/g) ?? []).length, requests, "every request carries the cancellable signal");
 });

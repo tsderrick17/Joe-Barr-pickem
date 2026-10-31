@@ -4,6 +4,7 @@ import {
   type WeekRolloverResult,
 } from "@/lib/advance-scoring-periods";
 import { checkpoint, currentExecutionContext, ExecutionCancelledError, providerSignal } from "@/lib/execution-context";
+import { FINAL_SCORE_POLLING_LIMIT_HOURS } from "@/lib/score-window";
 import { decideQuotaHold, pollingModeFor, selectDueGames, selectEligibleGames } from "@/lib/score-work-plan";
 import { nextScoreCheckAt, type ScorePollingMode } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -168,7 +169,7 @@ export async function syncFinalScores({
   await snapshotActivePlayoffEligibility();
   checkpoint("read games awaiting scores");
   const providerLookbackStart = new Date(
-    now.getTime() - 3 * 24 * 60 * 60 * 1000,
+    now.getTime() - FINAL_SCORE_POLLING_LIMIT_HOURS * 60 * 60 * 1000,
   ).toISOString();
   const { data: unfinishedGames, error: unfinishedGamesError } =
     await supabaseAdmin

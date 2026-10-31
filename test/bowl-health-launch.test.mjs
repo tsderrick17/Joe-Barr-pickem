@@ -8,8 +8,9 @@ import { recordingDatabase } from "./helpers/recording-database.mjs";
 // and that must not turn the health monitor, the deploy check and the watchdog red for six weeks. A real problem still must, and each kind of problem alerts on its own.
 const SEASON = { id: "season-1", player_visible_at: "2026-12-07T08:00:00Z" };
 const game = (id, bowl, kickoff, over = {}) => ({ id, bowl_name: bowl, kickoff_at: kickoff, order_index: 0, status: "scheduled", away_team_id: "a", home_team_id: "b", is_cfp: false, ...over });
+// The Frisco Bowl is final in these scenarios so the weeks that follow it do not count it as overdue for a final score (that rule has its own test below).
 const SCHEDULE = [
-  game("frisco", "Frisco Bowl", "2026-12-19T17:30:00Z", { order_index: 1 }),
+  game("frisco", "Frisco Bowl", "2026-12-19T17:30:00Z", { order_index: 1, status: "final" }),
   game("rose", "Rose Bowl", "2027-01-01T22:00:00Z", { order_index: 2, is_cfp: true, away_team_id: "a", home_team_id: null }),
   game("sugar", "Sugar Bowl", "2027-01-01T22:00:00Z", { order_index: 3, is_cfp: true, away_team_id: null, home_team_id: null }),
   game("title", "National Championship", "2027-01-26T00:30:00Z", { order_index: 4, is_cfp: true, away_team_id: null, home_team_id: null }),
@@ -62,9 +63,9 @@ test("an ordinary bowl without its teams is a problem at once, named by bowl and
 });
 
 test("a started game with no official line names the game, and each kind of problem is its own alert so a new kind is not hidden by an old one", () => {
-  const issues = assessBowlPoolIntegrity([SCHEDULE[0], { ...SCHEDULE[1], home_team_id: "b" }], [], new Date("2027-01-01T23:00:00Z")).issues;
+  const issues = assessBowlPoolIntegrity([{ ...SCHEDULE[0], status: "scheduled" }, { ...SCHEDULE[1], kickoff_at: "2026-12-19T22:00:00Z", home_team_id: "b" }], [], new Date("2026-12-19T23:00:00Z")).issues;
   assert.deepEqual(issues.map((issue) => issue.kind), ["line"], "one line issue naming the started games");
-  assert.match(issues.find((issue) => issue.kind === "line").message, /Frisco Bowl \(Dec 19\), Rose Bowl \(Jan 1\) have started without a locked line\./);
+  assert.match(issues.find((issue) => issue.kind === "line").message, /Frisco Bowl \(Dec 19\), Rose Bowl \(Dec 19\) have started without a locked line\./);
 
   const alerts = (bowlHealth) => evaluateWatchdogSignals({ health: { missingOfficialLines: 0, latestScores: null, providerAllowance: null, scoreChecksDueNow: 0, scoreProviderFailureStreak: 0, pendingScheduleReviews: 0, pinAttackIncidents: [], reminderHealth: { overdueScheduled: 0, staleSending: 0 } }, bootstrap: {}, bowlHealth }).filter((signal) => signal.key.startsWith("bowl-pool-"));
   const teams = { kind: "teams", message: "Rose Bowl (Jan 1) is missing a team." };
@@ -76,4 +77,25 @@ test("a started game with no official line names the game, and each kind of prob
   assert.match(only.detail, /Rose Bowl \(Jan 1\) has started without a locked line\. Open Commissioner Desk/);
   assert.deepEqual(alerts({ configured: true, healthy: false, problems: ["Something odd."] }).map((signal) => signal.key), ["bowl-pool-integrity-needs-review"], "a result with no kinds keeps the single alert");
   assert.deepEqual(alerts({ configured: true, healthy: true, problems: [] }), []);
+});
+
+test("a Bowl game with no final score six hours after kickoff is its own alert, named by bowl and date, and clears once it is final", () => {
+  const frisco = { ...SCHEDULE[0], status: "live" };
+  const lines = [{ game_id: "frisco" }];
+  const at = (now, game = frisco) => assessBowlPoolIntegrity([game], lines, new Date(now));
+  assert.equal(at("2026-12-19T23:29:00Z").healthy, true, "just under six hours after the 12:30 PM kickoff");
+  const overdue = at("2026-12-19T23:30:00Z");
+  assert.equal(overdue.healthy, false);
+  assert.deepEqual(overdue.issues, [{ kind: "final", message: "Frisco Bowl (Dec 19) has no final score yet, more than 6 hours after kickoff." }]);
+  assert.equal(at("2026-12-20T09:00:00Z", { ...frisco, status: "final" }).healthy, true);
+  assert.equal(at("2026-12-20T09:00:00Z", { ...frisco, status: "postponed" }).healthy, true);
+
+  const [alert, ...others] = evaluateWatchdogSignals({
+    health: { missingOfficialLines: 0, latestScores: null, providerAllowance: null, scoreChecksDueNow: 0, scoreProviderFailureStreak: 0, pendingScheduleReviews: 0, pinAttackIncidents: [], reminderHealth: { overdueScheduled: 0, staleSending: 0 } },
+    bootstrap: {}, bowlHealth: { configured: true, healthy: false, problems: overdue.problems, issues: overdue.issues },
+  }).filter((signal) => signal.key.startsWith("bowl-pool-"));
+  assert.deepEqual(others, []);
+  assert.equal(alert.key, "bowl-pool-final-needs-review");
+  assert.equal(alert.title, "A Bowl Pool game is overdue for a final score");
+  assert.match(alert.detail, /Frisco Bowl \(Dec 19\) has no final score yet/);
 });

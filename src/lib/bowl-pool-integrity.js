@@ -1,4 +1,5 @@
 import { dateFormat } from "./date-format.js";
+import { FINAL_OVERDUE_HOURS, finalIsOverdue } from "./final-overdue.js";
 
 /** How long before kickoff a game must have both teams. Playoff rounds wait on earlier rounds, so until then a team-less playoff game is expected. */
 export const BOWL_TEAMS_DUE_HOURS = 36;
@@ -29,7 +30,7 @@ export function countMissingBowlTeamSlots(games) {
 
 /**
  * Problems come back as plain sentences in `problems` and as `issues` ({ kind, message }) so the watchdog can alert on each kind on its own:
- * "structure" (duplicates, same team twice, bad status), "teams" and "line". Games out of kickoff order are only a `warnings` entry: the schedule pull and a Reschedule
+ * "structure" (duplicates, same team twice, bad status), "teams", "line" and "final" (a game with no final score long after kickoff). Games out of kickoff order are only a `warnings` entry: the schedule pull and a Reschedule
  * keep the list in date order on their own, so a game out of place means the Commissioner arranged it, which is worth a look but is not a failure.
  */
 export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
@@ -61,6 +62,8 @@ export function assessBowlPoolIntegrity(games, lines, now = new Date()) {
   const lineIds = new Set(lines.map((line) => line.game_id));
   const missingLines = games.filter((game) => ["scheduled", "live"].includes(game.status) && new Date(game.kickoff_at).getTime() <= now.getTime() && !lineIds.has(game.id));
   if (missingLines.length) add("line", `${missingLines.map(bowlGameLabel).join(", ")} ${missingLines.length === 1 ? "has" : "have"} started without a locked line.`);
+  const overdueFinals = games.filter((game) => finalIsOverdue(game, now));
+  if (overdueFinals.length) add("final", `${overdueFinals.map(bowlGameLabel).join(", ")} ${overdueFinals.length === 1 ? "has" : "have"} no final score yet, more than ${FINAL_OVERDUE_HOURS} hours after kickoff.`);
   const validStatuses = new Set(["scheduled", "live", "final", "postponed", "cancelled", "no_contest"]);
   const invalidStatus = games.filter((game) => !validStatuses.has(game.status));
   if (invalidStatus.length) problems.push(`${invalidStatus.length} Bowl Pool game${invalidStatus.length === 1 ? " has" : "s have"} an invalid status.`);

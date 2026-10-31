@@ -478,8 +478,15 @@ The Bowl Pool has its own integrity and settlement reconciliation checks. The
 commissioner readiness panel reports missing teams or locked lines, ordering or
 status corruption, missing result receipts, pending final picks, and pick/result
 mismatches. The watchdog raises one commissioner incident per kind of problem
-(`bowl-pool-teams-needs-review`, `-line-`, `-order-`, `-settlement-`, `-structure-`), so a new
+(`bowl-pool-teams-needs-review`, `-line-`, `-final-`, `-settlement-`, `-structure-`), so a new
 kind still alerts while an older one is open; the text names the bowl and date.
+Games out of kickoff order are only a warning on the readiness panel (the schedule
+pull and Reschedule keep the list in date order, so it means a hand-arranged order).
+A game still scheduled or live six hours after kickoff has no final score: the Bowl
+Pool raises `-final-` and the NFL raises `final-overdue-nfl` (NFL score checks stop
+72 hours after kickoff, so the alert is the cue). If ESPN cannot be read the Bowl
+worker still starts games, settles and grades, then ends the run as failed with the
+reason; the readiness panel's cron health reads that `bowl_scores` run.
 A team-less game is a problem at once for an ordinary bowl, but a College Football
 Playoff game after the first round only within 36 hours of kickoff (it waits for
 the earlier rounds), so launch day with the later playoff rounds still open is
