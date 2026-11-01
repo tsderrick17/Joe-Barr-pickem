@@ -9,8 +9,9 @@ import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
 import { noteOperationalWarning } from "@/lib/operational-warnings";
+import { notifyCommissioners, type WatchdogSignal } from "@/lib/watchdog-notify";
 
-type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
+type Signal = WatchdogSignal;
 type AlertRow = { id: string; signal_key: string; notified_at: string | null; notification_attempted_at: string | null };
 type ConfigurationRun = {
   id?: string;
@@ -22,36 +23,6 @@ type ConfigurationRun = {
 // The watchdog runs every fifteen minutes, so exactly one run lands in this window each Monday.
 function isWeeklyStoragePruneDue(now: Date) {
   return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 15;
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
-}
-async function notifyCommissioners(signal: Signal) {
-  const [{ data: commissioners, error }, key, sender] = await Promise.all([
-    supabaseAdmin.from("players").select("notification_email").eq("active", true).eq("is_commissioner", true).not("notification_email", "is", null),
-    Promise.resolve(process.env.BREVO_API_KEY),
-    Promise.resolve(process.env.BREVO_SENDER_EMAIL),
-  ]);
-  if (error) throw new Error("Commissioner alert recipients could not be loaded.");
-  if (!key || !sender) throw new Error("Commissioner alert email is not configured.");
-  const recipients = [...new Set((commissioners ?? []).map((player) => player.notification_email).filter(Boolean))] as string[];
-  if (!recipients.length) throw new Error("No commissioner notification email is configured.");
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: { "api-key": key, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sender: { name: "Joe Barr Pick'em Watchdog", email: sender },
-      to: recipients.map((email) => ({ email })),
-      subject: `[Pick'em action needed] ${signal.title}`,
-      htmlContent: `<main style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px"><h1>${escapeHtml(signal.title)}</h1><p>${escapeHtml(signal.detail)}</p><p><a href="https://pickemjb.vercel.app/admin">Open Commissioner Desk</a></p><p style="color:#57534e;font-size:12px">This alert is sent once per incident. It will not repeat unless the problem resolves and later returns.</p></main>`,
-      textContent: `${signal.title}\n\n${signal.detail}\n\nOpen Commissioner Desk: https://pickemjb.vercel.app/admin\n\nThis alert is sent once per incident.`,
-      tags: ["pickem-watchdog", signal.key],
-    }),
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok) throw new Error(`Commissioner alert email was rejected (${response.status}).`);
-  return recipients.length;
 }
 
 async function checkConfigurationDrift(now: Date, latestRun: ConfigurationRun | null) {

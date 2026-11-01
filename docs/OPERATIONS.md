@@ -294,11 +294,18 @@ failure leaves it in place.
 
 The watchdog evaluates operations every fifteen minutes (migration
 `20261030030000_background_job_cadence.sql`, to stay inside the Vercel
-Fluid active-CPU allowance; its 35-minute heartbeat window absorbs one missed run) but sends email only when
+Fluid active-CPU allowance; its 35-minute heartbeat window absorbs one missed run) but alerts only when
 commissioner action is likely required. It opens one incident per condition,
-sends one notification for that incident, and automatically resolves the
+sends one notification for that incident (an email and, to each device the
+Commissioner turned notifications on for, a phone notification that opens the
+Commissioner Desk), and automatically resolves the
 incident after recovery. A resolved condition can alert again if it genuinely
-recurs. Failed notification delivery is retried no more than every 30 minutes.
+recurs. The two channels are independent: the alert counts as delivered when
+either gets through, and the one that failed is listed under Commissioner ->
+Health and safety -> Recent warnings (so a lapsed Brevo key or a dead phone
+subscription is noticed while the other channel still works). Only when both
+fail is the notification retried, no more than every 30 minutes. A Commissioner
+with no phone set up simply gets the email.
 When the shared worker assessment finds real overdue line, scoring, or reminder
 work alongside an unhealthy worker receipt, the watchdog first makes one normal
 lease-protected recovery attempt. It keeps provider quota protection, retry
@@ -310,12 +317,16 @@ The only alert conditions are:
 - a game has passed line lock without an official line;
 - final scores are due and the score worker is failed or stale for 45 minutes;
 - a scheduled pool message is overdue or stuck sending;
+- the Odds API balance reported this month is under the 50-credit reserve while
+  the NFL season is still on (the score worker then stops spending credits, so
+  NFL games are not graded automatically until the credits renew on the 1st or
+  the plan is upgraded; this alert replaces the stalled-scores alert, which stays
+  quiet while credits are protected);
 - the full season schedule is still incomplete after August 15; or
 - the certified annual turnover is blocked by unfinished prior-season work; or
 - a required production cron/preflight check is missing.
 
-Individual bad email addresses and intentional low-provider-quota cooldowns do
-not alert. Open incidents and a manual **Run watchdog now** control are visible
+Individual bad email addresses and the per-game retry cooldowns do not alert. Open incidents and a manual **Run watchdog now** control are visible
 on the Commissioner overview.
 
 The weekly-recap scheduler treats any already-saved recap record for the same

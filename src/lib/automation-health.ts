@@ -5,6 +5,7 @@ import { FINAL_OVERDUE_HOURS, finalIsOverdue } from "@/lib/final-overdue.js";
 import { dateFormat } from "@/lib/date-format.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { latestProviderCreditSnapshot } from "@/lib/provider-chart-data.js";
+import { creditsBelowReserve } from "@/lib/provider-credits.js";
 
 export type AutomationRun = {
   job_type: "line_locks" | "scores" | "odds";
@@ -134,7 +135,7 @@ export async function checkAutomationHealth(now = new Date()) {
   }
 
   const quotaProtected = latestSuccessfulScores?.details?.quotaProtected === true ||
-    (providerAllowance !== null && providerAllowance < 50);
+    creditsBelowReserve(providerAllowance);
   const latestScoreFinishedAt = latestScores
     ? new Date(latestScores.completed_at ?? latestScores.started_at).getTime()
     : 0;

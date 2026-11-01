@@ -67,7 +67,7 @@ be replayed.
   inputs, and verified final scores.
 - **ESPN** supplies Bowl Pool schedule, preliminary lines when available, and
   final scores. NCAAF Odds API calls are an explicitly enabled fallback.
-- **Brevo** delivers reminders, reveals, recaps, and actionable watchdog email.
+- **Brevo** delivers reminders, reveals, recaps, and actionable watchdog email; the same watchdog alert also goes to the Commissioner's phone (Web Push), so either channel can fail alone.
 - **GitHub Actions** runs application quality, database migration workflows,
   isolated lifecycle checks, encrypted backups, and monthly upgrade rehearsals.
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
+import { creditsBelowReserve } from "@/lib/provider-credits.js";
 
 type Run = {
   completed_at: string | null;
@@ -183,7 +184,7 @@ export default function AutomationHealth() {
             detail={scheduleCooling ? `Next retry ${localTime(health.scheduleProviderCircuit!.next_retry_at)}` : "No provider cooldown is active."}
           />
           <StatusCard
-            attention={health.providerAllowance !== null && health.providerAllowance < 50}
+            attention={creditsBelowReserve(health.providerAllowance)}
             label="PROVIDER ALLOWANCE"
             value={health.providerAllowance === null ? "Not reported yet" : `${health.providerAllowance} credits remaining`}
             detail={`${health.reminderHealth.overdueScheduled} held reminders · ${formatAdminNumber(health.retention.candidates)} old operational records`}
