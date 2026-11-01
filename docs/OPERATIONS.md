@@ -213,14 +213,18 @@ game, and one turnover receipt per year. Removed: superseded pre-kickoff save
 snapshots and preliminary spreads (at turnover), score backoffs, expired leases
 and provider circuit state, PIN attempts after 24 hours, PIN incidents after 180
 days, and sync runs, resolved alerts, and resolved schedule reviews after 180
-days (weekly prune). At this pool's size that is a few megabytes a year, far
+days. The prune runs once a week, counted from the last prune the watchdog recorded (not from the day of the week, so a
+missed run is made up on the next one). At this pool's size that is a few megabytes a year, far
 inside the free database and storage limits.
 
 Scheduled GitHub workflows (weekly backup, smoke summary, rehearsals) are kept
 enabled by **Keep scheduled workflows enabled**, because GitHub switches off
 scheduled workflows in a public repository after 60 days without a commit. The
 backup health check reads the public run list anonymously if its GitHub token
-expires.
+expires. The isolated test database (a free Supabase project that pauses after a week
+without traffic) is kept awake by **Isolated project keep-alive**, a weekly `select 1`;
+if it ever pauses, Supabase's email for that project is the sign, and the Isolated
+database check turns red until it is restored from the Supabase dashboard.
 
 Survivor always ends with a champion (co-champions for a same-week finish or
 several survivors), so the annual turnover never stalls on it. A longer NFL

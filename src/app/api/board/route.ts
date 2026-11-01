@@ -129,7 +129,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (activeGamesRead) {
-      const { data: activeGames } = await activeGamesRead;
+      const { data: activeGames, error: activeGamesError } = await activeGamesRead;
+      // Only the "next week can be opened" offer depends on this read, so the Slate still loads without it; the failure is logged instead of passing for "no games".
+      if (activeGamesError) console.error("Slate active-week games query failed.", { code: activeGamesError.code, message: activeGamesError.message });
 
       if (
         activeGames?.length &&

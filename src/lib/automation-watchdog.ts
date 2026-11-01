@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
 import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
-import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue, isWeeklyStoragePruneDue } from "@/lib/watchdog-rules";
 import { noteOperationalWarning } from "@/lib/operational-warnings";
 import { notifyCommissioners, type WatchdogSignal } from "@/lib/watchdog-notify";
 
@@ -19,11 +19,6 @@ type ConfigurationRun = {
   started_at: string;
   details?: { checks?: LaunchPreflightCheck[] } | null;
 };
-
-// The watchdog runs every fifteen minutes, so exactly one run lands in this window each Monday.
-function isWeeklyStoragePruneDue(now: Date) {
-  return now.getUTCDay() === 1 && now.getUTCHours() === 13 && now.getUTCMinutes() < 15;
-}
 
 async function checkConfigurationDrift(now: Date, latestRun: ConfigurationRun | null) {
   if (!isConfigurationDriftCheckDue(latestRun, now)) {
@@ -74,16 +69,20 @@ export async function runAutomationWatchdog(now = new Date()) {
   // fails closed because there is no fresh pulse.
   await recordAutomationWorkerHeartbeat("watchdog", "success");
   try {
-    const [initialHealth, bootstrap, preflight, storagePrune, configurationRun, bowlHealth] = await Promise.all([
+    const [initialHealth, bootstrap, preflight, lastPrune, configurationRun, bowlHealth] = await Promise.all([
       checkAutomationHealth(now), getSeasonBootstrapStatus(now), supabaseAdmin.rpc("automation_preflight"),
-      isWeeklyStoragePruneDue(now)
-        ? supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
-        : Promise.resolve({ data: null, error: null }),
+      // The watchdog's own run record keeps the result of each cleanup (details.storagePruned), so the newest one that has it is the last cleanup.
+      supabaseAdmin.from("sync_runs").select("started_at").eq("job_type", "watchdog").not("details->storagePruned", "is", null)
+        .order("started_at", { ascending: false }).limit(1).maybeSingle(),
       supabaseAdmin.from("sync_runs").select("status, started_at, details")
         .eq("job_type", "configuration_drift").order("started_at", { ascending: false }).limit(1).maybeSingle(),
       checkBowlPoolHealth(),
     ]);
     if (preflight.error) throw new Error("Automation preflight could not be evaluated.");
+    // If the last cleanup cannot be looked up, run it: it only deletes what is past retention, so doing it early is harmless.
+    const storagePrune = isWeeklyStoragePruneDue(lastPrune.error ? null : lastPrune.data?.started_at, now)
+      ? await supabaseAdmin.rpc("prune_operational_storage", { reference_time: now.toISOString() })
+      : { data: null, error: null };
     if (storagePrune.error) throw new Error("The weekly operational storage cleanup could not be completed.");
     if (configurationRun.error) throw new Error("The latest configuration-drift check could not be loaded.");
     const criticalWorkerRecovery = await recoverCriticalWorkerWork(initialHealth);

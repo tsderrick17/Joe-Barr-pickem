@@ -10,7 +10,7 @@ test("a weekly keepalive re-enables every scheduled workflow so GitHub's 60-day 
   assert.match(keepalive, /permissions:\s*\n\s*actions: write/);
   assert.match(keepalive, /gh api --method PUT "repos\/\$\{REPO\}\/actions\/workflows\/\$\{workflow\}\/enable"/);
   // It keeps itself alive along with every other scheduled workflow.
-  for (const workflow of ["scheduled-workflow-keepalive.yml", "database-backup.yml", "weekly-production-smoke.yml", "isolated-integration.yml", "monthly-upgrade-rehearsal.yml"]) {
+  for (const workflow of ["scheduled-workflow-keepalive.yml", "database-backup.yml", "weekly-production-smoke.yml", "isolated-integration.yml", "isolated-project-keepalive.yml", "monthly-upgrade-rehearsal.yml"]) {
     assert.ok(keepalive.includes(workflow), `${workflow} is kept enabled`);
   }
   assert.doesNotMatch(keepalive, /contents: write|git commit|git push/, "it never commits");

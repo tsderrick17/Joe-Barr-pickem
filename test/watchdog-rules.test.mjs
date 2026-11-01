@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "../src/lib/watchdog-rules.js";
+import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue, isWeeklyStoragePruneDue } from "../src/lib/watchdog-rules.js";
 
 function healthy(overrides = {}) {
   return {
@@ -128,6 +128,15 @@ test("configuration drift runs once per Eastern day and retries failures hourly"
   assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "2026-08-20T14:59:00Z" }, now), true);
   assert.equal(isConfigurationDriftCheckDue({ status: "started", started_at: "2026-08-20T14:59:00Z" }, now), true);
   assert.equal(isConfigurationDriftCheckDue({ status: "failed", started_at: "not-a-date" }, now), true);
+});
+
+test("storage is pruned once a week, counted from the last prune, and retried when that is unknown or unreadable", () => {
+  const now = new Date("2026-08-20T16:00:00Z");
+  assert.equal(isWeeklyStoragePruneDue(null, now), true, "never pruned");
+  assert.equal(isWeeklyStoragePruneDue("2026-08-13T16:00:01Z", now), false, "a second short of a week");
+  assert.equal(isWeeklyStoragePruneDue("2026-08-13T16:00:00Z", now), true, "exactly a week");
+  assert.equal(isWeeklyStoragePruneDue("2026-08-20T15:59:00Z", now), false, "pruned a minute ago");
+  assert.equal(isWeeklyStoragePruneDue("not-a-date", now), true);
 });
 
 test("watchdog quiets a resolved incident for six hours, then allows a meaningful repeat", () => {

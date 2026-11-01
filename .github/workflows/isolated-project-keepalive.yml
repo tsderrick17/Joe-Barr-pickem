@@ -1,0 +1,36 @@
+name: Keep the isolated test project awake
+
+# Supabase pauses a Free project after about seven days without activity. The isolated test project's only regular activity is the Wednesday run of
+# "Isolated integration checks", which sits right on that boundary, so a quiet stretch (no pull requests) could pause it, and the next run would
+# fail until someone restored it. This asks it one trivial question on Sunday, halfway between two Wednesdays. It never touches production and
+# changes nothing in the database. The keep-alive workflow keeps this schedule enabled.
+
+on:
+  schedule:
+    - cron: "23 15 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-project-keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-24.04
+    environment: isolated-test
+    timeout-minutes: 5
+    env:
+      PICKEM_TEST_DATABASE_CONFIRMATION: ${{ vars.PICKEM_TEST_DATABASE_CONFIRMATION }}
+      PICKEM_TEST_DATABASE_URL: ${{ secrets.PICKEM_TEST_DATABASE_URL }}
+    steps:
+      - name: Ask the isolated test project one question
+        run: |
+          test "$PICKEM_TEST_DATABASE_CONFIRMATION" = "isolated"
+          case "$PICKEM_TEST_DATABASE_URL" in
+            *"lrimviwfflrisshmgnsh"*) ;;
+            *) echo "Refusing a database URL that is not the isolated test project." >&2; exit 1 ;;
+          esac
+          psql "$PICKEM_TEST_DATABASE_URL" -tAc "select 1"
