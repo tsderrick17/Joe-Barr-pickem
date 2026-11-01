@@ -10,6 +10,7 @@ import { easternDateKey } from "@/lib/eastern-time.js";
 import { cancelQueuedBowlReminders } from "@/lib/bowl-reminders";
 import { ProviderUnavailable } from "@/lib/provider-unavailable";
 import { easternDateTimeToUtc } from "@/lib/schedule-time.js";
+import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
 import type { EspnEvent } from "@/lib/bowl-pool-espn-schedule.js";
@@ -79,7 +80,7 @@ const sameTime = (a: unknown, b: unknown) => typeof a === "string" && typeof b =
  */
 export async function syncAnnualSchedule(now: Date) {
   const year = seasonYearAt(now);
-  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: `${year}-12-07T08:00:00.000Z` }, { onConflict: "season_year" }).select("id").single();
+  const { data: season, error: seasonError } = await supabaseAdmin.from("bowl_pool_seasons").upsert({ season_year: year, player_visible_at: bowlPoolLaunchAt(year) }, { onConflict: "season_year" }).select("id").single();
   if (seasonError || !season) return 0;
   const events = (await espnPostseasonEvents(year, "postseason schedule")).filter((event) => event.season?.type === 3 && event.competitions?.[0]?.competitors?.length === 2);
   const { data: existing, error: existingGamesError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, order_index, time_confirmed, line_lock_at, is_cfp, away_team_id, home_team_id, venue_name, venue_city, venue_state").eq("season_id", season.id).order("order_index");

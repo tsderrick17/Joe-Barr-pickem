@@ -13,14 +13,14 @@ const feed = (await read("espn-bowl-schedule-2026-10-31.json")).events;
 const seeded = await read("bowl-pool-seeded-2026.json");
 
 const SEASON = { id: "season-1" };
-let games; let teams; let lines; let lineRows; let reminderCancels; let gameWrites; let failUpdateFor;
+let games; let teams; let lines; let lineRows; let reminderCancels; let gameWrites; let failUpdateFor; let seasonUpserts;
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const startingGames = () => clone(seeded).map((game) => ({ line_lock_at: game.kickoff_at, is_cfp: /first round|fiesta|cotton|peach|rose|orange|sugar|national/i.test(game.bowl_name), away_team_id: null, home_team_id: null, venue_name: null, venue_city: null, venue_state: null, ...game, provider_game_id: game.provider_game_id }));
 
 const respond = (table, calls) => {
   const names = calls.map(([name]) => name);
   const arg = (method, index = 0) => calls.find(([name]) => name === method)?.[1][index];
-  if (table === "bowl_pool_seasons") return { data: SEASON, error: null };
+  if (table === "bowl_pool_seasons") { if (names.includes("upsert")) seasonUpserts.push(clone(arg("upsert"))); return { data: SEASON, error: null }; }
   if (table === "bowl_pool_games") {
     if (names.includes("update")) {
       const id = calls.find(([name, args]) => name === "eq" && args[0] === "id")[1][1];
@@ -84,7 +84,7 @@ const { syncAnnualSchedule } = await import("../src/lib/sync-bowl-pool.ts");
 const { resetOperationalWarningMemo } = await import("../src/lib/operational-warnings.ts");
 
 const realFetch = globalThis.fetch;
-const reset = () => { resetOperationalWarningMemo(); games = startingGames(); teams = []; lines = []; lineRows = new Map(); reminderCancels = []; gameWrites = []; failUpdateFor = null; bowlSyncFixture.database = recordingDatabase(respond); };
+const reset = () => { resetOperationalWarningMemo(); games = startingGames(); teams = []; lines = []; lineRows = new Map(); reminderCancels = []; gameWrites = []; seasonUpserts = []; failUpdateFor = null; bowlSyncFixture.database = recordingDatabase(respond); };
 const pull = async (events, now = "2026-12-01T12:00:00Z") => {
   globalThis.fetch = async () => ({ ok: true, json: async () => ({ events }) });
   try { return await syncAnnualSchedule(new Date(now)); } finally { globalThis.fetch = realFetch; }
@@ -104,6 +104,7 @@ test("December 1: the five missing games are added, the seeded rows keep their n
   assert.deepEqual(games.filter((game) => game.id.startsWith("inserted")).map((game) => game.bowl_name).sort(), ["Holiday", "Snoop Dogg Arizona", "Tony the Tiger Sun", "TransPerfect San Juan", "San Diego County Credit Union Poinsettia"].sort());
   assert.equal(byName("Frisco").provider_game_id.startsWith("espn:"), true, "linked to ESPN");
   assert.equal(byName("Cure").bowl_name, "Cure");
+  assert.deepEqual(seasonUpserts, [{ season_year: 2026, player_visible_at: "2026-12-07T08:00:00.000Z" }], "the season opens to players at the one launch time");
   for (const name of ["Frisco", "Frisco Football Classic", "Las Vegas", "Texas", "Liberty", "Music City"]) assert.equal(games.filter((game) => game.bowl_name === name).length, 1, `${name} appears once`);
 });
 

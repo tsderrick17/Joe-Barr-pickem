@@ -28,6 +28,11 @@ and add a row above.
 - **One ladder:** the score retry ladder (10 x6, 20 x3, 60, 120, 240 minutes) lives in `src/lib/score-retry-ladder.js`; the score worker and the credit charts both read it. The unused playoff flag on the polling helpers is gone (both seasons use one ladder).
 - **Readiness route:** the Bowl readiness page reads the season's games and entries once and uses their ids for the other reads (it used to repeat the same query four times), and a failed read now answers 500 instead of being assessed as empty ("no lines" would have read as every game missing a spread).
 
+## 2026-10-31 - The Bowl launch rule is written once, and the header works out the date in the browser
+
+- **One rule:** "December 7, 3:00 AM Eastern" lives only in `bowlPoolLaunchAt` (`src/lib/bowl-pool.js`). The schedule sync no longer writes its own `YYYY-12-07T08:00:00.000Z` into `bowl_pool_seasons.player_visible_at`; it calls the helper. (The SQL migrations that seed or dispatch a season still carry the same 08:00 UTC; they are history and the database function, not a second copy the app reads.)
+- **Header tab:** the inline script in `<head>` used to hold the launch time as a number worked out when the page was built, so from August 1 2027 it would have shown "NCAA Bowls" all year until the account answered and the tab then moved. It now carries the rule (month, day, UTC time from the helper) and works out the season year in the browser the way `seasonYearAt` does (Eastern time, new season on August 1). A test runs the built script at instants across several seasons and requires it to agree with `bowlSeasonOpen`.
+
 ## 2026-10-31 - Bowl scores are never taken from the odds feed, unchecked reads fail loud, and the weekly prune keeps its own clock
 
 - **ESPN only:** the Bowl Pool score worker no longer falls back to The Odds API's scores. A game is settled from ESPN's final alone (the rule from the cancellation work); the odds feed only supplies lines. A final with a missing score is skipped, never settled.
