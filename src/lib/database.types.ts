@@ -2531,6 +2531,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      record_verified_final: {
+        Args: {
+          actor_player_id?: string
+          target_game_id: string
+          verification_source: string
+          verified_away_score: number
+          verified_home_score: number
+        }
+        Returns: {
+          ats_picks_graded: number
+          final_scores_imported: number
+          survivor_picks_graded: number
+        }[]
+      }
       recover_pending_ats_grades: {
         Args: never
         Returns: {
