@@ -53,7 +53,7 @@ check schedule, selections, line locks, scoring, recap readiness, and week/round
 handoff; select a stage for the exact hold and next safe action. Below it are the
 game pipeline, the key counts, and what is up next. The repair and health tools
 are drawers at the bottom of Today: **Game-day guide**, **Fix something**
-(postponements, no contests, score corrections), **Checks and manual runs**, and
+(postponements, no contests, last-resort finals), **Checks and manual runs**, and
 **Health and safety** (automation, alerts, sign-in, activity log, handbook). Fix
 something and Health and safety open by themselves when the map says something
 needs the commissioner. Use the specialist tools only after the map identifies a need.
@@ -153,8 +153,11 @@ last resort.
 
 1. Run **Final Score Reconciliation**. It is read-only.
 2. Verify the official correction independently.
-3. Use the audited score-correction control once. It must preserve void rows,
-   regrade affected picks atomically, and record league impact.
+3. There is no screen for this (owner decision 2026-11-01: a wrong final is rare
+   enough to handle by hand). Ask the developer to run the audited database
+   function `correct_final_game_score_atomically` once for the game. It
+   preserves void rows, regrades affected picks atomically, and records league
+   impact.
 4. Confirm standings, receipts, and week state before allowing handoff.
 
 Never overwrite the original audit event or type an estimated score.

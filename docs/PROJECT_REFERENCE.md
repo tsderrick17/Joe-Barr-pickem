@@ -529,7 +529,9 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Pending affected ATS and Survivor picks become `void` atomically and receive
   append-only audit events. A legal unstarted replacement can be selected.
 - A verified score correction uses the audited atomic correction function. It
-  preserves void rows, regrades affected picks, and records league impact.
+  preserves void rows, regrades affected picks, and records league impact. It
+  has no Commissioner screen (owner decision 2026-11-01: rare enough to run by
+  hand); a wrong final is corrected by running the function against the game.
 - A game still not final more than three days after kickoff (past the score
   provider's window) can be finalized by hand: Game Exceptions → "Enter a
   verified final" calls `record_verified_final`, which requires a verification
