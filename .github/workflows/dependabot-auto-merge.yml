@@ -1,0 +1,52 @@
+name: Dependabot patch auto-merge
+
+# A Dependabot pull request whose every dependency moves by a patch version (1.2.3 to 1.2.4) and is an npm package is set to merge by itself once the
+# required checks pass (Application quality "verify" and, for Dependabot, the intentionally skipped database run). Anything else is left for the owner:
+# a minor or major version, or a GitHub Action (actions run with the repository's secrets and permissions, so those are never merged automatically).
+#
+# This only asks GitHub to merge when the checks are green; it never merges by itself. It needs "Allow auto-merge" switched on in the repository
+# settings; until then it says so and does nothing.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  patch-only:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ github.token }}
+      - id: decide
+        env:
+          UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          echo "$UPDATES" | jq -r '.[] | "\(.dependencyName) \(.prevVersion) -> \(.newVersion) (\(.updateType), \(.packageEcosystem))"'
+          if echo "$UPDATES" | jq -e 'length > 0 and all(.[]; .updateType == "version-update:semver-patch" and .packageEcosystem == "npm_and_yarn")' > /dev/null; then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+            echo "Every update is a patch of an npm package: asking GitHub to merge once the checks pass."
+          else
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "Not every update is a patch of an npm package: left for the owner to review and merge."
+          fi
+      - if: ${{ steps.decide.outputs.eligible == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if ! output=$(gh pr merge --auto --squash "$PR_URL" 2>&1); then
+            echo "$output"
+            case "$output" in
+              *"Auto merge is not allowed"*) echo "::notice::Auto-merge is switched off for this repository (Settings, General, Allow auto-merge), so this pull request waits for the owner." ;;
+              *) exit 1 ;;
+            esac
+          fi

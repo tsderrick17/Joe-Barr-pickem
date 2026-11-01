@@ -4,6 +4,14 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-31 - CI decides what a pull request needs, and Dependabot patch updates can merge themselves
+
+The 2026-10-31 audit (EFF-2, CLEAN-7, owner decision D6). The "changes" job of Application quality downloaded the repository's full history (over a gigabyte, mostly screenshot baselines) on every pull request just to list the changed files; it now asks GitHub's pull request API, and runs the screenshot suite if the list cannot be read. The required `database-lifecycle` check (about five minutes in a queue with one shared database) now has the same kind of gate: it runs when `supabase/`, `src/`, `scripts/`, the integration, browser and helper tests, or the package and workflow configuration changed. The audit proposed `src/lib` and `src/app/api` only; `src/` as a whole is used because the isolated run also drives the real login and Slate pages in a browser (player-flow), which a component change can break. A skipped job counts as passing for a required check, and a failed file check never skips the run (only an explicit "false" does).
+
+Not done, on measurement: building once for the four screenshot shards and splitting `build` out of `verify`. The build is 34 seconds of a 3-4 minute check, each shard builds in parallel on its own free runner, and sharing the output would add an upload and four downloads of a similar size, so the wall time would not improve.
+
+Decision D6: a Dependabot pull request in which every dependency is a patch version of an npm package is set to auto-merge by `dependabot-auto-merge.yml`, which only asks GitHub to merge once the required checks pass. Minor and major versions, and GitHub Actions (which run with the repository's secrets), still wait for the owner. It needs the repository's "Allow auto-merge" setting; until then it only says so.
+
 ## 2026-10-31 - A watchdog incident reaches the Commissioner by email and on their phone, and low provider credits have their own alert
 
 The 2026-10-31 audit (REL-6, owner decision D3) found the watchdog had one channel: if the Brevo key or account lapsed, the alert saying so was itself sent through Brevo. `notifyCommissioners` (now `src/lib/watchdog-notify.ts`) sends each new incident by email and, through the existing Web Push sender, to every device the Commissioner turned notifications on for; the notification opens the Commissioner Desk and a later alert for the same incident replaces it. The channels run independently and the alert counts as delivered when either gets through; a failure of either is saved as an operational warning (Recent warnings) and sent to Sentry, and only both failing makes the watchdog retry. A Commissioner with no phone set up is not a failure.
