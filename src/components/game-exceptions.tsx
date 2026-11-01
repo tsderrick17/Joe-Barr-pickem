@@ -213,12 +213,17 @@ export default function GameExceptions() {
           <p className="mt-2 text-sm text-red-950">
             The score provider can no longer supply these games (more than three days old). Enter a final only after you have checked the score yourself on NFL.com or ESPN. Every pick on the game is graded right away.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <select aria-label="Game to enter a final for" className="min-w-64 desk-button px-3 py-2" value={finalGameId} onChange={(event) => setFinalGameId(event.target.value)}>
-              <option value="">Choose the game</option>
-              {manualFinalGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
-            </select>
-          </div>
+          <p className="mt-3 text-sm font-bold">Which game?</p>
+          <ul className="mt-2 space-y-2">
+            {manualFinalGames.map((game) => (
+              <li key={game.id}>
+                <button aria-pressed={game.id === finalGameId} className={`desk-button w-full px-3 py-2 text-left font-bold ${game.id === finalGameId ? "ring-2 ring-red-900" : ""}`} onClick={() => setFinalGameId(game.id)} type="button">
+                  {game.awayTeam} at {game.homeTeam}
+                  <span className="block text-sm font-normal">{game.week} · {new Date(game.kickoffAt).toLocaleDateString()}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
           {finalGame ? (
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <label className="text-sm font-bold">

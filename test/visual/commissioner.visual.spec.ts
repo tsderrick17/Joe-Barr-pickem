@@ -195,10 +195,11 @@ async function openLastResortFinal(page: Page) {
   if ((await drawer.getAttribute("open")) === null) await drawer.locator("summary").click();
   const block = page.locator("#verified-final");
   await expect(block).toBeVisible({ timeout: 30_000 });
-  await block.getByLabel("Game to enter a final for").selectOption("g-overdue");
+  await block.getByRole("button", { name: /Cleveland Browns at Pittsburgh Steelers/ }).click();
   await block.getByLabel("Cleveland Browns").fill("20");
   await block.getByLabel("Pittsburgh Steelers").fill("17");
   await block.getByLabel("Where you checked it").fill("NFL.com box score");
+  await block.getByLabel("Where you checked it").blur();
   return block;
 }
 
