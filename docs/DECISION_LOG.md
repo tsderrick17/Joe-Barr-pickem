@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - The 6 Wk axis is always for a full six-week stretch
+
+The 6 Wk axis (2026-10-30) fitted whatever part of the timeline was on screen. At either end of the chart, and especially while pulling past it (the bounce on a phone), that part is fewer than six weeks, so the numbers rescaled to a short piece of the season. The owner does not want the axis to change there. The axis is now for the six-week stretch nearest the scroll position: `snapshotStretch` clamps the stretch to a full window inside the season, so the first and latest ends, and the bounce past them, give the axis of the first or latest six weeks. Between the ends it still follows the scroll to a twentieth of a week, on the spring and one tick spacing as before. All is unchanged.
+
 ## 2026-11-01 - A wrong final is corrected by hand, not from a Commissioner screen
 
 `correct_final_game_score_atomically` (regrades every pick and Survivor entry from a corrected score, with an audit row) exists and is tested, but no route or screen calls it. The runbook used to say "use the audited score-correction control". The owner chose not to build one (a wrong final needs the provider or the NFL to get a score wrong): the runbook and project reference now say the correction is run against the database function by the developer. The Fix something drawer's label still says "verified score corrections"; it is left as is to keep the Today screenshots unchanged.
