@@ -6,7 +6,7 @@ change, not a measured latency or Vercel CPU improvement.
 ## Before and after
 
 The selected-period branch of
-[`/api/admin/grading-dashboard`](../src/app/api/admin/grading-dashboard/route.ts)
+[`/api/admin/grading-dashboard`](../../src/app/api/admin/grading-dashboard/route.ts)
 previously read `games` twice: a full selected-period row query and a second
 ID-only query used to form the `game_lines` filter. The line query itself was
 also issued once. The two `games` queries named the same scoring period.
@@ -17,7 +17,7 @@ also issued once. The two `games` queries named the same scoring period.
 | ID-only `games` rows | 1 | 0 |
 | `game_lines` by those IDs | 1 | 1 |
 
-[`readGradingGamesAndLines`](../src/lib/grading-dashboard-reads.js) normalizes
+[`readGradingGamesAndLines`](../../src/lib/grading-dashboard-reads.js) normalizes
 the full game query to one promise. The dashboard consumes that same result and
 the line query depends on its IDs. Unrelated dashboard reads remain in the
 parallel batch. Empty or failed game reads still pass an empty ID list to the

@@ -9,7 +9,7 @@ annual rollover. `AGENTS.md` loads the short mandatory rules; this file holds
 the detailed context behind them.
 
 For a code-owner and request-boundary overview, see the
-[architecture and measurement map](ARCHITECTURE_MAP.md).
+[architecture and measurement map](history/ARCHITECTURE_MAP.md).
 
 ## Product in one paragraph
 
@@ -614,7 +614,7 @@ may enrich spreads but cannot override canonical schedule assignments.
   ambiguous or missing polling attribution are excluded from that cost trend;
   separate game- and period-level latency charts are not shown in this card.
   Its selected-period game rows also supply the IDs for the locked-line read;
-  see the [request-count note](GRADING_READ_OPTIMIZATION.md). This does not
+  see the [request-count note](history/GRADING_READ_OPTIMIZATION.md). This does not
   change grading, provider polling, or player-visible data.
 - Commissioner Connected Systems also reports calendar-month quota usage,
   scheduled month-end forecast, source breakdown, and average tracked credits

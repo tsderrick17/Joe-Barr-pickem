@@ -1,9 +1,9 @@
 import { providerRequestCost } from "./provider-efficiency.js";
 import { getLineLock } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
+import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
-const DEFAULT_SCORE_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
 function dateKeyInZone(value, timeZone) {
   const parts = dateFormat("en-US", {
     timeZone,
@@ -127,7 +127,7 @@ function scheduleSlates(games) {
   return groups;
 }
 
-export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = DEFAULT_SCORE_RETRY_MINUTES, regularSeasonGameDates = []) {
+export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMinutes = SCORE_RETRY_MINUTES, regularSeasonGameDates = []) {
   const timeZone = "America/New_York";
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
   const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();

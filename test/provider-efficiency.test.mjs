@@ -32,11 +32,10 @@ test("regular-season score polling uses a predictable cadence before expanding i
   assert.equal(nextScoreCheckAt(12, now), "2026-09-14T04:00:00.000Z");
 });
 
-test("playoff polling uses the same predictable ladder while the fifty-credit reserve remains", () => {
+test("polling follows one ladder in every round, and holds only when the fifty-credit reserve is gone", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now, false), "2026-09-14T00:10:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now, true), "2026-09-14T00:10:00.000Z");
-  assert.equal(nextScoreCheckAt(9, now, true), "2026-09-14T00:20:00.000Z");
+  assert.equal(nextScoreCheckAt(1, now), "2026-09-14T00:10:00.000Z");
+  assert.equal(nextScoreCheckAt(9, now), "2026-09-14T00:20:00.000Z");
   assert.equal(shouldHoldScorePollingForQuota(49, "2026-09-13T00:00:00.000Z", now), true);
   assert.equal(shouldHoldScorePollingForQuota(50, "2026-09-13T00:00:00.000Z", now), false);
 });
@@ -93,7 +92,7 @@ test("a rejected score-provider call persists per-game backoff before failing", 
   const failureHandler = source.slice(source.lastIndexOf("} catch (error)"));
   // A provider failure backs the games off; a run stopped by its own deadline does not (see the cancellation tests).
   assert.match(failureHandler, /if \(!providerResponseAccepted && !cancelledByDeadline\)/);
-  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds\)/);
+  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt\)/);
   assert.match(failureHandler, /providerChecked: providerRequestAttempted/);
   assert.match(failureHandler, /requestsLast: failedRequestsLast/);
 });

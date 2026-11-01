@@ -22,7 +22,7 @@ Use this authority order when sources disagree:
 1. Current timestamped migrations and the deployed database contract.
 2. Executable tests.
 3. Current application code.
-4. `docs/PROJECT_REFERENCE.md` and accepted entries in `docs/DECISION_LOG.md`.
+4. `docs/PROJECT_REFERENCE.md` and accepted entries in `docs/DECISION_LOG.md` (older ones are archived unchanged in `docs/decisions/`).
 5. Older operational notes.
 
 Do not silently choose between conflicting sources. Determine the implemented

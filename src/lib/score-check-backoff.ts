@@ -1,22 +1,18 @@
+import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
+
 const MINUTE = 60_000;
 
 export type ScorePollingMode = "regular" | "playoff";
 
-// Both seasons use the same predictable post-kickoff ladder. The 10-minute
-// worker tick makes the first six windows 10 minutes apart in wall-clock time;
-// later windows deliberately widen to preserve provider headroom.
-export const SCORE_POLLING_RETRY_MINUTES = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240] as const;
+// Both seasons use the same post-kickoff ladder (see score-retry-ladder.js).
+export const SCORE_POLLING_RETRY_MINUTES = SCORE_RETRY_MINUTES;
 
 export function scorePollingMode(isPlayoff: boolean): ScorePollingMode {
   return isPlayoff ? "playoff" : "regular";
 }
 
-function scorePollingDelayMinutes(
-  attempts: number,
-  isPlayoff: boolean,
-) {
+function scorePollingDelayMinutes(attempts: number) {
   const index = Math.max(0, attempts - 1);
-  void isPlayoff;
   return SCORE_POLLING_RETRY_MINUTES[index] ?? 120;
 }
 
@@ -27,9 +23,8 @@ function scorePollingDelayMinutes(
 export function nextScoreCheckAt(
   attempts: number,
   now = new Date(),
-  isPlayoff = false,
 ) {
-  const delayMinutes = scorePollingDelayMinutes(attempts, isPlayoff);
+  const delayMinutes = scorePollingDelayMinutes(attempts);
 
   return new Date(now.getTime() + delayMinutes * MINUTE).toISOString();
 }

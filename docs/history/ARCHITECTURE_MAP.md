@@ -2,7 +2,7 @@
 
 Updated October 7, 2026 after the off-season, validation, authentication, types, budget, Slate and worker work. This map is a guide to
 ownership and request boundaries, not a replacement for
-[PROJECT_REFERENCE.md](PROJECT_REFERENCE.md), current migrations, or tests.
+[PROJECT_REFERENCE.md](../PROJECT_REFERENCE.md), current migrations, or tests.
 Paths and conditional requests may change; recheck the code before making a
 performance or security decision.
 
@@ -10,35 +10,35 @@ performance or security decision.
 
 | Flow | Entry and orchestration | Decision / privacy boundary | Durable authority |
 | --- | --- | --- | --- |
-| Standings and Pick'em Pad | [`/api/home`](../src/app/api/home/route.ts) authenticates, reads the current season, periods, players, picks, games, lines, championships, and conditional Survivor data. | [`home-shape.ts`](../src/lib/home-shape.ts) counts wins and reveals the viewer's own picks, but another player's pick only after that game's kickoff. | Games, picks, lines, periods, and championships in current database migrations. |
-| The Slate | [`/api/board`](../src/app/api/board/route.ts) resolves the requested/default week and reads games, the viewer's saved picks, players, lines, and conditional Survivor state. | [`slate-shape.ts`](../src/lib/slate-shape.ts) exposes named public pickers only for started games. [`slate-view.ts`](../src/lib/slate-view.ts) owns page-side selection decisions. | Period/game pins and saved selections in the database. |
-| Pick save | [`/api/picks`](../src/app/api/picks/route.ts) checks identity, active player, week, eligibility, existing picks, and selected games. | [`slate-submission.js`](../src/lib/slate-submission.js) prepares ATS replacements; the route distinguishes omitted Survivor input from a requested Survivor change. | Atomic `replace_unlocked_picks` or `save_slate_selections` RPCs, plus database kickoff and integrity guards. |
-| Grading dashboard | [`/api/admin/grading-dashboard`](../src/app/api/admin/grading-dashboard/route.ts) checks the Commissioner, then reads season/period, game and pick status, worker records, reminders, incidents, and provider history. | [`require-commissioner.ts`](../src/lib/require-commissioner.ts) gates access; route-local functions summarize game state and latency. | Final/grade/line records and audited worker runs. |
-| Final-score worker | [`/api/cron/sync-scores`](../src/app/api/cron/sync-scores/route.ts) checks the automation secret and takes an execution lease before [`sync-final-scores.ts`](../src/lib/sync-final-scores.ts). | Due-game/backoff/quota checks decide whether the provider is called. Verified finals are normalized and applied through guarded database operations; absence from a provider response is not deletion. | Atomic grading, disruption, eligibility, period-transition, audit, and run-record functions. |
-| Official lines | [`/api/cron/lock-lines`](../src/app/api/cron/lock-lines/route.ts) uses the same secret/lease boundary before [`lock-due-lines.ts`](../src/lib/lock-due-lines.ts). | Due-game selection, provider validation, and freshness of fallback lines. | Atomic official-line lock and audit operations; a locked line is not replaced retroactively. |
-| Scheduled email | [`/api/cron/maintain-reminders`](../src/app/api/cron/maintain-reminders/route.ts) reconciles future messages; [`/api/cron/send-reminders`](../src/app/api/cron/send-reminders/route.ts) claims and delivers due messages. Both are leased. | [`reminder-readiness.ts`](../src/lib/reminder-readiness.ts) can defer/suppress; [`email-reminders.ts`](../src/lib/email-reminders.ts) selects recipients and preserves delivery receipts. | `push_reminders` and delivery records. The table/RPC names are historical; the transport is email. |
+| Standings and Pick'em Pad | [`/api/home`](../../src/app/api/home/route.ts) authenticates, reads the current season, periods, players, picks, games, lines, championships, and conditional Survivor data. | [`home-shape.ts`](../../src/lib/home-shape.ts) counts wins and reveals the viewer's own picks, but another player's pick only after that game's kickoff. | Games, picks, lines, periods, and championships in current database migrations. |
+| The Slate | [`/api/board`](../../src/app/api/board/route.ts) resolves the requested/default week and reads games, the viewer's saved picks, players, lines, and conditional Survivor state. | [`slate-shape.ts`](../../src/lib/slate-shape.ts) exposes named public pickers only for started games. [`slate-view.ts`](../../src/lib/slate-view.ts) owns page-side selection decisions. | Period/game pins and saved selections in the database. |
+| Pick save | [`/api/picks`](../../src/app/api/picks/route.ts) checks identity, active player, week, eligibility, existing picks, and selected games. | [`slate-submission.js`](../../src/lib/slate-submission.js) prepares ATS replacements; the route distinguishes omitted Survivor input from a requested Survivor change. | Atomic `replace_unlocked_picks` or `save_slate_selections` RPCs, plus database kickoff and integrity guards. |
+| Grading dashboard | [`/api/admin/grading-dashboard`](../../src/app/api/admin/grading-dashboard/route.ts) checks the Commissioner, then reads season/period, game and pick status, worker records, reminders, incidents, and provider history. | [`require-commissioner.ts`](../../src/lib/require-commissioner.ts) gates access; route-local functions summarize game state and latency. | Final/grade/line records and audited worker runs. |
+| Final-score worker | [`/api/cron/sync-scores`](../../src/app/api/cron/sync-scores/route.ts) checks the automation secret and takes an execution lease before [`sync-final-scores.ts`](../../src/lib/sync-final-scores.ts). | Due-game/backoff/quota checks decide whether the provider is called. Verified finals are normalized and applied through guarded database operations; absence from a provider response is not deletion. | Atomic grading, disruption, eligibility, period-transition, audit, and run-record functions. |
+| Official lines | [`/api/cron/lock-lines`](../../src/app/api/cron/lock-lines/route.ts) uses the same secret/lease boundary before [`lock-due-lines.ts`](../../src/lib/lock-due-lines.ts). | Due-game selection, provider validation, and freshness of fallback lines. | Atomic official-line lock and audit operations; a locked line is not replaced retroactively. |
+| Scheduled email | [`/api/cron/maintain-reminders`](../../src/app/api/cron/maintain-reminders/route.ts) reconciles future messages; [`/api/cron/send-reminders`](../../src/app/api/cron/send-reminders/route.ts) claims and delivers due messages. Both are leased. | [`reminder-readiness.ts`](../../src/lib/reminder-readiness.ts) can defer/suppress; [`email-reminders.ts`](../../src/lib/email-reminders.ts) selects recipients and preserves delivery receipts. | `push_reminders` and delivery records. The table/RPC names are historical; the transport is email. |
 
 Player authentication uses a bearer session checked against Supabase Auth and
 an active `players` row. Browser reads and refreshes share the session path in
-[`auth-session.ts`](../src/lib/auth-session.ts); there is no durable browser
+[`auth-session.ts`](../../src/lib/auth-session.ts); there is no durable browser
 authorization cache. Every protected route, player and Commissioner, uses the one
-request-scoped result in [`authenticate-active-player.ts`](../src/lib/authenticate-active-player.ts)
+request-scoped result in [`authenticate-active-player.ts`](../../src/lib/authenticate-active-player.ts)
 (401 / 403 / 503 / 500 with stable codes), through `commissionerAccess`
 and `profilePlayerAccess` where a name or the preference columns are needed.
 Automation uses a separate secret, lease, and heartbeat path; a player's browser
 token does not authorize workers.
 
-Other seams added since: request bodies are validated first ([`request-validation.ts`](../src/lib/request-validation.ts),
-[`request-bodies.ts`](../src/lib/request-bodies.ts)); database types are generated and
-committed ([`database.types.ts`](../src/lib/database.types.ts)); the season phase decides
-what runs and what players see ([`season-phase.ts`](../src/lib/season-phase.ts), `season_phase()` in the
-database); the Slate page's state is one reducer ([`slate-state.ts`](../src/lib/slate-state.ts)); and each
-automation run has a deadline context with checkpoints ([`execution-context.ts`](../src/lib/execution-context.ts),
-see [WORKER_STAGES.md](WORKER_STAGES.md)).
+Other seams added since: request bodies are validated first ([`request-validation.ts`](../../src/lib/request-validation.ts),
+[`request-bodies.ts`](../../src/lib/request-bodies.ts)); database types are generated and
+committed ([`database.types.ts`](../../src/lib/database.types.ts)); the season phase decides
+what runs and what players see ([`season-phase.ts`](../../src/lib/season-phase.ts), `season_phase()` in the
+database); the Slate page's state is one reducer ([`slate-state.ts`](../../src/lib/slate-state.ts)); and each
+automation run has a deadline context with checkpoints ([`execution-context.ts`](../../src/lib/execution-context.ts),
+see [WORKER_STAGES.md](../WORKER_STAGES.md)).
 
 ## Read-path cost inventory
 
-> Measured route costs for Home and the Slate now exist: [RESPONSE_COST_BASELINE.md](RESPONSE_COST_BASELINE.md),
+> Measured route costs for Home and the Slate now exist: [RESPONSE_COST_BASELINE.md](../RESPONSE_COST_BASELINE.md),
 > with regression budgets in `test/route-cost-budgets.json`. The grading dashboard and the workers are still
 > only inventoried below.
 
@@ -78,7 +78,7 @@ privacy and rule tests should become a regression budget.
   boundary, not a claim that every JavaScript module is checked; expand it as
   modules gain accurate input contracts. CI runs this check before tests.
   The isolated browser/database, visual, and production-smoke checks are
-  separate release gates described in the [Commissioner runbook](commissioner-runbook.md).
+  separate release gates described in the [Commissioner runbook](../commissioner-runbook.md).
 - For privacy edits, test the shaping module and the authenticated route; a
   browser screenshot cannot prove that hidden selections were not returned.
 - For saves, preserve the atomic RPC boundary and test both rejection before

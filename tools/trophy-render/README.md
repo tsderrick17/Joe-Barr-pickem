@@ -2,7 +2,7 @@
 
 The Commissioner's Trophy Room shows the three trophies on a mahogany table that turns. The table is 120 pictures, one for every
 3 degrees of a full turn, in `public/trophies/turntable/`. They are 3D renders made here; nothing in this folder is part of the app
-build, and the app never runs it.
+build, and the app never runs it. Dependabot does not watch this folder's own `package-lock.json` (it is a local tool), so update its dependency by hand when a security notice names it.
 
 ## When a new champion is crowned
 
