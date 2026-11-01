@@ -1,5 +1,6 @@
 import { dateFormat } from "./date-format.js";
 import { FINAL_OVERDUE_HOURS } from "./final-overdue.js";
+import { creditsBelowReserve, PROVIDER_CREDIT_RESERVE } from "./provider-credits.js";
 
 const BOWL_ISSUE_TITLES = {
   teams: "A Bowl Pool game is still missing a team",
@@ -38,7 +39,7 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     ? new Date(health.latestScores.completed_at ?? health.latestScores.started_at).getTime()
     : 0;
   const scoreWorkerStale = !latestScoreTime || now.getTime() - latestScoreTime > 45 * 60 * 1000;
-  const quotaProtected = health.providerAllowance !== null && health.providerAllowance < 50;
+  const quotaProtected = creditsBelowReserve(health.providerAllowance);
   if (!quotaProtected && (
     (health.scoreChecksDueNow > 0 && (health.latestScores?.status === "failed" || scoreWorkerStale)) ||
     health.scoreProviderFailureStreak >= 3
@@ -48,6 +49,17 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       key: "stalled-final-scores", severity: "critical",
       title: "Final-score automation is stalled",
       detail: `${affectedGames} game${affectedGames === 1 ? " needs" : "s need"} a score check and the worker has not completed successfully. Automatic retries are conserving provider credits between attempts.`,
+    });
+  }
+  // Below the reserve the score worker stops spending credits, which also silences the stalled-scores alert above: this is the alert that says why.
+  // The balance comes from the last score run, so it only counts if that run was this month (credits renew on the 1st) and the NFL season is still on.
+  const reportedAt = health.providerCreditSnapshot?.reportedAt ? new Date(health.providerCreditSnapshot.reportedAt) : null;
+  const reportedThisMonth = reportedAt !== null && reportedAt.getUTCFullYear() === now.getUTCFullYear() && reportedAt.getUTCMonth() === now.getUTCMonth();
+  if (quotaProtected && reportedThisMonth && bootstrap.seasonState !== "complete") {
+    signals.push({
+      key: "odds-credits-below-reserve", severity: "critical",
+      title: "Score provider credits are almost used up",
+      detail: `Only ${health.providerAllowance} Odds API credit${health.providerAllowance === 1 ? " is" : "s are"} left this month (${PROVIDER_CREDIT_RESERVE} are kept in reserve). Final-score checks are paused to protect them, so NFL games will not be graded automatically until the credits renew on the 1st or the plan is upgraded.`,
     });
   }
   const overdueFinals = health.overdueFinals ?? [];
