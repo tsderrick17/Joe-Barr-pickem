@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - A touch is a pull only if it starts mostly down
+
+On the Season Snapshot a diagonal drag slid the chart and pulled the page down to refresh at the same time. The pull now decides in the first 6 px of a touch: mostly down is a pull and holds the finger to the page (the touch is cancelled, so a chart under it cannot also slide); sideways, diagonal or up belongs to the page or the chart and never pulls. A pull that began mostly down may still drift sideways and back up as before.
+
 ## 2026-11-01 - The 6 Wk axis is always for a full six-week stretch
 
 The 6 Wk axis (2026-10-30) fitted whatever part of the timeline was on screen. At either end of the chart, and especially while pulling past it (the bounce on a phone), that part is fewer than six weeks, so the numbers rescaled to a short piece of the season. The owner does not want the axis to change there. The axis is now for the six-week stretch nearest the scroll position: `snapshotStretch` clamps the stretch to a full window inside the season, so the first and latest ends, and the bounce past them, give the axis of the first or latest six weeks. Between the ends it still follows the scroll to a twentieth of a week, on the spring and one tick spacing as before. All is unchanged.
