@@ -248,7 +248,7 @@ score or repeatedly poll a failing provider.
 Its selected-period game/line reads reuse one game result rather than making
 an extra ID-only lookup. This is a request-count optimization, not a reason to
 change the refresh cadence or an assurance of lower Vercel CPU. See the
-[measurement note](GRADING_READ_OPTIMIZATION.md) before comparing costs.
+[measurement note](history/GRADING_READ_OPTIMIZATION.md) before comparing costs.
 
 The **Recent operational history** list is the durable audit trail for the
 current view. It is useful for answering whether a final score was accepted,

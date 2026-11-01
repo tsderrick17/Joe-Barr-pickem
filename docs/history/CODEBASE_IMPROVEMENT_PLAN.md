@@ -72,11 +72,11 @@ The existing response-shaping modules, atomic database functions, isolated
 rehearsals, screenshot suite, due-work dispatch gates, and production health
 checks provide the foundation. Extend those mechanisms where they already fit.
 
-The governing references are [AGENTS.md](../AGENTS.md),
-[PROJECT_REFERENCE.md](PROJECT_REFERENCE.md), [SOP_INDEX.md](SOP_INDEX.md),
-[isolated testing](isolated-integration-tests.md),
-[database deployment](supabase-github-cutover.md), and
-[view states](VIEW_STATES.md).
+The governing references are [AGENTS.md](../../AGENTS.md),
+[PROJECT_REFERENCE.md](../PROJECT_REFERENCE.md), [SOP_INDEX.md](../SOP_INDEX.md),
+[isolated testing](../isolated-integration-tests.md),
+[database deployment](../supabase-github-cutover.md), and
+[view states](../VIEW_STATES.md).
 
 ## Execution rules
 
@@ -443,7 +443,7 @@ and delivery receipts when recovering from a failed release.
 - [x] Invalid submissions cannot reach property access or mutations unchecked.
 - [ ] Competitive rules have execution coverage across application and database (application scenarios exist; the shared database run is open).
 - [x] State transitions preserve drafts and reject stale responses (Slate reducer; browser flow spec).
-- [x] Worker stages, deadlines, and uncertain outcomes have an explicit contract ([WORKER_STAGES.md](WORKER_STAGES.md)).
+- [x] Worker stages, deadlines, and uncertain outcomes have an explicit contract ([WORKER_STAGES.md](../WORKER_STAGES.md)).
 - [~] Cost improvements have measured evidence and practical regression budgets (Home and Slate measured and budgeted; workers, grading dashboard and the picks read are open).
 - [ ] Styling and functional refactors remain independently reviewable (stylesheet work still ahead).
 - [x] Current reference/runbook entries describe the delivered behavior, and every

@@ -89,6 +89,30 @@ snapshot and every official competition record remain. It never calls a
 provider or needs an app secret. The Commissioner Connected systems section
 includes a read-only per-table size breakdown for review.
 
+## Secrets and keys inventory
+
+Where each secret lives, what stops without it, and which check notices. Values are
+never written here, in a pull request, in a log or in a chat. "Expires" says whether
+the secret lapses by itself; where it does, the date is set in that service's
+dashboard when the secret is made, so look there (the app cannot read it).
+
+| Secret | Lives in | Expires | What breaks | What notices |
+| --- | --- | --- | --- | --- |
+| `CRON_SECRET` | Vercel (all environments) **and** the Supabase Vault `cron_secret`; the two must match | No; change both together | Every automation route answers 401, so scores, lines, reminders and the watchdog stop | Launch preflight "Cron authorization" (compares Vercel with Vault); the automation heartbeat monitor goes red |
+| `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`) | Vercel | No, unless rotated in Supabase | Every server route and worker | `/api/health`, UptimeRobot, Sentry |
+| `PLAYER_AUTH_PEPPER` (32+ characters) | Vercel (all environments) | No; never rotate casually (see the Commissioner runbook, "Verify protected player credentials") | PIN sign-in is unavailable | Launch preflight "Player sign-in credential" |
+| `ODDS_API_KEY` | Vercel | Set by the provider's plan; credits renew monthly | NFL lines and the score fallback; Bowl lines | Launch preflight "NFL odds provider" (zero-credit check); the `odds-credits-below-reserve` watchdog alert when fewer than 50 credits remain |
+| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` | Vercel | Set when the key is made in Brevo | All pool email; the Commissioner's watchdog email (the phone alert still goes) | Launch preflight "Brevo delivery account"; a "watchdog alert email could not be sent" warning on the Automation tab. Whether the sender's domain is **Authenticated** in Brevo is only visible in Brevo itself |
+| `GITHUB_USAGE_TOKEN` | Vercel | Set when the token is made in GitHub | Nothing player-facing: the backup health check and usage panel fall back to anonymous reads | The usage panel shows "unavailable" |
+| `SENTRY_USAGE_TOKEN`, `UPTIMEROBOT_READ_ONLY_API_KEY` | Vercel | Set when made | Only the Commissioner's account-capacity panel | The panel shows that service as unavailable |
+| `BACKUP_ENCRYPTION_KEY` | GitHub repository secret **and** a safe place outside GitHub | No | Backups still run but cannot be decrypted if the passphrase is lost | Nothing, until a restore is attempted: keep a second copy outside GitHub |
+| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID` | GitHub repository secrets | Set when the token is made in Supabase | Production migrations and the weekly backup | The backup health monitor turns red within eight days; the Supabase migrations workflow fails |
+| `PICKEM_TEST_*` (isolated database URL and keys) | GitHub `isolated-test` environment | The isolated project pauses after a week without traffic (the weekly keep-alive prevents that) | The `database-lifecycle` check and the weekly rehearsal | The `database-lifecycle` check fails; Supabase emails about a paused project |
+
+Not secrets, so they are not rotated: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+`NEXT_PUBLIC_SENTRY_DSN` (public by design; never put a token in a `NEXT_PUBLIC_*` variable), the optional
+`NFL_FULL_SCHEDULE_URL` override (default: nflverse) and `BOWL_POOL_ODDS_API_ENABLED` (a switch).
+
 ## Provider allowance
 
 The NFL final-score worker is called only when it has work (see "Reproducible

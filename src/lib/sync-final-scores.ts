@@ -64,7 +64,6 @@ async function deferUnfinishedScoreChecks(
   games: GameRow[],
   previousChecks: Map<string, ScoreCheckBackoffRow>,
   checkedAt: string,
-  playoffPeriodIds: Set<string>,
 ) {
   if (games.length === 0) return;
 
@@ -76,11 +75,7 @@ async function deferUnfinishedScoreChecks(
       game_id: game.id,
       attempts,
       last_checked_at: checkedAt,
-      next_check_at: nextScoreCheckAt(
-        attempts,
-        checked,
-        playoffPeriodIds.has(game.scoring_period_id),
-      ),
+      next_check_at: nextScoreCheckAt(attempts, checked),
       updated_at: checkedAt,
     };
   });
@@ -337,7 +332,7 @@ export async function syncFinalScores({
     );
 
     if (completedEvents.length === 0) {
-      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
+      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
       const result = buildResult({
         eligibleGames: eligibleGames.length,
         providerChecked: true,
@@ -411,7 +406,7 @@ export async function syncFinalScores({
       const stillUnfinished = eligibleGames.filter(
         (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
       );
-      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, playoffPeriodIds);
+      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt);
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;
@@ -476,7 +471,7 @@ export async function syncFinalScores({
         // Network failures, timeouts, HTTP errors, and malformed payloads use
         // the same persistent per-game exponential backoff as a delayed final.
         // The five-minute cron can then exit without spending another credit.
-        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, playoffPeriodIds);
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
       } catch {
         await finishSyncRun(run.data.id, {
           status: "failed",
