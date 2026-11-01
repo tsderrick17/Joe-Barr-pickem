@@ -176,7 +176,10 @@ export async function syncAnnualSchedule(now: Date) {
       if (error) throw new Error("The Bowl Pool order could not be saved.");
     }
   }
-  if (championshipGameId) await supabaseAdmin.from("bowl_pool_seasons").update({ championship_game_id: championshipGameId }).eq("id", season.id);
+  if (championshipGameId) {
+    const { error: championshipSaveError } = await supabaseAdmin.from("bowl_pool_seasons").update({ championship_game_id: championshipGameId }).eq("id", season.id);
+    if (championshipSaveError) throw new Error("The Bowl Pool championship game could not be saved.");
+  }
   return imported;
 }
 
@@ -259,21 +262,16 @@ export async function syncScheduleAndLines(now: Date) {
  * left to the Commissioner; the overdue-final alert names it.
  */
 async function syncScores(now: Date) {
-  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id, espn_cancelled_seen_at").in("status", ["scheduled", "live"]);
+  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, espn_cancelled_seen_at").in("status", ["scheduled", "live"]);
   if (gamesReadError) throw new Error("Bowl Pool games awaiting scores could not be loaded.");
   if (!games?.length) return { finalized: 0, cancelled: 0 };
-  // ESPN is the no-cost source of truth for bowl results. The Odds API score
-  // feed remains an optional fallback when explicitly enabled, but score
-  // settlement must not depend on a paid NCAAF entitlement.
+  // ESPN is the no-cost source of truth for bowl results, and the only one: a score settles a game only when ESPN says it is final.
   const espnEvents = await espnPostseasonEvents(seasonYearAt(now), "scores");
-  const oddsEvents = process.env.BOWL_POOL_ODDS_API_ENABLED === "true"
-    ? await providerEvents("sports/americanfootball_ncaaf/scores", { daysFrom: "30" })
-    : [];
   let finalized = 0; let cancelled = 0;
   for (const game of games) {
     const espnEvent = espnEvents.find((candidate) => `espn:${candidate.id}` === game.provider_game_id);
     if (espnEvent && espnGameIsCancelled(espnEvent)) {
-      // Never settled from a score, ESPN's or the Odds API's.
+      // Never settled from a score.
       if (!game.espn_cancelled_seen_at) {
         const { error } = await supabaseAdmin.from("bowl_pool_games").update({ espn_cancelled_seen_at: now.toISOString() }).eq("id", game.id).is("espn_cancelled_seen_at", null);
         if (error) await noteOperationalWarning("bowl_scores", "A Bowl Pool game ESPN lists as cancelled could not be marked.", { gameId: game.id, code: error.code });
@@ -293,15 +291,9 @@ async function syncScores(now: Date) {
     const competitors = competition?.competitors ?? [];
     const away = competitors.find((competitor) => competitor.homeAway === "away") ?? competitors[0];
     const home = competitors.find((competitor) => competitor.homeAway === "home") ?? competitors[1];
-    let awayScore = parseScore(away?.score);
-    let homeScore = parseScore(home?.score);
-    if (!completed || awayScore === null || homeScore === null) {
-      const oddsEvent = oddsEvents.find((candidate) => candidate.id === game.odds_event_id);
-      if (!oddsEvent?.completed || oddsEvent.scores?.length !== 2) continue;
-      awayScore = parseScore(oddsEvent.scores.find((score) => score.name === oddsEvent.away_team)?.score);
-      homeScore = parseScore(oddsEvent.scores.find((score) => score.name === oddsEvent.home_team)?.score);
-    }
-    if (awayScore === null || homeScore === null) continue;
+    const awayScore = parseScore(away?.score);
+    const homeScore = parseScore(home?.score);
+    if (!completed || awayScore === null || homeScore === null) continue;
     const { error } = await supabaseAdmin.from("bowl_pool_games").update({ status: "final", away_score: awayScore, home_score: homeScore, finalized_at: now.toISOString() }).eq("id", game.id);
     if (!error) finalized += 1;
   }

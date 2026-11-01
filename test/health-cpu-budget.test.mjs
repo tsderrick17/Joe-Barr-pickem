@@ -73,6 +73,4 @@ test("the operations watchdog runs every fifteen minutes and preflight expects i
   assert.match(sql, /'pickem-operations-watchdog-every-ten-minutes',\s*'pickem-operations-watchdog-every-fifteen-minutes'/);
   assert.match(sql, /\('pickem-operations-watchdog-every-fifteen-minutes', 'Operations watchdog every fifteen minutes', '\*\/15 \* \* \* \*', '\/api\/cron\/watchdog', null::text\)/);
   assert.match(sql, /to_regprocedure\('cron\.schedule\(text,text,text\)'\) is not null/);
-  // The weekly prune window catches exactly one fifteen-minute tick.
-  assert.match(read("src/lib/automation-watchdog.ts"), /now\.getUTCHours\(\) === 13 && now\.getUTCMinutes\(\) < 15;/);
 });

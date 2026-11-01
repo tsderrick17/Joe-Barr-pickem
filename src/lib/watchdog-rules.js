@@ -133,6 +133,17 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
   return signals;
 }
 
+// The weekly storage cleanup runs on the first watchdog run once the last one is a week old (or none was ever recorded), not in one fixed
+// quarter-hour: if that single run failed or lost a lease race, the cleanup used to wait a whole week. It is safe to run more often, so a failed cleanup
+// is simply retried by the next run.
+export const STORAGE_PRUNE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isWeeklyStoragePruneDue(lastPrunedAt, now = new Date()) {
+  if (!lastPrunedAt) return true;
+  const timestamp = new Date(lastPrunedAt).getTime();
+  return !Number.isFinite(timestamp) || now.getTime() - timestamp >= STORAGE_PRUNE_INTERVAL_MS;
+}
+
 // A resolved incident that immediately returns is usually provider jitter or a
 // short-lived cron miss, not a new emergency. Keep a quiet period per signal so
 // the commissioner receives one useful message instead of a reopen/notify loop.

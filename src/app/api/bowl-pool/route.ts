@@ -29,15 +29,23 @@ export async function GET(request: NextRequest) {
   if (!player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]).filter((id): id is string => Boolean(id)))];
-  const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = await Promise.all([
-    teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, display_name, short_name, abbreviation, primary_color, secondary_color").in("id", teamIds) : Promise.resolve({ data: [] }),
+  const reads = await Promise.all([
+    teamIds.length ? supabaseAdmin.from("bowl_pool_teams").select("id, display_name, short_name, abbreviation, primary_color, secondary_color").in("id", teamIds) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("bowl_pool_entries").select("id, status, championship_total_guess, opted_in_at, opted_out_at, preview_selections").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle(),
     supabaseAdmin.from("bowl_pool_picks").select("id, game_id, selected_team_id, result").eq("entry_id", (await supabaseAdmin.from("bowl_pool_entries").select("id").eq("season_id", context.season.id).eq("player_id", player.id).maybeSingle()).data?.id ?? "00000000-0000-0000-0000-000000000000"),
     supabaseAdmin.from("bowl_pool_entries").select("id, player_id, status, championship_total_guess").eq("season_id", context.season.id),
     supabaseAdmin.from("bowl_pool_picks").select("entry_id, game_id, selected_team_id, result"),
-    gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, locked_spread, locked_at").in("game_id", gameIds) : Promise.resolve({ data: [] }),
+    gameIds.length ? supabaseAdmin.from("bowl_pool_game_lines").select("game_id, favorite_team_id, locked_spread, locked_at").in("game_id", gameIds) : Promise.resolve({ data: [], error: null }),
     supabaseAdmin.from("bowl_pool_game_results").select("entry_id, game_id, result"),
   ]);
+  // Every one of these feeds the standings or the player's own picks, so a failed read is an error, not an empty page: a missing read of picks or entries
+  // would show everyone with no picks.
+  const failedRead = reads.find((read) => read.error);
+  if (failedRead?.error) {
+    console.error("Bowl Pool read failed.", { code: failedRead.error.code, message: failedRead.error.message });
+    return NextResponse.json({ error: "The Bowl Pool could not be loaded right now. Please try again." }, { status: 503 });
+  }
+  const [{ data: teams }, { data: ownEntry }, { data: ownPicks }, { data: allEntries }, { data: allPicks }, { data: lines }, { data: automaticResults }] = reads;
   const teamById = new Map((teams ?? []).map((team) => [team.id, team]));
   const lineByGameId = new Map((lines ?? []).map((line) => [line.game_id, line]));
   const seasonEntryIds = new Set((allEntries ?? []).map((entry) => entry.id));
@@ -60,9 +68,14 @@ export async function GET(request: NextRequest) {
     }
   }
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
-  const { data: players } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
+  const { data: players, error: playersError } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
     ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
-    : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [] };
+    : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [], error: null };
+  // Without the names every standings row would read "Player".
+  if (playersError) {
+    console.error("Bowl Pool player names read failed.", { code: playersError.code, message: playersError.message });
+    return NextResponse.json({ error: "The Bowl Pool could not be loaded right now. Please try again." }, { status: 503 });
+  }
   const playerNameById = new Map((players ?? []).map((row) => [row.id, row.first_name]));
   const [{ data: championships }, { data: currentChampionships }] = await Promise.all([
     supabaseAdmin.from("pool_championships").select("player_id, season_year").eq("pool", "bowl").order("season_year", { ascending: false }),

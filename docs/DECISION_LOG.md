@@ -4,6 +4,14 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-31 - Bowl scores are never taken from the odds feed, unchecked reads fail loud, and the weekly prune keeps its own clock
+
+- **ESPN only:** the Bowl Pool score worker no longer falls back to The Odds API's scores. A game is settled from ESPN's final alone (the rule from the cancellation work); the odds feed only supplies lines. A final with a missing score is skipped, never settled.
+- **Reads that were unchecked now fail loud:** the Bowl Pool page (`GET /api/bowl-pool`) answers 503 "could not be loaded right now" when the entries, picks, results, lines, teams or players read fails, instead of showing standings with no picks or every name as "Player". The Slate's active-week games read logs its failure. The championship game save throws instead of being ignored.
+- **Weekly prune:** counted from the last prune the watchdog recorded (7 days), not from a weekday, so a missed run is made up on the next.
+- **Keep-alive:** the isolated test database gets its own weekly `select 1` workflow, and the scheduled-workflow keep-alive re-enables it.
+- **Deferred on purpose:** the `engines` field in package.json moves to Node 24.x after the Dec 7 Bowl launch, not before.
+
 ## 2026-10-31 - CI decides what a pull request needs, and Dependabot patch updates can merge themselves
 
 The 2026-10-31 audit (EFF-2, CLEAN-7, owner decision D6). The "changes" job of Application quality downloaded the repository's full history (over a gigabyte, mostly screenshot baselines) on every pull request just to list the changed files; it now asks GitHub's pull request API, and runs the screenshot suite if the list cannot be read. The required `database-lifecycle` check (about five minutes in a queue with one shared database) now has the same kind of gate: it runs when `supabase/`, `src/`, `scripts/`, the integration, browser and helper tests, or the package and workflow configuration changed. The audit proposed `src/lib` and `src/app/api` only; `src/` as a whole is used because the isolated run also drives the real login and Slate pages in a browser (player-flow), which a component change can break. A skipped job counts as passing for a required check, and a failed file check never skips the run (only an explicit "false" does).

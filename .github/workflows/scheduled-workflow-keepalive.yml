@@ -35,6 +35,7 @@ jobs:
             database-backup.yml \
             weekly-production-smoke.yml \
             isolated-integration.yml \
+            isolated-project-keepalive.yml \
             monthly-upgrade-rehearsal.yml; do
             gh api --method PUT "repos/${REPO}/actions/workflows/${workflow}/enable"
             echo "Enabled ${workflow}"
