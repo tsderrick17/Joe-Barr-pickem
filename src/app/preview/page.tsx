@@ -317,7 +317,7 @@ export default function PreviewPage() {
   if (access === "allowed") return <Rehearsal />;
   return <main className="min-h-screen bg-(color:--page-cream) px-6 py-10 text-(color:--themed-text-31)"><div className="mx-auto max-w-4xl">
     <h1 className="font-serif text-4xl font-bold">{access === "checking" ? "Checking sign-in" : "Commissioner only"}</h1>
-    {access === "denied" ? <p className="mt-3 max-w-2xl text-(color:--themed-text-29)">The rehearsal is the Commissioner&apos;s tool. <Link className="font-bold underline" href="/">Back to the Standings</Link></p> : null}
+    {access === "denied" ? <><p className="mt-3 max-w-2xl text-(color:--themed-text-29)">The rehearsal is the Commissioner&apos;s tool.</p><p className="mt-4"><Link className="font-bold underline" href="/">Back to the Standings</Link></p></> : null}
   </div></main>;
 }
 
