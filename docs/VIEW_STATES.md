@@ -53,6 +53,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Not joined, entry closed | `bowl-closed-not-joined` |
 | Bowl Card the morning the pool opens: the viewer alone in it with a zero score tile and no picks yet | `bowl-just-joined` |
 | Bowl Card with a postponed and a cancelled game: the word stands where the line would be (black, not teal), the cancelled game counts as played, and the viewer's kept pick still shows | `bowl-disrupted` |
+| Bowl Card with a game that kicked off seven hours ago and has no final yet: "Final score pending" stands where the line would be (black, not teal), and the other games are as usual | `bowl-final-pending` |
 | Bowl Card minimized | `bowl-minimized` |
 | Display choices (hide the Survivor Table): shown at once, not undone by a refresh that lands while the save is out, a second tap ignored while saving, a failed save puts the old choice back (behavior tests, `display-preference.visual.spec.ts`) | `regular-in` |
 | The page waits behind the loading shell for the Bowl Card's first load, shown anyway after 2.5 seconds, and at once when the card answers (behavior tests, `display-preference.visual.spec.ts`, frozen clock) | `regular-in` |
@@ -81,6 +82,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Everything picked, tiebreaker saved | `complete-saved` |
 | A team chosen, not yet submitted | `unsaved-change` |
 | A postponed and a cancelled game with the picks kept (the word replaces the venue and the buttons are locked), a game with no announced time ("Time TBD") and a preliminary line (black, not teal) | `disrupted` |
+| A game that kicked off the day before and has no final yet ("Final score pending" replaces the venue, the picks stay locked), beside a final game | `final-pending` |
 | Not a participant, first kickoff passed | `entry-closed` |
 
 ## Commissioner desk (`/admin`, `/admin/players`, `/admin/reminders`; the Trophy Room at `/trophy-room` is shot here too) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`
@@ -92,7 +94,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Provider cost chart (Performance: credits per game as 15- and 30-day moving averages) | `healthy`, phone and desktop |
 | Polling chart (Performance → New game finals by polling rung: percentages, first nine windows, emergency-window count) | `healthy`, phone and desktop |
 | Season | `healthy` |
-| Bowl Pool (readiness; "Bowl Pool lines" with its "Every game that is due has its line" note when none are missing, and in `attention` a scheduled game and a final game with no line, each with a favorite choice, a spread box and Set line; exceptions with the game chooser, and in `attention` a postponed game with its date, time and Reschedule beside a cancelled one) | `healthy`, `attention` (missing teams/lines, schedule change) |
+| Bowl Pool (readiness; "Bowl Pool lines" with its "Every game that is due has its line" note when none are missing, and in `attention` a scheduled game and a final game with no line, each with a favorite choice, a spread box and Set line; exceptions with the game chooser, and in `attention` a postponed game with its date, time and Reschedule beside a cancelled one) | `healthy`, `attention` (missing teams/lines, schedule change, a game cancelled automatically because ESPN lists it as cancelled, shown with its reason) |
 | Workshop board, full screen at `/admin/workshop` (every custom piece on one endless board: submit button, pick highlight, chip, megaphone, games remaining tile, player wins tile, loading football, result stamp, Bowl crest, the two season-closed banners, the pull-to-refresh strip, and the Pick'em, Bowl Pool and Survivor trophy banners; Desk, Menu, zoom and Home at the edges; the first-visit hint) | at rest, and with the football's settings panel open (right side on a computer, bottom sheet on a phone); phone and desktop, day and night; the lower rows (pull-to-refresh strip and the three banners) on desktop, day and night; animations are captured at rest |
 | Five tabs, with the repair and health drawers on Today (behavior test) | `healthy` |
 | Workshop board behaviour (`workshop.visual.spec.ts`): the board moves without end (drag, scroll, arrow keys, zoom, Home) and always covers the screen; a tap plays one copy, a drag does not; settings hidden until tune, then football pause, frame and step, Live values, Your settings and its count, Escape, typed words on every copy, 32 chip teams; remembered on the device and a damaged save ignored; Show names, Night, Desk; the desk's Workshop tab; the two split-flap cards tuned separately; the pull-to-refresh strip (slide by hand, tap for a whole pull); banner words and colour; easing choices; zoom in tile; Play everything; a damaged save ignored value by value | `healthy` |

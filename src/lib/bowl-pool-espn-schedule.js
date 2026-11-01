@@ -7,7 +7,7 @@
 // kickoffs and games ESPN adds late are exactly what once crossed one bowl's teams onto another's row.
 
 /** @typedef {{ id?: string; displayName?: string; abbreviation?: string; color?: string; alternateColor?: string; shortDisplayName?: string; location?: string }} EspnTeam */
-/** @typedef {{ id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { completed?: boolean } }; competitions?: Array<{ timeValid?: boolean; dateValid?: boolean; notes?: Array<{ headline?: string }>; status?: { type?: { completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: EspnTeam; homeAway?: "home" | "away" }> }> }} EspnEvent */
+/** @typedef {{ id: string; name?: string; shortName?: string; date: string; season?: { type?: number }; status?: { type?: { name?: string; completed?: boolean } }; competitions?: Array<{ timeValid?: boolean; dateValid?: boolean; notes?: Array<{ headline?: string }>; status?: { type?: { name?: string; completed?: boolean } }; odds?: Array<{ spread?: number; details?: string; provider?: { name?: string } }>; venue?: { fullName?: string; address?: { city?: string; state?: string } }; competitors?: Array<{ id?: string; score?: string | number | null; team?: EspnTeam; homeAway?: "home" | "away" }> }> }} EspnEvent */
 /** @typedef {{ id: string; provider_game_id: string | null; bowl_name: string; kickoff_at: string; order_index: number }} OwnGame */
 
 const MINUTE = 60_000;
@@ -43,6 +43,26 @@ export function headlineIsChampionship(headline) {
 export function espnTimeIsConfirmed(event) {
   const competition = event.competitions?.[0];
   return competition?.timeValid !== false && competition?.dateValid !== false && Number.isFinite(Date.parse(event.date));
+}
+
+/** ESPN names every game status ("STATUS_FINAL", "STATUS_CANCELED", "STATUS_POSTPONED"...) on the event and again on its competition. @param {EspnEvent} event */
+function espnStatusNames(event) {
+  return [event.status?.type?.name, event.competitions?.[0]?.status?.type?.name].filter(Boolean);
+}
+
+/**
+ * Whether ESPN calls the game finished. Only the "final" status counts: a cancelled or postponed game can carry a 0-0 score, and a score is never
+ * graded unless ESPN says the game was played to the end.
+ * @param {EspnEvent} event
+ */
+export function espnGameIsFinal(event) {
+  const names = espnStatusNames(event);
+  return names.includes("STATUS_FINAL") && !names.includes("STATUS_CANCELED");
+}
+
+/** Whether ESPN lists the game as cancelled (only its explicit "cancelled" status; "postponed" and "suspended" stay with the Commissioner). @param {EspnEvent} event */
+export function espnGameIsCancelled(event) {
+  return espnStatusNames(event).includes("STATUS_CANCELED");
 }
 
 /** @param {EspnTeam | undefined} team */

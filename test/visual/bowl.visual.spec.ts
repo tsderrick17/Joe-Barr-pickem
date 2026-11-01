@@ -22,6 +22,8 @@ const SCENARIOS: Record<string, Scenario> = {
   // stands where the venue goes and the buttons are locked), and the Rose Bowl with no announced time and a line that is still preliminary (black,
   // not the teal of an official line).
   "disrupted": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-1": "a1", "bowl-2": "h2", "bowl-4": "a4" }, gameOverrides: { 1: { status: "postponed" }, 2: { status: "cancelled" }, 3: { time_confirmed: false, line: { favorite_team_id: "h3", locked_spread: "-3", locked_at: null } } } }) },
+  // A game that kicked off hours ago and has no final yet (the Cure Bowl, the day after its kickoff): "Final score pending" stands where the venue goes, and the picks stay locked.
+  "final-pending": { build: () => bowlResponse({ optedIn: true, entryOpen: true, picks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2" }, graded: 1, gameOverrides: { 1: { status: "live" } } }), now: "2026-12-21T15:00:00Z" },
   // Not a participant and the first kickoff has passed: entry is closed.
   "entry-closed": { build: () => bowlResponse({ optedIn: false, entryOpen: false }), now: "2026-12-20T20:00:00Z" },
 };

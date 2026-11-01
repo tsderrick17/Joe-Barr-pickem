@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { bowlDisruptionLabel, bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
+import { bowlDisruptionLabel, bowlGameNote, bowlMatchupTeamLabels, bowlPoolLaunchAt, bowlTeamDisplayLabel, compareBowlPoolStandings } from "../src/lib/bowl-pool.js";
 import { bowlReceiptSummary, bowlSelectionsEqual } from "../src/lib/bowl-receipt.js";
 import { activeBowlStandingsEntries } from "../src/lib/bowl-pool-standings-entries.js";
 
@@ -96,4 +96,17 @@ test("Bowl readiness treats preseason TBD teams as setup while preserving order 
 test("a postponed, cancelled or no-contest game says so where its line or venue would be, and any other game says nothing", () => {
   assert.deepEqual(["postponed", "cancelled", "no_contest"].map(bowlDisruptionLabel), ["Postponed", "Cancelled", "No contest"]);
   for (const status of ["scheduled", "in_progress", "final", "", null, undefined, "unknown"]) assert.equal(bowlDisruptionLabel(status), undefined, String(status));
+});
+
+test("a game that kicked off six hours ago with no final says \"Final score pending\" where its line or venue would be; a recorded disruption keeps its own word", () => {
+  const now = new Date("2026-12-20T23:00:00Z");
+  const game = (status, kickoff_at) => ({ status, kickoff_at });
+  assert.equal(bowlGameNote(game("live", "2026-12-20T17:00:00Z"), now), "Final score pending");
+  assert.equal(bowlGameNote(game("scheduled", "2026-12-19T17:00:00Z"), now), "Final score pending", "a game the worker never moved to live is just as overdue");
+  assert.equal(bowlGameNote(game("live", "2026-12-20T17:01:00Z"), now), undefined, "still inside the six hours");
+  assert.equal(bowlGameNote(game("scheduled", "2026-12-21T17:00:00Z"), now), undefined, "not yet played");
+  assert.equal(bowlGameNote(game("final", "2026-12-19T17:00:00Z"), now), undefined);
+  assert.equal(bowlGameNote(game("postponed", "2026-12-19T17:00:00Z"), now), "Postponed");
+  assert.equal(bowlGameNote(game("cancelled", "2026-12-19T17:00:00Z"), now), "Cancelled");
+  assert.equal(bowlGameNote({ status: "live" }, now), undefined, "a game with no kickoff time is never overdue");
 });

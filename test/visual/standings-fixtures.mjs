@@ -121,6 +121,8 @@ export const SCENARIOS = {
   "bowl-just-joined": { ...base, showBowlCard: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // The Bowl Card with a game postponed and another cancelled: the word stands where the line would be, and neither has a result.
   "bowl-disrupted": { ...base, showBowlCard: true, serverTime: "2026-12-21T15:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
+  // The Bowl Card that evening, seven hours after the Cure Bowl kicked off with no final yet: "Final score pending" stands where its line would be (the card opens on that day).
+  "bowl-final-pending": { ...base, showBowlCard: true, serverTime: "2026-12-21T01:00:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // In the playoffs the Season Snapshot gets a Regular | Playoffs switch (it opens on the playoffs).
   "commissioner-playoff": { ...base, isCommissioner: true, seasonSnapshotReleased: true, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
@@ -135,6 +137,7 @@ export const BOWL_BY_SCENARIO = {
   "bowl-claim-open": { optedIn: false, entryOpen: true },
   "bowl-closed-not-joined": { optedIn: false, entryOpen: false },
   "bowl-just-joined": { optedIn: true, entryOpen: true, only: [2], fresh: true },
+  "bowl-final-pending": { graded: 1, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2" }, gameOverrides: { 1: { status: "live" } } },
   "bowl-disrupted": { graded: 1, viewerPicks: { "bowl-0": "h0", "bowl-1": "a1", "bowl-2": "h2" }, gameOverrides: { 1: { status: "postponed" }, 2: { status: "cancelled" } } },
 };
 

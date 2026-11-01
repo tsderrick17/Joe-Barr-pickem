@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getLineLock } from "@/lib/schedule-time.js";
 import { checkpoint, providerSignal } from "@/lib/execution-context";
 import { favoriteFromEspn, lineIsDueToLock, lockedSpreadFromOdds, lockStampFor, poolSpreadFromEspn } from "@/lib/bowl-line-policy";
-import { chronologicalOrder, espnHeadline, espnTeamIsTbd, espnTimeIsConfirmed, headlineIsCfp, headlineIsChampionship, newBowlName, noonEastern, orderIsChronological, planBowlSchedule } from "@/lib/bowl-pool-espn-schedule.js";
+import { chronologicalOrder, espnGameIsCancelled, espnGameIsFinal, espnHeadline, espnTeamIsTbd, espnTimeIsConfirmed, headlineIsCfp, headlineIsChampionship, newBowlName, noonEastern, orderIsChronological, planBowlSchedule } from "@/lib/bowl-pool-espn-schedule.js";
 import { easternDateKey } from "@/lib/eastern-time.js";
 import { cancelQueuedBowlReminders } from "@/lib/bowl-reminders";
 import { ProviderUnavailable } from "@/lib/provider-unavailable";
@@ -251,10 +251,16 @@ export async function syncScheduleAndLines(now: Date) {
   return { scheduleGames, linesLocked };
 }
 
+/**
+ * Settles what ESPN reports for the games still awaiting a result. Only ESPN's "final" status is a result: a cancelled game can carry a 0-0 score, which is never
+ * graded. A game ESPN lists as cancelled is cancelled here the way the Commissioner's Cancelled button does it, but only on the second run in a row that sees it so
+ * (espn_cancelled_seen_at keeps the first sighting and is cleared as soon as ESPN stops saying it), so one odd answer from ESPN changes nothing. A postponed game is
+ * left to the Commissioner; the overdue-final alert names it.
+ */
 async function syncScores(now: Date) {
-  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id").in("status", ["scheduled", "live"]);
+  const { data: games, error: gamesReadError } = await supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, odds_event_id, espn_cancelled_seen_at").in("status", ["scheduled", "live"]);
   if (gamesReadError) throw new Error("Bowl Pool games awaiting scores could not be loaded.");
-  if (!games?.length) return 0;
+  if (!games?.length) return { finalized: 0, cancelled: 0 };
   // ESPN is the no-cost source of truth for bowl results. The Odds API score
   // feed remains an optional fallback when explicitly enabled, but score
   // settlement must not depend on a paid NCAAF entitlement.
@@ -262,11 +268,27 @@ async function syncScores(now: Date) {
   const oddsEvents = process.env.BOWL_POOL_ODDS_API_ENABLED === "true"
     ? await providerEvents("sports/americanfootball_ncaaf/scores", { daysFrom: "30" })
     : [];
-  let finalized = 0;
+  let finalized = 0; let cancelled = 0;
   for (const game of games) {
     const espnEvent = espnEvents.find((candidate) => `espn:${candidate.id}` === game.provider_game_id);
+    if (espnEvent && espnGameIsCancelled(espnEvent)) {
+      // Never settled from a score, ESPN's or the Odds API's.
+      if (!game.espn_cancelled_seen_at) {
+        const { error } = await supabaseAdmin.from("bowl_pool_games").update({ espn_cancelled_seen_at: now.toISOString() }).eq("id", game.id).is("espn_cancelled_seen_at", null);
+        if (error) console.error("A Bowl Pool game ESPN lists as cancelled could not be marked.", { gameId: game.id, code: error.code });
+      } else {
+        const { error } = await supabaseAdmin.rpc("record_bowl_game_cancelled_by_espn", { target_game_id: game.id });
+        if (error) console.error("A Bowl Pool game ESPN lists as cancelled could not be cancelled.", { gameId: game.id, code: error.code });
+        else cancelled += 1;
+      }
+      continue;
+    }
+    if (espnEvent && game.espn_cancelled_seen_at) {
+      const { error } = await supabaseAdmin.from("bowl_pool_games").update({ espn_cancelled_seen_at: null }).eq("id", game.id);
+      if (error) console.error("A Bowl Pool game's cancellation mark could not be cleared.", { gameId: game.id, code: error.code });
+    }
     const competition = espnEvent?.competitions?.[0];
-    const completed = Boolean(espnEvent?.status?.type?.completed || competition?.status?.type?.completed);
+    const completed = Boolean(espnEvent && espnGameIsFinal(espnEvent));
     const competitors = competition?.competitors ?? [];
     const away = competitors.find((competitor) => competitor.homeAway === "away") ?? competitors[0];
     const home = competitors.find((competitor) => competitor.homeAway === "home") ?? competitors[1];
@@ -282,7 +304,7 @@ async function syncScores(now: Date) {
     const { error } = await supabaseAdmin.from("bowl_pool_games").update({ status: "final", away_score: awayScore, home_score: homeScore, finalized_at: now.toISOString() }).eq("id", game.id);
     if (!error) finalized += 1;
   }
-  return finalized;
+  return { finalized, cancelled };
 }
 
 async function refreshSeasonStatus(now: Date) {
@@ -317,7 +339,7 @@ export async function syncBowlPool(now = new Date()) {
   checkpoint("schedule and lines");
   const provider = await syncScheduleAndLines(now);
   checkpoint("scores");
-  const finalizedGames = await whenEspnAnswers(0, () => syncScores(now));
+  const scores = await whenEspnAnswers({ finalized: 0, cancelled: 0 }, () => syncScores(now));
   checkpoint("kickoff transitions");
   const { data: scheduled, error: scheduleError } = await supabaseAdmin.from("bowl_pool_games").select("id").eq("status", "scheduled").lte("kickoff_at", evaluatedAt);
   if (scheduleError) throw new Error("Bowl Pool kickoff transitions could not be loaded.");
@@ -347,5 +369,5 @@ export async function syncBowlPool(now = new Date()) {
   }
   await refreshSeasonStatus(now);
   if (espnProblems.length) throw new ProviderUnavailable("ESPN", [...new Set(espnProblems.map((problem) => problem.message))].join(" "));
-  return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded, finalizedGames, ...provider };
+  return { checkedAt: evaluatedAt, scheduleImported, gamesStarted: scheduled?.length ?? 0, missingPickLosses: Number(missing ?? 0), picksGraded, finalizedGames: scores.finalized, gamesCancelled: scores.cancelled, ...provider };
 }

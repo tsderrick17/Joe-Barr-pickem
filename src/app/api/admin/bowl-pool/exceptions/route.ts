@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (!commissionerResult.ok) return accessDenied(commissionerResult);
   try {
     const games = await seasonGames();
-    const { data: changes } = await supabaseAdmin.from("bowl_pool_schedule_changes").select("id, game_id, old_kickoff_at, new_kickoff_at, detected_at").is("reviewed_at", null).in("game_id", games.map((game) => game.id)).order("detected_at", { ascending: false });
+    const { data: changes } = await supabaseAdmin.from("bowl_pool_schedule_changes").select("id, game_id, old_kickoff_at, new_kickoff_at, reason, detected_at").is("reviewed_at", null).in("game_id", games.map((game) => game.id)).order("detected_at", { ascending: false });
     return NextResponse.json({ recordableGames: games.filter((game) => game.status === "scheduled" || game.status === "live"), exceptions: games.filter((game) => game.status === "postponed" || game.status === "cancelled" || game.status === "no_contest"), scheduleChanges: changes ?? [] });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Bowl Pool exceptions could not be loaded." }, { status: 500 });

@@ -361,6 +361,7 @@ export type Database = {
           away_team_id: string | null
           bowl_name: string
           created_at: string
+          espn_cancelled_seen_at: string | null
           finalized_at: string | null
           home_score: number | null
           home_team_id: string | null
@@ -383,6 +384,7 @@ export type Database = {
           away_team_id?: string | null
           bowl_name: string
           created_at?: string
+          espn_cancelled_seen_at?: string | null
           finalized_at?: string | null
           home_score?: number | null
           home_team_id?: string | null
@@ -405,6 +407,7 @@ export type Database = {
           away_team_id?: string | null
           bowl_name?: string
           created_at?: string
+          espn_cancelled_seen_at?: string | null
           finalized_at?: string | null
           home_score?: number | null
           home_team_id?: string | null
@@ -561,6 +564,7 @@ export type Database = {
           old_away_team_id: string | null
           old_home_team_id: string | null
           old_kickoff_at: string | null
+          reason: string | null
           reviewed_at: string | null
         }
         Insert: {
@@ -573,6 +577,7 @@ export type Database = {
           old_away_team_id?: string | null
           old_home_team_id?: string | null
           old_kickoff_at?: string | null
+          reason?: string | null
           reviewed_at?: string | null
         }
         Update: {
@@ -585,6 +590,7 @@ export type Database = {
           old_away_team_id?: string | null
           old_home_team_id?: string | null
           old_kickoff_at?: string | null
+          reason?: string | null
           reviewed_at?: string | null
         }
         Relationships: [
@@ -2448,6 +2454,12 @@ export type Database = {
         Args: { target_job_name: string; target_status: string }
         Returns: undefined
       }
+      record_bowl_game_cancelled_by_espn: {
+        Args: { target_game_id: string }
+        Returns: {
+          picks_voided: number
+        }[]
+      }
       record_bowl_game_disruption: {
         Args: {
           actor_player_id?: string
@@ -2552,6 +2564,7 @@ export type Database = {
           away_team_id: string | null
           bowl_name: string
           created_at: string
+          espn_cancelled_seen_at: string | null
           finalized_at: string | null
           home_score: number | null
           home_team_id: string | null
