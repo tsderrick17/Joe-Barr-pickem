@@ -28,9 +28,10 @@ process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "fixture-publishable-key";
 delete process.env.BOWL_POOL_ODDS_API_ENABLED;
 const { syncBowlPool } = await import("../src/lib/sync-bowl-pool.ts");
 const { ProviderUnavailable } = await import("../src/lib/provider-unavailable.ts");
+const { resetOperationalWarningMemo } = await import("../src/lib/operational-warnings.ts");
 
 const realFetch = globalThis.fetch;
-const realConsoleError = console.error;
+const realConsoleWarn = console.warn;
 const EVENT = (name, { away = "0", home = "0", completed = false } = {}) => ({
   id: "401", status: { type: { name, completed } },
   competitions: [{ status: { type: { name, completed } }, competitors: [{ homeAway: "away", score: away }, { homeAway: "home", score: home }] }],
@@ -38,6 +39,7 @@ const EVENT = (name, { away = "0", home = "0", completed = false } = {}) => ({
 /** One worker run against an ESPN that answers with `event` (or with an error status when `event` is null), for a game already marked or not. */
 async function run(event, { seenAt = null, cancelFails = false } = {}) {
   game = { id: "game-1", provider_game_id: "espn:401", odds_event_id: null, kickoff_at: "2026-12-20T17:00:00Z", line_lock_at: "2026-12-20T13:00:00Z", away_team_id: "a", home_team_id: "b", status: "live", order_index: 1, espn_cancelled_seen_at: seenAt };
+  resetOperationalWarningMemo();
   database = recordingDatabase(respond, { rpc: (name) => ({ data: null, error: cancelFails && name === "record_bowl_game_cancelled_by_espn" ? { code: "P0001", message: "A settled or cancelled Bowl Pool game cannot be changed." } : null }) });
   bowlStatusFixture.database = database;
   globalThis.fetch = event ? async () => ({ ok: true, json: async () => ({ events: [event] }) }) : async () => ({ ok: false, status: 503 });
@@ -88,15 +90,15 @@ test("an ESPN that cannot be read neither confirms nor clears a sighting", async
   assert.deepEqual(cancelCalls(), []);
 });
 
-test("a cancellation the database refuses is logged and does not stop the rest of the run", async () => {
-  const logged = [];
-  console.error = (...args) => logged.push(args);
+test("a cancellation the database refuses is raised as a warning and does not stop the rest of the run", async () => {
+  console.warn = () => undefined;
   try {
     const result = await run(EVENT("STATUS_CANCELED", { completed: true }), { seenAt: "2026-12-20T17:45:00Z", cancelFails: true });
     assert.equal(result.gamesCancelled, 0, "a refused cancellation is not counted");
     assert.ok(database.rpcCalls.some((call) => call.name === "grade_bowl_pool_final_picks"), "grading still ran");
-  } finally { console.error = realConsoleError; }
-  assert.deepEqual(logged.map(([message, detail]) => [message, detail.code]), [["A Bowl Pool game ESPN lists as cancelled could not be cancelled.", "P0001"]]);
+  } finally { console.warn = realConsoleWarn; }
+  const warnings = database.rpcCalls.filter((call) => call.name === "record_operational_warning" && /could not be cancelled/.test(call.args.target_message));
+  assert.deepEqual(warnings.map((call) => [call.args.target_job, call.args.target_message, call.args.target_details.code]), [["bowl_scores", "A Bowl Pool game ESPN lists as cancelled could not be cancelled.", "P0001"]]);
 });
 
 test("ESPN's final status wins only when nothing on the game says cancelled, on the event or its competition", () => {

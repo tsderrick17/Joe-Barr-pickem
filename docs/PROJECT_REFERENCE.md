@@ -629,6 +629,15 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Mutations are idempotent or retry-safe. Imports validate before writing;
   rollover returns the existing result; line locking and scoring operate only
   on due records.
+- A problem a worker works around (a skipped save, an ESPN game that vanished,
+  a failed alert receipt) goes through `noteOperationalWarning(job, message,
+  details)` in `src/lib/operational-warnings.ts`: it writes the log line, saves
+  one row per job and wording to `operational_warnings` (service role only;
+  repeats are counted, rows quiet for 30 days are dropped) through
+  `record_operational_warning`, and sends a Sentry warning once, again only after
+  12 quiet hours. It never throws. Commissioner -> Automation shows the last
+  week's warnings. Request routes, health probes and the season-phase fallbacks
+  keep plain log lines because they run on every view.
 - When the watchdog proves a critical worker is unhealthy while it has real
   due work, it makes one lease-protected recovery attempt through that worker's
   normal line-lock, score, or reminder path. It immediately rechecks the saved

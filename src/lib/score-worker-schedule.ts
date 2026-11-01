@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { nextScoreWorkAt } from "@/lib/score-worker-wake.js";
 import type { WeekRolloverResult } from "@/lib/advance-scoring-periods";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 const NOT_PLAYED = new Set(["postponed", "cancelled", "no_contest"]);
 
@@ -37,7 +38,7 @@ export async function recordNextScoreWork(weekRollover: WeekRolloverResult | nul
     if (error) throw error;
     return nextDueAt;
   } catch {
-    console.error("The score worker's next wake-up time could not be recorded; the hourly safety run will wake it.");
+    await noteOperationalWarning("scores", "The score worker's next wake-up time could not be recorded; the hourly safety run will wake it.");
     return null;
   }
 }

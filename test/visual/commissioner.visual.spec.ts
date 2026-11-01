@@ -165,6 +165,25 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
+// The watchdog panel on Today (inside the "Health and safety" drawer, which the Today shots fold shut): the warnings the automation worked around, or
+// the plain "No warnings this week". It opens by itself when something needs attention; on a quiet day the test opens it.
+for (const [state, theme] of [["quiet", "day"], ["attention", "day"], ["attention", "night"]] as const) {
+  for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+    test(`Commissioner watchdog warnings ${state} ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, state);
+      await settle(page, ".commissioner-panel-tab");
+      const drawer = page.locator(".commissioner-diagnostics > details").filter({ hasText: "Health and safety" });
+      if ((await drawer.getAttribute("open")) === null) await drawer.locator("summary").click();
+      const section = page.locator("section.commissioner-tool").filter({ hasText: "Action-only alerts" });
+      await expect(section.getByText(state === "quiet" ? "No warnings this week" : "Recent warnings")).toBeVisible({ timeout: 30_000 });
+      await page.waitForTimeout(600);
+      await expect(section).toHaveScreenshot(`commissioner-watchdog-warnings-${state}-${theme}-${label}.png`);
+    });
+  }
+}
+
 // The desk has five tabs, each with one job (the fifth, Workshop, opens full screen at its own address); repair and health tools sit in drawers on Today, and the season's checks live on Season.
 test("Commissioner desk has five tabs, with repair and health in drawers on Today", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });

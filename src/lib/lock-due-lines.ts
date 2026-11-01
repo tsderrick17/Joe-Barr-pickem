@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { checkpoint, providerSignal } from "@/lib/execution-context";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
 import { isFallbackLineFresh } from "@/lib/line-fallback-policy.js";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 type DueGame = {
   id: string;
@@ -84,7 +85,7 @@ export async function lockDueLines(
       completed_at: new Date().toISOString(),
       error_message: message,
     });
-    if (failureRunError) console.error("A failed line-lock run could not be recorded.");
+    if (failureRunError) await noteOperationalWarning("line_locks", "A failed line-lock run could not be recorded.");
 
     throw error;
   }

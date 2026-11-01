@@ -76,6 +76,10 @@ function dashboard(state) {
 
 const WATCHDOG = (state) => ({
   openAlerts: state === "attention" ? [{ id: "w1", severity: "warning", title: "Score sync failing", detail: "Two consecutive provider timeouts.", detected_at: T(3), notified_at: T(2.9), notification_error: null }] : [],
+  warnings: state === "attention" ? [
+    { id: "n1", job: "bowl_scores", message: "Bowl Pool games ESPN no longer lists.", details: { games: ["Frisco Bowl", "Cure Bowl"] }, occurrences: 14, first_seen_at: T(30), last_seen_at: T(0.2) },
+    { id: "n2", job: "bowl_scores", message: "A Bowl Pool line-history snapshot could not be saved.", details: { gameId: "b1" }, occurrences: 1, first_seen_at: T(6), last_seen_at: T(6) },
+  ] : [],
   lastRun: { status: "success", completed_at: T(0.1), error_message: null },
 });
 const HEALTH = (state) => ({

@@ -951,6 +951,36 @@ export type Database = {
         }
         Relationships: []
       }
+      operational_warnings: {
+        Row: {
+          details: Json
+          first_seen_at: string
+          id: string
+          job: string
+          last_seen_at: string
+          message: string
+          occurrences: number
+        }
+        Insert: {
+          details?: Json
+          first_seen_at?: string
+          id?: string
+          job: string
+          last_seen_at?: string
+          message: string
+          occurrences?: number
+        }
+        Update: {
+          details?: Json
+          first_seen_at?: string
+          id?: string
+          job?: string
+          last_seen_at?: string
+          message?: string
+          occurrences?: number
+        }
+        Relationships: []
+      }
       pick_history: {
         Row: {
           action: string
@@ -2492,6 +2522,14 @@ export type Database = {
           ats_voided: number
           survivor_voided: number
         }[]
+      }
+      record_operational_warning: {
+        Args: {
+          target_details?: Json
+          target_job: string
+          target_message: string
+        }
+        Returns: boolean
       }
       recover_pending_ats_grades: {
         Args: never

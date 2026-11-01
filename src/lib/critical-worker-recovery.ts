@@ -2,6 +2,7 @@ import { AutomationAlreadyRunningError, runWithAutomationLease } from "@/lib/aut
 import { lockDueLines } from "@/lib/lock-due-lines";
 import { sendDueReminders } from "@/lib/reminder-worker";
 import { syncFinalScores } from "@/lib/sync-final-scores";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 export type CriticalWorkerRecovery = {
   job: "line_locks" | "scores" | "reminders";
@@ -31,7 +32,7 @@ export async function recoverCriticalWorkerWork(health: { criticalWorkers: { pro
         recoveries.push({ job, outcome: "already-running" });
         continue;
       }
-      console.error("Critical worker recovery failed.", { job });
+      await noteOperationalWarning(job, "Critical worker recovery failed.", { job });
       recoveries.push({ job, outcome: "failed" });
     }
   }

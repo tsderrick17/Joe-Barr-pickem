@@ -10,6 +10,7 @@ import { reminderReadiness } from "@/lib/reminder-readiness";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { checkpoint, ExecutionCancelledError } from "@/lib/execution-context";
 import { isSafelyRetryable, updateForDelivery, updateForError, updateForReadiness, updateForRelease, type ReminderUpdate } from "@/lib/reminder-outcome";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 type Reminder = {
   id: string;
@@ -47,7 +48,7 @@ async function releaseUnstartedReminders(reminders: Reminder[]) {
     try {
       await updateClaimedReminder(reminder.id, updateForRelease(new Date()));
     } catch {
-      console.error("A claimed reminder could not be handed back after a stopped run.", { reminderId: reminder.id });
+      await noteOperationalWarning("reminders", "A claimed reminder could not be handed back after a stopped run.", { reminderId: reminder.id });
     }
   }
 }
@@ -108,7 +109,7 @@ export async function sendDueReminders() {
     } catch (reason) {
       const safelyRetryable = isSafelyRetryable(deliveryStarted, reason instanceof ReminderPreparationError);
       await updateClaimedReminder(reminder.id, updateForError(safelyRetryable, new Date()));
-      console.error("Email reminder delivery could not be completed.", {
+      await noteOperationalWarning("reminders", "Email reminder delivery could not be completed.", {
         reminderId: reminder.id,
         safelyRetryable,
         message:

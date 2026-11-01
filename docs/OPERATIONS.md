@@ -532,9 +532,11 @@ To see either message before players do, open the Email center, open the email i
 the email subject, the phone message and the email itself, worded from the real first game as the schedule stands. "Send this to my email and phone" sends it to the
 Commissioner alone (never the pool; it needs the Commissioner's own pool emails on). Their wording is fixed in the app, so there is nothing to save there.
 
-The ESPN schedule pull logs `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
+The ESPN schedule pull raises the warnings `Bowl Pool games ESPN no longer lists` (a row ESPN has dropped: look at it before players do) and `A Bowl Pool game could
 not be updated` (the database refused a matchup or kickoff that picks or a locked line hold; the Commissioner's schedule-change review lists
-what ESPN changed). The FCS playoff and the Celebration Bowl never enter the pool.
+what ESPN changed). Warnings like these are not left only in the Vercel log: they appear under Commissioner -> Automation -> Recent warnings with how many times and when
+they were last seen (kept 30 days), and each is sent to Sentry once when it first appears and again only if it returns after 12 quiet hours. The FCS playoff and the
+Celebration Bowl never enter the pool.
 
 Before the player-visible December launch gate, Bowl placeholders and missing
 lines are intentional and do not make the public Bowl health monitor fail. From
