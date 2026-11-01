@@ -426,7 +426,18 @@ holds production in attention if only the compatibility fallback is active.
 
 ## Release validation and correlated failures
 
-CI notes. The Supabase CLI's container images (used by the database-types check) are cached
+CI notes. Two checks decide for themselves whether a pull request needs them, reading the changed files from
+GitHub's pull request API (no checkout, so none of the repository's gigabyte of history is downloaded): the
+screenshot suite (Application quality) runs when a file under `src/`, `public/` or the screenshot, email-artwork
+and build configuration changes, and the isolated database run (Isolated integration checks, the required
+`database-lifecycle`) runs when `supabase/`, `src/`, `scripts/`, the integration, browser and helper tests, or the
+package and workflow configuration changes. A pull request that only touches documentation, unit tests or screenshots
+skips the database run, which GitHub counts as passing for the required check. If the file list cannot be read, both run.
+Pushes to `main`, the weekly run and manual runs always run everything. Dependabot patch updates of npm packages
+(every dependency in the pull request a patch) are set to auto-merge by `.github/workflows/dependabot-auto-merge.yml`
+once the required checks pass; minor and major versions and GitHub Actions are never merged automatically. This needs
+Settings, General, "Allow auto-merge" switched on; until it is, the workflow says so and the pull request waits for the
+owner. The Supabase CLI's container images (used by the database-types check) are cached
 by CLI version; a registry rate limit used to fail that check for hours. Playwright is pinned
 on purpose: the screenshot job runs in the Playwright container of the same version, the Linux
 baselines are recorded with its browser, and Dependabot ignores minor and major Playwright

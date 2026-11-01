@@ -16,22 +16,31 @@ jobs:
   # Whether a pull request can change what a player sees. The screenshot suite is the slowest check (about ten minutes), so a pull request that only
   # touches tests, documentation, database migrations or scripts skips it. Anything under src/ or public/, the screenshot tests and baselines, the
   # email artwork tests, and the build, dependency and workflow configuration always run it, and so does every push to main.
+  #
+  # The list of changed files comes from GitHub's pull request API, not a git checkout: the repository's history is over a gigabyte (screenshot
+  # baselines), and downloading it just to list file names was most of this job. If the list cannot be read, the screenshots run.
   changes:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - id: filter
         env:
+          GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
-          BASE: ${{ github.base_ref }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
           if [ "$EVENT" != "pull_request" ]; then echo "ui=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          files=$(git diff --name-only "origin/$BASE...HEAD")
+          if ! files=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename'); then
+            echo "The changed files could not be listed: running the screenshot suite to be safe."
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           echo "$files"
           if echo "$files" | grep -Eq '^(src/|public/|test/visual/|test/e2e/|test/helpers/|test/email-artwork|package(-lock)?\.json$|next\.config|postcss|tailwind|tsconfig|playwright|\.github/workflows/quality\.yml$)'; then
             echo "ui=true" >> "$GITHUB_OUTPUT"

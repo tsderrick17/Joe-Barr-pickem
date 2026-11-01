@@ -50,7 +50,7 @@ guard enables a transactional live-week rehearsal that revises picks, grades a
 completed slate, verifies permanent history, activates the next week, and then
 rolls every fixture back. The flag is ineffective unless the database
 confirmation is exactly `isolated` and the isolated database URL is present.
-Every human-authored pull request also enables the Chromium flow. It verifies a
+Every human-authored pull request that changes `supabase/`, `src/`, `scripts/`, the integration, browser or helper tests, or the package or workflow configuration also enables the Chromium flow (a pull request that only touches documentation, unit tests or screenshots skips the whole database run, which counts as passing). It verifies a
 real PIN session, account-control persistence through reload and one temporary
 profile failure, ATS saves, and Survivor replacement before the change can
 merge. Dependabot pull requests do not receive the isolated database or browser
