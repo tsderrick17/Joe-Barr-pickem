@@ -8,13 +8,13 @@ async function signedOut(page: Page, theme: string) {
   await page.addInitScript((mode) => { window.localStorage.setItem("pickem-theme", mode as string); }, theme);
 }
 
-const PROFILE = (all: boolean) => ({
+const PROFILE = (all: boolean, isCommissioner = false) => ({
   notificationEmail: "tyler@example.com", senderEmail: "pool@example.com", emailNotificationsEnabled: true,
   emailWeeklyEnabled: true, emailFinalLinesEnabled: all, emailSundayFinalLinesEnabled: true, emailEarlyLockEnabled: all,
   emailPickDueSundayEarlyEnabled: true, emailPickDueSundayAfternoonEnabled: true, emailPickDuePrimetimeEnabled: true,
   emailSundayEarlyRevealEnabled: all, emailSundayLateRevealEnabled: all, emailFeaturedWindowRevealEnabled: all,
   emailWeeklyRecapEnabled: true, emailPlayoffDayRecapEnabled: all, emailPlayoffPublicRevealEnabled: all,
-  firstName: "Tyler", isCommissioner: false, showPoolChat: false,
+  firstName: "Tyler", isCommissioner, showPoolChat: false,
 });
 
 const PERIODS = [
@@ -35,24 +35,25 @@ async function serve(page: Page, { profile, periods }: { profile?: ReturnType<ty
   await page.clock.install({ time: new Date(NOW) });
 }
 
-type Case = { name: string; path: string; ready: string; auth: boolean; profile?: boolean; periods?: typeof PERIODS; after?: (page: Page) => Promise<void> };
+type Case = { name: string; path: string; ready: string; auth: boolean; profile?: boolean; commissioner?: boolean; periods?: typeof PERIODS; after?: (page: Page) => Promise<void> };
 const CASES: Case[] = [
   { name: "login", path: "/login", ready: "h1", auth: false },
   { name: "profile-default", path: "/profile", ready: "form", auth: true, profile: false },
   { name: "profile-custom", path: "/profile", ready: "form", auth: true, profile: true, after: async (page) => { await page.locator("main section button[aria-expanded='false']").first().click(); await page.waitForTimeout(400); } },
   { name: "archive", path: "/archive", ready: "h1", auth: true, periods: PERIODS },
   { name: "archive-empty", path: "/archive", ready: "h1", auth: true, periods: [] },
-  { name: "preview", path: "/preview", ready: "h1, h2", auth: true },
+  { name: "preview", path: "/preview", ready: "h1, h2", auth: true, commissioner: true },
+  { name: "preview-player", path: "/preview", ready: "h1", auth: true },
 ];
 
-for (const { name, path, ready, auth, profile, periods, after } of CASES) {
+for (const { name, path, ready, auth, profile, commissioner, periods, after } of CASES) {
   for (const theme of ["day", "night"]) {
     for (const [label, width] of Object.entries(WIDTHS)) {
       if (theme === "night" && width !== 390 && width !== 1280) continue;
       test(`Account ${name} ${theme} at ${label}`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         if (auth) await signIn(page, theme); else await signedOut(page, theme);
-        await serve(page, { profile: profile === undefined ? undefined : PROFILE(profile), periods });
+        await serve(page, { profile: profile === undefined && !commissioner ? undefined : PROFILE(profile ?? false, commissioner), periods });
         await page.goto(path);
         await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
         await page.evaluate(() => document.fonts.ready);

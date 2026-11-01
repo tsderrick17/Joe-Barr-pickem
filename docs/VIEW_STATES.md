@@ -120,8 +120,8 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Login | signed out |
 | Notifications (`/profile`) | `profile-default`, `profile-custom` (fine-tune open) |
 | Week Archive | `archive` (four weeks), `archive-empty` |
-| Rehearsal preview (`/preview`) | default |
-| Rehearsal walk-through: the six scenarios in all four views (behavior test, `rehearsal-walkthrough.visual.spec.ts`; no screenshots) | `/preview` |
+| Rehearsal preview (`/preview`, Commissioner only) | `preview` (as the Commissioner), `preview-player` (a signed-in player sees "Commissioner only" and a link back to the Standings) |
+| Rehearsal walk-through: the six scenarios in all four views, who may open it, and the team-lane and sideways-scroll guards (behavior tests, `rehearsal-walkthrough.visual.spec.ts`; no screenshots) | `/preview` |
 | Email plans on Notifications: Essentials, Regular and Full Card set the playoff toggles (behavior test, `email-plans.visual.spec.ts`; no screenshots) | `/profile` |
 | "Notifications on this phone" on Notifications (every player): `off`, `on`, `blocked`, `iphone-tab` (an iPhone browser tab, told to add the app to the Home Screen) and `no-support`, day at phone and desktop width, plus `on` at night; behavior tests follow the taps (turn on: permission, key, save; test; turn off) and show the section to a player who is not the Commissioner too (`phone-notifications.visual.spec.ts`) | `/profile` |
 | In-app "Turn on notifications" banner (Home Screen app, signed in, notifications not on yet): `offer` day at phone and desktop, night at phone, and `on` after one tap; behavior tests: one tap asks the phone and saves it, a "no" says where to turn them on later, Not now keeps it away after reopening, and no banner in a browser tab, when already on, when blocked, on Notifications, or before sign-in (`notifications-banner.visual.spec.ts`) | any page in the app |

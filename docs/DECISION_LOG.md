@@ -4,6 +4,10 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-10-31 - The rehearsal page is the Commissioner's
+
+`/preview` (the sample-picks rehearsal) used to open for anyone who knew the address. It now draws only after `/api/profile` answers `isCommissioner`; a signed-in player sees "Commissioner only" with a link back to the Standings, and a signed-out visitor is still sent to sign in by the header. The page holds only fictional sample data, so this is a gate on the page, not on data; the Commissioner Workshop stays reached only from the Commissioner screen. The two layout guards that opened `/preview` unsigned against the real app (`test/e2e/visual-layout.spec.ts`) moved into the rehearsal walk-through spec in the screenshot suite, which signs in with a mocked Commissioner; the new screen is the `preview-player` Account state.
+
 ## 2026-10-31 - Bowl scores are never taken from the odds feed, unchecked reads fail loud, and the weekly prune keeps its own clock
 
 - **ESPN only:** the Bowl Pool score worker no longer falls back to The Odds API's scores. A game is settled from ESPN's final alone (the rule from the cancellation work); the odds feed only supplies lines. A final with a missing score is skipped, never settled.

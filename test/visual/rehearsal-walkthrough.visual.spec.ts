@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 // The player rehearsal at /preview, walked through: the six scenarios the Commissioner uses to check a week before it goes live, in each of the four views.
-// No screenshots are compared (the Account "preview" state covers how it looks); this checks what each scenario shows.
-async function open(page: Page) {
+// No screenshots are compared (the Account "preview" and "preview-player" states cover how it looks); this checks what each scenario shows, who may open it,
+// and the two layout guards (aligned team lanes, no sideways scroll) that used to run unsigned against the real app.
+async function open(page: Page, { commissioner = true } = {}) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
   const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
   const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
@@ -10,9 +11,10 @@ async function open(page: Page) {
   await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/preview");
-  await expect(page.locator("#rehearsal-scenario")).toBeVisible({ timeout: 30_000 });
+  if (commissioner) await expect(page.locator("#rehearsal-scenario")).toBeVisible({ timeout: 30_000 });
 }
 const scenario = (page: Page, value: string) => page.locator("#rehearsal-scenario").selectOption(value);
 const view = (page: Page, name: "Ticket" | "Slate" | "Pick'em Pad" | "Email") => page.getByRole("group", { name: "Rehearsal view" }).getByRole("button", { name, exact: true }).click();
@@ -99,4 +101,32 @@ test("each email scenario carries its sample image: the Slate before lines lock,
   await expect(page.getByText("Tuesday - 6:30 AM ET")).toBeVisible();
   await expect(page.getByText("FINAL W/L STAMPS REMAIN MEMORIALIZED")).toBeVisible();
   await expect(page.getByText("ZAC WAS ELIMINATED THIS WEEK · 2 ENTRIES REMAIN")).toBeVisible();
+});
+
+test("the rehearsal is the Commissioner's: a signed-in player who is not the Commissioner sees a plain message, never the sample picks", async ({ page }) => {
+  await open(page, { commissioner: false });
+  await expect(page.getByRole("heading", { name: "Commissioner only" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("link", { name: "Back to the Standings" })).toHaveAttribute("href", "/");
+  await expect(page.locator("#rehearsal-scenario")).toHaveCount(0);
+  await expect(page.getByText("Sample", { exact: false })).toHaveCount(0);
+});
+
+test("desktop slate keeps chipless team lanes aligned", async ({ page }) => {
+  await open(page);
+  await view(page, "Slate");
+  await expect(page.getByRole("heading", { name: /ATS SLATE/ })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  const rightEdges = await page.locator(".slate-game-row:not(.is-final) .slate-team-label-lane.is-right").evaluateAll((nodes) => nodes.map((node) => Math.round((node as HTMLElement).getBoundingClientRect().left)));
+  expect(rightEdges.length).toBeGreaterThan(3);
+  expect(Math.max(...rightEdges) - Math.min(...rightEdges)).toBeLessThanOrEqual(1);
+});
+
+test("mobile rehearsal surfaces fit without horizontal overflow", async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await view(page, "Pick'em Pad");
+  await expect(page.locator("h1").filter({ hasText: "Pick'em Pad" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
