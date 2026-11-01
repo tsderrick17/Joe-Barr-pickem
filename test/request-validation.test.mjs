@@ -55,6 +55,8 @@ test("field helpers accept only the right shape", () => {
 });
 
 test("each body parser rejects what it cannot use and keeps a legal body whole", () => {
+  assert.deepEqual(bodies.parseVerifiedFinal({ gameId: "g1", awayScore: 20, homeScore: 0, source: "  NFL.com box score " }), { gameId: "g1", awayScore: 20, homeScore: 0, source: "NFL.com box score" });
+  for (const bad of [{}, { gameId: "g1", awayScore: 20, homeScore: 17 }, { gameId: "g1", awayScore: 20, homeScore: 17, source: "   " }, { gameId: "g1", awayScore: "20", homeScore: 17, source: "x" }, { gameId: "g1", awayScore: 20.5, homeScore: 17, source: "x" }, { gameId: "g1", awayScore: -1, homeScore: 17, source: "x" }, { gameId: "g1", awayScore: 151, homeScore: 17, source: "x" }, { gameId: "g1", awayScore: 20, homeScore: 17, source: "x".repeat(201) }, { gameId: 5, awayScore: 20, homeScore: 17, source: "x" }]) assert.equal(bodies.parseVerifiedFinal(bad), null);
   assert.deepEqual(bodies.parseGameDisruption({ gameId: "g1", status: "postponed" }), { gameId: "g1", status: "postponed" });
   for (const bad of [{}, { gameId: "g1" }, { gameId: "g1", status: "rescheduled" }, { gameId: 5, status: "postponed" }, { gameId: "g1", status: ["postponed"] }]) assert.equal(bodies.parseGameDisruption(bad), null);
 
@@ -92,6 +94,7 @@ const requests = (method) => MALFORMED.map((raw) => [raw, new Request("http://lo
 
 const routes = [
   ["admin/bowl-pool/exceptions", "POST", [{}, { gameId: "g1" }, { gameId: "g1", status: "bogus" }, { gameId: 5, status: "cancelled" }]],
+  ["admin/verified-final", "POST", [{}, { gameId: "g1" }, { gameId: "g1", awayScore: 20, homeScore: 17 }, { gameId: "g1", awayScore: "20", homeScore: 17, source: "NFL.com" }, { gameId: ["g1"], awayScore: 20, homeScore: 17, source: "NFL.com" }]],
   ["admin/game-disruptions", "POST", [{}, { gameId: "g1" }, { gameId: "g1", status: "rescheduled" }, { gameId: ["g1"], status: "cancelled" }]],
   ["admin/players", "POST", [{}, { firstName: "Dana" }, { firstName: 5, pin: 1234 }, { firstName: "Dana", pin: "12" }]],
   ["admin/reminder-templates", "PUT", [{}, { id: 5 }, { id: "pick_due_sunday_11", title: "", message: "x" }]],

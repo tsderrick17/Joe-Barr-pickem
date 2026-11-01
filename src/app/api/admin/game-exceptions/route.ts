@@ -12,6 +12,9 @@ type GameRow = {
   status: "postponed" | "cancelled" | "no_contest" | "final";
 };
 
+/** The score provider reaches back three days; past that a final can only be entered by hand (database function record_verified_final). */
+const PROVIDER_SCORE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+
 export async function GET(request: NextRequest) {
   const commissionerResult = await commissionerAccess(request);
   if (!commissionerResult.ok) return accessDenied(commissionerResult);
@@ -125,5 +128,8 @@ export async function GET(request: NextRequest) {
     return described ? [described] : [];
   });
 
-  return NextResponse.json({ exceptions, recordableGames });
+  const handFinalCutoff = Date.now() - PROVIDER_SCORE_WINDOW_MS;
+  const manualFinalGames = recordableGames.filter((game) => new Date(game.kickoffAt).getTime() <= handFinalCutoff);
+
+  return NextResponse.json({ exceptions, recordableGames, manualFinalGames });
 }

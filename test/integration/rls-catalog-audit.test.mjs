@@ -31,6 +31,7 @@ const privilegedFunctions = [
   "record_game_disruption",
   "ensure_annual_season_rollover",
   "correct_final_game_score_atomically",
+  "record_verified_final",
   "snapshot_playoff_day_eligibility",
 ];
 

@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - An NFL final the provider can no longer supply is entered by the Commissioner, verified and audited
+
+The 2026-10-31 audit (REL-7, owner decision D5; the owner declined an ESPN fallback). The NFL score provider reaches back three days; a game still not final after that could never be graded, and the rule was only "never type an estimated score". Now `record_verified_final` (Commissioner → Fix something → Game Exceptions → "Enter a verified final · last resort") finalizes such a game from two typed scores and a required note of where they were checked. It refuses a game less than three days past kickoff, a game that already has a final (a wrong final goes through the audited correction function) and a postponed, cancelled or no-contest game. It grades through `finalize_games_atomically`, so ATS, Survivor and playoff rules are the same as the automatic path, clears the game's retry state, and writes a `final_score_entered_manually` audit row (scores, note, kickoff, picks graded) in the same transaction. The block shows only when such a game exists. The Bowl Pool is unchanged (ESPN only). Runbook: "Provider down or account lapsed for more than three days".
+
 ## 2026-10-31 - The rehearsal page is the Commissioner's
 
 `/preview` (the sample-picks rehearsal) used to open for anyone who knew the address. It now draws only after `/api/profile` answers `isCommissioner`; a signed-in player sees "Commissioner only" with a link back to the Standings, and a signed-out visitor is still sent to sign in by the header. The page holds only fictional sample data, so this is a gate on the page, not on data; the Commissioner Workshop stays reached only from the Commissioner screen. The two layout guards that opened `/preview` unsigned against the real app (`test/e2e/visual-layout.spec.ts`) moved into the rehearsal walk-through spec in the screenshot suite, which signs in with a mocked Commissioner; the new screen is the `preview-player` Account state.

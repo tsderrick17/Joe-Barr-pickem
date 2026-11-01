@@ -530,6 +530,13 @@ may enrich spreads but cannot override canonical schedule assignments.
   append-only audit events. A legal unstarted replacement can be selected.
 - A verified score correction uses the audited atomic correction function. It
   preserves void rows, regrades affected picks, and records league impact.
+- A game still not final more than three days after kickoff (past the score
+  provider's window) can be finalized by hand: Game Exceptions → "Enter a
+  verified final" calls `record_verified_final`, which requires a verification
+  note, refuses a game that already has a final or is postponed, cancelled, or no
+  contest, grades through `finalize_games_atomically` like the automatic path,
+  clears the game's retry state, and writes a `final_score_entered_manually`
+  audit row. There is no ESPN fallback for the NFL.
 - Final-score reconciliation is read-only. It compares stored finals with the
   provider and flags discrepancies; it never edits scores or grades.
 - Completed periods, games, official lines, picks, and audit history are frozen.

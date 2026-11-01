@@ -15,6 +15,14 @@ export function parseGameDisruption(input: JsonObject) {
   return gameId && status ? { gameId, status } : null;
 }
 
+export function parseVerifiedFinal(input: JsonObject) {
+  const gameId = idValue(input.gameId);
+  const awayScore = integerValue(input.awayScore, 0, 150);
+  const homeScore = integerValue(input.homeScore, 0, 150);
+  const source = textValue(input.source, 200)?.trim();
+  return gameId && awayScore !== null && homeScore !== null && source ? { gameId, awayScore, homeScore, source } : null;
+}
+
 export function parseBowlException(input: JsonObject) {
   const gameId = idValue(input.gameId);
   const status = oneOf(input.status, BOWL_EXCEPTION_STATUSES);
