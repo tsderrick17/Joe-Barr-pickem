@@ -67,15 +67,16 @@ function shortWeek(label: string) {
 const AXIS_WIDTH = 30;
 const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
-const PLOT_TOP = 8;
+// Room over the top line for the 6 Wk position rail; All keeps the same room, so both draw the axis in the same place.
+const PLOT_TOP = 12;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
 
 /**
- * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies along
- * the top of the chart, in the win of room the axis keeps over the highest line, so both views put the axis and the week
- * numbers in exactly the same place. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
+ * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies in the
+ * strip above the top line of the axis, which All keeps empty, so both views put the axis and the week numbers in exactly
+ * the same place. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
  * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
  */
 function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
@@ -128,7 +129,7 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
 }
 
 type Axis = { low: number; ceiling: number; tickStep: number };
-// Every tick from the bottom up to the top; the top itself is a tick only when it lands on one.
+// Every tick from the bottom up to the top, which is always a tick.
 const axisTicks = ({ low, ceiling, tickStep }: Axis) => Array.from({ length: Math.floor((ceiling - low) / tickStep + 1e-9) + 1 }, (_, index) => low + index * tickStep);
 // A critically damped spring: the axis glides to each new range without overshoot, and a range that changes again
 // mid-glide (a fast scroll) carries the motion on instead of restarting it. About a third of a second to settle.
@@ -271,7 +272,7 @@ function SnapshotChart({
         <g clipPath={`url(#${clip}-axis)`}>
           {drawnTicks.map(({ tick, gone }) => <text className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} fill="#536077" fontFamily="Arial, sans-serif" fontSize="11" key={tick} textAnchor="end" x={AXIS_WIDTH - 4} y={y(tick) + 4}>{tick}</text>)}
         </g>
-        <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(10 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
+        <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(12 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
       <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>

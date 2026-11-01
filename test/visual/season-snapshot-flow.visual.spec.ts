@@ -97,11 +97,15 @@ test("in the 6 Wk view a rail along the top of the chart shows the window and mo
 
   // It opens on the latest six of nine weeks: the thumb is two thirds of the track, at its right end.
   let { track: bar, thumb: grip } = await boxes();
-  // The rail lies along the top of the plot, above every line, and the week numbers are where All puts them.
+  // The rail lies in the strip above the axis's top line (always a numbered tick), above every line.
   const plotBox = (await plot.boundingBox())!;
   expect(bar.y - plotBox.y).toBeLessThan(4);
   const lineTop = await page.locator(".season-snapshot-lines").evaluate((element) => element.getBoundingClientRect().top);
   expect(lineTop, "the highest line stays below the rail").toBeGreaterThan(bar.y + bar.height);
+  const topLine = await page.locator(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)").evaluateAll((lines) => Math.min(...lines.map((line) => line.getBoundingClientRect().top)));
+  expect(topLine, "the rail sits above the top line, not on it").toBeGreaterThanOrEqual(bar.y + bar.height);
+  const topNumber = await page.locator(".season-snapshot-yaxis .season-snapshot-tick:not(.is-leaving)").evaluateAll((texts) => Math.min(...texts.map((text) => text.getBoundingClientRect().top + text.getBoundingClientRect().height / 2)));
+  expect(Math.abs(topNumber - topLine), "and the top line has its number").toBeLessThan(4);
   expect(grip.width / bar.width).toBeCloseTo(2 / 3, 1);
   expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
 

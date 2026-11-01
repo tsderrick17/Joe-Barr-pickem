@@ -252,7 +252,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   overflow: hidden;
 }
 /* The browser's own scroll bar would sit on the week numbers and look nothing like the pad: it is hidden, and the
-   position rail along the top of the chart takes its place. */
+   position rail above the chart's top line takes its place. */
 .season-snapshot-plot-scroll.is-windowed {
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -260,8 +260,8 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   scrollbar-width: none;
 }
 .season-snapshot-plot-scroll.is-windowed::-webkit-scrollbar { display: none; }
-/* Over the top of the plot, in the room the axis keeps above the highest line; the y-axis numbers stay clear on its left. */
-.season-snapshot-rail { cursor: pointer; left: 30px; padding: 1px 0 .35rem; position: absolute; right: 0; top: 0; touch-action: none; z-index: 1; }
+/* In the strip above the axis's top line; the y-axis numbers stay clear on its left. */
+.season-snapshot-rail { cursor: pointer; left: 30px; padding: 2px 0 4px; position: absolute; right: 0; top: 0; touch-action: none; z-index: 1; }
 .season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 5px; position: relative; }
 .season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; cursor: grab; position: absolute; top: 0; }
 .season-snapshot-plot-scroll:focus-visible { outline: 2px solid var(--blue-50); outline-offset: 2px; }

@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - The top of the Season Snapshot axis is always a numbered tick; the rail sits above it
+
+Supersedes the next entry's unlabelled top. The owner wants a top number and line at all times. The top is now the first tick at least half a win over the highest line; to keep it close (weeks 1 to 6 with a leader at 9 end at 10, not 12), the tick spacing is the smallest round one (1, 2, 4, 5, 10, 20 or 50 wins) that needs no more than six gaps, so the axis can show up to seven numbers. In 6 Wk the spacing is checked for every half-week position of the window, so it still never changes while scrolling. The 6 Wk rail sits in a 12 px strip above the top line (All keeps the strip empty, so both views line up), and the "Wins" label moved 2 px right.
+
 ## 2026-11-01 - The Season Snapshot axis ends a win over the leader; the 6 Wk rail moves to the top
 
 The owner saw weeks 1 to 6 topped at 12 when nobody had more than 9: the axis rounded its top up to the next tick (4-win spacing). The top is now exactly a win over the highest line in view, in both All and 6 Wk; the ticks stay on the fixed spacing and the top is labelled only when it lands on one. The bottom still starts on a tick. The 6 Wk position rail moved from under the "Week" label to the top of the plot, over that win of room, so it never covers a line and takes no space: both views put the axis and the week numbers in the same place. The gap between the heading rule and the chart is also smaller (top padding .5rem to .25rem, plot top 10 to 8 px).
