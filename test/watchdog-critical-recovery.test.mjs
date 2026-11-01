@@ -7,16 +7,19 @@ import test, { mock } from "node:test";
 // The real recovery step with the three workers and the lease scripted: which work the watchdog may restart, in what
 // order, and how each outcome is reported.
 const ran = [];
+const warned = [];
 let leaseBehavior = {};
 class AutomationAlreadyRunningError extends Error {}
 globalThis.recoveryFixture = {
   AutomationAlreadyRunningError,
+  noteOperationalWarning: async (job, message, details) => { warned.push([job, message, details]); },
   runWithAutomationLease: async (job, task) => { ran.push(`${job}:${task.name}`); const behavior = leaseBehavior[job]; if (behavior) throw behavior; return task(); },
 };
 registerHooks({
   resolve(specifier, context, nextResolve) {
     const shim = (source) => ({ url: `data:text/javascript,${encodeURIComponent(source)}`, shortCircuit: true });
     if (specifier === "@/lib/automation-execution-lease") return shim("export const AutomationAlreadyRunningError = globalThis.recoveryFixture.AutomationAlreadyRunningError; export const runWithAutomationLease = (...args) => globalThis.recoveryFixture.runWithAutomationLease(...args);");
+    if (specifier === "@/lib/operational-warnings") return shim("export const noteOperationalWarning = (...args) => globalThis.recoveryFixture.noteOperationalWarning(...args);");
     if (specifier === "@/lib/lock-due-lines") return shim("export async function lockDueLines() {}");
     if (specifier === "@/lib/sync-final-scores") return shim("export async function syncFinalScores() {}");
     if (specifier === "@/lib/reminder-worker") return shim("export async function sendDueReminders() {}");
@@ -25,7 +28,7 @@ registerHooks({
 });
 const { recoverCriticalWorkerWork } = await import("../src/lib/critical-worker-recovery.ts");
 const health = (...jobs) => ({ criticalWorkers: { problems: jobs.map((jobName) => ({ jobName })) } });
-const reset = (behavior = {}) => { ran.length = 0; leaseBehavior = behavior; mock.method(console, "error", () => undefined); };
+const reset = (behavior = {}) => { ran.length = 0; warned.length = 0; leaseBehavior = behavior; mock.method(console, "error", () => undefined); };
 
 test("a healthy pool recovers nothing", async () => {
   reset();
@@ -67,6 +70,7 @@ test("a worker that fails is reported failed and does not stop the next one", as
   reset({ scores: new Error("provider down") });
   const result = await recoverCriticalWorkerWork(health("scores", "reminders"));
   assert.deepEqual(result, [{ job: "scores", outcome: "failed" }, { job: "reminders", outcome: "recovered" }]);
+  assert.deepEqual(warned, [["scores", "Critical worker recovery failed.", { job: "scores" }]], "the Commissioner is told, not only the log");
   mock.restoreAll();
 });
 
