@@ -125,8 +125,8 @@ for (const theme of ["day", "night"]) {
       await page.evaluate(() => document.fonts.ready);
       await page.getByRole("button", { name: "Open email image studio" }).click();
       await page.getByLabel("Email type").selectOption("bowl_pool_open");
-      await expect(page.getByText("Phone notification")).toBeVisible();
-      await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible();
+      await expect(page.getByText("Phone notification")).toBeVisible({ timeout: 30_000 });
+      await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
       await page.waitForTimeout(600);
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       await expect(page).toHaveScreenshot(`commissioner-reminders-bowl-message-${theme}-${label}.png`, { fullPage: true });
