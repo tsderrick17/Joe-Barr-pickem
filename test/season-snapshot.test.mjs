@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -275,6 +275,21 @@ test("the 6 Wk axis fits the weeks in view, counting where a line crosses an edg
   const season = Array.from({ length: 14 }, (_, index) => ({ scores: [{ playerId: "a", wins: 2 * (index + 1) }] }));
   const late = snapshotWindowRange(season, [{ id: "a" }], {}, 8, 14);
   assert.equal(snapshotWindowAxis(late.min, late.max, snapshotWindowStep(season, [{ id: "a" }], {}, 6)).low, 12);
+});
+
+test("the 6 Wk axis is always for a full six-week stretch: the ends and the bounce past them never shorten it", () => {
+  // Fourteen weeks, 60 pixels a week: the chart scrolls from 0 to 480 pixels.
+  assert.deepEqual(snapshotStretch(0, 60, 14, 6), { from: 0, to: 6 });
+  assert.deepEqual(snapshotStretch(480, 60, 14, 6), { from: 8, to: 14 });
+  assert.deepEqual(snapshotStretch(-90, 60, 14, 6), { from: 0, to: 6 }, "pulled past the first week");
+  assert.deepEqual(snapshotStretch(570, 60, 14, 6), { from: 8, to: 14 }, "pulled past the latest week");
+  assert.deepEqual(snapshotStretch(150, 60, 14, 6), { from: 2.5, to: 8.5 }, "between the ends it follows the scroll");
+  assert.deepEqual(snapshotStretch(0, 60, 4, 6), { from: 0, to: 6 }, "a season shorter than the window starts at the first week");
+  const players = [{ id: "a" }];
+  const season = Array.from({ length: 14 }, (_, index) => ({ scores: [{ playerId: "a", wins: index + 1 }] }));
+  const rangeAt = (left) => { const { from, to } = snapshotStretch(left, 60, 14, 6); return snapshotWindowRange(season, players, {}, from, to); };
+  assert.deepEqual(rangeAt(-200), rangeAt(0), "the axis does not change at the first end");
+  assert.deepEqual(rangeAt(900), rangeAt(480), "or at the latest end");
 });
 
 test("the whole regular season still counts from zero, and the playoffs start just under the lowest line", () => {

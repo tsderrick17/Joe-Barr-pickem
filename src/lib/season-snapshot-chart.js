@@ -151,6 +151,21 @@ export function snapshotWindowRange(weeks, players, baseline, from, to) {
 }
 
 /**
+ * The six-week stretch the 6 Wk axis is for, from how far the chart is scrolled. The stretch is always a full window
+ * inside the season: pulling past either end (the bounce on a phone) still counts as the first or the latest six
+ * weeks, never a shorter piece. Between the ends it follows the scroll to a twentieth of a week.
+ * @param {number} scrollLeft
+ * @param {number} step  pixels per week
+ * @param {number} weekCount
+ * @param {number} windowWeeks
+ */
+export function snapshotStretch(scrollLeft, step, weekCount, windowWeeks) {
+  const latest = Math.max(0, weekCount - windowWeeks);
+  const from = Math.min(latest, Math.max(0, Math.round((scrollLeft / step) * 20) / 20));
+  return { from, to: from + windowWeeks };
+}
+
+/**
  * The wins axis: whole-number ticks, about five of them, with a win of room above the top line. From zero for the whole
  * regular season; otherwise it starts just under the lowest line, on an even number.
  * @param {number} min

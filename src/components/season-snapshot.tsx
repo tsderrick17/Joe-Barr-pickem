@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -175,7 +175,9 @@ function useSpringAxis(target: Axis) {
     frame = requestAnimationFrame(advance);
     return () => cancelAnimationFrame(frame);
   }, [low, ceiling, tickStep]);
-  return { ...shown, ticks: axisTicks(target), leaving };
+  // A number that came back before the glide ended is current again, not leaving: one of each on the axis.
+  const ticks = axisTicks(target);
+  return { ...shown, ticks, leaving: leaving.filter((tick) => !ticks.includes(tick)) };
 }
 
 function SnapshotChart({
@@ -220,12 +222,10 @@ function SnapshotChart({
     if (element && scrolls) element.scrollLeft = element.scrollWidth;
   }, [scrolls, plotWidth, weeks.length]);
 
-  // The part of the timeline in view, in weeks from the baseline. Kept to a twentieth of a week, so scrolling redraws
-  // only when the range could change. Until the first scroll it is the latest six weeks, where the view opens.
-  const edgesAt = (left: number) => ({
-    from: Math.round(((left - PLOT_LEFT) / step) * 20) / 20,
-    to: Math.round(((left + viewport - PLOT_LEFT) / step) * 20) / 20,
-  });
+  // The six-week stretch the axis is for, in weeks from the baseline: always a full six weeks, so the ends of the chart
+  // (and the bounce past them) never shrink it. Kept to a twentieth of a week, so scrolling redraws only when the range
+  // could change. Until the first scroll it is the latest six weeks, where the view opens.
+  const edgesAt = (left: number) => snapshotStretch(left, step, weekCount, WINDOW_WEEKS);
   const [scrolled, setScrolled] = useState<{ from: number; to: number } | null>(null);
   // Leaving the 6-week view forgets where it was: it always reopens on the latest weeks.
   const [wasScrolling, setWasScrolling] = useState(scrolls);
@@ -242,7 +242,7 @@ function SnapshotChart({
   };
 
   // Only the players still on the chart shape the axis, so hiding the leader rescales the chart to the people who
-  // remain. In the 6-week view it also fits the weeks in view and follows them as the chart scrolls; the whole regular
+  // remain. In the 6-week view it also fits the six-week stretch nearest the scroll and follows it as the chart scrolls; the whole regular
   // season always counts from zero.
   const range = snapshotWindowRange(weeks, players, baseline, edges.from, edges.to);
   const target = scrolls
