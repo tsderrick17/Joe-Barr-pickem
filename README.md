@@ -31,7 +31,7 @@ For a technical review, useful starting points are [schedule validation](src/lib
 
 ## Verification and release
 
-The fast suite exercises scoring, privacy, scheduling, provider accounting, and failure paths. Privileged tests run only against a separately confirmed `isolated-test` Supabase project. The full-season drill rehearses 18 regular weeks and four playoff rounds in a disposable 285-game fixture; it is a certification scenario, not a hardcoded limit on future NFL seasons. Pull requests run application checks, a Vercel preview, and relevant isolated database/browser checks. Production migrations are previewed before application, and a successful Vercel production deployment triggers a public-contract smoke gate.
+The fast suite exercises scoring, privacy, scheduling, provider accounting, and failure paths. Privileged tests run only against a separately confirmed `isolated-test` Supabase project. The full-season drill rehearses 18 regular weeks and four playoff rounds in a disposable 285-game fixture; it is a certification scenario, not a hardcoded limit on future NFL seasons. Pull requests run application checks (the screenshot and isolated database checks only when the changed files need them). Vercel builds a preview only for `main` and branches named `preview/...`, not for every pull request. Production migrations are previewed before application, and a successful Vercel production deployment triggers a public-contract smoke gate.
 
 For a local code check with Node.js 24 and npm:
 
@@ -51,7 +51,7 @@ The normal test suite already validates local Markdown links and key operating-c
 | Question | Start here |
 | --- | --- |
 | What rules and safety guarantees must remain true? | [Project reference](docs/PROJECT_REFERENCE.md) |
-| Why was a durable tradeoff made? | [Decision log](docs/DECISION_LOG.md) |
+| Why was a durable tradeoff made? | [Decision log](docs/DECISION_LOG.md) (older entries in `docs/decisions/`) |
 | What should a commissioner do during a normal week? | [Game-day runbook](docs/GAME_DAY_RUNBOOK.md) |
 | Where should an alert or unusual condition be routed? | [SOP index](docs/SOP_INDEX.md) |
 | How is a guarded recovery or release performed? | [Commissioner runbook](docs/commissioner-runbook.md) |
