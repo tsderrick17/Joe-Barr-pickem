@@ -20,6 +20,9 @@ import { pullNotch } from "@/lib/haptics.js";
 const THRESHOLD = 76;
 const MAX = 98;
 const RESISTANCE = 0.6;
+// A touch is a pull only if its first few pixels go mostly down. Sideways (the Season Snapshot chart, a diagonal drag) or up belongs to the page, and
+// a pull that has begun holds the finger to the page, so it cannot also slide the chart.
+const LOCK_SLOP = 6;
 
 function isInstalledApp() {
   return (navigator as { standalone?: boolean }).standalone === true || window.matchMedia("(display-mode: standalone)").matches;
@@ -59,7 +62,7 @@ export default function PullToRefresh() {
   const [landedAt, setLandedAt] = useState<number | null>(null);   // when the foot landed (the puff), or null while the pole is still coming down
   const [stretchedAt, setStretchedAt] = useState<number | null>(null);   // when the chain came fully taut (its one slight boing), or null while it is slack
   const [now, setNow] = useState(0);
-  const gesture = useRef({ active: false, startY: 0, pull: 0, phase: "pulling" as Phase, lastTouch: 0, landed: false, stretched: false, notch: 0 });
+  const gesture = useRef({ active: false, startX: 0, startY: 0, axis: "unknown" as "unknown" | "down" | "other", pull: 0, phase: "pulling" as Phase, lastTouch: 0, landed: false, stretched: false, notch: 0 });
 
   useEffect(() => {
     if (!isInstalledApp()) return;
@@ -70,7 +73,9 @@ export default function PullToRefresh() {
     const onStart = (event: TouchEvent) => {
       state.lastTouch = Date.now();
       state.active = state.phase !== "refreshing" && event.touches.length === 1 && window.scrollY <= 0 && !insideScrolledBox(event.target);
+      state.startX = event.touches[0]?.clientX ?? 0;
       state.startY = event.touches[0]?.clientY ?? 0;
+      state.axis = "unknown";
       state.pull = 0;
       if (state.active) { state.phase = "pulling"; state.landed = false; state.stretched = false; state.notch = 0; setLandedAt(null); setStretchedAt(null); setPhase("pulling"); setHeight(headerHeight()); setWidth(document.documentElement.clientWidth); setCoverTop(pageTop()); }
     };
@@ -79,6 +84,12 @@ export default function PullToRefresh() {
       state.lastTouch = Date.now();
       const distance = (event.touches[0]?.clientY ?? state.startY) - state.startY;
       if (window.scrollY > 0 || event.touches.length !== 1) { reset(); return; }
+      if (state.axis === "unknown") {
+        const across = (event.touches[0]?.clientX ?? state.startX) - state.startX;
+        if (Math.hypot(across, distance) < LOCK_SLOP) return;
+        state.axis = distance > Math.abs(across) ? "down" : "other";
+      }
+      if (state.axis === "other") { reset(); return; }
       if (distance <= 0) { state.pull = 0; state.phase = "pulling"; setPhase("pulling"); setPull(0); return; }
       if (event.cancelable) event.preventDefault();
       state.pull = Math.min(MAX, distance * RESISTANCE);

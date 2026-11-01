@@ -70,6 +70,39 @@ test("pulling down far enough shows the chain planted and then reloads the page"
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBeUndefined();
 });
 
+// Touches that wander sideways as they go: the finger moves from (startX, startY) to (endX, endY), and the test reports whether the page's own scroll was
+// refused (touchmove cancelled) for any of them.
+async function wander(page: Page, [startX, startY]: [number, number], [endX, endY]: [number, number]) {
+  return page.evaluate(([x0, y0, x1, y1]) => {
+    const target = document.body;
+    const touch = (x: number, y: number) => new Touch({ identifier: 1, target, clientX: x, clientY: y });
+    const send = (type: string, x: number, y: number) => {
+      const event = new TouchEvent(type, { bubbles: true, cancelable: true, touches: [touch(x, y)], changedTouches: [touch(x, y)] });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    send("touchstart", x0, y0);
+    let refused = false;
+    for (let step = 1; step <= 10; step += 1) refused = send("touchmove", x0 + ((x1 - x0) * step) / 10, y0 + ((y1 - y0) * step) / 10) || refused;
+    return refused;
+  }, [startX, startY, endX, endY] as const);
+}
+
+test("a drag that goes sideways or diagonally never pulls; a mostly-down drag does and holds the page still", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await installedApp(page);
+  await page.goto("/login");
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
+  // Across, then across and down (swiping the Season Snapshot chart with the finger drifting down): the page does not pull and the touch is left to the page.
+  expect(await wander(page, [300, 100], [100, 100])).toBe(false);
+  await expect(page.locator(".pull-chain")).toHaveCount(0);
+  expect(await wander(page, [300, 100], [120, 200])).toBe(false);
+  await expect(page.locator(".pull-chain")).toHaveCount(0);
+  // Down with the finger drifting a little sideways, as a thumb does: it pulls, and the touch is held (a chart under it cannot slide).
+  expect(await wander(page, [200, 100], [170, 260])).toBe(true);
+  await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
+});
+
 test("a short pull springs back without reloading", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await installedApp(page);
