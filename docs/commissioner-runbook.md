@@ -121,6 +121,34 @@ function, trigger, schedule, Vault secret, or provider setting exists.
 5. A missing official line leaves the affected pick pending and blocks unsafe
    week completion.
 
+## Provider down or account lapsed for more than three days
+
+The NFL score provider (The Odds API) reaches back three days. If a game is still
+not final after that, the automatic path can no longer fetch its score. The
+watchdog's "final overdue" alert fires six hours after the expected end, long
+before this point; use this section only when the provider has stayed unavailable
+(an outage, an exhausted or lapsed plan) past the three days.
+
+1. Fix the cause first if you can (renew the plan, check **Health and safety**),
+   then run **Final Score Check** once. A game inside the window is still fetched
+   automatically.
+2. For each game still not final more than three days after kickoff, look up the
+   official final score yourself on NFL.com or ESPN.
+3. Open **Today → Fix something → Game Exceptions → Enter a verified final · last
+   resort**. Choose the game, type both scores, write where you checked them
+   (for example "NFL.com box score"), and press **Save verified final**. The
+   block appears only when such a game exists.
+4. Confirm the question. The game is finalized through the same atomic grading
+   as the automatic path (ATS, Survivor, playoff rules), and an audit entry
+   (`final_score_entered_manually`, with your note) is written in the same step.
+5. Confirm standings and week state before allowing handoff.
+
+The form refuses a game that is not yet three days past kickoff, a game that
+already has a final (a wrong final goes through the audited correction below), and
+a postponed, cancelled, or no-contest game. There is no ESPN fallback by design
+(owner decision D5, 2026-10-31): a typed, verified, audited final is the only
+last resort.
+
 ## Provider score disagrees with the saved final
 
 1. Run **Final Score Reconciliation**. It is read-only.

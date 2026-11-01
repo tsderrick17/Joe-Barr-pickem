@@ -184,6 +184,60 @@ for (const [state, theme] of [["quiet", "day"], ["attention", "day"], ["attentio
   }
 }
 
+// The last-resort final entry (Today → Fix something → Game Exceptions): an NFL game still not final past the score provider's three-day window.
+// It is answered from this fixture only, so the other Today shots keep their baselines.
+const OVERDUE_GAME = { id: "g-overdue", awayTeam: "Cleveland Browns", homeTeam: "Pittsburgh Steelers", week: "Week 4", kickoffAt: "2026-09-28T17:00:00Z" };
+
+async function openLastResortFinal(page: Page) {
+  await page.route("**/api/admin/game-exceptions", (route) => route.fulfill({ json: { exceptions: [], recordableGames: [OVERDUE_GAME], manualFinalGames: [OVERDUE_GAME] } }));
+  await settle(page, ".commissioner-panel-tab");
+  const drawer = page.locator(".commissioner-diagnostics > details").filter({ hasText: "Fix something" });
+  if ((await drawer.getAttribute("open")) === null) await drawer.locator("summary").click();
+  const block = page.locator("#verified-final");
+  await expect(block).toBeVisible({ timeout: 30_000 });
+  await block.getByLabel("Game to enter a final for").selectOption("g-overdue");
+  await block.getByLabel("Cleveland Browns").fill("20");
+  await block.getByLabel("Pittsburgh Steelers").fill("17");
+  await block.getByLabel("Where you checked it").fill("NFL.com box score");
+  return block;
+}
+
+for (const theme of ["day", "night"] as const) {
+  for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+    test(`Commissioner last-resort final entry ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, "healthy");
+      const block = await openLastResortFinal(page);
+      await expect(block.getByRole("button", { name: "Save verified final" })).toBeEnabled();
+      await page.waitForTimeout(600);
+      await expect(block).toHaveScreenshot(`commissioner-last-resort-final-${theme}-${label}.png`);
+    });
+  }
+}
+
+test("Commissioner last-resort final asks first, then sends the scores and the note, and says what was graded", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  let sent: unknown = null;
+  await page.route("**/api/admin/verified-final", async (route) => {
+    sent = route.request().postDataJSON();
+    await route.fulfill({ json: { message: "Final saved: 20 to 17. 3 ATS and 1 Survivor pick graded." } });
+  });
+  const block = await openLastResortFinal(page);
+  const button = block.getByRole("button", { name: "Save verified final" });
+  let asked = "";
+  page.once("dialog", (dialog) => { asked = dialog.message(); void dialog.dismiss(); });
+  await button.click();
+  await expect.poll(() => asked).toContain("Cleveland Browns 20, Pittsburgh Steelers 17");
+  expect(sent, "declining the question sends nothing").toBeNull();
+  page.once("dialog", (dialog) => { void dialog.accept(); });
+  await button.click();
+  await expect(page.getByText("Final saved: 20 to 17. 3 ATS and 1 Survivor pick graded.")).toBeVisible();
+  expect(sent).toEqual({ gameId: "g-overdue", awayScore: 20, homeScore: 17, source: "NFL.com box score" });
+});
+
 // The desk has five tabs, each with one job (the fifth, Workshop, opens full screen at its own address); repair and health tools sit in drawers on Today, and the season's checks live on Season.
 test("Commissioner desk has five tabs, with repair and health in drawers on Today", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });

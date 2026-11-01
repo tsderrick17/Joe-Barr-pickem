@@ -22,6 +22,12 @@ export default function GameExceptions() {
   const [selectedGameId, setSelectedGameId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [manualFinalGames, setManualFinalGames] = useState<RecordableGame[]>([]);
+  const [finalGameId, setFinalGameId] = useState("");
+  const [finalAway, setFinalAway] = useState("");
+  const [finalHome, setFinalHome] = useState("");
+  const [finalSource, setFinalSource] = useState("");
+  const [isSavingFinal, setIsSavingFinal] = useState(false);
 
   async function requestExceptions() {
     const {
@@ -41,7 +47,7 @@ export default function GameExceptions() {
       throw new Error(data.error ?? "Game exceptions could not be loaded.");
     }
 
-    return data as { exceptions: GameException[]; recordableGames: RecordableGame[] };
+    return data as { exceptions: GameException[]; recordableGames: RecordableGame[]; manualFinalGames: RecordableGame[] };
   }
 
   useEffect(() => {
@@ -54,6 +60,7 @@ export default function GameExceptions() {
         if (!cancelled) {
           setExceptions(loadedExceptions.exceptions);
           setRecordableGames(loadedExceptions.recordableGames);
+          setManualFinalGames(loadedExceptions.manualFinalGames);
         }
       } catch (error) {
         if (!cancelled) {
@@ -85,6 +92,7 @@ export default function GameExceptions() {
       const loadedExceptions = await requestExceptions();
       setExceptions(loadedExceptions.exceptions);
       setRecordableGames(loadedExceptions.recordableGames);
+      setManualFinalGames(loadedExceptions.manualFinalGames);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -121,6 +129,39 @@ export default function GameExceptions() {
       setErrorMessage(error instanceof Error ? error.message : "The disruption could not be recorded.");
     } finally {
       setIsRecording(false);
+    }
+  }
+
+  const finalGame = manualFinalGames.find((game) => game.id === finalGameId);
+  const finalReady = Boolean(finalGame) && finalAway !== "" && finalHome !== "" && finalSource.trim() !== "";
+
+  async function saveVerifiedFinal() {
+    if (!finalGame || !finalReady) return;
+    if (!window.confirm(`Save ${finalGame.awayTeam} ${finalAway}, ${finalGame.homeTeam} ${finalHome} as the final? Every pick on this game is graded right away. Only do this after checking the score yourself.`)) return;
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSavingFinal(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Please sign in before entering a final score.");
+      const response = await fetch("/api/admin/verified-final", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ gameId: finalGame.id, awayScore: Number(finalAway), homeScore: Number(finalHome), source: finalSource.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "The final score could not be saved.");
+      setSuccessMessage(data.message);
+      setFinalGameId("");
+      setFinalAway("");
+      setFinalHome("");
+      setFinalSource("");
+      await loadExceptions();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "The final score could not be saved.");
+    } finally {
+      setIsSavingFinal(false);
     }
   }
 
@@ -163,6 +204,40 @@ export default function GameExceptions() {
             <button className="bg-(color:--fill-danger-solid) px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
             <button className="border border-(color:--themed-border-25) px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>
           </div>
+        </div>
+      ) : null}
+
+      {manualFinalGames.length ? (
+        <div className="mt-5 border border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4" id="verified-final">
+          <p className="text-sm font-bold uppercase tracking-wide text-red-950">Enter a verified final · last resort</p>
+          <p className="mt-2 text-sm text-red-950">
+            The score provider can no longer supply these games (more than three days old). Enter a final only after you have checked the score yourself on NFL.com or ESPN. Every pick on the game is graded right away.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <select aria-label="Game to enter a final for" className="min-w-64 desk-button px-3 py-2" value={finalGameId} onChange={(event) => setFinalGameId(event.target.value)}>
+              <option value="">Choose the game</option>
+              {manualFinalGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
+            </select>
+          </div>
+          {finalGame ? (
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <label className="text-sm font-bold">
+                {finalGame.awayTeam}
+                <input className="desk-button mt-1 block w-24 px-3 py-2" inputMode="numeric" max={150} min={0} onChange={(event) => setFinalAway(event.target.value)} type="number" value={finalAway} />
+              </label>
+              <label className="text-sm font-bold">
+                {finalGame.homeTeam}
+                <input className="desk-button mt-1 block w-24 px-3 py-2" inputMode="numeric" max={150} min={0} onChange={(event) => setFinalHome(event.target.value)} type="number" value={finalHome} />
+              </label>
+              <label className="min-w-64 flex-1 text-sm font-bold">
+                Where you checked it
+                <input className="desk-button mt-1 block w-full px-3 py-2" maxLength={200} onChange={(event) => setFinalSource(event.target.value)} placeholder="For example: NFL.com box score" type="text" value={finalSource} />
+              </label>
+              <button className="bg-(color:--fill-danger-solid) px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!finalReady || isSavingFinal} onClick={() => void saveVerifiedFinal()} type="button">
+                {isSavingFinal ? "Saving..." : "Save verified final"}
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

@@ -28,6 +28,7 @@ const routes = [
   ["admin/players GET", () => import("../src/app/api/admin/players/route.ts").then((module) => module.GET(get()))],
   ["admin/reminders GET", () => import("../src/app/api/admin/reminders/route.ts").then((module) => module.GET(get()))],
   ["admin/game-disruptions POST", () => import("../src/app/api/admin/game-disruptions/route.ts").then((module) => module.POST(send("POST", { gameId: "g1", status: "postponed" })))],
+  ["admin/verified-final POST", () => import("../src/app/api/admin/verified-final/route.ts").then((module) => module.POST(send("POST", { gameId: "g1", awayScore: 20, homeScore: 17, source: "NFL.com" })))],
   ["admin/bowl-pool/exceptions POST", () => import("../src/app/api/admin/bowl-pool/exceptions/route.ts").then((module) => module.POST(send("POST", { gameId: "g1", status: "cancelled" })))],
   ["profile GET", () => import("../src/app/api/profile/route.ts").then((module) => module.GET(get()))],
   ["pool-chat POST", () => import("../src/app/api/pool-chat/route.ts").then((module) => module.POST(send("POST", { message: "hi" })))],

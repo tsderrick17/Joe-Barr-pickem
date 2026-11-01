@@ -40,7 +40,10 @@ Use **Commissioner → Final Score Check** once after the two-hour-fifty-minute 
 If a saved final disagrees with the provider, run **Final Score Reconciliation**
 and follow the audited correction procedure in
 [commissioner-runbook.md](commissioner-runbook.md). Never type an estimated
-score or repeatedly poll a failing provider.
+score or repeatedly poll a failing provider. A game still not final more than
+three days after kickoff (the provider no longer has it) is the one case where
+the Commissioner types a verified final: see "Provider down or account lapsed
+for more than three days" in the runbook.
 
 ### A kickoff moves or a game is postponed, cancelled, or no contest
 
