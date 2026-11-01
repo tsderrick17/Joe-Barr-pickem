@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import PickemScoreboard, { type PickemScoreboardRow } from "@/components/pickem-scoreboard";
 import SlateGameRow, { type SlateGameRowData } from "@/components/slate-game-row";
+import { fetchWithSession } from "@/lib/auth-session";
 import { countPickemWins } from "@/lib/standings";
 
 type Side = "left" | "right";
@@ -294,7 +296,32 @@ function EmailPreview({ rows, scenario }: { rows: PickemScoreboardRow[]; scenari
   </section>;
 }
 
+type Access = "checking" | "allowed" | "denied";
+
+/** The rehearsal is the Commissioner's tool: it is drawn only once the account has answered as the Commissioner (a signed-out visitor is sent to sign in by the header). */
+function useCommissionerAccess(): Access {
+  const [access, setAccess] = useState<Access>("checking");
+  useEffect(() => {
+    let active = true;
+    fetchWithSession("/api/profile")
+      .then((response) => response.ok ? response.json() as Promise<{ isCommissioner?: boolean }> : Promise.reject(new Error("The account could not be read.")))
+      .then((player) => { if (active) setAccess(player.isCommissioner ? "allowed" : "denied"); })
+      .catch(() => { if (active) setAccess("denied"); });
+    return () => { active = false; };
+  }, []);
+  return access;
+}
+
 export default function PreviewPage() {
+  const access = useCommissionerAccess();
+  if (access === "allowed") return <Rehearsal />;
+  return <main className="min-h-screen bg-(color:--page-cream) px-6 py-10 text-(color:--themed-text-31)"><div className="mx-auto max-w-4xl">
+    <h1 className="font-serif text-4xl font-bold">{access === "checking" ? "Checking sign-in" : "Commissioner only"}</h1>
+    {access === "denied" ? <><p className="mt-3 max-w-2xl text-(color:--themed-text-29)">The rehearsal is the Commissioner&apos;s tool.</p><p className="mt-4"><Link className="font-bold underline" href="/">Back to the Standings</Link></p></> : null}
+  </div></main>;
+}
+
+function Rehearsal() {
   const [scenarioKey, setScenarioKey] = useState("open");
   const [view, setView] = useState<"ticket" | "slate" | "pad" | "email">("ticket");
   const scenario = scenarios[scenarioKey];

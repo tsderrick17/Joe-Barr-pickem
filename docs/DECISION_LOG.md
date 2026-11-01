@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-10-31 - The rehearsal page is the Commissioner's
+
+`/preview` (the sample-picks rehearsal) used to open for anyone who knew the address. It now draws only after `/api/profile` answers `isCommissioner`; a signed-in player sees "Commissioner only" with a link back to the Standings, and a signed-out visitor is still sent to sign in by the header. The page holds only fictional sample data, so this is a gate on the page, not on data; the Commissioner Workshop stays reached only from the Commissioner screen. The two layout guards that opened `/preview` unsigned against the real app (`test/e2e/visual-layout.spec.ts`) moved into the rehearsal walk-through spec in the screenshot suite, which signs in with a mocked Commissioner; the new screen is the `preview-player` Account state.
+
 ## 2026-10-31 - The decision log is split, dated reports move to history, and leftovers are deleted
 
 - **Decision log:** `docs/DECISION_LOG.md` keeps the newest entries (2026-10-05 onward); older ones moved unchanged to `docs/decisions/2026-Q3.md` and `docs/decisions/2026-10-early.md` and keep their standing. All 291 entries are preserved; a table at the top of the log names the archives.
