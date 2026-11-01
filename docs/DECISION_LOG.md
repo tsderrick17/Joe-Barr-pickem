@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - The Season Snapshot axis ends a win over the leader; the 6 Wk rail moves to the top
+
+The owner saw weeks 1 to 6 topped at 12 when nobody had more than 9: the axis rounded its top up to the next tick (4-win spacing). The top is now exactly a win over the highest line in view, in both All and 6 Wk; the ticks stay on the fixed spacing and the top is labelled only when it lands on one. The bottom still starts on a tick. The 6 Wk position rail moved from under the "Week" label to the top of the plot, over that win of room, so it never covers a line and takes no space: both views put the axis and the week numbers in the same place. The gap between the heading rule and the chart is also smaller (top padding .5rem to .25rem, plot top 10 to 8 px).
+
 ## 2026-11-01 - A touch is a pull only if it starts mostly down
 
 On the Season Snapshot a diagonal drag slid the chart and pulled the page down to refresh at the same time. The pull now decides in the first 6 px of a touch: mostly down is a pull and holds the finger to the page (the touch is cancelled, so a chart under it cannot also slide); sideways, diagonal or up belongs to the page or the chart and never pulls. A pull that began mostly down may still drift sideways and back up as before.

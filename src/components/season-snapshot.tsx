@@ -67,14 +67,15 @@ function shortWeek(label: string) {
 const AXIS_WIDTH = 30;
 const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
-const PLOT_TOP = 10;
+const PLOT_TOP = 8;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
 
 /**
- * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad and never lies
- * on top of the week numbers. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
+ * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies along
+ * the top of the chart, in the win of room the axis keeps over the highest line, so both views put the axis and the week
+ * numbers in exactly the same place. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
  * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
  */
 function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
@@ -127,7 +128,8 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
 }
 
 type Axis = { low: number; ceiling: number; tickStep: number };
-const axisTicks = ({ low, ceiling, tickStep }: Axis) => Array.from({ length: Math.round((ceiling - low) / tickStep) + 1 }, (_, index) => low + index * tickStep);
+// Every tick from the bottom up to the top; the top itself is a tick only when it lands on one.
+const axisTicks = ({ low, ceiling, tickStep }: Axis) => Array.from({ length: Math.floor((ceiling - low) / tickStep + 1e-9) + 1 }, (_, index) => low + index * tickStep);
 // A critically damped spring: the axis glides to each new range without overshoot, and a range that changes again
 // mid-glide (a fast scroll) carries the motion on instead of restarting it. About a third of a second to settle.
 const SPRING = 16;
@@ -294,9 +296,9 @@ function SnapshotChart({
           </svg>
         </div>
       </div>
+      {scrolls ? <SnapshotRail scroller={scrollRef} /> : null}
     </div>
     <p aria-hidden="true" className="season-snapshot-week-label">Week</p>
-    {scrolls ? <SnapshotRail scroller={scrollRef} /> : null}
   </section>;
 }
 

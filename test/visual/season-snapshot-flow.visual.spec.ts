@@ -40,7 +40,8 @@ const flipButton = (page: Page) => page.getByRole("button", { name: "Show the Se
 const backButton = (page: Page) => page.getByRole("button", { name: "Show the Pick'em Pad" });
 const keyRows = (page: Page) => page.locator(".season-snapshot-key-row");
 const ribbonFills = (page: Page) => page.evaluate(() => [...document.querySelectorAll(".season-snapshot-ribbon > path:first-child")].map((path) => path.getAttribute("fill")));
-const axisTicks = (page: Page) => page.evaluate(() => [...document.querySelectorAll(".season-snapshot-yaxis text:not(.season-snapshot-axis-label)")].map((text) => text.textContent));
+// The numbers and where they sit: a rescale can keep the same numbers and only spread them out.
+const axisScale = (page: Page) => page.evaluate(() => [...document.querySelectorAll(".season-snapshot-yaxis text:not(.season-snapshot-axis-label)")].map((text) => `${text.textContent}@${Math.round(Number(text.getAttribute("y")))}`));
 
 test("the snapshot loads only when the pad is turned over, and only once", async ({ page }) => {
   const requests = await open(page);
@@ -81,7 +82,7 @@ test("6 Wk windows the chart to six weeks that scroll; All fits the whole season
   await expect(plot).not.toHaveClass(/is-windowed/);
 });
 
-test("in the 6 Wk view a rail beneath the chart shows the window and moves it; All has no rail", async ({ page }) => {
+test("in the 6 Wk view a rail along the top of the chart shows the window and moves it; All has no rail", async ({ page }) => {
   await open(page);
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
@@ -96,6 +97,11 @@ test("in the 6 Wk view a rail beneath the chart shows the window and moves it; A
 
   // It opens on the latest six of nine weeks: the thumb is two thirds of the track, at its right end.
   let { track: bar, thumb: grip } = await boxes();
+  // The rail lies along the top of the plot, above every line, and the week numbers are where All puts them.
+  const plotBox = (await plot.boundingBox())!;
+  expect(bar.y - plotBox.y).toBeLessThan(4);
+  const lineTop = await page.locator(".season-snapshot-lines").evaluate((element) => element.getBoundingClientRect().top);
+  expect(lineTop, "the highest line stays below the rail").toBeGreaterThan(bar.y + bar.height);
   expect(grip.width / bar.width).toBeCloseTo(2 / 3, 1);
   expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
 
@@ -114,8 +120,15 @@ test("in the 6 Wk view a rail beneath the chart shows the window and moves it; A
   ({ track: bar, thumb: grip } = await boxes());
   expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
 
+  // The rail takes no room of its own: All draws the axis and the week numbers in exactly the same place.
+  const layout = () => page.evaluate(() => ["season-snapshot-yaxis", "season-snapshot-week-label"].map((name) => {
+    const box = document.querySelector(`.${name}`)!.getBoundingClientRect();
+    return [Math.round(box.top), Math.round(box.height)];
+  }));
+  const windowed = await layout();
   await weeks.getByRole("button", { name: "All" }).click();
   await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
+  expect(await layout()).toEqual(windowed);
 });
 
 test("in the 6 Wk view the axis fits the weeks in view and follows them as the chart scrolls, on one tick spacing", async ({ page }) => {
@@ -159,14 +172,14 @@ test("hiding a player removes their line and rescales the axis; nobody's color m
   const colorsBefore = await Promise.all(Array.from({ length: count }, (_, index) => swatchOf(index)));
   expect(new Set(colorsBefore).size, "every player has a distinct color").toBe(count);
   const fillsBefore = await ribbonFills(page);
-  const ticksBefore = await axisTicks(page);
+  const ticksBefore = await axisScale(page);
   const leader = keyRows(page).first();
   await leader.click();
   await expect(leader).toHaveAttribute("aria-pressed", "false");
   const fillsAfter = await ribbonFills(page);
   expect(fillsAfter.length).toBeLessThan(fillsBefore.length);
   // The axis glides to its new range; the numbers that leave it fade out and are gone once it settles.
-  await expect.poll(() => axisTicks(page), { message: "the axis rescales to whoever remains" }).not.toEqual(ticksBefore);
+  await expect.poll(() => axisScale(page), { message: "the axis rescales to whoever remains" }).not.toEqual(ticksBefore);
   // Everyone still on the chart keeps the color they had.
   const colorsAfter = await Promise.all(Array.from({ length: count }, (_, index) => swatchOf(index)));
   expect(colorsAfter).toEqual(colorsBefore);
