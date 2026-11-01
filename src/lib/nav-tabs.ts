@@ -32,7 +32,13 @@ export function forgetTabs() {
   try { window.localStorage.removeItem(KEY); } catch { /* nothing remembered */ }
 }
 
-/** The inline script; `bowlLaunchMs` is when this season's Bowl Pool opens. */
-export function navTabsScript(bowlLaunchMs: number) {
-  return `try{var r=document.documentElement,t=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"{}");if(t.bowls||Date.now()>=${bowlLaunchMs})r.dataset.navBowls="1";if(t.commissioner)r.dataset.navCommissioner="1"}catch(e){}`;
+/**
+ * The inline script. The launch is worked out in the browser from the one rule in bowl-pool.js (which month, day and UTC time it falls on,
+ * the same every year because December is always standard time) and the season year as seasonYearAt() counts it (Eastern time, new season
+ * on August 1). The page is built once and served for months, so a launch time baked in at build would be last season's by next August.
+ */
+export function navTabsScript() {
+  const launch = new Date(bowlPoolLaunchAt(seasonYearAt()));
+  const rule = [launch.getUTCMonth(), launch.getUTCDate(), launch.getUTCHours(), launch.getUTCMinutes()];
+  return `try{var r=document.documentElement,t=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"{}"),o=false;try{var p=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"numeric"}).formatToParts(Date.now()),y=0,m=0;p.forEach(function(x){if(x.type==="year")y=+x.value;if(x.type==="month")m=+x.value});if(y){if(m<8)y--;o=Date.now()>=Date.UTC(y,${rule[0]},${rule[1]},${rule[2]},${rule[3]})}}catch(e){}if(t.bowls||o)r.dataset.navBowls="1";if(t.commissioner)r.dataset.navCommissioner="1"}catch(e){}`;
 }

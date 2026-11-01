@@ -12,8 +12,6 @@ import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
 import { earlyReadScript, sessionStorageKey } from "@/lib/early-read.js";
 import FootballWarmup from "@/components/football-warmup";
-import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
-import { currentSeasonYear } from "@/lib/season";
 
 const architectsDaughter = localFont({
   src: "../../public/fonts/architects-daughter.ttf",
@@ -55,7 +53,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       {/* Decides the optional header tabs before the first paint, so they never slide in later (see nav-tabs.ts). */}
       <head>
-        <script dangerouslySetInnerHTML={{ __html: navTabsScript(Date.parse(bowlPoolLaunchAt(currentSeasonYear()))) }} />
+        <script dangerouslySetInnerHTML={{ __html: navTabsScript() }} />
         {/* Starts the Standings' or the Slate's first data read before the page's code has arrived (see early-read.js). */}
         <script dangerouslySetInnerHTML={{ __html: earlyReadScript(sessionStorageKey(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")) }} />
       </head>
