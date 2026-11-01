@@ -14,6 +14,7 @@ import { renderEmailArtwork, type EmailArtworkSnapshot } from "@/lib/email-artwo
 import { ensureEarlyLockSnapshot, ensureFeaturedWindowRevealSnapshot, ensureFreshSlateSnapshot, ensureGameDaySlateSnapshot, ensurePlayoffDayRecapSnapshot, ensurePlayoffPublicRevealSnapshot, ensureSundayRevealSnapshot, ensureWeeklyRecapSnapshot } from "@/lib/weekly-recap";
 import { ensureBowlDailyRecapSnapshot, ensureBowlLineLockSnapshot } from "@/lib/bowl-pool-recap";
 import { emailArtworkOptions, emailArtworkKinds, emailArtworkTemplateId, type EmailArtworkOptions } from "@/lib/email-artwork-options";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 type Reminder = {
   id: string;
@@ -471,7 +472,7 @@ async function sendPhoneNotifications(reminder: Reminder, playerIds: string[]) {
     const badges = await picksStillToMakeFor(playerIds).catch(() => new Map<string, number>());
     await sendPushToPlayers(playerIds, (playerId) => (badges.has(playerId) ? { ...message, badge: badges.get(playerId) } : message));
   } catch (reason) {
-    console.warn("Phone notifications for a reminder could not be sent.", { reminderId: reminder.id, message: reason instanceof Error ? reason.message : "unknown" });
+    await noteOperationalWarning("reminders", "Phone notifications for a reminder could not be sent.", { reminderId: reminder.id, message: reason instanceof Error ? reason.message : "unknown" });
   }
 }
 

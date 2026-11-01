@@ -1,6 +1,8 @@
 import "./helpers/typescript-renderer.mjs";
+import { registerHooks } from "node:module";
 import assert from "node:assert/strict";
 import test from "node:test";
+import { recordingDatabase } from "./helpers/recording-database.mjs";
 import {
   assessLinesReady,
   assessWeekHandoff,
@@ -10,6 +12,17 @@ import {
   LINE_LOCK_GRACE_MS,
   RECAP_GRACE_MS,
 } from "../src/lib/pool-integrity-health.js";
+
+// The probe route saves what it finds as an operational warning, so it needs a database to save to.
+globalThis.integrityFixture = { database: recordingDatabase(() => ({ data: null, error: null })) };
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = new Proxy({}, { get: (_, name) => (...args) => globalThis.integrityFixture.database[name](...args) });", shortCircuit: true };
+    return nextResolve(specifier, context);
+  },
+});
+process.env.NEXT_PUBLIC_SUPABASE_URL = "https://fixture.invalid";
+process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "fixture-publishable-key";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -98,10 +111,13 @@ test("the handoff probe leaves games still in progress, postponed games, empty w
 
 test("a probe answers 200 healthy, 503 unhealthy and 503 on error, and only a healthy answer may be cached", async () => {
   const { poolIntegrityResponse } = await import("../src/lib/pool-integrity-route.ts");
+  const { resetOperationalWarningMemo } = await import("../src/lib/operational-warnings.ts");
+  resetOperationalWarningMemo();
+  integrityFixture.database = recordingDatabase(() => ({ data: null, error: null }));
   const quietly = async (run) => {
-    const original = console.error;
-    console.error = () => undefined;
-    try { return await run(); } finally { console.error = original; }
+    const original = [console.warn, console.error];
+    console.warn = console.error = () => undefined;
+    try { return await run(); } finally { [console.warn, console.error] = original; }
   };
 
   const healthy = await poolIntegrityResponse("probe", 900, async () => ({ healthy: true }));
@@ -113,8 +129,10 @@ test("a probe answers 200 healthy, 503 unhealthy and 503 on error, and only a he
   assert.equal(unhealthy.status, 503);
   assert.equal(unhealthy.headers.get("cache-control"), "no-store, max-age=0");
   assert.deepEqual(Object.keys(await unhealthy.json()).sort(), ["checkedAt", "status"], "no detail leaves the server");
+  assert.deepEqual(integrityFixture.database.rpcCalls.map((call) => call.args), [{ target_job: "pool_integrity", target_message: "probe is unhealthy.", target_details: { reason: "2 games without a line" } }], "the reason is saved for the Commissioner instead");
 
   const failed = await quietly(() => poolIntegrityResponse("probe", 900, async () => { throw new Error("database unreachable"); }));
   assert.equal(failed.status, 503);
   assert.equal(failed.headers.get("cache-control"), "no-store, max-age=0");
+  assert.deepEqual(integrityFixture.database.rpcCalls.slice(1).map((call) => [call.args.target_message, call.args.target_details.message]), [["probe could not be completed.", "database unreachable"]]);
 });

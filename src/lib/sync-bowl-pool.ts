@@ -13,6 +13,7 @@ import { easternDateTimeToUtc } from "@/lib/schedule-time.js";
 
 type ProviderEvent = { id: string; commence_time: string; home_team: string; away_team: string; completed?: boolean; scores?: Array<{ name: string; score: string | number | null }>; bookmakers?: Array<{ markets?: Array<{ key: string; outcomes?: Array<{ name: string; point?: number }> }> }> };
 import type { EspnEvent } from "@/lib/bowl-pool-espn-schedule.js";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 async function providerEvents(path: string, query: Record<string, string>) {
   // The Odds API's free plan does not include college-football markets. Keep
@@ -39,14 +40,14 @@ async function teamIdFor(name: string, providerId: string, abbreviation?: string
     // Teams saved before school colors existed pick them up on the next import.
     if ((primaryColor && primaryColor !== existing.primary_color) || (secondaryColor && secondaryColor !== existing.secondary_color)) {
       const { error: colorError } = await supabaseAdmin.from("bowl_pool_teams").update({ primary_color: primaryColor ?? existing.primary_color, secondary_color: secondaryColor ?? existing.secondary_color }).eq("id", existing.id);
-      if (colorError) console.error("Bowl Pool school colors could not be saved.", { teamId: existing.id });
+      if (colorError) await noteOperationalWarning("bowl_scores", "Bowl Pool school colors could not be saved.", { teamId: existing.id });
     }
     // A team still carrying its long provider name gets the school's short name;
     // a name anyone has already edited is left alone.
     const schoolName = colors?.shortName?.trim();
     if (schoolName && existing.short_name === name && schoolName !== name) {
       const { error: nameError } = await supabaseAdmin.from("bowl_pool_teams").update({ short_name: schoolName }).eq("id", existing.id);
-      if (nameError) console.error("Bowl Pool school name could not be saved.", { teamId: existing.id });
+      if (nameError) await noteOperationalWarning("bowl_scores", "Bowl Pool school name could not be saved.", { teamId: existing.id });
     }
     return existing.id;
   }
@@ -85,7 +86,7 @@ export async function syncAnnualSchedule(now: Date) {
   if (existingGamesError) throw new Error("Bowl Pool games could not be loaded.");
   const games = (existing ?? []) as OwnGameRow[];
   const plan = planBowlSchedule(events, games);
-  if (plan.unmatched.length) console.warn("Bowl Pool games ESPN no longer lists.", { games: plan.unmatched.map((game) => game.bowl_name) });
+  if (plan.unmatched.length) await noteOperationalWarning("bowl_scores", "Bowl Pool games ESPN no longer lists.", { games: plan.unmatched.map((game) => game.bowl_name) });
 
   const teamCache = new Map<string, string | null>();
   // Both teams, or neither: a game with one side still "TBD" has no teams yet.
@@ -139,7 +140,7 @@ export async function syncAnnualSchedule(now: Date) {
       // The kickoff moved: reminders queued for the old time are cancelled and queue again for the new one.
       if (patch.kickoff_at) await cancelQueuedBowlReminders(game.id);
       const { error } = await supabaseAdmin.from("bowl_pool_games").update(patch).eq("id", game.id);
-      if (error) { console.error("A Bowl Pool game could not be updated.", { gameId: game.id, code: error.code }); continue; }
+      if (error) { await noteOperationalWarning("bowl_scores", "A Bowl Pool game could not be updated.", { gameId: game.id, code: error.code }); continue; }
       if (patch.kickoff_at) kickoffMoved = true;
     }
     imported += 1;
@@ -159,7 +160,7 @@ export async function syncAnnualSchedule(now: Date) {
       time_confirmed: confirmed, is_cfp: headlineIsCfp(headline), venue_name: competition?.venue?.fullName ?? null, venue_city: competition?.venue?.address?.city ?? null, venue_state: competition?.venue?.address?.state ?? null,
       away_team_id: teams?.away ?? null, home_team_id: teams?.home ?? null,
     }, { onConflict: "provider_game_id" }).select("id").single();
-    if (error || !saved) { console.error("A new Bowl Pool game could not be saved.", { code: error?.code }); continue; }
+    if (error || !saved) { await noteOperationalWarning("bowl_scores", "A new Bowl Pool game could not be saved.", { code: error?.code }); continue; }
     imported += 1; inserted += 1;
     if (headlineIsChampionship(headline)) championshipGameId = saved.id;
     await lineFor(saved.id, event, teams, lineLockAt);
@@ -210,7 +211,7 @@ export async function syncScheduleAndLines(now: Date) {
     if (fallbackError || !locked?.length) return false;
     alreadyLocked.add(gameId);
     const { error: historyError } = await supabaseAdmin.from("bowl_pool_spread_history").insert({ game_id: gameId, favorite_team_id: provisional.favorite_team_id, source_spread: provisional.source_spread, pool_spread: provisional.locked_spread, source: provisional.source, captured_at: provisional.source_captured_at });
-    if (historyError) console.error("A Bowl Pool line-history snapshot could not be saved.", { gameId });
+    if (historyError) await noteOperationalWarning("bowl_scores", "A Bowl Pool line-history snapshot could not be saved.", { gameId });
     linesLocked += 1;
     return true;
   };
@@ -244,7 +245,7 @@ export async function syncScheduleAndLines(now: Date) {
     const { error: lineError } = await supabaseAdmin.from("bowl_pool_game_lines").upsert({ game_id: game.id, favorite_team_id: favoriteId, source_spread: sourceSpread, locked_spread: lockedSpread, source: "The Odds API", source_captured_at: now.toISOString(), locked_at: now.toISOString() }, { onConflict: "game_id" });
     if (!lineError) {
       const { error: historyError } = await supabaseAdmin.from("bowl_pool_spread_history").insert({ game_id: game.id, favorite_team_id: favoriteId, source_spread: sourceSpread, pool_spread: lockedSpread, source: "The Odds API", captured_at: now.toISOString() });
-      if (historyError) console.error("A Bowl Pool line-history snapshot could not be saved.", { gameId: game.id });
+      if (historyError) await noteOperationalWarning("bowl_scores", "A Bowl Pool line-history snapshot could not be saved.", { gameId: game.id });
       linesLocked += 1;
     }
   }
@@ -275,17 +276,17 @@ async function syncScores(now: Date) {
       // Never settled from a score, ESPN's or the Odds API's.
       if (!game.espn_cancelled_seen_at) {
         const { error } = await supabaseAdmin.from("bowl_pool_games").update({ espn_cancelled_seen_at: now.toISOString() }).eq("id", game.id).is("espn_cancelled_seen_at", null);
-        if (error) console.error("A Bowl Pool game ESPN lists as cancelled could not be marked.", { gameId: game.id, code: error.code });
+        if (error) await noteOperationalWarning("bowl_scores", "A Bowl Pool game ESPN lists as cancelled could not be marked.", { gameId: game.id, code: error.code });
       } else {
         const { error } = await supabaseAdmin.rpc("record_bowl_game_cancelled_by_espn", { target_game_id: game.id });
-        if (error) console.error("A Bowl Pool game ESPN lists as cancelled could not be cancelled.", { gameId: game.id, code: error.code });
+        if (error) await noteOperationalWarning("bowl_scores", "A Bowl Pool game ESPN lists as cancelled could not be cancelled.", { gameId: game.id, code: error.code });
         else cancelled += 1;
       }
       continue;
     }
     if (espnEvent && game.espn_cancelled_seen_at) {
       const { error } = await supabaseAdmin.from("bowl_pool_games").update({ espn_cancelled_seen_at: null }).eq("id", game.id);
-      if (error) console.error("A Bowl Pool game's cancellation mark could not be cleared.", { gameId: game.id, code: error.code });
+      if (error) await noteOperationalWarning("bowl_scores", "A Bowl Pool game's cancellation mark could not be cleared.", { gameId: game.id, code: error.code });
     }
     const competition = espnEvent?.competitions?.[0];
     const completed = Boolean(espnEvent && espnGameIsFinal(espnEvent));

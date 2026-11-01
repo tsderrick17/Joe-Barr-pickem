@@ -8,6 +8,7 @@ import { finishSyncRun } from "@/lib/sync-run";
 import { checkBowlPoolHealth } from "@/lib/bowl-pool-health";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 import { evaluateWatchdogSignals, isConfigurationDriftCheckDue, isWatchdogRepeatNotificationDue } from "@/lib/watchdog-rules";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 type Signal = { key: string; severity: "critical" | "warning"; title: string; detail: string };
 type AlertRow = { id: string; signal_key: string; notified_at: string | null; notification_attempted_at: string | null };
@@ -140,7 +141,7 @@ export async function runAutomationWatchdog(now = new Date()) {
       const { error: resolveError } = await supabaseAdmin.from("automation_alerts").update({ resolved_at: now.toISOString(), last_seen_at: now.toISOString() }).in("id", resolvedIds);
       if (resolveError) {
         bookkeepingFailures += 1;
-        console.error("Recovered watchdog incidents could not be closed.");
+        await noteOperationalWarning("watchdog", "Recovered watchdog incidents could not be closed.");
       }
     }
     const openByKey = new Map((openAlerts ?? []).map((alert) => [alert.signal_key, alert as AlertRow]));
@@ -166,7 +167,7 @@ export async function runAutomationWatchdog(now = new Date()) {
         const { error: refreshError } = await supabaseAdmin.from("automation_alerts").update({ last_seen_at: now.toISOString(), severity: signal.severity, title: signal.title, detail: signal.detail, details: signal }).eq("id", alert.id);
         if (refreshError) {
           bookkeepingFailures += 1;
-          console.error("An open watchdog incident could not be refreshed.", { signalKey: signal.key });
+          await noteOperationalWarning("watchdog", "An open watchdog incident could not be refreshed.", { signalKey: signal.key });
         }
       }
       const repeatQuiet = !wasAlreadyOpen && !isWatchdogRepeatNotificationDue(lastNotifiedByKey.get(signal.key), now);
@@ -177,17 +178,17 @@ export async function runAutomationWatchdog(now = new Date()) {
         const { error: attemptError } = await supabaseAdmin.from("automation_alerts").update({ notification_attempted_at: now.toISOString() }).eq("id", alert.id);
         if (attemptError) {
           bookkeepingFailures += 1;
-          console.error("A watchdog alert attempt could not be recorded, so the alert was not sent.", { signalKey: signal.key });
+          await noteOperationalWarning("watchdog", "A watchdog alert attempt could not be recorded, so the alert was not sent.", { signalKey: signal.key });
           continue;
         }
         try {
           const recipients = await notifyCommissioners(signal);
           notified += 1;
           const { error: receiptError } = await supabaseAdmin.from("automation_alerts").update({ notified_at: now.toISOString(), notification_recipients: recipients, notification_error: null }).eq("id", alert.id);
-          if (receiptError) console.error("A sent watchdog alert receipt could not be saved.", { signalKey: signal.key });
+          if (receiptError) await noteOperationalWarning("watchdog", "A sent watchdog alert receipt could not be saved.", { signalKey: signal.key });
         } catch (error) {
           const { error: failureRecordError } = await supabaseAdmin.from("automation_alerts").update({ notification_error: error instanceof Error ? error.message : "Alert delivery failed." }).eq("id", alert.id);
-          if (failureRecordError) console.error("A watchdog alert delivery failure could not be saved.", { signalKey: signal.key });
+          if (failureRecordError) await noteOperationalWarning("watchdog", "A watchdog alert delivery failure could not be saved.", { signalKey: signal.key });
         }
       }
     }

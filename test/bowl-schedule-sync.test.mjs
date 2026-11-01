@@ -81,9 +81,10 @@ registerHooks({
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://fixture.invalid";
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "fixture-publishable-key";
 const { syncAnnualSchedule } = await import("../src/lib/sync-bowl-pool.ts");
+const { resetOperationalWarningMemo } = await import("../src/lib/operational-warnings.ts");
 
 const realFetch = globalThis.fetch;
-const reset = () => { games = startingGames(); teams = []; lines = []; lineRows = new Map(); reminderCancels = []; gameWrites = []; failUpdateFor = null; bowlSyncFixture.database = recordingDatabase(respond); };
+const reset = () => { resetOperationalWarningMemo(); games = startingGames(); teams = []; lines = []; lineRows = new Map(); reminderCancels = []; gameWrites = []; failUpdateFor = null; bowlSyncFixture.database = recordingDatabase(respond); };
 const pull = async (events, now = "2026-12-01T12:00:00Z") => {
   globalThis.fetch = async () => ({ ok: true, json: async () => ({ events }) });
   try { return await syncAnnualSchedule(new Date(now)); } finally { globalThis.fetch = realFetch; }
@@ -170,17 +171,19 @@ test("selection day: teams and a line arrive for one game, a half-set matchup st
   assert.equal(byName("Alamo").home_team_id, null);
 });
 
-test("a game ESPN reports with a team the database refuses (picks or a locked line already hold the matchup) is logged and the rest still update", async () => {
+test("a game ESPN reports with a team the database refuses (picks or a locked line already hold the matchup) is raised as a warning and the rest still update", async () => {
   reset();
   failUpdateFor = byName("Cure").id;
-  const logged = [];
-  const realError = console.error;
-  console.error = (...args) => logged.push(args);
+  const realWarn = console.warn;
+  console.warn = () => undefined;
   try {
     assert.equal(await pull(withTeams("StaffDNA Cure Bowl", "Navy Midshipmen", "Tulane Green Wave")), 46, "the refused game is not counted");
-  } finally { console.error = realError; }
-  assert.equal(logged.length, 1);
-  assert.equal(logged[0][1].gameId, byName("Cure").id);
+  } finally { console.warn = realWarn; }
+  const warnings = bowlSyncFixture.database.rpcCalls.filter((call) => call.name === "record_operational_warning");
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0].args.target_job, "bowl_scores");
+  assert.equal(warnings[0].args.target_message, "A Bowl Pool game could not be updated.");
+  assert.equal(warnings[0].args.target_details.gameId, byName("Cure").id);
   assert.equal(byName("Fiesta").time_confirmed, true, "every other game was still brought up to date");
 });
 

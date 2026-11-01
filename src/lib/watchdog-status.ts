@@ -13,3 +13,15 @@ export async function getWatchdogStatus() {
   if (error || runError) throw new Error("Watchdog status could not be loaded.");
   return { openAlerts: (alerts ?? []).filter((alert) => !alert.resolved_at), recentAlerts: alerts ?? [], lastRun };
 }
+
+const WARNING_WINDOW_DAYS = 7;
+const WARNINGS_SHOWN = 8;
+
+/** What the workers coped with but did not stop for (see operational-warnings.ts): seen in the last week, newest first. */
+export async function getRecentOperationalWarnings(now = new Date()) {
+  const since = new Date(now.getTime() - WARNING_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin.from("operational_warnings").select("id, job, message, details, occurrences, first_seen_at, last_seen_at")
+    .gte("last_seen_at", since).order("last_seen_at", { ascending: false }).limit(WARNINGS_SHOWN);
+  if (error) throw new Error("Recent warnings could not be loaded.");
+  return data ?? [];
+}

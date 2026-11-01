@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { recordAutomationWorkerHeartbeat } from "@/lib/critical-worker-heartbeat-recorder";
 import { runInExecutionContext } from "@/lib/execution-context";
+import { noteOperationalWarning } from "@/lib/operational-warnings";
 
 export type AutomationJob = "line_locks" | "scores" | "bowl_scores" | "reminders" | "reminder_schedule" | "season_bootstrap" | "watchdog" | "schedule_refresh";
 
@@ -33,7 +34,7 @@ async function claimAutomationLease(job: AutomationJob) {
     if (attempt < LEASE_CLAIM_RETRY_DELAYS_MS.length) {
       await new Promise((resolve) => setTimeout(resolve, LEASE_CLAIM_RETRY_DELAYS_MS[attempt]));
     } else {
-      console.error("Automation execution lease claim failed after bounded retries.", {
+      await noteOperationalWarning(job, "Automation execution lease claim failed after bounded retries.", {
         job,
         error: error.message,
       });
@@ -117,7 +118,7 @@ export async function runWithAutomationLease<T>(
     throw error;
   } finally {
     if (timedOut) {
-      console.error("Automation lease retained until expiry after execution timeout.", { job });
+      await noteOperationalWarning(job, "Automation lease retained until expiry after execution timeout.", { job });
     } else {
       let { error: releaseError } = await supabaseAdmin.rpc(
       "release_automation_execution_lease",
@@ -133,7 +134,7 @@ export async function runWithAutomationLease<T>(
       }
 
       if (releaseError) {
-        console.error("Automation lease release failed.", { job });
+        await noteOperationalWarning(job, "Automation lease release failed.", { job });
       }
     }
   }

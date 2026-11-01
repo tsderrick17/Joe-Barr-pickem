@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 
 type Alert = { id: string; severity: string; title: string; detail: string; detected_at: string; notified_at: string | null; notification_error: string | null };
-type Status = { openAlerts: Alert[]; lastRun: { status: string; completed_at: string | null; error_message: string | null } | null };
+type Warning = { id: string; job: string; message: string; details: Record<string, unknown>; occurrences: number; last_seen_at: string };
+type Status = { openAlerts: Alert[]; warnings?: Warning[]; lastRun: { status: string; completed_at: string | null; error_message: string | null } | null };
+
+const JOB_NAMES: Record<string, string> = {
+  line_locks: "Line locking", scores: "Score sync", bowl_scores: "Bowl Pool sync", reminders: "Reminders", reminder_schedule: "Reminder schedule",
+  season_bootstrap: "Season setup", watchdog: "Watchdog", schedule_refresh: "Schedule refresh", pool_integrity: "Health checks",
+};
+const detailText = (details: Record<string, unknown>) => Object.entries(details).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : String(value)}`).join(" · ");
 
 export default function AutomationWatchdog() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -56,6 +63,15 @@ export default function AutomationWatchdog() {
         <p className="font-bold">{status.openAlerts.length ? `${status.openAlerts.length} incident${status.openAlerts.length === 1 ? "" : "s"} need attention` : "No actionable incidents"}</p>
         {status.openAlerts.map((alert) => <article className="mt-3 border-t border-current pt-3" key={alert.id}><p className="font-bold">{alert.title}</p><p className="mt-1 text-sm">{alert.detail}</p><p className="mt-1 text-xs">Opened {new Date(alert.detected_at).toLocaleString()} · {alert.notified_at ? "commissioner notified" : alert.notification_error ? `email retry pending: ${alert.notification_error}` : "notification pending"}</p></article>)}
         <p className="mt-3 text-xs text-(color:--themed-text-28)">Last check: {status.lastRun?.completed_at ? new Date(status.lastRun.completed_at).toLocaleString() : "not run yet"}</p>
+      </div> : null}
+      {status?.warnings ? <div className="mt-4 border border-(color:--themed-border-21) bg-(color:--themed-bg-23) p-4">
+        <p className="font-bold">{status.warnings.length ? "Recent warnings" : "No warnings this week"}</p>
+        <p className="mt-1 text-xs text-(color:--themed-text-28)">Things the automation worked around without stopping. They are not incidents and send no email.</p>
+        {status.warnings.map((warning) => <article className="mt-3 border-t border-current pt-3" key={warning.id}>
+          <p className="font-bold">{warning.message}</p>
+          {Object.keys(warning.details).length ? <p className="mt-1 text-sm">{detailText(warning.details)}</p> : null}
+          <p className="mt-1 text-xs">{JOB_NAMES[warning.job] ?? warning.job} · seen {warning.occurrences} {warning.occurrences === 1 ? "time" : "times"} · last {new Date(warning.last_seen_at).toLocaleString()}</p>
+        </article>)}
       </div> : null}
     </section>
   );
