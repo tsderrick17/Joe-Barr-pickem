@@ -92,8 +92,8 @@ for (const scenario of Object.keys(SCENARIOS)) {
 }
 
 // The 6 Wk window needs more than six weeks to scroll, so this state serves a fourteen-week season: late enough that the
-// axis fits the weeks in view and starts above zero. The position rail sits
-// beneath the week numbers in the pad's own colors; the screenshot guards both. Headless Chromium hides scroll bars
+// axis fits the weeks in view and starts above zero. The position rail lies
+// along the top of the plot in the pad's own colors, above every line; the screenshot guards both. Headless Chromium hides scroll bars
 // everywhere else, so this is the one place the browser is launched with them drawn: a scroll bar returning would show.
 for (const theme of ["day", "night"]) {
   for (const label of ["phone-390", "desktop-1280"] as const) {

@@ -266,15 +266,16 @@ test("the 6 Wk axis fits the weeks in view, counting where a line crosses an edg
     const axis = snapshotWindowAxis(min, max, step);
     assert.equal(axis.tickStep, step, "the spacing never changes while scrolling");
     assert.equal(axis.low % step, 0);
-    assert.equal(axis.ceiling % step, 0);
     assert.ok(axis.low <= min - 1 || axis.low === 0, "at least a win of room under the lowest line");
-    assert.ok(axis.ceiling >= max + 1, "and over the highest");
+    assert.equal(axis.ceiling, Math.max(axis.low + step, max + 1), "the top is a win over the highest line, not rounded up to a tick");
     assert.ok((axis.ceiling - axis.low) / step <= 6, "about five ticks");
   }
   // Late in a long season the axis no longer starts at zero.
   const season = Array.from({ length: 14 }, (_, index) => ({ scores: [{ playerId: "a", wins: 2 * (index + 1) }] }));
   const late = snapshotWindowRange(season, [{ id: "a" }], {}, 8, 14);
   assert.equal(snapshotWindowAxis(late.min, late.max, snapshotWindowStep(season, [{ id: "a" }], {}, 6)).low, 12);
+  // The owner's case: weeks 1 to 6, nobody above 9 wins, a 4-win spacing. The top is 10, not 12.
+  assert.deepEqual(snapshotWindowAxis(0, 9, 4), { low: 0, ceiling: 10, tickStep: 4 });
 });
 
 test("the 6 Wk axis is always for a full six-week stretch: the ends and the bounce past them never shorten it", () => {
@@ -294,6 +295,6 @@ test("the 6 Wk axis is always for a full six-week stretch: the ends and the boun
 
 test("the whole regular season still counts from zero, and the playoffs start just under the lowest line", () => {
   assert.deepEqual(snapshotAxis(3, 14, true), { low: 0, ceiling: 15, tickStep: 3 });
-  assert.deepEqual(snapshotAxis(9, 14, false), { low: 8, ceiling: 16, tickStep: 2 });
+  assert.deepEqual(snapshotAxis(9, 14, false), { low: 8, ceiling: 15, tickStep: 2 }, "the top is a win over the leader, not the next tick");
   assert.equal(snapshotAxis(0, 4, false).low, 0);
 });

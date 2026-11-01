@@ -227,12 +227,16 @@ measure database requests or end-to-end route time.
   flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
   at a time with the y-axis standing still beside it, and always opens on the
   most recent six weeks. Its y-axis fits the six-week stretch nearest the scroll
-  (a win or more under the lowest line and over the highest), always a full six
+  (a win or more under the lowest line, on a tick, and exactly a win over the
+  highest, not rounded up to the next tick), always a full six
   weeks, so the first and latest ends and the bounce past them never shorten it,
   and glides on a spring as the view scrolls, the lines with it; the tick spacing stays the same for the whole
   view, so the numbers slide past like a ruler and fade in or out at the edges.
-  All always counts from zero. A slim position rail under the "Week" label
-  replaces the browser's scroll bar. Axis margins are kept tight. On phones the key is a compact
+  All always counts from zero, and its top is also a win over the leader. A slim
+  position rail along the top of the plot (in that win of room, so it never
+  covers a line) replaces the browser's scroll bar; it takes no room of its own,
+  so All and 6 Wk put the axis and the week numbers in exactly the same place.
+  Axis margins are kept tight. On phones the key is a compact
   four-column grid. The key lists everyone in current-standings order;
   pressing a name hides or shows that person, the axis and stacking recompute
   for whoever remains, and hovering a name or line highlights one player. The

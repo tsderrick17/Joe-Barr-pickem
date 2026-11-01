@@ -166,8 +166,9 @@ export function snapshotStretch(scrollLeft, step, weekCount, windowWeeks) {
 }
 
 /**
- * The wins axis: whole-number ticks, about five of them, with a win of room above the top line. From zero for the whole
- * regular season; otherwise it starts just under the lowest line, on an even number.
+ * The wins axis: whole-number ticks, about five of them. The top is a win above the highest line, not rounded up to the
+ * next tick, so no space is wasted over the lines. From zero for the whole regular season; otherwise it starts just under
+ * the lowest line, on an even number.
  * @param {number} min
  * @param {number} max
  * @param {boolean} fromZero
@@ -176,8 +177,7 @@ export function snapshotAxis(min, max, fromZero) {
   const low = fromZero ? 0 : Math.max(0, Math.floor((Math.floor(min) - 1) / 2) * 2);
   const high = Math.max(low + 2, Math.ceil(max)) + 1;
   const tickStep = Math.max(1, Math.ceil((high - low) / 5));
-  const ceiling = low + Math.ceil((high - low) / tickStep) * tickStep;
-  return { low, ceiling, tickStep };
+  return { low, ceiling: high, tickStep };
 }
 
 /**
@@ -199,14 +199,15 @@ export function snapshotWindowStep(weeks, players, baseline, windowWeeks) {
 }
 
 /**
- * The axis for a scrolling window on a fixed tick spacing: it starts a win or more under the lowest line and ends a win
- * or more over the highest, both on a tick.
+ * The axis for a scrolling window on a fixed tick spacing: it starts on a tick a win or more under the lowest line and
+ * ends exactly a win over the highest (at least one tick above the start), so the top follows the lines in view and the
+ * position rail along the top of the chart never covers one.
  * @param {number} min
  * @param {number} max
  * @param {number} tickStep
  */
 export function snapshotWindowAxis(min, max, tickStep) {
   const low = Math.max(0, Math.floor((min - 1) / tickStep) * tickStep);
-  const ceiling = Math.max(low + tickStep, Math.ceil((max + 1) / tickStep) * tickStep);
+  const ceiling = Math.max(low + tickStep, max + 1);
   return { low, ceiling, tickStep };
 }
