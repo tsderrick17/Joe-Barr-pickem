@@ -1,6 +1,6 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
-import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
+import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse, withElevenPlayers } from "./standings-fixtures.mjs";
 
 // The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
 // painted frames so a recorded baseline and a later check agree about the settled chart.
@@ -121,6 +121,26 @@ for (const theme of ["day", "night"]) {
       }
     });
   }
+}
+
+// The Season Snapshot's player key with the whole pool, eleven names: the rows come out even (six and five across on a wide screen, four, four and
+// three on a phone), never a full line with only a couple left over.
+for (const label of ["phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot key with eleven players at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    const eleven = withElevenPlayers(homeResponse("commissioner-playoff"), seasonSnapshotResponse("commissioner-playoff", 14));
+    await page.route("**/api/home**", (route) => route.fulfill({ json: eleven.home }));
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: eleven.snapshot }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    await page.getByRole("button", { name: "Season", exact: true }).click();
+    await page.waitForTimeout(1500);
+    await settled(page);
+    await expect(page.locator(".season-snapshot-key-row")).toHaveCount(11);
+    await expect(page.locator(".season-snapshot-layout")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-eleven-players-${label}.png`);
+  });
 }
 
 test("once Survivor has a champion, even the champion's ticket owes only the two Pick'em selections", async ({ page }) => {

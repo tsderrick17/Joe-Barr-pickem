@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRibbonShade, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -72,23 +72,28 @@ const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
+/** The narrowest a name's box in the player key may be, in rem: the same width the stylesheet gives it. */
+const KEY_MIN_REM = 6.6;
 
 /**
- * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies in the
- * strip above the top line of the axis, which All keeps empty, so both views put the axis and the week numbers in exactly
- * the same place. It spans the grid lines, from the axis to where the lines end. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
- * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
+ * Where the 6-week view sits in the season, and the only way to move it: the chart itself does not scroll under a finger,
+ * a wheel or a drag, so a flick never shifts the weeks by accident. The page draws the rail instead of the browser so it
+ * matches the pad. It lies in the strip above the top line of the axis, which All keeps empty, so both views put the axis
+ * and the week numbers in exactly the same place, and spans the grid lines, from the axis to where the lines end. Drag the
+ * thumb or press the track and the view lands on the nearest week; the arrow keys step a week when it has focus. Only the
+ * thin track shows; the part of the rail you can grab is taller, to be easy to catch with a thumb.
  */
-function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
-  const [thumb, setThumb] = useState({ left: 0, width: 1 });
+function SnapshotRail({ scroller, step, weekCount }: { scroller: RefObject<HTMLDivElement | null>; step: number; weekCount: number }) {
+  const [thumb, setThumb] = useState({ left: 0, width: 1, at: 0 });
+  const [dragging, setDragging] = useState(false);
   // While a drag is on, how far along the thumb the pointer took hold (0 to 1 of the track).
   const grab = useRef<number | null>(null);
   useEffect(() => {
     const element = scroller.current;
     if (!element) return;
     const update = () => {
-      const next = snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth);
-      setThumb((current) => current.left === next.left && current.width === next.width ? current : next);
+      const next = { ...snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth), at: Math.max(0, Math.round(element.scrollLeft / step)) };
+      setThumb((current) => current.left === next.left && current.width === next.width && current.at === next.at ? current : next);
     };
     update();
     element.addEventListener("scroll", update, { passive: true });
@@ -99,28 +104,56 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
       element.removeEventListener("scroll", update);
       observer.disconnect();
     };
-  }, [scroller]);
+  }, [scroller, step]);
   const along = (event: ReactPointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
     return (event.clientX - box.left) / box.width;
   };
+  const scrollTo = (left: number) => {
+    const element = scroller.current;
+    if (element) element.scrollTo({ left: snapshotRailStop(left, step, element.scrollWidth - element.clientWidth) });
+  };
   const moveTo = (fraction: number) => {
     const element = scroller.current;
-    if (element && grab.current !== null) element.scrollTo({ left: (fraction - grab.current) * element.scrollWidth });
+    if (element && grab.current !== null) scrollTo((fraction - grab.current) * element.scrollWidth);
   };
-  const release = () => { grab.current = null; };
+  const release = () => {
+    grab.current = null;
+    setDragging(false);
+  };
+  const keys: Record<string, number> = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageUp: -WINDOW_WEEKS, PageDown: WINDOW_WEEKS, Home: -Infinity, End: Infinity };
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const weeks = keys[event.key];
+    const element = scroller.current;
+    if (weeks === undefined || !element) return;
+    event.preventDefault();
+    scrollTo(Number.isFinite(weeks) ? element.scrollLeft + weeks * step : weeks * element.scrollWidth);
+  };
+  // The first week in view, counting from 0, and the furthest it can be.
+  const last = Math.max(0, weekCount - WINDOW_WEEKS);
+  const first = Math.min(last, thumb.at);
   return <div
-    aria-hidden="true"
-    className="season-snapshot-rail"
+    aria-label="Move the weeks shown"
+    aria-orientation="horizontal"
+    aria-valuemax={last + 1}
+    aria-valuemin={1}
+    aria-valuenow={first + 1}
+    aria-valuetext={`Weeks ${first + 1} to ${first + WINDOW_WEEKS}`}
+    className={`season-snapshot-rail${dragging ? " is-dragging" : ""}`}
+    onKeyDown={onKeyDown}
+    onLostPointerCapture={release}
     onPointerCancel={release}
     onPointerDown={(event) => {
       const fraction = along(event);
       grab.current = fraction >= thumb.left && fraction <= thumb.left + thumb.width ? fraction - thumb.left : thumb.width / 2;
       event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
       moveTo(fraction);
     }}
     onPointerMove={(event) => moveTo(along(event))}
     onPointerUp={release}
+    role="slider"
+    tabIndex={0}
   >
     <div className="season-snapshot-rail-track">
       <span className="season-snapshot-rail-thumb" style={{ left: `${thumb.left * 100}%`, width: `${thumb.width * 100}%` }} />
@@ -285,9 +318,8 @@ function SnapshotChart({
         </g>
         <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(12 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
-      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
+      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group">
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>
-          {scrolls ? Array.from({ length: weeks.length - WINDOW_WEEKS + 1 }, (_, index) => <span aria-hidden="true" className="season-snapshot-snap" key={index} style={{ left: index * step }} />) : null}
           <svg aria-label={`${title}, cumulative wins by week`} height={height} role="img" viewBox={`0 0 ${plotWidth} ${height}`} width={plotWidth}>
             {/* Grid and lines stay above the week numbers, even mid-glide. */}
             <clipPath id={`${clip}-plot`}><rect height={height - PLOT_BOTTOM + 2} width={plotWidth} x={0} y={0} /></clipPath>
@@ -304,16 +336,23 @@ function SnapshotChart({
             </g>)}
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
-              {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
+              {ribbons.map((ribbon, index) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
                 <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
-                <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
-                <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
+                {/* The light edge on top and the dark one underneath are one soft gradient across the strip, not thin strips of their own,
+                    which stepped from pixel row to pixel row along every slope. */}
+                <path d={snapshotRibbonPath(ribbon.points)} fill={`url(#${clip}-shade-${index})`} />
+                <linearGradient gradientUnits="userSpaceOnUse" id={`${clip}-shade-${index}`} {...snapshotRibbonShade(ribbon.points)}>
+                  <stop offset="0" stopColor="#ffffff" stopOpacity="0.34" />
+                  <stop offset="0.42" stopColor="#ffffff" stopOpacity="0" />
+                  <stop offset="0.58" stopColor="#102030" stopOpacity="0" />
+                  <stop offset="1" stopColor="#102030" stopOpacity="0.32" />
+                </linearGradient>
               </g>)}
             </g></g>
           </svg>
         </div>
       </div>
-      {scrolls ? <SnapshotRail scroller={scrollRef} /> : null}
+      {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
     </div>
     <p aria-hidden="true" className="season-snapshot-week-label">Week</p>
   </section>;
@@ -361,6 +400,23 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
   const keyRows = standings
     .map((player, order) => ({ player, order, total: chartTotals.get(player.id) ?? 0 }))
     .sort((a, b) => b.total - a.total || a.order - b.order);
+  // The key's rows come out even (six and five, not eight and three): how many names go across follows from the room there is.
+  const keyRef = useRef<HTMLDivElement>(null);
+  const [keyColumns, setKeyColumns] = useState<number | null>(null);
+  const names = keyRows.length;
+  useLayoutEffect(() => {
+    const element = keyRef.current;
+    if (!element) return;
+    const measure = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const columns = snapshotKeyColumns(names, element.clientWidth, KEY_MIN_REM * rem, parseFloat(getComputedStyle(element).columnGap) || 0);
+      setKeyColumns((current) => current === columns ? current : columns);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [names]);
 
   return <div className="season-snapshot-layout">
     <div className="season-snapshot-charts">
@@ -370,7 +426,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
         ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
-    <div aria-label="Players shown on the chart" className="season-snapshot-key">
+    <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
       {keyRows.map(({ player, total }) => {
         const shown = !hidden.has(player.id);
         return <button aria-label={`${player.firstName}, ${total} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">

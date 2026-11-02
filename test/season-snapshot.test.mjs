@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
-import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotRibbonShade, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -331,4 +331,57 @@ test("the whole regular season counts from zero, where everyone starts; the play
   assert.deepEqual(snapshotAxis(0, 25, true), { low: 0, ceiling: 27, tickStep: 9 });
   assert.deepEqual(snapshotAxis(9, 14, false), { low: 9, ceiling: 15, tickStep: 2 });
   assert.equal(snapshotAxis(0, 4, false).low, 0);
+});
+
+test("the player key's rows come out even: eleven names that fit eight across go six and five, never eight and three", () => {
+  // The stylesheet's 6.6rem boxes at 16 px with a .35rem gap: 105.6 and 5.6 pixels, so eight fit across 940 px.
+  const across = (count, width) => snapshotKeyColumns(count, width, 105.6, 5.6);
+  const fitting = (width) => Math.max(1, Math.floor((width + 5.6) / 111.2));
+  const rowsOf = (count, columns) => Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
+  assert.equal(fitting(940), 8);
+  assert.deepEqual(rowsOf(11, across(11, 940)), [6, 5]);
+  assert.deepEqual(rowsOf(8, across(8, 719)), [4, 4], "six would fit, which would leave two on the second row");
+  assert.deepEqual(rowsOf(11, across(11, 1500)), [11], "one row when everything fits");
+  assert.deepEqual(rowsOf(11, across(11, 330)), [3, 3, 3, 2], "a narrow screen keeps its rows within one name of each other");
+  assert.equal(across(0, 500), 1);
+  assert.equal(across(5, 10), 1, "less room than one box still gives one column");
+  // For every count and width: never wider than fits, never more rows than the room needs, and the last row is short by fewer names than there are rows.
+  for (let count = 1; count <= 16; count += 1) {
+    for (let width = 120; width <= 1700; width += 37) {
+      const columns = across(count, width);
+      const rows = rowsOf(count, columns);
+      assert.ok(columns <= fitting(width), count + " names in " + width + " px");
+      assert.equal(rows.length, rowsOf(count, fitting(width)).length, count + " names in " + width + " px use no more rows than the room needs");
+      assert.ok(columns - rows.at(-1) < rows.length, count + " names in " + width + " px: " + rows.join(", "));
+    }
+  }
+});
+
+test("a ribbon's shading runs straight across its strip whatever the slope, so no light or dark edge can step along it", () => {
+  for (const slope of [0, 0.04, 0.3, -0.7, 1.4]) {
+    const points = [{ x: 40, top: 100, bottom: 103 }, { x: 140, top: 100 + slope * 100, bottom: 103 + slope * 100 }];
+    const { x1, y1, x2, y2 } = snapshotRibbonShade(points);
+    // How far across the strip a spot is, as the gradient sees it: its position along the gradient's own vector.
+    const across = (x, y) => ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / ((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    const top = (x) => 100 + slope * (x - 40);
+    for (const x of [40, 75, 140]) {
+      assert.ok(Math.abs(across(x, top(x))) < 1e-9, "the top edge is the start of the gradient all along (slope " + slope + ")");
+      assert.ok(Math.abs(across(x, top(x) + 3) - 1) < 1e-9, "and the bottom edge its end (slope " + slope + ")");
+    }
+  }
+  // A strip that starts as a point (a line's first week) still gets a finite gradient, set for its full-width end.
+  const wedge = snapshotRibbonShade([{ x: 0, top: 50, bottom: 50 }, { x: 100, top: 40, bottom: 43 }]);
+  assert.ok(Object.values(wedge).every(Number.isFinite));
+});
+
+test("the 6 Wk rail puts the view on the nearest week and never past either end", () => {
+  const step = 80;
+  const furthest = step * 8;
+  assert.equal(snapshotRailStop(0, step, furthest), 0);
+  assert.equal(snapshotRailStop(39, step, furthest), 0, "less than half a week rounds back");
+  assert.equal(snapshotRailStop(41, step, furthest), 80, "more than half a week rounds on");
+  assert.equal(snapshotRailStop(step * 3.4, step, furthest), step * 3);
+  assert.equal(snapshotRailStop(-500, step, furthest), 0, "the bounce past the first week");
+  assert.equal(snapshotRailStop(99999, step, furthest), furthest, "and past the latest");
+  assert.equal(snapshotRailStop(200, 0, furthest), 0, "no week width, no movement");
 });

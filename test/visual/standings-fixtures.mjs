@@ -147,6 +147,24 @@ export function homeResponse(name) {
   return scenario;
 }
 
+/**
+ * The pool at its full size, eleven players, for the states that depend on how many names there are (the Season Snapshot's key):
+ * the home answer and the snapshot, each with three more players than the usual eight.
+ */
+export function withElevenPlayers(home, snapshot) {
+  const added = ["Steve", "John", "Shane"].map((firstName, index) => ({
+    ...home.rows[home.rows.length - 1], id: `p${NAMES.length + index}`, firstName, wins: 2 + index,
+    playoffEliminated: false, forfeited: false, trophies: [], holdsPickemTrophy: false,
+  }));
+  const withScores = (weeks) => weeks.map((week, weekIndex) => ({
+    ...week, scores: [...week.scores, ...added.map((player, index) => ({ playerId: player.id, wins: Math.max(0, Math.round((weekIndex + 1) * (0.9 - index * 0.2))) }))],
+  }));
+  return {
+    home: { ...home, rows: [...home.rows, ...added] },
+    snapshot: { ...snapshot, regular: withScores(snapshot.regular), playoffs: withScores(snapshot.playoffs), colorOrder: [...snapshot.colorOrder, ...added.map((player) => player.id)] },
+  };
+}
+
 /** Cumulative wins by week for the Season Snapshot, in a fixed order. */
 export function seasonSnapshotResponse(scenario = "", weekCount = 5) {
   const scores = NAMES.map((_, playerIndex) => Array.from({ length: weekCount }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
