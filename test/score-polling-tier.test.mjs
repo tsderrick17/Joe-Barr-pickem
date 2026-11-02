@@ -124,16 +124,20 @@ test("a credit reading from last month counts as no reading: the first day of a 
   assert.equal(plan.reportedThisMonth, false);
 });
 
-test("the month's forecast prices score checks on the lighter tiers once the rule would use them, and says so", () => {
-  const normal = monthlyCreditSeries([usage(300)], new Date("2026-11-26T12:00:00Z"), NOV);
+test("the month's forecast is a full-operations forecast: it prices every slate on Normal, whatever the low-balance rule would do", () => {
+  const plenty = monthlyCreditSeries([usage(300)], new Date("2026-11-26T12:00:00Z"), NOV);
   const squeezed = monthlyCreditSeries([usage(455)], new Date("2026-11-26T12:00:00Z"), NOV);
-  const scores = (series) => series.calendarDays.reduce((sum, day) => sum + day.forecastScores, 0);
-  assert.ok(scores(squeezed) < scores(normal) / 2, "Minimal checks cost far less than Normal's");
-  // Thanksgiving is priced on Minimal; by Sunday the rule would have stepped back up to Lean, and the forecast follows it.
-  assert.deepEqual(squeezed.calendarDays.filter((day) => day.forecastSlates > 0).map((day) => [day.date.slice(8, 10), day.forecastTier]), [["26", "minimal"], ["29", "lean"]]);
-  assert.match(squeezed.forecastAssumptions, /Past 440 credits used the forecast prices score checks on the Minimal and Lean schedules, as the low-balance rule would/);
-  assert.doesNotMatch(normal.forecastAssumptions, /Past 440/);
-  assert.equal(normal.tierPlan.tier, "normal");
+  const paused = monthlyCreditSeries([usage(495)], new Date("2026-11-26T12:00:00Z"), NOV);
+  const days = (series) => series.calendarDays.map((day) => [day.forecastScores, day.forecastLines, day.forecast]);
+  assert.deepEqual(days(squeezed), days(plenty), "the same forecast at 300 used and 455 used");
+  assert.deepEqual(days(paused), days(plenty), "and when the worker would be paused");
+  assert.equal(squeezed.forecastExpectedChecks, plenty.forecastExpectedChecks);
+  assert.ok(Math.abs(plenty.forecastExpectedChecks - 7.73) < 0.01, "Normal's expected checks per slate");
+  assert.equal(plenty.calendarDays.filter((day) => day.forecastSlates > 0).every((day) => Math.abs(day.forecastScores - day.forecastSlates * plenty.forecastExpectedChecks * 2) < 1e-9), true);
+  assert.doesNotMatch(squeezed.forecastAssumptions, /Past 440|Lean|Minimal/);
+  assert.match(squeezed.forecastAssumptions, /full-operations forecast on the Normal schedule/);
+  // Only the schedule in force reacts.
+  assert.deepEqual([plenty, squeezed, paused].map((series) => series.tierPlan.tier), ["normal", "minimal", "paused"]);
 });
 
 // --- Reading the tier for the worker ---------------------------------------------------------------------------------------------------------

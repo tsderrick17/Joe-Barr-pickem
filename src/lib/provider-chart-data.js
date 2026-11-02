@@ -3,7 +3,7 @@ import { getLineLock } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
 import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
-import { chooseScoreTier, LINE_NEED_CUSHION_CREDITS, LOW_BALANCE_USED_CREDITS, SCORE_TIER_SCHEDULES } from "./score-polling-tier.js";
+import { chooseScoreTier, LINE_NEED_CUSHION_CREDITS, SCORE_TIER_SCHEDULES } from "./score-polling-tier.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 function dateKeyInZone(value, timeZone) {
@@ -152,7 +152,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const allDays = Array.from({ length: daysInMonth }, (_, index) => ({
     date: new Date(start + index * 86400000).toISOString(), credits: 0, cumulative: 0,
     scores: 0, lines: 0, other: 0, estimatedCalls: 0,
-    forecast: 0, forecastTier: null, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0, forecastRefreshes: 0, forecastLockFetches: 0,
+    forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0, forecastRefreshes: 0, forecastLockFetches: 0,
   }));
   const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
   for (const run of runs) {
@@ -210,8 +210,9 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     if (key > todayKey || (key === todayKey && todayRefreshPending)) day.forecastRefreshes = 1;
     day.forecastLines = (day.forecastRefreshes + day.forecastLockFetches) * lineCostPerCall;
   }
-  // Score checks are priced the way the worker would run them: Normal until LOW_BALANCE_USED_CREDITS are used, then the lighter tier the
-  // low-balance rule would pick for what is left of the month, decided day by day with the credits the forecast has spent so far.
+  // The forecast is a full-operations forecast: every remaining slate is priced on the Normal schedule, whatever the low-balance rule would do
+  // (the owner wants to see what the month costs when nothing is held back). Only the tier plan below reacts to a low balance.
+  for (const day of allDays) day.forecastScores = day.forecastSlates * expectedChecks * scoreCostPerCall;
   const provider = latestProviderCreditSnapshot(runs);
   const reportedThisMonth = provider !== null && provider.timestamp >= start && provider.timestamp <= now.getTime();
   const providerLimit = provider?.limit ?? 500;
@@ -221,27 +222,20 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     minimal: expectedScoreChecks(SCORE_TIER_SCHEDULES.minimal.gapMinutes, settle.share).checks,
   };
   const futureDays = allDays.filter((day) => day.date.slice(0, 10) >= todayKey);
-  const decideTier = (fromIndex, used) => {
-    const rest = futureDays.slice(fromIndex);
-    const slates = rest.reduce((sum, day) => sum + day.forecastSlates, 0);
-    return chooseScoreTier({
-      usedCredits: used,
-      remainingCredits: Math.max(0, providerLimit - used),
-      lineNeedCredits: rest.reduce((sum, day) => sum + day.forecastLines, 0) + LINE_NEED_CUSHION_CREDITS,
-      leanNeedCredits: slates * checksByTier.lean * scoreCostPerCall,
-      minimalNeedCredits: slates * checksByTier.minimal * scoreCostPerCall,
-      gameDaysLeft: rest.filter((day) => day.forecastSlates > 0).length,
-    });
-  };
+  // Which schedule the score worker is on right now, from what is used and what the rest of the month needs on each lighter schedule.
   const usedNow = reportedThisMonth ? provider.used : cumulative;
-  const tierPlan = { ...decideTier(0, usedNow), reportedThisMonth };
-  let usedForecast = usedNow;
-  futureDays.forEach((day, index) => {
-    const tier = decideTier(index, usedForecast).tier;
-    day.forecastTier = tier;
-    day.forecastScores = tier === "paused" ? 0 : day.forecastSlates * checksByTier[tier] * scoreCostPerCall;
-    usedForecast += day.forecastScores + day.forecastLines;
-  });
+  const slatesLeft = futureDays.reduce((sum, day) => sum + day.forecastSlates, 0);
+  const tierPlan = {
+    ...chooseScoreTier({
+      usedCredits: usedNow,
+      remainingCredits: Math.max(0, providerLimit - usedNow),
+      lineNeedCredits: futureDays.reduce((sum, day) => sum + day.forecastLines, 0) + LINE_NEED_CUSHION_CREDITS,
+      leanNeedCredits: slatesLeft * checksByTier.lean * scoreCostPerCall,
+      minimalNeedCredits: slatesLeft * checksByTier.minimal * scoreCostPerCall,
+      gameDaysLeft: futureDays.filter((day) => day.forecastSlates > 0).length,
+    }),
+    reportedThisMonth,
+  };
   for (const day of allDays) day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   let forecastCumulative = cumulative;
   for (const day of allDays) {
@@ -264,12 +258,11 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const sundayAverageCredits = regularSundayKeys.length
     ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
     : null;
-  const reducedTiers = [...new Set(futureDays.map((day) => day.forecastTier).filter((tier) => tier && tier !== "normal"))];
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.${reducedTiers.length ? ` Past ${LOW_BALANCE_USED_CREDITS} credits used the forecast prices score checks on the ${reducedTiers.map((tier) => SCORE_TIER_SCHEDULES[tier]?.label ?? tier).join(" and ")} schedule${reducedTiers.length > 1 ? "s" : ""}, as the low-balance rule would.` : ""}`,
+    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks. This is a full-operations forecast on the Normal schedule; a low-credit schedule never changes it.`,
     forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks, tierPlan,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
