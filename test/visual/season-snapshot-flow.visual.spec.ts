@@ -179,6 +179,37 @@ test("in the 6 Wk view the axis fits the weeks in view and follows them as the c
   expect(first.at(-1)!, "the first weeks need less room at the top").toBeLessThan(latest.at(-1)!);
 });
 
+test("in 6 Wk the starting points show only when a week rests at the left edge; between weeks the lines reach the edge", async ({ page }) => {
+  await open(page);
+  await flipButton(page).click();
+  await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
+  await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+  const plot = page.locator(".season-snapshot-plot-scroll");
+  await expect(plot).toHaveClass(/is-windowed/);
+  // Every collapsed end (a line's starting point), by where it sits against the window's left edge (the plot starts 6 pixels in).
+  const points = () => plot.evaluate((scroll) => {
+    const left = scroll.scrollLeft + 6;
+    const found = { onEdge: 0, inside: 0 };
+    for (const path of scroll.querySelectorAll<SVGPathElement>(".season-snapshot-ribbon path:first-child")) {
+      // M top-start L top-end L bottom-end L bottom-start Z
+      const [a, b, c, d] = path.getAttribute("d")!.match(/[^MLZ ]+,[^MLZ ]+/g)!.map((pair) => pair.split(",").map(Number));
+      for (const [top, bottom] of [[a, d], [b, c]]) {
+        if (Math.abs(top[1] - bottom[1]) > 0.01) continue;
+        if (Math.abs(top[0] - left) < 1) found.onEdge += 1;
+        else if (top[0] > left) found.inside += 1;
+      }
+    }
+    return found;
+  });
+  const resting = await points();
+  expect(resting.onEdge, "resting on a week, the points sit on the edge").toBeGreaterThan(0);
+  expect(resting.inside).toBe(0);
+  const step = await plot.evaluate((scroll) => { scroll.style.scrollSnapType = "none"; return (scroll.clientWidth - 20) / 6; });
+  await plot.evaluate((scroll, back) => { scroll.scrollLeft -= back; }, step * 1.5);
+  await expect.poll(async () => (await points()).inside, "between weeks no point shows inside the window").toBe(0);
+  expect((await points()).onEdge, "the points slid out of view with the window").toBe(0);
+});
+
 test("hiding a player removes their line and rescales the axis; nobody's color moves; Show all restores", async ({ page }) => {
   await open(page);
   await flipButton(page).click();

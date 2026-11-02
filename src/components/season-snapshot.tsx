@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -87,7 +87,7 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
     const element = scroller.current;
     if (!element) return;
     const update = () => {
-      const next = { left: element.scrollLeft / element.scrollWidth, width: element.clientWidth / element.scrollWidth };
+      const next = snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth);
       setThumb((current) => current.left === next.left && current.width === next.width ? current : next);
     };
     update();
@@ -270,8 +270,9 @@ function SnapshotChart({
   // Painting runs bottom lane first so the line that was ahead most recently is on top.
   const stacked = snapshotStackOrder(weeks, players, baseline);
   const rank = new Map(stacked.map((player, index) => [player.id, index]));
-  // The 6-week view starts its lines at the nearest whole week of its left edge, where the window rests.
-  const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y, 3, scrolls ? Math.round(edges.from) : 0)
+  // The 6-week view starts its lines at the whole week at or before its left edge: the starting points show only when
+  // the window rests on a week, and while it moves between weeks they slide out of view instead of jumping in.
+  const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y, 3, scrolls ? Math.floor(edges.from) : 0)
     .sort((a, b) => (rank.get(b.playerId) ?? 0) - (rank.get(a.playerId) ?? 0));
 
   return <section className="season-snapshot-chart">

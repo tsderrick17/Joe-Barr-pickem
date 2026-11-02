@@ -229,7 +229,8 @@ measure database requests or end-to-end route time.
   most recent six weeks. It draws exactly the six weeks in view: the lines and
   the grid stop at the window's first and last week, and every line starts
   there as a point, so players who share a score fan out of one point (as All
-  does from zero). Its y-axis fits the six-week stretch nearest the scroll,
+  does from zero). The starting points show only when the window rests on a
+  week; between weeks they slide out of view instead of jumping in. Its y-axis fits the six-week stretch nearest the scroll,
   always a full six weeks, so the first and latest ends and the bounce past them
   never shorten it, and glides on a spring as the view scrolls, the lines with
   it; numbers that leave fade out. All always counts from zero, where everyone
@@ -237,7 +238,8 @@ measure database requests or end-to-end route time.
   line is one or two wins over the leader, never on it; every line is numbered
   and evenly spaced in whole wins, six lines at most (of the two possible tops,
   the one that splits into more lines). A slim position rail in the strip above
-  the top line replaces the browser's scroll bar, as wide as the grid lines;
+  the top line replaces the browser's scroll bar, as wide as the grid lines,
+  its thumb always inside the track, even in the bounce past either end;
   All keeps that strip empty, so both views put the axis and the week numbers
   in exactly the same place.
   Axis margins are kept tight. On phones the key is a compact

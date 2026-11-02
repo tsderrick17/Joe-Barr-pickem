@@ -166,6 +166,19 @@ export function snapshotStretch(scrollLeft, step, weekCount, windowWeeks) {
   return { from, to: from + windowWeeks };
 }
 
+/**
+ * Where the 6 Wk position thumb sits on its track, as fractions of the track. A bounce past either end of the chart
+ * (a scroll position outside its range) still leaves the thumb inside the track.
+ * @param {number} scrollLeft
+ * @param {number} clientWidth
+ * @param {number} scrollWidth
+ */
+export function snapshotThumb(scrollLeft, clientWidth, scrollWidth) {
+  if (!(scrollWidth > 0)) return { left: 0, width: 1 };
+  const width = Math.min(1, clientWidth / scrollWidth);
+  return { left: Math.min(1 - width, Math.max(0, scrollLeft / scrollWidth)), width };
+}
+
 /** How many even gaps an axis may split into, most first: never more than six lines. */
 const GAP_COUNTS = [5, 4, 3, 2, 1];
 const gapsFor = (span) => GAP_COUNTS.find((gaps) => span % gaps === 0) ?? 1;
