@@ -239,7 +239,7 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   flex-direction: column;
   min-height: 0;
 }
-.season-snapshot-body { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; padding-top: .25rem; }
+.season-snapshot-body { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
 .season-snapshot-layout { display: flex; flex: 1 1 auto; flex-direction: column; gap: .5rem; min-height: 0; }
 .season-snapshot-axis-label { fill: #536077; font: 800 10px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 
@@ -260,8 +260,9 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   scrollbar-width: none;
 }
 .season-snapshot-plot-scroll.is-windowed::-webkit-scrollbar { display: none; }
-/* In the strip above the axis's top line; the y-axis numbers stay clear on its left. */
-.season-snapshot-rail { cursor: pointer; left: 30px; padding: 2px 0 4px; position: absolute; right: 0; top: 0; touch-action: none; z-index: 1; }
+/* In the strip above the axis's top line, as wide as the grid lines: the y-axis numbers stay clear on its left, and it
+   ends where the lines end on its right. */
+.season-snapshot-rail { cursor: pointer; left: 30px; padding: 0 0 4px; position: absolute; right: 14px; top: 0; touch-action: none; z-index: 1; }
 .season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 5px; position: relative; }
 .season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; cursor: grab; position: absolute; top: 0; }
 .season-snapshot-plot-scroll:focus-visible { outline: 2px solid var(--blue-50); outline-offset: 2px; }

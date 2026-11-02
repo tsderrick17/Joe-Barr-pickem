@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -68,7 +68,7 @@ const AXIS_WIDTH = 30;
 const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
 // Room over the top line for the 6 Wk position rail; All keeps the same room, so both draw the axis in the same place.
-const PLOT_TOP = 12;
+const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
@@ -76,7 +76,7 @@ const WINDOW_WEEKS = 6;
 /**
  * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies in the
  * strip above the top line of the axis, which All keeps empty, so both views put the axis and the week numbers in exactly
- * the same place. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
+ * the same place. It spans the grid lines, from the axis to where the lines end. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
  * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
  */
 function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
@@ -246,11 +246,9 @@ function SnapshotChart({
 
   // Only the players still on the chart shape the axis, so hiding the leader rescales the chart to the people who
   // remain. In the 6-week view it also fits the six-week stretch nearest the scroll and follows it as the chart scrolls; the whole regular
-  // season always counts from zero.
+  // season always counts from zero, where everyone starts.
   const range = snapshotWindowRange(weeks, players, baseline, edges.from, edges.to);
-  const target = scrolls
-    ? snapshotWindowAxis(range.min, range.max, snapshotWindowStep(weeks, players, baseline, WINDOW_WEEKS))
-    : snapshotAxis(range.min, range.max, !isPlayoff);
+  const target = snapshotAxis(range.min, range.max, !scrolls && !isPlayoff);
   const { low, ceiling, ticks, leaving } = useSpringAxis(target);
   const plotHeight = height - PLOT_TOP - PLOT_BOTTOM;
   const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, PLOT_RIGHT);

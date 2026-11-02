@@ -165,55 +165,21 @@ export function snapshotStretch(scrollLeft, step, weekCount, windowWeeks) {
   return { from, to: from + windowWeeks };
 }
 
-/** Round tick spacings, smallest first; an axis has at most this many gaps between numbers. */
-const TICK_STEPS = [1, 2, 4, 5, 10, 20, 50];
-const MAX_TICK_GAPS = 6;
-/** The top of the axis is always a numbered tick with its line: the first one at least half a win over the highest line. */
-const topTick = (low, max, step) => low + Math.max(1, Math.ceil((max + 0.5 - low) / step)) * step;
-const tickGaps = (low, max, step) => (topTick(low, max, step) - low) / step;
+/** How many even gaps an axis may split into, most first: never more than six lines. */
+const GAP_COUNTS = [5, 4, 3, 2, 1];
+const gapsFor = (span) => GAP_COUNTS.find((gaps) => span % gaps === 0) ?? 1;
 
 /**
- * The wins axis: round tick spacing, the smallest that needs no more than six gaps, so the top number sits close over the
- * leader. The top is always a numbered tick. From zero for the whole regular season; otherwise it starts just under the
- * lowest line, on an even number.
+ * The wins axis. The bottom line is the lowest score shown (zero for the whole regular season, where everyone starts)
+ * and the top line is one or two wins over the leader, never on it. Every line is numbered and evenly spaced in whole
+ * wins, six lines at most: of the two possible tops, the one that splits into more lines (the nearer one on a tie).
  * @param {number} min
  * @param {number} max
  * @param {boolean} fromZero
  */
 export function snapshotAxis(min, max, fromZero) {
-  const low = fromZero ? 0 : Math.max(0, Math.floor((Math.floor(min) - 1) / 2) * 2);
-  const tickStep = TICK_STEPS.find((step) => tickGaps(low, max, step) <= MAX_TICK_GAPS) ?? 100;
-  return { low, ceiling: topTick(low, max, tickStep), tickStep };
-}
-
-/**
- * One tick spacing for every position of a scrolling window, so the numbers slide past like a ruler as the view moves
- * instead of all changing at once. It is the smallest round spacing (1, 2, 4, 5, 10, 20 or 50 wins) that gives every
- * position of the window no more than six gaps, checked every half week.
- * @param {Array<{ scores: Array<{ playerId: string, wins: number }> }>} weeks
- * @param {Array<{ id: string }>} players
- * @param {Record<string, number>} baseline
- * @param {number} windowWeeks
- */
-export function snapshotWindowStep(weeks, players, baseline, windowWeeks) {
-  const ranges = [];
-  for (let from = 0; from + windowWeeks <= Math.max(windowWeeks, weeks.length); from += 0.5) {
-    ranges.push(snapshotWindowRange(weeks, players, baseline, from, from + windowWeeks));
-  }
-  return TICK_STEPS.find((step) => ranges.every(({ min, max }) => {
-    const axis = snapshotWindowAxis(min, max, step);
-    return (axis.ceiling - axis.low) / step <= MAX_TICK_GAPS;
-  })) ?? 100;
-}
-
-/**
- * The axis for a scrolling window on a fixed tick spacing: it starts on a tick a win or more under the lowest line and
- * ends on the first tick at least half a win over the highest, so the top is always numbered and follows the lines in view.
- * @param {number} min
- * @param {number} max
- * @param {number} tickStep
- */
-export function snapshotWindowAxis(min, max, tickStep) {
-  const low = Math.max(0, Math.floor((min - 1) / tickStep) * tickStep);
-  return { low, ceiling: topTick(low, max, tickStep), tickStep };
+  const low = fromZero ? 0 : Math.max(0, Math.floor(min));
+  const near = Math.floor(max) + 1 - low;
+  const span = gapsFor(near + 1) > gapsFor(near) ? near + 1 : near;
+  return { low, ceiling: low + span, tickStep: span / gapsFor(span) };
 }
