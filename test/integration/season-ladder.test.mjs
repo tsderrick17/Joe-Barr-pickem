@@ -6,7 +6,7 @@ import { createIsolatedClients, isolatedTestConfig, testToken } from "./test-sup
 const config = isolatedTestConfig();
 const { loadSeasonLadder } = await import("../../src/lib/season-ladder.ts");
 
-test("the grading histogram reads every recorded rung from the database, across pages, ignoring runs without one", { skip: !config && "Set the isolated PICKEM_TEST_SUPABASE_* variables to run database integration tests." }, async () => {
+test("the grading histogram reads every recorded rung of the current ladder from the database, across pages, ignoring runs without one or from another ladder", { skip: !config && "Set the isolated PICKEM_TEST_SUPABASE_* variables to run database integration tests." }, async () => {
   const { admin } = createIsolatedClients(config);
   // A window far in the future cannot collide with real or other test rows.
   const year = 4500 + Math.floor(Math.random() * 450);
@@ -19,12 +19,14 @@ test("the grading histogram reads every recorded rung from the database, across 
   try {
     const run = (minute, details, jobType = "scores") => ({ provider: `test-${token}`, job_type: jobType, status: "success", started_at: at(minute), completed_at: at(minute), details });
     // 1,005 runs that recorded a rung force a second page, so rows past the 1,000-row cap are counted.
-    const bulk = Array.from({ length: 1005 }, (_, index) => run(index, { ladderRungs: { "1": 1, "3": index % 2 } }));
+    const bulk = Array.from({ length: 1005 }, (_, index) => run(index, { ladderRungs: { "1": 1, "3": index % 2 }, ladderVersion: "current" }));
     const extras = [
       run(2000, { ladderRungs: {} }),                       // recorded no finals: not counted
       run(2001, { newFinals: 4 }),                          // an older run with no rung record at all
-      run(2002, { ladderRungs: { "2": 5, "x": 9, "-1": 3 } }), // only valid rungs are counted
-      run(2003, { ladderRungs: { "1": 100 } }, "line_locks"), // another worker's run is ignored
+      run(2002, { ladderRungs: { "2": 5, "x": 9, "-1": 3 }, ladderVersion: "current" }), // only valid rungs are counted
+      run(2003, { ladderRungs: { "1": 100 }, ladderVersion: "current" }, "line_locks"), // another worker's run is ignored
+      run(2004, { ladderRungs: { "1": 7, "4": 7 }, ladderVersion: "older" }), // a run from another ladder: its rung numbers mean other times
+      run(2005, { ladderRungs: { "1": 11 } }),                // a run from before ladders were named
     ];
     const rows = [...bulk, ...extras];
     for (let start = 0; start < rows.length; start += 500) {
@@ -33,14 +35,19 @@ test("the grading histogram reads every recorded rung from the database, across 
       ids.push(...data.map((row) => row.id));
     }
 
-    const ladder = await loadSeasonLadder(admin, since, until);
+    const ladder = await loadSeasonLadder(admin, since, until, "current");
     assert.equal(ladder.counts.get(1), 1005, "every rung-1 final is counted, including rows past the first page");
     assert.equal(ladder.counts.get(2), 5);
     assert.equal(ladder.counts.get(3), 502, "half of the 1,005 runs recorded a rung-3 final");
     assert.equal(ladder.counts.has(-1), false);
+    assert.equal(ladder.counts.get(4), undefined, "another ladder's rung 4 is not counted");
     assert.equal(ladder.runs, 1006, "only runs that found a final on a valid rung count toward coverage");
     // The database returns its own timestamp spelling (+00:00), so compare the instant.
     assert.equal(Date.parse(ladder.since), Date.parse(at(0)), "coverage starts at the first run that found a final");
+    // Without a version every run that recorded a rung counts, as before.
+    const everything = await loadSeasonLadder(admin, since, until);
+    assert.equal(everything.counts.get(1), 1005 + 7 + 11);
+    assert.equal(everything.counts.get(4), 7);
   } finally {
     for (let start = 0; start < ids.length; start += 200) {
       await admin.from("sync_runs").delete().in("id", ids.slice(start, start + 200));

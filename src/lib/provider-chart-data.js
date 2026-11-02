@@ -2,6 +2,7 @@ import { providerRequestCost } from "./provider-efficiency.js";
 import { getLineLock } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
 import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 function dateKeyInZone(value, timeZone) {
@@ -44,7 +45,7 @@ const PRIOR_FIRST_HOUR_SHARE = 0.9;
 
 /**
  * Share of recent slates whose last game settled inside the first hour of
- * score polling (polling starts 170 minutes after a slate's last kickoff).
+ * score polling (polling starts FIRST_SCORE_CHECK_DELAY_MINUTES after a slate's last kickoff).
  * It is a 15-day moving average; with too little history the
  * 90% prior stands in.
  */
@@ -54,7 +55,7 @@ export function firstHourSettleShare(games, now = new Date()) {
   let total = 0;
   for (const slate of scheduleSlates(games)) {
     const kickoffs = slate.games.map((game) => Date.parse(game.kickoff_at ?? game.kickoffAt));
-    const pollingStart = Math.max(...kickoffs) + 170 * 60000;
+    const pollingStart = Math.max(...kickoffs) + FIRST_SCORE_CHECK_DELAY_MINUTES * 60000;
     if (pollingStart < since || pollingStart > now.getTime()) continue;
     const finals = slate.games.map((game) => Date.parse(game.finalized_at ?? ""));
     if (!finals.every(Number.isFinite)) continue;
@@ -94,24 +95,38 @@ function firstHourExpectedChecks(rungMinutes) {
   return expected;
 }
 
-/** Expected provider score checks for one slate given the retry ladder and the first-hour share. */
+/**
+ * Expected provider score checks for one slate given the retry ladder and the first-hour share.
+ * The ladder is read as check offsets from the first check: the "first hour" is the windows that start before +60 minutes, the "next
+ * hour" the windows that start from +60 up to +120, and the cooldown the one window after those. Which gaps those are depends on the
+ * ladder, so they are returned for the forecast text (`nextHourGaps`, `cooldownGap`).
+ */
 export function expectedScoreChecks(retryMinutes, firstHourShare) {
   let elapsed = 0;
   let firstHour = 0;
   let index = 0;
   while (index < retryMinutes.length && elapsed < 60) { elapsed += retryMinutes[index]; firstHour++; index++; }
   const firstHourRungs = retryMinutes.slice(0, firstHour);
+  const nextHourStart = index;
   let nextHour = 0;
   while (index < retryMinutes.length && elapsed < 120) { elapsed += retryMinutes[index]; nextHour++; index++; }
-  // The 120- and 240-minute rungs are emergencies, so a slate that is still open
-  // after the next hour settles on the 60-minute cooldown check.
+  const nextHourGaps = retryMinutes.slice(nextHourStart, nextHourStart + nextHour);
+  // The later rungs are emergencies, so a slate that is still open after the next hour
+  // settles on the one cooldown check that follows.
   const cooldown = index < retryMinutes.length ? 1 : 0;
+  const cooldownGap = cooldown ? retryMinutes[index] : null;
   const rest = (1 - firstHourShare) / 2;
   const nextHourMean = nextHour ? (nextHour + 1) / 2 : 0;
   return {
     checks: firstHourShare * firstHourExpectedChecks(firstHourRungs) + rest * (firstHour + nextHourMean) + rest * (firstHour + nextHour + cooldown),
-    firstHour, nextHour, cooldown,
+    firstHour, nextHour, cooldown, nextHourGaps, cooldownGap,
   };
+}
+
+/** "20", "20 and 60", "20, 60 and 120": the distinct gaps of a stretch of the ladder, for a sentence. */
+function listMinutes(gaps) {
+  const distinct = [...new Set(gaps)];
+  return distinct.length > 1 ? `${distinct.slice(0, -1).join(", ")} and ${distinct.at(-1)}` : String(distinct[0] ?? 0);
 }
 
 function scheduleSlates(games) {
@@ -219,7 +234,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} twenty-minute checks and half on the 60-minute cooldown check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.`,
+    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.`,
     forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
@@ -251,7 +266,7 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
     return {
     slateStartedAt, games: slateGames.length, settledGames: complete ? slateGames.length : 0, latencyMinutes, credits: 0, finals: 0, calls: 0, productive: 0,
     ambiguous: false,
-    start: Date.parse(slateStartedAt) + 170 * 60000,
+    start: Date.parse(slateStartedAt) + FIRST_SCORE_CHECK_DELAY_MINUTES * 60000,
     end: slateGames.every((game) => game.finalized_at)
       ? Math.max(...slateGames.map((game) => Date.parse(game.finalized_at))) + 60000
       : Math.min(now.getTime(), Date.parse(slateStartedAt) + 24 * 60 * 60000),
