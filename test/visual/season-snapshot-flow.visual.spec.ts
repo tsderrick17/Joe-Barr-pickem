@@ -164,6 +164,15 @@ test("in the 6 Wk view the axis fits the weeks in view and follows them as the c
   await page.mouse.up();
   await expect.poll(async () => (await settledTicks())[0]).toBe(0);
   await expect(leaving, "numbers that left the axis are gone once it settles").toHaveCount(0);
+  // Exactly weeks 0 to 6 are drawn: the lines stop at week 6 instead of running on toward week 7.
+  const cut = await page.evaluate(() => {
+    const weekLines = [...document.querySelectorAll(".season-snapshot-plot-scroll line[stroke-dasharray]")].map((line) => Number(line.getAttribute("x1")));
+    const lines = document.querySelector(".season-snapshot-lines")!.parentElement!.getAttribute("clip-path")!.match(/#([^)]+)/)![1];
+    const box = document.getElementById(lines)!.querySelector("rect")!;
+    return { from: Number(box.getAttribute("x")), to: Number(box.getAttribute("x")) + Number(box.getAttribute("width")), week6: weekLines[5] };
+  });
+  expect(cut.from, "the lines start at week 0").toBeCloseTo(6, 0);
+  expect(cut.to, "and end at week 6").toBeCloseTo(cut.week6, 0);
   const first = await settledTicks();
   expect(spacing(first).size, "evenly spaced").toBe(1);
   expect(first.length, "six numbered lines at most").toBeLessThanOrEqual(6);
