@@ -75,8 +75,10 @@ export function snapshotLayers(weeks, standings, startWinsById = {}) {
  * week to their slot at the end, so a line only bends at week boundaries, the
  * same as an ordinary line chart. Slots keep the same stacking order at both
  * ends, so bands on a shared path never cross or overlap.
+ * At `start`, the first week the chart shows, every line begins from its score as a single point, so players who
+ * share a score fan out of one point (the whole season: everyone from zero).
  */
-export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3) {
+export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3, start = 0) {
   const scores = [standings.map((player) => ({ playerId: player.id, wins: baseline[player.id] ?? 0 })), ...weeks.map((week) => week.scores)];
   const nodes = scores.map((entries, weekIndex) => {
     const totals = new Map(entries.map((entry) => [entry.playerId, entry.wins]));
@@ -90,8 +92,7 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3)
     for (const [wins, ids] of groups) {
       ids.forEach((id, rank) => {
         const top = y(wins) + (rank - ids.length / 2) * thickness;
-        // Every regular-season line originates at the same zero, without a dot.
-        positions.set(id, weekIndex === 0 && wins === 0
+        positions.set(id, weekIndex === start
           ? { top: y(wins), bottom: y(wins) }
           : { top, bottom: top + thickness });
       });

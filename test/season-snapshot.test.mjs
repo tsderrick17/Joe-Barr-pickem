@@ -94,6 +94,19 @@ test("tied ribbons touch without overlap in standings order and join across week
   }
 });
 
+test("in the 6 Wk view every line starts from a point at the window's first week, so shared scores fan out of one point", () => {
+  const standings = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  const weeks = [[1, 1, 2], [2, 3, 2], [4, 3, 3]].map((wins) => ({ scores: standings.map(({ id }, index) => ({ playerId: id, wins: wins[index] })) }));
+  const y = (wins) => 200 - wins * 40;
+  const ribbons = snapshotRibbons(weeks, standings, {}, (week) => week * 100, y, 3, 1);
+  for (const ribbon of ribbons.filter((entry) => entry.weekIndex === 1)) {
+    const wins = weeks[0].scores.find((entry) => entry.playerId === ribbon.playerId).wins;
+    assert.deepEqual(ribbon.points[0], { x: 100, top: y(wins), bottom: y(wins) }, ribbon.playerId);
+  }
+  const later = ribbons.filter((entry) => entry.weekIndex === 2);
+  assert.ok(later.every((ribbon) => ribbon.points[0].bottom - ribbon.points[0].top === 3), "the following weeks keep their full width");
+});
+
 test("ribbons keep joined endpoints when bundles split and merge", () => {
   const standings = [{ id: "first" }, { id: "second" }, { id: "third" }];
   const weeks = [[1, 1, 1], [2, 1, 2], [3, 3, 3]].map((wins) => ({ scores: standings.map(({ id }, index) => ({ playerId: id, wins: wins[index] })) }));

@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - Lines start from a point at the chart's first week
+
+The owner found the 6 Wk start sloppy: players on the same score started as a fanned-out stack of lanes. Every line now starts as a single point at the first week shown (the nearest whole week to the window's left edge in 6 Wk, week 0 otherwise), so shared scores fan out of one point the way All fans out of zero. The playoff chart's starting totals pinch the same way.
+
 ## 2026-11-01 - The 6 Wk view draws exactly six weeks
 
 The owner found the lines running past week 6 toward week 7 (and in from the week before) confusing. In 6 Wk the lines are now clipped to the window's first and last week and the grid lines to the window's last week, following the scroll without redrawing; the rail already ends at the same place.
