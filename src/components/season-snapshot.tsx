@@ -220,9 +220,19 @@ function SnapshotChart({
   const plotWidth = scrolls ? PLOT_LEFT + step * weekCount + PLOT_RIGHT : viewport;
 
   // The 6-week view always opens on the most recent six weeks.
+  // The 6-week view draws exactly the weeks in view: the grid and the lines stop at the window's first and last week
+  // instead of running on into the weeks either side. The clip follows the scroll without redrawing the chart.
+  const gridWindow = useRef<SVGRectElement>(null);
+  const lineWindow = useRef<SVGRectElement>(null);
+  const fitWindow = () => {
+    const left = scrollRef.current?.scrollLeft ?? 0;
+    gridWindow.current?.setAttribute("x", String(left));
+    lineWindow.current?.setAttribute("x", String(left + PLOT_LEFT));
+  };
   useLayoutEffect(() => {
     const element = scrollRef.current;
     if (element && scrolls) element.scrollLeft = element.scrollWidth;
+    fitWindow();
   }, [scrolls, plotWidth, weeks.length]);
 
   // The six-week stretch the axis is for, in weeks from the baseline: always a full six weeks, so the ends of the chart
@@ -240,6 +250,7 @@ function SnapshotChart({
   const onScroll = () => {
     const element = scrollRef.current;
     if (!element) return;
+    fitWindow();
     const next = edgesAt(element.scrollLeft);
     setScrolled((current) => current && current.from === next.from && current.to === next.to ? current : next);
   };
@@ -278,20 +289,25 @@ function SnapshotChart({
           <svg aria-label={`${title}, cumulative wins by week`} height={height} role="img" viewBox={`0 0 ${plotWidth} ${height}`} width={plotWidth}>
             {/* Grid and lines stay above the week numbers, even mid-glide. */}
             <clipPath id={`${clip}-plot`}><rect height={height - PLOT_BOTTOM + 2} width={plotWidth} x={0} y={0} /></clipPath>
-            <g clipPath={`url(#${clip}-plot)`}>
+            {scrolls ? <>
+              <clipPath id={`${clip}-grid`}><rect height={height - PLOT_BOTTOM + 2} ref={gridWindow} width={viewport - PLOT_RIGHT} y={0} /></clipPath>
+              <clipPath id={`${clip}-window`}><rect height={height} ref={lineWindow} width={viewport - PLOT_LEFT - PLOT_RIGHT} y={0} /></clipPath>
+            </> : null}
+            <g clipPath={`url(#${clip}-${scrolls ? "grid" : "plot"})`}>
               {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - PLOT_RIGHT} y1={y(tick)} y2={y(tick)} />)}
             </g>
             {weeks.map((week, index) => <g key={week.id}>
               <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - PLOT_BOTTOM} />
               <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5}>{shortWeek(week.label)}</text>
             </g>)}
-            <g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
+            {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
+            <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
               {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
                 <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
                 <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
                 <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
               </g>)}
-            </g>
+            </g></g>
           </svg>
         </div>
       </div>

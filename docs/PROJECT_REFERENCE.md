@@ -226,7 +226,8 @@ measure database requests or end-to-end route time.
   An All / 6 Wk toggle (regular season only) sits between the title and the
   flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
   at a time with the y-axis standing still beside it, and always opens on the
-  most recent six weeks. Its y-axis fits the six-week stretch nearest the scroll,
+  most recent six weeks. It draws exactly the six weeks in view: the lines and
+  the grid stop at the window's first and last week. Its y-axis fits the six-week stretch nearest the scroll,
   always a full six weeks, so the first and latest ends and the bounce past them
   never shorten it, and glides on a spring as the view scrolls, the lines with
   it; numbers that leave fade out. All always counts from zero, where everyone
