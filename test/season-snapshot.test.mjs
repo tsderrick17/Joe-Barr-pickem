@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotWindowAxis, snapshotWindowRange, snapshotWindowStep, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -247,7 +247,7 @@ test("everyone keeps a permanent color: join order decides, and hiding, leaving 
   assert.equal(joined.get("z"), full.get("a"), "the twelfth player wraps to the first hue");
 });
 
-test("the 6 Wk axis fits the weeks in view, counting where a line crosses an edge, and keeps one tick spacing as it scrolls", () => {
+test("the 6 Wk range fits the weeks in view, counting where a line crosses an edge", () => {
   const players = [{ id: "a" }, { id: "b" }];
   const weeks = [2, 4, 6, 8, 10, 12, 14, 16].map((wins) => ({ scores: [{ playerId: "a", wins }, { playerId: "b", wins: wins / 2 }] }));
   // Weeks 2 to 4 (points 2..4): a has 4..8, b has 2..4.
@@ -258,30 +258,32 @@ test("the 6 Wk axis fits the weeks in view, counting where a line crosses an edg
   assert.deepEqual(snapshotWindowRange(weeks, [{ id: "a" }], {}, 2, 4), { min: 4, max: 8 });
   const gap = [{ scores: [{ playerId: "a", wins: 3 }] }, { scores: [] }];
   assert.deepEqual(snapshotWindowRange(gap, [{ id: "a" }], {}, 1, 2), { min: 3, max: 3 });
-
-  const step = snapshotWindowStep(weeks, players, {}, 6);
-  assert.ok([1, 2, 4, 5, 10, 20].includes(step));
-  for (let from = 0; from <= 2; from += 0.25) {
-    const { min, max } = snapshotWindowRange(weeks, players, {}, from, from + 6);
-    const axis = snapshotWindowAxis(min, max, step);
-    assert.equal(axis.tickStep, step, "the spacing never changes while scrolling");
-    assert.equal(axis.low % step, 0);
-    assert.ok(axis.low <= min - 1 || axis.low === 0, "at least a win of room under the lowest line");
-    assert.equal((axis.ceiling - axis.low) % step, 0, "the top is a numbered tick");
-    assert.ok(axis.ceiling >= max + 0.5 && axis.ceiling - step < max + 0.5, "the first tick at least half a win over the highest line");
-    assert.ok((axis.ceiling - axis.low) / step <= 6, "about five ticks");
-  }
-  // Late in a long season the axis no longer starts at zero.
+  // Late in a long season the axis starts at the lowest line in view, not at zero.
   const season = Array.from({ length: 14 }, (_, index) => ({ scores: [{ playerId: "a", wins: 2 * (index + 1) }] }));
   const late = snapshotWindowRange(season, [{ id: "a" }], {}, 8, 14);
-  assert.equal(snapshotWindowAxis(late.min, late.max, snapshotWindowStep(season, [{ id: "a" }], {}, 6)).low, 12);
-  // The owner's season: weeks 1 to 6 top out at 9 wins, weeks 2 to 7 at 10. A 2-win spacing fits every window in six
-  // gaps, so weeks 1 to 6 end on a numbered 10 (not 12) and weeks 2 to 7 on 12, never with the leader on the top line.
-  const owner = [1, 3, 5, 7, 8, 9, 10].map((wins) => ({ scores: [{ playerId: "a", wins }, { playerId: "b", wins: 0 }] }));
-  const ownerStep = snapshotWindowStep(owner, players, {}, 6);
-  assert.equal(ownerStep, 2);
-  assert.deepEqual(snapshotWindowAxis(0, 9, ownerStep), { low: 0, ceiling: 10, tickStep: 2 });
-  assert.deepEqual(snapshotWindowAxis(0, 10, ownerStep), { low: 0, ceiling: 12, tickStep: 2 });
+  assert.equal(snapshotAxis(late.min, late.max, false).low, 16);
+});
+
+test("the axis runs from the lowest score to one or two wins over the leader, in at most six evenly spaced numbered lines", () => {
+  for (let low = 0; low <= 12; low += 1) {
+    for (let max = low; max <= low + 40; max += 1) {
+      const axis = snapshotAxis(low, max, false);
+      const where = `lowest ${low}, leader ${max}`;
+      assert.equal(axis.low, low, `${where}: the bottom line is the lowest score`);
+      assert.ok(axis.ceiling > max && axis.ceiling <= max + 2, `${where}: the top line is one or two wins over the leader`);
+      assert.ok(Number.isInteger(axis.tickStep) && axis.tickStep >= 1, `${where}: whole-win spacing`);
+      const gaps = (axis.ceiling - axis.low) / axis.tickStep;
+      assert.ok(Number.isInteger(gaps) && gaps <= 5, `${where}: the top is a numbered line, six lines at most`);
+    }
+  }
+  // Mid-scroll the edges cross lines between weeks; the numbers stay whole.
+  assert.deepEqual(snapshotAxis(2.5, 7.25, false), { low: 2, ceiling: 8, tickStep: 2 });
+  // The owner's season: weeks 1 to 6 top out at 9 wins (axis to 10), weeks 2 to 7 at 10 (axis to 12).
+  assert.deepEqual(snapshotAxis(0, 9, false), { low: 0, ceiling: 10, tickStep: 2 });
+  assert.deepEqual(snapshotAxis(0, 10, false), { low: 0, ceiling: 12, tickStep: 3 });
+  // Lowest 8, leader 25: 8, 14, 20, 26 rather than an axis from 4 to 28.
+  assert.deepEqual(snapshotAxis(8, 25, false), { low: 8, ceiling: 26, tickStep: 6 });
+  assert.deepEqual(snapshotAxis(0, 0, false), { low: 0, ceiling: 2, tickStep: 1 }, "an empty chart still has a top line");
 });
 
 test("the 6 Wk axis is always for a full six-week stretch: the ends and the bounce past them never shorten it", () => {
@@ -299,9 +301,9 @@ test("the 6 Wk axis is always for a full six-week stretch: the ends and the boun
   assert.deepEqual(rangeAt(900), rangeAt(480), "or at the latest end");
 });
 
-test("the whole regular season still counts from zero, and the playoffs start just under the lowest line", () => {
-  assert.deepEqual(snapshotAxis(3, 14, true), { low: 0, ceiling: 16, tickStep: 4 }, "the top is the first numbered tick over the leader");
-  assert.deepEqual(snapshotAxis(9, 14, false), { low: 8, ceiling: 16, tickStep: 2 });
-  assert.deepEqual(snapshotAxis(0, 9, true), { low: 0, ceiling: 10, tickStep: 2 });
+test("the whole regular season counts from zero, where everyone starts; the playoffs start at the lowest line", () => {
+  assert.deepEqual(snapshotAxis(3, 14, true), { low: 0, ceiling: 15, tickStep: 3 });
+  assert.deepEqual(snapshotAxis(0, 25, true), { low: 0, ceiling: 27, tickStep: 9 });
+  assert.deepEqual(snapshotAxis(9, 14, false), { low: 9, ceiling: 15, tickStep: 2 });
   assert.equal(snapshotAxis(0, 4, false).low, 0);
 });

@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - The Season Snapshot axis runs from the lowest score to one or two wins over the leader
+
+Supersedes the round spacings of the next entry. The owner wants the bottom line on the lowest score shown, the top line one or two wins over the leader (never on it), and never more than six lines. With round spacings (2, 4, 5 ...) those cannot all hold, so the spacing is now any whole number of wins that splits the axis evenly: of the two possible tops, the one that divides into more lines, at most six. Lowest 8 and leader 25 now draw 8, 14, 20, 26 instead of 4 to 28; a whole season from 0 with a leader at 25 draws 0, 9, 18, 27. In 6 Wk the spacing can change as the window scrolls (the numbers glide and fade as before). The rail now ends where the grid lines end instead of 14 px past them, and the 6 px above it is used: no top padding in the chart body or the rail, plot top 12 to 10 px.
+
 ## 2026-11-01 - The top of the Season Snapshot axis is always a numbered tick; the rail sits above it
 
 Supersedes the next entry's unlabelled top. The owner wants a top number and line at all times. The top is now the first tick at least half a win over the highest line; to keep it close (weeks 1 to 6 with a leader at 9 end at 10, not 12), the tick spacing is the smallest round one (1, 2, 4, 5, 10, 20 or 50 wins) that needs no more than six gaps, so the axis can show up to seven numbers. In 6 Wk the spacing is checked for every half-week position of the window, so it still never changes while scrolling. The 6 Wk rail sits in a 12 px strip above the top line (All keeps the strip empty, so both views line up), and the "Wins" label moved 2 px right.

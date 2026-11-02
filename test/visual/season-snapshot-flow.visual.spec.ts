@@ -106,6 +106,10 @@ test("in the 6 Wk view a rail along the top of the chart shows the window and mo
   expect(topLine, "the rail sits above the top line, not on it").toBeGreaterThanOrEqual(bar.y + bar.height);
   const topNumber = await page.locator(".season-snapshot-yaxis .season-snapshot-tick:not(.is-leaving)").evaluateAll((texts) => Math.min(...texts.map((text) => text.getBoundingClientRect().top + text.getBoundingClientRect().height / 2)));
   expect(Math.abs(topNumber - topLine), "and the top line has its number").toBeLessThan(4);
+  // It is as wide as the grid lines: from the axis to where the lines end, never past them.
+  const grid = await page.locator(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)").first().boundingBox();
+  expect(bar.x).toBeCloseTo(plotBox.x, 0);
+  expect(bar.x + bar.width, "the rail ends where the lines end").toBeCloseTo(grid!.x + grid!.width, 0);
   expect(grip.width / bar.width).toBeCloseTo(2 / 3, 1);
   expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
 
@@ -135,7 +139,7 @@ test("in the 6 Wk view a rail along the top of the chart shows the window and mo
   expect(await layout()).toEqual(windowed);
 });
 
-test("in the 6 Wk view the axis fits the weeks in view and follows them as the chart scrolls, on one tick spacing", async ({ page }) => {
+test("in the 6 Wk view the axis fits the weeks in view and follows them as the chart scrolls", async ({ page }) => {
   await open(page, nineWeekSnapshot(14));
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
@@ -149,8 +153,9 @@ test("in the 6 Wk view the axis fits the weeks in view and follows them as the c
   await expect(leaving).toHaveCount(0);
   const latest = await settledTicks();
   expect(spacing(latest).size, "evenly spaced").toBe(1);
+  expect(latest.length, "six numbered lines at most").toBeLessThanOrEqual(6);
 
-  // Drag the rail back to the first weeks: the axis glides down to zero, on the same spacing.
+  // Drag the rail back to the first weeks: the axis glides down to zero, where everyone starts.
   const bar = (await page.locator(".season-snapshot-rail-track").boundingBox())!;
   const grip = (await page.locator(".season-snapshot-rail-thumb").boundingBox())!;
   await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
@@ -160,7 +165,8 @@ test("in the 6 Wk view the axis fits the weeks in view and follows them as the c
   await expect.poll(async () => (await settledTicks())[0]).toBe(0);
   await expect(leaving, "numbers that left the axis are gone once it settles").toHaveCount(0);
   const first = await settledTicks();
-  expect([...spacing(first)]).toEqual([...spacing(latest)]);
+  expect(spacing(first).size, "evenly spaced").toBe(1);
+  expect(first.length, "six numbered lines at most").toBeLessThanOrEqual(6);
   expect(first.at(-1)!, "the first weeks need less room at the top").toBeLessThan(latest.at(-1)!);
 });
 

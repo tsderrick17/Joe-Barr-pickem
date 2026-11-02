@@ -226,18 +226,17 @@ measure database requests or end-to-end route time.
   An All / 6 Wk toggle (regular season only) sits between the title and the
   flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
   at a time with the y-axis standing still beside it, and always opens on the
-  most recent six weeks. Its y-axis fits the six-week stretch nearest the scroll
-  (a win or more under the lowest line, on a tick, up to the first tick at
-  least half a win over the highest), always a full six
-  weeks, so the first and latest ends and the bounce past them never shorten it,
-  and glides on a spring as the view scrolls, the lines with it; the tick spacing stays the same for the whole
-  view, so the numbers slide past like a ruler and fade in or out at the edges.
-  All always counts from zero. In both views the top of the axis is always a
-  numbered tick with its line, and the tick spacing is the smallest round one
-  (1, 2, 4, 5, 10, 20 or 50 wins) that needs no more than six gaps, so the top
-  number sits close over the leader. A slim position rail in the strip above
-  the top line replaces the browser's scroll bar; All keeps that strip empty,
-  so both views put the axis and the week numbers in exactly the same place.
+  most recent six weeks. Its y-axis fits the six-week stretch nearest the scroll,
+  always a full six weeks, so the first and latest ends and the bounce past them
+  never shorten it, and glides on a spring as the view scrolls, the lines with
+  it; numbers that leave fade out. All always counts from zero, where everyone
+  starts. In both views the bottom line is the lowest score shown and the top
+  line is one or two wins over the leader, never on it; every line is numbered
+  and evenly spaced in whole wins, six lines at most (of the two possible tops,
+  the one that splits into more lines). A slim position rail in the strip above
+  the top line replaces the browser's scroll bar, as wide as the grid lines;
+  All keeps that strip empty, so both views put the axis and the week numbers
+  in exactly the same place.
   Axis margins are kept tight. On phones the key is a compact
   four-column grid. The key lists everyone in current-standings order;
   pressing a name hides or shows that person, the axis and stacking recompute
