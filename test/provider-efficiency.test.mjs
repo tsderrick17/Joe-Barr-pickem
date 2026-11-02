@@ -13,12 +13,15 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("regular-season score polling uses a predictable cadence before expanding its cooldown", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
   assert.deepEqual(
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((attempt) => nextScoreCheckAt(attempt, now)),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((attempt) => nextScoreCheckAt(attempt, now)),
     [
-      "2026-09-14T00:10:00.000Z",
-      "2026-09-14T00:10:00.000Z",
-      "2026-09-14T00:10:00.000Z",
-      "2026-09-14T00:10:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
+      "2026-09-14T00:05:00.000Z",
       "2026-09-14T00:10:00.000Z",
       "2026-09-14T00:10:00.000Z",
       "2026-09-14T00:20:00.000Z",
@@ -29,13 +32,19 @@ test("regular-season score polling uses a predictable cadence before expanding i
       "2026-09-14T04:00:00.000Z",
     ],
   );
-  assert.equal(nextScoreCheckAt(12, now), "2026-09-14T04:00:00.000Z");
+  assert.equal(nextScoreCheckAt(15, now), "2026-09-14T04:00:00.000Z");
+});
+
+test("after the last gap a game gets no more automatic checks: its timer is set as far out as polling itself ends", () => {
+  const now = new Date("2026-09-14T00:00:00.000Z");
+  assert.equal(nextScoreCheckAt(16, now), "2026-09-17T00:00:00.000Z", "72 hours out");
+  assert.equal(nextScoreCheckAt(40, now), "2026-09-17T00:00:00.000Z");
 });
 
 test("polling follows one ladder in every round, and holds only when the fifty-credit reserve is gone", () => {
   const now = new Date("2026-09-14T00:00:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now), "2026-09-14T00:10:00.000Z");
-  assert.equal(nextScoreCheckAt(9, now), "2026-09-14T00:20:00.000Z");
+  assert.equal(nextScoreCheckAt(1, now), "2026-09-14T00:05:00.000Z");
+  assert.equal(nextScoreCheckAt(9, now), "2026-09-14T00:10:00.000Z");
   assert.equal(shouldHoldScorePollingForQuota(49, "2026-09-13T00:00:00.000Z", now), true);
   assert.equal(shouldHoldScorePollingForQuota(50, "2026-09-13T00:00:00.000Z", now), false);
 });

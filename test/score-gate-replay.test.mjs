@@ -18,9 +18,10 @@ for (const gap of SCORE_RETRY_MINUTES) expectedMinutes.push(expectedMinutes.at(-
 
 /**
  * Walk the clock forward one tick at a time until the game has had every check on the ladder.
- * @param {{ delaySeconds?: (check: number) => number, clockBehindSeconds?: number, manualRunAfterCheck?: { check: number, afterSeconds: number } }} [options]
+ * With `untilHours` it keeps going that long after kickoff instead of stopping at the ladder's last check, to see what the gate does next.
+ * @param {{ delaySeconds?: (check: number) => number, clockBehindSeconds?: number, manualRunAfterCheck?: { check: number, afterSeconds: number }, untilHours?: number }} [options]
  */
-function replay({ delaySeconds = () => 4, clockBehindSeconds = 0, manualRunAfterCheck = null } = {}) {
+function replay({ delaySeconds = () => 4, clockBehindSeconds = 0, manualRunAfterCheck = null, untilHours = 0 } = {}) {
   const checks = []; // { start (ms), tick (ms) }
   let backoff = null; // { attempts, nextCheckAt (ms) }
   const record = (startedAt) => {
@@ -28,8 +29,8 @@ function replay({ delaySeconds = () => 4, clockBehindSeconds = 0, manualRunAfter
     const stamped = nextScoreCheckAt(attempts, new Date(startedAt - clockBehindSeconds * 1000));
     backoff = { attempts, nextCheckAt: Date.parse(stamped) };
   };
-  for (let tick = kickoff; checks.length < expectedMinutes.length; tick += TICK) {
-    if (tick > kickoff + 72 * 60 * MINUTE) assert.fail("the replay never reached the end of the ladder");
+  for (let tick = kickoff; untilHours ? tick <= kickoff + untilHours * 60 * MINUTE : checks.length < expectedMinutes.length; tick += TICK) {
+    if (tick > kickoff + 72 * 60 * MINUTE && !untilHours) assert.fail("the replay never reached the end of the ladder");
     const evaluatedAt = tick + 50; // the gate reads the clock a moment after the schedule fires
     const due = tick >= kickoff + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE && !(backoff && backoff.nextCheckAt > evaluatedAt);
     if (!due) continue;
@@ -82,4 +83,9 @@ test("a Commissioner run between ticks counts as a check of its own and never do
   const afterManual = automatic[2] - automatic[1];
   assert.ok(afterManual >= TICK, "the next automatic check is at least one tick later");
   assert.equal(afterManual % TICK, 0, "and it is still on the clock");
+});
+
+test("after the ladder's last check a game is not checked again by the gate, for as long as polling would run", () => {
+  const checks = minutesAfterKickoff(replay({ untilHours: 72 }));
+  assert.deepEqual(checks, expectedMinutes, "the last automatic check is the ladder's last, and nothing follows it");
 });

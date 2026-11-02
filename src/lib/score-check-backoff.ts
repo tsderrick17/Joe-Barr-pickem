@@ -1,3 +1,4 @@
+import { FINAL_SCORE_POLLING_LIMIT_HOURS } from "./score-window.js";
 import { SCORE_GATE_INTERVAL_MINUTES, SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
 
 const MINUTE = 60_000;
@@ -11,9 +12,11 @@ export function scorePollingMode(isPlayoff: boolean): ScorePollingMode {
   return isPlayoff ? "playoff" : "regular";
 }
 
+// Past the last gap there are no more automatic checks: the timer is set as far out as polling itself ends, so the database gate never
+// wakes the worker for that game again. The Commissioner is alerted that the final is overdue, and the manual button ignores the timer.
 function scorePollingDelayMinutes(attempts: number) {
   const index = Math.max(0, attempts - 1);
-  return SCORE_POLLING_RETRY_MINUTES[index] ?? 120;
+  return SCORE_POLLING_RETRY_MINUTES[index] ?? FINAL_SCORE_POLLING_LIMIT_HOURS * 60;
 }
 
 /**
@@ -26,7 +29,7 @@ function scorePollingDelayMinutes(attempts: number) {
  * whole tick late costs one tick, once. A game can never be checked twice in one tick, because the gap is at least one tick.
  *
  * A delayed or suspended game should remain visible to the Commissioner, but
- * it must not consume one provider credit every fifteen minutes indefinitely.
+ * it must not consume provider credits indefinitely: after the ladder's last gap it is not checked again automatically.
  */
 export function nextScoreCheckAt(
   attempts: number,
