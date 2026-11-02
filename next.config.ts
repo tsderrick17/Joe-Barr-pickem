@@ -41,6 +41,9 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // A phone that kept the app open across a deploy still runs the old build. With an id per deploy, Next notices on the next tap and loads the
+  // page fresh; without one the links on that old page quietly stop working. Builds outside Vercel (tests, local) have no commit and no id.
+  ...(process.env.VERCEL_GIT_COMMIT_SHA ? { deploymentId: process.env.VERCEL_GIT_COMMIT_SHA } : {}),
   // Browser rehearsals run beside a normal local server. Give that temporary
   // server its own build directory so Next never contends for .next/dev.
   ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
