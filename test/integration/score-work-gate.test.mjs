@@ -37,8 +37,8 @@ test("the score gate wakes the worker at the time it asked for, and at least onc
 test("the score gate calls a game due exactly when the JavaScript rules say, and honours its retry timer to the second", { skip }, async () => {
   const { admin } = createIsolatedClients(config);
   const token = testToken();
-  // A game in January 2000 and a gate moment shortly after it, so nothing else in the database can be due. The period starts later that day
-  // (same pool week), so "a week is waiting to open" is false too.
+  // A game in January 2000 and a gate moment shortly after it, so nothing else in the database can be due. Its week is already active,
+  // so "a week is waiting to open" is false too.
   const kickoff = Date.parse("2000-01-01T09:00:00.000Z");
   const firstCheck = kickoff + FIRST_SCORE_CHECK_DELAY_MINUTES * 60_000;
   const iso = (ms) => new Date(ms).toISOString();
@@ -59,7 +59,7 @@ test("the score gate calls a game due exactly when the JavaScript rules say, and
     const { data: season, error: seasonError } = await admin.from("seasons").insert({ year: 3000 + Math.floor(Math.random() * 300), state: "preseason" }).select("id").single();
     assert.equal(seasonError, null, seasonError?.message);
     seasonId = season.id;
-    const { data: period, error: periodError } = await admin.from("scoring_periods").insert({ season_id: seasonId, display_name: "Gate week", period_type: "regular", max_picks: 2, status: "upcoming", display_order: 1, starts_at: "2000-01-01T20:00:00.000Z" }).select("id").single();
+    const { data: period, error: periodError } = await admin.from("scoring_periods").insert({ season_id: seasonId, display_name: "Gate week", period_type: "regular", max_picks: 2, status: "active", display_order: 1 }).select("id").single();
     assert.equal(periodError, null, periodError?.message);
     const { data: teams, error: teamsError } = await admin.from("teams").insert([
       { abbreviation: `GA${token.slice(-4)}`.slice(0, 4), city: "Gate", mascot: "Away", full_name: `Gate ${token} Away` },
