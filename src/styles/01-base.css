@@ -59,8 +59,10 @@ body {
 }
 
 /* Reserve the account row's height before the async player lookup settles: the name button is 2.75rem tall and the row has .5rem of padding
-   above and below, so the bar is this tall with or without the name. */
+   above and below, so the bar is this tall with or without the name. The row inside is reserved the same way: without the name it would be
+   shorter than the name button, and the brand, centered in it, sat a few pixels higher until the name arrived and the row grew. */
 .mobile-account-nav > div { min-height: 3.75rem; }
+.mobile-account-nav > div > div { min-height: 2.75rem; }
 
 /* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
 /* Optional header tabs: in the page from the start, shown by flags set before the first paint (nav-tabs.ts), so they never slide in. */

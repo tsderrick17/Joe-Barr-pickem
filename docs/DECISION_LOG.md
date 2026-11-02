@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-02 - The header does not move when the player's name arrives
+
+On phones the "Joe Barr Memorial / Lead Pipe Locks" brand sat 3 px higher until the signed-in name appeared, then dropped to its place. The bar's height was already reserved, but the row inside it was shorter than the name button while the name was missing, and the brand is centered in that row. The row now keeps the name button's height (`.mobile-account-nav > div > div`). Browser test `header-shift.visual.spec.ts` holds the account answer back and checks the brand and the bar do not move at phone, tablet and desktop widths.
+
 ## 2026-11-02 - A page left open for hours must not go dead
 
 The owner opened the Home Screen app after the phone had been locked all night: buttons and tabs on the page worked, but the Standings, Slate, Players and Email center links did nothing. The page was from before several overnight deployments and the site had no way to know that: no deployment id was set, so Next could not tell the old page from the new server, and a tapped link waited for page data that could not be used. Two fixes, one under the other: each production build now carries its own deployment id (the commit), so Next detects the mismatch on the next tap and reloads that page fresh; and a small guard (`stuck-link-guard.tsx`) loads a tapped link's page normally if the page has not moved four seconds after the tap, whatever the cause. A page the player left, or went back from, is left alone. Browser tests: a link whose page data never arrives still loads, a working link is never reloaded, and going back is not undone.
