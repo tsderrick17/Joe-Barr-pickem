@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-02 - A retry gap is the real gap between two checks
+
+Production data showed the score ladder's 10-minute gaps running as 20: last Sunday's 1 PM games were checked at 3:50, 4:10 and 4:30 PM, and over 28 days there were 23 ten-minute gaps and 33 twenty-minute ones. The worker stamped each game's retry timer from the moment its run started, a few seconds after the gate's clock tick; at the next tick the timer was still running by those few seconds, so the gate skipped the game and every gap became one tick longer. It affected only how soon a final was picked up, never whether it was saved or graded correctly. `nextScoreCheckAt` now stamps from the tick the run was called for (3:50:04 counts as 3:50:00), so a 10-minute gap is due at exactly the next tick. A run that starts a whole tick late costs one tick, once, and a game is never checked twice in one tick. `SCORE_GATE_INTERVAL_MINUTES` (in `score-retry-ladder.js`) must equal the cron schedule. Test `score-gate-replay.test.mjs` replays the gate tick by tick; `integration/score-work-gate.test.mjs` checks the gate's own SQL against the first-check minutes and the retry timer to the second.
+
 ## 2026-11-02 - The header does not move when the player's name arrives
 
 On phones the "Joe Barr Memorial / Lead Pipe Locks" brand sat 3 px higher until the signed-in name appeared, then dropped to its place. The bar's height was already reserved, but the row inside it was shorter than the name button while the name was missing, and the brand is centered in that row. The row now keeps the name button's height (`.mobile-account-nav > div > div`). Browser test `header-shift.visual.spec.ts` holds the account answer back and checks the brand and the bar do not move at phone, tablet and desktop widths.

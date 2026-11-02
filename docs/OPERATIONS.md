@@ -129,6 +129,11 @@ Each successful score run records newly finalized games by ladder window. The
 Commissioner grading panel aggregates those records and shows the percentage
 of new finals captured by each window; a game is counted once, at the first
 poll that safely records it as final.
+A retry gap is the real gap between two checks. The worker stamps a game's retry timer from the gate tick it was
+called for (the clock minute, every `SCORE_GATE_INTERVAL_MINUTES`), not from its own start a few seconds later; stamped from the
+start, the timer was still running at the next tick, the game skipped it, and every 10-minute gap was really 20 (seen on the
+Week 8 Sunday: 3:50, 4:10, 4:30 PM). `test/score-gate-replay.test.mjs` replays the gate tick by tick against the real
+function. If the gate's cron schedule changes, change that constant with it.
 Each run also records which check finalized each game (`details.finalGameRungs`), and the Commissioner
 game inspector shows it for a finished game, beside how long after kickoff it was graded ("Graded: 3h 41m
 after kickoff · check 4 of 12 (10-min window)"). Games graded before this was recorded, or by hand, show only

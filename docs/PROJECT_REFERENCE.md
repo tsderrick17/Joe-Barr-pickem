@@ -619,7 +619,9 @@ may enrich spreads but cannot override canonical schedule assignments.
   provider credit unless a game's durable retry time is due. Regular-season and playoff games
   become eligible 170 minutes after official kickoff and use the same fixed
   10/10/10/10/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
-  the final 240-minute window reserved for emergencies.
+  the final 240-minute window reserved for emergencies. A retry gap is the real gap between two checks:
+  the retry timer is stamped from the gate tick the run was called for, not from the run's start a few
+  seconds later (`nextScoreCheckAt`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
 - Remaining credits do not change the normal cadence. Repeated polling pauses
   only below the protected 50-credit emergency reserve. Every paid response can
   settle all due completed games it contains. The Bowl dispatcher checks every
