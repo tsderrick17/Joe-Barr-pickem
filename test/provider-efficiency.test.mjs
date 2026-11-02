@@ -3,50 +3,34 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { nextScoreCheckAt } from "../src/lib/score-check-backoff.ts";
-import { shouldHoldScorePollingForQuota } from "../src/lib/score-check-backoff.ts";
+import { nextScoreCheckTime } from "../src/lib/score-polling-tier.js";
 import { providerRequestCost, summarizeProviderEfficiency } from "../src/lib/provider-efficiency.js";
 import { isEasternPrelockRefreshWindow } from "../src/lib/prelock-refresh-window.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+// A game kicking off at 18:00 UTC on a five-minute mark: its next check is the next time on the tier's list after the tick the run was called for.
+const KICKOFF = Date.parse("2026-09-13T18:00:00.000Z");
+const at = (minutesAfterKickoff, seconds = 4) => KICKOFF + minutesAfterKickoff * 60_000 + seconds * 1000;
+const minutesAfter = (iso) => (Date.parse(iso) - KICKOFF) / 60_000;
+
 test("regular-season score polling uses a predictable cadence before expanding its cooldown", () => {
-  const now = new Date("2026-09-14T00:00:00.000Z");
+  // Each check of the Normal tier sets the timer to the next time on its list, whatever few seconds the run started after its tick.
   assert.deepEqual(
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((attempt) => nextScoreCheckAt(attempt, now)),
-    [
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:05:00.000Z",
-      "2026-09-14T00:10:00.000Z",
-      "2026-09-14T00:10:00.000Z",
-      "2026-09-14T00:20:00.000Z",
-      "2026-09-14T00:20:00.000Z",
-      "2026-09-14T00:20:00.000Z",
-      "2026-09-14T01:00:00.000Z",
-      "2026-09-14T02:00:00.000Z",
-      "2026-09-14T04:00:00.000Z",
-    ],
+    [175, 180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470].map((minutes) => minutesAfter(nextScoreCheckTime("normal", KICKOFF, at(minutes)))),
+    [180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470, 710],
   );
-  assert.equal(nextScoreCheckAt(15, now), "2026-09-14T04:00:00.000Z");
 });
 
-test("after the last gap a game gets no more automatic checks: its timer is set as far out as polling itself ends", () => {
-  const now = new Date("2026-09-14T00:00:00.000Z");
-  assert.equal(nextScoreCheckAt(16, now), "2026-09-17T00:00:00.000Z", "72 hours out");
-  assert.equal(nextScoreCheckAt(40, now), "2026-09-17T00:00:00.000Z");
+test("after the last time a game gets no more automatic checks: its timer is set as far out as polling itself ends", () => {
+  const tick = KICKOFF + 710 * 60_000;
+  assert.equal(nextScoreCheckTime("normal", KICKOFF, at(710)), new Date(tick + 72 * 3_600_000).toISOString(), "72 hours out");
+  assert.equal(nextScoreCheckTime("normal", KICKOFF, at(2000)), new Date(KICKOFF + 2000 * 60_000 + 72 * 3_600_000).toISOString());
 });
 
-test("polling follows one ladder in every round, and holds only when the fifty-credit reserve is gone", () => {
-  const now = new Date("2026-09-14T00:00:00.000Z");
-  assert.equal(nextScoreCheckAt(1, now), "2026-09-14T00:05:00.000Z");
-  assert.equal(nextScoreCheckAt(9, now), "2026-09-14T00:10:00.000Z");
-  assert.equal(shouldHoldScorePollingForQuota(49, "2026-09-13T00:00:00.000Z", now), true);
-  assert.equal(shouldHoldScorePollingForQuota(50, "2026-09-13T00:00:00.000Z", now), false);
+test("a playoff round follows the same list, and a paused game is looked at again in an hour", () => {
+  assert.equal(minutesAfter(nextScoreCheckTime("normal", KICKOFF, at(180))), 185);
+  assert.equal(minutesAfter(nextScoreCheckTime("paused", KICKOFF, at(180))), 240);
 });
 
 test("only the daylight-safe invocation at 7 AM Eastern may refresh pregame odds", () => {
@@ -101,7 +85,7 @@ test("a rejected score-provider call persists per-game backoff before failing", 
   const failureHandler = source.slice(source.lastIndexOf("} catch (error)"));
   // A provider failure backs the games off; a run stopped by its own deadline does not (see the cancellation tests).
   assert.match(failureHandler, /if \(!providerResponseAccepted && !cancelledByDeadline\)/);
-  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt\)/);
+  assert.match(failureHandler, /deferUnfinishedScoreChecks\(eligibleGames, backoffByGameId, checkedAt, tier\)/);
   assert.match(failureHandler, /providerChecked: providerRequestAttempted/);
   assert.match(failureHandler, /requestsLast: failedRequestsLast/);
 });

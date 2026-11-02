@@ -101,7 +101,7 @@ dashboard when the secret is made, so look there (the app cannot read it).
 | `CRON_SECRET` | Vercel (all environments) **and** the Supabase Vault `cron_secret`; the two must match | No; change both together | Every automation route answers 401, so scores, lines, reminders and the watchdog stop | Launch preflight "Cron authorization" (compares Vercel with Vault); the automation heartbeat monitor goes red |
 | `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`) | Vercel | No, unless rotated in Supabase | Every server route and worker | `/api/health`, UptimeRobot, Sentry |
 | `PLAYER_AUTH_PEPPER` (32+ characters) | Vercel (all environments) | No; never rotate casually (see the Commissioner runbook, "Verify protected player credentials") | PIN sign-in is unavailable | Launch preflight "Player sign-in credential" |
-| `ODDS_API_KEY` | Vercel | Set by the provider's plan; credits renew monthly | NFL lines and the score fallback; Bowl lines | Launch preflight "NFL odds provider" (zero-credit check); the `odds-credits-below-reserve` watchdog alert when fewer than 50 credits remain |
+| `ODDS_API_KEY` | Vercel | Set by the provider's plan; credits renew monthly | NFL lines and the score fallback; Bowl lines | Launch preflight "NFL odds provider" (zero-credit check); the `score-polling-paused` watchdog alert when automatic score checks are paused for the month's credits |
 | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` | Vercel | Set when the key is made in Brevo | All pool email; the Commissioner's watchdog email (the phone alert still goes) | Launch preflight "Brevo delivery account"; a "watchdog alert email could not be sent" warning on the Automation tab. Whether the sender's domain is **Authenticated** in Brevo is only visible in Brevo itself |
 | `GITHUB_USAGE_TOKEN` | Vercel | Set when the token is made in GitHub | Nothing player-facing: the backup health check and usage panel fall back to anonymous reads | The usage panel shows "unavailable" |
 | `SENTRY_USAGE_TOKEN`, `UPTIMEROBOT_READ_ONLY_API_KEY` | Vercel | Set when made | Only the Commissioner's account-capacity panel | The panel shows that service as unavailable |
@@ -124,9 +124,35 @@ and playoff delayed finals use the same ladder. After the last window (the check
 kickoff) a game gets no more automatic checks: the overdue alert (6 hours after kickoff) and the
 Commissioner's score button take over. Both
 competition types become eligible 175 minutes after official kickoff. The
-monthly balance does not change the normal cadence. Repeated polling pauses only below the protected
-50-credit emergency reserve, so official line integrity is never traded for
+monthly balance does not change the normal cadence until 440 of the month's 500
+credits are used (`LOW_BALANCE_USED_CREDITS`). From there the worker runs the
+Lean or Minimal schedule instead (see "Low-balance score checking" below), and
+pauses automatic checks only when the credits left would not cover the rest of
+the month's official lines, so official line integrity is never traded for
 faster grading. One paid response settles every due completed game it contains.
+### Low-balance score checking
+
+Past 440 of the month's 500 Odds API credits used, the worker runs one of two lighter schedules; each is a list of times after kickoff, so a game
+mid-ladder when the schedule changes goes straight to the next time on the new list (nothing skipped, nothing checked twice):
+
+| Schedule | Checks (minutes after kickoff) | Expected credits per slate\* |
+| --- | --- | --- |
+| Normal (until 440 used) | 175, 180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470, 710 | about 15.5 |
+| Lean | 175, 190, 205, 220, 235, 250, 265, 325, 445, 685 | about 5.9 |
+| Minimal | 190, 210, 230, 250, 310, 430, 670 | about 4.5 |
+
+\*The forecast model's figure at a 90% first-hour share (`expectedScoreChecks`); the Performance tab prices the rest of the month with it.
+
+Every score run, and every health check, decides the schedule afresh (`decideScoreTier`, `chooseScoreTier`): Normal under 440 used, or when
+no credit reading was taken this month (credits renew on the 1st, UTC); from 440 used, Lean if its forecast for the game days left fits in
+the balance minus the line need (the remaining 7 AM refreshes and lock-time fetches, plus a cushion of 5), otherwise Minimal; and paused only
+when nothing is left after the line need. So it can step back up from Minimal to Lean as game days pass, and Normal returns with the next month.
+A game the schedule says to leave alone is not checked and spends nothing; its retry timer moves to its next time (an hour on, when paused), so
+the gate stops waking the worker for it. The Commissioner's "Run score check now" button ignores the schedule, checks every due game and
+spends 2 credits a tap. Each run records its `tier`; the "new game finals by polling rung" chart counts Normal-schedule runs only, because
+a rung is a place on a schedule's list. The Performance tab's credit panel shows the schedule in force and why, and its forecast uses the
+schedules the rule would pick.
+
 Each successful score run records newly finalized games by ladder window. The
 Commissioner grading panel aggregates those records and shows the percentage
 of new finals captured by each window; a game is counted once, at the first
@@ -343,7 +369,7 @@ fail is the notification retried, no more than every 30 minutes. A Commissioner
 with no phone set up simply gets the email.
 When the shared worker assessment finds real overdue line, scoring, or reminder
 work alongside an unhealthy worker receipt, the watchdog first makes one normal
-lease-protected recovery attempt. It keeps provider quota protection, retry
+lease-protected recovery attempt. It keeps the low-balance score schedule, retry
 backoff, delivery deduplication, and all existing database safeguards; it then
 rechecks health and leaves the incident open if recovery did not complete.
 
@@ -352,11 +378,13 @@ The only alert conditions are:
 - a game has passed line lock without an official line;
 - final scores are due and the score worker is failed or stale for 45 minutes;
 - a scheduled pool message is overdue or stuck sending;
-- the Odds API balance reported this month is under the 50-credit reserve while
-  the NFL season is still on (the score worker then stops spending credits, so
-  NFL games are not graded automatically until the credits renew on the 1st or
-  the plan is upgraded; this alert replaces the stalled-scores alert, which stays
-  quiet while credits are protected);
+- automatic score checks are paused for the month's credits while the NFL season
+  is still on (`score-polling-paused`, critical: what is left would not cover the
+  rest of the month's official lines, so NFL games are not graded automatically
+  until the credits renew on the 1st or you use the manual button; this alert
+  replaces the stalled-scores alert, which stays quiet while checks are paused).
+  A warning, `score-polling-reduced`, says when the Lean or Minimal schedule is
+  in force; every game is still graded then, only later;
 - the full season schedule is still incomplete after August 15; or
 - the certified annual turnover is blocked by unfinished prior-season work; or
 - a required production cron/preflight check is missing.

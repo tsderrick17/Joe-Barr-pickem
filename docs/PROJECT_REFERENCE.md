@@ -621,10 +621,13 @@ may enrich spreads but cannot override canonical schedule assignments.
   5/5/5/5/5/5/5/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
   the 60-, 120- and 240-minute windows reserved for emergencies. After the last window no more
   automatic checks follow (the overdue alert and the Commissioner's button take over). The database gate wakes the worker every five minutes. A retry gap is the real gap between two checks:
-  the retry timer is stamped from the gate tick the run was called for, not from the run's start a few
-  seconds later (`nextScoreCheckAt`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
-- Remaining credits do not change the normal cadence. Repeated polling pauses
-  only below the protected 50-credit emergency reserve. Every paid response can
+  a game's retry timer is its next time on its tier's list of times after kickoff, counted from the gate tick the run was called for, not from the run's start a few
+  seconds later (`nextScoreCheckTime`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
+- Remaining credits do not change the normal cadence until 440 of the month's 500 credits are used
+  (`LOW_BALANCE_USED_CREDITS`). Then the worker runs a Lean or Minimal list of times instead (`score-polling-tier.js`,
+  decided every run from the month's usage and what the rest of the month needs: the remaining line requests plus a cushion, and each
+  schedule's forecast for the game days left), and pauses automatic checks only when the balance would not cover the lines. A reading from an earlier month,
+  or none, means Normal. The manual button always works. See "Low-balance score checking" in OPERATIONS.md. Every paid response can
   settle all due completed games it contains. The Bowl dispatcher checks every
   15 minutes but calls the app only when its seasonal schedule says work is due.
 - Provider response headers feed a 30-day Commissioner efficiency summary of
@@ -649,7 +652,7 @@ may enrich spreads but cannot override canonical schedule assignments.
   enabled.
 - Schedule-provider failures use a circuit breaker and shared cooldown. Manual
   commissioner override may bypass timing, but not authentication, leases,
-  quota reserve, pins, or atomic validation.
+  pins, or atomic validation.
 - Mutations are idempotent or retry-safe. Imports validate before writing;
   rollover returns the existing result; line locking and scoring operate only
   on due records.

@@ -1,6 +1,5 @@
 import { dateFormat } from "./date-format.js";
 import { FINAL_OVERDUE_HOURS } from "./final-overdue.js";
-import { creditsBelowReserve, PROVIDER_CREDIT_RESERVE } from "./provider-credits.js";
 
 const BOWL_ISSUE_TITLES = {
   teams: "A Bowl Pool game is still missing a team",
@@ -39,8 +38,10 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
     ? new Date(health.latestScores.completed_at ?? health.latestScores.started_at).getTime()
     : 0;
   const scoreWorkerStale = !latestScoreTime || now.getTime() - latestScoreTime > 45 * 60 * 1000;
-  const quotaProtected = creditsBelowReserve(health.providerAllowance);
-  if (!quotaProtected && (
+  // The score tier (score-polling-tier.js) is decided from this month's credits; "paused" is the one state where the worker stops on purpose.
+  const scoreTier = health.scoreTier?.tier ?? "normal";
+  const scoresPaused = scoreTier === "paused";
+  if (!scoresPaused && (
     (health.scoreChecksDueNow > 0 && (health.latestScores?.status === "failed" || scoreWorkerStale)) ||
     health.scoreProviderFailureStreak >= 3
   )) {
@@ -51,15 +52,19 @@ export function evaluateWatchdogSignals({ health, bootstrap, preflightChecks = [
       detail: `${affectedGames} game${affectedGames === 1 ? " needs" : "s need"} a score check and the worker has not completed successfully. Automatic retries are conserving provider credits between attempts.`,
     });
   }
-  // Below the reserve the score worker stops spending credits, which also silences the stalled-scores alert above: this is the alert that says why.
-  // The balance comes from the last score run, so it only counts if that run was this month (credits renew on the 1st) and the NFL season is still on.
-  const reportedAt = health.providerCreditSnapshot?.reportedAt ? new Date(health.providerCreditSnapshot.reportedAt) : null;
-  const reportedThisMonth = reportedAt !== null && reportedAt.getUTCFullYear() === now.getUTCFullYear() && reportedAt.getUTCMonth() === now.getUTCMonth();
-  if (quotaProtected && reportedThisMonth && bootstrap.seasonState !== "complete") {
+  // Paused is the alert that says why scores are not being checked (it also silences the stalled-scores alert above). Lean and Minimal are a
+  // heads-up: every game is still checked and graded, only later. Neither is raised once the NFL season is over.
+  if (scoresPaused && bootstrap.seasonState !== "complete") {
     signals.push({
-      key: "odds-credits-below-reserve", severity: "critical",
-      title: "Score provider credits are almost used up",
-      detail: `Only ${health.providerAllowance} Odds API credit${health.providerAllowance === 1 ? " is" : "s are"} left this month (${PROVIDER_CREDIT_RESERVE} are kept in reserve). Final-score checks are paused to protect them, so NFL games will not be graded automatically until the credits renew on the 1st or the plan is upgraded.`,
+      key: "score-polling-paused", severity: "critical",
+      title: "Score checks are paused to protect the official lines",
+      detail: `${health.scoreTier.message} NFL games will not be graded automatically until the credits renew on the 1st. "Run score check now" under Emergency manual controls still works (2 credits a tap).`,
+    });
+  } else if ((scoreTier === "lean" || scoreTier === "minimal") && bootstrap.seasonState !== "complete") {
+    signals.push({
+      key: "score-polling-reduced", severity: "warning",
+      title: `Score checks are on the ${scoreTier === "lean" ? "Lean" : "Minimal"} schedule to save credits`,
+      detail: `${health.scoreTier.message} Every game is still checked and graded, only later than usual; Normal checking returns when the credits renew on the 1st.`,
     });
   }
   const overdueFinals = health.overdueFinals ?? [];
