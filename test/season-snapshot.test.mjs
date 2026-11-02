@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
-import { snapshotAxis, snapshotKeyColumns, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotRibbonShade, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -355,23 +355,6 @@ test("the player key's rows come out even: eleven names that fit eight across go
       assert.ok(columns - rows.at(-1) < rows.length, count + " names in " + width + " px: " + rows.join(", "));
     }
   }
-});
-
-test("a ribbon's shading runs straight across its strip whatever the slope, so no light or dark edge can step along it", () => {
-  for (const slope of [0, 0.04, 0.3, -0.7, 1.4]) {
-    const points = [{ x: 40, top: 100, bottom: 103 }, { x: 140, top: 100 + slope * 100, bottom: 103 + slope * 100 }];
-    const { x1, y1, x2, y2 } = snapshotRibbonShade(points);
-    // How far across the strip a spot is, as the gradient sees it: its position along the gradient's own vector.
-    const across = (x, y) => ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / ((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    const top = (x) => 100 + slope * (x - 40);
-    for (const x of [40, 75, 140]) {
-      assert.ok(Math.abs(across(x, top(x))) < 1e-9, "the top edge is the start of the gradient all along (slope " + slope + ")");
-      assert.ok(Math.abs(across(x, top(x) + 3) - 1) < 1e-9, "and the bottom edge its end (slope " + slope + ")");
-    }
-  }
-  // A strip that starts as a point (a line's first week) still gets a finite gradient, set for its full-width end.
-  const wedge = snapshotRibbonShade([{ x: 0, top: 50, bottom: 50 }, { x: 100, top: 40, bottom: 43 }]);
-  assert.ok(Object.values(wedge).every(Number.isFinite));
 });
 
 test("the 6 Wk rail puts the view on the nearest week and never past either end", () => {

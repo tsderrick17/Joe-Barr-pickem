@@ -248,9 +248,6 @@ measure database requests or end-to-end route time.
   week; with focus the arrow keys step a week and Home, End, Page Up and Page
   Down jump (it is a slider for screen readers). All keeps that strip empty, so
   both views put the axis and the week numbers in exactly the same place.
-  Each line's light top edge and dark underside are one soft gradient across
-  the strip, laid along its slant (`snapshotRibbonShade`), not thin strips
-  under a pixel high, which stepped from pixel row to pixel row along a slope.
   Axis margins are kept tight. On phones the key is a compact
   four-column grid; on wider screens its rows come out even (eleven names go
   six and five, not eight and three: `snapshotKeyColumns`). The key lists everyone in current-standings order;
