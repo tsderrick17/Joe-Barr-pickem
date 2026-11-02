@@ -774,9 +774,11 @@ the condition genuinely recurs.
 
 The Grading page uses every data point recorded, not a window of recent rows. The
 polling histogram (new game finals by retry rung) reads every score run that
-recorded a rung since the start of the season, in pages, and says which date it
-starts from (rungs were first recorded on Sep 21; earlier checks did not record
-one and are not guessed). "Last score sync" reads score runs only, Worker activity
+recorded a rung on the current polling schedule (`SCORE_LADDER_VERSION`; a rung number means a
+different time after kickoff under a different schedule), in pages, and says which date it
+starts from. It draws the 5- and 10-minute windows as shares of every final and gives the later
+windows (20 minutes and up, and the last check) as one count below the chart. Earlier checks did
+not record the schedule and are not guessed. "Last score sync" reads score runs only, Worker activity
 shows the latest run of each worker, and the efficiency totals are season to date.
 
 The Grading charts share the dashboard's selected period and adaptive refresh:

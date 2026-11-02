@@ -49,7 +49,7 @@ function dashboard(state) {
   const games = quiet ? GAMES.map((game) => ({ ...game, status: "final", state: "final", finalizedAt: T(30), score: "21-17", picks: { total: 8, pending: 0, graded: 8, visible: true }, survivor: { total: 4, pending: 0 } })) : GAMES.map((game, index) => (attention && index === 0 ? { ...game, needsAttention: true, status: "final", state: "awaiting grade" } : game));
   return {
     checkedAt: NOW, creditUsage: CREDIT_USAGE, ladderCoverage: { since: T(200), runs: 40 },
-    ladderSummary: [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 0, 0, 0, 1, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
+    ladderSummary: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240, 0].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 3, 1, 0, 0, 0, 1, 0, 0, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
     status: attention ? "attention" : "healthy",
     periods: [{ id: "p5", displayName: "Week 5", status: quiet ? "complete" : "active", type: "regular" }, { id: "p4", displayName: "Week 4", status: "complete", type: "regular" }],
     period: { id: "p5", displayName: "Week 5", type: "regular", status: quiet ? "complete" : "active" },
@@ -67,7 +67,7 @@ function dashboard(state) {
     attention: attention ? [{ id: "a1", severity: "warning", title: "Score sync failed", detail: "The last two score checks failed; a retry is scheduled." }, { id: "a2", severity: "info", title: "Final awaiting grade", detail: "IND at WAS is final and waiting to be graded." }] : [],
     audit: Array.from({ length: 6 }, (_, index) => ({ id: `e${index}`, action: ["final_score_imported", "lines_locked", "picks_graded"][index % 3], entityType: "game", details: {}, createdAt: T(index + 1) })),
     workerRuns: [{ jobType: "scores", status: attention ? "failed" : "success", startedAt: T(attention ? 3 : 0.1), completedAt: T(attention ? 3 : 0.1), error: attention ? "Provider timed out" : null }, { jobType: "line_lock", status: "success", startedAt: T(10), completedAt: T(10), error: null }],
-    cadence: { firstCheckMinutesAfterKickoff: 150, cronIntervalMinutes: 5, regularRetryMinutes: [5, 10, 20], playoffRetryMinutes: [3, 5, 10], note: "Sample cadence note." },
+    cadence: { firstCheckMinutesAfterKickoff: 175, cronIntervalMinutes: 5, regularRetryMinutes: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240], playoffRetryMinutes: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240], note: "Sample cadence note." },
     scorePolls: Array.from({ length: 4 }, (_, index) => ({ startedAt: T(index + 1), completedAt: T(index + 1), status: "success", eligibleGames: 3, completedGamesFound: 1, finalScoresImported: 1, newFinals: 1, requestsLast: 1, pollingMode: "regular", quotaProtected: false })),
     incidents: attention ? [{ id: "i1", title: "Score provider timeouts", severity: "warning", detectedAt: T(3), lastSeenAt: T(0.2), resolvedAt: null }, { id: "i0", title: "Late line lock", severity: "info", detectedAt: T(100), lastSeenAt: T(99), resolvedAt: T(98) }] : [{ id: "i0", title: "Late line lock", severity: "info", detectedAt: T(100), lastSeenAt: T(99), resolvedAt: T(98) }],
     reminders: [{ id: "r1", category: "weekly", title: "Week 6 Slate is open", scheduledFor: IN(70), status: "scheduled" }],

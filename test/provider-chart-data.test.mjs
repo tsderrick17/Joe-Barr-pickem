@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
+import { SCORE_RETRY_MINUTES } from "../src/lib/score-retry-ladder.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
 
 test("monthly credits include charged failures, zero days and only the current month through now", () => {
   const run = (at, cost, extra = {}) => ({ started_at: at, status: "failed", job_type: "scores", details: { requestsLast: cost, ...extra } });
@@ -151,6 +153,7 @@ test("score checks follow the retry ladder and the measured first-hour share", (
   const ladder = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
   const base = expectedScoreChecks(ladder, 0.9);
   assert.deepEqual([base.firstHour, base.nextHour, base.cooldown], [6, 3, 1]);
+  assert.deepEqual([base.nextHourGaps, base.cooldownGap], [[20, 20, 20], 60]);
   // 5% use 6 + a 1-3 check mean of 2; 5% reach the cooldown check (6 + 3 + 1).
   // A normal settle time centered in the hour averages 3.5 checks for the first-hour group.
   assert.ok(Math.abs(base.checks - (0.9 * 3.5 + 0.05 * 8 + 0.05 * 10)) < 1e-5);
@@ -158,10 +161,21 @@ test("score checks follow the retry ladder and the measured first-hour share", (
   assert.ok(expectedScoreChecks(ladder, 0.6).checks > base.checks);
 });
 
+test("the forecast reads the real ladder: first-hour windows start before +60 minutes, the next hour's from +60 to +120, and its words name the real gaps", () => {
+  const expected = expectedScoreChecks(SCORE_RETRY_MINUTES, 0.9);
+  assert.deepEqual([expected.firstHour, expected.nextHour, expected.cooldown], [10, 3, 1], "windows starting at +0, 5, ..., 35, 45, 55; then +75, 95, 115; then one later check");
+  assert.deepEqual([expected.nextHourGaps, expected.cooldownGap], [[20, 20, 60], 120]);
+  assert.ok(Math.abs(expected.checks - 7.73) < 0.01, "about 7.7 expected checks a slate on the 175-minute, five-minute ladder (4.05 on the old one)");
+  const text = monthlyCreditSeries([], new Date("2026-09-10T12:00:00Z"), [{ kickoff_at: "2026-09-12T17:00:00Z" }]).forecastAssumptions;
+  assert.match(text, /7\.7 expected provider checks/);
+  assert.match(text, /next 3 checks \(20 and 60-minute gaps\)/);
+  assert.doesNotMatch(text, /twenty-minute|60-minute cooldown/, "no wording left over from the old ladder");
+});
+
 test("the first-hour share is a 15-day average of settled slates, with a 90% prior until there is history", () => {
   const now = new Date("2026-10-20T00:00:00Z");
   const slate = (kickoff, minutesAfterPollingStart) => {
-    const pollingStart = Date.parse(kickoff) + 170 * 60000;
+    const pollingStart = Date.parse(kickoff) + FIRST_SCORE_CHECK_DELAY_MINUTES * 60000;
     return [{ kickoff_at: kickoff, finalized_at: new Date(pollingStart + minutesAfterPollingStart * 60000).toISOString() }];
   };
   assert.deepEqual(firstHourSettleShare([], now), { share: 0.9, slates: 0, measured: false });
