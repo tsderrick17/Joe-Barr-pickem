@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-01 - The starting points show only when a week rests at the left edge
+
+The 6 Wk starting points were placed at the nearest whole week, so halfway between two weeks they jumped in a week from the edge and left a gap. They now sit at the whole week at or before the window's left edge: they show only when the window rests on a week, and slide out of view as it moves. The position rail's thumb is also clamped to its track, so the bounce past either end no longer carries it outside.
+
 ## 2026-11-01 - Lines start from a point at the chart's first week
 
 The owner found the 6 Wk start sloppy: players on the same score started as a fanned-out stack of lanes. Every line now starts as a single point at the first week shown (the nearest whole week to the window's left edge in 6 Wk, week 0 otherwise), so shared scores fan out of one point the way All fans out of zero. The playoff chart's starting totals pinch the same way.

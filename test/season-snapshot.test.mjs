@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -297,6 +297,17 @@ test("the axis runs from the lowest score to one or two wins over the leader, in
   // Lowest 8, leader 25: 8, 14, 20, 26 rather than an axis from 4 to 28.
   assert.deepEqual(snapshotAxis(8, 25, false), { low: 8, ceiling: 26, tickStep: 6 });
   assert.deepEqual(snapshotAxis(0, 0, false), { low: 0, ceiling: 2, tickStep: 1 }, "an empty chart still has a top line");
+});
+
+test("the 6 Wk position thumb stays inside its track, even in the bounce past either end", () => {
+  // Fourteen weeks at 60 pixels a week in an 360-pixel window: 840 pixels wide, scrolling from 0 to 480.
+  assert.deepEqual(snapshotThumb(0, 360, 840), { left: 0, width: 360 / 840 });
+  assert.deepEqual(snapshotThumb(480, 360, 840), { left: 480 / 840, width: 360 / 840 });
+  assert.deepEqual(snapshotThumb(-90, 360, 840), { left: 0, width: 360 / 840 }, "pulled past the first week");
+  const past = snapshotThumb(570, 360, 840);
+  assert.equal(past.left + past.width, 1, "pulled past the latest week it ends where the track ends");
+  assert.deepEqual(snapshotThumb(0, 300, 300), { left: 0, width: 1 }, "a chart that fits fills the track");
+  assert.deepEqual(snapshotThumb(0, 0, 0), { left: 0, width: 1 }, "before the chart is measured");
 });
 
 test("the 6 Wk axis is always for a full six-week stretch: the ends and the bounce past them never shorten it", () => {
