@@ -138,7 +138,7 @@ Week 8 Sunday: 3:50, 4:10, 4:30 PM). `test/score-gate-replay.test.mjs` replays t
 function. If the gate's cron schedule changes, change that constant with it.
 Each run also records which check finalized each game (`details.finalGameRungs`), and the Commissioner
 game inspector shows it for a finished game, beside how long after kickoff it was graded ("Graded: 3h 41m
-after kickoff · check 4 of 12 (10-min window)"). Games graded before this was recorded, or by hand, show only
+after kickoff · check 4 of 16 (5-min window)"). Games graded before this was recorded, or by hand, show only
 the time after kickoff. A "credit" on that page is one Odds API request unit: a score check costs 2, and the
 day shown is the UTC day, so Sunday-night games count toward Monday.
 The Bowl Pool gate wakes every 15 minutes inside Supabase, but invokes Vercel
