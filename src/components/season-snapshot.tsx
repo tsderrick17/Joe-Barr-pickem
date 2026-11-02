@@ -270,7 +270,8 @@ function SnapshotChart({
   // Painting runs bottom lane first so the line that was ahead most recently is on top.
   const stacked = snapshotStackOrder(weeks, players, baseline);
   const rank = new Map(stacked.map((player, index) => [player.id, index]));
-  const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y)
+  // The 6-week view starts its lines at the nearest whole week of its left edge, where the window rests.
+  const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y, 3, scrolls ? Math.round(edges.from) : 0)
     .sort((a, b) => (rank.get(b.playerId) ?? 0) - (rank.get(a.playerId) ?? 0));
 
   return <section className="season-snapshot-chart">
