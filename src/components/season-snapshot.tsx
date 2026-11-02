@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRibbonShade, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -336,17 +336,10 @@ function SnapshotChart({
             </g>)}
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
-              {ribbons.map((ribbon, index) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
+              {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
                 <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
-                {/* The light edge on top and the dark one underneath are one soft gradient across the strip, not thin strips of their own,
-                    which stepped from pixel row to pixel row along every slope. */}
-                <path d={snapshotRibbonPath(ribbon.points)} fill={`url(#${clip}-shade-${index})`} />
-                <linearGradient gradientUnits="userSpaceOnUse" id={`${clip}-shade-${index}`} {...snapshotRibbonShade(ribbon.points)}>
-                  <stop offset="0" stopColor="#ffffff" stopOpacity="0.34" />
-                  <stop offset="0.42" stopColor="#ffffff" stopOpacity="0" />
-                  <stop offset="0.58" stopColor="#102030" stopOpacity="0" />
-                  <stop offset="1" stopColor="#102030" stopOpacity="0.32" />
-                </linearGradient>
+                <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
+                <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
               </g>)}
             </g></g>
           </svg>

@@ -117,23 +117,6 @@ export function snapshotRibbonPath(points, upper = 0, lower = 1) {
 }
 
 /**
- * The gradient that shades a ribbon, as the two points it runs between (in the chart's own coordinates). The ribbon is a
- * slanted strip, so a plain top-to-bottom gradient would shade it across its slant; this one runs straight across the strip,
- * the top edge at its start and the bottom edge at its end, whatever the slope. The soft shading replaces thin bevel strips
- * less than a pixel high, whose edges stepped from pixel row to pixel row along every slope.
- * @param {Array<{ x: number, top: number, bottom: number }>} points  the strip's two ends
- */
-export function snapshotRibbonShade(points) {
-  const [from, to] = points;
-  const slope = ((to.top + to.bottom) - (from.top + from.bottom)) / 2 / (to.x - from.x);
-  const thickness = Math.max(from.bottom - from.top, to.bottom - to.top);
-  const run = thickness / (1 + slope * slope);
-  const x = (from.x + to.x) / 2;
-  const y = (from.top + from.bottom + to.top + to.bottom) / 4;
-  return { x1: x + (slope * run) / 2, y1: y - run / 2, x2: x - (slope * run) / 2, y2: y + run / 2 };
-}
-
-/**
  * How many columns the player key uses so its rows come out even: as many as fit across, then the fewest that still
  * need the same number of rows. Eleven names that would fit eight to a row go six and five, not eight and three.
  * @param {number} count  names in the key
