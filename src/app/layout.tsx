@@ -12,6 +12,7 @@ import PullToRefresh from "@/components/pull-to-refresh";
 import { navTabsScript } from "@/lib/nav-tabs";
 import { earlyReadScript, sessionStorageKey } from "@/lib/early-read.js";
 import FootballWarmup from "@/components/football-warmup";
+import StuckLinkGuard from "@/components/stuck-link-guard";
 
 const architectsDaughter = localFont({
   src: "../../public/fonts/architects-daughter.ttf",
@@ -60,6 +61,7 @@ export default function RootLayout({
       <body className={`${architectsDaughter.variable} ${graduate.variable} ${cormorant.variable}`}>
         <FootballWarmup />
         <PullToRefresh />
+        <StuckLinkGuard />
         <SiteNav />
         <AddToHomeScreen variant="banner" />
         <TurnOnNotifications />

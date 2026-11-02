@@ -19,6 +19,10 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-02 - A page left open for hours must not go dead
+
+The owner opened the Home Screen app after the phone had been locked all night: buttons and tabs on the page worked, but the Standings, Slate, Players and Email center links did nothing. The page was from before several overnight deployments and the site had no way to know that: no deployment id was set, so Next could not tell the old page from the new server, and a tapped link waited for page data that could not be used. Two fixes, one under the other: each production build now carries its own deployment id (the commit), so Next detects the mismatch on the next tap and reloads that page fresh; and a small guard (`stuck-link-guard.tsx`) loads a tapped link's page normally if the page has not moved four seconds after the tap, whatever the cause. A page the player left, or went back from, is left alone. Browser tests: a link whose page data never arrives still loads, a working link is never reloaded, and going back is not undone.
+
 ## 2026-11-01 - The starting points show only when a week rests at the left edge
 
 The 6 Wk starting points were placed at the nearest whole week, so halfway between two weeks they jumped in a week from the edge and left a gap. They now sit at the whole week at or before the window's left edge: they show only when the window rests on a week, and slide out of view as it moves. The position rail's thumb is also clamped to its track, so the bounce past either end no longer carries it outside.
