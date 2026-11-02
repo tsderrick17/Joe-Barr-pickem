@@ -224,9 +224,11 @@ measure database requests or end-to-end route time.
   Standings rail (the Survivor Table's width) on the same parchment, and each
   face hides at the edge-on moment so no mirrored text shows.
   An All / 6 Wk toggle (regular season only) sits between the title and the
-  flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
-  at a time with the y-axis standing still beside it, and always opens on the
-  most recent six weeks. It draws exactly the six weeks in view: the lines and
+  flip button. 6 Wk shows exactly six weeks, moves one whole week at a time with
+  the y-axis standing still beside it, and always opens on the most recent six
+  weeks. The position rail is the only way to move the weeks: the graph itself
+  does not scroll under a finger, a wheel, a drag or the keys, so a flick can
+  never shift it. It draws exactly the six weeks in view: the lines and
   the grid stop at the window's first and last week, and every line starts
   there as a point, so players who share a score fan out of one point (as All
   does from zero). The starting points show only when the window rests on a
@@ -237,13 +239,21 @@ measure database requests or end-to-end route time.
   starts. In both views the bottom line is the lowest score shown and the top
   line is one or two wins over the leader, never on it; every line is numbered
   and evenly spaced in whole wins, six lines at most (of the two possible tops,
-  the one that splits into more lines). A slim position rail in the strip above
+  the one that splits into more lines). A position rail in the strip above
   the top line replaces the browser's scroll bar, as wide as the grid lines,
-  its thumb always inside the track, even in the bounce past either end;
-  All keeps that strip empty, so both views put the axis and the week numbers
-  in exactly the same place.
+  its thumb always inside the track, even in the bounce past either end. The
+  bar fills the strip (8 px); the part that takes a press reaches well below it
+  so a thumb can catch it; the pointer stays an ordinary arrow and the thumb
+  swells a little under it instead. Dragging or pressing lands on the nearest
+  week; with focus the arrow keys step a week and Home, End, Page Up and Page
+  Down jump (it is a slider for screen readers). All keeps that strip empty, so
+  both views put the axis and the week numbers in exactly the same place.
+  Each line's light top edge and dark underside are one soft gradient across
+  the strip, laid along its slant (`snapshotRibbonShade`), not thin strips
+  under a pixel high, which stepped from pixel row to pixel row along a slope.
   Axis margins are kept tight. On phones the key is a compact
-  four-column grid. The key lists everyone in current-standings order;
+  four-column grid; on wider screens its rows come out even (eleven names go
+  six and five, not eight and three: `snapshotKeyColumns`). The key lists everyone in current-standings order;
   pressing a name hides or shows that person, the axis and stacking recompute
   for whoever remains, and hovering a name or line highlights one player. The
   playoff chart starts with players out of the playoff race hidden. The

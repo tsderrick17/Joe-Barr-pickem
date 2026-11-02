@@ -117,6 +117,48 @@ export function snapshotRibbonPath(points, upper = 0, lower = 1) {
 }
 
 /**
+ * The gradient that shades a ribbon, as the two points it runs between (in the chart's own coordinates). The ribbon is a
+ * slanted strip, so a plain top-to-bottom gradient would shade it across its slant; this one runs straight across the strip,
+ * the top edge at its start and the bottom edge at its end, whatever the slope. The soft shading replaces thin bevel strips
+ * less than a pixel high, whose edges stepped from pixel row to pixel row along every slope.
+ * @param {Array<{ x: number, top: number, bottom: number }>} points  the strip's two ends
+ */
+export function snapshotRibbonShade(points) {
+  const [from, to] = points;
+  const slope = ((to.top + to.bottom) - (from.top + from.bottom)) / 2 / (to.x - from.x);
+  const thickness = Math.max(from.bottom - from.top, to.bottom - to.top);
+  const run = thickness / (1 + slope * slope);
+  const x = (from.x + to.x) / 2;
+  const y = (from.top + from.bottom + to.top + to.bottom) / 4;
+  return { x1: x + (slope * run) / 2, y1: y - run / 2, x2: x - (slope * run) / 2, y2: y + run / 2 };
+}
+
+/**
+ * How many columns the player key uses so its rows come out even: as many as fit across, then the fewest that still
+ * need the same number of rows. Eleven names that would fit eight to a row go six and five, not eight and three.
+ * @param {number} count  names in the key
+ * @param {number} width  room across, in pixels
+ * @param {number} minItem  the narrowest a name's box may be
+ * @param {number} gap  space between boxes
+ */
+export function snapshotKeyColumns(count, width, minItem, gap) {
+  const fit = Math.max(1, Math.floor((width + gap) / (minItem + gap)));
+  const rows = Math.max(1, Math.ceil(count / fit));
+  return Math.max(1, Math.ceil(count / rows));
+}
+
+/**
+ * Where a drag on the position rail puts the 6-week view: the week boundary nearest the pointer, never past either end.
+ * @param {number} target  the wanted scroll position, in pixels
+ * @param {number} step  pixels per week
+ * @param {number} furthest  the most the chart can scroll
+ */
+export function snapshotRailStop(target, step, furthest) {
+  if (!(step > 0)) return 0;
+  return Math.min(Math.max(0, furthest), Math.max(0, Math.round(target / step) * step));
+}
+
+/**
  * The lowest and highest totals the shown players reach between two points of the timeline, measured in weeks from the
  * baseline (0) and allowed to fall between weeks: where a line crosses an edge of the view counts, so the range moves
  * smoothly as the view scrolls. A week a player has no score for carries their previous total forward.

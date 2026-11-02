@@ -251,25 +251,21 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   min-width: 0;
   overflow: hidden;
 }
-/* The browser's own scroll bar would sit on the week numbers and look nothing like the pad: it is hidden, and the
-   position rail above the chart's top line takes its place. */
-.season-snapshot-plot-scroll.is-windowed {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-.season-snapshot-plot-scroll.is-windowed::-webkit-scrollbar { display: none; }
+/* In the 6-week view the chart is wider than its window, but nothing scrolls it directly: no finger, wheel, drag or key moves the
+   weeks (a flick of the graph used to change them by accident). The position rail above the chart's top line is the only way, and the
+   page moves the chart for it. The browser's own scroll bar never shows, so it cannot sit on the week numbers. */
+.season-snapshot-plot-scroll.is-windowed { user-select: none; -webkit-user-select: none; }
 /* In the strip above the axis's top line, as wide as the grid lines: the y-axis numbers stay clear on its left, and it
-   ends where the lines end on its right. */
-.season-snapshot-rail { cursor: pointer; left: 30px; padding: 0 0 4px; position: absolute; right: 14px; top: 0; touch-action: none; z-index: 1; }
-.season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 5px; position: relative; }
-.season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; cursor: grab; position: absolute; top: 0; }
-.season-snapshot-plot-scroll:focus-visible { outline: 2px solid var(--blue-50); outline-offset: 2px; }
+   ends where the lines end on its right. The thin track fills the strip; the part of the rail that takes a press reaches
+   further down, so it is easy to catch with a thumb. The pointer stays an ordinary arrow: the thumb swells a little instead. */
+.season-snapshot-rail { cursor: default; left: 30px; outline: none; padding: 0 0 12px; position: absolute; right: 14px; top: 0; touch-action: none; user-select: none; -webkit-user-select: none; z-index: 1; }
+.season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 8px; position: relative; }
+.season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; position: absolute; top: 0; transition: box-shadow .12s ease; }
+.season-snapshot-rail:hover .season-snapshot-rail-thumb,
+.season-snapshot-rail.is-dragging .season-snapshot-rail-thumb { box-shadow: 0 0 0 1px var(--themed-text-2); }
+.season-snapshot-rail:focus-visible .season-snapshot-rail-track { outline: 2px solid var(--blue-50); outline-offset: 2px; }
 .season-snapshot-plot-track { position: relative; }
 .season-snapshot-plot-track svg { display: block; max-width: none; }
-/* One notch per week: the view always lands on an exact six-week window. */
-.season-snapshot-snap { height: 1px; pointer-events: none; position: absolute; scroll-snap-align: start; top: 0; width: 1px; }
 .season-snapshot-week-label { color: #536077; font: 800 10px/1 Arial, sans-serif; letter-spacing: .12em; margin: .15rem 0 0; padding-left: 30px; text-align: center; text-transform: uppercase; }
 
 /* All / 6 Wk sits between the title and the flip button. */
@@ -331,7 +327,8 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .season-snapshot-key {
   display: grid;
   gap: .3rem .35rem;
-  grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr));
+  /* The page works out how many names go across so the rows come out even (--key-columns); until then, as many as fit. */
+  grid-template-columns: repeat(var(--key-columns, auto-fill), minmax(6.6rem, 1fr));
   min-width: 0;
 }
 .season-snapshot-key .season-snapshot-key-row { margin-bottom: 0; }
