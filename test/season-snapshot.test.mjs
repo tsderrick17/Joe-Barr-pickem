@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
 import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
@@ -227,9 +228,9 @@ test("the chart is held until it can change: while picks await grading, while a 
   const pending = state(sunday + HOUR, [pick("sun1", "pending"), pick("sun2", "pending")]);
   assert.equal(snapshotFreshForMs(sunday + HOUR, [pending]), HOUR, "capped at an hour");
   // Close to that moment it is checked at the score-sync pace.
-  assert.equal(snapshotFreshForMs(late + 170 * MINUTE + MINUTE, [state(late + 170 * MINUTE + MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 2 * MINUTE);
+  assert.equal(snapshotFreshForMs(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE + MINUTE, [state(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE + MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 2 * MINUTE);
   // Exactly on time, the wait is the time remaining, never less than the grade pace.
-  assert.equal(snapshotFreshForMs(late + 170 * MINUTE - 30 * MINUTE, [state(late + 140 * MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 30 * MINUTE);
+  assert.equal(snapshotFreshForMs(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE - 30 * MINUTE, [state(late + (FIRST_SCORE_CHECK_DELAY_MINUTES - 30) * MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 30 * MINUTE);
   // Everything graded but a player has an open slot: held until the last kickoff (an hour at most).
   const open = state(mondayNight - 90 * MINUTE, [pick("sun1", "win")]);
   assert.equal(snapshotFreshForMs(mondayNight - 90 * MINUTE, [open]), HOUR);

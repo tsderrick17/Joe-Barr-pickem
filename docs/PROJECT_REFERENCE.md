@@ -617,9 +617,10 @@ may enrich spreads but cannot override canonical schedule assignments.
   final due, a week to open, picks to settle, its recorded next handoff,
   Survivor or playoff day-start time, or the hourly safety run) and spends no
   provider credit unless a game's durable retry time is due. Regular-season and playoff games
-  become eligible 170 minutes after official kickoff and use the same fixed
-  10/10/10/10/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
-  the final 240-minute window reserved for emergencies. A retry gap is the real gap between two checks:
+  become eligible 175 minutes after official kickoff and use the same fixed
+  5/5/5/5/5/5/5/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
+  the 60-, 120- and 240-minute windows reserved for emergencies. After the last window no more
+  automatic checks follow (the overdue alert and the Commissioner's button take over). The database gate wakes the worker every five minutes. A retry gap is the real gap between two checks:
   the retry timer is stamped from the gate tick the run was called for, not from the run's start a few
   seconds later (`nextScoreCheckAt`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
 - Remaining credits do not change the normal cadence. Repeated polling pauses

@@ -328,7 +328,7 @@ there for context when reviewing whether a retry actually recovered the system.
 
 The fixed retry ladder below is the only score-polling policy. There is no polling simulator or suggested plan, and nothing here changes the cadence.
 
-The live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
+The live cadence: the first NFL score check is eligible 175 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 5 minutes, and unfinished games follow seven 5-minute windows, two 10-minute windows, three 20-minute windows, then emergency windows of 60, 120 and 240 minutes. After the last window the game is not checked automatically again: the overdue alert (6 hours after kickoff) tells you, and the sync-scores button still works. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
 
 Provider cost plots credits per settled game as a 15-day and a 30-day moving
 average (one point per exact kickoff slate; each average covers the games in the

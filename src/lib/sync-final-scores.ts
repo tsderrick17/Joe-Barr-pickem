@@ -5,6 +5,7 @@ import {
 } from "@/lib/advance-scoring-periods";
 import { checkpoint, currentExecutionContext, ExecutionCancelledError, providerSignal } from "@/lib/execution-context";
 import { FINAL_SCORE_POLLING_LIMIT_HOURS } from "@/lib/score-window";
+import { SCORE_LADDER_VERSION } from "@/lib/score-retry-ladder";
 import { decideQuotaHold, pollingModeFor, selectDueGames, selectEligibleGames } from "@/lib/score-work-plan";
 import { nextScoreCheckAt, type ScorePollingMode } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -46,6 +47,8 @@ export type ScoreSyncResult = {
   newFinals?: number;
   newFinalsByRung?: Record<string, number>;
   ladderRungs?: Record<string, number>;
+  /** Which ladder those rungs belong to (SCORE_LADDER_VERSION): rung numbers only line up within one ladder. */
+  ladderVersion?: string;
   /** The check (rung) that finalized each game this run: game id to rung, so the Grading page can say which window graded a game. */
   finalGameRungs?: Record<string, number>;
   picksGraded: number;
@@ -445,6 +448,7 @@ export async function syncFinalScores({
         newFinals: finalizedGames.length,
         newFinalsByRung,
         ladderRungs: newFinalsByRung,
+        ladderVersion: SCORE_LADDER_VERSION,
         finalGameRungs,
         picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
         picksAwaitingLine:

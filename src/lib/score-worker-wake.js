@@ -1,8 +1,8 @@
 import { easternDateTimeToUtc, easternParts } from "./eastern-time.js";
 
 /**
- * When the score worker next has time-based work, so the database gate can wake it then instead of every ten minutes.
- * Finals are not part of this: the gate sees a game that is 170 minutes past kickoff and not final by itself. These
+ * When the score worker next has time-based work, so the database gate can wake it then instead of every tick.
+ * Finals are not part of this: the gate sees a game that is FIRST_SCORE_CHECK_DELAY_MINUTES past kickoff and not final by itself. These
  * are the other duties of a run that fall due at a known time:
  *  - the weekly handoff, once the completed week has been kept visible until its handoff time;
  *  - Survivor no-pick eliminations, at the active week's final eligible kickoff;
