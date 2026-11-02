@@ -150,8 +150,8 @@ when nothing is left after the line need. So it can step back up from Minimal to
 A game the schedule says to leave alone is not checked and spends nothing; its retry timer moves to its next time (an hour on, when paused), so
 the gate stops waking the worker for it. The Commissioner's "Run score check now" button ignores the schedule, checks every due game and
 spends 2 credits a tap. Each run records its `tier`; the "new game finals by polling rung" chart counts Normal-schedule runs only, because
-a rung is a place on a schedule's list. The Performance tab's credit panel shows the schedule in force and why, and its forecast uses the
-schedules the rule would pick.
+a rung is a place on a schedule's list. The Performance tab's credit panel shows the schedule in force and why. Its month-end forecast is a
+full-operations forecast: it always prices every remaining slate on the Normal schedule and never reflects a lower one.
 
 Each successful score run records newly finalized games by ladder window. The
 Commissioner grading panel aggregates those records and shows the percentage
