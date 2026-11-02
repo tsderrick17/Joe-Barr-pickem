@@ -1,4 +1,4 @@
-import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
+import { SCORE_GATE_INTERVAL_MINUTES, SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
 
 const MINUTE = 60_000;
 
@@ -17,6 +17,14 @@ function scorePollingDelayMinutes(attempts: number) {
 }
 
 /**
+ * When a game that is still unfinished may be checked again.
+ *
+ * The database wakes the worker on a fixed clock (every SCORE_GATE_INTERVAL_MINUTES) and the worker starts a few seconds after each tick.
+ * Stamping the timer from the run's own start ("3:50:04 + 10 minutes = 4:00:04") leaves it running a few seconds past the next tick, so
+ * the game skips that tick and every gap becomes one tick longer than the ladder says. The timer is stamped from the tick the run was called
+ * for instead: 3:50:04 counts as 3:50:00, so a 10-minute gap is due at exactly 4:00:00 and the 4:00 tick checks the game. A run that starts a
+ * whole tick late costs one tick, once. A game can never be checked twice in one tick, because the gap is at least one tick.
+ *
  * A delayed or suspended game should remain visible to the Commissioner, but
  * it must not consume one provider credit every fifteen minutes indefinitely.
  */
@@ -24,9 +32,11 @@ export function nextScoreCheckAt(
   attempts: number,
   now = new Date(),
 ) {
-  const delayMinutes = scorePollingDelayMinutes(attempts);
+  const tick = SCORE_GATE_INTERVAL_MINUTES * MINUTE;
+  const delayMs = Math.max(scorePollingDelayMinutes(attempts) * MINUTE, tick);
+  const thisTick = Math.floor(now.getTime() / tick) * tick;
 
-  return new Date(now.getTime() + delayMinutes * MINUTE).toISOString();
+  return new Date(thisTick + delayMs).toISOString();
 }
 
 export function shouldHoldScorePollingForQuota(
