@@ -149,6 +149,24 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
+// The score-checking line on the Performance tab: Normal, and the three schedules the low-balance rule can switch to, each with its reason in plain words.
+for (const tier of ["normal", "lean", "minimal", "paused"] as const) {
+  for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+    test(`Commissioner score checking ${tier} day at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, "day");
+      await serve(page, tier === "normal" ? "healthy" : tier);
+      await settle(page, ".commissioner-panel-tab");
+      await page.locator(".commissioner-panel-tab").nth(1).click();
+      const section = page.locator("section[aria-label='Monthly provider credit usage']");
+      await expect(section.locator("svg").first()).toBeVisible({ timeout: 30_000 });
+      await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
+      await page.waitForTimeout(600);
+      await expect(section).toHaveScreenshot(`commissioner-score-checking-${tier}-day-${label}.png`);
+    });
+  }
+}
+
 // The provider cost chart (Performance tab): credits per game as 15- and 30-day moving averages.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner provider cost chart day at ${label}`, async ({ page }) => {

@@ -14,7 +14,7 @@ export const SCORE_LADDER_VERSION = "2026-11-five-minute";
 /**
  * How often the database's score gate wakes the worker, in minutes. It must equal the cron schedule in the migrations
  * (pg_cron job "refresh-final-nfl-scores-every-five-minutes", "*\/5 * * * *"). The worker anchors every retry timer to the tick it was
- * called for, so a retry gap in this ladder is the real gap between two checks. See nextScoreCheckAt.
+ * called for, so a retry gap in this ladder is the real gap between two checks. See nextScoreCheckTime (score-polling-tier.js).
  */
 export const SCORE_GATE_INTERVAL_MINUTES = 5;
 

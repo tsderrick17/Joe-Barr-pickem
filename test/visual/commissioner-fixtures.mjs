@@ -4,6 +4,7 @@
  * season-setup panels, plus the Players and Reminders pages. Fictional names;
  * nothing here comes from or goes to a real database.
  */
+import { chooseScoreTier } from "../../src/lib/score-polling-tier.js";
 
 export const NOW = "2026-10-04T18:30:00Z";
 const T = (hoursAgo) => new Date(Date.parse(NOW) - hoursAgo * 3_600_000).toISOString();
@@ -24,6 +25,16 @@ const DAYS = Array.from({ length: 30 }, (_, index) => {
   const credits = index % 7 === 6 ? 14 : index % 7 === 0 ? 3 : 1;
   return { date, credits, cumulative: 0, scores: Math.floor(credits * 0.6), lines: Math.floor(credits * 0.3), other: credits - Math.floor(credits * 0.6) - Math.floor(credits * 0.3), estimatedCalls: credits };
 }).map((day, index, all) => ({ ...day, cumulative: all.slice(0, index + 1).reduce((sum, item) => sum + item.credits, 0) }));
+
+// The score-checking line on the Performance tab, for each tier: the rule's own sentence for sample numbers (4 game days left, 12 credits of lines).
+const TIER_NEEDS = { lineNeedCredits: 12, leanNeedCredits: 41, minimalNeedCredits: 27, gameDaysLeft: 4 };
+const TIER_PLANS = {
+  normal: chooseScoreTier({ usedCredits: 88, remainingCredits: 412, ...TIER_NEEDS }),
+  lean: chooseScoreTier({ usedCredits: 441, remainingCredits: 59, ...TIER_NEEDS }),
+  minimal: chooseScoreTier({ usedCredits: 456, remainingCredits: 44, ...TIER_NEEDS }),
+  paused: chooseScoreTier({ usedCredits: 489, remainingCredits: 11, ...TIER_NEEDS }),
+};
+const tierPlanFor = (state) => TIER_PLANS[state] ?? TIER_PLANS.normal;
 
 const CREDIT_USAGE = {
   monthLabel: "October 2026", trackedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
@@ -48,7 +59,7 @@ function dashboard(state) {
   const quiet = state === "quiet";
   const games = quiet ? GAMES.map((game) => ({ ...game, status: "final", state: "final", finalizedAt: T(30), score: "21-17", picks: { total: 8, pending: 0, graded: 8, visible: true }, survivor: { total: 4, pending: 0 } })) : GAMES.map((game, index) => (attention && index === 0 ? { ...game, needsAttention: true, status: "final", state: "awaiting grade" } : game));
   return {
-    checkedAt: NOW, creditUsage: CREDIT_USAGE, ladderCoverage: { since: T(200), runs: 40 },
+    checkedAt: NOW, creditUsage: { ...CREDIT_USAGE, tierPlan: tierPlanFor(state) }, ladderCoverage: { since: T(200), runs: 40 },
     ladderSummary: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240, 0].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 3, 1, 0, 0, 0, 1, 0, 0, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
     status: attention ? "attention" : "healthy",
     periods: [{ id: "p5", displayName: "Week 5", status: quiet ? "complete" : "active", type: "regular" }, { id: "p4", displayName: "Week 4", status: "complete", type: "regular" }],
@@ -86,7 +97,7 @@ const HEALTH = (state) => ({
   status: state === "attention" ? "attention" : "healthy", problems: state === "attention" ? ["Score checks have failed twice in a row."] : [],
   latestSuccessfulLocks: { started_at: T(10), completed_at: T(10), status: "success" }, latestSuccessfulScores: { started_at: T(state === "attention" ? 3 : 0.1), completed_at: T(state === "attention" ? 3 : 0.1), status: "success" },
   scoreCandidates: state === "quiet" ? 0 : 2, scoreProviderFailureStreak: state === "attention" ? 2 : 0, scoreProviderRetryAt: state === "attention" ? IN(0.1) : null, scoreCheckStatus: state === "attention" ? "retrying" : state === "quiet" ? "idle" : "scheduled",
-  scheduleProviderCircuit: null, scheduleProviderCooldownActive: false, reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, providerAllowance: 455,
+  scheduleProviderCircuit: null, scheduleProviderCooldownActive: false, reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, providerAllowance: 455, scoreTier: tierPlanFor(state),
   retention: { candidates: 0, cutoff: T(24 * 365) }, criticalWorkers: { healthy: state !== "attention", messages: state === "attention" ? ["The score worker last failed."] : [] },
 });
 const PREFLIGHT = (state) => ({

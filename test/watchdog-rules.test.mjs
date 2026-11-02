@@ -35,30 +35,38 @@ test("watchdog alerts the Commissioner when ten distinct invalid PINs are tried"
   }]);
 });
 
-// Below the 50-credit reserve the score worker stops spending credits on purpose, so "scores are stalled" would be a false alarm; the one alert that
-// is raised instead says that the credits are the reason.
+// When the score worker is paused for the month's credits it stops on purpose, so "scores are stalled" would be a false alarm; the one alert that
+// is raised instead says that the credits are the reason. The tier (Normal, Lean, Minimal, paused) comes from score-polling-tier.js.
+const pausedTier = { tier: "paused", message: "Paused: 12 credits left and the rest of the month's official lines need about 15 credits. The Run score check now button still works." };
 const lowCredits = (overrides = {}) => healthy({
-  scoreChecksDueNow: 3, providerAllowance: 12,
-  providerCreditSnapshot: { used: 488, remaining: 12, limit: 500, reportedAt: "2026-08-20T10:01:00Z" },
+  scoreChecksDueNow: 3, providerAllowance: 12, scoreTier: pausedTier,
   latestScores: { status: "failed", started_at: "2026-08-20T10:00:00Z", completed_at: "2026-08-20T10:01:00Z" },
   ...overrides,
 });
 const evaluateAt = (health, now = "2026-08-20T13:00:00Z", bootstrap = completeBootstrap) => evaluateWatchdogSignals({ health, bootstrap, preflightChecks: [{ label: "Cron", passed: true }], now: new Date(now) });
 
-test("low provider credits raise one alert that names the credits, not a stalled-scores alarm", () => {
+test("paused score checks raise one alert that names the credits, not a stalled-scores alarm", () => {
   assert.deepEqual(evaluateAt(lowCredits()), [{
-    key: "odds-credits-below-reserve", severity: "critical",
-    title: "Score provider credits are almost used up",
-    detail: "Only 12 Odds API credits are left this month (50 are kept in reserve). Final-score checks are paused to protect them, so NFL games will not be graded automatically until the credits renew on the 1st or the plan is upgraded.",
+    key: "score-polling-paused", severity: "critical",
+    title: "Score checks are paused to protect the official lines",
+    detail: `${pausedTier.message} NFL games will not be graded automatically until the credits renew on the 1st. "Run score check now" under Emergency manual controls still works (2 credits a tap).`,
   }]);
-  assert.match(evaluateAt(lowCredits({ providerAllowance: 1 }))[0].detail, /Only 1 Odds API credit is left/);
 });
 
-test("the credits alert is quiet at the reserve, with no reported balance, off-season, and about a balance from an earlier month", () => {
-  assert.deepEqual(evaluateAt(healthy({ providerAllowance: 50, providerCreditSnapshot: { used: 450, remaining: 50, limit: 500, reportedAt: "2026-08-20T10:01:00Z" } })), [], "exactly at the reserve is not below it");
-  assert.deepEqual(evaluateAt(healthy({ providerAllowance: null, providerCreditSnapshot: null })), [], "a balance that was never reported says nothing");
+test("Lean and Minimal are a heads-up, not an emergency: every game is still graded, only later", () => {
+  for (const [tier, name] of [["lean", "Lean"], ["minimal", "Minimal"]]) {
+    const scoreTier = { tier, message: `${name}: 31 credits are free for scores after the lines, and Lean needs about 30 credits for the 2 game days left.` };
+    const signals = evaluateAt(healthy({ scoreTier }));
+    assert.deepEqual(signals.map((signal) => [signal.key, signal.severity, signal.title]), [["score-polling-reduced", "warning", `Score checks are on the ${name} schedule to save credits`]]);
+    assert.match(signals[0].detail, /only later than usual; Normal checking returns when the credits renew on the 1st/);
+  }
+});
+
+test("the score-tier alerts are quiet on Normal, with no tier reported, and after the season is over", () => {
+  assert.deepEqual(evaluateAt(healthy({ scoreTier: { tier: "normal", message: "Normal: 45 credits used." } })), []);
+  assert.deepEqual(evaluateAt(healthy({ providerAllowance: null, providerCreditSnapshot: null })), [], "no tier reported says nothing");
   assert.deepEqual(evaluateAt(lowCredits(), "2026-08-20T13:00:00Z", { ...completeBootstrap, seasonState: "complete" }), [], "after the Super Bowl nobody is waiting for grades");
-  assert.deepEqual(evaluateAt(lowCredits(), "2026-09-01T00:05:00Z"), [], "credits renew on the 1st: last month's low balance is out of date");
+  assert.deepEqual(evaluateAt(healthy({ scoreTier: { tier: "lean", message: "Lean: ..." } }), "2026-08-20T13:00:00Z", { ...completeBootstrap, seasonState: "complete" }), []);
 });
 
 test("watchdog emits only actionable line, scoring, queue, schedule, and configuration incidents", () => {

@@ -3,6 +3,7 @@ import { getLineLock } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
 import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
+import { chooseScoreTier, LINE_NEED_CUSHION_CREDITS, LOW_BALANCE_USED_CREDITS, SCORE_TIER_SCHEDULES } from "./score-polling-tier.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 function dateKeyInZone(value, timeZone) {
@@ -151,7 +152,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const allDays = Array.from({ length: daysInMonth }, (_, index) => ({
     date: new Date(start + index * 86400000).toISOString(), credits: 0, cumulative: 0,
     scores: 0, lines: 0, other: 0, estimatedCalls: 0,
-    forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0, forecastRefreshes: 0, forecastLockFetches: 0,
+    forecast: 0, forecastTier: null, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0, forecastRefreshes: 0, forecastLockFetches: 0,
   }));
   const daysByKey = new Map(allDays.map((day) => [day.date.slice(0, 10), day]));
   for (const run of runs) {
@@ -166,11 +167,14 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   }
   let cumulative = 0;
   for (const day of allDays) { cumulative += day.credits; day.cumulative = cumulative; }
-  const scoreRuns = runs.filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
-  const scoreCredits = scoreRuns.reduce((sum, run) => sum + providerRequestCost(run), 0);
-  const scoreCostPerCall = scoreRuns.length ? scoreCredits / scoreRuns.length : 2;
-  const lineRuns = runs.filter((run) => (run.job_type === "line_locks" || run.job_type === "odds") && providerRequestCost(run) > 0);
-  const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
+  const paidRuns = (kind) => {
+    const all = runs.filter((run) => kind(run) && providerRequestCost(run) > 0);
+    const thisMonth = all.filter((run) => Date.parse(run.completed_at ?? run.started_at) >= start);
+    return thisMonth.length ? thisMonth : all;
+  };
+  const averageCost = (list, fallback) => list.length ? list.reduce((sum, run) => sum + providerRequestCost(run), 0) / list.length : fallback;
+  const scoreCostPerCall = averageCost(paidRuns((run) => run.job_type === "scores"), 2);
+  const lineCostPerCall = averageCost(paidRuns((run) => run.job_type === "line_locks" || run.job_type === "odds"), 1);
   const settle = firstHourSettleShare(games, now);
   const expected = expectedScoreChecks(retryMinutes, settle.share);
   const expectedChecks = expected.checks;
@@ -184,7 +188,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     if (!day) continue;
     day.forecastGames += slate.games.length;
     day.forecastSlates += 1;
-    day.forecastScores += expectedChecks * scoreCostPerCall;
   }
   // Line requests: the 7 AM Eastern pre-lock refresh runs every day, and each
   // distinct lock moment makes one lock-time fetch on the Eastern day it falls
@@ -206,8 +209,40 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     const key = day.date.slice(0, 10);
     if (key > todayKey || (key === todayKey && todayRefreshPending)) day.forecastRefreshes = 1;
     day.forecastLines = (day.forecastRefreshes + day.forecastLockFetches) * lineCostPerCall;
-    day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   }
+  // Score checks are priced the way the worker would run them: Normal until LOW_BALANCE_USED_CREDITS are used, then the lighter tier the
+  // low-balance rule would pick for what is left of the month, decided day by day with the credits the forecast has spent so far.
+  const provider = latestProviderCreditSnapshot(runs);
+  const reportedThisMonth = provider !== null && provider.timestamp >= start && provider.timestamp <= now.getTime();
+  const providerLimit = provider?.limit ?? 500;
+  const checksByTier = {
+    normal: expectedChecks,
+    lean: expectedScoreChecks(SCORE_TIER_SCHEDULES.lean.gapMinutes, settle.share).checks,
+    minimal: expectedScoreChecks(SCORE_TIER_SCHEDULES.minimal.gapMinutes, settle.share).checks,
+  };
+  const futureDays = allDays.filter((day) => day.date.slice(0, 10) >= todayKey);
+  const decideTier = (fromIndex, used) => {
+    const rest = futureDays.slice(fromIndex);
+    const slates = rest.reduce((sum, day) => sum + day.forecastSlates, 0);
+    return chooseScoreTier({
+      usedCredits: used,
+      remainingCredits: Math.max(0, providerLimit - used),
+      lineNeedCredits: rest.reduce((sum, day) => sum + day.forecastLines, 0) + LINE_NEED_CUSHION_CREDITS,
+      leanNeedCredits: slates * checksByTier.lean * scoreCostPerCall,
+      minimalNeedCredits: slates * checksByTier.minimal * scoreCostPerCall,
+      gameDaysLeft: rest.filter((day) => day.forecastSlates > 0).length,
+    });
+  };
+  const usedNow = reportedThisMonth ? provider.used : cumulative;
+  const tierPlan = { ...decideTier(0, usedNow), reportedThisMonth };
+  let usedForecast = usedNow;
+  futureDays.forEach((day, index) => {
+    const tier = decideTier(index, usedForecast).tier;
+    day.forecastTier = tier;
+    day.forecastScores = tier === "paused" ? 0 : day.forecastSlates * checksByTier[tier] * scoreCostPerCall;
+    usedForecast += day.forecastScores + day.forecastLines;
+  });
+  for (const day of allDays) day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   let forecastCumulative = cumulative;
   for (const day of allDays) {
     if (day.date.slice(0, 10) < todayKey) continue;
@@ -229,13 +264,13 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const sundayAverageCredits = regularSundayKeys.length
     ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
     : null;
-  const provider = latestProviderCreditSnapshot(runs);
+  const reducedTiers = [...new Set(futureDays.map((day) => day.forecastTier).filter((tier) => tier && tier !== "normal"))];
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.`,
-    forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks,
+    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.${reducedTiers.length ? ` Past ${LOW_BALANCE_USED_CREDITS} credits used the forecast prices score checks on the ${reducedTiers.map((tier) => SCORE_TIER_SCHEDULES[tier]?.label ?? tier).join(" and ")} schedule${reducedTiers.length > 1 ? "s" : ""}, as the low-balance rule would.` : ""}`,
+    forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks, tierPlan,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
     remaining: provider?.remaining ?? null,
