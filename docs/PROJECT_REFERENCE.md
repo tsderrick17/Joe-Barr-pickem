@@ -244,7 +244,10 @@ measure database requests or end-to-end route time.
   its thumb always inside the track, even in the bounce past either end. The
   bar fills the strip (8 px); the part that takes a press reaches well below it
   so a thumb can catch it; the pointer stays an ordinary arrow and the thumb
-  swells a little under it instead. Dragging or pressing lands on the nearest
+  swells a little instead, only while a mouse is over it or a finger is on it
+  (a touch screen has no hover swell, so a tap never leaves the rail swollen).
+  The 8 px bar is centered between the masthead's rule and the top grid line.
+  Dragging or pressing lands on the nearest
   week; with focus the arrow keys step a week and Home, End, Page Up and Page
   Down jump (it is a slider for screen readers). All keeps that strip empty, so
   both views put the axis and the week numbers in exactly the same place.

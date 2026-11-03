@@ -257,12 +257,16 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .season-snapshot-plot-scroll.is-windowed { user-select: none; -webkit-user-select: none; }
 /* In the strip above the axis's top line, as wide as the grid lines: the y-axis numbers stay clear on its left, and it
    ends where the lines end on its right. The thin track fills the strip; the part of the rail that takes a press reaches
-   further down, so it is easy to catch with a thumb. The pointer stays an ordinary arrow: the thumb swells a little instead. */
-.season-snapshot-rail { cursor: default; left: 30px; outline: none; padding: 0 0 12px; position: absolute; right: 14px; top: 0; touch-action: none; user-select: none; -webkit-user-select: none; z-index: 1; }
+   further down, so it is easy to catch with a thumb. The pointer stays an ordinary arrow: the thumb swells a little instead, only while a
+   mouse is over it or a finger is on it (a touch screen leaves :hover stuck after a tap, so it has no hover swell).
+   The 8px track is centered in the open space between the masthead's rule and the top grid line: that space is the masthead's bottom margin
+   (.55rem, .7rem from 640px) plus the 10px above the line, so the rail starts half of (margin - 2px) above the chart. */
+.season-snapshot-rail { cursor: default; left: 30px; outline: none; padding: 0 0 12px; position: absolute; right: 14px; top: calc(1px - .275rem); touch-action: none; user-select: none; -webkit-user-select: none; z-index: 1; }
+@media (min-width: 640px) { .season-snapshot-rail { top: calc(1px - .35rem); } }
 .season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 8px; position: relative; }
 .season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; position: absolute; top: 0; transition: box-shadow .12s ease; }
-.season-snapshot-rail:hover .season-snapshot-rail-thumb,
 .season-snapshot-rail.is-dragging .season-snapshot-rail-thumb { box-shadow: 0 0 0 1px var(--themed-text-2); }
+@media (hover: hover) { .season-snapshot-rail:hover .season-snapshot-rail-thumb { box-shadow: 0 0 0 1px var(--themed-text-2); } }
 .season-snapshot-rail:focus-visible .season-snapshot-rail-track { outline: 2px solid var(--blue-50); outline-offset: 2px; }
 .season-snapshot-plot-track { position: relative; }
 .season-snapshot-plot-track svg { display: block; max-width: none; }

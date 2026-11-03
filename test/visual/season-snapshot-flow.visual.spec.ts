@@ -362,3 +362,65 @@ test("the player key's rows come out even at every width, eleven names or eight"
   await page.setViewportSize({ width: 390, height: 1400 });
   await expect.poll(lines).toEqual([4, 4, 3]);
 });
+
+// The 6 Wk rail's thin track is centered in the open space between the masthead's rule and the top grid line, at every width.
+for (const width of [390, 700, 1280]) {
+  test(`the 6 Wk rail track is centered between the masthead rule and the top line at ${width}px`, async ({ page }) => {
+    await open(page);
+    await page.setViewportSize({ width, height: 1400 });
+    await flipButton(page).click();
+    await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
+    await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+    await expect(page.locator(".season-snapshot-rail-track")).toBeVisible();
+    await page.waitForTimeout(600);   // the axis glides to its range
+    const { above, below } = await page.evaluate(() => {
+      const track = document.querySelector(".season-snapshot-rail-track")!.getBoundingClientRect();
+      const rule = document.querySelector(".season-snapshot .pickem-ledger-masthead")!.getBoundingClientRect().bottom;
+      const topLine = Math.min(...[...document.querySelectorAll(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)")].map((line) => line.getBoundingClientRect().top));
+      return { above: track.top - rule, below: topLine - track.bottom };
+    });
+    expect(above, "clear of the rule").toBeGreaterThan(2);
+    expect(below, "clear of the top line").toBeGreaterThan(2);
+    expect(Math.abs(above - below), `${above.toFixed(1)}px above, ${below.toFixed(1)}px below`).toBeLessThanOrEqual(1);
+  });
+}
+
+// A touch screen leaves :hover stuck on whatever was tapped, until the next tap elsewhere. The rail's swell is for a mouse over it or a finger on it
+// (the dragging state), never for that stuck hover. The browser is made to treat the rail as hovered, as it would be after a tap on a phone.
+async function holdHover(page: Page, selector: string) {
+  const client = await page.context().newCDPSession(page);
+  await client.send("DOM.enable");
+  await client.send("CSS.enable");
+  const { root } = await client.send("DOM.getDocument");
+  const { nodeId } = await client.send("DOM.querySelector", { nodeId: root.nodeId, selector });
+  await client.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
+}
+async function openSixWeeks(page: Page) {
+  await open(page);
+  await flipButton(page).click();
+  await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
+  await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+  await expect(page.locator(".season-snapshot-rail-thumb")).toBeVisible();
+}
+const thumbRing = (page: Page) => page.locator(".season-snapshot-rail-thumb").evaluate((element) => getComputedStyle(element).boxShadow);
+
+test("with a mouse, the rail thumb swells while the pointer is over it", async ({ page }) => {
+  await openSixWeeks(page);
+  expect(await thumbRing(page), "at rest").toBe("none");
+  await holdHover(page, ".season-snapshot-rail");
+  expect(await thumbRing(page), "hovered").not.toBe("none");
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true });
+  test("a tap leaves the rail thumb at rest once the finger lifts: it swells only while dragging", async ({ page }) => {
+    await openSixWeeks(page);
+    expect(await page.evaluate(() => matchMedia("(hover: hover)").matches), "a touch screen cannot hover").toBe(false);
+    expect(await thumbRing(page), "at rest").toBe("none");
+    const box = (await page.locator(".season-snapshot-rail-thumb").boundingBox())!;
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.locator(".season-snapshot-rail.is-dragging")).toHaveCount(0);
+    await holdHover(page, ".season-snapshot-rail");   // what the tap leaves behind
+    expect(await thumbRing(page), "stuck hover after the tap").toBe("none");
+  });
+});
