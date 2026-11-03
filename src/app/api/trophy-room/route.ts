@@ -32,7 +32,7 @@ async function buildTrophyRoom() {
   const [players, seasons, periods, survivorEntries, championships, bowlSeasons, bowlChampionships, games, lines, picks, weekPicks] = await Promise.all([
     supabaseAdmin.from("players").select("id, first_name"),
     supabaseAdmin.from("seasons").select("id, year"),
-    supabaseAdmin.from("scoring_periods").select("id, season_id, display_order, period_type, status, max_picks"),
+    supabaseAdmin.from("scoring_periods").select("id, season_id, display_name, display_order, period_type, status, max_picks"),
     supabaseAdmin.from("survivor_entries").select("player_id, eliminated_scoring_period_id"),
     supabaseAdmin.from("pool_championships").select("season_year, pool, player_id"),
     supabaseAdmin.from("bowl_pool_seasons").select("id, season_year"),
@@ -65,6 +65,6 @@ async function buildTrophyRoom() {
   // a week counts for the streaks as soon as every game in it is final, not only once the pool has moved on to the next week; a player's own week
   // counts sooner still, as soon as both of their picks are graded (see playerWeeks)
   const settledPeriodIds = settledPeriods(games.data ?? []);
-  const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [], settledPeriodIds });
+  const streaks = weeklyStreaks({ seasons: seasons.data ?? [], periods: periods.data ?? [], picks: weekPicks.data ?? [], settledPeriodIds, games: games.data ?? [] });
   return { ...stats, players: stats.players.map((row: { playerId: string }) => ({ ...row, streaks: streaks.get(row.playerId) ?? null })) };
 }

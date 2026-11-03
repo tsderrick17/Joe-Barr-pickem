@@ -173,3 +173,25 @@ test("without a score or a spread nothing is counted as a half-point game or a p
   });
   assert.deepEqual([rows[0].halfWins, rows[0].halfLosses, rows[0].pushes], [0, 0, 0]);
 });
+
+test("the Other Stats figures are regular season only: a playoff pick never counts as a half-point game or a push", () => {
+  const gameRows = [
+    { id: "a", kickoff_at: "2026-09-10T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+    { id: "b", kickoff_at: "2027-01-10T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+    { id: "c", kickoff_at: "2027-01-11T00:00:00Z", home_team_id: "H", away_team_id: "A", home_score: 24, away_score: 20 },
+  ];
+  const lineRows = [
+    { game_id: "a", favorite_team_id: "H", locked_spread: 3.5 },   // regular season: covers by half a point
+    { game_id: "b", favorite_team_id: "H", locked_spread: 3.5 },   // Wild Card: covers by half a point (not counted)
+    { game_id: "c", favorite_team_id: "H", locked_spread: 4 },     // Wild Card: a push (not counted)
+  ];
+  const pickRows = [
+    { id: "1", player_id: "ann", game_id: "a", scoring_period_id: "p26", selected_team_id: "H", result: "win" },
+    { id: "2", player_id: "ann", game_id: "b", scoring_period_id: "wild", selected_team_id: "H", result: "win" },
+    { id: "3", player_id: "ann", game_id: "c", scoring_period_id: "wild", selected_team_id: "H", result: "loss" },
+  ];
+  const ann = buildAllTimeStats({ players, seasons, periods, games: gameRows, lines: lineRows, picks: pickRows }).players[0];
+  assert.deepEqual([ann.halfWins, ann.halfLosses, ann.pushes], [1, 0, 0], "only the regular-season game");
+  assert.equal(ann.ab, 3, "the Record view still counts every graded pick");
+  assert.equal(ann.h, 2);
+});
