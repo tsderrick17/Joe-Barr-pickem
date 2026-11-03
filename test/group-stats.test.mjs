@@ -171,6 +171,21 @@ test("the five teams with the best hit rate come beside the five most picked, ti
   assert.deepEqual(withTeams.teamsByHitRate.map((team) => team.teamId), ["x", "z", "w", "y"], "x is 2-0, z is 1-0, then the two 0-1 teams by name");
   assert.deepEqual(withTeams.teams.map((team) => team.teamId), ["x", "w", "y", "z"], "the most picked list is unchanged: x twice, then the rest by name");
   assert.ok(withTeams.players.every((player) => player.teamsByHitRate.length === player.teams.length), "each player gets both lists");
+  // The same table turned over: the least picked (ties by name) and the lowest hit rate (ties to the team picked more often, then by name).
+  assert.deepEqual(withTeams.teamsLeastPicked.map((team) => team.teamId), ["w", "y", "z", "x"], "three teams picked once (by name), then x picked twice");
+  assert.deepEqual(withTeams.teamsByLowestHitRate.map((team) => team.teamId), ["w", "y", "x", "z"], "the two 0-1 teams by name, then x (2-0, picked more) ahead of z (1-0)");
+  assert.ok(withTeams.players.every((player) => player.teamsLeastPicked.length === player.teams.length && player.teamsByLowestHitRate.length === player.teams.length), "each player gets the lowest lists too");
+  assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsLeastPicked, []);
+  // Only five come back, even when more teams were picked.
+  const many = buildGroupStats({
+    players, seasons, periods,
+    games: Array.from({ length: 7 }, (_, i) => ({ id: `m${i}`, home_team_id: `t${i}`, away_team_id: "opp", home_score: 20, away_score: 10 })),
+    lines: Array.from({ length: 7 }, (_, i) => ({ game_id: `m${i}`, favorite_team_id: `t${i}`, locked_spread: 3 })),
+    picks: Array.from({ length: 7 }, (_, i) => ({ id: `mp${i}`, player_id: "ann", game_id: `m${i}`, scoring_period_id: "s25-w1", selected_team_id: `t${i}`, result: i < 3 ? "win" : "loss" })),
+  });
+  assert.equal(many.teamsLeastPicked.length, 5);
+  assert.equal(many.teamsByLowestHitRate.length, 5);
+  assert.deepEqual(many.teamsByLowestHitRate.map((team) => team.hitRate), [0, 0, 0, 0, 1], "the four 0-1 teams come first, then one of the 1-0 teams");
   assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsByHitRate, []);
 });
 

@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-03 - Performance teams table: press the chosen column again for the least picked / lowest hit rate
+
+Owner request. The Commissioner Performance teams table still opens on the five most picked teams, and the Picked / Hit rate headers still switch between the
+five most picked and the five best hit rate. Pressing the header that is already chosen a second time now turns the table over: the five least picked, or the
+five with the lowest hit rate (the arrow flips from ▼ to ▲, the heading says "Least picked teams" / "Lowest hit rate teams"); a third press turns it back, and
+choosing the other column starts at the top again. Ties: least picked goes by team name; lowest hit rate goes to the team picked more often, then by name. Both
+lists ride in the stats payload beside the existing two, for the league and for each player. Nothing else on the page changed.
+
+**Reason:** The owner wanted to see the teams the league avoids and the teams it misses on, with no new control: the same header, pressed once more.
+
 ## 2026-11-03 - Season Snapshot rail: centered in its strip, and swollen only while touched
 
 Owner request. The 6 Wk position rail's 8 px bar sat low in the open space between the masthead's rule and the top grid line (about 9 px of room above it, 2 px below); it is now centered in that space at every width. The thumb's small swell used the browser's hover state, which a phone leaves stuck on after a tap until the next tap elsewhere, so a touched rail stayed swollen; the swell now applies to hover only on devices that can hover (a mouse) and, on every device, only while the rail is being dragged.

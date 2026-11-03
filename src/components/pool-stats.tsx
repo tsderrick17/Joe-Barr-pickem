@@ -12,7 +12,7 @@ import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type
  * the same height: five teams (the most picked, or the best hit rate), the favorite / underdog / pick'em and home/away splits, and season by season.
  * Private to the Commissioner. (Streaks are the Trophy Room's.)
  */
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
+type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
 type PlayerView = View & { playerId: string; name: string };
 type Stats = View & { players: PlayerView[] };
 
@@ -22,7 +22,9 @@ export default function PoolStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState("");
   const [chosen, setChosen] = useState(LEAGUE);
-  const [teamSort, setTeamSort] = useState<TeamSort>("picked");
+  // Which five teams the table shows: the column chosen, most or least (pressing the chosen column again turns it over).
+  const [teamSort, setTeamSort] = useState<{ key: TeamSort; descending: boolean }>({ key: "picked", descending: true });
+  const chooseTeamSort = (key: TeamSort) => setTeamSort((current) => (current.key === key ? { key, descending: !current.descending } : { key, descending: true }));
 
   useEffect(() => {
     let disposed = false;
@@ -71,9 +73,9 @@ export default function PoolStats() {
         <div className="pool-stats-trio">
           {view.teams.length ? (
             <div className="pool-stats-block">
-              <h3>{teamSort === "picked" ? "Most picked teams" : "Best hit rate teams"}</h3>
-              <p>{teamSort === "picked" ? `The five teams ${who} took most often.` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit most often.`}</p>
-              <TeamsTable onSort={setTeamSort} sort={teamSort} teams={teamSort === "picked" ? view.teams : view.teamsByHitRate} />
+              <h3>{teamSort.key === "picked" ? (teamSort.descending ? "Most picked teams" : "Least picked teams") : (teamSort.descending ? "Best hit rate teams" : "Lowest hit rate teams")}</h3>
+              <p>{teamSort.key === "picked" ? `The five teams ${who} took ${teamSort.descending ? "most" : "least"} often.` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit ${teamSort.descending ? "most" : "least"} often.`}</p>
+              <TeamsTable descending={teamSort.descending} onSort={chooseTeamSort} sort={teamSort.key} teams={teamSort.key === "picked" ? (teamSort.descending ? view.teams : view.teamsLeastPicked) : (teamSort.descending ? view.teamsByHitRate : view.teamsByLowestHitRate)} />
             </div>
           ) : null}
 
