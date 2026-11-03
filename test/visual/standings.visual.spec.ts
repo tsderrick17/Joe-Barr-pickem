@@ -180,7 +180,7 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
     await settle(page);
     await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
     const names = page.locator(".season-snapshot-plot-track svg text");
-    await expect(names).toHaveText(["WILD", "CARD", "DIVISIONAL", "CONFERENCE", "CHAMPS", "SUPER", "BOWL"]);
+    await expect(names).toHaveText(["WILD", "CARD", "DIVISIONAL", "CONF", "CHAMP", "SUPER", "BOWL"]);
     await page.waitForTimeout(1200);
     await settled(page);
     // Words that sit side by side on a line (a round's name against its neighbor's) never overlap or leave the chart.
@@ -194,6 +194,10 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
         expect(apart, "no two words of the round names overlap").toBe(true);
       }
     }
+    // The one-line name (Divisional) is centered vertically between the two lines of the others: its middle is the middle of WILD / CARD.
+    const middle = (box: { top: number; bottom: number }) => (box.top + box.bottom) / 2;
+    expect(Math.abs(middle(boxes[2]) - (boxes[0].top + boxes[1].bottom) / 2), "Divisional is centered between the lines of the other names").toBeLessThanOrEqual(1);
+    expect(Math.abs(boxes[0].top - boxes[3].top), "the first lines of two-line names sit level").toBeLessThanOrEqual(1);
     await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-four-rounds-${label}.png`);
   });
 }

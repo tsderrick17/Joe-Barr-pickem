@@ -26,7 +26,7 @@ desktop: the back of the pad is always the front's size, so the chart follows it
 once every game of it is graded (everyone picks the whole round), so from Wild Card kickoff to Monday night the Playoffs half, which the Snapshot opens on, was an
 axis with no lines. It now opens on Season until a playoff round is charted, and pressing Playoffs says "Fills in when the Wild Card is final." over the empty
 plot. (2) The round names were cut to eight letters ("WILD CAR", "DIVISION", "CONFEREN", "SUPER BO") and on a phone the last two touched. They are now
-written in full on one or two short lines (WILD / CARD, DIVISIONAL, CONFERENCE / CHAMPS, SUPER / BOWL), with the room under the playoff chart growing by one
+written on one or two short lines (WILD / CARD, DIVISIONAL centered vertically between the two lines of the others, CONF / CHAMP, SUPER / BOWL), with the room under the playoff chart growing by one
 line only when a name takes two; the regular-season chart and every text size are unchanged. Left alone: with "hide eliminated rows" on, very late in the
 playoffs the pad is short, and turning it over makes the card grow to the chart's minimum height.
 

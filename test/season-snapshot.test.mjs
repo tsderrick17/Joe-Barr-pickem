@@ -374,7 +374,7 @@ test("a week's name under the chart: its number, or a playoff round in full on o
   assert.deepEqual(snapshotWeekLines("Week 18"), ["18"]);
   assert.deepEqual(snapshotWeekLines("Wild Card"), ["WILD", "CARD"]);
   assert.deepEqual(snapshotWeekLines("Divisional Round"), ["DIVISIONAL"]);
-  assert.deepEqual(snapshotWeekLines("Conference Championships"), ["CONFERENCE", "CHAMPS"]);
+  assert.deepEqual(snapshotWeekLines("Conference Championships"), ["CONF", "CHAMP"]);
   assert.deepEqual(snapshotWeekLines("Super Bowl"), ["SUPER", "BOWL"]);
   assert.deepEqual(snapshotWeekLines("Round"), ["ROUND"], "a name with nothing left after the trimming still shows something");
 });

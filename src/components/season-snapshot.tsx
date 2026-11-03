@@ -242,7 +242,7 @@ function SnapshotChart({
     return () => observer.disconnect();
   }, []);
   const { height } = size;
-  // Room under the plot for the week names: one line, or two when a playoff round's name takes two.
+  // Room under the plot for the week names: one line, or two when a playoff round's name takes two (a one-line name sits centered between them).
   const labels = weeks.map((week) => snapshotWeekLines(week.label));
   const bottom = PLOT_BOTTOM + (Math.max(1, ...labels.map((lines) => lines.length)) - 1) * LABEL_LINE;
   const viewport = Math.max(120, size.width - AXIS_WIDTH);
@@ -333,7 +333,7 @@ function SnapshotChart({
             </g>
             {weeks.map((week, index) => <g key={week.id}>
               <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - bottom} />
-              {labels[index].map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5 - (labels[index].length - 1 - lineIndex) * LABEL_LINE}>{line}</text>)}
+              {labels[index].map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5 - (bottom - PLOT_BOTTOM) / 2 + (lineIndex - (labels[index].length - 1) / 2) * LABEL_LINE}>{line}</text>)}
             </g>)}
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
