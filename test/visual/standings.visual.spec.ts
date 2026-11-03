@@ -143,6 +143,65 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
   });
 }
 
+// Wild Card weekend: no playoff round is final yet, so the Playoffs half has nothing to draw. The Snapshot opens on Season instead, and
+// pressing Playoffs says when it fills in rather than showing an empty chart.
+for (const label of ["phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot on Wild Card weekend at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 0) }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    const half = page.getByRole("group", { name: "Season half shown" });
+    await expect(half.getByRole("button", { name: "Season", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".season-snapshot-empty")).toHaveCount(0);
+    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
+    await half.getByRole("button", { name: "Playoffs" }).click();
+    await expect(page.getByText("Fills in when the Wild Card is final.")).toBeVisible();
+    await expect(page.locator(".season-snapshot-ribbon")).toHaveCount(0);
+    await page.waitForTimeout(1200);
+    await settled(page);
+    await expect(page.locator(".season-snapshot-layout")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-wild-card-weekend-${label}.png`);
+    // Back to Season and to Playoffs again: the choice is the viewer's while no round is charted.
+    await half.getByRole("button", { name: "Season", exact: true }).click();
+    await expect(page.locator(".season-snapshot-empty")).toHaveCount(0);
+  });
+}
+
+// All four playoff rounds charted: every round is named in full (one or two short lines), none cut short and none touching the next,
+// even on a phone where each round has under a fifth of the width.
+for (const label of ["phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot playoffs with all four rounds at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 4) }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    const names = page.locator(".season-snapshot-plot-track svg text");
+    await expect(names).toHaveText(["WILD", "CARD", "DIVISIONAL", "CONF", "CHAMP", "SUPER", "BOWL"]);
+    await page.waitForTimeout(1200);
+    await settled(page);
+    // Words that sit side by side on a line (a round's name against its neighbor's) never overlap or leave the chart.
+    const boxes = await names.evaluateAll((texts) => texts.map((text) => { const box = text.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    const chart = await page.locator(".season-snapshot-plot-scroll").boundingBox();
+    for (const [index, box] of boxes.entries()) {
+      expect(box.left, `word ${index} stays inside the chart on the left`).toBeGreaterThanOrEqual(chart!.x);
+      expect(box.right, `word ${index} stays inside the chart on the right`).toBeLessThanOrEqual(chart!.x + chart!.width + 0.5);
+      for (const other of boxes.slice(index + 1)) {
+        const apart = box.right <= other.left || other.right <= box.left || box.bottom <= other.top || other.bottom <= box.top;
+        expect(apart, "no two words of the round names overlap").toBe(true);
+      }
+    }
+    // The one-line name (Divisional) is centered vertically between the two lines of the others: its middle is the middle of WILD / CARD.
+    const middle = (box: { top: number; bottom: number }) => (box.top + box.bottom) / 2;
+    expect(Math.abs(middle(boxes[2]) - (boxes[0].top + boxes[1].bottom) / 2), "Divisional is centered between the lines of the other names").toBeLessThanOrEqual(1);
+    expect(Math.abs(boxes[0].top - boxes[3].top), "the first lines of two-line names sit level").toBeLessThanOrEqual(1);
+    await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-four-rounds-${label}.png`);
+  });
+}
+
 test("once Survivor has a champion, even the champion's ticket owes only the two Pick'em selections", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await signIn(page, "day");

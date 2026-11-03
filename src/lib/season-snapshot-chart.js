@@ -40,6 +40,20 @@ export function snapshotStackOrder(weeks, players, baseline = {}) {
     .map((entry) => entry.player);
 }
 
+/**
+ * What is written under a week's line: a regular week's number, or a playoff round's name in full, on one line or two
+ * (WILD / CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL) so four rounds sit side by side on a phone without a name
+ * cut short or touching its neighbor.
+ * @param {string} label  the scoring period's name
+ * @returns {string[]}
+ */
+export function snapshotWeekLines(label) {
+  const week = label.match(/week\s*(\d+)/i);
+  if (week) return [week[1]];
+  const words = label.replace(/\b(round|playoffs?)\b/gi, " ").replace(/\bconference\b/gi, "Conf").replace(/\bchampionships?\b/gi, "Champ").trim().split(/\s+/).filter(Boolean);
+  return words.length ? words.slice(0, 2).map((word) => word.toUpperCase()) : [label.slice(0, 10).toUpperCase()];
+}
+
 /** Lower-ranked colors are painted widest first; leaders remain visible inside. */
 export function snapshotLayers(weeks, standings, startWinsById = {}) {
   const segments = [];

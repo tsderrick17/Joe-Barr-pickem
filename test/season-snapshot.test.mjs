@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
-import { snapshotAxis, snapshotKeyColumns, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotWeekLines, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -35,6 +35,41 @@ test("the active week waits until its last pick settles, then plots everyone and
       { id: "wild", label: "Wild Card", complete: false, scores: [{ playerId: "al", wins: 3 }, { playerId: "tyler", wins: 2 }] },
     ],
   });
+});
+
+test("the playoff chart grows one round at a time, in order, and totals carry across all four rounds", () => {
+  const players = [{ id: "al" }, { id: "tyler" }];
+  const pick = (player, period, result, count = 1) => Array.from({ length: count }, () => ({ player_id: player, scoring_period_id: period, result }));
+  const picks = [
+    ...pick("al", "reg", "win"),
+    ...pick("al", "wild", "win", 3), ...pick("al", "wild", "loss"), ...pick("tyler", "wild", "win", 2), ...pick("tyler", "wild", "loss", 2),
+    ...pick("al", "div", "win", 2), ...pick("tyler", "div", "win"), ...pick("tyler", "div", "loss"),
+    // A pick still pending and a pick voided (a player out of the race) are not wins.
+    ...pick("al", "conf", "win"), ...pick("al", "conf", "pending"), ...pick("tyler", "conf", "win"), ...pick("tyler", "conf", "void"),
+    ...pick("al", "bowl", "win"), ...pick("tyler", "bowl", "void"),
+  ];
+  const stage = (statuses, settled = []) => {
+    const round = (id, name, order, status) => ({ id, display_name: name, display_order: order, period_type: "playoff", max_picks: 6, status });
+    // Listed out of order on purpose: the chart follows the season's order, not the order it was handed.
+    const periods = [
+      round("bowl", "Super Bowl", 22, statuses[3]), round("conf", "Conference Championships", 21, statuses[2]),
+      round("div", "Divisional Round", 20, statuses[1]), round("wild", "Wild Card", 19, statuses[0]),
+      { id: "reg", display_name: "Week 18", display_order: 18, period_type: "regular", max_picks: 2, status: "complete" },
+    ];
+    return buildSeasonSnapshot(periods, players, picks, new Set(settled)).playoffs;
+  };
+  const labels = (playoffs) => playoffs.map((round) => round.label);
+  const totals = (playoffs, player) => playoffs.map((round) => round.scores.find((score) => score.playerId === player).wins);
+
+  assert.deepEqual(stage(["active", "upcoming", "upcoming", "upcoming"]), [], "Wild Card weekend: the first round is not charted until it settles");
+  assert.deepEqual(labels(stage(["complete", "upcoming", "upcoming", "upcoming"])), ["Wild Card"]);
+  assert.deepEqual(labels(stage(["complete", "active", "upcoming", "upcoming"])), ["Wild Card"], "an unsettled round waits");
+  assert.deepEqual(labels(stage(["complete", "complete", "active", "upcoming"], ["conf"])), ["Wild Card", "Divisional Round", "Conference Championships"]);
+  const done = stage(["complete", "complete", "complete", "complete"]);
+  assert.deepEqual(labels(done), ["Wild Card", "Divisional Round", "Conference Championships", "Super Bowl"], "all four, in the season's order");
+  assert.deepEqual(totals(done, "al"), [4, 6, 7, 8], "one regular-season win, then 3, 2, 1 and 1: pending and voided picks never count");
+  assert.deepEqual(totals(done, "tyler"), [2, 3, 4, 4], "a voided Super Bowl pick leaves the total where it was");
+  assert.ok(done.every((round) => round.complete));
 });
 
 test("an active regular week is plotted for everyone together, including a card with two losses", () => {
@@ -367,4 +402,14 @@ test("the 6 Wk rail puts the view on the nearest week and never past either end"
   assert.equal(snapshotRailStop(-500, step, furthest), 0, "the bounce past the first week");
   assert.equal(snapshotRailStop(99999, step, furthest), furthest, "and past the latest");
   assert.equal(snapshotRailStop(200, 0, furthest), 0, "no week width, no movement");
+});
+
+test("a week's name under the chart: its number, or a playoff round in full on one or two short lines", () => {
+  assert.deepEqual(snapshotWeekLines("Week 7"), ["7"]);
+  assert.deepEqual(snapshotWeekLines("Week 18"), ["18"]);
+  assert.deepEqual(snapshotWeekLines("Wild Card"), ["WILD", "CARD"]);
+  assert.deepEqual(snapshotWeekLines("Divisional Round"), ["DIVISIONAL"]);
+  assert.deepEqual(snapshotWeekLines("Conference Championships"), ["CONF", "CHAMP"]);
+  assert.deepEqual(snapshotWeekLines("Super Bowl"), ["SUPER", "BOWL"]);
+  assert.deepEqual(snapshotWeekLines("Round"), ["ROUND"], "a name with nothing left after the trimming still shows something");
 });
