@@ -184,6 +184,7 @@ for (const label of ["phone-360", "phone-390", "desktop-1280"] as const) {
     await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
     const words = page.locator(".season-snapshot-plot-track svg text");
     await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
+    await expect(page.locator(".season-snapshot-start"), "once a day is final the starting dots are gone and the lines start from their points").toHaveCount(0);
     await page.waitForTimeout(1200);
     await settled(page);
     const texts = await words.allTextContents();
