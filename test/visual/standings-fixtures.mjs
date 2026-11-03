@@ -165,13 +165,20 @@ export function withElevenPlayers(home, snapshot) {
   };
 }
 
-const ROUND_NAMES = ["Wild Card", "Divisional Round", "Conference Championships", "Super Bowl"];
+// The seven Eastern game days of a usual postseason: the round each belongs to and the day it is played.
+const PLAYOFF_DAYS = [
+  ["Wild Card", "SAT"], ["Wild Card", "SUN"], ["Wild Card", "MON"],
+  ["Divisional Round", "SAT"], ["Divisional Round", "SUN"],
+  ["Conference Championships", "SUN"], ["Super Bowl", "SUN"],
+];
+// What each later game day adds for the player at the top of the order; those further down the order add less.
+const DAY_GAINS = [0, 2, 1, 2, 1, 1, 1];
 
 /**
- * Cumulative wins by week for the Season Snapshot, in a fixed order. In the playoff scenario `rounds` is how many playoff
- * rounds are final and charted (0 is Wild Card weekend, before any round is final; 4 is the whole postseason).
+ * Cumulative wins by week for the Season Snapshot, in a fixed order. In the playoff scenario `days` is how many playoff game days
+ * are final and charted (0 is Wild Card weekend before Saturday's games end; 7 is the whole postseason).
  */
-export function seasonSnapshotResponse(scenario = "", weekCount = 5, rounds = 1) {
+export function seasonSnapshotResponse(scenario = "", weekCount = 5, days = 1) {
   const scores = NAMES.map((_, playerIndex) => Array.from({ length: weekCount }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
   return {
     regular: Array.from({ length: weekCount }, (_, week) => ({
@@ -179,13 +186,13 @@ export function seasonSnapshotResponse(scenario = "", weekCount = 5, rounds = 1)
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
     playoffs: scenario === "commissioner-playoff"
-      ? ROUND_NAMES.slice(0, rounds).map((label, round) => ({
-        id: `playoff-${round + 1}`, label, complete: true,
-        // Round one lifts everyone from their regular-season total; each later round adds fewer wins to those further down the order.
+      ? PLAYOFF_DAYS.slice(0, days).map(([label, day], index) => ({
+        id: `playoff-${index + 1}`, label, day, roundDays: PLAYOFF_DAYS.filter(([round]) => round === label).length, complete: true,
+        // The first game day lifts everyone from their regular-season total; each later day adds fewer wins to those further down the order.
         scores: NAMES.map((_, playerIndex) => ({
           playerId: `p${playerIndex}`,
           wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex)
-            + Array.from({ length: round }, (_, earlier) => Math.max(0, [4, 2, 1][earlier] - Math.floor(playerIndex / 2))).reduce((sum, wins) => sum + wins, 0),
+            + DAY_GAINS.slice(0, index + 1).reduce((sum, gain) => sum + Math.max(0, gain - Math.floor(playerIndex / 2)), 0),
         })),
       }))
       : [],

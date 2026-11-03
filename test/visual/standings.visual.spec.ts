@@ -143,7 +143,7 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
   });
 }
 
-// Wild Card weekend: no playoff round is final yet, so the Playoffs half has nothing to draw. The Snapshot opens on Season instead, and
+// Wild Card weekend before Saturday's games end: no playoff game day is final yet, so the Playoffs half has nothing to draw. The Snapshot opens on Season instead, and
 // pressing Playoffs says when it fills in rather than showing an empty chart.
 for (const label of ["phone-390", "desktop-1280"] as const) {
   test(`Season Snapshot on Wild Card weekend at ${label}`, async ({ page }) => {
@@ -158,7 +158,7 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
     await expect(page.locator(".season-snapshot-empty")).toHaveCount(0);
     await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
     await half.getByRole("button", { name: "Playoffs" }).click();
-    await expect(page.getByText("Fills in when the Wild Card is final.")).toBeVisible();
+    await expect(page.getByText("Fills in once the first playoff day is final.")).toBeVisible();
     await expect(page.locator(".season-snapshot-ribbon")).toHaveCount(0);
     await page.waitForTimeout(1200);
     await settled(page);
@@ -169,36 +169,43 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
   });
 }
 
-// All four playoff rounds charted: every round is named in full (one or two short lines), none cut short and none touching the next,
-// even on a phone where each round has under a fifth of the width.
-for (const label of ["phone-390", "desktop-1280"] as const) {
-  test(`Season Snapshot playoffs with all four rounds at ${label}`, async ({ page }) => {
+// The whole postseason charted a game day at a time: seven days (Wild Card Sat, Sun, Mon; Divisional Sat, Sun; Conference Championships Sun;
+// Super Bowl Sun), each round with more than one day showing its weekdays under its lines and each round's name once under its days. No two words overlap or leave the chart,
+// even on a narrow phone where a day has under a seventh of the width, and a one-line name sits centered between the lines of the others.
+for (const label of ["phone-360", "phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot playoffs with all seven game days at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width: WIDTHS[label], height: 900 });
     await signIn(page, "day");
     await serve(page, "commissioner-playoff");
-    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 4) }));
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 7) }));
     await settle(page);
     await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
-    const names = page.locator(".season-snapshot-plot-track svg text");
-    await expect(names).toHaveText(["WILD", "CARD", "DIVISIONAL", "CONF", "CHAMP", "SUPER", "BOWL"]);
+    const words = page.locator(".season-snapshot-plot-track svg text");
+    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
     await page.waitForTimeout(1200);
     await settled(page);
-    // Words that sit side by side on a line (a round's name against its neighbor's) never overlap or leave the chart.
-    const boxes = await names.evaluateAll((texts) => texts.map((text) => { const box = text.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    const texts = await words.allTextContents();
+    expect(texts.slice(0, 5), "a weekday under each game day's line, but none for a round that is only one day").toEqual(["SAT", "SUN", "MON", "SAT", "SUN"]);
+    expect(texts.slice(5).join(" "), "each round named once, in full").toBe("WILD CARD DIVISIONAL CONF CHAMP SUPER BOWL");
+    // Words never overlap or leave the chart.
+    const boxes = await words.evaluateAll((elements) => elements.map((element) => { const box = element.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
     const chart = await page.locator(".season-snapshot-plot-scroll").boundingBox();
     for (const [index, box] of boxes.entries()) {
       expect(box.left, `word ${index} stays inside the chart on the left`).toBeGreaterThanOrEqual(chart!.x);
       expect(box.right, `word ${index} stays inside the chart on the right`).toBeLessThanOrEqual(chart!.x + chart!.width + 0.5);
       for (const other of boxes.slice(index + 1)) {
         const apart = box.right <= other.left || other.right <= box.left || box.bottom <= other.top || other.bottom <= box.top;
-        expect(apart, "no two words of the round names overlap").toBe(true);
+        expect(apart, `words ${index} and ${boxes.indexOf(other)} do not overlap`).toBe(true);
       }
     }
-    // The one-line name (Divisional) is centered vertically between the two lines of the others: its middle is the middle of WILD / CARD.
+    // The Super Bowl is two lines (SUPER over BOWL) at every width; a name on one line is centered on the middle of those two.
     const middle = (box: { top: number; bottom: number }) => (box.top + box.bottom) / 2;
-    expect(Math.abs(middle(boxes[2]) - (boxes[0].top + boxes[1].bottom) / 2), "Divisional is centered between the lines of the other names").toBeLessThanOrEqual(1);
-    expect(Math.abs(boxes[0].top - boxes[3].top), "the first lines of two-line names sit level").toBeLessThanOrEqual(1);
-    await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-four-rounds-${label}.png`);
+    const block = (boxes.at(-2)!.top + boxes.at(-1)!.bottom) / 2;
+    for (const [index, text] of texts.entries()) {
+      if (["WILD CARD", "DIVISIONAL", "CONF CHAMP"].includes(text)) expect(Math.abs(middle(boxes[index]) - block), `${text} is centered on the lines of the other names`).toBeLessThanOrEqual(1);
+    }
+    if (texts.includes("CHAMP")) expect(Math.abs((boxes[texts.indexOf("CONF")].top + boxes[texts.indexOf("CHAMP")].bottom) / 2 - block), "CONF over CHAMP sits level with SUPER over BOWL").toBeLessThanOrEqual(1);
+    await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-all-seven-days-${label}.png`);
   });
 }
 

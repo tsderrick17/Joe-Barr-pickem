@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
-type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
+type Week = { id: string; label: string; day?: string; roundDays?: number; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
 type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
 type Range = "all" | "six";
 
@@ -61,6 +61,8 @@ function readSavedSnapshot(): Snapshot | null {
 const AXIS_WIDTH = 30;
 const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
+/** The playoff chart by game day: room for a round's name centered under its last day (SUPER, half of it, spills right of the line). */
+const PLOT_RIGHT_DAYS = 20;
 // Room over the top line for the 6 Wk position rail; All keeps the same room, so both draw the axis in the same place.
 const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
@@ -242,16 +244,25 @@ function SnapshotChart({
     return () => observer.disconnect();
   }, []);
   const { height } = size;
-  // Room under the plot for the week names: one line, or two when a playoff round's name takes two (a one-line name sits centered between them).
-  const labels = weeks.map((week) => snapshotWeekLines(week.label));
-  const bottom = PLOT_BOTTOM + (Math.max(1, ...labels.map((lines) => lines.length)) - 1) * LABEL_LINE;
+  // The playoffs are drawn a game day at a time: each day's weekday sits under its line and each round's name once under its days.
+  const byDay = weeks.length > 0 && weeks.every((week) => week.day);
+  const right = byDay ? PLOT_RIGHT_DAYS : PLOT_RIGHT;
   const viewport = Math.max(120, size.width - AXIS_WIDTH);
   const weekCount = Math.max(1, weeks.length);
   const scrolls = windowed && weeks.length > WINDOW_WEEKS;
   // In the 6-week view every week keeps a sixth of the visible width and the
   // extra weeks extend to the left; otherwise the season fits the view.
-  const step = (viewport - PLOT_LEFT - PLOT_RIGHT) / (scrolls ? WINDOW_WEEKS : weekCount);
-  const plotWidth = scrolls ? PLOT_LEFT + step * weekCount + PLOT_RIGHT : viewport;
+  const step = (viewport - PLOT_LEFT - right) / (scrolls ? WINDOW_WEEKS : weekCount);
+  const plotWidth = scrolls ? PLOT_LEFT + step * weekCount + right : viewport;
+  // Room under the plot for the names: one line, or two when a name takes two (a one-line name sits centered between them). Regular weeks
+  // and playoff rounds without days name each week under its own line; game days put the weekday on the first line and the round's name below.
+  const labels = weeks.map((week) => snapshotWeekLines(week.label));
+  const rounds = byDay ? snapshotRoundGroups(weeks).map((group, index, all) => ({
+    ...group,
+    lines: snapshotRoundLines(group.label, (group.last - group.first + 1) * step, index === all.length - 1 ? right : undefined),
+  })) : [];
+  const nameLines = byDay ? Math.max(1, ...rounds.map((round) => round.lines.length)) : Math.max(1, ...labels.map((lines) => lines.length));
+  const bottom = PLOT_BOTTOM + (nameLines - (byDay ? 0 : 1)) * LABEL_LINE;
 
   // The 6-week view always opens on the most recent six weeks.
   // The 6-week view draws exactly the weeks in view: the grid and the lines stop at the window's first and last week
@@ -296,7 +307,7 @@ function SnapshotChart({
   const target = snapshotAxis(range.min, range.max, !scrolls && !isPlayoff);
   const { low, ceiling, ticks, leaving } = useSpringAxis(target);
   const plotHeight = height - PLOT_TOP - bottom;
-  const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, PLOT_RIGHT);
+  const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, right);
   const y = (wins: number) => PLOT_TOP + plotHeight * (1 - (wins - low) / (ceiling - low));
   const drawnTicks = [...ticks.map((tick) => ({ tick, gone: false })), ...leaving.map((tick) => ({ tick, gone: true }))];
   const clip = useId().replaceAll(":", "");
@@ -329,11 +340,16 @@ function SnapshotChart({
               <clipPath id={`${clip}-window`}><rect height={height} ref={lineWindow} width={viewport - PLOT_LEFT - PLOT_RIGHT} y={0} /></clipPath>
             </> : null}
             <g clipPath={`url(#${clip}-${scrolls ? "grid" : "plot"})`}>
-              {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - PLOT_RIGHT} y1={y(tick)} y2={y(tick)} />)}
+              {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - right} y1={y(tick)} y2={y(tick)} />)}
             </g>
             {weeks.map((week, index) => <g key={week.id}>
               <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - bottom} />
-              {labels[index].map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5 - (bottom - PLOT_BOTTOM) / 2 + (lineIndex - (labels[index].length - 1) / 2) * LABEL_LINE}>{line}</text>)}
+              {byDay
+                ? (week.roundDays ?? 2) > 1 ? <text fill="#536077" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" x={x(index + 1)} y={height - 5 - nameLines * LABEL_LINE}>{week.day}</text> : null
+                : labels[index].map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5 - (bottom - PLOT_BOTTOM) / 2 + (lineIndex - (labels[index].length - 1) / 2) * LABEL_LINE}>{line}</text>)}
+            </g>)}
+            {rounds.map((round) => <g key={`${round.label}:${round.first}`}>
+              {round.lines.map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor="middle" x={(x(round.first + 1) + x(round.last + 1)) / 2} y={height - 5 - ((nameLines - 1) * LABEL_LINE) / 2 + (lineIndex - (round.lines.length - 1) / 2) * LABEL_LINE}>{line}</text>)}
             </g>)}
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
@@ -349,7 +365,7 @@ function SnapshotChart({
       {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
       {emptyNote ? <p className="season-snapshot-empty">{emptyNote}</p> : null}
     </div>
-    <p aria-hidden="true" className="season-snapshot-week-label">Week</p>
+    <p aria-hidden="true" className="season-snapshot-week-label">{byDay ? "Game day" : "Week"}</p>
   </section>;
 }
 
@@ -418,7 +434,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
       {/* The playoff chart replaces the regular-season chart; it starts from each
           player's final regular-season total. */}
       {showPlayoffs
-        ? <SnapshotChart baseline={playoffBaseline} colors={colors} emptyNote={snapshot.playoffs.length ? undefined : "Fills in when the Wild Card is final."} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
+        ? <SnapshotChart baseline={playoffBaseline} colors={colors} emptyNote={snapshot.playoffs.length ? undefined : "Fills in once the first playoff day is final."} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
     <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>

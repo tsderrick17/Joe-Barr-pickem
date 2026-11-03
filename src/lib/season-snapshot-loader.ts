@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { currentSeasonYear } from "@/lib/season";
-import { buildSeasonSnapshot, seasonSnapshotReleased, snapshotReleaseWeek } from "@/lib/season-snapshot.js";
+import { buildSeasonSnapshot, seasonSnapshotReleased, snapshotReleaseWeek, unsettledPlayoffDay } from "@/lib/season-snapshot.js";
 import { CLOSED_CHART_MS, activeWeekState, snapshotFreshForMs } from "@/lib/season-snapshot-freshness.js";
 import { readAllPages } from "@/lib/read-all-pages";
 
@@ -59,10 +59,13 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
 
   const visibleIds = periods.filter((period) => period.status === "complete" || period.status === "active").map((period) => period.id);
   const activeIds = periods.filter((period) => period.status === "active").map((period) => period.id);
+  // The playoffs are charted a game day at a time, so every playoff round that has started needs its games, not only the active week.
+  const playoffIds = periods.filter((period) => period.period_type === "playoff" && visibleIds.includes(period.id)).map((period) => period.id);
+  const gamePeriodIds = [...new Set([...activeIds, ...playoffIds])];
   const [picksResult, activeGamesResult] = await Promise.all([
     visibleIds.length ? loadPicks(visibleIds) : Promise.resolve({ data: [], error: null }),
-    activeIds.length
-      ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at").in("scoring_period_id", activeIds)
+    gamePeriodIds.length
+      ? supabaseAdmin.from("games").select("id, scoring_period_id, kickoff_at, status").in("scoring_period_id", gamePeriodIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
   if (picksResult.error || activeGamesResult.error) {
@@ -85,8 +88,15 @@ async function load(isCommissioner: boolean): Promise<SeasonSnapshotResult> {
   }));
   const activeWeekSettled = new Set(weekStates.filter((week) => week.settled).map((week) => week.periodId));
   if (releaseWeek && isCommissioner) released = activeWeekSettled.has(releaseWeek.id);
-  const snapshot = buildSeasonSnapshot(periods, everyone.filter((player) => player.active), picks, activeWeekSettled);
-  const freshForMs = snapshotFreshForMs(now, weekStates);
+  const games = activeGamesResult.data ?? [];
+  const snapshot = buildSeasonSnapshot(periods, everyone.filter((player) => player.active), picks, activeWeekSettled, games, now);
+  // An active playoff round is trusted game day by game day: what matters is when the next day's last pick could settle.
+  const playoffActive = new Set(periods.filter((period) => period.period_type === "playoff" && period.status === "active").map((period) => period.id));
+  const nextDay = playoffActive.size ? unsettledPlayoffDay({ periods, games, picks, now, playerIds: activePlayerIds }) : null;
+  const freshForMs = snapshotFreshForMs(now, [
+    ...weekStates.filter((week) => !playoffActive.has(week.periodId)),
+    ...(playoffActive.size ? [nextDay ?? { settled: true, lastKickoff: null, earliestGrade: null }] : []),
+  ]);
   return { ok: true, released, payload: { ...snapshot, colorOrder: everyone.map((player) => player.id) }, freshForMs };
 }
 

@@ -217,14 +217,25 @@ measure database requests or end-to-end route time.
   or overlapping strokes. Bands join at common week boundaries and taper to the
   zero baseline. The chart has sparse axis labels but no point callouts or
   duplicate data table. During the playoffs the playoff
-  chart replaces the regular-season chart. A playoff round is charted only
-  once it is settled (every game of the round graded), so on Wild Card weekend
-  the Playoffs half has nothing to draw: the Snapshot opens on Season until a
-  playoff round is charted, and pressing Playoffs says "Fills in when the Wild
-  Card is final." over the empty plot. A playoff round is named in full under
-  its line, on one or two short lines (WILD / CARD, DIVISIONAL, CONF /
-  CHAMP, SUPER / BOWL; a one-line name sits centered vertically between the
-  two lines of the others), never cut short or touching its neighbor. Each person has a permanent color: eleven validated hues, shuffled
+  chart replaces the regular-season chart, and it is drawn one Eastern game
+  day at a time (the same days playoff eligibility is frozen on): usually
+  seven, Wild Card Sat, Sun and Mon, Divisional Sat and Sun, Conference
+  Championships Sun, Super Bowl Sun, counted from the games on file, so a
+  moved game moves its day. A game belongs to the Eastern day it kicks off on
+  and a cancelled game is no day. A day is charted once every game of it has
+  kicked off and none of its picks is pending, and nothing after a day that is
+  not final yet is drawn. Each day's weekday sits under its line (none for a
+  round that is only one day, such as the Conference Championships) and each
+  round's name once under its days, on one line when it fits and otherwise a
+  word a line (WILD CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL; a one-line
+  name sits centered vertically between the lines of the others), never cut
+  short or touching its neighbor; the axis is titled Game day. Until the
+  first playoff day is final the Playoffs half has nothing to draw: the
+  Snapshot opens on Season, and pressing Playoffs says "Fills in once the
+  first playoff day is final." over the empty plot. A playoff round with no
+  games on file is drawn as one point. The route reads every started playoff
+  round's games, and trusts the shared chart until the next day's last pick
+  could settle. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the
   pool (inactive players keep their slot), so hiding, leaving, or joining never
   repaints anyone. The pad turns over flat; turned over, it widens to the full
