@@ -132,21 +132,60 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
   return { weeksByPlayer, histogram };
 }
 
+const NOT_PLAYED = ["postponed", "cancelled", "no_contest"];
+
+/** A playoff round that counts toward Perfect Weeks: every one but the Super Bowl (a single game, not a week). */
+const isScoredRound = (period) => period.period_type === "playoff" && period.display_name !== "Super Bowl";
+
+/**
+ * Perfect playoff rounds per player: a round in which the player won every pick the round allowed, with no loss. The round allows
+ * `max_picks` picks, or fewer when it has fewer games to play (a postponed, cancelled or no-contest game is not one). The player's own
+ * round is decided the moment those wins are in, since nothing else can change it, so it does not wait for the round to finish.
+ * @returns {Map<string, number>} playerId -> perfect rounds
+ */
+function perfectRounds({ periods, yearBySeason, picks, games }) {
+  const rounds = new Map(periods.filter((period) => isScoredRound(period) && yearBySeason.has(period.season_id)).map((period) => [period.id, period]));
+  const playable = new Map();
+  for (const game of games) {
+    if (NOT_PLAYED.includes(game.status)) continue;
+    playable.set(game.scoring_period_id, (playable.get(game.scoring_period_id) ?? 0) + 1);
+  }
+  const tallies = new Map();
+  for (const pick of picks) {
+    if (!rounds.has(pick.scoring_period_id)) continue;
+    const key = `${pick.player_id}|${pick.scoring_period_id}`;
+    const tally = tallies.get(key) ?? { playerId: pick.player_id, periodId: pick.scoring_period_id, wins: 0, losses: 0 };
+    if (pick.result === "win") tally.wins += 1;
+    else if (pick.result === "loss") tally.losses += 1;
+    tallies.set(key, tally);
+  }
+  const perfect = new Map();
+  for (const { playerId, periodId, wins, losses } of tallies.values()) {
+    const needed = Math.max(1, Math.min(rounds.get(periodId).max_picks, playable.get(periodId) ?? Infinity));
+    if (losses === 0 && wins >= needed) perfect.set(playerId, (perfect.get(playerId) ?? 0) + 1);
+  }
+  return perfect;
+}
+
 /**
  * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
- * { longest, current, endedAt }; the 2-0 streak also carries `total`, how many perfect (2-0) weeks the player has had in all. Only the periods and picks are needed.
+ * { longest, current, endedAt }. The 2-0 streak also carries `total`, how many perfect weeks the player has had in all: the regular season's
+ * 2-0 weeks plus every playoff round won pick for pick, everything but the Super Bowl. Only the streaks are regular season. Only the periods and picks are needed.
  * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
- * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string> }} input
+ * `games` (id of the period and status) tell a round how many picks it really allowed; `display_name` on the periods names the Super Bowl.
+ * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string>, games?: { scoring_period_id: string, status: string }[] }} input
  * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null, total: number }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
  */
-export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set() }) {
+export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set(), games = [] }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
   const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
-  return new Map([...weeksByPlayer].map(([playerId, weeks]) => {
+  const playoffPerfect = perfectRounds({ periods, yearBySeason, picks, games });
+  return new Map([...new Set([...weeksByPlayer.keys(), ...playoffPerfect.keys()])].map((playerId) => {
+    const weeks = weeksByPlayer.get(playerId) ?? [];
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
   }));
 }
 

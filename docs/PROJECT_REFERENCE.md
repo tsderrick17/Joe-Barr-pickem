@@ -420,9 +420,12 @@ measure database requests or end-to-end route time.
   yet" shows only for a trophy nobody has won.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
-  appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
-  view: Shutout Free Weeks in a Row and Perfect Weeks in a Row (best run, current run beneath), games decided by a half point (wins, losses, hit
-  rate) and pushes picked; A to Z by default, no places, every column sorts. The two views are one two-way switch.
+  appear only on the trophies and banners). Record view: Wins and Hit rate (every graded pick, regular season and playoffs), Perfect Weeks (every
+  perfect week of every round but the Super Bowl: a regular 2-0 week, and a playoff round in which the player won every pick it allowed with no
+  loss, 6-0 in the Wild Card round when it has six games, 4-0 in the Divisional, 2-0 in the Conference Championships; a round with fewer playable
+  games allows fewer picks), places with ties. Other Stats view is **regular season only**: Shutout Free Weeks in a Row and Perfect Weeks in a Row
+  (best run, current run beneath; regular weeks only), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
+  picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. The two views are one two-way switch.
 - Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
 - A week counts toward the weekly figures (Perfect Weeks, both streaks) once every game in it is final, not only once the pool has advanced, and
