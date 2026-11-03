@@ -226,6 +226,9 @@ const split = (wins, losses, share) => ({ ...bucket(wins, losses), share });
 const teamPicked = (teamId, name, abbreviation, wins, losses, share) => ({ teamId, name, abbreviation, ...bucket(wins, losses), share });
 /** The five teams with the best hit rate (ties to the team picked more often), as the stats route sends them beside the five most picked. */
 const byHitRate = (teams) => [...teams].sort((a, b) => b.hitRate - a.hitRate || b.picks - a.picks).slice(0, 5);
+/** The same table turned over: the five least picked (ties by name) and the five with the lowest hit rate (ties to the team picked more often). */
+const byLeastPicked = (teams) => [...teams].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
+const byLowestHitRate = (teams) => [...teams].sort((a, b) => a.hitRate - b.hitRate || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
 const leagueTeams = [
   teamPicked("kc", "Kansas City Chiefs", "KC", 236, 190, 0.095), teamPicked("buf", "Buffalo Bills", "BUF", 211, 176, 0.086),
   teamPicked("phi", "Philadelphia Eagles", "PHI", 198, 171, 0.082), teamPicked("sf", "San Francisco 49ers", "SF", 187, 169, 0.079), teamPicked("det", "Detroit Lions", "DET", 176, 150, 0.073),
@@ -235,6 +238,8 @@ export const POOL_STATS = {
   record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
   teams: leagueTeams,
   teamsByHitRate: byHitRate(leagueTeams),
+  teamsLeastPicked: byLeastPicked(leagueTeams),
+  teamsByLowestHitRate: byLowestHitRate(leagueTeams),
   mostPicked: leagueTeams[0],
   mostPickedTied: 1,
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
@@ -256,6 +261,8 @@ export const POOL_STATS = {
       record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
       teams,
       teamsByHitRate: byHitRate(teams),
+      teamsLeastPicked: byLeastPicked(teams),
+      teamsByLowestHitRate: byLowestHitRate(teams),
       mostPicked: teams[0],
       mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
       bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],

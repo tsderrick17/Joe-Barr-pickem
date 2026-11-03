@@ -79,11 +79,14 @@ export function SplitsTable({ splits }: { splits: Splits }) {
 
 export type TeamSort = "picked" | "rate";
 
-/** Five teams, with how much of the picking each took and how it did. Picked and Hit rate are buttons: they choose which five (most picked, or best hit rate). */
-export function TeamsTable({ teams, sort, onSort }: { teams: TeamPicked[]; sort: TeamSort; onSort: (sort: TeamSort) => void }) {
+/**
+ * Five teams, with how much of the picking each took and how it did. Picked and Hit rate are buttons: they choose which five (most picked, or best
+ * hit rate). Pressing the column that is already chosen turns it over, to the least picked or the lowest hit rate (▲); pressing it again turns it back (▼).
+ */
+export function TeamsTable({ teams, sort, descending = true, onSort }: { teams: TeamPicked[]; sort: TeamSort; descending?: boolean; onSort: (sort: TeamSort) => void }) {
   const head = (key: TeamSort, label: string) => (
-    <th aria-sort={sort === key ? "descending" : "none"} scope="col">
-      <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? " ▼" : ""}</span></button>
+    <th aria-sort={sort === key ? (descending ? "descending" : "ascending") : "none"} scope="col">
+      <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? (descending ? " ▼" : " ▲") : ""}</span></button>
     </th>
   );
   return (

@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-03 - Performance teams table: press the chosen column again for the least picked / lowest hit rate
+
+Owner request. The Commissioner Performance teams table still opens on the five most picked teams, and the Picked / Hit rate headers still switch between the
+five most picked and the five best hit rate. Pressing the header that is already chosen a second time now turns the table over: the five least picked, or the
+five with the lowest hit rate (the arrow flips from ▼ to ▲, the heading says "Least picked teams" / "Lowest hit rate teams"); a third press turns it back, and
+choosing the other column starts at the top again. Ties: least picked goes by team name; lowest hit rate goes to the team picked more often, then by name. Both
+lists ride in the stats payload beside the existing two, for the league and for each player. Nothing else on the page changed.
+
+**Reason:** The owner wanted to see the teams the league avoids and the teams it misses on, with no new control: the same header, pressed once more.
+
 ## 2026-11-03 - Trophy Room: Perfect Weeks count every round but the Super Bowl; Other Stats is regular season only
 
 Owner request. The All-Time Table's Perfect Weeks column counted only regular-season 2-0 weeks. It now also counts every playoff round in which the player won every pick the round allowed with no loss (Wild Card, Divisional Round, Conference Championships), and never the Super Bowl (one game, not a week). A round allows its `max_picks` (6, 4, 2), or fewer when it has fewer playable games (a postponed, cancelled or no-contest game is not one); a player's round counts the moment those wins are in. A pick not made or lost, or a round with a loss, is not perfect. The streaks ("in a Row") stay regular season only.
