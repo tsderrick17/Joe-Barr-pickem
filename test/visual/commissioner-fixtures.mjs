@@ -69,7 +69,7 @@ function dashboard(state) {
       lastScoreSyncAt: attention ? T(3) : T(0.1), lastScoreSyncAgeMinutes: attention ? 180 : 6, latestScoreSyncStatus: attention ? "failed" : "success", providerAllowance: 455,
       pickOutcomes: { win: 14, loss: 10, void: 0, pending: quiet ? 0 : 16 }, survivorEntries: quiet ? { active: 0, eliminated: 10, complete: 1 } : { active: 5, eliminated: 3, complete: 0 },
       reminders: { scheduled: quiet ? 2 : 4, sending: 0, sent: 12, cancelled: 1, test: 0 },
-      efficiency: { totalCredits: 88, scoreCredits: 52, spreadCredits: 36, finalizedGames: 40, creditsPerFinal: 2.2, productiveRate: 0.74, trend: "improving", history: [3, 2.6, 2.4, 2.2].map((value, index) => ({ slateStartedAt: T(24 * 7 * (4 - index)), creditsPerFinal: value, creditsPerGame: value - 0.3, latencyMinutes: 12 - index, settledGames: [14, 15, 14, 15][index], productiveRate: 0.7 + index * 0.02, credits: [44, 38, 31, 27][index], finals: 14, games: [14, 15, 14, 15][index], calls: 20, attribution: "sample" })) },
+      efficiency: { totalCredits: 88, scoreCredits: 52, spreadCredits: 36, finalizedGames: 40, creditsPerFinal: 2.2, productiveRate: 0.74, trend: "improving", averagesSince: T(24 * 7 * 5), history: [3, 2.6, 2.4, 2.2].map((value, index) => ({ slateStartedAt: T(24 * 7 * (4 - index)), creditsPerFinal: value, creditsPerGame: value - 0.3, latencyMinutes: 12 - index, settledGames: [14, 15, 14, 15][index], productiveRate: 0.7 + index * 0.02, credits: [44, 38, 31, 27][index], finals: 14, games: [14, 15, 14, 15][index], calls: 20, attribution: "sample" })) },
       settlementLatency: { averageMinutes: 11, slowestMinutes: 24, samples: 14, history: [14, 12, 11, 9].map((minutes, index) => ({ label: `Week ${index + 1}`, shortLabel: `W${index + 1}`, minutes })) },
       comparison: { previousPeriod: "Week 4", previousAverageMinutes: 13, deltaMinutes: -2, history: [1, 2, 3, 4].map((week) => ({ id: `w${week}`, label: `Week ${week}`, shortLabel: `W${week}`, averageMinutes: 14 - week, samples: 14 })) },
       readiness: { scheduleLoaded: true, linesLocked: 5, lineTotal: 5, nextKickoffAt: quiet ? IN(60) : IN(3), nextLineLockAt: quiet ? IN(52) : null },
@@ -240,16 +240,16 @@ export const POOL_STATS = {
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
   weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
   splits: {
-    side: { favorite: split(1310, 1086, 0.532), underdog: split(1108, 991, 0.468) },
+    side: { favorite: split(1270, 1048, 0.516), underdog: split(1070, 960, 0.452), pickem: split(78, 69, 0.033) },
     venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469) },
   },
   graded: 4495,
   players: [
-    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, [4, 4, { seasonYear: 2026, week: 9 }], [12, 0, { seasonYear: 2025, week: 14 }], 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
-    ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, [5, 0, { seasonYear: 2026, week: 8 }], [23, 9, { seasonYear: 2026, week: 9 }], 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
-    ["p4", "Rick", bucket(551, 519), { donut: 58, split: 119, sweep: 53 }, [3, 0, { seasonYear: 2025, week: 4 }], [8, 3, { seasonYear: 2025, week: 6 }], 0.5, 0.49, "phi", "Philadelphia Eagles", "PHI"],
-    ["p2", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, [6, 2, { seasonYear: 2025, week: 11 }], [17, 17, { seasonYear: 2026, week: 9 }], 0.57, 0.46, "kc", "Kansas City Chiefs", "KC"],
-  ].map(([playerId, name, record, weeks, sweeps, noDonut, favoriteShare, homeShare, teamId, teamName, teamAbbreviation]) => {
+    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
+    ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
+    ["p4", "Rick", bucket(551, 519), { donut: 58, split: 119, sweep: 53 }, 0.5, 0.49, "phi", "Philadelphia Eagles", "PHI"],
+    ["p2", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, 0.57, 0.46, "kc", "Kansas City Chiefs", "KC"],
+  ].map(([playerId, name, record, weeks, favoriteShare, homeShare, teamId, teamName, teamAbbreviation]) => {
     const teams = [teamPicked(teamId, teamName, teamAbbreviation, Math.round(record.wins * 0.11), Math.round(record.losses * 0.1), 0.105), teamPicked("sf", "San Francisco 49ers", "SF", Math.round(record.wins * 0.09), Math.round(record.losses * 0.09), 0.088), teamPicked("det", "Detroit Lions", "DET", Math.round(record.wins * 0.08), Math.round(record.losses * 0.07), 0.074)];
     return {
       playerId, name,
@@ -260,9 +260,8 @@ export const POOL_STATS = {
       mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
       bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
       weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
-      streaks: { sweeps: { longest: sweeps[0], current: sweeps[1], endedAt: sweeps[2] }, noDonut: { longest: noDonut[0], current: noDonut[1], endedAt: noDonut[2] } },
       splits: {
-        side: { favorite: split(Math.round(record.wins * 0.55), Math.round(record.losses * 0.45), favoriteShare), underdog: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.55), 1 - favoriteShare) },
+        side: { favorite: split(Math.round(record.wins * 0.53), Math.round(record.losses * 0.43), favoriteShare - 0.02), underdog: split(Math.round(record.wins * 0.44), Math.round(record.losses * 0.54), 0.97 - favoriteShare), pickem: split(Math.round(record.wins * 0.03), Math.round(record.losses * 0.03), 0.03) },
         venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare) },
       },
       graded: record.picks,

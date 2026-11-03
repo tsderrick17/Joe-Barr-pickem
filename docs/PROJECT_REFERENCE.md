@@ -824,6 +824,12 @@ queries paginate so a busy month cannot silently lose older records.
 Slate efficiency uses exact kickoff times; legacy receipt attribution is
 explicitly estimated and withheld for overlapping windows. The ladder plots
 fresh-final counts with widths proportional to configured polling gaps.
+The provider cost chart's 15- and 30-day averages count only slates that started on or after midnight Eastern on Monday, November 2, 2026
+(`SCORE_POLLING_AVERAGES_SINCE` in `src/lib/provider-chart-data.js`, sent to the page as `efficiency.averagesSince`), the day score checks moved to the
+5-minute rhythm, so the averages measure the polling in force now.
+The Performance tab's Pick'em performance splits are Favorites, Underdogs, Pick'em, Home and Away. A game whose locked spread is 0 is a pick'em game:
+the line names the home team as its "favorite" only by the pool's PK convention, so such a game is counted under Pick'em and never under
+Favorites or Underdogs (`recordsFor` in `src/lib/group-stats.js`). The streaks are the Trophy Room's; the Performance tab no longer shows them.
 
 ### NCAA Bowl Pool schedule staging
 

@@ -10,7 +10,7 @@ export type Split = Bucket & { share: number | null };
 export type Weeks = { total: number; donut: number; split: number; sweep: number };
 export type RecordSummary = Bucket & { pushes: number; pushedGames: number; pushShare: number | null };
 export type TeamPicked = Bucket & { teamId: string; name: string; abbreviation: string; share: number | null };
-export type Splits = { side: { favorite: Split; underdog: Split }; venue: { home: Split; away: Split } };
+export type Splits = { side: { favorite: Split; underdog: Split; pickem: Split }; venue: { home: Split; away: Split } };
 
 export const percent = (value: number | null) => (value === null ? "—" : `${Math.round(value * 100)}%`);
 
@@ -55,16 +55,16 @@ export function WeeksHistogram({ weeks, label }: { weeks: Weeks; label: string }
   );
 }
 
-/** Favorites and underdogs, then home and away, one list; a heavier line sits between the two pairs. */
+/** Favorites, underdogs and pick'em games (no favorite at all), then home and away, one list; a heavier line sits between the two groups. */
 export function SplitsTable({ splits }: { splits: Splits }) {
-  const rows: Array<[string, Split]> = [["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog], ["Home", splits.venue.home], ["Away", splits.venue.away]];
+  const rows: Array<[string, Split]> = [["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog], ["Pick’em", splits.side.pickem], ["Home", splits.venue.home], ["Away", splits.venue.away]];
   return (
     <div className="pool-table-wrap">
       <table className="pool-table">
         <thead><tr><th scope="col">Pick</th><th scope="col">Picked</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
         <tbody>
           {rows.map(([name, split], index) => (
-            <tr className={index === 2 ? "pool-table-break" : undefined} key={name}>
+            <tr className={index === 3 ? "pool-table-break" : undefined} key={name}>
               <th scope="row">{name}</th>
               <td>{percent(split.share)}</td>
               <td>{split.wins}–{split.losses}</td>

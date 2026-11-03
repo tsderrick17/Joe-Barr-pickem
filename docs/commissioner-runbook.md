@@ -332,7 +332,10 @@ The live cadence: the first NFL score check is eligible 175 minutes after offici
 
 Provider cost plots credits per settled game as a 15-day and a 30-day moving
 average (one point per exact kickoff slate; each average covers the games in the
-last 15 or 30 Eastern calendar dates). Settlement latency and the per-slate
+last 15 or 30 Eastern calendar dates). It counts only slates from Monday,
+November 2, 2026 on, when score checks moved to a 5-minute rhythm, so the
+averages measure the current polling and are not weighed down by games from the
+old schedule; the chart fills in as games settle after that date. Settlement latency and the per-slate
 credits line are no longer drawn.
 Historical receipts have no slate IDs: non-overlapping polling windows are
 estimated, while overlapping windows remain unplotted. A gap is not a zero.

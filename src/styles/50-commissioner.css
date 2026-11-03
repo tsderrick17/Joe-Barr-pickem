@@ -438,10 +438,11 @@ select.grading-rail-control { background-color: var(--select-bg, rgba(255, 255, 
 .desk-faint { color: var(--club-muted); }
 .club-eyebrow-dark { color: var(--club-muted); font-size: .65rem; font-weight: 700; letter-spacing: .28em; margin: 0; text-transform: uppercase; }
 .commissioner-map h2, .game-day-playbook h2 { font-weight: 400; }
-/* Up next, participant impact and notification readiness: three short fact lists in one card instead of three cards. */
+/* Up next, participant impact and notification readiness: three short fact lists in one card instead of three cards. Below the game pipeline they run
+   three across; on a wide screen the card sits under the game inspector, in the right-hand column, and the lists stack. */
 .at-glance { display: grid; gap: 1.5rem 2.25rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .at-glance-col h3 { color: var(--club-muted); font: 700 .66rem Arial, sans-serif; letter-spacing: .24em; text-transform: uppercase; }
-@media (max-width: 900px) { .at-glance { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px), (min-width: 1024px) { .at-glance { grid-template-columns: minmax(0, 1fr); } }
 .desk-button { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); transition: background .18s ease, border-color .18s ease; }
 .desk-button:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
 select.desk-button { background-color: var(--select-bg, transparent); border-color: var(--select-edge, var(--club-gold-dk)); color: var(--field-ink, var(--club-ink)); }
@@ -743,11 +744,12 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 .pool-stats-block h3 { font: 700 1.15rem Georgia, serif; margin: 0; }
 .pool-stats-block > p { color: var(--club-muted); font-size: 0.88rem; margin: 0.15rem 0 0.7rem; max-width: 46rem; }
 /* Teams, splits and seasons sit side by side (one column on a phone), every card as tall as five teams: a row is --pool-row, the table is a header and
-   five rows, and the season list scrolls inside that height once it has more than five seasons. */
+   five rows. The teams and splits tables always show every row; only the season list (which grows a row a year) scrolls inside that height. */
 .pool-stats-trio { --pool-row: 2.6rem; display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
 .pool-stats-trio .pool-stats-block { display: flex; flex-direction: column; }
 .pool-stats-trio .pool-stats-block > p { min-height: 3em; }
-.pool-stats-trio .pool-table-wrap { flex: 1 1 auto; max-height: calc(var(--pool-row) * 6 + 2px); min-height: calc(var(--pool-row) * 6 + 2px); overflow-y: auto; }
+.pool-stats-trio .pool-table-wrap { flex: 1 1 auto; min-height: calc(var(--pool-row) * 6 + 2px); }
+.pool-stats-trio .pool-table-wrap-seasons { max-height: calc(var(--pool-row) * 6 + 2px); overflow-y: auto; }
 .pool-stats-trio .pool-table tr { height: var(--pool-row); }
 .pool-stats-trio .pool-table thead th { position: sticky; top: 0; }
 .pool-table-break { border-top-color: var(--club-gold-dk); }
@@ -773,7 +775,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 .pool-table thead th:first-child { text-align: left; }
 .pool-table th[scope="row"] { font: 400 1rem/1.12 Georgia, serif; padding-block: 0.3rem; text-align: left; white-space: normal; width: 100%; }
 .pool-table small { color: var(--club-muted); font: 400 0.72rem Arial, sans-serif; margin-left: 0.4rem; }
-.pool-alive { color: var(--club-ok); font-weight: 700; }
 .pool-strong { font-weight: 700; }
 .pool-empty { color: var(--club-muted); font-style: italic; margin: 0; }
 .pool-select { align-items: center; display: flex; gap: 0.7rem; }

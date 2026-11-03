@@ -41,7 +41,8 @@ test("weekly records: a missed pick is a loss, a voided week is left out, unfini
 });
 
 test("a streak carries from one season into the next, and a skipped week neither breaks nor extends it", () => {
-  const ann = stats.players.find((row) => row.name === "Ann").streaks, bob = stats.players.find((row) => row.name === "Bob").streaks;
+  const streaks = weeklyStreaks({ seasons, periods, picks });
+  const ann = streaks.get("ann"), bob = streaks.get("bob");
   assert.equal(ann.sweeps.longest, 2, "2025 w3 and 2026 w1 are consecutive counted weeks for Ann");
   assert.equal(ann.sweeps.current, 2, "her void week is skipped, so the run is still alive");
   assert.deepEqual(ann.sweeps.endedAt, { seasonYear: 2026, week: 1 });
@@ -77,6 +78,35 @@ test("a pick that lands exactly on the number is a push, graded as a loss, and t
   assert.equal(withPush.splits.venue.home.picks, 1);
 });
 
+test("a pick'em game (spread 0) is its own line and never counts as a favorite or an underdog", () => {
+  // The pool's PK convention names the home team as the line's "favorite" at a spread of 0, so the home pick must not read as the favorite.
+  const pickemGames = [
+    { id: "pk1", home_team_id: "fav", away_team_id: "dog", home_score: 24, away_score: 20 },
+    { id: "pk2", home_team_id: "fav", away_team_id: "dog", home_score: 17, away_score: 21 },
+    { id: "pk3", home_team_id: "fav", away_team_id: "dog", home_score: 20, away_score: 27 },
+  ];
+  const pickemLines = pickemGames.map((item) => ({ game_id: item.id, favorite_team_id: "fav", locked_spread: 0 }));
+  const pickemPicks = [
+    { id: "q1", player_id: "ann", game_id: "pk1", scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
+    { id: "q2", player_id: "ann", game_id: "pk2", scoring_period_id: "s26-w1", selected_team_id: "dog", result: "win" },
+    { id: "q3", player_id: "ann", game_id: "pk3", scoring_period_id: "s26-w1", selected_team_id: "fav", result: "loss" },
+  ];
+  const only = buildGroupStats({ players, seasons, periods, games: pickemGames, lines: pickemLines, picks: pickemPicks });
+  const { favorite, underdog, pickem } = only.splits.side;
+  assert.deepEqual([favorite.picks, underdog.picks], [0, 0]);
+  assert.deepEqual([pickem.wins, pickem.losses, pickem.picks], [2, 1, 3]);
+  assert.equal(pickem.share, 1);
+  assert.equal(only.splits.venue.home.picks + only.splits.venue.away.picks, 3, "home and away still count every pick");
+
+  // Mixed with ordinary lines, the three shares add up to the whole.
+  const mixed = buildGroupStats({ players, seasons, periods, games: [...games, ...pickemGames], lines: [...lines, ...pickemLines], picks: [...picks, ...pickemPicks] });
+  const side = mixed.splits.side;
+  assert.equal(side.pickem.picks, 3);
+  assert.equal(side.favorite.picks + side.underdog.picks + side.pickem.picks, mixed.graded);
+  assert.ok(Math.abs(side.favorite.share + side.underdog.share + side.pickem.share - 1) < 1e-9);
+  assert.equal(side.favorite.picks + side.underdog.picks, stats.graded, "the ordinary lines count exactly as before");
+});
+
 test("no data gives empty, safe numbers", () => {
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });
   assert.equal(empty.record.hitRate, null); assert.equal(empty.weeks.total, 0); assert.deepEqual(empty.players, []);
@@ -90,8 +120,7 @@ test("each player gets their own full set, and the players add up to the group",
   assert.deepEqual(ann.weeks, { total: 4, donut: 0, split: 1, sweep: 3 });
   assert.deepEqual(bob.weeks, { total: 5, donut: 1, split: 2, sweep: 2 });
   assert.equal(ann.weeks.total + bob.weeks.total, stats.weeks.total);
-  assert.deepEqual(ann.streaks.sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
-  assert.deepEqual(bob.streaks.noDonut, { longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 2 } });
+  assert.equal("streaks" in ann, false, "the streaks are the Trophy Room's, not part of a player's performance set");
   assert.equal(ann.splits.side.favorite.picks + ann.splits.side.underdog.picks, ann.graded);
   assert.deepEqual(ann.bySeason.map((season) => season.seasonYear), [2026, 2025]);
 });
@@ -152,9 +181,8 @@ test("a team missing from the list still counts, under a plain name, and nobody 
   assert.deepEqual(empty.teams, []);
 });
 
-test("weekly streaks alone (what the Trophy Room sends) match the ones inside the full stats", () => {
+test("weekly streaks (what the Trophy Room sends)", () => {
   const streaks = weeklyStreaks({ seasons, periods, picks });
-  for (const player of stats.players) assert.deepEqual(streaks.get(player.playerId), player.streaks, player.name);
   assert.deepEqual(streaks.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
   assert.equal(streaks.has("nobody"), false);
 });

@@ -9,25 +9,14 @@ import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type
 /**
  * Pick'em performance for the Performance panel: the league's numbers, or any one player's, chosen from a dropdown. Each view has the
  * record and hit rate, the most picked team (or how many teams tie for it), the weekly 0-2 / 1-1 / 2-0 histogram, then three tables side by side at
- * the same height: five teams (the most picked, or the best hit rate), the favorite/underdog and home/away splits, and season by season;
- * a player's view adds their regular season streaks. Private to the Commissioner.
+ * the same height: five teams (the most picked, or the best hit rate), the favorite / underdog / pick'em and home/away splits, and season by season.
+ * Private to the Commissioner. (Streaks are the Trophy Room's.)
  */
-type Run = { longest: number; current: number; endedAt: { seasonYear: number; week: number } | null };
 type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
-type PlayerView = View & { playerId: string; name: string; streaks: { sweeps: Run; noDonut: Run } };
+type PlayerView = View & { playerId: string; name: string };
 type Stats = View & { players: PlayerView[] };
 
 const LEAGUE = "league";
-
-function RunTile({ label, run }: { label: string; run: Run }) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{run.longest}<small>{run.endedAt ? ` · ${run.endedAt.seasonYear} wk ${run.endedAt.week}` : ""}</small></dd>
-      <small>{run.current > 0 ? <span className="pool-alive">{run.current} right now</span> : "not active"}</small>
-    </div>
-  );
-}
 
 export default function PoolStats() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -79,17 +68,6 @@ export default function PoolStats() {
           <WeeksHistogram label={`${who === "the league" ? "The league’s" : `${who}’s`} weekly records histogram`} weeks={view.weeks} />
         </div>
 
-        {player ? (
-          <div className="pool-stats-block">
-            <h3>Regular season streaks</h3>
-            <p>A streak alive at the end of a season carries into the next. The whole league&rsquo;s streaks are in the Trophy Room.</p>
-            <dl className="pool-stats-tiles">
-              <RunTile label="Consecutive Donut Free Weeks" run={player.streaks.noDonut} />
-              <RunTile label="Consecutive 2-0 Weeks" run={player.streaks.sweeps} />
-            </dl>
-          </div>
-        ) : null}
-
         <div className="pool-stats-trio">
           {view.teams.length ? (
             <div className="pool-stats-block">
@@ -109,7 +87,7 @@ export default function PoolStats() {
             <div className="pool-stats-block">
               <h3>Season by season</h3>
               <p>{player ? `${player.name}’s` : "The league’s"} record in each season.</p>
-              <div className="pool-table-wrap">
+              <div className="pool-table-wrap pool-table-wrap-seasons">
                 <table className="pool-table">
                   <thead><tr><th scope="col">Season</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
                   <tbody>

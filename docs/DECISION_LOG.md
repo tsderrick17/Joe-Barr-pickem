@@ -19,6 +19,21 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-03 - Commissioner tools: pick'em is its own line, no streaks on Performance, the cost averages start at the 5-minute schedule
+
+Owner requests, one batch. (1) On a wide screen the Up next / Participant impact / Notification readiness card moves into the open space to the right, under
+the game inspector, its three lists stacked; on a phone or tablet it still follows the game pipeline. (2) The Teams table (and the splits table) always show
+every row with no scroll bar; only the Season by season list, which grows a row a year, still scrolls. (3) Pick'em games get their own line in the
+Favorites / Underdogs table. A pick'em game's line is stored with the home team as its "favorite" at a spread of 0, so those picks were being counted as
+favorites (home) or underdogs (away); a locked spread of 0 now counts under Pick'em only, and the three shares add up to the whole. (4) The Regular season
+streaks section is removed from the Performance tab (the Trophy Room has the streaks), and the per-player streaks no longer ride in the stats payload.
+(5) The Provider cost chart's averages count only slates from Monday, November 2, 2026 on, the day score checks moved to every 5 minutes, so games from the
+old schedule no longer weigh them down.
+
+**Reason:** The owner wanted pick'em games told apart from favorites and underdogs, a table that needs no scroll bar, a Performance tab without a section
+they do not use, and a cost chart that measures the polling in force now. Not changed: the Trophy Room's all-time "bases" figure still treats the away team of
+a pick'em game as the underdog; that is a separate, player-visible number and was left for the owner to decide.
+
 ## 2026-11-03 - The Season Snapshot lines go back to their original shading
 
 The owner found the lines looked worse with the soft gradient shading of the next entry (#719). The original look is back: each line is its color with a thin light strip along the top and a thin dark strip along the bottom. `snapshotRibbonShade` is removed. Rounding the bend at each week stays a separate, unanswered offer.

@@ -391,10 +391,10 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
-  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toHaveCount(0);   // streaks live in the Trophy Room, not here
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
-  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Home, Away
-  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Home", "Away"]);
+  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Pick'em, Home, Away
+  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Pick’em", "Home", "Away"]);
   await section.getByLabel("Show").selectOption({ label: "Rick" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });
@@ -416,6 +416,13 @@ for (const width of [390, 560, 768, 1280]) {
     }).toPass({ timeout: 30_000 });
     const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
     expect(overflowing, "no table wider than its card").toBe(0);
+    // The teams and splits tables show every row: no scroll bar, at any width.
+    for (const heading of ["Most picked teams", "What the league picks"]) {
+      const wrap = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: heading }) }).locator(".pool-table-wrap");
+      const taller = await wrap.evaluate((element) => element.scrollHeight - element.clientHeight);
+      expect(taller, `${heading}: nothing to scroll`).toBeLessThanOrEqual(1);
+      expect(await wrap.evaluate((element) => getComputedStyle(element).overflowY), `${heading}: not a vertical scroller`).not.toBe("scroll");
+    }
   });
 }
 
