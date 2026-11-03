@@ -42,7 +42,7 @@ export function snapshotStackOrder(weeks, players, baseline = {}) {
 
 /**
  * What is written under a week's line: a regular week's number, or a playoff round's name in full, on one line or two
- * (WILD / CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL) so four rounds sit side by side on a phone without a name
+ * (WILD / CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL) so four rounds sit side by side without a name
  * cut short or touching its neighbor.
  * @param {string} label  the scoring period's name
  * @returns {string[]}
@@ -52,6 +52,39 @@ export function snapshotWeekLines(label) {
   if (week) return [week[1]];
   const words = label.replace(/\b(round|playoffs?)\b/gi, " ").replace(/\bconference\b/gi, "Conf").replace(/\bchampionships?\b/gi, "Champ").trim().split(/\s+/).filter(Boolean);
   return words.length ? words.slice(0, 2).map((word) => word.toUpperCase()) : [label.slice(0, 10).toUpperCase()];
+}
+
+/** About how wide a word is in the 10px bold capitals under the chart, in pixels: enough to tell which names fit side by side. */
+export const snapshotTextWidth = (text) => text.length * 6.8;
+
+/**
+ * The playoff game days that belong to one round, side by side: [{ label, first, last }] with the positions of its first and
+ * last day. The round's name is written once under all of them.
+ * @param {Array<{ label: string }>} weeks
+ */
+export function snapshotRoundGroups(weeks) {
+  /** @type {Array<{ label: string, first: number, last: number }>} */
+  const groups = [];
+  weeks.forEach((week, index) => {
+    const latest = groups.at(-1);
+    if (latest && latest.label === week.label) latest.last = index;
+    else groups.push({ label: week.label, first: index, last: index });
+  });
+  return groups;
+}
+
+/**
+ * A round's name under its game days: on one line when it fits in the room its days give it (and, for the last round, in the
+ * room left at the chart's edge, since its name is centered under its day), otherwise one word to a line.
+ * @param {string} label  the scoring period's name
+ * @param {number} room  the width of the round's days, in pixels
+ * @param {number} [edgeRoom]  the room on either side of the name at the chart's edge
+ * @returns {string[]}
+ */
+export function snapshotRoundLines(label, room, edgeRoom = Infinity) {
+  const words = snapshotWeekLines(label);
+  const width = snapshotTextWidth(words.join(" "));
+  return words.length > 1 && width + 12 <= room && width / 2 <= edgeRoom ? [words.join(" ")] : words;
 }
 
 /** Lower-ranked colors are painted widest first; leaders remain visible inside. */

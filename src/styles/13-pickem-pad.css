@@ -373,8 +373,6 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
 .season-snapshot-show-all:not(:disabled):focus-visible { background: var(--blue-22); color: var(--sand-95); }
 .season-snapshot-show-all { border: 1px solid var(--blue-22); border-radius: 999px; font: 800 .66rem/1.2 Arial, sans-serif; margin-top: .15rem; padding: .28rem .8rem; transition: background .15s ease, color .15s ease; width: 100%; grid-column: 1 / -1; }
 .season-snapshot-show-all:disabled { border-color: #c9c2b5; color: #a39c90; cursor: default; }
-/* Over the empty plot, between the axis's 30px on the left and the lines' 14px on the right, under the top gap and above the week names. */
-.season-snapshot-empty { align-items: center; bottom: 18px; color: #57637a; display: flex; font: 600 .68rem/1.5 Arial, sans-serif; justify-content: center; left: 30px; margin: 0; padding: 0 1rem; pointer-events: none; position: absolute; right: 14px; text-align: center; top: 10px; }
 .season-snapshot-message { color: #57637a; font: 600 .68rem/1.5 Arial, sans-serif; margin-top: .35rem; margin: 0; padding: 1rem .3rem; }
 
 @media (max-width: 700px) {
