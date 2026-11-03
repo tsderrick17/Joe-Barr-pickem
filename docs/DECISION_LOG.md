@@ -29,6 +29,14 @@ lists ride in the stats payload beside the existing two, for the league and for 
 
 **Reason:** The owner wanted to see the teams the league avoids and the teams it misses on, with no new control: the same header, pressed once more.
 
+## 2026-11-03 - Trophy Room: Perfect Weeks count every round but the Super Bowl; Other Stats is regular season only
+
+Owner request. The All-Time Table's Perfect Weeks column counted only regular-season 2-0 weeks. It now also counts every playoff round in which the player won every pick the round allowed with no loss (Wild Card, Divisional Round, Conference Championships), and never the Super Bowl (one game, not a week). A round allows its `max_picks` (6, 4, 2), or fewer when it has fewer playable games (a postponed, cancelled or no-contest game is not one); a player's round counts the moment those wins are in. A pick not made or lost, or a round with a loss, is not perfect. The streaks ("in a Row") stay regular season only.
+
+The Other Stats view is regular season only. Its streaks already were; its half-point wins, losses and hit rate and its pushes picked counted playoff picks too and now count regular-season picks only. The Record view's Wins and Hit rate still count every graded pick.
+
+**Reason:** The owner wanted Perfect Weeks to reward a clean playoff round like a clean regular week, and wanted the Other Stats page to mean the regular season throughout.
+
 ## 2026-11-03 - Season Snapshot rail: centered in its strip, and swollen only while touched
 
 Owner request. The 6 Wk position rail's 8 px bar sat low in the open space between the masthead's rule and the top grid line (about 9 px of room above it, 2 px below); it is now centered in that space at every width. The thumb's small swell used the browser's hover state, which a phone leaves stuck on after a tap until the next tap elsewhere, so a touched rail stayed swollen; the swell now applies to hover only on devices that can hover (a mouse) and, on every device, only while the rail is being dragged.

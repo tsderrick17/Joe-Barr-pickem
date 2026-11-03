@@ -280,3 +280,38 @@ test("a week still being played counts for a player once both of their own picks
   assert.deepEqual([settled.get("cat").sweeps.total, settled.get("cat").noDonut.current], [0, 0], "Cat's graded loss and her pick not made is a 0-2 week");
   assert.equal(settled.get("bob").noDonut.current, 0, "a pick that is still pending leaves the week out even after the week settles");
 });
+
+test("Perfect Weeks count every round but the Super Bowl: a regular 2-0 week and a playoff round won pick for pick; the streaks stay regular season", () => {
+  const round = (id, name, order, max) => ({ id, season_id: "s26", display_name: name, display_order: order, period_type: "playoff", status: "complete", max_picks: max });
+  const rounds = [round("wc", "Wild Card", 19, 6), round("div", "Divisional Round", 20, 4), round("conf", "Conference Championships", 21, 2), round("sb", "Super Bowl", 22, 1)];
+  const periodsWithRounds = [week("s26", 1), week("s26", 2), ...rounds];
+  const gameRows = [
+    ...Array.from({ length: 6 }, (_, i) => ({ id: `wc${i}`, scoring_period_id: "wc", status: "final" })),
+    ...Array.from({ length: 4 }, (_, i) => ({ id: `div${i}`, scoring_period_id: "div", status: "final" })),
+    { id: "conf0", scoring_period_id: "conf", status: "final" }, { id: "conf1", scoring_period_id: "conf", status: "postponed" },   // only one playable game
+    { id: "sb0", scoring_period_id: "sb", status: "final" },
+  ];
+  const entry = (playerId, periodId, results) => results.map((result, i) => ({ id: `${playerId}-${periodId}-${i}`, player_id: playerId, scoring_period_id: periodId, result }));
+  const picks = [
+    ...entry("ann", "s26-w1", ["win", "win"]), ...entry("ann", "s26-w2", ["win", "loss"]),   // one regular perfect week
+    ...entry("ann", "wc", Array(6).fill("win")),                                            // a perfect Wild Card round
+    ...entry("ann", "div", ["win", "win", "win", "loss"]),                                 // not perfect
+    ...entry("ann", "conf", ["win"]),                                                       // one playable game, won: perfect
+    ...entry("ann", "sb", ["win"]),                                                         // the Super Bowl never counts
+    ...entry("bob", "wc", ["win", "win", "win", "win", "win", "loss"]),                    // 5-1 is not perfect
+    ...entry("bob", "div", ["win", "win", "win"]),                                         // three wins, one pick not made: not perfect
+    ...entry("bob", "sb", ["win"]),
+    ...entry("cat", "wc", Array(6).fill("win")),                                           // a player with playoff rounds only still appears
+  ];
+  const streaks = weeklyStreaks({ seasons, periods: periodsWithRounds, picks, games: gameRows });
+  assert.equal(streaks.get("ann").sweeps.total, 3, "regular 2-0 + Wild Card + Conference; not the Divisional 3-1 and not the Super Bowl");
+  assert.deepEqual([streaks.get("ann").sweeps.longest, streaks.get("ann").sweeps.current], [1, 0], "the streaks follow regular weeks only");
+  assert.equal(streaks.get("bob")?.sweeps.total ?? 0, 0, "a 5-1 round, a round with a pick not made, and the Super Bowl are not perfect weeks");
+  assert.equal(streaks.get("cat").sweeps.total, 1, "a perfect round counts for a player with no regular weeks");
+  assert.equal(streaks.get("cat").noDonut.longest, 0);
+  // Without game rows a round allows its full max_picks.
+  assert.equal(weeklyStreaks({ seasons, periods: periodsWithRounds, picks }).get("ann").sweeps.total, 2, "the Conference Championships need both picks when no game rows are given");
+  // A round counts the moment the player's picks are all in and won, before the round itself finishes.
+  const open = periodsWithRounds.map((period) => (period.id === "wc" ? { ...period, status: "active" } : period));
+  assert.equal(weeklyStreaks({ seasons, periods: open, picks, games: gameRows.map((game) => (game.id === "wc5" ? { ...game, status: "scheduled" } : game)) }).get("cat").sweeps.total, 1);
+});
