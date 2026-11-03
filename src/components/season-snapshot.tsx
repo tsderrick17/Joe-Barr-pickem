@@ -68,6 +68,8 @@ const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** A playoff round's name may take two lines under its week line; each line past the first needs this much more room. */
 const LABEL_LINE = 11;
+/** The radius of a player's starting dot on the playoff chart before any game day is charted. */
+const START_DOT = 5;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
 /** The narrowest a name's box in the player key may be, in rem: the same width the stylesheet gives it. */
@@ -215,7 +217,7 @@ function useSpringAxis(target: Axis) {
 }
 
 function SnapshotChart({
-  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false, emptyNote,
+  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false,
 }: {
   title: string;
   showTitle: boolean;
@@ -227,8 +229,6 @@ function SnapshotChart({
   onHover: (id: string | null) => void;
   isPlayoff: boolean;
   windowed?: boolean;
-  /** Said over the empty plot when no week has been charted yet. */
-  emptyNote?: string;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -319,6 +319,15 @@ function SnapshotChart({
   // the window rests on a week, and while it moves between weeks they slide out of view instead of jumping in.
   const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y, 3, scrolls ? Math.floor(edges.from) : 0)
     .sort((a, b) => (rank.get(b.playerId) ?? 0) - (rank.get(a.playerId) ?? 0));
+  // Before anything is charted (the playoffs before the first game day is final, when that day only waits on the axis) there are no
+  // lines yet: each player is one dot at their starting total, and players on the same total sit side by side from the starting line, top lane first.
+  const sameTotal = new Map<number, number>();
+  const startDots = weeks.some((week) => week.scores.length > 0) ? [] : stacked.map((player) => {
+    const wins = baseline[player.id] ?? 0;
+    const place = sameTotal.get(wins) ?? 0;
+    sameTotal.set(wins, place + 1);
+    return { player, cx: x(0) + place * (START_DOT * 2 + 1), cy: y(wins) };
+  });
 
   return <section className="season-snapshot-chart">
     {showTitle ? <h4 className="season-snapshot-chart-title">{title}</h4> : null}
@@ -359,11 +368,13 @@ function SnapshotChart({
                 <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
               </g>)}
             </g></g>
+            {startDots.map(({ player, cx, cy }) => <g className={`season-snapshot-ribbon season-snapshot-start ${hoverId && hoverId !== player.id ? "is-dim" : ""}`} key={player.id} onMouseEnter={() => onHover(player.id)} onMouseLeave={() => onHover(null)}>
+              <circle cx={cx} cy={cy} fill={colors.get(player.id)} r={START_DOT} stroke="#fffdf7" strokeWidth="1.5" />
+            </g>)}
           </svg>
         </div>
       </div>
       {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
-      {emptyNote ? <p className="season-snapshot-empty">{emptyNote}</p> : null}
     </div>
     <p aria-hidden="true" className="season-snapshot-week-label">{byDay ? "Game day" : "Week"}</p>
   </section>;
@@ -406,7 +417,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
   // The key shows what the chart shows: each player's total at the chart's last
   // point, never the live standings. Standings move as games finish, the chart
   // moves once when the week settles, and the two must change together.
-  const lastPoint = showPlayoffs ? (snapshot.playoffs.at(-1) ?? lastRegular) : lastRegular;
+  const lastPoint = showPlayoffs ? (snapshot.playoffs.filter((week) => week.scores.length > 0).at(-1) ?? lastRegular) : lastRegular;
   const chartTotals = new Map((lastPoint?.scores ?? []).map((score) => [score.playerId, score.wins]));
   const keyRows = standings
     .map((player, order) => ({ player, order, total: chartTotals.get(player.id) ?? 0 }))
@@ -434,7 +445,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
       {/* The playoff chart replaces the regular-season chart; it starts from each
           player's final regular-season total. */}
       {showPlayoffs
-        ? <SnapshotChart baseline={playoffBaseline} colors={colors} emptyNote={snapshot.playoffs.length ? undefined : "Fills in once the first playoff day is final."} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
+        ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
     <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
@@ -458,8 +469,6 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   const [opened, setOpened] = useState(false);
   const [range, setRange] = useState<Range>("all");
   const [view, setView] = useState<"regular" | "playoffs">("playoffs");
-  // True once the Playoffs half was pressed this visit: until a playoff round is charted it is an empty page, so the chart opens on Season instead.
-  const [askedForPlayoffs, setAskedForPlayoffs] = useState(false);
   // The saved view is read when the pad is first turned over, never during the
   // first render, so the server and browser always agree on the markup.
   if (active && !opened) {
@@ -499,15 +508,13 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
     });
   }, [active, refreshKey, retry, fetchSnapshot]);
 
-  // Once the playoffs begin a Season | Playoffs switch appears and the chart opens on the playoffs (on Season until the first playoff
-  // round is final, when the Playoffs half has nothing to draw yet). The week-range toggle belongs to the regular-season chart only.
+  // Once the playoffs begin a Season | Playoffs switch appears and the chart opens on the playoffs (starting dots, with the first game day
+  // waiting on the axis, until that day is final). The week-range toggle belongs to the regular-season chart only.
   const hasPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
-  const nothingCharted = snapshot !== null && snapshot.playoffs.length === 0;
-  const shownView = hasPlayoffs ? (nothingCharted && !askedForPlayoffs ? "regular" : view) : "regular";
+  const shownView = hasPlayoffs ? view : "regular";
   const showPlayoffs = shownView === "playoffs";
   const chooseView = (next: "regular" | "playoffs") => {
     setView(next);
-    setAskedForPlayoffs(next === "playoffs");
     saveSetting(VIEW_KEY, next);
   };
   const chooseRange = (next: Range) => {

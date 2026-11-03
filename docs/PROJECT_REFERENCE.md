@@ -230,10 +230,11 @@ measure database requests or end-to-end route time.
   word a line (WILD CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL; a one-line
   name sits centered vertically between the lines of the others), never cut
   short or touching its neighbor; the axis is titled Game day. Until the
-  first playoff day is final the Playoffs half has nothing to draw: the
-  Snapshot opens on Season, and pressing Playoffs says "Fills in once the
-  first playoff day is final." over the empty plot. A playoff round with no
-  games on file is drawn as one point. The route reads every started playoff
+  first playoff day is final the Playoffs half shows each player as one dot
+  at their final regular-season total (players on the same total side by side
+  from the starting line) and the first game day waits on the bottom axis (its
+  weekday and round name, no scores); the lines grow from those dots day by day. A
+  playoff round with no games on file is drawn as one point. The route reads every started playoff
   round's games, and trusts the shared chart until the next day's last pick
   could settle. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the

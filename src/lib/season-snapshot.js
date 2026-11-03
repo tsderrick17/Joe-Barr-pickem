@@ -125,5 +125,11 @@ export function buildSeasonSnapshot(periods, players, picks, activeWeekSettled =
       });
     }
   }
+  // Until the first playoff day is final the chart is the players' starting points, with that first day waiting on the bottom axis.
+  if (!snapshot.playoffs.length && days.length) {
+    const [first] = days;
+    const period = periods.find((entry) => entry.id === first.periodId);
+    snapshot.playoffs.push({ id: `${first.periodId}:${first.key}`, label: period.display_name, day: first.weekday, roundDays: days.filter((entry) => entry.periodId === first.periodId).length, complete: false, scores: [] });
+  }
   return snapshot;
 }

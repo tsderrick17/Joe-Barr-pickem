@@ -27,8 +27,11 @@ stayed empty until Monday night. It now has one point per Eastern game day, coun
 same day playoff eligibility is frozen on; a cancelled game is no day). A day is charted once every game of it has kicked off and none of its picks is pending, and
 nothing after a day that is not final yet is drawn, so Wild Card weekend starts filling in on Saturday night. Under the chart each day's weekday sits under its line
 (none for a round that is only one day, the owner's call) and each round's name once under its days, on one line when it fits and otherwise a word a line (WILD CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL); the axis is
-titled Game day. This supersedes the previous entry's round names under each round's line, and its empty-state note, now "Fills in once the first playoff day is
-final." A playoff round with no games on file is still drawn as one point. The route also reads the games of every started playoff round (about a dozen rows) and
+titled Game day. This supersedes the previous entry's round names under each round's line, and its empty state: before the first playoff day is final the Snapshot
+now opens on Playoffs like any other time and shows each player as one dot at their final regular-season total (the owner's call), with no note and no empty
+plot; players on the same total sit side by side from the starting line, and hovering a name or a dot works as on the lines. The first game day waits on the
+bottom axis as a placeholder (its weekday and round name, no scores: the route adds that one entry, `complete: false`, only while no day is charted), so the
+owner sees where the lines will start. A playoff round with no games on file is still drawn as one point. The route also reads the games of every started playoff round (about a dozen rows) and
 trusts its shared chart only until the next day's last pick could settle, not until the end of the round.
 
 **Reason:** The owner wanted the playoffs plotted day by day, so the chart tells the story of the postseason as it is played instead of a round at a time.

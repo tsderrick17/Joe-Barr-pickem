@@ -185,17 +185,18 @@ export function seasonSnapshotResponse(scenario = "", weekCount = 5, days = 1) {
       id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < weekCount - 1,
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
-    playoffs: scenario === "commissioner-playoff"
-      ? PLAYOFF_DAYS.slice(0, days).map(([label, day], index) => ({
-        id: `playoff-${index + 1}`, label, day, roundDays: PLAYOFF_DAYS.filter(([round]) => round === label).length, complete: true,
-        // The first game day lifts everyone from their regular-season total; each later day adds fewer wins to those further down the order.
-        scores: NAMES.map((_, playerIndex) => ({
-          playerId: `p${playerIndex}`,
-          wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex)
-            + DAY_GAINS.slice(0, index + 1).reduce((sum, gain) => sum + Math.max(0, gain - Math.floor(playerIndex / 2)), 0),
+    playoffs: scenario !== "commissioner-playoff" ? []
+      // Before the first game day is final the first day waits on the axis with nothing to plot.
+      : days === 0 ? [{ id: "playoff-1", label: "Wild Card", day: "SAT", roundDays: 3, complete: false, scores: [] }]
+        : PLAYOFF_DAYS.slice(0, days).map(([label, day], index) => ({
+          id: `playoff-${index + 1}`, label, day, roundDays: PLAYOFF_DAYS.filter(([round]) => round === label).length, complete: true,
+          // The first game day lifts everyone from their regular-season total; each later day adds fewer wins to those further down the order.
+          scores: NAMES.map((_, playerIndex) => ({
+            playerId: `p${playerIndex}`,
+            wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex)
+              + DAY_GAINS.slice(0, index + 1).reduce((sum, gain) => sum + Math.max(0, gain - Math.floor(playerIndex / 2)), 0),
+          })),
         })),
-      }))
-      : [],
     colorOrder: NAMES.map((_, playerIndex) => `p${playerIndex}`),
   };
 }

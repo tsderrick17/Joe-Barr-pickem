@@ -143,8 +143,8 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
   });
 }
 
-// Wild Card weekend before Saturday's games end: no playoff game day is final yet, so the Playoffs half has nothing to draw. The Snapshot opens on Season instead, and
-// pressing Playoffs says when it fills in rather than showing an empty chart.
+// Wild Card weekend before Saturday's games end: no playoff game day is final yet. The Snapshot opens on Playoffs like any other time and shows every player as a dot at
+// their starting total, with the first game day (SAT, under the round's name) waiting on the bottom axis, and no lines and no note.
 for (const label of ["phone-390", "desktop-1280"] as const) {
   test(`Season Snapshot on Wild Card weekend at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width: WIDTHS[label], height: 900 });
@@ -154,18 +154,20 @@ for (const label of ["phone-390", "desktop-1280"] as const) {
     await settle(page);
     await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
     const half = page.getByRole("group", { name: "Season half shown" });
-    await expect(half.getByRole("button", { name: "Season", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator(".season-snapshot-empty")).toHaveCount(0);
-    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
-    await half.getByRole("button", { name: "Playoffs" }).click();
-    await expect(page.getByText("Fills in once the first playoff day is final.")).toBeVisible();
-    await expect(page.locator(".season-snapshot-ribbon")).toHaveCount(0);
+    await expect(half.getByRole("button", { name: "Playoffs" })).toHaveAttribute("aria-pressed", "true");
+    const dots = page.locator(".season-snapshot-start circle");
+    await expect(dots.first()).toBeAttached();
+    await expect(dots, "one dot for every player on the chart").toHaveCount(await page.locator(".season-snapshot-key-row[aria-pressed=true]").count());
+    await expect(page.locator(".season-snapshot-ribbon:not(.season-snapshot-start)"), "no lines yet").toHaveCount(0);
+    await expect(page.getByText(/fills in/i)).toHaveCount(0);
+    expect(await page.locator(".season-snapshot-plot-track svg text").allTextContents(), "the first game day waits on the axis under its round").toEqual(["SAT", "WILD", "CARD"]);
     await page.waitForTimeout(1200);
     await settled(page);
     await expect(page.locator(".season-snapshot-layout")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-wild-card-weekend-${label}.png`);
-    // Back to Season and to Playoffs again: the choice is the viewer's while no round is charted.
+    // Season is still one press away, and has its lines but no starting dots.
     await half.getByRole("button", { name: "Season", exact: true }).click();
-    await expect(page.locator(".season-snapshot-empty")).toHaveCount(0);
+    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
+    await expect(page.locator(".season-snapshot-start")).toHaveCount(0);
   });
 }
 

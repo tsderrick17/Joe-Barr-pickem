@@ -83,7 +83,7 @@ test("the playoffs are charted one Eastern game day at a time: seven days, each 
 test("a playoff game day is charted only once every game of it has kicked off and none of its picks is pending", () => {
   const { games, picks, periods, players } = postseason();
   const wildCard = periods(["active", "upcoming", "upcoming", "upcoming"]);
-  const days = (when, pickList = picks) => buildSeasonSnapshot(wildCard, players, pickList, new Set(), games, new Date(when).getTime()).playoffs.map((day) => day.day);
+  const days = (when, pickList = picks) => buildSeasonSnapshot(wildCard, players, pickList, new Set(), games, new Date(when).getTime()).playoffs.filter((day) => day.scores.length).map((day) => day.day);
   assert.deepEqual(days("2027-01-16T20:00:00Z"), [], "before the first kickoff nothing is charted");
   assert.deepEqual(days("2027-01-17T02:00:00Z", picks.filter((pick) => !["wc3", "wc4", "wc5"].includes(pick.game_id))), ["SAT"], "Saturday's games are over and graded");
   const pendingOnSaturday = picks.map((pick) => (pick.game_id === "wc2" ? { ...pick, result: "pending" } : pick));
@@ -91,6 +91,17 @@ test("a playoff game day is charted only once every game of it has kicked off an
   assert.deepEqual(days("2027-01-17T19:00:00Z"), ["SAT"], "Sunday's night game has not kicked off, so Sunday waits");
   assert.deepEqual(days("2027-01-18T03:00:00Z"), ["SAT", "SUN"], "Sunday is final once its last game has kicked off and its picks are graded");
   assert.deepEqual(days("2027-01-19T03:00:00Z", pendingOnSaturday), [], "nothing after a day that is not final is drawn");
+});
+
+test("before any playoff day is final the first day waits on the axis with no scores, then gives way to the real days", () => {
+  const { games, picks, periods, players } = postseason();
+  const wildCard = periods(["active", "upcoming", "upcoming", "upcoming"]);
+  const early = buildSeasonSnapshot(wildCard, players, picks, new Set(), games, new Date("2027-01-16T20:00:00Z").getTime()).playoffs;
+  assert.deepEqual(early, [{ id: "wild:2027-01-16", label: "Wild Card", day: "SAT", roundDays: 3, complete: false, scores: [] }], "only the first day, named, with nothing to plot");
+  const saturday = buildSeasonSnapshot(wildCard, players, picks.filter((pick) => !["wc3", "wc4", "wc5"].includes(pick.game_id)), new Set(), games, new Date("2027-01-17T02:00:00Z").getTime()).playoffs;
+  assert.deepEqual(saturday.map((day) => [day.day, day.scores.length > 0]), [["SAT", true]], "once Saturday is final it is charted, not also waiting");
+  const none = buildSeasonSnapshot(periods(["upcoming", "upcoming", "upcoming", "upcoming"]), players, picks, new Set(), games, new Date("2027-01-10T12:00:00Z").getTime()).playoffs;
+  assert.deepEqual(none, [], "no playoff round has started, so there is no first day to show");
 });
 
 test("a cancelled playoff game is no game day, and a round with no games on file is one point", () => {
