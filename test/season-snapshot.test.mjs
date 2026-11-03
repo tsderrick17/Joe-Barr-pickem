@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
-import { snapshotAxis, snapshotKeyColumns, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotWeekLines, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -367,4 +367,14 @@ test("the 6 Wk rail puts the view on the nearest week and never past either end"
   assert.equal(snapshotRailStop(-500, step, furthest), 0, "the bounce past the first week");
   assert.equal(snapshotRailStop(99999, step, furthest), furthest, "and past the latest");
   assert.equal(snapshotRailStop(200, 0, furthest), 0, "no week width, no movement");
+});
+
+test("a week's name under the chart: its number, or a playoff round in full on one or two short lines", () => {
+  assert.deepEqual(snapshotWeekLines("Week 7"), ["7"]);
+  assert.deepEqual(snapshotWeekLines("Week 18"), ["18"]);
+  assert.deepEqual(snapshotWeekLines("Wild Card"), ["WILD", "CARD"]);
+  assert.deepEqual(snapshotWeekLines("Divisional Round"), ["DIVISIONAL"]);
+  assert.deepEqual(snapshotWeekLines("Conference Championships"), ["CONFERENCE", "CHAMPS"]);
+  assert.deepEqual(snapshotWeekLines("Super Bowl"), ["SUPER", "BOWL"]);
+  assert.deepEqual(snapshotWeekLines("Round"), ["ROUND"], "a name with nothing left after the trimming still shows something");
 });

@@ -217,7 +217,13 @@ measure database requests or end-to-end route time.
   or overlapping strokes. Bands join at common week boundaries and taper to the
   zero baseline. The chart has sparse axis labels but no point callouts or
   duplicate data table. During the playoffs the playoff
-  chart replaces the regular-season chart. Each person has a permanent color: eleven validated hues, shuffled
+  chart replaces the regular-season chart. A playoff round is charted only
+  once it is settled (every game of the round graded), so on Wild Card weekend
+  the Playoffs half has nothing to draw: the Snapshot opens on Season until a
+  playoff round is charted, and pressing Playoffs says "Fills in when the Wild
+  Card is final." over the empty plot. A playoff round is named in full under
+  its line, on one or two short lines (WILD / CARD, DIVISIONAL, CONFERENCE /
+  CHAMPS, SUPER / BOWL), never cut short or touching its neighbor. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the
   pool (inactive players keep their slot), so hiding, leaving, or joining never
   repaints anyone. The pad turns over flat; turned over, it widens to the full

@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-03 - Season Snapshot in the playoffs: no blank chart on Wild Card weekend, and the round names in full
+
+Owner asked how the Snapshot looks once the playoffs begin and the pad grows to six picks. Checked with the whole pool of eleven at each round on a phone and a
+desktop: the back of the pad is always the front's size, so the chart follows it and nothing is cut off. Two things were wrong. (1) A playoff round is charted only
+once every game of it is graded (everyone picks the whole round), so from Wild Card kickoff to Monday night the Playoffs half, which the Snapshot opens on, was an
+axis with no lines. It now opens on Season until a playoff round is charted, and pressing Playoffs says "Fills in when the Wild Card is final." over the empty
+plot. (2) The round names were cut to eight letters ("WILD CAR", "DIVISION", "CONFEREN", "SUPER BO") and on a phone the last two touched. They are now
+written in full on one or two short lines (WILD / CARD, DIVISIONAL, CONFERENCE / CHAMPS, SUPER / BOWL), with the room under the playoff chart growing by one
+line only when a name takes two; the regular-season chart and every text size are unchanged. Left alone: with "hide eliminated rows" on, very late in the
+playoffs the pad is short, and turning it over makes the card grow to the chart's minimum height.
+
+**Reason:** A blank chart looks broken, and a name cut short reads as a mistake; the owner wants a page that is plain and trustworthy.
+
 ## 2026-11-03 - Season Snapshot rail: centered in its strip, and swollen only while touched
 
 Owner request. The 6 Wk position rail's 8 px bar sat low in the open space between the masthead's rule and the top grid line (about 9 px of room above it, 2 px below); it is now centered in that space at every width. The thumb's small swell used the browser's hover state, which a phone leaves stuck on after a tap until the next tap elsewhere, so a touched rail stayed swollen; the swell now applies to hover only on devices that can hover (a mouse) and, on every device, only while the rail is being dragged.
