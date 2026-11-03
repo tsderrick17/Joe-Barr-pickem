@@ -320,6 +320,24 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
   }));
 }
 
+/**
+ * Score checks moved to a 5-minute rhythm on the morning of Monday, November 2, 2026 (migration 20261102120000). The provider cost chart's averages
+ * count only slates that started on or after midnight Eastern that day, so they measure the polling in force now, not the old schedule.
+ */
+export const SCORE_POLLING_AVERAGES_SINCE = "2026-11-02T05:00:00.000Z";
+
+/**
+ * The slates the averages count: those that started at or after `since` (all of them when there is no date).
+ * @template {{ slateStartedAt: string }} T
+ * @param {T[]} points
+ * @param {string | null | undefined} since
+ * @returns {T[]}
+ */
+export function slatesSince(points, since) {
+  const from = since ? Date.parse(since) : NaN;
+  return Number.isFinite(from) ? points.filter((point) => Date.parse(point.slateStartedAt) >= from) : points;
+}
+
 // The last `days` Eastern calendar dates, including the point's date. Weight by games,
 // not by slate, so a single-game Thursday does not count like a Sunday slate.
 const easternDayFormatter = dateFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, slateEfficiencySeries } from "../src/lib/provider-chart-data.js";
+import { expectedScoreChecks, firstHourSettleShare, latestProviderCreditSnapshot, monthlyCreditSeries, rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, SCORE_POLLING_AVERAGES_SINCE, slateEfficiencySeries, slatesSince } from "../src/lib/provider-chart-data.js";
 import { providerRequestCost } from "../src/lib/provider-efficiency.js";
 import { SCORE_RETRY_MINUTES } from "../src/lib/score-retry-ladder.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
@@ -208,4 +208,23 @@ test("line requests: a 7 AM refresh each day plus one fetch per distinct lock ti
   assert.equal(byDate["2026-10-02"].forecastRefreshes, 1);
   assert.equal(byDate["2026-10-03"].forecastLines, 2);
   assert.equal(byDate["2026-10-02"].forecastLines, 1);
+});
+
+test("the cost averages start at the 5-minute polling cutover: earlier slates are dropped, and the averages are built from the rest", () => {
+  const slate = (slateStartedAt, credits, settledGames) => ({ slateStartedAt, credits, settledGames, creditsPerGame: credits / settledGames });
+  const history = [
+    slate("2026-10-25T17:00:00Z", 60, 10),   // the old schedule
+    slate("2026-11-01T17:00:00Z", 60, 12),   // Sunday before the cutover
+    slate("2026-11-03T01:15:00Z", 20, 1),    // Monday night, 8:15 PM Eastern: the first slate on the 5-minute schedule
+    slate("2026-11-08T18:00:00Z", 36, 12),
+  ];
+  assert.equal(SCORE_POLLING_AVERAGES_SINCE, "2026-11-02T05:00:00.000Z", "midnight Eastern, Monday November 2");
+  const counted = slatesSince(history, SCORE_POLLING_AVERAGES_SINCE);
+  assert.deepEqual(counted.map((point) => point.slateStartedAt), ["2026-11-03T01:15:00Z", "2026-11-08T18:00:00Z"]);
+  assert.equal(rollingCreditsPerGame15Days(counted, 0), 20, "the first counted slate stands alone");
+  assert.equal(rollingCreditsPerGame15Days(counted, 1), 56 / 13, "older slates no longer pull the average");
+  assert.notEqual(rollingCreditsPerGame15Days(history, 3), rollingCreditsPerGame15Days(counted, 1));
+  assert.deepEqual(slatesSince(history, null), history, "no date keeps every slate");
+  assert.deepEqual(slatesSince(history, "not a date"), history);
+  assert.deepEqual(slatesSince([], SCORE_POLLING_AVERAGES_SINCE), []);
 });
