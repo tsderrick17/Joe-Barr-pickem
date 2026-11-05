@@ -14,6 +14,7 @@ import { nextWeekManualAccessAt } from "@/lib/week-rollover";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
 import type { SeasonPhase, SlateResponse, SlateScoringPeriod as ScoringPeriodRow } from "@/lib/api-contracts";
 import { seasonPhaseFromRows } from "@/lib/season-phase";
+import { howItWorksStart } from "@/lib/how-it-works.js";
 import {
   activeSurvivor,
   concludedSurvivor,
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       .order("submitted_at"),
     supabaseAdmin
       .from("scoring_periods")
-      .select("season_id, period_type, status")
+      .select("season_id, period_type, status, display_order")
       .eq("id", weekId)
       .maybeSingle(),
     supabaseAdmin
@@ -273,8 +274,20 @@ export async function GET(request: NextRequest) {
           .in("game_id", gameIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
+  // The folding "How it works" is a Commissioner preview for now (players keep the classic instructions, at no cost). Familiar means a
+  // saved pick in an earlier week of the same kind this season, so week 1 and the first playoff round start open again.
+  const familiarRead = player.is_commissioner
+    ? Promise.resolve(supabaseAdmin
+      .from("picks")
+      .select("id, scoring_periods!inner(season_id, period_type, display_order)")
+      .eq("player_id", player.id)
+      .eq("scoring_periods.season_id", period.season_id)
+      .eq("scoring_periods.period_type", period.period_type)
+      .lt("scoring_periods.display_order", period.display_order)
+      .limit(1))
+    : null;
   // A Slate that returns early never waits on these; an unexpected failure must not go unhandled.
-  for (const read of [seasonRead, survivorRead, teamAndLineResults]) read?.catch(() => undefined);
+  for (const read of [seasonRead, survivorRead, teamAndLineResults, familiarRead]) read?.catch(() => undefined);
 
   const { data: publicPicks, error: publicPicksError } = await publicPicksRead;
 
@@ -377,7 +390,16 @@ export async function GET(request: NextRequest) {
   // reclaimed space for every Pick'em game in the active round instead.
   if (period.period_type === "playoff") survivor = concludedSurvivor();
 
+  // Only how the instructions start depends on this read, so a failure shows them open rather than failing the Slate.
+  let howItWorks: "open" | "folded" | null = null;
+  if (familiarRead) {
+    const familiar = await familiarRead.then((result) => result, () => ({ data: null, error: { code: "unknown" } }));
+    if (familiar.error) console.error("Slate how-it-works read failed.", { code: familiar.error.code });
+    howItWorks = howItWorksStart({ preview: true, familiar: !familiar.error && Boolean(familiar.data?.length) });
+  }
+
   return NextResponse.json({
+    ...(howItWorks ? { howItWorks } : {}),
     serverTime: currentTime.toISOString(),
     games: shapeSlateGames({
       games: games as GameRow[],

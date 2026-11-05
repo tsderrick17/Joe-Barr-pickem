@@ -25,6 +25,8 @@ export type SlateState = {
   nextWeekAvailableAt: number | null;
   games: BoardGame[];
   showActionOnly: boolean;
+  /** How the "How it works" instructions start; null for the classic, always-open ones. */
+  howItWorks: "open" | "folded" | null;
   seasonOver: boolean;
   playoffEliminated: boolean;
   forfeitAvailable: boolean;
@@ -53,7 +55,7 @@ export type SlateState = {
 };
 
 export const initialSlateState: SlateState = {
-  weeks: [], week: null, nextWeekAvailableAt: null, games: [], showActionOnly: false, seasonOver: false, playoffEliminated: false, forfeitAvailable: false, forfeited: false,
+  weeks: [], week: null, nextWeekAvailableAt: null, games: [], showActionOnly: false, howItWorks: null, seasonOver: false, playoffEliminated: false, forfeitAvailable: false, forfeited: false,
   survivorUsedTeamIds: [], survivorAvailable: true, survivorChipsVisible: true, survivorOnReceipt: true, survivorStatus: "active", clockSynchronized: false,
   draftPicks: [], draftSurvivor: null, savedPicks: [], savedSurvivor: null,
   latestLoadId: 0, isLoading: true, errorMessage: "",
@@ -88,6 +90,7 @@ function fromBoard(state: SlateState, data: BoardResponse): SlateState {
     seasonOver: data.seasonPhase ? data.seasonPhase === "off_season" : state.seasonOver,
     games: data.games,
     showActionOnly: Boolean(data.showPoolAction),
+    howItWorks: data.howItWorks ?? null,
     playoffEliminated: data.pickem.playoffEliminated,
     forfeitAvailable: Boolean(data.pickem.forfeit?.available),
     forfeited: Boolean(data.pickem.forfeit?.forfeited),

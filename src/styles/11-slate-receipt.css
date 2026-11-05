@@ -657,3 +657,18 @@
 #slate-matchups,
 #my-ticket { scroll-margin-top: calc(var(--site-nav-height, 7rem) + 5rem); }
 
+
+/* The Slate's "How it works" button: a full-width row under the PICK'EM card, in the card's label style, lined up with its text. */
+.slate-how-toggle {
+  color: var(--slate-help-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  min-height: 2.75rem;
+  padding: 0 .75rem;
+  text-transform: uppercase;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .slate-how-toggle { min-height: 2.25rem; padding-left: 1rem; }
+}

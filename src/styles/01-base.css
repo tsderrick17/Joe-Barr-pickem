@@ -79,3 +79,27 @@ html:not([data-nav-bowls]) .nav-bowls-tab { display: none; }
 .account-menu-confirm { display: grid; gap: .3rem; padding: .2rem; }
 .account-menu-confirm p { color: var(--themed-text-18); font-size: .95rem; font-weight: 700; margin: .3rem .3rem .4rem; }
 
+
+/* "How it works" (the Slate and the Bowl Pool): the button and the fold under it. The fold animates its row from nothing to its full
+   height (grid rows 0fr to 1fr, so no height is measured or guessed), fading in as it opens; the chevron turns with it. Folded, the
+   content is hidden from taps, the keyboard and screen readers. */
+.how-toggle { align-items: center; background: transparent; border: 0; cursor: pointer; display: flex; gap: .45rem; text-align: left; }
+.how-toggle-chevron { flex: none; transition: transform .34s cubic-bezier(.22, .61, .36, 1); }
+.how-toggle[aria-expanded="true"] .how-toggle-chevron { transform: rotate(180deg); }
+.how-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .34s cubic-bezier(.22, .61, .36, 1), opacity .2s ease, visibility 0s linear .34s;
+  visibility: hidden;
+}
+.how-fold.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows .34s cubic-bezier(.22, .61, .36, 1), opacity .26s ease .08s, visibility 0s;
+  visibility: visible;
+}
+.how-fold-inner { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .how-fold, .how-fold.is-open, .how-toggle-chevron { transition: none; }
+}

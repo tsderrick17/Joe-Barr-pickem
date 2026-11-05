@@ -54,6 +54,8 @@ export type SlateResponse = {
     usedTeamIds: string[];
   };
   showPoolAction: boolean;
+  /** How the "How it works" instructions start (src/lib/how-it-works.js); absent for the classic, always-open instructions. */
+  howItWorks?: "open" | "folded";
   /** Sent with the bootstrap request (the first load of the page). */
   seasonPhase?: SeasonPhase;
   bootstrap?: {

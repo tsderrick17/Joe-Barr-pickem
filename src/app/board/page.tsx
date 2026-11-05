@@ -48,7 +48,7 @@ export default function BoardPage() {
   // last saved, which load is current, and the save in flight. The clock ticks on its own.
   const [state, dispatch] = useReducer(slateReducer, initialSlateState);
   const {
-    weeks, week, nextWeekAvailableAt, games, showActionOnly, seasonOver, playoffEliminated, forfeitAvailable, forfeited, survivorUsedTeamIds, survivorAvailable,
+    weeks, week, nextWeekAvailableAt, games, showActionOnly, howItWorks, seasonOver, playoffEliminated, forfeitAvailable, forfeited, survivorUsedTeamIds, survivorAvailable,
     survivorChipsVisible, survivorOnReceipt, survivorStatus, clockSynchronized, isLoading, errorMessage, isSubmitting,
   } = state;
   const { draftPicks: selectedPicks, draftSurvivor: survivorPick, savedPicks, savedSurvivor: savedSurvivorPick, warning: selectionWarning, feedback: selectionFeedback } = state;
@@ -637,8 +637,10 @@ export default function BoardPage() {
             actionOnlyActive={actionOnlyActive}
             availableWeeks={availableWeeks}
             hasEarlyGame={hasEarlyGame}
+            howItWorks={howItWorks}
             onChooseWeek={chooseWeek}
             onToggleDisplay={toggleDisplay}
+            pickLimit={selectionLimit}
             readOnly={seasonClosedForViewer}
             survivorHelp={survivorHelp}
             week={week}
