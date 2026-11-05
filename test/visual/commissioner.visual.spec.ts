@@ -375,8 +375,12 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await serve(page, "healthy");
   await page.goto("/admin");
   await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
-  await page.locator(".commissioner-panel-tab").nth(1).click();
   const section = page.locator("[aria-labelledby=pool-stats-title]");
+  // A press that lands before the page is ready to answer does nothing (this test failed that way on 2026-10-30 and 2026-11-05), so press until the panel opens.
+  await expect(async () => {
+    await page.locator(".commissioner-panel-tab").nth(1).click();
+    await expect(section.getByLabel("Show")).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
   await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
