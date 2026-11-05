@@ -90,7 +90,7 @@ test("the morning after a Divisional game day the moderator posts the playoff ra
     assert.equal(note.is_moderator, true);
     assert.equal(note.body, [
       "4 games left.",
-      // 4 games left, 2 ahead of the closest chaser: 4 - 2 + 1.
+      // The wins Leader needs even if Chaser gets all 4 games left right: 10 + 4 - 12 + 1.
       `${names.leader} leads. Magic number: 3`,
       `2 back: ${names.chaser} and ${names.twin}`,
       `3 back: ${names.trailer}`,

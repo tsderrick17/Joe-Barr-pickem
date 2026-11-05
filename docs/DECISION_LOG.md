@@ -22,8 +22,8 @@ and add a row above.
 ## 2026-11-05 - Playoff race note: "Gary leads", and the leader's magic number once it is 5 or less
 
 The owner then asked for no score on the leader line ("Gary leads."), and for the leader's magic number once it is 5 or less:
-"Gary leads. Magic number: 3". It is how many leader wins plus losses by the closest chaser still alive put the title out of
-everyone else's reach: games left minus the gap to that chaser, plus one (a player stays in while they can still tie). Co-leaders read
+"Gary leads. Magic number: 3". It is the wins the leader still needs to win the pool outright, assuming everyone else gets every
+remaining game right: the closest chaser's wins plus the games left, minus the leader's wins, plus one. Co-leaders read
 "Gary and Connor are tied for the lead." with no number. This replaces the earlier "no magic numbers" choice for the leader only;
 nobody else gets one. (`20261105030000_playoff_race_note_magic_number.sql`)
 

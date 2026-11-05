@@ -515,9 +515,10 @@ playoff wins.
   Eastern, pg_cron `post-playoff-race-chat-note` every fifteen minutes until
   9:45 AM), the Commissioner's moderator note in the pool chat reads, line by
   line: "4 games left.", "Gary leads." (with "Magic number: 3" after it when
-  the leader's magic number is 5 or less: games left minus the gap to the
-  closest chaser still alive, plus one; co-leaders get "tied for the lead" and
-  no number), then everyone still alive grouped by how far back ("2 back:
+  the leader's magic number is 5 or less: the wins the leader still needs to
+  win the pool outright even if everyone else gets every remaining game right,
+  the closest chaser's wins plus games left minus the leader's wins plus one;
+  co-leaders get "tied for the lead" and no number), then everyone still alive grouped by how far back ("2 back:
   Connor", "3 back: Rick and Tyler"), then
   "Knocked out yesterday: ..." (alive before the day, out after it, by the same
   math as the snapshot, so it names exactly who the next snapshot scratches)

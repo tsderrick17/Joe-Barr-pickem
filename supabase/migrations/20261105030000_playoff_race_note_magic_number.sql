@@ -1,7 +1,7 @@
 -- The playoff race note, refined again by the owner: the leader line says only "Gary leads." (no score), and when the
--- leader's magic number is 5 or less it follows: "Gary leads. Magic number: 3". The magic number is how many leader wins
--- plus losses by the closest chaser still alive put the title out of everyone else's reach: games left minus the gap
--- to that chaser, plus one (a player stays in while they can still tie). Co-leaders read "Gary and Connor are tied for
+-- leader's magic number is 5 or less it follows: "Gary leads. Magic number: 3". The magic number is how many more games
+-- the leader must win to win the pool outright even if every other player gets every remaining game right: the closest
+-- chaser's wins plus the games left, minus the leader's wins, plus one. Co-leaders read "Gary and Connor are tied for
 -- the lead." with no number. Everything else is as in 20261105020000_playoff_race_note_every_day.sql.
 --
 --   4 games left.
@@ -165,9 +165,9 @@ begin
       continue;
     end if;
 
-    -- The leader's magic number: leader wins plus losses by the closest chaser still alive that put the title out of
-    -- everyone else's reach (once the gap is more than the games left, nobody can tie). Shown only when it is 5 or less.
-    magic_number := case when closest_after is null then null else remaining_after - (leader_after - closest_after) + 1 end;
+    -- The leader's magic number: the wins the leader still needs to win the pool outright, assuming the closest chaser
+    -- (and so everyone else) gets every remaining game right. Shown only when it is 5 or less.
+    magic_number := case when closest_after is null then null else closest_after + remaining_after - leader_after + 1 end;
 
     note_body := format('%s game%s left.', remaining_after, case when remaining_after = 1 then '' else 's' end)
       || E'\n' || case
