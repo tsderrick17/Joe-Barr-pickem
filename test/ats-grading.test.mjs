@@ -75,15 +75,15 @@ test("does not grade without a usable official line", () => {
   assert.equal(gradeAtsPick({ ...game, selectedTeamId: "away", homeScore: null }), "pending");
 });
 
-test("begins final-score checks two hours and fifty minutes after kickoff", () => {
+test("begins final-score checks two hours and fifty-five minutes after kickoff", () => {
   const game = { kickoffAt: "2026-09-13T17:00:00.000Z", status: "scheduled" };
 
   assert.equal(
-    isDueForFinalScoreCheck(game, new Date("2026-09-13T19:49:59.000Z")),
+    isDueForFinalScoreCheck(game, new Date("2026-09-13T19:54:59.000Z")),
     false,
   );
   assert.equal(
-    isDueForFinalScoreCheck(game, new Date("2026-09-13T19:50:00.000Z")),
+    isDueForFinalScoreCheck(game, new Date("2026-09-13T19:55:00.000Z")),
     true,
   );
   assert.equal(

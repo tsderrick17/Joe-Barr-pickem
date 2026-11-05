@@ -40,6 +40,53 @@ export function snapshotStackOrder(weeks, players, baseline = {}) {
     .map((entry) => entry.player);
 }
 
+/**
+ * What is written under a week's line: a regular week's number, or a playoff round's name in full, on one line or two
+ * (WILD / CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL) so four rounds sit side by side without a name
+ * cut short or touching its neighbor.
+ * @param {string} label  the scoring period's name
+ * @returns {string[]}
+ */
+export function snapshotWeekLines(label) {
+  const week = label.match(/week\s*(\d+)/i);
+  if (week) return [week[1]];
+  const words = label.replace(/\b(round|playoffs?)\b/gi, " ").replace(/\bconference\b/gi, "Conf").replace(/\bchampionships?\b/gi, "Champ").trim().split(/\s+/).filter(Boolean);
+  return words.length ? words.slice(0, 2).map((word) => word.toUpperCase()) : [label.slice(0, 10).toUpperCase()];
+}
+
+/** About how wide a word is in the 10px bold capitals under the chart, in pixels: enough to tell which names fit side by side. */
+export const snapshotTextWidth = (text) => text.length * 6.8;
+
+/**
+ * The playoff game days that belong to one round, side by side: [{ label, first, last }] with the positions of its first and
+ * last day. The round's name is written once under all of them.
+ * @param {Array<{ label: string }>} weeks
+ */
+export function snapshotRoundGroups(weeks) {
+  /** @type {Array<{ label: string, first: number, last: number }>} */
+  const groups = [];
+  weeks.forEach((week, index) => {
+    const latest = groups.at(-1);
+    if (latest && latest.label === week.label) latest.last = index;
+    else groups.push({ label: week.label, first: index, last: index });
+  });
+  return groups;
+}
+
+/**
+ * A round's name under its game days: on one line when it fits in the room its days give it (and, for the last round, in the
+ * room left at the chart's edge, since its name is centered under its day), otherwise one word to a line.
+ * @param {string} label  the scoring period's name
+ * @param {number} room  the width of the round's days, in pixels
+ * @param {number} [edgeRoom]  the room on either side of the name at the chart's edge
+ * @returns {string[]}
+ */
+export function snapshotRoundLines(label, room, edgeRoom = Infinity) {
+  const words = snapshotWeekLines(label);
+  const width = snapshotTextWidth(words.join(" "));
+  return words.length > 1 && width + 12 <= room && width / 2 <= edgeRoom ? [words.join(" ")] : words;
+}
+
 /** Lower-ranked colors are painted widest first; leaders remain visible inside. */
 export function snapshotLayers(weeks, standings, startWinsById = {}) {
   const segments = [];
@@ -114,6 +161,31 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3,
 export function snapshotRibbonPath(points, upper = 0, lower = 1) {
   const edge = (fraction) => points.map((point) => `${point.x},${point.top + (point.bottom - point.top) * fraction}`);
   return `M${edge(upper).join(" L")} L${edge(lower).reverse().join(" L")} Z`;
+}
+
+/**
+ * How many columns the player key uses so its rows come out even: as many as fit across, then the fewest that still
+ * need the same number of rows. Eleven names that would fit eight to a row go six and five, not eight and three.
+ * @param {number} count  names in the key
+ * @param {number} width  room across, in pixels
+ * @param {number} minItem  the narrowest a name's box may be
+ * @param {number} gap  space between boxes
+ */
+export function snapshotKeyColumns(count, width, minItem, gap) {
+  const fit = Math.max(1, Math.floor((width + gap) / (minItem + gap)));
+  const rows = Math.max(1, Math.ceil(count / fit));
+  return Math.max(1, Math.ceil(count / rows));
+}
+
+/**
+ * Where a drag on the position rail puts the 6-week view: the week boundary nearest the pointer, never past either end.
+ * @param {number} target  the wanted scroll position, in pixels
+ * @param {number} step  pixels per week
+ * @param {number} furthest  the most the chart can scroll
+ */
+export function snapshotRailStop(target, step, furthest) {
+  if (!(step > 0)) return 0;
+  return Math.min(Math.max(0, furthest), Math.max(0, Math.round(target / step) * step));
 }
 
 /**

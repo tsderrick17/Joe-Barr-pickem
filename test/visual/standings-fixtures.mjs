@@ -147,17 +147,56 @@ export function homeResponse(name) {
   return scenario;
 }
 
-/** Cumulative wins by week for the Season Snapshot, in a fixed order. */
-export function seasonSnapshotResponse(scenario = "", weekCount = 5) {
+/**
+ * The pool at its full size, eleven players, for the states that depend on how many names there are (the Season Snapshot's key):
+ * the home answer and the snapshot, each with three more players than the usual eight.
+ */
+export function withElevenPlayers(home, snapshot) {
+  const added = ["Steve", "John", "Shane"].map((firstName, index) => ({
+    ...home.rows[home.rows.length - 1], id: `p${NAMES.length + index}`, firstName, wins: 2 + index,
+    playoffEliminated: false, forfeited: false, trophies: [], holdsPickemTrophy: false,
+  }));
+  const withScores = (weeks) => weeks.map((week, weekIndex) => ({
+    ...week, scores: [...week.scores, ...added.map((player, index) => ({ playerId: player.id, wins: Math.max(0, Math.round((weekIndex + 1) * (0.9 - index * 0.2))) }))],
+  }));
+  return {
+    home: { ...home, rows: [...home.rows, ...added] },
+    snapshot: { ...snapshot, regular: withScores(snapshot.regular), playoffs: withScores(snapshot.playoffs), colorOrder: [...snapshot.colorOrder, ...added.map((player) => player.id)] },
+  };
+}
+
+// The seven Eastern game days of a usual postseason: the round each belongs to and the day it is played.
+const PLAYOFF_DAYS = [
+  ["Wild Card", "SAT"], ["Wild Card", "SUN"], ["Wild Card", "MON"],
+  ["Divisional Round", "SAT"], ["Divisional Round", "SUN"],
+  ["Conference Championships", "SUN"], ["Super Bowl", "SUN"],
+];
+// What each later game day adds for the player at the top of the order; those further down the order add less.
+const DAY_GAINS = [0, 2, 1, 2, 1, 1, 1];
+
+/**
+ * Cumulative wins by week for the Season Snapshot, in a fixed order. In the playoff scenario `days` is how many playoff game days
+ * are final and charted (0 is Wild Card weekend before Saturday's games end; 7 is the whole postseason).
+ */
+export function seasonSnapshotResponse(scenario = "", weekCount = 5, days = 1) {
   const scores = NAMES.map((_, playerIndex) => Array.from({ length: weekCount }, (_, week) => Math.max(0, Math.round((week + 1) * (1.8 - playerIndex * 0.12)))));
   return {
     regular: Array.from({ length: weekCount }, (_, week) => ({
       id: `week-${week + 1}`, label: `Week ${week + 1}`, complete: week < weekCount - 1,
       scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: scores[playerIndex][week] })),
     })),
-    playoffs: scenario === "commissioner-playoff"
-      ? [{ id: "playoff-1", label: "Wild Card", complete: true, scores: NAMES.map((_, playerIndex) => ({ playerId: `p${playerIndex}`, wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex) })) }]
-      : [],
+    playoffs: scenario !== "commissioner-playoff" ? []
+      // Before the first game day is final the first day waits on the axis with nothing to plot.
+      : days === 0 ? [{ id: "playoff-1", label: "Wild Card", day: "SAT", roundDays: 3, complete: false, scores: [] }]
+        : PLAYOFF_DAYS.slice(0, days).map(([label, day], index) => ({
+          id: `playoff-${index + 1}`, label, day, roundDays: PLAYOFF_DAYS.filter(([round]) => round === label).length, complete: true,
+          // The first game day lifts everyone from their regular-season total; each later day adds fewer wins to those further down the order.
+          scores: NAMES.map((_, playerIndex) => ({
+            playerId: `p${playerIndex}`,
+            wins: Math.max(0, Math.round(4 * (1.8 - playerIndex * 0.12))) + Math.max(0, 6 - playerIndex)
+              + DAY_GAINS.slice(0, index + 1).reduce((sum, gain) => sum + Math.max(0, gain - Math.floor(playerIndex / 2)), 0),
+          })),
+        })),
     colorOrder: NAMES.map((_, playerIndex) => `p${playerIndex}`),
   };
 }

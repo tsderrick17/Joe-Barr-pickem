@@ -46,18 +46,25 @@ test("the right axis is independent of the left one", () => {
   assert.deepEqual(rightDomain({ values: [], scale: "tight", present: true }), { minimum: 0, maximum: 4 });
 });
 
-test("the polling ladder charts the first nine windows as shares of every final, with the emergency windows as one count", async () => {
+test("the polling ladder charts the 5- and 10-minute windows as shares of every final, with the later windows as one count", async () => {
   const { ladderChartData } = await import("../src/lib/ladder-chart.js");
-  const minutes = [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240];
-  const counts = [16, 17, 12, 2, 1, 0, 0, 0, 0, 1, 0, 1];
-  const { points, ticks, total, emergencyFinals, emergencyMinutes } = ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: counts[index] })));
-  assert.equal(points.length, 9, "windows 10, 11 and 12 are not charted");
-  assert.equal(total, 50, "shares are of every final, emergency windows included");
-  assert.equal(points[0].values.finals, 32, "16 of 50 finals");
-  assert.equal(points[2].values.finals, 24);
-  assert.deepEqual([points[0].start, points[0].end, points[8].start, points[8].end], [0, 10, 100, 120], "bar width is the retry gap");
-  assert.deepEqual(ticks, [0, 30, 60, 90, 120], "the bottom axis counts minutes from the first check, every half hour");
-  assert.equal(emergencyFinals, 2);
-  assert.deepEqual(emergencyMinutes, [60, 120, 240]);
+  const { SCORE_RETRY_MINUTES } = await import("../src/lib/score-retry-ladder.js");
+  // One item per check, the last (no gap after it) with a window of 0, as the Grading route builds them.
+  const minutes = [...SCORE_RETRY_MINUTES, 0];
+  const counts = [16, 17, 12, 2, 1, 0, 0, 3, 1, 0, 0, 0, 1, 0, 1, 2];
+  assert.equal(counts.length, minutes.length);
+  const { points, ticks, total, laterFinals, laterMinutes, laterIncludesLastCheck } = ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: counts[index] })));
+  assert.equal(points.length, 9, "the seven 5-minute and two 10-minute windows are charted; the 20-minute windows and later are not");
+  assert.equal(total, 56, "shares are of every final, the later windows and the last check included");
+  assert.equal(points[0].values.finals, 28.6, "16 of 56 finals");
+  assert.equal(points[2].values.finals, 21.4);
+  assert.deepEqual([points[0].start, points[0].end, points[7].start, points[7].end, points[8].end], [0, 5, 35, 45, 55], "bar width is the retry gap");
+  assert.deepEqual(ticks, [0, 15, 30, 45], "a short chart is labelled every quarter hour from the first check");
+  assert.equal(laterFinals, 4, "finals found on the 20-minute windows, the 60, 120 and 240 windows and the last check");
+  assert.deepEqual(laterMinutes, [20, 60, 120, 240]);
+  assert.equal(laterIncludesLastCheck, true);
   assert.deepEqual(ladderChartData(minutes.map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: 0 }))).points.map((point) => point.values.finals), Array(9).fill(0), "no finals yet means empty bars, not a divide by zero");
+  // A longer chart is labelled every half hour, as before.
+  const long = ladderChartData([10, 10, 10, 10, 10, 10, 10, 10, 10, 20].map((windowMinutes, index) => ({ rung: index + 1, windowMinutes, newFinals: 1 })));
+  assert.deepEqual(long.ticks, [0, 30, 60, 90]);
 });

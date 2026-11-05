@@ -4,6 +4,7 @@
  * season-setup panels, plus the Players and Reminders pages. Fictional names;
  * nothing here comes from or goes to a real database.
  */
+import { chooseScoreTier } from "../../src/lib/score-polling-tier.js";
 
 export const NOW = "2026-10-04T18:30:00Z";
 const T = (hoursAgo) => new Date(Date.parse(NOW) - hoursAgo * 3_600_000).toISOString();
@@ -24,6 +25,16 @@ const DAYS = Array.from({ length: 30 }, (_, index) => {
   const credits = index % 7 === 6 ? 14 : index % 7 === 0 ? 3 : 1;
   return { date, credits, cumulative: 0, scores: Math.floor(credits * 0.6), lines: Math.floor(credits * 0.3), other: credits - Math.floor(credits * 0.6) - Math.floor(credits * 0.3), estimatedCalls: credits };
 }).map((day, index, all) => ({ ...day, cumulative: all.slice(0, index + 1).reduce((sum, item) => sum + item.credits, 0) }));
+
+// The score-checking line on the Performance tab, for each tier: the rule's own sentence for sample numbers (4 game days left, 12 credits of lines).
+const TIER_NEEDS = { lineNeedCredits: 12, leanNeedCredits: 41, minimalNeedCredits: 27, gameDaysLeft: 4 };
+const TIER_PLANS = {
+  normal: chooseScoreTier({ usedCredits: 88, remainingCredits: 412, ...TIER_NEEDS }),
+  lean: chooseScoreTier({ usedCredits: 441, remainingCredits: 59, ...TIER_NEEDS }),
+  minimal: chooseScoreTier({ usedCredits: 456, remainingCredits: 44, ...TIER_NEEDS }),
+  paused: chooseScoreTier({ usedCredits: 489, remainingCredits: 11, ...TIER_NEEDS }),
+};
+const tierPlanFor = (state) => TIER_PLANS[state] ?? TIER_PLANS.normal;
 
 const CREDIT_USAGE = {
   monthLabel: "October 2026", trackedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
@@ -48,8 +59,8 @@ function dashboard(state) {
   const quiet = state === "quiet";
   const games = quiet ? GAMES.map((game) => ({ ...game, status: "final", state: "final", finalizedAt: T(30), score: "21-17", picks: { total: 8, pending: 0, graded: 8, visible: true }, survivor: { total: 4, pending: 0 } })) : GAMES.map((game, index) => (attention && index === 0 ? { ...game, needsAttention: true, status: "final", state: "awaiting grade" } : game));
   return {
-    checkedAt: NOW, creditUsage: CREDIT_USAGE, ladderCoverage: { since: T(200), runs: 40 },
-    ladderSummary: [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 0, 0, 0, 1, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
+    checkedAt: NOW, creditUsage: { ...CREDIT_USAGE, tierPlan: tierPlanFor(state) }, ladderCoverage: { since: T(200), runs: 40 },
+    ladderSummary: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240, 0].map((windowMinutes, index) => { const newFinals = [16, 17, 12, 2, 1, 0, 0, 3, 1, 0, 0, 0, 1, 0, 0, 1][index]; return { rung: index + 1, windowMinutes, newFinals, pickedUp: newFinals, percentage: newFinals * 2, newFinalsPercentage: newFinals * 2 }; }),
     status: attention ? "attention" : "healthy",
     periods: [{ id: "p5", displayName: "Week 5", status: quiet ? "complete" : "active", type: "regular" }, { id: "p4", displayName: "Week 4", status: "complete", type: "regular" }],
     period: { id: "p5", displayName: "Week 5", type: "regular", status: quiet ? "complete" : "active" },
@@ -58,7 +69,7 @@ function dashboard(state) {
       lastScoreSyncAt: attention ? T(3) : T(0.1), lastScoreSyncAgeMinutes: attention ? 180 : 6, latestScoreSyncStatus: attention ? "failed" : "success", providerAllowance: 455,
       pickOutcomes: { win: 14, loss: 10, void: 0, pending: quiet ? 0 : 16 }, survivorEntries: quiet ? { active: 0, eliminated: 10, complete: 1 } : { active: 5, eliminated: 3, complete: 0 },
       reminders: { scheduled: quiet ? 2 : 4, sending: 0, sent: 12, cancelled: 1, test: 0 },
-      efficiency: { totalCredits: 88, scoreCredits: 52, spreadCredits: 36, finalizedGames: 40, creditsPerFinal: 2.2, productiveRate: 0.74, trend: "improving", history: [3, 2.6, 2.4, 2.2].map((value, index) => ({ slateStartedAt: T(24 * 7 * (4 - index)), creditsPerFinal: value, creditsPerGame: value - 0.3, latencyMinutes: 12 - index, settledGames: [14, 15, 14, 15][index], productiveRate: 0.7 + index * 0.02, credits: [44, 38, 31, 27][index], finals: 14, games: [14, 15, 14, 15][index], calls: 20, attribution: "sample" })) },
+      efficiency: { totalCredits: 88, scoreCredits: 52, spreadCredits: 36, finalizedGames: 40, creditsPerFinal: 2.2, productiveRate: 0.74, trend: "improving", averagesSince: T(24 * 7 * 5), history: [3, 2.6, 2.4, 2.2].map((value, index) => ({ slateStartedAt: T(24 * 7 * (4 - index)), creditsPerFinal: value, creditsPerGame: value - 0.3, latencyMinutes: 12 - index, settledGames: [14, 15, 14, 15][index], productiveRate: 0.7 + index * 0.02, credits: [44, 38, 31, 27][index], finals: 14, games: [14, 15, 14, 15][index], calls: 20, attribution: "sample" })) },
       settlementLatency: { averageMinutes: 11, slowestMinutes: 24, samples: 14, history: [14, 12, 11, 9].map((minutes, index) => ({ label: `Week ${index + 1}`, shortLabel: `W${index + 1}`, minutes })) },
       comparison: { previousPeriod: "Week 4", previousAverageMinutes: 13, deltaMinutes: -2, history: [1, 2, 3, 4].map((week) => ({ id: `w${week}`, label: `Week ${week}`, shortLabel: `W${week}`, averageMinutes: 14 - week, samples: 14 })) },
       readiness: { scheduleLoaded: true, linesLocked: 5, lineTotal: 5, nextKickoffAt: quiet ? IN(60) : IN(3), nextLineLockAt: quiet ? IN(52) : null },
@@ -67,7 +78,7 @@ function dashboard(state) {
     attention: attention ? [{ id: "a1", severity: "warning", title: "Score sync failed", detail: "The last two score checks failed; a retry is scheduled." }, { id: "a2", severity: "info", title: "Final awaiting grade", detail: "IND at WAS is final and waiting to be graded." }] : [],
     audit: Array.from({ length: 6 }, (_, index) => ({ id: `e${index}`, action: ["final_score_imported", "lines_locked", "picks_graded"][index % 3], entityType: "game", details: {}, createdAt: T(index + 1) })),
     workerRuns: [{ jobType: "scores", status: attention ? "failed" : "success", startedAt: T(attention ? 3 : 0.1), completedAt: T(attention ? 3 : 0.1), error: attention ? "Provider timed out" : null }, { jobType: "line_lock", status: "success", startedAt: T(10), completedAt: T(10), error: null }],
-    cadence: { firstCheckMinutesAfterKickoff: 150, cronIntervalMinutes: 5, regularRetryMinutes: [5, 10, 20], playoffRetryMinutes: [3, 5, 10], note: "Sample cadence note." },
+    cadence: { firstCheckMinutesAfterKickoff: 175, cronIntervalMinutes: 5, regularRetryMinutes: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240], playoffRetryMinutes: [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240], note: "Sample cadence note." },
     scorePolls: Array.from({ length: 4 }, (_, index) => ({ startedAt: T(index + 1), completedAt: T(index + 1), status: "success", eligibleGames: 3, completedGamesFound: 1, finalScoresImported: 1, newFinals: 1, requestsLast: 1, pollingMode: "regular", quotaProtected: false })),
     incidents: attention ? [{ id: "i1", title: "Score provider timeouts", severity: "warning", detectedAt: T(3), lastSeenAt: T(0.2), resolvedAt: null }, { id: "i0", title: "Late line lock", severity: "info", detectedAt: T(100), lastSeenAt: T(99), resolvedAt: T(98) }] : [{ id: "i0", title: "Late line lock", severity: "info", detectedAt: T(100), lastSeenAt: T(99), resolvedAt: T(98) }],
     reminders: [{ id: "r1", category: "weekly", title: "Week 6 Slate is open", scheduledFor: IN(70), status: "scheduled" }],
@@ -86,7 +97,7 @@ const HEALTH = (state) => ({
   status: state === "attention" ? "attention" : "healthy", problems: state === "attention" ? ["Score checks have failed twice in a row."] : [],
   latestSuccessfulLocks: { started_at: T(10), completed_at: T(10), status: "success" }, latestSuccessfulScores: { started_at: T(state === "attention" ? 3 : 0.1), completed_at: T(state === "attention" ? 3 : 0.1), status: "success" },
   scoreCandidates: state === "quiet" ? 0 : 2, scoreProviderFailureStreak: state === "attention" ? 2 : 0, scoreProviderRetryAt: state === "attention" ? IN(0.1) : null, scoreCheckStatus: state === "attention" ? "retrying" : state === "quiet" ? "idle" : "scheduled",
-  scheduleProviderCircuit: null, scheduleProviderCooldownActive: false, reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, providerAllowance: 455,
+  scheduleProviderCircuit: null, scheduleProviderCooldownActive: false, reminderHealth: { overdueScheduled: 0, staleSending: 0, recentEmailFailures: 0 }, providerAllowance: 455, scoreTier: tierPlanFor(state),
   retention: { candidates: 0, cutoff: T(24 * 365) }, criticalWorkers: { healthy: state !== "attention", messages: state === "attention" ? ["The score worker last failed."] : [] },
 });
 const PREFLIGHT = (state) => ({
@@ -215,6 +226,9 @@ const split = (wins, losses, share) => ({ ...bucket(wins, losses), share });
 const teamPicked = (teamId, name, abbreviation, wins, losses, share) => ({ teamId, name, abbreviation, ...bucket(wins, losses), share });
 /** The five teams with the best hit rate (ties to the team picked more often), as the stats route sends them beside the five most picked. */
 const byHitRate = (teams) => [...teams].sort((a, b) => b.hitRate - a.hitRate || b.picks - a.picks).slice(0, 5);
+/** The same table turned over: the five least picked (ties by name) and the five with the lowest hit rate (ties to the team picked more often). */
+const byLeastPicked = (teams) => [...teams].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
+const byLowestHitRate = (teams) => [...teams].sort((a, b) => a.hitRate - b.hitRate || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
 const leagueTeams = [
   teamPicked("kc", "Kansas City Chiefs", "KC", 236, 190, 0.095), teamPicked("buf", "Buffalo Bills", "BUF", 211, 176, 0.086),
   teamPicked("phi", "Philadelphia Eagles", "PHI", 198, 171, 0.082), teamPicked("sf", "San Francisco 49ers", "SF", 187, 169, 0.079), teamPicked("det", "Detroit Lions", "DET", 176, 150, 0.073),
@@ -224,34 +238,37 @@ export const POOL_STATS = {
   record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
   teams: leagueTeams,
   teamsByHitRate: byHitRate(leagueTeams),
+  teamsLeastPicked: byLeastPicked(leagueTeams),
+  teamsByLowestHitRate: byLowestHitRate(leagueTeams),
   mostPicked: leagueTeams[0],
   mostPickedTied: 1,
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
   weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
   splits: {
-    side: { favorite: split(1310, 1086, 0.532), underdog: split(1108, 991, 0.468) },
+    side: { favorite: split(1270, 1048, 0.516), underdog: split(1070, 960, 0.452), pickem: split(78, 69, 0.033) },
     venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469) },
   },
   graded: 4495,
   players: [
-    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, [4, 4, { seasonYear: 2026, week: 9 }], [12, 0, { seasonYear: 2025, week: 14 }], 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
-    ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, [5, 0, { seasonYear: 2026, week: 8 }], [23, 9, { seasonYear: 2026, week: 9 }], 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
-    ["p4", "Rick", bucket(551, 519), { donut: 58, split: 119, sweep: 53 }, [3, 0, { seasonYear: 2025, week: 4 }], [8, 3, { seasonYear: 2025, week: 6 }], 0.5, 0.49, "phi", "Philadelphia Eagles", "PHI"],
-    ["p2", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, [6, 2, { seasonYear: 2025, week: 11 }], [17, 17, { seasonYear: 2026, week: 9 }], 0.57, 0.46, "kc", "Kansas City Chiefs", "KC"],
-  ].map(([playerId, name, record, weeks, sweeps, noDonut, favoriteShare, homeShare, teamId, teamName, teamAbbreviation]) => {
+    ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
+    ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
+    ["p4", "Rick", bucket(551, 519), { donut: 58, split: 119, sweep: 53 }, 0.5, 0.49, "phi", "Philadelphia Eagles", "PHI"],
+    ["p2", "Connor", bucket(644, 466), { donut: 33, split: 120, sweep: 77 }, 0.57, 0.46, "kc", "Kansas City Chiefs", "KC"],
+  ].map(([playerId, name, record, weeks, favoriteShare, homeShare, teamId, teamName, teamAbbreviation]) => {
     const teams = [teamPicked(teamId, teamName, teamAbbreviation, Math.round(record.wins * 0.11), Math.round(record.losses * 0.1), 0.105), teamPicked("sf", "San Francisco 49ers", "SF", Math.round(record.wins * 0.09), Math.round(record.losses * 0.09), 0.088), teamPicked("det", "Detroit Lions", "DET", Math.round(record.wins * 0.08), Math.round(record.losses * 0.07), 0.074)];
     return {
       playerId, name,
       record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
       teams,
       teamsByHitRate: byHitRate(teams),
+      teamsLeastPicked: byLeastPicked(teams),
+      teamsByLowestHitRate: byLowestHitRate(teams),
       mostPicked: teams[0],
       mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
       bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
       weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
-      streaks: { sweeps: { longest: sweeps[0], current: sweeps[1], endedAt: sweeps[2] }, noDonut: { longest: noDonut[0], current: noDonut[1], endedAt: noDonut[2] } },
       splits: {
-        side: { favorite: split(Math.round(record.wins * 0.55), Math.round(record.losses * 0.45), favoriteShare), underdog: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.55), 1 - favoriteShare) },
+        side: { favorite: split(Math.round(record.wins * 0.53), Math.round(record.losses * 0.43), favoriteShare - 0.02), underdog: split(Math.round(record.wins * 0.44), Math.round(record.losses * 0.54), 0.97 - favoriteShare), pickem: split(Math.round(record.wins * 0.03), Math.round(record.losses * 0.03), 0.03) },
         venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare) },
       },
       graded: record.picks,

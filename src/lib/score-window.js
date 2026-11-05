@@ -1,4 +1,4 @@
-export const FIRST_SCORE_CHECK_DELAY_MINUTES = 170;
+export const FIRST_SCORE_CHECK_DELAY_MINUTES = 175;
 
 /**
  * Polling for a game's final stops this long after kickoff: the paid provider no longer returns a game older than its three-day look-back, so

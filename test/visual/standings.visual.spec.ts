@@ -1,6 +1,6 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
-import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse } from "./standings-fixtures.mjs";
+import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse, withElevenPlayers } from "./standings-fixtures.mjs";
 
 // The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
 // painted frames so a recorded baseline and a later check agree about the settled chart.
@@ -121,6 +121,95 @@ for (const theme of ["day", "night"]) {
       }
     });
   }
+}
+
+// The Season Snapshot's player key with the whole pool, eleven names: the rows come out even (six and five across on a wide screen, four, four and
+// three on a phone), never a full line with only a couple left over.
+for (const label of ["phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot key with eleven players at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    const eleven = withElevenPlayers(homeResponse("commissioner-playoff"), seasonSnapshotResponse("commissioner-playoff", 14));
+    await page.route("**/api/home**", (route) => route.fulfill({ json: eleven.home }));
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: eleven.snapshot }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    await page.getByRole("button", { name: "Season", exact: true }).click();
+    await page.waitForTimeout(1500);
+    await settled(page);
+    await expect(page.locator(".season-snapshot-key-row")).toHaveCount(11);
+    await expect(page.locator(".season-snapshot-layout")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-eleven-players-${label}.png`);
+  });
+}
+
+// Wild Card weekend before Saturday's games end: no playoff game day is final yet. The Snapshot opens on Playoffs like any other time and shows every player as a dot at
+// their starting total, with the first game day (SAT, under the round's name) waiting on the bottom axis, and no lines and no note.
+for (const label of ["phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot on Wild Card weekend at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 0) }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    const half = page.getByRole("group", { name: "Season half shown" });
+    await expect(half.getByRole("button", { name: "Playoffs" })).toHaveAttribute("aria-pressed", "true");
+    const dots = page.locator(".season-snapshot-start circle");
+    await expect(dots.first()).toBeAttached();
+    await expect(dots, "one dot for every player on the chart").toHaveCount(await page.locator(".season-snapshot-key-row[aria-pressed=true]").count());
+    await expect(page.locator(".season-snapshot-ribbon:not(.season-snapshot-start)"), "no lines yet").toHaveCount(0);
+    await expect(page.getByText(/fills in/i)).toHaveCount(0);
+    expect(await page.locator(".season-snapshot-plot-track svg text").allTextContents(), "the first game day waits on the axis under its round").toEqual(["SAT", "WILD", "CARD"]);
+    await page.waitForTimeout(1200);
+    await settled(page);
+    await expect(page.locator(".season-snapshot-layout")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-wild-card-weekend-${label}.png`);
+    // Season is still one press away, and has its lines but no starting dots.
+    await half.getByRole("button", { name: "Season", exact: true }).click();
+    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
+    await expect(page.locator(".season-snapshot-start")).toHaveCount(0);
+  });
+}
+
+// The whole postseason charted a game day at a time: seven days (Wild Card Sat, Sun, Mon; Divisional Sat, Sun; Conference Championships Sun;
+// Super Bowl Sun), each round with more than one day showing its weekdays under its lines and each round's name once under its days. No two words overlap or leave the chart,
+// even on a narrow phone where a day has under a seventh of the width, and a one-line name sits centered between the lines of the others.
+for (const label of ["phone-360", "phone-390", "desktop-1280"] as const) {
+  test(`Season Snapshot playoffs with all seven game days at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTHS[label], height: 900 });
+    await signIn(page, "day");
+    await serve(page, "commissioner-playoff");
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 5, 7) }));
+    await settle(page);
+    await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+    const words = page.locator(".season-snapshot-plot-track svg text");
+    await expect(page.locator(".season-snapshot-ribbon").first()).toBeAttached();
+    await expect(page.locator(".season-snapshot-start"), "once a day is final the starting dots are gone and the lines start from their points").toHaveCount(0);
+    await page.waitForTimeout(1200);
+    await settled(page);
+    const texts = await words.allTextContents();
+    expect(texts.slice(0, 5), "a weekday under each game day's line, but none for a round that is only one day").toEqual(["SAT", "SUN", "MON", "SAT", "SUN"]);
+    expect(texts.slice(5).join(" "), "each round named once, in full").toBe("WILD CARD DIVISIONAL CONF CHAMP SUPER BOWL");
+    // Words never overlap or leave the chart.
+    const boxes = await words.evaluateAll((elements) => elements.map((element) => { const box = element.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    const chart = await page.locator(".season-snapshot-plot-scroll").boundingBox();
+    for (const [index, box] of boxes.entries()) {
+      expect(box.left, `word ${index} stays inside the chart on the left`).toBeGreaterThanOrEqual(chart!.x);
+      expect(box.right, `word ${index} stays inside the chart on the right`).toBeLessThanOrEqual(chart!.x + chart!.width + 0.5);
+      for (const other of boxes.slice(index + 1)) {
+        const apart = box.right <= other.left || other.right <= box.left || box.bottom <= other.top || other.bottom <= box.top;
+        expect(apart, `words ${index} and ${boxes.indexOf(other)} do not overlap`).toBe(true);
+      }
+    }
+    // The Super Bowl is two lines (SUPER over BOWL) at every width; a name on one line is centered on the middle of those two.
+    const middle = (box: { top: number; bottom: number }) => (box.top + box.bottom) / 2;
+    const block = (boxes.at(-2)!.top + boxes.at(-1)!.bottom) / 2;
+    for (const [index, text] of texts.entries()) {
+      if (["WILD CARD", "DIVISIONAL", "CONF CHAMP"].includes(text)) expect(Math.abs(middle(boxes[index]) - block), `${text} is centered on the lines of the other names`).toBeLessThanOrEqual(1);
+    }
+    if (texts.includes("CHAMP")) expect(Math.abs((boxes[texts.indexOf("CONF")].top + boxes[texts.indexOf("CHAMP")].bottom) / 2 - block), "CONF over CHAMP sits level with SUPER over BOWL").toBeLessThanOrEqual(1);
+    await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-day-flipped-all-seven-days-${label}.png`);
+  });
 }
 
 test("once Survivor has a champion, even the champion's ticket owes only the two Pick'em selections", async ({ page }) => {

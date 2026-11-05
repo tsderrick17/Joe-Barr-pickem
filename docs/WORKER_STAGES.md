@@ -32,7 +32,7 @@ cadence, whether the paid allowance says to hold). The worker reads context, ask
 | 6 | Advance scoring periods | yes | yes (atomic RPC) |
 | 7 | Playoff eligibility snapshot | yes | yes (immutable once taken) |
 | 8 | Read games awaiting scores; plan (pure) | yes | yes (reads) |
-| 9 | Quota hold decision (pure) | no | yes |
+| 9 | Score tier decision; games the tier leaves alone get their next time | no | yes (reads the month's credit use; rewrites the same timers) |
 | 10 | Provider request | yes | yes; the signal aborts on cancellation |
 | 11 | **Commit** final scores (`finalize_games_atomically`) | **yes, the last one** | yes (atomic, idempotent) |
 | 12 | Bookkeeping after the commit: clear backoff, defer unfinished games, roll the week, record the run | no | must finish; each step is idempotent |

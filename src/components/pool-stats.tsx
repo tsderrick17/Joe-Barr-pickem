@@ -9,31 +9,22 @@ import { RecordTiles, SplitsTable, TeamsTable, WeeksHistogram, type Bucket, type
 /**
  * Pick'em performance for the Performance panel: the league's numbers, or any one player's, chosen from a dropdown. Each view has the
  * record and hit rate, the most picked team (or how many teams tie for it), the weekly 0-2 / 1-1 / 2-0 histogram, then three tables side by side at
- * the same height: five teams (the most picked, or the best hit rate), the favorite/underdog and home/away splits, and season by season;
- * a player's view adds their regular season streaks. Private to the Commissioner.
+ * the same height: five teams (the most picked, or the best hit rate), the favorite / underdog / pick'em and home/away splits, and season by season.
+ * Private to the Commissioner. (Streaks are the Trophy Room's.)
  */
-type Run = { longest: number; current: number; endedAt: { seasonYear: number; week: number } | null };
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
-type PlayerView = View & { playerId: string; name: string; streaks: { sweeps: Run; noDonut: Run } };
+type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
+type PlayerView = View & { playerId: string; name: string };
 type Stats = View & { players: PlayerView[] };
 
 const LEAGUE = "league";
-
-function RunTile({ label, run }: { label: string; run: Run }) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{run.longest}<small>{run.endedAt ? ` · ${run.endedAt.seasonYear} wk ${run.endedAt.week}` : ""}</small></dd>
-      <small>{run.current > 0 ? <span className="pool-alive">{run.current} right now</span> : "not active"}</small>
-    </div>
-  );
-}
 
 export default function PoolStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState("");
   const [chosen, setChosen] = useState(LEAGUE);
-  const [teamSort, setTeamSort] = useState<TeamSort>("picked");
+  // Which five teams the table shows: the column chosen, most or least (pressing the chosen column again turns it over).
+  const [teamSort, setTeamSort] = useState<{ key: TeamSort; descending: boolean }>({ key: "picked", descending: true });
+  const chooseTeamSort = (key: TeamSort) => setTeamSort((current) => (current.key === key ? { key, descending: !current.descending } : { key, descending: true }));
 
   useEffect(() => {
     let disposed = false;
@@ -79,23 +70,12 @@ export default function PoolStats() {
           <WeeksHistogram label={`${who === "the league" ? "The league’s" : `${who}’s`} weekly records histogram`} weeks={view.weeks} />
         </div>
 
-        {player ? (
-          <div className="pool-stats-block">
-            <h3>Regular season streaks</h3>
-            <p>A streak alive at the end of a season carries into the next. The whole league&rsquo;s streaks are in the Trophy Room.</p>
-            <dl className="pool-stats-tiles">
-              <RunTile label="Consecutive Donut Free Weeks" run={player.streaks.noDonut} />
-              <RunTile label="Consecutive 2-0 Weeks" run={player.streaks.sweeps} />
-            </dl>
-          </div>
-        ) : null}
-
         <div className="pool-stats-trio">
           {view.teams.length ? (
             <div className="pool-stats-block">
-              <h3>{teamSort === "picked" ? "Most picked teams" : "Best hit rate teams"}</h3>
-              <p>{teamSort === "picked" ? `The five teams ${who} took most often.` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit most often.`}</p>
-              <TeamsTable onSort={setTeamSort} sort={teamSort} teams={teamSort === "picked" ? view.teams : view.teamsByHitRate} />
+              <h3>{teamSort.key === "picked" ? (teamSort.descending ? "Most picked teams" : "Least picked teams") : (teamSort.descending ? "Best hit rate teams" : "Lowest hit rate teams")}</h3>
+              <p>{teamSort.key === "picked" ? `The five teams ${who} took ${teamSort.descending ? "most" : "least"} often.` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit ${teamSort.descending ? "most" : "least"} often.`}</p>
+              <TeamsTable descending={teamSort.descending} onSort={chooseTeamSort} sort={teamSort.key} teams={teamSort.key === "picked" ? (teamSort.descending ? view.teams : view.teamsLeastPicked) : (teamSort.descending ? view.teamsByHitRate : view.teamsByLowestHitRate)} />
             </div>
           ) : null}
 
@@ -109,7 +89,7 @@ export default function PoolStats() {
             <div className="pool-stats-block">
               <h3>Season by season</h3>
               <p>{player ? `${player.name}’s` : "The league’s"} record in each season.</p>
-              <div className="pool-table-wrap">
+              <div className="pool-table-wrap pool-table-wrap-seasons">
                 <table className="pool-table">
                   <thead><tr><th scope="col">Season</th><th scope="col">Record</th><th scope="col">Hit rate</th></tr></thead>
                   <tbody>

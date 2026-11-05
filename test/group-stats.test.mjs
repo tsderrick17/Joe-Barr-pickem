@@ -41,7 +41,8 @@ test("weekly records: a missed pick is a loss, a voided week is left out, unfini
 });
 
 test("a streak carries from one season into the next, and a skipped week neither breaks nor extends it", () => {
-  const ann = stats.players.find((row) => row.name === "Ann").streaks, bob = stats.players.find((row) => row.name === "Bob").streaks;
+  const streaks = weeklyStreaks({ seasons, periods, picks });
+  const ann = streaks.get("ann"), bob = streaks.get("bob");
   assert.equal(ann.sweeps.longest, 2, "2025 w3 and 2026 w1 are consecutive counted weeks for Ann");
   assert.equal(ann.sweeps.current, 2, "her void week is skipped, so the run is still alive");
   assert.deepEqual(ann.sweeps.endedAt, { seasonYear: 2026, week: 1 });
@@ -77,6 +78,35 @@ test("a pick that lands exactly on the number is a push, graded as a loss, and t
   assert.equal(withPush.splits.venue.home.picks, 1);
 });
 
+test("a pick'em game (spread 0) is its own line and never counts as a favorite or an underdog", () => {
+  // The pool's PK convention names the home team as the line's "favorite" at a spread of 0, so the home pick must not read as the favorite.
+  const pickemGames = [
+    { id: "pk1", home_team_id: "fav", away_team_id: "dog", home_score: 24, away_score: 20 },
+    { id: "pk2", home_team_id: "fav", away_team_id: "dog", home_score: 17, away_score: 21 },
+    { id: "pk3", home_team_id: "fav", away_team_id: "dog", home_score: 20, away_score: 27 },
+  ];
+  const pickemLines = pickemGames.map((item) => ({ game_id: item.id, favorite_team_id: "fav", locked_spread: 0 }));
+  const pickemPicks = [
+    { id: "q1", player_id: "ann", game_id: "pk1", scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" },
+    { id: "q2", player_id: "ann", game_id: "pk2", scoring_period_id: "s26-w1", selected_team_id: "dog", result: "win" },
+    { id: "q3", player_id: "ann", game_id: "pk3", scoring_period_id: "s26-w1", selected_team_id: "fav", result: "loss" },
+  ];
+  const only = buildGroupStats({ players, seasons, periods, games: pickemGames, lines: pickemLines, picks: pickemPicks });
+  const { favorite, underdog, pickem } = only.splits.side;
+  assert.deepEqual([favorite.picks, underdog.picks], [0, 0]);
+  assert.deepEqual([pickem.wins, pickem.losses, pickem.picks], [2, 1, 3]);
+  assert.equal(pickem.share, 1);
+  assert.equal(only.splits.venue.home.picks + only.splits.venue.away.picks, 3, "home and away still count every pick");
+
+  // Mixed with ordinary lines, the three shares add up to the whole.
+  const mixed = buildGroupStats({ players, seasons, periods, games: [...games, ...pickemGames], lines: [...lines, ...pickemLines], picks: [...picks, ...pickemPicks] });
+  const side = mixed.splits.side;
+  assert.equal(side.pickem.picks, 3);
+  assert.equal(side.favorite.picks + side.underdog.picks + side.pickem.picks, mixed.graded);
+  assert.ok(Math.abs(side.favorite.share + side.underdog.share + side.pickem.share - 1) < 1e-9);
+  assert.equal(side.favorite.picks + side.underdog.picks, stats.graded, "the ordinary lines count exactly as before");
+});
+
 test("no data gives empty, safe numbers", () => {
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });
   assert.equal(empty.record.hitRate, null); assert.equal(empty.weeks.total, 0); assert.deepEqual(empty.players, []);
@@ -90,8 +120,7 @@ test("each player gets their own full set, and the players add up to the group",
   assert.deepEqual(ann.weeks, { total: 4, donut: 0, split: 1, sweep: 3 });
   assert.deepEqual(bob.weeks, { total: 5, donut: 1, split: 2, sweep: 2 });
   assert.equal(ann.weeks.total + bob.weeks.total, stats.weeks.total);
-  assert.deepEqual(ann.streaks.sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
-  assert.deepEqual(bob.streaks.noDonut, { longest: 4, current: 4, endedAt: { seasonYear: 2026, week: 2 } });
+  assert.equal("streaks" in ann, false, "the streaks are the Trophy Room's, not part of a player's performance set");
   assert.equal(ann.splits.side.favorite.picks + ann.splits.side.underdog.picks, ann.graded);
   assert.deepEqual(ann.bySeason.map((season) => season.seasonYear), [2026, 2025]);
 });
@@ -142,6 +171,21 @@ test("the five teams with the best hit rate come beside the five most picked, ti
   assert.deepEqual(withTeams.teamsByHitRate.map((team) => team.teamId), ["x", "z", "w", "y"], "x is 2-0, z is 1-0, then the two 0-1 teams by name");
   assert.deepEqual(withTeams.teams.map((team) => team.teamId), ["x", "w", "y", "z"], "the most picked list is unchanged: x twice, then the rest by name");
   assert.ok(withTeams.players.every((player) => player.teamsByHitRate.length === player.teams.length), "each player gets both lists");
+  // The same table turned over: the least picked (ties by name) and the lowest hit rate (ties to the team picked more often, then by name).
+  assert.deepEqual(withTeams.teamsLeastPicked.map((team) => team.teamId), ["w", "y", "z", "x"], "three teams picked once (by name), then x picked twice");
+  assert.deepEqual(withTeams.teamsByLowestHitRate.map((team) => team.teamId), ["w", "y", "x", "z"], "the two 0-1 teams by name, then x (2-0, picked more) ahead of z (1-0)");
+  assert.ok(withTeams.players.every((player) => player.teamsLeastPicked.length === player.teams.length && player.teamsByLowestHitRate.length === player.teams.length), "each player gets the lowest lists too");
+  assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsLeastPicked, []);
+  // Only five come back, even when more teams were picked.
+  const many = buildGroupStats({
+    players, seasons, periods,
+    games: Array.from({ length: 7 }, (_, i) => ({ id: `m${i}`, home_team_id: `t${i}`, away_team_id: "opp", home_score: 20, away_score: 10 })),
+    lines: Array.from({ length: 7 }, (_, i) => ({ game_id: `m${i}`, favorite_team_id: `t${i}`, locked_spread: 3 })),
+    picks: Array.from({ length: 7 }, (_, i) => ({ id: `mp${i}`, player_id: "ann", game_id: `m${i}`, scoring_period_id: "s25-w1", selected_team_id: `t${i}`, result: i < 3 ? "win" : "loss" })),
+  });
+  assert.equal(many.teamsLeastPicked.length, 5);
+  assert.equal(many.teamsByLowestHitRate.length, 5);
+  assert.deepEqual(many.teamsByLowestHitRate.map((team) => team.hitRate), [0, 0, 0, 0, 1], "the four 0-1 teams come first, then one of the 1-0 teams");
   assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsByHitRate, []);
 });
 
@@ -152,9 +196,8 @@ test("a team missing from the list still counts, under a plain name, and nobody 
   assert.deepEqual(empty.teams, []);
 });
 
-test("weekly streaks alone (what the Trophy Room sends) match the ones inside the full stats", () => {
+test("weekly streaks (what the Trophy Room sends)", () => {
   const streaks = weeklyStreaks({ seasons, periods, picks });
-  for (const player of stats.players) assert.deepEqual(streaks.get(player.playerId), player.streaks, player.name);
   assert.deepEqual(streaks.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 1 }, total: 3 });
   assert.equal(streaks.has("nobody"), false);
 });
@@ -236,4 +279,39 @@ test("a week still being played counts for a player once both of their own picks
   const settled = weeklyStreaks({ seasons, periods, picks, settledPeriodIds: new Set(["w2"]) });
   assert.deepEqual([settled.get("cat").sweeps.total, settled.get("cat").noDonut.current], [0, 0], "Cat's graded loss and her pick not made is a 0-2 week");
   assert.equal(settled.get("bob").noDonut.current, 0, "a pick that is still pending leaves the week out even after the week settles");
+});
+
+test("Perfect Weeks count every round but the Super Bowl: a regular 2-0 week and a playoff round won pick for pick; the streaks stay regular season", () => {
+  const round = (id, name, order, max) => ({ id, season_id: "s26", display_name: name, display_order: order, period_type: "playoff", status: "complete", max_picks: max });
+  const rounds = [round("wc", "Wild Card", 19, 6), round("div", "Divisional Round", 20, 4), round("conf", "Conference Championships", 21, 2), round("sb", "Super Bowl", 22, 1)];
+  const periodsWithRounds = [week("s26", 1), week("s26", 2), ...rounds];
+  const gameRows = [
+    ...Array.from({ length: 6 }, (_, i) => ({ id: `wc${i}`, scoring_period_id: "wc", status: "final" })),
+    ...Array.from({ length: 4 }, (_, i) => ({ id: `div${i}`, scoring_period_id: "div", status: "final" })),
+    { id: "conf0", scoring_period_id: "conf", status: "final" }, { id: "conf1", scoring_period_id: "conf", status: "postponed" },   // only one playable game
+    { id: "sb0", scoring_period_id: "sb", status: "final" },
+  ];
+  const entry = (playerId, periodId, results) => results.map((result, i) => ({ id: `${playerId}-${periodId}-${i}`, player_id: playerId, scoring_period_id: periodId, result }));
+  const picks = [
+    ...entry("ann", "s26-w1", ["win", "win"]), ...entry("ann", "s26-w2", ["win", "loss"]),   // one regular perfect week
+    ...entry("ann", "wc", Array(6).fill("win")),                                            // a perfect Wild Card round
+    ...entry("ann", "div", ["win", "win", "win", "loss"]),                                 // not perfect
+    ...entry("ann", "conf", ["win"]),                                                       // one playable game, won: perfect
+    ...entry("ann", "sb", ["win"]),                                                         // the Super Bowl never counts
+    ...entry("bob", "wc", ["win", "win", "win", "win", "win", "loss"]),                    // 5-1 is not perfect
+    ...entry("bob", "div", ["win", "win", "win"]),                                         // three wins, one pick not made: not perfect
+    ...entry("bob", "sb", ["win"]),
+    ...entry("cat", "wc", Array(6).fill("win")),                                           // a player with playoff rounds only still appears
+  ];
+  const streaks = weeklyStreaks({ seasons, periods: periodsWithRounds, picks, games: gameRows });
+  assert.equal(streaks.get("ann").sweeps.total, 3, "regular 2-0 + Wild Card + Conference; not the Divisional 3-1 and not the Super Bowl");
+  assert.deepEqual([streaks.get("ann").sweeps.longest, streaks.get("ann").sweeps.current], [1, 0], "the streaks follow regular weeks only");
+  assert.equal(streaks.get("bob")?.sweeps.total ?? 0, 0, "a 5-1 round, a round with a pick not made, and the Super Bowl are not perfect weeks");
+  assert.equal(streaks.get("cat").sweeps.total, 1, "a perfect round counts for a player with no regular weeks");
+  assert.equal(streaks.get("cat").noDonut.longest, 0);
+  // Without game rows a round allows its full max_picks.
+  assert.equal(weeklyStreaks({ seasons, periods: periodsWithRounds, picks }).get("ann").sweeps.total, 2, "the Conference Championships need both picks when no game rows are given");
+  // A round counts the moment the player's picks are all in and won, before the round itself finishes.
+  const open = periodsWithRounds.map((period) => (period.id === "wc" ? { ...period, status: "active" } : period));
+  assert.equal(weeklyStreaks({ seasons, periods: open, picks, games: gameRows.map((game) => (game.id === "wc5" ? { ...game, status: "scheduled" } : game)) }).get("cat").sweeps.total, 1);
 });

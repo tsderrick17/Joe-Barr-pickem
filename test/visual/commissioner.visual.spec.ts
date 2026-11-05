@@ -149,6 +149,24 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
+// The score-checking line on the Performance tab: Normal, and the three schedules the low-balance rule can switch to, each with its reason in plain words.
+for (const tier of ["normal", "lean", "minimal", "paused"] as const) {
+  for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+    test(`Commissioner score checking ${tier} day at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, "day");
+      await serve(page, tier === "normal" ? "healthy" : tier);
+      await settle(page, ".commissioner-panel-tab");
+      await page.locator(".commissioner-panel-tab").nth(1).click();
+      const section = page.locator("section[aria-label='Monthly provider credit usage']");
+      await expect(section.locator("svg").first()).toBeVisible({ timeout: 30_000 });
+      await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
+      await page.waitForTimeout(600);
+      await expect(section).toHaveScreenshot(`commissioner-score-checking-${tier}-day-${label}.png`);
+    });
+  }
+}
+
 // The provider cost chart (Performance tab): credits per game as 15- and 30-day moving averages.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner provider cost chart day at ${label}`, async ({ page }) => {
@@ -370,13 +388,35 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();
   await section.getByRole("button", { name: /^Picked/ }).click();
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  // Pressing the chosen column again turns the table over: the five least picked, then the five with the lowest hit rate; once more turns it back.
+  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.locator("button.pool-sort") });
+  const teamRows = teamBlock.locator("tbody th");
+  await expect(teamRows.first()).toHaveText("Kansas City Chiefs");
+  await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▼");
+  await section.getByRole("button", { name: /^Picked/ }).click();
+  await expect(section.getByRole("heading", { name: "Least picked teams" })).toBeVisible();
+  await expect(section.getByText("The five teams the league took least often.")).toBeVisible();
+  await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▲");
+  await expect(teamBlock.locator("th[aria-sort=ascending]")).toHaveCount(1);
+  await expect(teamRows).toHaveText(["Detroit Lions", "San Francisco 49ers", "Philadelphia Eagles", "Buffalo Bills", "Kansas City Chiefs"]);
+  await section.getByRole("button", { name: /^Picked/ }).click();
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▼");
+  await section.getByRole("button", { name: /^Hit rate/ }).click();
+  await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();   // another column starts at the top again
+  await section.getByRole("button", { name: /^Hit rate/ }).click();
+  await expect(section.getByRole("heading", { name: "Lowest hit rate teams" })).toBeVisible();
+  await expect(section.getByText("The five teams the league hit least often.")).toBeVisible();
+  await expect(teamRows).toHaveText(["San Francisco 49ers", "Philadelphia Eagles", "Detroit Lions", "Buffalo Bills", "Kansas City Chiefs"]);
+  await section.getByRole("button", { name: /^Picked/ }).click();   // back to Picked: highest first
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   await section.getByLabel("Show").selectOption({ label: "Connor" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
-  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Regular season streaks" })).toHaveCount(0);   // streaks live in the Trophy Room, not here
   await expect(section.getByRole("heading", { name: "Season by season" })).toBeVisible();
-  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Home, Away
-  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Home", "Away"]);
+  await expect(section.getByText("Side of the spread")).toHaveCount(0);   // the splits are one plain list: Favorites, Underdogs, Pick'em, Home, Away
+  await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Pick’em", "Home", "Away"]);
   await section.getByLabel("Show").selectOption({ label: "Rick" });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });
@@ -398,6 +438,13 @@ for (const width of [390, 560, 768, 1280]) {
     }).toPass({ timeout: 30_000 });
     const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
     expect(overflowing, "no table wider than its card").toBe(0);
+    // The teams and splits tables show every row: no scroll bar, at any width.
+    for (const heading of ["Most picked teams", "What the league picks"]) {
+      const wrap = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: heading }) }).locator(".pool-table-wrap");
+      const taller = await wrap.evaluate((element) => element.scrollHeight - element.clientHeight);
+      expect(taller, `${heading}: nothing to scroll`).toBeLessThanOrEqual(1);
+      expect(await wrap.evaluate((element) => getComputedStyle(element).overflowY), `${heading}: not a vertical scroller`).not.toBe("scroll");
+    }
   });
 }
 

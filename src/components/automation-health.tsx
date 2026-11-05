@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
-import { creditsBelowReserve } from "@/lib/provider-credits.js";
 
 type Run = {
   completed_at: string | null;
@@ -32,6 +31,7 @@ type Health = {
     recentEmailFailures: number;
   };
   providerAllowance: number | null;
+  scoreTier: { tier: "normal" | "lean" | "minimal" | "paused"; message: string };
   retention: { candidates: number; cutoff: string };
   criticalWorkers: {
     healthy: boolean;
@@ -116,7 +116,7 @@ export default function AutomationHealth() {
 
   async function runEmergency(kind: "scores" | "schedule") {
     const explanation = kind === "scores"
-      ? "Run a final-score check now? This intentionally bypasses the automatic score cooldown, but still preserves provider quota and overlap safeguards."
+      ? "Run a final-score check now? This intentionally bypasses the automatic score schedule, and costs 2 provider credits, but keeps the overlap safeguards."
       : "Run a schedule and line-history refresh now? This intentionally bypasses the automatic schedule cooldown and may consume one provider request.";
     if (!window.confirm(explanation)) return;
 
@@ -184,16 +184,16 @@ export default function AutomationHealth() {
             detail={scheduleCooling ? `Next retry ${localTime(health.scheduleProviderCircuit!.next_retry_at)}` : "No provider cooldown is active."}
           />
           <StatusCard
-            attention={creditsBelowReserve(health.providerAllowance)}
+            attention={health.scoreTier.tier === "paused"}
             label="PROVIDER ALLOWANCE"
             value={health.providerAllowance === null ? "Not reported yet" : `${health.providerAllowance} credits remaining`}
-            detail={`${health.reminderHealth.overdueScheduled} held reminders · ${formatAdminNumber(health.retention.candidates)} old operational records`}
+            detail={`${health.scoreTier.tier === "normal" ? "" : `Score checks: ${health.scoreTier.message} `}${health.reminderHealth.overdueScheduled} held reminders · ${formatAdminNumber(health.retention.candidates)} old operational records`}
           />
         </div>
 
         <details className="mt-4 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
           <summary className="cursor-pointer font-bold">Emergency manual controls</summary>
-          <p className="mt-2 text-sm text-(color:--themed-text-29)">These runs bypass provider cooldown timing only. Authentication, overlap leases, quota reserve, line locks, week pins, and atomic database checks remain enforced.</p>
+          <p className="mt-2 text-sm text-(color:--themed-text-29)">These runs bypass provider cooldown timing and the low-credit schedule. Authentication, overlap leases, line locks, week pins, and atomic database checks remain enforced.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("scores")} type="button">{action === "scores" ? "Checking scores..." : "Run score check now"}</button>
             <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("schedule")} type="button">{action === "schedule" ? "Refreshing schedule..." : "Override schedule cooldown"}</button>

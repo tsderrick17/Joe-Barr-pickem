@@ -7,8 +7,10 @@ import { accessDenied } from "@/lib/access-response";
 import { currentSeasonYear } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { summarizeProviderEfficiency } from "@/lib/provider-efficiency.js";
-import { monthlyCreditSeries, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
+import { monthlyCreditSeries, SCORE_POLLING_AVERAGES_SINCE, slateEfficiencySeries } from "@/lib/provider-chart-data.js";
 import { SCORE_POLLING_RETRY_MINUTES } from "@/lib/score-check-backoff";
+import { retryLadderSentence, SCORE_GATE_INTERVAL_MINUTES, SCORE_LADDER_VERSION } from "@/lib/score-retry-ladder.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window.js";
 import { latestWorkerRuns } from "@/lib/latest-worker-runs.js";
 import { loadSeasonLadder, type SeasonLadder } from "@/lib/season-ladder";
 import { readGradingGamesAndLines } from "@/lib/grading-dashboard-reads";
@@ -39,7 +41,7 @@ const LADDER_CACHE_MS = 10 * 60 * 1000;
 let ladderCache: { key: string; at: number; ladder: SeasonLadder } | null = null;
 async function seasonLadder(seasonStart: string, now: Date) {
   if (ladderCache && ladderCache.key === seasonStart && now.getTime() - ladderCache.at < LADDER_CACHE_MS) return ladderCache.ladder;
-  const ladder = await loadSeasonLadder(supabaseAdmin, seasonStart);
+  const ladder = await loadSeasonLadder(supabaseAdmin, seasonStart, undefined, SCORE_LADDER_VERSION);
   ladderCache = { key: seasonStart, at: now.getTime(), ladder };
   return ladder;
 }
@@ -153,7 +155,7 @@ export async function GET(request: NextRequest) {
     const rungByGame = new Map<string, number>();
     const weekFirstKickoff = games[0]?.kickoff_at;
     if (weekFirstKickoff) {
-      const { data: rungRuns } = await supabaseAdmin.from("sync_runs").select("rungs:details->finalGameRungs").eq("job_type", "scores").not("details->finalGameRungs", "is", null).gte("started_at", weekFirstKickoff).order("started_at", { ascending: true }).limit(1000);
+      const { data: rungRuns } = await supabaseAdmin.from("sync_runs").select("rungs:details->finalGameRungs").eq("job_type", "scores").eq("details->>ladderVersion", SCORE_LADDER_VERSION).not("details->finalGameRungs", "is", null).gte("started_at", weekFirstKickoff).order("started_at", { ascending: true }).limit(1000);
       for (const run of rungRuns ?? []) {
         const rungs = run.rungs;
         if (!rungs || typeof rungs !== "object" || Array.isArray(rungs)) continue;
@@ -178,7 +180,7 @@ export async function GET(request: NextRequest) {
         state,
         score: game.away_score !== null && game.home_score !== null ? `${game.away_score}–${game.home_score}` : null,
         finalizedAt: game.finalized_at,
-        gradedWindow: rungByGame.has(game.id) ? { rung: rungByGame.get(game.id)!, windowMinutes: SCORE_POLLING_RETRY_MINUTES[Math.min(rungByGame.get(game.id)!, SCORE_POLLING_RETRY_MINUTES.length) - 1] } : null,
+        gradedWindow: rungByGame.has(game.id) ? { rung: rungByGame.get(game.id)!, windowMinutes: SCORE_POLLING_RETRY_MINUTES[rungByGame.get(game.id)! - 1] ?? 0 } : null,
         line: lineByGame.get(game.id) ? { spread: lineByGame.get(game.id)!.locked_spread, lockedAt: lineByGame.get(game.id)!.locked_at, manual: lineByGame.get(game.id)!.manual_override } : null,
         picks: { total: picksVisible ? pickCounts.total : 0, pending: picksVisible ? pickCounts.pending : 0, graded: picksVisible ? pickCounts.graded : 0, visible: picksVisible },
         survivor: picksVisible ? survivorCounts : { total: 0, pending: 0 },
@@ -227,7 +229,8 @@ export async function GET(request: NextRequest) {
     catch (error) { console.error("The score-polling histogram could not be loaded.", { message: error instanceof Error ? error.message : String(error) }); }
     const ladderCounts = ladder.counts;
     const ladderTotal = [...ladderCounts.values()].reduce((sum, count) => sum + count, 0);
-    const ladderSummary = SCORE_POLLING_RETRY_MINUTES.map((windowMinutes, index) => {
+    // One item per check: the last has no gap after it (windowMinutes 0), but a final can still be found on it.
+    const ladderSummary = [...SCORE_POLLING_RETRY_MINUTES, 0].map((windowMinutes, index) => {
       const rung = index + 1;
       const newFinals = ladderCounts.get(rung) ?? 0;
       return { rung, windowMinutes, newFinals, pickedUp: newFinals, percentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0, newFinalsPercentage: ladderTotal ? Math.round((newFinals / ladderTotal) * 100) : 0 };
@@ -252,12 +255,12 @@ export async function GET(request: NextRequest) {
       status: attention.length ? "attention" : "healthy",
       periods: (periods ?? []).map((item) => ({ id: item.id, displayName: item.display_name, status: item.status, type: item.period_type })),
       period: { id: period.id, displayName: period.display_name, type: period.period_type, status: period.status },
-      metrics: { games: gameRows.length, live, settled, awaitingGrade: pendingGrades, gradeEligibleGames, gradeCompleteGames, pendingGradeGames, attention: attention.length, activePlayers: playersResult.count ?? 0, lastScoreSyncAt: latestRunAt, lastScoreSyncAgeMinutes: minutesSince(latestRunAt, now), latestScoreSyncStatus: latestScoreRun?.status ?? "none", providerAllowance: creditUsage.remaining, pickOutcomes: pickOutcomeCounts, survivorEntries: survivorEntryCounts, reminders: reminderCounts, efficiency: { totalCredits: efficiency.totalCredits, scoreCredits: efficiency.scoreCredits, spreadCredits: efficiency.spreadCredits, finalizedGames: efficiency.finalizedGames, creditsPerFinal: efficiency.creditsPerFinal, productiveRate: efficiency.productiveRate, trend: efficiency.trend, history: efficiencyHistory }, settlementLatency: { ...settlementLatency, history: latencyHistory }, comparison: { previousPeriod: previousPeriod?.display_name ?? null, previousAverageMinutes: previousAverage, deltaMinutes: settlementLatency.averageMinutes !== null && previousAverage !== null ? settlementLatency.averageMinutes - previousAverage : null, history: periodLatencyHistory }, readiness: { scheduleLoaded: gameRows.length > 0, linesLocked: lineLockedCount, lineTotal: gameRows.length, nextKickoffAt: futureGames[0]?.kickoffAt ?? null, nextLineLockAt: futureGames.filter((game) => game.lineLockAt).sort((left, right) => new Date(left.lineLockAt).getTime() - new Date(right.lineLockAt).getTime())[0]?.lineLockAt ?? null } },
+      metrics: { games: gameRows.length, live, settled, awaitingGrade: pendingGrades, gradeEligibleGames, gradeCompleteGames, pendingGradeGames, attention: attention.length, activePlayers: playersResult.count ?? 0, lastScoreSyncAt: latestRunAt, lastScoreSyncAgeMinutes: minutesSince(latestRunAt, now), latestScoreSyncStatus: latestScoreRun?.status ?? "none", providerAllowance: creditUsage.remaining, pickOutcomes: pickOutcomeCounts, survivorEntries: survivorEntryCounts, reminders: reminderCounts, efficiency: { totalCredits: efficiency.totalCredits, scoreCredits: efficiency.scoreCredits, spreadCredits: efficiency.spreadCredits, finalizedGames: efficiency.finalizedGames, creditsPerFinal: efficiency.creditsPerFinal, productiveRate: efficiency.productiveRate, trend: efficiency.trend, history: efficiencyHistory, averagesSince: SCORE_POLLING_AVERAGES_SINCE }, settlementLatency: { ...settlementLatency, history: latencyHistory }, comparison: { previousPeriod: previousPeriod?.display_name ?? null, previousAverageMinutes: previousAverage, deltaMinutes: settlementLatency.averageMinutes !== null && previousAverage !== null ? settlementLatency.averageMinutes - previousAverage : null, history: periodLatencyHistory }, readiness: { scheduleLoaded: gameRows.length > 0, linesLocked: lineLockedCount, lineTotal: gameRows.length, nextKickoffAt: futureGames[0]?.kickoffAt ?? null, nextLineLockAt: futureGames.filter((game) => game.lineLockAt).sort((left, right) => new Date(left.lineLockAt).getTime() - new Date(right.lineLockAt).getTime())[0]?.lineLockAt ?? null } },
       games: gameRows,
       attention,
       audit: (auditResult.data ?? []).map((entry) => ({ id: entry.id, action: entry.action, entityType: entry.entity_type, entityId: entry.entity_id, details: entry.details, createdAt: entry.created_at })),
       workerRuns: latestWorkerRuns([...(syncResult.data ?? []), ...(lineLockRunsResult.data ?? []), ...(bowlRunsResult.data ?? [])]).map((run) => ({ jobType: run.job_type, status: run.status, startedAt: run.started_at, completedAt: run.completed_at, error: run.error_message })),
-      cadence: { firstCheckMinutesAfterKickoff: 170, cronIntervalMinutes: 10, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: "Both regular-season and playoff games enter score polling 170 minutes after official kickoff. They then use six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. The worker is invoked every 10 minutes." },
+      cadence: { firstCheckMinutesAfterKickoff: FIRST_SCORE_CHECK_DELAY_MINUTES, cronIntervalMinutes: SCORE_GATE_INTERVAL_MINUTES, regularRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], playoffRetryMinutes: [...SCORE_POLLING_RETRY_MINUTES], note: `Both regular-season and playoff games enter score polling ${FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after official kickoff. They then use ${retryLadderSentence(SCORE_POLLING_RETRY_MINUTES)}. After the last window there are no more automatic checks. The worker is invoked every ${SCORE_GATE_INTERVAL_MINUTES} minutes.` },
       scorePolls: (syncResult.data ?? []).filter((run) => run.job_type === "scores").slice(0, 12).map((run) => { const details = run.details && typeof run.details === "object" ? run.details as Record<string, unknown> : {}; return { startedAt: run.started_at, completedAt: run.completed_at, status: run.status, eligibleGames: Number(details.eligibleGames ?? 0), completedGamesFound: Number(details.completedGamesFound ?? 0), finalScoresImported: Number(details.finalScoresImported ?? 0), newFinals: Number(details.newFinals ?? details.finalScoresImported ?? 0), requestsLast: Number(details.requestsLast ?? 0), pollingMode: typeof details.pollingMode === "string" ? details.pollingMode : "—", quotaProtected: details.quotaProtected === true, ladderRungs: details.ladderRungs ?? details.newFinalsByRung ?? {} }; }),
       ladderSummary,
       ladderCoverage: { since: ladder.since, runs: ladder.runs },

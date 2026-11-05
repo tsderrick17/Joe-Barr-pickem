@@ -12,6 +12,8 @@
  * (a season still alive or won is not an exit, so it is not averaged in).
  * Half-point games: graded picks that finished exactly half a point from the number (won or lost by a half), as halfWins and halfLosses.
  * Pushes picked: picks that landed exactly on the number (graded as losses under the pool rule). Both need the final score and the locked spread.
+ * The Other Stats view is regular season only: half-point games and pushes picked count regular-season picks, never a playoff round (the Record
+ * view's wins and hit rate count every graded pick).
  */
 export const QUALIFYING_AB = 50;
 export const BEST_SEASON_MIN_AB = 20;
@@ -41,6 +43,7 @@ export function formatAverage(value) {
 export function buildAllTimeStats({ players, seasons, periods, games, lines, picks, survivorEntries = [], championships = [], bowlChampionships = [] }) {
   const nameById = new Map(players.map((player) => [player.id, player.first_name]));
   const seasonYearByPeriod = new Map(periods.map((period) => [period.id, seasons.find((season) => season.id === period.season_id)?.year ?? null]));
+  const regularPeriodIds = new Set(periods.filter((period) => period.period_type === "regular").map((period) => period.id));
   const kickoffByGame = new Map(games.map((game) => [game.id, Date.parse(game.kickoff_at)]));
   const favoriteByGame = new Map(lines.map((line) => [line.game_id, line.favorite_team_id]));
   const spreadByGame = new Map(lines.map((line) => [line.game_id, line.locked_spread]));
@@ -120,7 +123,7 @@ export function buildAllTimeStats({ players, seasons, periods, games, lines, pic
     let pushes = 0;
     const bySeason = new Map();
     for (const pick of playerPicks) {
-      const against = marginAgainstNumber(pick);
+      const against = regularPeriodIds.has(pick.scoring_period_id) ? marginAgainstNumber(pick) : null;   // Other Stats: regular season only
       if (against !== null) {
         if (Math.abs(against) === 0.5) { if (against > 0) halfWins += 1; else halfLosses += 1; }
         if (against === 0) pushes += 1;

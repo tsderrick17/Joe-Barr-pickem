@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildSeasonSnapshot } from "../src/lib/season-snapshot.js";
-import { snapshotAxis, snapshotLayers, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { buildSeasonSnapshot, unsettledPlayoffDay } from "../src/lib/season-snapshot.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRoundGroups, snapshotRoundLines, snapshotWeekLines, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -34,6 +35,143 @@ test("the active week waits until its last pick settles, then plots everyone and
       { id: "wild", label: "Wild Card", complete: false, scores: [{ playerId: "al", wins: 3 }, { playerId: "tyler", wins: 2 }] },
     ],
   });
+});
+
+// Two players over a postseason played on the usual days. Kickoffs are UTC; the Eastern day each falls on is in the comment.
+const postseason = () => {
+  const round = (id, name, order, status) => ({ id, display_name: name, display_order: order, period_type: "playoff", max_picks: 6, status });
+  const game = (id, period, kickoff, status = "final") => ({ id, scoring_period_id: period, kickoff_at: kickoff, status });
+  const games = [
+    game("wc1", "wild", "2027-01-16T21:30:00Z"), game("wc2", "wild", "2027-01-17T01:30:00Z"), // Saturday afternoon and Saturday night (UTC is already Sunday)
+    game("wc3", "wild", "2027-01-17T18:00:00Z"), // Sunday
+    game("wc4", "wild", "2027-01-18T01:15:00Z"), // Sunday night
+    game("wc5", "wild", "2027-01-19T01:15:00Z"), // Monday night
+    game("dv1", "div", "2027-01-23T21:30:00Z"), game("dv2", "div", "2027-01-24T20:00:00Z"), // Saturday, Sunday
+    game("cc1", "conf", "2027-01-31T20:00:00Z"), game("cc2", "conf", "2027-02-01T00:00:00Z"), // both Sunday
+    game("sb1", "bowl", "2027-02-14T23:30:00Z"), // Sunday
+  ];
+  const win = (player, g) => ({ player_id: player, scoring_period_id: games.find((x) => x.id === g).scoring_period_id, game_id: g, result: "win" });
+  const loss = (player, g) => ({ ...win(player, g), result: "loss" });
+  const picks = [
+    win("al", "wc1"), win("al", "wc2"), loss("al", "wc3"), win("al", "wc4"), win("al", "wc5"),
+    loss("tyler", "wc1"), win("tyler", "wc2"), win("tyler", "wc3"), loss("tyler", "wc4"), loss("tyler", "wc5"),
+    win("al", "dv1"), win("al", "dv2"), win("tyler", "dv1"), loss("tyler", "dv2"),
+    win("al", "cc1"), loss("al", "cc2"), win("tyler", "cc1"), { ...win("tyler", "cc2"), result: "void" },
+    win("al", "sb1"), { ...win("tyler", "sb1"), result: "void" },
+  ];
+  const periods = (statuses) => [
+    round("bowl", "Super Bowl", 22, statuses[3]), round("conf", "Conference Championships", 21, statuses[2]),
+    round("div", "Divisional Round", 20, statuses[1]), round("wild", "Wild Card", 19, statuses[0]),
+    { id: "reg", display_name: "Week 18", display_order: 18, period_type: "regular", max_picks: 2, status: "complete" },
+  ];
+  return { games, picks, periods, players: [{ id: "al" }, { id: "tyler" }] };
+};
+
+test("the playoffs are charted one Eastern game day at a time: seven days, each named for its round and weekday", () => {
+  const { games, picks, periods, players } = postseason();
+  const now = new Date("2027-03-01T12:00:00Z").getTime();
+  const chart = buildSeasonSnapshot(periods(["complete", "complete", "complete", "complete"]), players, picks, new Set(), games, now).playoffs;
+  assert.deepEqual(chart.map((day) => `${day.label} ${day.day}`), [
+    "Wild Card SAT", "Wild Card SUN", "Wild Card MON", "Divisional Round SAT", "Divisional Round SUN", "Conference Championships SUN", "Super Bowl SUN",
+  ], "a Saturday night kickoff that is already Sunday in UTC stays on Saturday; both Conference games are one day");
+  assert.deepEqual(chart.map((day) => day.roundDays), [3, 3, 3, 2, 2, 1, 1], "how many days its round has, so a round of one day needs no weekday");
+  const total = (player) => chart.map((day) => day.scores.find((score) => score.playerId === player).wins);
+  assert.deepEqual(total("al"), [2, 3, 4, 5, 6, 7, 8], "Saturday two wins, then a win and a loss on Sunday, Monday, and so on, carried forward");
+  assert.deepEqual(total("tyler"), [1, 2, 2, 3, 3, 4, 4], "a voided pick is not a win, and the total stays where it was");
+});
+
+test("a playoff game day is charted only once every game of it has kicked off and none of its picks is pending", () => {
+  const { games, picks, periods, players } = postseason();
+  const wildCard = periods(["active", "upcoming", "upcoming", "upcoming"]);
+  const days = (when, pickList = picks) => buildSeasonSnapshot(wildCard, players, pickList, new Set(), games, new Date(when).getTime()).playoffs.filter((day) => day.scores.length).map((day) => day.day);
+  assert.deepEqual(days("2027-01-16T20:00:00Z"), [], "before the first kickoff nothing is charted");
+  assert.deepEqual(days("2027-01-17T02:00:00Z", picks.filter((pick) => !["wc3", "wc4", "wc5"].includes(pick.game_id))), ["SAT"], "Saturday's games are over and graded");
+  const pendingOnSaturday = picks.map((pick) => (pick.game_id === "wc2" ? { ...pick, result: "pending" } : pick));
+  assert.deepEqual(days("2027-01-17T02:00:00Z", pendingOnSaturday), [], "a Saturday pick still pending holds Saturday back");
+  assert.deepEqual(days("2027-01-17T19:00:00Z"), ["SAT"], "Sunday's night game has not kicked off, so Sunday waits");
+  assert.deepEqual(days("2027-01-18T03:00:00Z"), ["SAT", "SUN"], "Sunday is final once its last game has kicked off and its picks are graded");
+  assert.deepEqual(days("2027-01-19T03:00:00Z", pendingOnSaturday), [], "nothing after a day that is not final is drawn");
+});
+
+test("before any playoff day is final the first day waits on the axis with no scores, then gives way to the real days", () => {
+  const { games, picks, periods, players } = postseason();
+  const wildCard = periods(["active", "upcoming", "upcoming", "upcoming"]);
+  const early = buildSeasonSnapshot(wildCard, players, picks, new Set(), games, new Date("2027-01-16T20:00:00Z").getTime()).playoffs;
+  assert.deepEqual(early, [{ id: "wild:2027-01-16", label: "Wild Card", day: "SAT", roundDays: 3, complete: false, scores: [] }], "only the first day, named, with nothing to plot");
+  const saturday = buildSeasonSnapshot(wildCard, players, picks.filter((pick) => !["wc3", "wc4", "wc5"].includes(pick.game_id)), new Set(), games, new Date("2027-01-17T02:00:00Z").getTime()).playoffs;
+  assert.deepEqual(saturday.map((day) => [day.day, day.scores.length > 0]), [["SAT", true]], "once Saturday is final it is charted, not also waiting");
+  const none = buildSeasonSnapshot(periods(["upcoming", "upcoming", "upcoming", "upcoming"]), players, picks, new Set(), games, new Date("2027-01-10T12:00:00Z").getTime()).playoffs;
+  assert.deepEqual(none, [], "no playoff round has started, so there is no first day to show");
+});
+
+test("a cancelled playoff game is no game day, and a round with no games on file is one point", () => {
+  const { games, picks, periods, players } = postseason();
+  const withCancelled = [...games, { id: "wcx", scoring_period_id: "wild", kickoff_at: "2027-01-20T18:00:00Z", status: "cancelled" }];
+  const now = new Date("2027-03-01T12:00:00Z").getTime();
+  const chart = buildSeasonSnapshot(periods(["complete", "upcoming", "upcoming", "upcoming"]), players, picks, new Set(), withCancelled, now).playoffs;
+  assert.deepEqual(chart.map((day) => day.day), ["SAT", "SUN", "MON"], "the cancelled game's Wednesday is not a day");
+  const legacy = buildSeasonSnapshot(periods(["complete", "upcoming", "upcoming", "upcoming"]), players, picks, new Set(), [], now).playoffs;
+  assert.deepEqual(legacy.map((round) => [round.label, round.day]), [["Wild Card", undefined]]);
+  assert.deepEqual(legacy[0].scores.map((score) => score.wins), [4, 2], "the whole round's wins in one point");
+});
+
+test("the next playoff day to appear decides how long the chart can be trusted", () => {
+  const { games, picks, periods } = postseason();
+  const now = (when) => new Date(when).getTime();
+  const active = periods(["active", "upcoming", "upcoming", "upcoming"]);
+  const next = unsettledPlayoffDay({ periods: active, games, picks, now: now("2027-01-17T19:00:00Z"), playerIds: ["al", "tyler"] });
+  assert.equal(next.settled, false);
+  assert.equal(next.lastKickoff, now("2027-01-18T01:15:00Z"), "the day that is not final yet is Sunday, not the whole round");
+  const done = unsettledPlayoffDay({ periods: periods(["complete", "complete", "complete", "complete"]), games, picks, now: now("2027-03-01T12:00:00Z"), playerIds: ["al", "tyler"] });
+  assert.equal(done, null, "every day final");
+});
+
+test("the playoff round names sit under their days: one line if it fits, otherwise a word a line", () => {
+  const days = ["Wild Card", "Wild Card", "Wild Card", "Divisional Round", "Divisional Round", "Conference Championships", "Super Bowl"].map((label) => ({ label }));
+  assert.deepEqual(snapshotRoundGroups(days), [
+    { label: "Wild Card", first: 0, last: 2 }, { label: "Divisional Round", first: 3, last: 4 },
+    { label: "Conference Championships", first: 5, last: 5 }, { label: "Super Bowl", first: 6, last: 6 },
+  ]);
+  assert.deepEqual(snapshotRoundLines("Wild Card", 120), ["WILD CARD"], "three days give it room");
+  assert.deepEqual(snapshotRoundLines("Conference Championships", 40), ["CONF", "CHAMP"], "one narrow day does not");
+  assert.deepEqual(snapshotRoundLines("Conference Championships", 95), ["CONF CHAMP"], "a wide chart gives one day enough");
+  assert.deepEqual(snapshotRoundLines("Super Bowl", 95, 20), ["SUPER", "BOWL"], "the last round must also fit in the room left at the edge");
+  assert.deepEqual(snapshotRoundLines("Divisional Round", 10), ["DIVISIONAL"], "a single word stays whole");
+});
+
+test("with no games on file, the playoff chart grows one round at a time, in order, and totals carry across all four rounds", () => {
+  const players = [{ id: "al" }, { id: "tyler" }];
+  const pick = (player, period, result, count = 1) => Array.from({ length: count }, () => ({ player_id: player, scoring_period_id: period, result }));
+  const picks = [
+    ...pick("al", "reg", "win"),
+    ...pick("al", "wild", "win", 3), ...pick("al", "wild", "loss"), ...pick("tyler", "wild", "win", 2), ...pick("tyler", "wild", "loss", 2),
+    ...pick("al", "div", "win", 2), ...pick("tyler", "div", "win"), ...pick("tyler", "div", "loss"),
+    // A pick still pending and a pick voided (a player out of the race) are not wins.
+    ...pick("al", "conf", "win"), ...pick("al", "conf", "pending"), ...pick("tyler", "conf", "win"), ...pick("tyler", "conf", "void"),
+    ...pick("al", "bowl", "win"), ...pick("tyler", "bowl", "void"),
+  ];
+  const stage = (statuses, settled = []) => {
+    const round = (id, name, order, status) => ({ id, display_name: name, display_order: order, period_type: "playoff", max_picks: 6, status });
+    // Listed out of order on purpose: the chart follows the season's order, not the order it was handed.
+    const periods = [
+      round("bowl", "Super Bowl", 22, statuses[3]), round("conf", "Conference Championships", 21, statuses[2]),
+      round("div", "Divisional Round", 20, statuses[1]), round("wild", "Wild Card", 19, statuses[0]),
+      { id: "reg", display_name: "Week 18", display_order: 18, period_type: "regular", max_picks: 2, status: "complete" },
+    ];
+    return buildSeasonSnapshot(periods, players, picks, new Set(settled)).playoffs;
+  };
+  const labels = (playoffs) => playoffs.map((round) => round.label);
+  const totals = (playoffs, player) => playoffs.map((round) => round.scores.find((score) => score.playerId === player).wins);
+
+  assert.deepEqual(stage(["active", "upcoming", "upcoming", "upcoming"]), [], "Wild Card weekend: the first round is not charted until it settles");
+  assert.deepEqual(labels(stage(["complete", "upcoming", "upcoming", "upcoming"])), ["Wild Card"]);
+  assert.deepEqual(labels(stage(["complete", "active", "upcoming", "upcoming"])), ["Wild Card"], "an unsettled round waits");
+  assert.deepEqual(labels(stage(["complete", "complete", "active", "upcoming"], ["conf"])), ["Wild Card", "Divisional Round", "Conference Championships"]);
+  const done = stage(["complete", "complete", "complete", "complete"]);
+  assert.deepEqual(labels(done), ["Wild Card", "Divisional Round", "Conference Championships", "Super Bowl"], "all four, in the season's order");
+  assert.deepEqual(totals(done, "al"), [4, 6, 7, 8], "one regular-season win, then 3, 2, 1 and 1: pending and voided picks never count");
+  assert.deepEqual(totals(done, "tyler"), [2, 3, 4, 4], "a voided Super Bowl pick leaves the total where it was");
+  assert.ok(done.every((round) => round.complete));
 });
 
 test("an active regular week is plotted for everyone together, including a card with two losses", () => {
@@ -227,9 +365,9 @@ test("the chart is held until it can change: while picks await grading, while a 
   const pending = state(sunday + HOUR, [pick("sun1", "pending"), pick("sun2", "pending")]);
   assert.equal(snapshotFreshForMs(sunday + HOUR, [pending]), HOUR, "capped at an hour");
   // Close to that moment it is checked at the score-sync pace.
-  assert.equal(snapshotFreshForMs(late + 170 * MINUTE + MINUTE, [state(late + 170 * MINUTE + MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 2 * MINUTE);
+  assert.equal(snapshotFreshForMs(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE + MINUTE, [state(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE + MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 2 * MINUTE);
   // Exactly on time, the wait is the time remaining, never less than the grade pace.
-  assert.equal(snapshotFreshForMs(late + 170 * MINUTE - 30 * MINUTE, [state(late + 140 * MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 30 * MINUTE);
+  assert.equal(snapshotFreshForMs(late + FIRST_SCORE_CHECK_DELAY_MINUTES * MINUTE - 30 * MINUTE, [state(late + (FIRST_SCORE_CHECK_DELAY_MINUTES - 30) * MINUTE, [pick("sun1", "win"), pick("sun2", "pending")])]), 30 * MINUTE);
   // Everything graded but a player has an open slot: held until the last kickoff (an hour at most).
   const open = state(mondayNight - 90 * MINUTE, [pick("sun1", "win")]);
   assert.equal(snapshotFreshForMs(mondayNight - 90 * MINUTE, [open]), HOUR);
@@ -330,4 +468,50 @@ test("the whole regular season counts from zero, where everyone starts; the play
   assert.deepEqual(snapshotAxis(0, 25, true), { low: 0, ceiling: 27, tickStep: 9 });
   assert.deepEqual(snapshotAxis(9, 14, false), { low: 9, ceiling: 15, tickStep: 2 });
   assert.equal(snapshotAxis(0, 4, false).low, 0);
+});
+
+test("the player key's rows come out even: eleven names that fit eight across go six and five, never eight and three", () => {
+  // The stylesheet's 6.6rem boxes at 16 px with a .35rem gap: 105.6 and 5.6 pixels, so eight fit across 940 px.
+  const across = (count, width) => snapshotKeyColumns(count, width, 105.6, 5.6);
+  const fitting = (width) => Math.max(1, Math.floor((width + 5.6) / 111.2));
+  const rowsOf = (count, columns) => Array.from({ length: Math.ceil(count / columns) }, (_, row) => Math.min(columns, count - row * columns));
+  assert.equal(fitting(940), 8);
+  assert.deepEqual(rowsOf(11, across(11, 940)), [6, 5]);
+  assert.deepEqual(rowsOf(8, across(8, 719)), [4, 4], "six would fit, which would leave two on the second row");
+  assert.deepEqual(rowsOf(11, across(11, 1500)), [11], "one row when everything fits");
+  assert.deepEqual(rowsOf(11, across(11, 330)), [3, 3, 3, 2], "a narrow screen keeps its rows within one name of each other");
+  assert.equal(across(0, 500), 1);
+  assert.equal(across(5, 10), 1, "less room than one box still gives one column");
+  // For every count and width: never wider than fits, never more rows than the room needs, and the last row is short by fewer names than there are rows.
+  for (let count = 1; count <= 16; count += 1) {
+    for (let width = 120; width <= 1700; width += 37) {
+      const columns = across(count, width);
+      const rows = rowsOf(count, columns);
+      assert.ok(columns <= fitting(width), count + " names in " + width + " px");
+      assert.equal(rows.length, rowsOf(count, fitting(width)).length, count + " names in " + width + " px use no more rows than the room needs");
+      assert.ok(columns - rows.at(-1) < rows.length, count + " names in " + width + " px: " + rows.join(", "));
+    }
+  }
+});
+
+test("the 6 Wk rail puts the view on the nearest week and never past either end", () => {
+  const step = 80;
+  const furthest = step * 8;
+  assert.equal(snapshotRailStop(0, step, furthest), 0);
+  assert.equal(snapshotRailStop(39, step, furthest), 0, "less than half a week rounds back");
+  assert.equal(snapshotRailStop(41, step, furthest), 80, "more than half a week rounds on");
+  assert.equal(snapshotRailStop(step * 3.4, step, furthest), step * 3);
+  assert.equal(snapshotRailStop(-500, step, furthest), 0, "the bounce past the first week");
+  assert.equal(snapshotRailStop(99999, step, furthest), furthest, "and past the latest");
+  assert.equal(snapshotRailStop(200, 0, furthest), 0, "no week width, no movement");
+});
+
+test("a week's name under the chart: its number, or a playoff round in full on one or two short lines", () => {
+  assert.deepEqual(snapshotWeekLines("Week 7"), ["7"]);
+  assert.deepEqual(snapshotWeekLines("Week 18"), ["18"]);
+  assert.deepEqual(snapshotWeekLines("Wild Card"), ["WILD", "CARD"]);
+  assert.deepEqual(snapshotWeekLines("Divisional Round"), ["DIVISIONAL"]);
+  assert.deepEqual(snapshotWeekLines("Conference Championships"), ["CONF", "CHAMP"]);
+  assert.deepEqual(snapshotWeekLines("Super Bowl"), ["SUPER", "BOWL"]);
+  assert.deepEqual(snapshotWeekLines("Round"), ["ROUND"], "a name with nothing left after the trimming still shows something");
 });

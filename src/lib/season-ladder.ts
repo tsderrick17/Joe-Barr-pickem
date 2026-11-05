@@ -4,11 +4,12 @@ export type SeasonLadder = { counts: Map<number, number>; runs: number; since: s
 
 /**
  * Every fresh final the score worker recorded on a retry rung, from `since`
- * (optionally up to `until`). Reads only score runs that recorded a rung, and
+ * (optionally up to `until`), counting only runs of one ladder version when `version` is given: a rung number means a different time
+ * after kickoff under a different ladder (SCORE_LADDER_VERSION). Reads only score runs that recorded a rung, and
  * only the rung counts, in pages, so the whole season is covered however many
  * runs there are. A run counts toward coverage only if it actually found a final.
  */
-export async function loadSeasonLadder(client: SupabaseClient, since: string, until?: string): Promise<SeasonLadder> {
+export async function loadSeasonLadder(client: SupabaseClient, since: string, until?: string, version?: string): Promise<SeasonLadder> {
   const counts = new Map<number, number>();
   let runs = 0;
   let first: string | null = null;
@@ -18,6 +19,7 @@ export async function loadSeasonLadder(client: SupabaseClient, since: string, un
       .eq("job_type", "scores").not("details->ladderRungs", "is", null)
       .gte("started_at", since);
     if (until) query = query.lt("started_at", until);
+    if (version) query = query.eq("details->>ladderVersion", version);
     const { data, error } = await query
       .order("started_at", { ascending: true }).order("id", { ascending: true })
       .range(offset, offset + 999);
