@@ -16,7 +16,8 @@ test("backup heartbeat accepts a recent completed restore-verified workflow", ()
 
 test("backup heartbeat fails closed for failed, stale, missing, or malformed runs", () => {
   assert.equal(assessBackupWorkflowRun({ status: "completed", conclusion: "failure", updated_at: now.toISOString() }, now).healthy, false);
-  assert.equal(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "2026-09-13T16:59:59Z" }, now).healthy, false);
+  assert.equal(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "2026-09-19T16:59:59Z" }, now).healthy, false, "a day missed: older than two days");
+  assert.equal(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "2026-09-20T04:00:00Z" }, now).healthy, true, "yesterday's run that started hours late is still current");
   assert.deepEqual(assessBackupWorkflowRun(null, now), { healthy: false, reason: "missing" });
   assert.deepEqual(assessBackupWorkflowRun({ status: "completed", conclusion: "success", updated_at: "bad" }, now), { healthy: false, reason: "invalid" });
 });

@@ -20,7 +20,7 @@ guarded recovery tools for a specific observed condition.
 | Tuesday, 6:30 AM Eastern | Send the weekly recap once all results are trustworthy | Check reminder health if the recap is late |
 | Wednesday, 3:00 AM Eastern | Default to the next usable week after the 24-hour display minimum | Confirm the prior week remains available |
 | Wednesday | Rehearse one complete save, revision, scoring, and week-handoff cycle in isolated-test | Review only a failed workflow |
-| Weekly | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
+| Daily, 09:17 UTC | Export, encrypt, restore-check, and retain a database backup | Review only a failed workflow or backup-health alert |
 | First eligible non-gameday in the first ten Eastern dates of each month | Run one isolated dependency/migration/lifecycle rehearsal | Review a failure, then use a deliberate manual retry; scheduled attempts do not repeat that month |
 | Super Bowl graded | The season phase becomes off-season: workers go idle, players see the closed page | None; do not re-enable anything |
 | December 1 (Eastern) | The Bowl Pool window opens: the dispatcher starts calling the Bowl worker | Check Bowl readiness once the schedule is imported |

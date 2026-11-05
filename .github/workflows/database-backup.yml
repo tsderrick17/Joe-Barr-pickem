@@ -2,7 +2,8 @@ name: Encrypted database backup
 
 on:
   schedule:
-    - cron: "17 13 * * 1"
+    # Every day at 09:17 UTC (4:17 AM Eastern in winter), after the night's late games are graded: a bad day loses at most a day of picks.
+    - cron: "17 9 * * *"
   workflow_dispatch:
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
         ports:
           - 5432:5432
     concurrency:
-      group: weekly-production-backup
+      group: production-backup
       cancel-in-progress: false
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -91,9 +92,14 @@ jobs:
           fi
           # Count the rows in the backup and in the restored copy: a schema-only or short backup fails here.
           node scripts/backup-verify.mjs restore
-      - name: Retain encrypted backup for 90 days
+      # Monday's export is kept for 90 days (GitHub's maximum for a public repository); the other days' for 30, so the newest month is daily
+      # and the three months before it weekly.
+      - name: Choose how long to keep this export
+        id: keep
+        run: echo "days=$([ "$(date -u +%u)" = 1 ] && echo 90 || echo 30)" >> "$GITHUB_OUTPUT"
+      - name: Retain encrypted backup
         uses: actions/upload-artifact@v7
         with:
           name: pickem-production-backup-${{ github.run_id }}
           path: production-backup.tar.enc
-          retention-days: 90
+          retention-days: ${{ steps.keep.outputs.days }}
