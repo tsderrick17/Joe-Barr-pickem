@@ -1509,6 +1509,7 @@ export type Database = {
       }
       pool_chat_messages: {
         Row: {
+          announcement_key: string | null
           body: string
           championship_id: string | null
           created_at: string
@@ -1520,6 +1521,7 @@ export type Database = {
           season_id: string
         }
         Insert: {
+          announcement_key?: string | null
           body: string
           championship_id?: string | null
           created_at?: string
@@ -1531,6 +1533,7 @@ export type Database = {
           season_id: string
         }
         Update: {
+          announcement_key?: string | null
           body?: string
           championship_id?: string | null
           created_at?: string
@@ -2456,6 +2459,14 @@ export type Database = {
       pin_login_cooldown_seconds: {
         Args: { attempt_source_fingerprint: string }
         Returns: number
+      }
+      post_playoff_race_notes: {
+        Args: { evaluated_at?: string }
+        Returns: {
+          note_day: string
+          note_outcome: string
+          note_period_id: string
+        }[]
       }
       project_database_usage_bytes: { Args: never; Returns: number }
       prune_operational_storage: {

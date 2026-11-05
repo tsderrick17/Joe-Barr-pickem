@@ -19,6 +19,24 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Playoff race note in the pool chat after each game day, from the Divisional round
+
+The owner asked for a moderator chat message for playoff eliminations, then shaped it: a note after every game day starting in the
+Divisional round, telling people how far behind they are and how many games are left, posted at 6 AM Eastern the following morning,
+with no magic numbers.
+
+- Example: "🏈 Divisional Saturday is in the books. 4 playoff games left. / Gary leads with 12. Still alive: Connor 10 (2 back), Tyler 9
+  (3 back). / Knocked out: Al."
+- The math is the pool's own rule (stay in while you can tie the leader, remaining possible wins as the snapshot counts them), so the
+  note's "Knocked out" is exactly who the next day-start snapshot scratches. No picks are named. Forfeited players are in neither list.
+- It runs inside the database (pg_cron `post-playoff-race-chat-note`, every fifteen minutes from 6:00 to 9:45 AM Eastern, which is
+  11:00 to 14:45 UTC because the playoffs are always in Eastern Standard Time), so it costs nothing on Vercel. It waits for every game
+  through the day to be final and graded, posts once per round and day (a unique `announcement_key`), and skips the Wild Card round and
+  the Super Bowl (the champion's congratulations).
+- Moderator notes may now run to 1,000 characters so a full pool fits; players' messages keep their 280-character limit.
+
+**Reason:** a daily, factual race report keeps the playoffs lively in the chat without hinting at anyone's picks.
+
 ## 2026-11-05 - Trophy Room banners: each moves its own way, never in step
 
 The owner liked the banners' movement but asked for some randomness, since two banners swaying in exact unison looked awkward. Every banner

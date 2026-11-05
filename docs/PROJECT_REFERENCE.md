@@ -511,6 +511,19 @@ playoff wins.
 - When a new day-start snapshot marks a player ineligible, their affected
   future pending picks are atomically changed to `void`. They are excluded from
   totals rather than left as losses.
+- The playoff race note: from the Divisional round on, the morning after each
+  playoff game day (6:00 AM Eastern, pg_cron `post-playoff-race-chat-note`
+  every fifteen minutes until 9:45 AM), the Commissioner's moderator note in the
+  pool chat says how many playoff games are left, who leads and with how many,
+  everyone still alive with their wins and how far back, and who was knocked
+  out that day (alive before it, out after it, by the same math as the
+  snapshot, so it names exactly who the next snapshot scratches). It never names
+  picks and gives no magic numbers. Forfeited players are left out of both
+  lists. It waits until every game through that day is final and graded, posts
+  once per round and day (`pool_chat_messages.announcement_key`,
+  `post_playoff_race_notes`), and skips the Wild Card round and the Super Bowl,
+  where the champion's congratulations takes over. Moderator notes may run to
+  1,000 characters; players' messages keep the 280 limit.
 
 ### Forfeiting
 
