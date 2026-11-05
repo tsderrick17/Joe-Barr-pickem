@@ -328,11 +328,14 @@ there for context when reviewing whether a retry actually recovered the system.
 
 The fixed retry ladder below is the only score-polling policy. There is no polling simulator or suggested plan, and nothing here changes the cadence.
 
-The live cadence: the first NFL score check is eligible 170 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 10 minutes, and unfinished games follow six 10-minute windows, three 20-minute windows, one 60-minute window, one 120-minute window, and one emergency 240-minute window. Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder cards show the percentage of newly finalized games captured by each polling window; each game is counted once at the window that first records it as final.
+The live cadence: the first NFL score check is eligible 175 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 5 minutes, and unfinished games follow seven 5-minute windows, two 10-minute windows, three 20-minute windows, then emergency windows of 60, 120 and 240 minutes. After the last window the game is not checked automatically again: the overdue alert (6 hours after kickoff) tells you, and the sync-scores button still works. That is the Normal schedule, in force until 440 of the month's 500 credits are used. After that the worker switches to a Lean or Minimal schedule (fewer, later checks) so the rest of the month lasts, and pauses only if what is left would not cover the official lines; the Performance tab shows which schedule is in force and why, and the sync-scores button always works (2 credits a tap). Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder chart shows the percentage of newly finalized games captured by each of the 5- and 10-minute polling windows, with the later windows as one count below it; it counts only checks made on the Normal schedule (not the lighter low-credit ones), so it starts empty after a schedule change. Each game is counted once at the window that first records it as final.
 
 Provider cost plots credits per settled game as a 15-day and a 30-day moving
 average (one point per exact kickoff slate; each average covers the games in the
-last 15 or 30 Eastern calendar dates). Settlement latency and the per-slate
+last 15 or 30 Eastern calendar dates). It counts only slates from Monday,
+November 2, 2026 on, when score checks moved to a 5-minute rhythm, so the
+averages measure the current polling and are not weighed down by games from the
+old schedule; the chart fills in as games settle after that date. Settlement latency and the per-slate
 credits line are no longer drawn.
 Historical receipts have no slate IDs: non-overlapping polling windows are
 estimated, while overlapping windows remain unplotted. A gap is not a zero.

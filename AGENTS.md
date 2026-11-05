@@ -55,7 +55,8 @@ rule, preserve user data, and update stale documentation in the same change.
   selectable on the next Eastern calendar day. Every completed week remains
   accessible.
 - Scheduled automation is the primary path. Commissioner recovery controls
-  must use the same authentication, execution leases, quota protection,
+  must use the same authentication, execution leases, credit rules (the low-balance
+  tiers pace automatic score checks only; the manual button always works),
   gameweek pins, and atomic database functions as automation.
 
 ## Database and environment safety

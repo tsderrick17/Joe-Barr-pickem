@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotRibbons, snapshotRibbonPath, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
-type Week = { id: string; label: string; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
+type Week = { id: string; label: string; day?: string; roundDays?: number; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
 type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
 type Range = "all" | "six";
 
@@ -57,38 +57,43 @@ function readSavedSnapshot(): Snapshot | null {
   return null;
 }
 
-function shortWeek(label: string) {
-  const regular = label.match(/week\s*(\d+)/i);
-  if (regular) return regular[1];
-  return label.replace(/\b(round|playoff|championships?)\b/gi, "").trim().slice(0, 8).toUpperCase() || label.slice(0, 8);
-}
-
 // Tight margins: the axis labels sit right against the plot.
 const AXIS_WIDTH = 30;
 const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
+/** The playoff chart by game day: room for a round's name centered under its last day (SUPER, half of it, spills right of the line). */
+const PLOT_RIGHT_DAYS = 20;
 // Room over the top line for the 6 Wk position rail; All keeps the same room, so both draw the axis in the same place.
 const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
+/** A playoff round's name may take two lines under its week line; each line past the first needs this much more room. */
+const LABEL_LINE = 11;
+/** The radius of a player's starting dot on the playoff chart before any game day is charted. */
+const START_DOT = 5;
 /** The "6 Wk" view shows exactly this many weeks and scrolls a week at a time. */
 const WINDOW_WEEKS = 6;
+/** The narrowest a name's box in the player key may be, in rem: the same width the stylesheet gives it. */
+const KEY_MIN_REM = 6.6;
 
 /**
- * Where the 6-week view sits in the season. The page draws it instead of the browser so it matches the pad. It lies in the
- * strip above the top line of the axis, which All keeps empty, so both views put the axis and the week numbers in exactly
- * the same place. It spans the grid lines, from the axis to where the lines end. A mouse drags the thumb or presses the track; a finger or trackpad scrolls the chart itself
- * and the thumb follows. The chart stays a focusable group, so the arrow keys scroll it too.
+ * Where the 6-week view sits in the season, and the only way to move it: the chart itself does not scroll under a finger,
+ * a wheel or a drag, so a flick never shifts the weeks by accident. The page draws the rail instead of the browser so it
+ * matches the pad. It lies in the strip above the top line of the axis, which All keeps empty, so both views put the axis
+ * and the week numbers in exactly the same place, and spans the grid lines, from the axis to where the lines end. Drag the
+ * thumb or press the track and the view lands on the nearest week; the arrow keys step a week when it has focus. Only the
+ * thin track shows; the part of the rail you can grab is taller, to be easy to catch with a thumb.
  */
-function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null> }) {
-  const [thumb, setThumb] = useState({ left: 0, width: 1 });
+function SnapshotRail({ scroller, step, weekCount }: { scroller: RefObject<HTMLDivElement | null>; step: number; weekCount: number }) {
+  const [thumb, setThumb] = useState({ left: 0, width: 1, at: 0 });
+  const [dragging, setDragging] = useState(false);
   // While a drag is on, how far along the thumb the pointer took hold (0 to 1 of the track).
   const grab = useRef<number | null>(null);
   useEffect(() => {
     const element = scroller.current;
     if (!element) return;
     const update = () => {
-      const next = snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth);
-      setThumb((current) => current.left === next.left && current.width === next.width ? current : next);
+      const next = { ...snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth), at: Math.max(0, Math.round(element.scrollLeft / step)) };
+      setThumb((current) => current.left === next.left && current.width === next.width && current.at === next.at ? current : next);
     };
     update();
     element.addEventListener("scroll", update, { passive: true });
@@ -99,28 +104,56 @@ function SnapshotRail({ scroller }: { scroller: RefObject<HTMLDivElement | null>
       element.removeEventListener("scroll", update);
       observer.disconnect();
     };
-  }, [scroller]);
+  }, [scroller, step]);
   const along = (event: ReactPointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
     return (event.clientX - box.left) / box.width;
   };
+  const scrollTo = (left: number) => {
+    const element = scroller.current;
+    if (element) element.scrollTo({ left: snapshotRailStop(left, step, element.scrollWidth - element.clientWidth) });
+  };
   const moveTo = (fraction: number) => {
     const element = scroller.current;
-    if (element && grab.current !== null) element.scrollTo({ left: (fraction - grab.current) * element.scrollWidth });
+    if (element && grab.current !== null) scrollTo((fraction - grab.current) * element.scrollWidth);
   };
-  const release = () => { grab.current = null; };
+  const release = () => {
+    grab.current = null;
+    setDragging(false);
+  };
+  const keys: Record<string, number> = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageUp: -WINDOW_WEEKS, PageDown: WINDOW_WEEKS, Home: -Infinity, End: Infinity };
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const weeks = keys[event.key];
+    const element = scroller.current;
+    if (weeks === undefined || !element) return;
+    event.preventDefault();
+    scrollTo(Number.isFinite(weeks) ? element.scrollLeft + weeks * step : weeks * element.scrollWidth);
+  };
+  // The first week in view, counting from 0, and the furthest it can be.
+  const last = Math.max(0, weekCount - WINDOW_WEEKS);
+  const first = Math.min(last, thumb.at);
   return <div
-    aria-hidden="true"
-    className="season-snapshot-rail"
+    aria-label="Move the weeks shown"
+    aria-orientation="horizontal"
+    aria-valuemax={last + 1}
+    aria-valuemin={1}
+    aria-valuenow={first + 1}
+    aria-valuetext={`Weeks ${first + 1} to ${first + WINDOW_WEEKS}`}
+    className={`season-snapshot-rail${dragging ? " is-dragging" : ""}`}
+    onKeyDown={onKeyDown}
+    onLostPointerCapture={release}
     onPointerCancel={release}
     onPointerDown={(event) => {
       const fraction = along(event);
       grab.current = fraction >= thumb.left && fraction <= thumb.left + thumb.width ? fraction - thumb.left : thumb.width / 2;
       event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
       moveTo(fraction);
     }}
     onPointerMove={(event) => moveTo(along(event))}
     onPointerUp={release}
+    role="slider"
+    tabIndex={0}
   >
     <div className="season-snapshot-rail-track">
       <span className="season-snapshot-rail-thumb" style={{ left: `${thumb.left * 100}%`, width: `${thumb.width * 100}%` }} />
@@ -211,13 +244,25 @@ function SnapshotChart({
     return () => observer.disconnect();
   }, []);
   const { height } = size;
+  // The playoffs are drawn a game day at a time: each day's weekday sits under its line and each round's name once under its days.
+  const byDay = weeks.length > 0 && weeks.every((week) => week.day);
+  const right = byDay ? PLOT_RIGHT_DAYS : PLOT_RIGHT;
   const viewport = Math.max(120, size.width - AXIS_WIDTH);
   const weekCount = Math.max(1, weeks.length);
   const scrolls = windowed && weeks.length > WINDOW_WEEKS;
   // In the 6-week view every week keeps a sixth of the visible width and the
   // extra weeks extend to the left; otherwise the season fits the view.
-  const step = (viewport - PLOT_LEFT - PLOT_RIGHT) / (scrolls ? WINDOW_WEEKS : weekCount);
-  const plotWidth = scrolls ? PLOT_LEFT + step * weekCount + PLOT_RIGHT : viewport;
+  const step = (viewport - PLOT_LEFT - right) / (scrolls ? WINDOW_WEEKS : weekCount);
+  const plotWidth = scrolls ? PLOT_LEFT + step * weekCount + right : viewport;
+  // Room under the plot for the names: one line, or two when a name takes two (a one-line name sits centered between them). Regular weeks
+  // and playoff rounds without days name each week under its own line; game days put the weekday on the first line and the round's name below.
+  const labels = weeks.map((week) => snapshotWeekLines(week.label));
+  const rounds = byDay ? snapshotRoundGroups(weeks).map((group, index, all) => ({
+    ...group,
+    lines: snapshotRoundLines(group.label, (group.last - group.first + 1) * step, index === all.length - 1 ? right : undefined),
+  })) : [];
+  const nameLines = byDay ? Math.max(1, ...rounds.map((round) => round.lines.length)) : Math.max(1, ...labels.map((lines) => lines.length));
+  const bottom = PLOT_BOTTOM + (nameLines - (byDay ? 0 : 1)) * LABEL_LINE;
 
   // The 6-week view always opens on the most recent six weeks.
   // The 6-week view draws exactly the weeks in view: the grid and the lines stop at the window's first and last week
@@ -261,8 +306,8 @@ function SnapshotChart({
   const range = snapshotWindowRange(weeks, players, baseline, edges.from, edges.to);
   const target = snapshotAxis(range.min, range.max, !scrolls && !isPlayoff);
   const { low, ceiling, ticks, leaving } = useSpringAxis(target);
-  const plotHeight = height - PLOT_TOP - PLOT_BOTTOM;
-  const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, PLOT_RIGHT);
+  const plotHeight = height - PLOT_TOP - bottom;
+  const x = (weekIndex: number) => snapshotX(weekIndex, weekCount, plotWidth, PLOT_LEFT, right);
   const y = (wins: number) => PLOT_TOP + plotHeight * (1 - (wins - low) / (ceiling - low));
   const drawnTicks = [...ticks.map((tick) => ({ tick, gone: false })), ...leaving.map((tick) => ({ tick, gone: true }))];
   const clip = useId().replaceAll(":", "");
@@ -274,33 +319,46 @@ function SnapshotChart({
   // the window rests on a week, and while it moves between weeks they slide out of view instead of jumping in.
   const ribbons = snapshotRibbons(weeks, stacked, baseline, x, y, 3, scrolls ? Math.floor(edges.from) : 0)
     .sort((a, b) => (rank.get(b.playerId) ?? 0) - (rank.get(a.playerId) ?? 0));
+  // Before anything is charted (the playoffs before the first game day is final, when that day only waits on the axis) there are no
+  // lines yet: each player is one dot at their starting total, and players on the same total sit side by side from the starting line, top lane first.
+  const sameTotal = new Map<number, number>();
+  const startDots = weeks.some((week) => week.scores.length > 0) ? [] : stacked.map((player) => {
+    const wins = baseline[player.id] ?? 0;
+    const place = sameTotal.get(wins) ?? 0;
+    sameTotal.set(wins, place + 1);
+    return { player, cx: x(0) + place * (START_DOT * 2 + 1), cy: y(wins) };
+  });
 
   return <section className="season-snapshot-chart">
     {showTitle ? <h4 className="season-snapshot-chart-title">{title}</h4> : null}
     <div className="season-snapshot-row" ref={rowRef}>
       <svg aria-hidden="true" className="season-snapshot-yaxis" height={height} width={AXIS_WIDTH}>
-        <clipPath id={`${clip}-axis`}><rect height={height - PLOT_BOTTOM + 6} width={AXIS_WIDTH} x={0} y={0} /></clipPath>
+        <clipPath id={`${clip}-axis`}><rect height={height - bottom + 6} width={AXIS_WIDTH} x={0} y={0} /></clipPath>
         <g clipPath={`url(#${clip}-axis)`}>
           {drawnTicks.map(({ tick, gone }) => <text className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} fill="#536077" fontFamily="Arial, sans-serif" fontSize="11" key={tick} textAnchor="end" x={AXIS_WIDTH - 4} y={y(tick) + 4}>{tick}</text>)}
         </g>
         <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(12 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
-      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined}>
+      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group">
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>
-          {scrolls ? Array.from({ length: weeks.length - WINDOW_WEEKS + 1 }, (_, index) => <span aria-hidden="true" className="season-snapshot-snap" key={index} style={{ left: index * step }} />) : null}
           <svg aria-label={`${title}, cumulative wins by week`} height={height} role="img" viewBox={`0 0 ${plotWidth} ${height}`} width={plotWidth}>
             {/* Grid and lines stay above the week numbers, even mid-glide. */}
-            <clipPath id={`${clip}-plot`}><rect height={height - PLOT_BOTTOM + 2} width={plotWidth} x={0} y={0} /></clipPath>
+            <clipPath id={`${clip}-plot`}><rect height={height - bottom + 2} width={plotWidth} x={0} y={0} /></clipPath>
             {scrolls ? <>
-              <clipPath id={`${clip}-grid`}><rect height={height - PLOT_BOTTOM + 2} ref={gridWindow} width={viewport - PLOT_RIGHT} y={0} /></clipPath>
+              <clipPath id={`${clip}-grid`}><rect height={height - bottom + 2} ref={gridWindow} width={viewport - PLOT_RIGHT} y={0} /></clipPath>
               <clipPath id={`${clip}-window`}><rect height={height} ref={lineWindow} width={viewport - PLOT_LEFT - PLOT_RIGHT} y={0} /></clipPath>
             </> : null}
             <g clipPath={`url(#${clip}-${scrolls ? "grid" : "plot"})`}>
-              {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - PLOT_RIGHT} y1={y(tick)} y2={y(tick)} />)}
+              {drawnTicks.map(({ tick, gone }) => <line className={`season-snapshot-tick${gone ? " is-leaving" : ""}`} key={tick} stroke="#d9d2c3" x1={0} x2={plotWidth - right} y1={y(tick)} y2={y(tick)} />)}
             </g>
             {weeks.map((week, index) => <g key={week.id}>
-              <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - PLOT_BOTTOM} />
-              <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5}>{shortWeek(week.label)}</text>
+              <line stroke="#e8e0d1" strokeDasharray="2 4" x1={x(index + 1)} x2={x(index + 1)} y1={PLOT_TOP} y2={height - bottom} />
+              {byDay
+                ? (week.roundDays ?? 2) > 1 ? <text fill="#536077" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" x={x(index + 1)} y={height - 5 - nameLines * LABEL_LINE}>{week.day}</text> : null
+                : labels[index].map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor={index === weeks.length - 1 ? "end" : "middle"} x={x(index + 1)} y={height - 5 - (bottom - PLOT_BOTTOM) / 2 + (lineIndex - (labels[index].length - 1) / 2) * LABEL_LINE}>{line}</text>)}
+            </g>)}
+            {rounds.map((round) => <g key={`${round.label}:${round.first}`}>
+              {round.lines.map((line, lineIndex) => <text fill="#39465b" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" key={lineIndex} textAnchor="middle" x={(x(round.first + 1) + x(round.last + 1)) / 2} y={height - 5 - ((nameLines - 1) * LABEL_LINE) / 2 + (lineIndex - (round.lines.length - 1) / 2) * LABEL_LINE}>{line}</text>)}
             </g>)}
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
@@ -310,12 +368,15 @@ function SnapshotChart({
                 <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
               </g>)}
             </g></g>
+            {startDots.map(({ player, cx, cy }) => <g className={`season-snapshot-ribbon season-snapshot-start ${hoverId && hoverId !== player.id ? "is-dim" : ""}`} key={player.id} onMouseEnter={() => onHover(player.id)} onMouseLeave={() => onHover(null)}>
+              <circle cx={cx} cy={cy} fill={colors.get(player.id)} r={START_DOT} stroke="#fffdf7" strokeWidth="1.5" />
+            </g>)}
           </svg>
         </div>
       </div>
-      {scrolls ? <SnapshotRail scroller={scrollRef} /> : null}
+      {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
     </div>
-    <p aria-hidden="true" className="season-snapshot-week-label">Week</p>
+    <p aria-hidden="true" className="season-snapshot-week-label">{byDay ? "Game day" : "Week"}</p>
   </section>;
 }
 
@@ -356,11 +417,28 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
   // The key shows what the chart shows: each player's total at the chart's last
   // point, never the live standings. Standings move as games finish, the chart
   // moves once when the week settles, and the two must change together.
-  const lastPoint = showPlayoffs ? (snapshot.playoffs.at(-1) ?? lastRegular) : lastRegular;
+  const lastPoint = showPlayoffs ? (snapshot.playoffs.filter((week) => week.scores.length > 0).at(-1) ?? lastRegular) : lastRegular;
   const chartTotals = new Map((lastPoint?.scores ?? []).map((score) => [score.playerId, score.wins]));
   const keyRows = standings
     .map((player, order) => ({ player, order, total: chartTotals.get(player.id) ?? 0 }))
     .sort((a, b) => b.total - a.total || a.order - b.order);
+  // The key's rows come out even (six and five, not eight and three): how many names go across follows from the room there is.
+  const keyRef = useRef<HTMLDivElement>(null);
+  const [keyColumns, setKeyColumns] = useState<number | null>(null);
+  const names = keyRows.length;
+  useLayoutEffect(() => {
+    const element = keyRef.current;
+    if (!element) return;
+    const measure = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const columns = snapshotKeyColumns(names, element.clientWidth, KEY_MIN_REM * rem, parseFloat(getComputedStyle(element).columnGap) || 0);
+      setKeyColumns((current) => current === columns ? current : columns);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [names]);
 
   return <div className="season-snapshot-layout">
     <div className="season-snapshot-charts">
@@ -370,7 +448,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
         ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
-    <div aria-label="Players shown on the chart" className="season-snapshot-key">
+    <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
       {keyRows.map(({ player, total }) => {
         const shown = !hidden.has(player.id);
         return <button aria-label={`${player.firstName}, ${total} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">
@@ -430,8 +508,8 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
     });
   }, [active, refreshKey, retry, fetchSnapshot]);
 
-  // Once the playoffs begin a Regular | Playoffs switch appears and the chart opens on the playoffs. The
-  // week-range toggle belongs to the regular-season chart only.
+  // Once the playoffs begin a Season | Playoffs switch appears and the chart opens on the playoffs (starting dots, with the first game day
+  // waiting on the axis, until that day is final). The week-range toggle belongs to the regular-season chart only.
   const hasPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
   const shownView = hasPlayoffs ? view : "regular";
   const showPlayoffs = shownView === "playoffs";

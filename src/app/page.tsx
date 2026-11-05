@@ -181,7 +181,7 @@ export default function HomePage() {
 
     void loadHome();
 
-    // Grades land on the ten-minute score sync and reveals have their own
+    // Grades land on the five-minute score sync and reveals have their own
     // exact timer, so a slow background poll plus a refresh whenever the
     // player returns keeps the page current without constant server work.
     const refreshInterval = window.setInterval(() => {

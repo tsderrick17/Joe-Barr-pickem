@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ProviderChart from "@/components/provider-chart";
-import { rollingCreditsPerGame15Days, rollingCreditsPerGame30Days } from "@/lib/provider-chart-data.js";
+import { rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, slatesSince } from "@/lib/provider-chart-data.js";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
 import type { EfficiencyPoint, EfficiencySummary } from "@/components/efficiency-trend-panel";
 
@@ -12,11 +12,14 @@ const date = (value: string, time = false) => new Date(value).toLocaleString("en
 });
 const number = (value: number | null | undefined) => formatAdminNumber(value, { maximumFractionDigits: 1 });
 
-export default function SlatePerformancePanel({ history, summary }: {
+export default function SlatePerformancePanel({ history: allSlates, summary }: {
   history: EfficiencyPoint[];
   summary: EfficiencySummary;
 }) {
   const [range, setRange] = useState<"all" | "14">("all");
+  // The averages start where the current polling schedule did, so a game from the old schedule never moves them.
+  const history = slatesSince(allSlates, summary.averagesSince);
+  const since = summary.averagesSince ? date(summary.averagesSince) : null;
   const first = range === "14" ? Math.max(0, history.length - 14) : 0;
   const observed = history.slice(first);
   const attributed = history.filter((point) => point.creditsPerGame !== null && point.settledGames > 0);
@@ -26,7 +29,7 @@ export default function SlatePerformancePanel({ history, summary }: {
   return <section className="desk-card min-w-0" aria-label="Provider cost: credits per game, 15- and 30-day averages">
     <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-(color:--ink-faint-zinc)">Score polling · Season to date</p>
+        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-(color:--ink-faint-zinc)">Score polling{since ? ` · Since ${since}` : ""}</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight text-(color:--themed-text-31)">Provider cost</h3>
         <p className="mt-2 text-xs text-(color:--themed-text-27)">Credits spent per game, smoothed over 15 and 30 days · Eastern time</p>
       </div>
@@ -36,7 +39,7 @@ export default function SlatePerformancePanel({ history, summary }: {
       <div><span>Score credits</span><strong>{number(summary.scoreCredits)}</strong><small>Season-to-date polling</small></div>
       <div><span>Credits / game</span><strong>{number(creditsPerGame)}</strong><small>{attributedGames} games in attributed slates</small></div>
     </div>
-    <ProviderChart
+    {history.length ? <ProviderChart
       key={range}
       label="Credits per game: 15-day and 30-day moving averages"
       yAxisLabel="Credits / game"
@@ -57,7 +60,7 @@ export default function SlatePerformancePanel({ history, summary }: {
         { key: "average15", label: "15-day average", color: "var(--club-forest-2)" },
         { key: "average30", label: "30-day average", color: "var(--club-cognac-2)", dash: "6 5" },
       ]}
-    />
-    <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Credits spent on score checks per settled game. Each line averages the games in the last 15 or 30 Eastern calendar dates, so a big Sunday counts for more than a single Thursday game; slates whose credits cannot be attributed are left out. Credits are attributed to a slate by the time each check ran, so they are an estimate.</p>
+    /> : <p className="rounded-sm bg-(color:--fill-track) px-3 py-4 text-sm text-(color:--themed-text-27)">No game has settled on the 5-minute schedule yet. The chart fills in as games finish.</p>}
+    <p className="mt-3 text-[11px] leading-relaxed text-(color:--themed-text-27)">Credits spent on score checks per settled game. Each line averages the games in the last 15 or 30 Eastern calendar dates, so a big Sunday counts for more than a single Thursday game; slates whose credits cannot be attributed are left out. Credits are attributed to a slate by the time each check ran, so they are an estimate.{since ? ` The averages count games from ${since} on, when score checks moved to every 5 minutes.` : ""}</p>
   </section>;
 }

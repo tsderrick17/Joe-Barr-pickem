@@ -15,9 +15,10 @@
  * next one. "Longest" is the best run ever; "Now" is the run the player is on at their latest counted week.
  *
  * Most picked team: of the graded picks, which teams were taken most often (top five, with how often and how they did). The five teams with the
- * best hit rate come with them (ties go to the team picked more often), so the Performance panel can sort either way.
+ * best hit rate come with them (ties go to the team picked more often), and so do the five least picked (ties alphabetical) and the five with the
+ * lowest hit rate (ties to the team picked more often), so the Performance panel can sort either way, highest or lowest.
  *
- * Splits: of the picks that were graded, how often the group took the favorite or the underdog, and the home or the road team (the Super Bowl has a designated home team, and international games are not treated as neutral), and how each did.
+ * Splits: of the picks that were graded, how often the group took the favorite, the underdog or a pick'em game (a locked spread of 0: the line names the home team as its "favorite" only by the pool's PK convention, so a pick'em game is never counted as a favorite or an underdog), and the home or the road team (the Super Bowl has a designated home team, and international games are not treated as neutral), and how each did.
  */
 
 const WEEK_PICKS = 2;
@@ -48,7 +49,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   let wins = 0, losses = 0, pushPicks = 0;
   const pushedGames = new Set(), pickedGames = new Set();
   const bucket = () => ({ wins: 0, losses: 0 });
-  const side = { favorite: bucket(), underdog: bucket() }, venue = { home: bucket(), away: bucket() };
+  const side = { favorite: bucket(), underdog: bucket(), pickem: bucket() }, venue = { home: bucket(), away: bucket() };
   const bySeason = new Map(), byTeam = new Map();
   for (const pick of subset) {
     if (!isDecided(pick)) continue;
@@ -64,28 +65,33 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
       const adjusted = margin + (pick.selected_team_id === line.favorite_team_id ? -line.locked_spread : line.locked_spread);
       if (!won && adjusted === 0) { pushPicks += 1; pushedGames.add(pick.game_id); }   // landing exactly on the number (or a tied pick'em game) is a push, graded as a loss
     }
-    if (line?.favorite_team_id) side[pick.selected_team_id === line.favorite_team_id ? "favorite" : "underdog"][won ? "wins" : "losses"] += 1;
+    const kind = line && line.locked_spread != null && Number(line.locked_spread) === 0 ? "pickem" : line?.favorite_team_id ? (pick.selected_team_id === line.favorite_team_id ? "favorite" : "underdog") : null;
+    if (kind) side[kind][won ? "wins" : "losses"] += 1;
     if (game) venue[pick.selected_team_id === game.home_team_id ? "home" : "away"][won ? "wins" : "losses"] += 1;
   }
   const total = wins + losses;
   const share = (bucketRecord, whole) => ({ ...withRate(bucketRecord), share: rate(bucketRecord.wins + bucketRecord.losses, whole) });
-  const sideTotal = side.favorite.wins + side.favorite.losses + side.underdog.wins + side.underdog.losses;
+  const sideTotal = Object.values(side).reduce((sum, item) => sum + item.wins + item.losses, 0);
   const venueTotal = Object.values(venue).reduce((sum, item) => sum + item.wins + item.losses, 0);
   const everyTeam = [...byTeam]
     .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
     .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
   const teams = everyTeam.slice(0, 5);
   const teamsByHitRate = [...everyTeam].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
+  const teamsLeastPicked = [...everyTeam].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
+  const teamsByLowestHitRate = [...everyTeam].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
   const tiedForMost = everyTeam.length ? everyTeam.filter((team) => team.picks === everyTeam[0].picks).length : 0;   // how many teams share the top spot
   return {
     record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
     teams,
     teamsByHitRate,
+    teamsLeastPicked,
+    teamsByLowestHitRate,
     mostPicked: teams[0] ?? null,
     mostPickedTied: tiedForMost,   // 1 when one team leads; more when teams tie for the most picks
     bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),
     splits: {
-      side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal) },
+      side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal), pickem: share(side.pickem, sideTotal) },
       venue: { home: share(venue.home, venueTotal), away: share(venue.away, venueTotal) },
     },
     graded: total,
@@ -131,21 +137,60 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
   return { weeksByPlayer, histogram };
 }
 
+const NOT_PLAYED = ["postponed", "cancelled", "no_contest"];
+
+/** A playoff round that counts toward Perfect Weeks: every one but the Super Bowl (a single game, not a week). */
+const isScoredRound = (period) => period.period_type === "playoff" && period.display_name !== "Super Bowl";
+
+/**
+ * Perfect playoff rounds per player: a round in which the player won every pick the round allowed, with no loss. The round allows
+ * `max_picks` picks, or fewer when it has fewer games to play (a postponed, cancelled or no-contest game is not one). The player's own
+ * round is decided the moment those wins are in, since nothing else can change it, so it does not wait for the round to finish.
+ * @returns {Map<string, number>} playerId -> perfect rounds
+ */
+function perfectRounds({ periods, yearBySeason, picks, games }) {
+  const rounds = new Map(periods.filter((period) => isScoredRound(period) && yearBySeason.has(period.season_id)).map((period) => [period.id, period]));
+  const playable = new Map();
+  for (const game of games) {
+    if (NOT_PLAYED.includes(game.status)) continue;
+    playable.set(game.scoring_period_id, (playable.get(game.scoring_period_id) ?? 0) + 1);
+  }
+  const tallies = new Map();
+  for (const pick of picks) {
+    if (!rounds.has(pick.scoring_period_id)) continue;
+    const key = `${pick.player_id}|${pick.scoring_period_id}`;
+    const tally = tallies.get(key) ?? { playerId: pick.player_id, periodId: pick.scoring_period_id, wins: 0, losses: 0 };
+    if (pick.result === "win") tally.wins += 1;
+    else if (pick.result === "loss") tally.losses += 1;
+    tallies.set(key, tally);
+  }
+  const perfect = new Map();
+  for (const { playerId, periodId, wins, losses } of tallies.values()) {
+    const needed = Math.max(1, Math.min(rounds.get(periodId).max_picks, playable.get(periodId) ?? Infinity));
+    if (losses === 0 && wins >= needed) perfect.set(playerId, (perfect.get(playerId) ?? 0) + 1);
+  }
+  return perfect;
+}
+
 /**
  * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
- * { longest, current, endedAt }; the 2-0 streak also carries `total`, how many perfect (2-0) weeks the player has had in all. Only the periods and picks are needed.
+ * { longest, current, endedAt }. The 2-0 streak also carries `total`, how many perfect weeks the player has had in all: the regular season's
+ * 2-0 weeks plus every playoff round won pick for pick, everything but the Super Bowl. Only the streaks are regular season. Only the periods and picks are needed.
  * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
- * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string> }} input
+ * `games` (id of the period and status) tell a round how many picks it really allowed; `display_name` on the periods names the Super Bowl.
+ * @param {{ seasons: { id: string, year: number }[], periods: object[], picks: object[], settledPeriodIds?: Set<string>, games?: { scoring_period_id: string, status: string }[] }} input
  * @returns {Map<string, { sweeps: { longest: number, current: number, endedAt: object | null, total: number }, noDonut: { longest: number, current: number, endedAt: object | null } }>}
  */
-export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set() }) {
+export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set(), games = [] }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
   const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
-  return new Map([...weeksByPlayer].map(([playerId, weeks]) => {
+  const playoffPerfect = perfectRounds({ periods, yearBySeason, picks, games });
+  return new Map([...new Set([...weeksByPlayer.keys(), ...playoffPerfect.keys()])].map((playerId) => {
+    const weeks = weeksByPlayer.get(playerId) ?? [];
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
   }));
 }
 
@@ -176,22 +221,15 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
     return { total: weeks.length, ...counts };
   };
 
-  const streakRows = [...weeksByPlayer].map(([playerId, weeks]) => {
-    weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return { playerId, name: nameById.get(playerId) ?? "Former player", weeks: weeks.length, perfectWeeks: weeks.filter((week) => week.wins === 2).length, sweeps: runs(weeks, (week) => week.wins === 2), noDonut: runs(weeks, (week) => week.wins > 0) };
-  });
-  // Each player's own full set: the same record, histogram, streaks and splits from just their picks.
+  // Each player's own full set: the same record, histogram and splits from just their picks.
   const picksByPlayer = new Map();
   for (const pick of picks) picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), pick]);
-  const streaksByPlayer = new Map(streakRows.map((row) => [row.playerId, row]));
-  const summary = (run) => ({ longest: run?.longest ?? 0, current: run?.current ?? 0, endedAt: run?.longestEnd ?? null });
   const eachPlayer = [...new Set([...picksByPlayer.keys(), ...weeksByPlayer.keys()])]
     .map((playerId) => ({
       playerId,
       name: nameById.get(playerId) ?? "Former player",
       ...recordsFor(picksByPlayer.get(playerId) ?? [], lookups),
       weeks: histogramOf(weeksByPlayer.get(playerId) ?? []),
-      streaks: { sweeps: { ...summary(streaksByPlayer.get(playerId)?.sweeps), total: streaksByPlayer.get(playerId)?.perfectWeeks ?? 0 }, noDonut: summary(streaksByPlayer.get(playerId)?.noDonut) },
     }))
     .filter((player) => player.graded > 0 || player.weeks.total > 0)
     .sort((a, b) => a.name.localeCompare(b.name));

@@ -101,7 +101,7 @@ dashboard when the secret is made, so look there (the app cannot read it).
 | `CRON_SECRET` | Vercel (all environments) **and** the Supabase Vault `cron_secret`; the two must match | No; change both together | Every automation route answers 401, so scores, lines, reminders and the watchdog stop | Launch preflight "Cron authorization" (compares Vercel with Vault); the automation heartbeat monitor goes red |
 | `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`) | Vercel | No, unless rotated in Supabase | Every server route and worker | `/api/health`, UptimeRobot, Sentry |
 | `PLAYER_AUTH_PEPPER` (32+ characters) | Vercel (all environments) | No; never rotate casually (see the Commissioner runbook, "Verify protected player credentials") | PIN sign-in is unavailable | Launch preflight "Player sign-in credential" |
-| `ODDS_API_KEY` | Vercel | Set by the provider's plan; credits renew monthly | NFL lines and the score fallback; Bowl lines | Launch preflight "NFL odds provider" (zero-credit check); the `odds-credits-below-reserve` watchdog alert when fewer than 50 credits remain |
+| `ODDS_API_KEY` | Vercel | Set by the provider's plan; credits renew monthly | NFL lines and the score fallback; Bowl lines | Launch preflight "NFL odds provider" (zero-credit check); the `score-polling-paused` watchdog alert when automatic score checks are paused for the month's credits |
 | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` | Vercel | Set when the key is made in Brevo | All pool email; the Commissioner's watchdog email (the phone alert still goes) | Launch preflight "Brevo delivery account"; a "watchdog alert email could not be sent" warning on the Automation tab. Whether the sender's domain is **Authenticated** in Brevo is only visible in Brevo itself |
 | `GITHUB_USAGE_TOKEN` | Vercel | Set when the token is made in GitHub | Nothing player-facing: the backup health check and usage panel fall back to anonymous reads | The usage panel shows "unavailable" |
 | `SENTRY_USAGE_TOKEN`, `UPTIMEROBOT_READ_ONLY_API_KEY` | Vercel | Set when made | Only the Commissioner's account-capacity panel | The panel shows that service as unavailable |
@@ -118,20 +118,53 @@ Not secrets, so they are not rotated: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_S
 The NFL final-score worker is called only when it has work (see "Reproducible
 critical schedules" below) and calls the provider only when at least one
 game's durable retry time is due. Regular-season delayed
-finals follow the same predictable 10/10/10/10/10/10/20/20/20/60/120/240-minute
-sequence every week, with the final 240-minute window reserved for emergencies,
-and playoff delayed finals use the same ladder. Both
-competition types become eligible 170 minutes after official kickoff. The
-monthly balance does not change the normal cadence. Repeated polling pauses only below the protected
-50-credit emergency reserve, so official line integrity is never traded for
+finals follow the same predictable 5/5/5/5/5/5/5/10/10/20/20/20/60/120/240-minute
+sequence every week, with the 60-, 120- and 240-minute windows reserved for emergencies,
+and playoff delayed finals use the same ladder. After the last window (the check 710 minutes after
+kickoff) a game gets no more automatic checks: the overdue alert (6 hours after kickoff) and the
+Commissioner's score button take over. Both
+competition types become eligible 175 minutes after official kickoff. The
+monthly balance does not change the normal cadence until 440 of the month's 500
+credits are used (`LOW_BALANCE_USED_CREDITS`). From there the worker runs the
+Lean or Minimal schedule instead (see "Low-balance score checking" below), and
+pauses automatic checks only when the credits left would not cover the rest of
+the month's official lines, so official line integrity is never traded for
 faster grading. One paid response settles every due completed game it contains.
+### Low-balance score checking
+
+Past 440 of the month's 500 Odds API credits used, the worker runs one of two lighter schedules; each is a list of times after kickoff, so a game
+mid-ladder when the schedule changes goes straight to the next time on the new list (nothing skipped, nothing checked twice):
+
+| Schedule | Checks (minutes after kickoff) | Expected credits per slate\* |
+| --- | --- | --- |
+| Normal (until 440 used) | 175, 180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470, 710 | about 15.5 |
+| Lean | 175, 190, 205, 220, 235, 250, 265, 325, 445, 685 | about 5.9 |
+| Minimal | 190, 210, 230, 250, 310, 430, 670 | about 4.5 |
+
+\*The forecast model's figure at a 90% first-hour share (`expectedScoreChecks`); the Performance tab prices the rest of the month with it.
+
+Every score run, and every health check, decides the schedule afresh (`decideScoreTier`, `chooseScoreTier`): Normal under 440 used, or when
+no credit reading was taken this month (credits renew on the 1st, UTC); from 440 used, Lean if its forecast for the game days left fits in
+the balance minus the line need (the remaining 7 AM refreshes and lock-time fetches, plus a cushion of 5), otherwise Minimal; and paused only
+when nothing is left after the line need. So it can step back up from Minimal to Lean as game days pass, and Normal returns with the next month.
+A game the schedule says to leave alone is not checked and spends nothing; its retry timer moves to its next time (an hour on, when paused), so
+the gate stops waking the worker for it. The Commissioner's "Run score check now" button ignores the schedule, checks every due game and
+spends 2 credits a tap. Each run records its `tier`; the "new game finals by polling rung" chart counts Normal-schedule runs only, because
+a rung is a place on a schedule's list. The Performance tab's credit panel shows the schedule in force and why. Its month-end forecast is a
+full-operations forecast: it always prices every remaining slate on the Normal schedule and never reflects a lower one.
+
 Each successful score run records newly finalized games by ladder window. The
 Commissioner grading panel aggregates those records and shows the percentage
 of new finals captured by each window; a game is counted once, at the first
 poll that safely records it as final.
+A retry gap is the real gap between two checks. The worker stamps a game's retry timer from the gate tick it was
+called for (the clock minute, every `SCORE_GATE_INTERVAL_MINUTES`), not from its own start a few seconds later; stamped from the
+start, the timer was still running at the next tick, the game skipped it, and every 10-minute gap was really 20 (seen on the
+Week 8 Sunday: 3:50, 4:10, 4:30 PM). `test/score-gate-replay.test.mjs` replays the gate tick by tick against the real
+function. If the gate's cron schedule changes, change that constant with it.
 Each run also records which check finalized each game (`details.finalGameRungs`), and the Commissioner
 game inspector shows it for a finished game, beside how long after kickoff it was graded ("Graded: 3h 41m
-after kickoff · check 4 of 12 (10-min window)"). Games graded before this was recorded, or by hand, show only
+after kickoff · check 4 of 16 (5-min window)"). Games graded before this was recorded, or by hand, show only
 the time after kickoff. A "credit" on that page is one Odds API request unit: a score check costs 2, and the
 day shown is the UTC day, so Sunday-night games count toward Monday.
 The Bowl Pool gate wakes every 15 minutes inside Supabase, but invokes Vercel
@@ -336,7 +369,7 @@ fail is the notification retried, no more than every 30 minutes. A Commissioner
 with no phone set up simply gets the email.
 When the shared worker assessment finds real overdue line, scoring, or reminder
 work alongside an unhealthy worker receipt, the watchdog first makes one normal
-lease-protected recovery attempt. It keeps provider quota protection, retry
+lease-protected recovery attempt. It keeps the low-balance score schedule, retry
 backoff, delivery deduplication, and all existing database safeguards; it then
 rechecks health and leaves the incident open if recovery did not complete.
 
@@ -345,11 +378,13 @@ The only alert conditions are:
 - a game has passed line lock without an official line;
 - final scores are due and the score worker is failed or stale for 45 minutes;
 - a scheduled pool message is overdue or stuck sending;
-- the Odds API balance reported this month is under the 50-credit reserve while
-  the NFL season is still on (the score worker then stops spending credits, so
-  NFL games are not graded automatically until the credits renew on the 1st or
-  the plan is upgraded; this alert replaces the stalled-scores alert, which stays
-  quiet while credits are protected);
+- automatic score checks are paused for the month's credits while the NFL season
+  is still on (`score-polling-paused`, critical: what is left would not cover the
+  rest of the month's official lines, so NFL games are not graded automatically
+  until the credits renew on the 1st or you use the manual button; this alert
+  replaces the stalled-scores alert, which stays quiet while checks are paused).
+  A warning, `score-polling-reduced`, says when the Lean or Minimal schedule is
+  in force; every game is still graded then, only later;
 - the full season schedule is still incomplete after August 15; or
 - the certified annual turnover is blocked by unfinished prior-season work; or
 - a required production cron/preflight check is missing.
@@ -414,8 +449,9 @@ details or require UptimeRobot's paid push-heartbeat feature.
 
 Migration `20260818013000_rebuild_critical_automation.sql` established the
 original critical schedules. The current schedule contract is in
-`20261030030000_background_job_cadence.sql`: the guarded line-lock gate
-checks every minute; the score gate checks every ten minutes; reminder delivery
+`20261030030000_background_job_cadence.sql` and, for the score gate,
+`20261102120000_score_polling_five_minutes.sql`: the guarded line-lock gate
+checks every minute; the score gate checks every five minutes; reminder delivery
 is gated every five minutes; reminder schedule maintenance runs every 30
 minutes (at :05 and :35, five minutes after the 7:00 AM Eastern spread refresh
 and the Tuesday 6:30 AM recap eligibility); the watchdog runs every 15 minutes;
@@ -429,11 +465,11 @@ the same way as line locks: the five-minute cron runs
 scheduled reminder is due or a stale "sending" claim needs requeueing, the same
 rows `claim_due_push_reminders()` would act on. The watchdog still judges the
 reminder worker only when reminders are due, so idle skips never raise alerts.
-Score sync is gated too (`dispatch_score_sync_if_due()`, migration
-`20261030030000_background_job_cadence.sql`). Each run also performs season
+Score sync is gated too (`dispatch_score_sync_if_due()`, migrations
+`20261030030000_background_job_cadence.sql` and `20261102120000_score_polling_five_minutes.sql`). Each run also performs season
 rollover, week advancement, Survivor no-pick eliminations and the playoff
 day-start eligibility snapshot, so the gate calls the worker when a final is due
-(170 minutes after kickoff, past any retry timer), when a week is waiting to
+(175 minutes after kickoff, past any retry timer), when a week is waiting to
 open, when picks can be settled now (a no-contest game, or a final game with its
 official line), at the next time-based duty the worker recorded after its last
 run in `automation_dispatch_state.next_due_at` (the weekly handoff time, the

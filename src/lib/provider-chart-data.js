@@ -2,6 +2,8 @@ import { providerRequestCost } from "./provider-efficiency.js";
 import { getLineLock } from "./schedule-time.js";
 import { dateFormat } from "./date-format.js";
 import { SCORE_RETRY_MINUTES } from "./score-retry-ladder.js";
+import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "./score-window.js";
+import { chooseScoreTier, LINE_NEED_CUSHION_CREDITS, SCORE_TIER_SCHEDULES } from "./score-polling-tier.js";
 
 const SLATE_GROUP_GAP = 30 * 60000;
 function dateKeyInZone(value, timeZone) {
@@ -44,7 +46,7 @@ const PRIOR_FIRST_HOUR_SHARE = 0.9;
 
 /**
  * Share of recent slates whose last game settled inside the first hour of
- * score polling (polling starts 170 minutes after a slate's last kickoff).
+ * score polling (polling starts FIRST_SCORE_CHECK_DELAY_MINUTES after a slate's last kickoff).
  * It is a 15-day moving average; with too little history the
  * 90% prior stands in.
  */
@@ -54,7 +56,7 @@ export function firstHourSettleShare(games, now = new Date()) {
   let total = 0;
   for (const slate of scheduleSlates(games)) {
     const kickoffs = slate.games.map((game) => Date.parse(game.kickoff_at ?? game.kickoffAt));
-    const pollingStart = Math.max(...kickoffs) + 170 * 60000;
+    const pollingStart = Math.max(...kickoffs) + FIRST_SCORE_CHECK_DELAY_MINUTES * 60000;
     if (pollingStart < since || pollingStart > now.getTime()) continue;
     const finals = slate.games.map((game) => Date.parse(game.finalized_at ?? ""));
     if (!finals.every(Number.isFinite)) continue;
@@ -94,24 +96,38 @@ function firstHourExpectedChecks(rungMinutes) {
   return expected;
 }
 
-/** Expected provider score checks for one slate given the retry ladder and the first-hour share. */
+/**
+ * Expected provider score checks for one slate given the retry ladder and the first-hour share.
+ * The ladder is read as check offsets from the first check: the "first hour" is the windows that start before +60 minutes, the "next
+ * hour" the windows that start from +60 up to +120, and the cooldown the one window after those. Which gaps those are depends on the
+ * ladder, so they are returned for the forecast text (`nextHourGaps`, `cooldownGap`).
+ */
 export function expectedScoreChecks(retryMinutes, firstHourShare) {
   let elapsed = 0;
   let firstHour = 0;
   let index = 0;
   while (index < retryMinutes.length && elapsed < 60) { elapsed += retryMinutes[index]; firstHour++; index++; }
   const firstHourRungs = retryMinutes.slice(0, firstHour);
+  const nextHourStart = index;
   let nextHour = 0;
   while (index < retryMinutes.length && elapsed < 120) { elapsed += retryMinutes[index]; nextHour++; index++; }
-  // The 120- and 240-minute rungs are emergencies, so a slate that is still open
-  // after the next hour settles on the 60-minute cooldown check.
+  const nextHourGaps = retryMinutes.slice(nextHourStart, nextHourStart + nextHour);
+  // The later rungs are emergencies, so a slate that is still open after the next hour
+  // settles on the one cooldown check that follows.
   const cooldown = index < retryMinutes.length ? 1 : 0;
+  const cooldownGap = cooldown ? retryMinutes[index] : null;
   const rest = (1 - firstHourShare) / 2;
   const nextHourMean = nextHour ? (nextHour + 1) / 2 : 0;
   return {
     checks: firstHourShare * firstHourExpectedChecks(firstHourRungs) + rest * (firstHour + nextHourMean) + rest * (firstHour + nextHour + cooldown),
-    firstHour, nextHour, cooldown,
+    firstHour, nextHour, cooldown, nextHourGaps, cooldownGap,
   };
+}
+
+/** "20", "20 and 60", "20, 60 and 120": the distinct gaps of a stretch of the ladder, for a sentence. */
+function listMinutes(gaps) {
+  const distinct = [...new Set(gaps)];
+  return distinct.length > 1 ? `${distinct.slice(0, -1).join(", ")} and ${distinct.at(-1)}` : String(distinct[0] ?? 0);
 }
 
 function scheduleSlates(games) {
@@ -151,11 +167,14 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   }
   let cumulative = 0;
   for (const day of allDays) { cumulative += day.credits; day.cumulative = cumulative; }
-  const scoreRuns = runs.filter((run) => run.job_type === "scores" && providerRequestCost(run) > 0);
-  const scoreCredits = scoreRuns.reduce((sum, run) => sum + providerRequestCost(run), 0);
-  const scoreCostPerCall = scoreRuns.length ? scoreCredits / scoreRuns.length : 2;
-  const lineRuns = runs.filter((run) => (run.job_type === "line_locks" || run.job_type === "odds") && providerRequestCost(run) > 0);
-  const lineCostPerCall = lineRuns.length ? lineRuns.reduce((sum, run) => sum + providerRequestCost(run), 0) / lineRuns.length : 1;
+  const paidRuns = (kind) => {
+    const all = runs.filter((run) => kind(run) && providerRequestCost(run) > 0);
+    const thisMonth = all.filter((run) => Date.parse(run.completed_at ?? run.started_at) >= start);
+    return thisMonth.length ? thisMonth : all;
+  };
+  const averageCost = (list, fallback) => list.length ? list.reduce((sum, run) => sum + providerRequestCost(run), 0) / list.length : fallback;
+  const scoreCostPerCall = averageCost(paidRuns((run) => run.job_type === "scores"), 2);
+  const lineCostPerCall = averageCost(paidRuns((run) => run.job_type === "line_locks" || run.job_type === "odds"), 1);
   const settle = firstHourSettleShare(games, now);
   const expected = expectedScoreChecks(retryMinutes, settle.share);
   const expectedChecks = expected.checks;
@@ -169,7 +188,6 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     if (!day) continue;
     day.forecastGames += slate.games.length;
     day.forecastSlates += 1;
-    day.forecastScores += expectedChecks * scoreCostPerCall;
   }
   // Line requests: the 7 AM Eastern pre-lock refresh runs every day, and each
   // distinct lock moment makes one lock-time fetch on the Eastern day it falls
@@ -191,8 +209,34 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     const key = day.date.slice(0, 10);
     if (key > todayKey || (key === todayKey && todayRefreshPending)) day.forecastRefreshes = 1;
     day.forecastLines = (day.forecastRefreshes + day.forecastLockFetches) * lineCostPerCall;
-    day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   }
+  // The forecast is a full-operations forecast: every remaining slate is priced on the Normal schedule, whatever the low-balance rule would do
+  // (the owner wants to see what the month costs when nothing is held back). Only the tier plan below reacts to a low balance.
+  for (const day of allDays) day.forecastScores = day.forecastSlates * expectedChecks * scoreCostPerCall;
+  const provider = latestProviderCreditSnapshot(runs);
+  const reportedThisMonth = provider !== null && provider.timestamp >= start && provider.timestamp <= now.getTime();
+  const providerLimit = provider?.limit ?? 500;
+  const checksByTier = {
+    normal: expectedChecks,
+    lean: expectedScoreChecks(SCORE_TIER_SCHEDULES.lean.gapMinutes, settle.share).checks,
+    minimal: expectedScoreChecks(SCORE_TIER_SCHEDULES.minimal.gapMinutes, settle.share).checks,
+  };
+  const futureDays = allDays.filter((day) => day.date.slice(0, 10) >= todayKey);
+  // Which schedule the score worker is on right now, from what is used and what the rest of the month needs on each lighter schedule.
+  const usedNow = reportedThisMonth ? provider.used : cumulative;
+  const slatesLeft = futureDays.reduce((sum, day) => sum + day.forecastSlates, 0);
+  const tierPlan = {
+    ...chooseScoreTier({
+      usedCredits: usedNow,
+      remainingCredits: Math.max(0, providerLimit - usedNow),
+      lineNeedCredits: futureDays.reduce((sum, day) => sum + day.forecastLines, 0) + LINE_NEED_CUSHION_CREDITS,
+      leanNeedCredits: slatesLeft * checksByTier.lean * scoreCostPerCall,
+      minimalNeedCredits: slatesLeft * checksByTier.minimal * scoreCostPerCall,
+      gameDaysLeft: futureDays.filter((day) => day.forecastSlates > 0).length,
+    }),
+    reportedThisMonth,
+  };
+  for (const day of allDays) day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
   let forecastCumulative = cumulative;
   for (const day of allDays) {
     if (day.date.slice(0, 10) < todayKey) continue;
@@ -214,13 +258,12 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
   const sundayAverageCredits = regularSundayKeys.length
     ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
     : null;
-  const provider = latestProviderCreditSnapshot(runs);
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
-    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} twenty-minute checks and half on the 60-minute cooldown check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks.`,
-    forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks,
+    forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks. This is a full-operations forecast on the Normal schedule; a low-credit schedule never changes it.`,
+    forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks, tierPlan,
     days, calendarDays: allDays, trackedCredits: cumulative, reportedUsed: provider?.used ?? null,
     providerLimit: provider?.limit ?? null,
     remaining: provider?.remaining ?? null,
@@ -251,7 +294,7 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
     return {
     slateStartedAt, games: slateGames.length, settledGames: complete ? slateGames.length : 0, latencyMinutes, credits: 0, finals: 0, calls: 0, productive: 0,
     ambiguous: false,
-    start: Date.parse(slateStartedAt) + 170 * 60000,
+    start: Date.parse(slateStartedAt) + FIRST_SCORE_CHECK_DELAY_MINUTES * 60000,
     end: slateGames.every((game) => game.finalized_at)
       ? Math.max(...slateGames.map((game) => Date.parse(game.finalized_at))) + 60000
       : Math.min(now.getTime(), Date.parse(slateStartedAt) + 24 * 60 * 60000),
@@ -275,6 +318,24 @@ export function slateEfficiencySeries(games, runs, now = new Date()) {
     creditsPerFinal: !slate.ambiguous && slate.finals > 0 ? slate.credits / slate.finals : null,
     productiveRate: !slate.ambiguous && slate.calls > 0 ? 100 * slate.productive / slate.calls : null,
   }));
+}
+
+/**
+ * Score checks moved to a 5-minute rhythm on the morning of Monday, November 2, 2026 (migration 20261102120000). The provider cost chart's averages
+ * count only slates that started on or after midnight Eastern that day, so they measure the polling in force now, not the old schedule.
+ */
+export const SCORE_POLLING_AVERAGES_SINCE = "2026-11-02T05:00:00.000Z";
+
+/**
+ * The slates the averages count: those that started at or after `since` (all of them when there is no date).
+ * @template {{ slateStartedAt: string }} T
+ * @param {T[]} points
+ * @param {string | null | undefined} since
+ * @returns {T[]}
+ */
+export function slatesSince(points, since) {
+  const from = since ? Date.parse(since) : NaN;
+  return Number.isFinite(from) ? points.filter((point) => Date.parse(point.slateStartedAt) >= from) : points;
 }
 
 // The last `days` Eastern calendar dates, including the point's date. Weight by games,

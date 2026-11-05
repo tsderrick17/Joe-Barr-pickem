@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { recordingDatabase } from "./helpers/recording-database.mjs";
 import { FINAL_OVERDUE_HOURS, finalIsOverdue } from "../src/lib/final-overdue.js";
-import { FINAL_SCORE_POLLING_LIMIT_HOURS, isDueForFinalScoreCheck } from "../src/lib/score-window.js";
+import { FINAL_SCORE_POLLING_LIMIT_HOURS, FIRST_SCORE_CHECK_DELAY_MINUTES, isDueForFinalScoreCheck } from "../src/lib/score-window.js";
 import { evaluateWatchdogSignals } from "../src/lib/watchdog-rules.js";
 
 // "A game has no final score long after kickoff" is one rule for both pools: the same cut-off for the NFL alert, the Bowl alert and the Bowl Card's
@@ -21,10 +21,13 @@ test("a game is overdue six hours after kickoff while still scheduled or live, a
   assert.equal(finalIsOverdue({ status: "live", kickoff_at: "not a date" }, NOW), false);
 });
 
-test("NFL score checks start 170 minutes after kickoff and stop 72 hours after it", () => {
+test("NFL score checks start 175 minutes after kickoff and stop 72 hours after it", () => {
   assert.equal(FINAL_SCORE_POLLING_LIMIT_HOURS, 72);
+  assert.equal(FIRST_SCORE_CHECK_DELAY_MINUTES, 175);
   const due = (kickoffAt) => isDueForFinalScoreCheck({ kickoffAt, status: "live" }, NOW);
   assert.equal(due(hoursAgo(2.5)), false, "too early");
+  assert.equal(due(hoursAgo(174 / 60)), false, "one minute early");
+  assert.equal(due(hoursAgo(175 / 60)), true, "exactly on time");
   assert.equal(due(hoursAgo(3)), true);
   assert.equal(due(hoursAgo(71.9)), true, "still worth a credit");
   assert.equal(due(hoursAgo(72)), false, "the provider no longer returns it: no more credits spent");

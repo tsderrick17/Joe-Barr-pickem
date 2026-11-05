@@ -5,8 +5,11 @@ import {
 } from "@/lib/advance-scoring-periods";
 import { checkpoint, currentExecutionContext, ExecutionCancelledError, providerSignal } from "@/lib/execution-context";
 import { FINAL_SCORE_POLLING_LIMIT_HOURS } from "@/lib/score-window";
-import { decideQuotaHold, pollingModeFor, selectDueGames, selectEligibleGames } from "@/lib/score-work-plan";
-import { nextScoreCheckAt, type ScorePollingMode } from "@/lib/score-check-backoff";
+import { SCORE_LADDER_VERSION } from "@/lib/score-retry-ladder";
+import { isTierCheckDue, ladderVersionForTier, nextScoreCheckTime, tierRung } from "@/lib/score-polling-tier";
+import { decideScoreTier, type ScoreTier } from "@/lib/score-tier-plan";
+import { pollingModeFor, selectDueGames, selectEligibleGames } from "@/lib/score-work-plan";
+import type { ScorePollingMode } from "@/lib/score-check-backoff";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
 import { voidDisruptedPicks } from "@/lib/void-disrupted-picks";
@@ -34,6 +37,7 @@ type FinalGameRow = GameRow & { awayScore: number; homeScore: number };
 type ScoreCheckBackoffRow = {
   game_id: string;
   attempts: number;
+  last_checked_at: string;
   next_check_at: string;
 };
 
@@ -46,6 +50,11 @@ export type ScoreSyncResult = {
   newFinals?: number;
   newFinalsByRung?: Record<string, number>;
   ladderRungs?: Record<string, number>;
+  /** Which ladder those rungs belong to (SCORE_LADDER_VERSION, with the tier added unless Normal): rung numbers only line up within one ladder. */
+  ladderVersion?: string;
+  /** Which score-check tier this run followed, and why (score-polling-tier.js). */
+  tier?: ScoreTier;
+  tierMessage?: string;
   /** The check (rung) that finalized each game this run: game id to rung, so the Grading page can say which window graded a game. */
   finalGameRungs?: Record<string, number>;
   picksGraded: number;
@@ -57,32 +66,62 @@ export type ScoreSyncResult = {
   warnings: string[];
   weekRollover: WeekRolloverResult;
   survivorNoPickEliminations: number;
-  quotaProtected?: boolean;
 };
+
+/** When each game was last really checked (the tick that run was called for counts), or null if it never was. */
+function lastCheckedMs(previous: ScoreCheckBackoffRow | undefined) {
+  return previous && previous.attempts >= 1 ? Date.parse(previous.last_checked_at) : null;
+}
 
 async function deferUnfinishedScoreChecks(
   games: GameRow[],
   previousChecks: Map<string, ScoreCheckBackoffRow>,
   checkedAt: string,
+  tier: ScoreTier,
 ) {
   if (games.length === 0) return;
 
-  const checked = new Date(checkedAt);
+  const checked = Date.parse(checkedAt);
+  const rows = games.map((game) => ({
+    game_id: game.id,
+    attempts: (previousChecks.get(game.id)?.attempts ?? 0) + 1,
+    last_checked_at: checkedAt,
+    next_check_at: nextScoreCheckTime(tier, Date.parse(game.kickoff_at), checked),
+    updated_at: checkedAt,
+  }));
+  const { error } = await supabaseAdmin
+    .from("score_check_backoff")
+    .upsert(rows, { onConflict: "game_id" });
+  if (error) throw new Error("Delayed score checks could not be rescheduled safely.");
+}
+
+/**
+ * Games the tier says to leave alone this run (not their time yet on the tier's list, or polling is paused) get their timer set to their next
+ * time, so the database gate stops waking the worker for them every tick. Nothing is counted as a check.
+ */
+async function passOverScoreChecks(
+  games: GameRow[],
+  previousChecks: Map<string, ScoreCheckBackoffRow>,
+  checkedAt: string,
+  tier: ScoreTier,
+) {
+  if (games.length === 0) return;
+
+  const passedAt = Date.parse(checkedAt);
   const rows = games.map((game) => {
     const previous = previousChecks.get(game.id);
-    const attempts = (previous?.attempts ?? 0) + 1;
     return {
       game_id: game.id,
-      attempts,
-      last_checked_at: checkedAt,
-      next_check_at: nextScoreCheckAt(attempts, checked),
+      attempts: previous?.attempts ?? 0,
+      last_checked_at: previous?.last_checked_at ?? checkedAt,
+      next_check_at: nextScoreCheckTime(tier, Date.parse(game.kickoff_at), passedAt),
       updated_at: checkedAt,
     };
   });
   const { error } = await supabaseAdmin
     .from("score_check_backoff")
     .upsert(rows, { onConflict: "game_id" });
-  if (error) throw new Error("Delayed score checks could not be rescheduled safely.");
+  if (error) throw new Error("Passed-over score checks could not be rescheduled safely.");
 }
 
 function parseScore(value: string | number | null | undefined) {
@@ -200,7 +239,7 @@ export async function syncFinalScores({
     scoreDueGames.length
       ? await supabaseAdmin
           .from("score_check_backoff")
-          .select("game_id, attempts, next_check_at")
+          .select("game_id, attempts, last_checked_at, next_check_at")
           .in("game_id", scoreDueGames.map((game) => game.id))
       : { data: [], error: null };
   if (scoreCheckBackoffsError) {
@@ -212,8 +251,7 @@ export async function syncFinalScores({
       row,
     ]),
   );
-  const eligibleGames = selectEligibleGames(scoreDueGames, backoffByGameId, now, bypassProviderCooldown);
-  const pollingMode = pollingModeFor(eligibleGames, playoffPeriodIds);
+  const timerDueGames = selectEligibleGames(scoreDueGames, backoffByGameId, now, bypassProviderCooldown);
 
   // Every outcome reports the same fields; only what actually differs is passed in.
   const buildResult = (overrides: Partial<ScoreSyncResult> = {}): ScoreSyncResult => ({
@@ -241,32 +279,23 @@ export async function syncFinalScores({
     weekRollover.action === "completed" ||
     recoveredGrades.picksGraded > 0;
 
-  if (eligibleGames.length === 0 && !shouldRecordRollover) {
+  if (timerDueGames.length === 0 && !shouldRecordRollover) {
     return noScoreResult;
   }
 
-  const { data: recentProviderRuns, error: recentProviderRunsError } =
-    await supabaseAdmin
-      .from("sync_runs")
-      .select("details, completed_at, started_at")
-      .eq("provider", "The Odds API")
-      .in("status", ["success", "failed"])
-      .order("started_at", { ascending: false })
-      .limit(25);
-  if (recentProviderRunsError) {
-    throw new Error("Recent score-provider usage could not be loaded.");
-  }
-  const quota = decideQuotaHold({ eligibleGames, backoffByGameId, recentProviderRuns: recentProviderRuns ?? [], now });
-  if (quota.hold) {
-    warnings.push(
-      `Score polling is conserving the remaining Odds API allowance (${quota.creditsRemaining} credits reported); delayed finals will retry automatically while the Commissioner health panel keeps the condition visible.`,
-    );
-    return buildResult({
-      eligibleGames: eligibleGames.length,
-      requestsRemaining: String(quota.creditsRemaining),
-      pollingMode,
-      quotaProtected: true,
-    });
+  // Which tier of checking to run: Normal until the month's credits run low, then Lean or Minimal, and paused only when what is left is needed
+  // for the official lines. The Commissioner's recovery run checks every due game whatever the tier says; the games it leaves alone are
+  // rescheduled to their next time so the gate does not wake the worker for them again.
+  const tierPlan = await decideScoreTier(now);
+  const tier = tierPlan.tier;
+  const eligibleGames = bypassProviderCooldown
+    ? timerDueGames
+    : timerDueGames.filter((game) => tier !== "paused" && isTierCheckDue(tier, Date.parse(game.kickoff_at), lastCheckedMs(backoffByGameId.get(game.id)), now.getTime()));
+  await passOverScoreChecks(timerDueGames.filter((game) => !eligibleGames.includes(game)), backoffByGameId, checkedAt, tier);
+  const pollingMode = pollingModeFor(eligibleGames, playoffPeriodIds);
+  if (tier === "paused" && timerDueGames.length > 0 && eligibleGames.length === 0) warnings.push(tierPlan.message);
+  if (eligibleGames.length === 0 && !shouldRecordRollover) {
+    return buildResult({ tier, tierMessage: tierPlan.message });
   }
 
   const run = await supabaseAdmin
@@ -283,7 +312,7 @@ export async function syncFinalScores({
     await finishSyncRun(run.data.id, {
         status: "success",
         completed_at: new Date().toISOString(),
-        details: noScoreResult,
+        details: { ...noScoreResult, tier, tierMessage: tierPlan.message },
       });
     return noScoreResult;
   }
@@ -332,7 +361,7 @@ export async function syncFinalScores({
     );
 
     if (completedEvents.length === 0) {
-      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+      await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, tier);
       const result = buildResult({
         eligibleGames: eligibleGames.length,
         providerChecked: true,
@@ -340,6 +369,8 @@ export async function syncFinalScores({
         requestsUsed,
         requestsLast,
         pollingMode,
+        tier,
+        tierMessage: tierPlan.message,
       });
       await finishSyncRun(run.data.id, { status: "success", completed_at: new Date().toISOString(), details: result });
       return result;
@@ -406,7 +437,7 @@ export async function syncFinalScores({
       const stillUnfinished = eligibleGames.filter(
         (game) => !finalizedGames.some((finalized) => finalized.id === game.id),
       );
-      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt);
+      await deferUnfinishedScoreChecks(stillUnfinished, backoffByGameId, checkedAt, tier);
 
       const atomicResult = atomicRows[0] as {
         final_scores_imported: number;
@@ -431,9 +462,11 @@ export async function syncFinalScores({
           `${unmatchedCompletedGames} completed game${unmatchedCompletedGames === 1 ? "" : "s"} could not be matched to valid team scores.`,
         );
       }
-      const finalGameRungs = Object.fromEntries(finalizedGames.map((game) => [game.id, (backoffByGameId.get(game.id)?.attempts ?? 0) + 1]));
+      // A game's rung is its place on the tier's list of check times, so it means the same thing however the game got there.
+      const rungOf = (game: FinalGameRow) => tierRung(tier, Date.parse(game.kickoff_at), now.getTime());
+      const finalGameRungs = Object.fromEntries(finalizedGames.map((game) => [game.id, rungOf(game)]));
       const newFinalsByRung = finalizedGames.reduce<Record<string, number>>((counts, game) => {
-        const rung = String((backoffByGameId.get(game.id)?.attempts ?? 0) + 1);
+        const rung = String(rungOf(game));
         counts[rung] = (counts[rung] ?? 0) + 1;
         return counts;
       }, {});
@@ -445,6 +478,9 @@ export async function syncFinalScores({
         newFinals: finalizedGames.length,
         newFinalsByRung,
         ladderRungs: newFinalsByRung,
+        ladderVersion: ladderVersionForTier(SCORE_LADDER_VERSION, tier),
+        tier,
+        tierMessage: tierPlan.message,
         finalGameRungs,
         picksGraded: recoveredGrades.picksGraded + atomicResult.ats_picks_graded,
         picksAwaitingLine:
@@ -471,7 +507,7 @@ export async function syncFinalScores({
         // Network failures, timeouts, HTTP errors, and malformed payloads use
         // the same persistent per-game exponential backoff as a delayed final.
         // The five-minute cron can then exit without spending another credit.
-        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt);
+        await deferUnfinishedScoreChecks(eligibleGames, backoffByGameId, checkedAt, tier);
       } catch {
         await finishSyncRun(run.data.id, {
           status: "failed",
@@ -491,6 +527,7 @@ export async function syncFinalScores({
         requestsUsed: failedRequestsUsed,
         requestsLast: failedRequestsLast,
         pollingMode,
+        tier,
       },
     });
     throw error;

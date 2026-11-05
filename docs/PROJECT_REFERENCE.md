@@ -217,16 +217,37 @@ measure database requests or end-to-end route time.
   or overlapping strokes. Bands join at common week boundaries and taper to the
   zero baseline. The chart has sparse axis labels but no point callouts or
   duplicate data table. During the playoffs the playoff
-  chart replaces the regular-season chart. Each person has a permanent color: eleven validated hues, shuffled
+  chart replaces the regular-season chart, and it is drawn one Eastern game
+  day at a time (the same days playoff eligibility is frozen on): usually
+  seven, Wild Card Sat, Sun and Mon, Divisional Sat and Sun, Conference
+  Championships Sun, Super Bowl Sun, counted from the games on file, so a
+  moved game moves its day. A game belongs to the Eastern day it kicks off on
+  and a cancelled game is no day. A day is charted once every game of it has
+  kicked off and none of its picks is pending, and nothing after a day that is
+  not final yet is drawn. Each day's weekday sits under its line (none for a
+  round that is only one day, such as the Conference Championships) and each
+  round's name once under its days, on one line when it fits and otherwise a
+  word a line (WILD CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL; a one-line
+  name sits centered vertically between the lines of the others), never cut
+  short or touching its neighbor; the axis is titled Game day. Until the
+  first playoff day is final the Playoffs half shows each player as one dot
+  at their final regular-season total (players on the same total side by side
+  from the starting line) and the first game day waits on the bottom axis (its
+  weekday and round name, no scores); the lines grow from those dots day by day. A
+  playoff round with no games on file is drawn as one point. The route reads every started playoff
+  round's games, and trusts the shared chart until the next day's last pick
+  could settle. Each person has a permanent color: eleven validated hues, shuffled
   three times at random and frozen, assigned in the order players joined the
   pool (inactive players keep their slot), so hiding, leaving, or joining never
   repaints anyone. The pad turns over flat; turned over, it widens to the full
   Standings rail (the Survivor Table's width) on the same parchment, and each
   face hides at the edge-on moment so no mirrored text shows.
   An All / 6 Wk toggle (regular season only) sits between the title and the
-  flip button. 6 Wk shows exactly six weeks, scrolls sideways one notched week
-  at a time with the y-axis standing still beside it, and always opens on the
-  most recent six weeks. It draws exactly the six weeks in view: the lines and
+  flip button. 6 Wk shows exactly six weeks, moves one whole week at a time with
+  the y-axis standing still beside it, and always opens on the most recent six
+  weeks. The position rail is the only way to move the weeks: the graph itself
+  does not scroll under a finger, a wheel, a drag or the keys, so a flick can
+  never shift it. It draws exactly the six weeks in view: the lines and
   the grid stop at the window's first and last week, and every line starts
   there as a point, so players who share a score fan out of one point (as All
   does from zero). The starting points show only when the window rests on a
@@ -237,13 +258,21 @@ measure database requests or end-to-end route time.
   starts. In both views the bottom line is the lowest score shown and the top
   line is one or two wins over the leader, never on it; every line is numbered
   and evenly spaced in whole wins, six lines at most (of the two possible tops,
-  the one that splits into more lines). A slim position rail in the strip above
+  the one that splits into more lines). A position rail in the strip above
   the top line replaces the browser's scroll bar, as wide as the grid lines,
-  its thumb always inside the track, even in the bounce past either end;
-  All keeps that strip empty, so both views put the axis and the week numbers
-  in exactly the same place.
+  its thumb always inside the track, even in the bounce past either end. The
+  bar fills the strip (8 px); the part that takes a press reaches well below it
+  so a thumb can catch it; the pointer stays an ordinary arrow and the thumb
+  swells a little instead, only while a mouse is over it or a finger is on it
+  (a touch screen has no hover swell, so a tap never leaves the rail swollen).
+  The 8 px bar is centered between the masthead's rule and the top grid line.
+  Dragging or pressing lands on the nearest
+  week; with focus the arrow keys step a week and Home, End, Page Up and Page
+  Down jump (it is a slider for screen readers). All keeps that strip empty, so
+  both views put the axis and the week numbers in exactly the same place.
   Axis margins are kept tight. On phones the key is a compact
-  four-column grid. The key lists everyone in current-standings order;
+  four-column grid; on wider screens its rows come out even (eleven names go
+  six and five, not eight and three: `snapshotKeyColumns`). The key lists everyone in current-standings order;
   pressing a name hides or shows that person, the axis and stacking recompute
   for whoever remains, and hovering a name or line highlights one player. The
   playoff chart starts with players out of the playoff race hidden. The
@@ -357,6 +386,7 @@ measure database requests or end-to-end route time.
   The number on the app icon is the player's **picks still to make this week** (`picksStillToMake`, `src/lib/picks-to-make-rule.js`): the Pick'em picks the week allows minus those made (never more than the open,
   unpicked games), plus one while they are still in Survivor and have not picked; zero when nothing is open. It is set three ways: by each mirrored notification (so it is right with the app
   closed), when the Home Screen app opens or is returned to (`/api/badge`, at most once every five minutes), and right after picks are saved. Bowl Pool picks are not counted yet.
+- A page left open across a deploy: every production build carries its own deployment id (`deploymentId` in `next.config.ts`: the first twelve characters of the commit, since Vercel allows 32 at most), so a phone still showing an old build is told on its next tap and loads the page fresh instead of leaving its links dead. Under that, `src/components/stuck-link-guard.tsx` (in the layout) watches every link tap: if Next took the tap over and the page has not moved four seconds later (page data that never came back, a connection the phone put to sleep), it loads the link's page normally; a tap that worked, a page since left, or a back step is left alone.
 - Add to Home Screen (`src/components/add-to-home-screen.tsx`, rules in `src/lib/home-screen.js`) helps every player put the pool on a phone's Home Screen,
   where it opens like an app and can receive notifications. A slim banner under the header of every page shows on any phone that is not running the
   Home Screen app, with the steps for that phone and browser one tap away ("Show me how"): Safari on an iPhone (Share, Add to Home Screen, leave Open as
@@ -409,9 +439,12 @@ measure database requests or end-to-end route time.
   yet" shows only for a trophy nobody has won.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions
-  appear only on the trophies and banners). Record view: Wins, Hit rate, Perfect Weeks (all 2-0 weeks), places with ties. Other Stats
-  view: Shutout Free Weeks in a Row and Perfect Weeks in a Row (best run, current run beneath), games decided by a half point (wins, losses, hit
-  rate) and pushes picked; A to Z by default, no places, every column sorts. The two views are one two-way switch.
+  appear only on the trophies and banners). Record view: Wins and Hit rate (every graded pick, regular season and playoffs), Perfect Weeks (every
+  perfect week of every round but the Super Bowl: a regular 2-0 week, and a playoff round in which the player won every pick it allowed with no
+  loss, 6-0 in the Wild Card round when it has six games, 4-0 in the Divisional, 2-0 in the Conference Championships; a round with fewer playable
+  games allows fewer picks), places with ties. Other Stats view is **regular season only**: Shutout Free Weeks in a Row and Perfect Weeks in a Row
+  (best run, current run beneath; regular weeks only), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
+  picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. The two views are one two-way switch.
 - Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
 - A week counts toward the weekly figures (Perfect Weeks, both streaks) once every game in it is final, not only once the pool has advanced, and
@@ -616,11 +649,17 @@ may enrich spreads but cannot override canonical schedule assignments.
   final due, a week to open, picks to settle, its recorded next handoff,
   Survivor or playoff day-start time, or the hourly safety run) and spends no
   provider credit unless a game's durable retry time is due. Regular-season and playoff games
-  become eligible 170 minutes after official kickoff and use the same fixed
-  10/10/10/10/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
-  the final 240-minute window reserved for emergencies.
-- Remaining credits do not change the normal cadence. Repeated polling pauses
-  only below the protected 50-credit emergency reserve. Every paid response can
+  become eligible 175 minutes after official kickoff and use the same fixed
+  5/5/5/5/5/5/5/10/10/20/20/20/60/120/240-minute delayed-final sequence, with
+  the 60-, 120- and 240-minute windows reserved for emergencies. After the last window no more
+  automatic checks follow (the overdue alert and the Commissioner's button take over). The database gate wakes the worker every five minutes. A retry gap is the real gap between two checks:
+  a game's retry timer is its next time on its tier's list of times after kickoff, counted from the gate tick the run was called for, not from the run's start a few
+  seconds later (`nextScoreCheckTime`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
+- Remaining credits do not change the normal cadence until 440 of the month's 500 credits are used
+  (`LOW_BALANCE_USED_CREDITS`). Then the worker runs a Lean or Minimal list of times instead (`score-polling-tier.js`,
+  decided every run from the month's usage and what the rest of the month needs: the remaining line requests plus a cushion, and each
+  schedule's forecast for the game days left), and pauses automatic checks only when the balance would not cover the lines. A reading from an earlier month,
+  or none, means Normal. The manual button always works. See "Low-balance score checking" in OPERATIONS.md. Every paid response can
   settle all due completed games it contains. The Bowl dispatcher checks every
   15 minutes but calls the app only when its seasonal schedule says work is due.
 - Provider response headers feed a 30-day Commissioner efficiency summary of
@@ -645,7 +684,7 @@ may enrich spreads but cannot override canonical schedule assignments.
   enabled.
 - Schedule-provider failures use a circuit breaker and shared cooldown. Manual
   commissioner override may bypass timing, but not authentication, leases,
-  quota reserve, pins, or atomic validation.
+  pins, or atomic validation.
 - Mutations are idempotent or retry-safe. Imports validate before writing;
   rollover returns the existing result; line locking and scoring operate only
   on due records.
@@ -770,9 +809,11 @@ the condition genuinely recurs.
 
 The Grading page uses every data point recorded, not a window of recent rows. The
 polling histogram (new game finals by retry rung) reads every score run that
-recorded a rung since the start of the season, in pages, and says which date it
-starts from (rungs were first recorded on Sep 21; earlier checks did not record
-one and are not guessed). "Last score sync" reads score runs only, Worker activity
+recorded a rung on the current polling schedule (`SCORE_LADDER_VERSION`; a rung number means a
+different time after kickoff under a different schedule), in pages, and says which date it
+starts from. It draws the 5- and 10-minute windows as shares of every final and gives the later
+windows (20 minutes and up, and the last check) as one count below the chart. Earlier checks did
+not record the schedule and are not guessed. "Last score sync" reads score runs only, Worker activity
 shows the latest run of each worker, and the efficiency totals are season to date.
 
 The Grading charts share the dashboard's selected period and adaptive refresh:
@@ -808,6 +849,12 @@ queries paginate so a busy month cannot silently lose older records.
 Slate efficiency uses exact kickoff times; legacy receipt attribution is
 explicitly estimated and withheld for overlapping windows. The ladder plots
 fresh-final counts with widths proportional to configured polling gaps.
+The provider cost chart's 15- and 30-day averages count only slates that started on or after midnight Eastern on Monday, November 2, 2026
+(`SCORE_POLLING_AVERAGES_SINCE` in `src/lib/provider-chart-data.js`, sent to the page as `efficiency.averagesSince`), the day score checks moved to the
+5-minute rhythm, so the averages measure the polling in force now.
+The Performance tab's Pick'em performance splits are Favorites, Underdogs, Pick'em, Home and Away. A game whose locked spread is 0 is a pick'em game:
+the line names the home team as its "favorite" only by the pool's PK convention, so such a game is counted under Pick'em and never under
+Favorites or Underdogs (`recordsFor` in `src/lib/group-stats.js`). The streaks are the Trophy Room's; the Performance tab no longer shows them.
 
 ### NCAA Bowl Pool schedule staging
 

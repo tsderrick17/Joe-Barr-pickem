@@ -5,7 +5,7 @@ import { FINAL_OVERDUE_HOURS, finalIsOverdue } from "@/lib/final-overdue.js";
 import { dateFormat } from "@/lib/date-format.js";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { latestProviderCreditSnapshot } from "@/lib/provider-chart-data.js";
-import { creditsBelowReserve } from "@/lib/provider-credits.js";
+import { decideScoreTier } from "@/lib/score-tier-plan";
 
 export type AutomationRun = {
   job_type: "line_locks" | "scores" | "odds";
@@ -13,7 +13,7 @@ export type AutomationRun = {
   started_at: string;
   completed_at: string | null;
   error_message: string | null;
-  details: { requestsRemaining?: string | null; requestsUsed?: string | null; quotaProtected?: boolean } | null;
+  details: { requestsRemaining?: string | null; requestsUsed?: string | null } | null;
 };
 
 function latestByJob(runs: AutomationRun[], job: "line_locks" | "scores") {
@@ -134,8 +134,9 @@ export async function checkAutomationHealth(now = new Date()) {
     problems.push(`${missingOfficialLines} game${missingOfficialLines === 1 ? " is" : "s are"} past line lock without an official line.`);
   }
 
-  const quotaProtected = latestSuccessfulScores?.details?.quotaProtected === true ||
-    creditsBelowReserve(providerAllowance);
+  // Which tier of score checking the worker is on (score-polling-tier.js). Only "paused" is a problem: Lean and Minimal still grade every game.
+  const scoreTier = await decideScoreTier(now, providerCreditSnapshot);
+  const quotaProtected = scoreTier.tier === "paused";
   const latestScoreFinishedAt = latestScores
     ? new Date(latestScores.completed_at ?? latestScores.started_at).getTime()
     : 0;
@@ -147,7 +148,7 @@ export async function checkAutomationHealth(now = new Date()) {
     problems.push("Final-score sync is stale while games are awaiting review.");
   }
   if (quotaProtected) {
-    problems.push(`Odds API allowance is being protected${providerAllowance !== null ? ` (${providerAllowance} credits reported)` : ""}; delayed final-score polling is in cooldown.`);
+    problems.push(`Score checks are paused to protect the official lines: ${scoreTier.message}`);
   }
   const pendingScheduleReviews = scheduleReviewsResult.count ?? 0;
   if (pendingScheduleReviews > 0) {
@@ -201,6 +202,7 @@ export async function checkAutomationHealth(now = new Date()) {
     scoreCheckStatus,
     providerAllowance,
     providerCreditSnapshot,
+    scoreTier,
     scheduleProviderCircuit: scheduleCircuitResult.data,
     scheduleProviderCooldownActive: Boolean(
       scheduleCircuitResult.data &&

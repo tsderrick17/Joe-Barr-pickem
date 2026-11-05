@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window.js";
+import { SCORE_RETRY_MINUTES } from "@/lib/score-retry-ladder.js";
 import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
@@ -15,7 +16,7 @@ type Dashboard = {
   status: "healthy" | "attention";
   periods: Array<{ id: string; displayName: string; status: string; type: string }>;
   period: { id: string; displayName: string; type: string; status: string } | null;
-  metrics: { games: number; live: number; settled: number; awaitingGrade: number; gradeEligibleGames: number; gradeCompleteGames: number; pendingGradeGames: number; attention: number; activePlayers: number; lastScoreSyncAt: string | null; lastScoreSyncAgeMinutes: number | null; latestScoreSyncStatus: string; providerAllowance: number | null; pickOutcomes: { win: number; loss: number; void: number; pending: number }; survivorEntries: { active: number; eliminated: number; complete: number }; reminders: { scheduled: number; sending: number; sent: number; cancelled: number; test: number }; efficiency: { totalCredits: number; scoreCredits: number; spreadCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string; history: EfficiencyPoint[] }; settlementLatency: { averageMinutes: number | null; slowestMinutes: number | null; samples: number; history: Array<{ label: string; shortLabel: string; minutes: number }> }; comparison: { previousPeriod: string | null; previousAverageMinutes: number | null; deltaMinutes: number | null; history: Array<{ id: string; label: string; shortLabel: string; averageMinutes: number | null; samples: number }> }; readiness: { scheduleLoaded: boolean; linesLocked: number; lineTotal: number; nextKickoffAt: string | null; nextLineLockAt: string | null } } | null;
+  metrics: { games: number; live: number; settled: number; awaitingGrade: number; gradeEligibleGames: number; gradeCompleteGames: number; pendingGradeGames: number; attention: number; activePlayers: number; lastScoreSyncAt: string | null; lastScoreSyncAgeMinutes: number | null; latestScoreSyncStatus: string; providerAllowance: number | null; pickOutcomes: { win: number; loss: number; void: number; pending: number }; survivorEntries: { active: number; eliminated: number; complete: number }; reminders: { scheduled: number; sending: number; sent: number; cancelled: number; test: number }; efficiency: { totalCredits: number; scoreCredits: number; spreadCredits: number; finalizedGames: number; creditsPerFinal: number | null; productiveRate: number | null; trend: string; history: EfficiencyPoint[]; averagesSince?: string | null }; settlementLatency: { averageMinutes: number | null; slowestMinutes: number | null; samples: number; history: Array<{ label: string; shortLabel: string; minutes: number }> }; comparison: { previousPeriod: string | null; previousAverageMinutes: number | null; deltaMinutes: number | null; history: Array<{ id: string; label: string; shortLabel: string; averageMinutes: number | null; samples: number }> }; readiness: { scheduleLoaded: boolean; linesLocked: number; lineTotal: number; nextKickoffAt: string | null; nextLineLockAt: string | null } } | null;
   games: Array<{ id: string; away: string; home: string; awayName: string; homeName: string; kickoffAt: string; finalizedAt: string | null; gradedWindow?: { rung: number; windowMinutes: number } | null; status: string; state: string; score: string | null; needsAttention: boolean; picks: { total: number; pending: number; graded: number; visible: boolean }; survivor: { total: number; pending: number } }>;
   attention: Array<{ id: string; severity: string; title: string; detail: string }>;
   audit: Array<{ id: string; action: string; entityType: string; details: Record<string, unknown>; createdAt: string }>;
@@ -78,7 +79,7 @@ function GameInspector({ game }: { game: Dashboard["games"][number] }) {
 function gradedLine(game: { kickoffAt: string; finalizedAt: string | null; gradedWindow?: { rung: number; windowMinutes: number } | null }) {
   const minutes = Math.max(0, Math.round((new Date(game.finalizedAt ?? game.kickoffAt).getTime() - new Date(game.kickoffAt).getTime()) / 60000));
   const elapsed = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m` : `${minutes}m`;
-  return `${elapsed} after kickoff${game.gradedWindow ? ` · check ${game.gradedWindow.rung} of 12 (${game.gradedWindow.windowMinutes}-min window)` : ""}`;
+  return `${elapsed} after kickoff${game.gradedWindow ? ` · check ${game.gradedWindow.rung} of ${SCORE_RETRY_MINUTES.length + 1} (${game.gradedWindow.windowMinutes ? `${game.gradedWindow.windowMinutes}-min window` : "last check"})` : ""}`;
 }
 
 export default function GradingDashboard({ view = "today" }: { view?: "today" | "performance" | "log" }) {
@@ -185,18 +186,17 @@ export default function GradingDashboard({ view = "today" }: { view?: "today" | 
         <div className="space-y-4">
           <div className="hidden lg:block">{selectedGame ? <GameInspector game={selectedGame} /> : <div className="desk-card text-sm text-(color:--themed-text-28)">Select a game to inspect it.</div>}</div>
 
+        <div className="desk-card at-glance">
+          <div className="at-glance-col"><h3>Up next</h3>
+              <dl className="grading-facts mt-3">
+                <div><dt>Next kickoff</dt><dd>{local(metric.readiness.nextKickoffAt)}</dd></div>
+                <div><dt>Next line lock</dt><dd>{local(metric.readiness.nextLineLockAt)}</dd></div>
+                <div><dt>Last score sync</dt><dd>{metric.latestScoreSyncStatus} · {local(metric.lastScoreSyncAt)}</dd></div>
+              </dl></div>
+          <div className="at-glance-col"><h3>Participant impact</h3><dl className="grading-facts mt-3"><div><dt>Pick&apos;em</dt><dd>{metric.pickOutcomes.win} wins · {metric.pickOutcomes.loss} losses · {metric.pickOutcomes.pending} pending · {metric.pickOutcomes.void} void</dd></div><div><dt>Survivor</dt><dd>{metric.survivorEntries.active === 0 && metric.survivorEntries.complete > 0 ? `Over · ${metric.survivorEntries.complete} ${metric.survivorEntries.complete === 1 ? "winner" : "winners"} · ${metric.survivorEntries.eliminated} eliminated` : `${metric.survivorEntries.active} active · ${metric.survivorEntries.eliminated} eliminated · ${metric.survivorEntries.complete} complete`}</dd></div><div><dt>Active players</dt><dd>{metric.activePlayers}</dd></div></dl></div>
+          <div className="at-glance-col"><h3>Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Next message</dt><dd>{nextMessage ? `${nextMessage.title} · ${local(nextMessage.scheduledFor)}` : "None scheduled"}</dd></div><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
         </div>
-      </div>
-
-      <div className="desk-card at-glance mt-4">
-        <div className="at-glance-col"><h3>Up next</h3>
-            <dl className="grading-facts mt-3">
-              <div><dt>Next kickoff</dt><dd>{local(metric.readiness.nextKickoffAt)}</dd></div>
-              <div><dt>Next line lock</dt><dd>{local(metric.readiness.nextLineLockAt)}</dd></div>
-              <div><dt>Last score sync</dt><dd>{metric.latestScoreSyncStatus} · {local(metric.lastScoreSyncAt)}</dd></div>
-            </dl></div>
-        <div className="at-glance-col"><h3>Participant impact</h3><dl className="grading-facts mt-3"><div><dt>Pick&apos;em</dt><dd>{metric.pickOutcomes.win} wins · {metric.pickOutcomes.loss} losses · {metric.pickOutcomes.pending} pending · {metric.pickOutcomes.void} void</dd></div><div><dt>Survivor</dt><dd>{metric.survivorEntries.active === 0 && metric.survivorEntries.complete > 0 ? `Over · ${metric.survivorEntries.complete} ${metric.survivorEntries.complete === 1 ? "winner" : "winners"} · ${metric.survivorEntries.eliminated} eliminated` : `${metric.survivorEntries.active} active · ${metric.survivorEntries.eliminated} eliminated · ${metric.survivorEntries.complete} complete`}</dd></div><div><dt>Active players</dt><dd>{metric.activePlayers}</dd></div></dl></div>
-        <div className="at-glance-col"><h3>Notification readiness</h3><dl className="grading-facts mt-3"><div><dt>Next message</dt><dd>{nextMessage ? `${nextMessage.title} · ${local(nextMessage.scheduledFor)}` : "None scheduled"}</dd></div><div><dt>Queued</dt><dd className={metric.reminders.scheduled || metric.reminders.sending ? "text-(color:--themed-text-21)" : ""}>{metric.reminders.scheduled} scheduled · {metric.reminders.sending} sending</dd></div><div><dt>Delivered</dt><dd>{metric.reminders.sent} sent · {metric.reminders.cancelled} cancelled · {metric.reminders.test} test</dd></div></dl></div>
+        </div>
       </div>
       </> : null}
       {view === "performance" ? <>
@@ -204,7 +204,7 @@ export default function GradingDashboard({ view = "today" }: { view?: "today" | 
       <section className="desk-card mt-4" aria-label="Fresh finals picked up by polling ladder">
         <div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-serif text-xl font-bold">New game finals by polling rung</h3><span className="text-xs font-bold text-(color:--themed-text-27)">Bar width = retry gap · height = share of all finals</span></div>
         <p className="mt-1 text-xs text-(color:--themed-text-27)">Polling starts {FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after kickoff; the bottom axis counts minutes from that first check.</p>
-        {data.ladderCoverage?.since ? <p className="mt-1 text-xs text-(color:--themed-text-27)">Every fresh final recorded this season · since {new Date(data.ladderCoverage.since).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })} · found across {formatAdminNumber(data.ladderCoverage.runs)} score checks. Finals before that were not recorded by rung.</p> : null}
+        {data.ladderCoverage?.since ? <p className="mt-1 text-xs text-(color:--themed-text-27)">Every fresh final recorded on the Normal polling schedule · since {new Date(data.ladderCoverage.since).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })} · found across {formatAdminNumber(data.ladderCoverage.runs)} score checks. Finals found before that, or on a lighter low-credit schedule, are not counted here.</p> : null}
         {data.ladderSummary.length ? <div className="mt-3"><LadderHistogram items={data.ladderSummary} /></div> : <p className="mt-3 text-sm text-(color:--themed-text-28)">Fills in as score polls record their retry rung.</p>}
       </section>
 

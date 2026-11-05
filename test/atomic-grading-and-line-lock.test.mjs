@@ -64,7 +64,7 @@ test("the season year is evaluated on every call, never frozen at module load", 
 
 test("the real retry ladder is the only polling policy", async () => {
   const { SCORE_POLLING_RETRY_MINUTES } = await import("../src/lib/score-check-backoff.ts");
-  assert.deepEqual([...SCORE_POLLING_RETRY_MINUTES], [10, 10, 10, 10, 10, 10, 20, 20, 20, 60, 120, 240]);
+  assert.deepEqual([...SCORE_POLLING_RETRY_MINUTES], [5, 5, 5, 5, 5, 5, 5, 10, 10, 20, 20, 20, 60, 120, 240]);
 });
 
 test("every automation job has one settings row with a timeout shorter than its lease", async () => {

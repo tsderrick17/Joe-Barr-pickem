@@ -19,6 +19,115 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-03 - Season Snapshot playoffs: drawn a game day at a time
+
+Owner request, after asking how many game days each round has (a usual postseason: Wild Card Sat, Sun, Mon; Divisional Sat, Sun; Conference Championships Sun;
+Super Bowl Sun, seven in all). The playoff chart used to show one point per round, charted only once every game of the round was graded, so Wild Card weekend
+stayed empty until Monday night. It now has one point per Eastern game day, counted from the games on file (a game belongs to the Eastern day it kicks off on, the
+same day playoff eligibility is frozen on; a cancelled game is no day). A day is charted once every game of it has kicked off and none of its picks is pending, and
+nothing after a day that is not final yet is drawn, so Wild Card weekend starts filling in on Saturday night. Under the chart each day's weekday sits under its line
+(none for a round that is only one day, the owner's call) and each round's name once under its days, on one line when it fits and otherwise a word a line (WILD CARD, DIVISIONAL, CONF / CHAMP, SUPER / BOWL); the axis is
+titled Game day. This supersedes the previous entry's round names under each round's line, and its empty state: before the first playoff day is final the Snapshot
+now opens on Playoffs like any other time and shows each player as one dot at their final regular-season total (the owner's call), with no note and no empty
+plot; players on the same total sit side by side from the starting line, and hovering a name or a dot works as on the lines. The first game day waits on the
+bottom axis as a placeholder (its weekday and round name, no scores: the route adds that one entry, `complete: false`, only while no day is charted), so the
+owner sees where the lines will start. A playoff round with no games on file is still drawn as one point. The route also reads the games of every started playoff round (about a dozen rows) and
+trusts its shared chart only until the next day's last pick could settle, not until the end of the round.
+
+**Reason:** The owner wanted the playoffs plotted day by day, so the chart tells the story of the postseason as it is played instead of a round at a time.
+
+## 2026-11-03 - Season Snapshot in the playoffs: no blank chart on Wild Card weekend, and the round names in full
+
+Owner asked how the Snapshot looks once the playoffs begin and the pad grows to six picks. Checked with the whole pool of eleven at each round on a phone and a
+desktop: the back of the pad is always the front's size, so the chart follows it and nothing is cut off. Two things were wrong. (1) A playoff round is charted only
+once every game of it is graded (everyone picks the whole round), so from Wild Card kickoff to Monday night the Playoffs half, which the Snapshot opens on, was an
+axis with no lines. It now opens on Season until a playoff round is charted, and pressing Playoffs says "Fills in when the Wild Card is final." over the empty
+plot. (2) The round names were cut to eight letters ("WILD CAR", "DIVISION", "CONFEREN", "SUPER BO") and on a phone the last two touched. They are now
+written on one or two short lines (WILD / CARD, DIVISIONAL centered vertically between the two lines of the others, CONF / CHAMP, SUPER / BOWL), with the room under the playoff chart growing by one
+line only when a name takes two; the regular-season chart and every text size are unchanged. Left alone: with "hide eliminated rows" on, very late in the
+playoffs the pad is short, and turning it over makes the card grow to the chart's minimum height.
+
+**Reason:** A blank chart looks broken, and a name cut short reads as a mistake; the owner wants a page that is plain and trustworthy.
+
+## 2026-11-03 - Performance teams table: press the chosen column again for the least picked / lowest hit rate
+
+Owner request. The Commissioner Performance teams table still opens on the five most picked teams, and the Picked / Hit rate headers still switch between the
+five most picked and the five best hit rate. Pressing the header that is already chosen a second time now turns the table over: the five least picked, or the
+five with the lowest hit rate (the arrow flips from ▼ to ▲, the heading says "Least picked teams" / "Lowest hit rate teams"); a third press turns it back, and
+choosing the other column starts at the top again. Ties: least picked goes by team name; lowest hit rate goes to the team picked more often, then by name. Both
+lists ride in the stats payload beside the existing two, for the league and for each player. Nothing else on the page changed.
+
+**Reason:** The owner wanted to see the teams the league avoids and the teams it misses on, with no new control: the same header, pressed once more.
+
+## 2026-11-03 - Trophy Room: Perfect Weeks count every round but the Super Bowl; Other Stats is regular season only
+
+Owner request. The All-Time Table's Perfect Weeks column counted only regular-season 2-0 weeks. It now also counts every playoff round in which the player won every pick the round allowed with no loss (Wild Card, Divisional Round, Conference Championships), and never the Super Bowl (one game, not a week). A round allows its `max_picks` (6, 4, 2), or fewer when it has fewer playable games (a postponed, cancelled or no-contest game is not one); a player's round counts the moment those wins are in. A pick not made or lost, or a round with a loss, is not perfect. The streaks ("in a Row") stay regular season only.
+
+The Other Stats view is regular season only. Its streaks already were; its half-point wins, losses and hit rate and its pushes picked counted playoff picks too and now count regular-season picks only. The Record view's Wins and Hit rate still count every graded pick.
+
+**Reason:** The owner wanted Perfect Weeks to reward a clean playoff round like a clean regular week, and wanted the Other Stats page to mean the regular season throughout.
+
+## 2026-11-03 - Season Snapshot rail: centered in its strip, and swollen only while touched
+
+Owner request. The 6 Wk position rail's 8 px bar sat low in the open space between the masthead's rule and the top grid line (about 9 px of room above it, 2 px below); it is now centered in that space at every width. The thumb's small swell used the browser's hover state, which a phone leaves stuck on after a tap until the next tap elsewhere, so a touched rail stayed swollen; the swell now applies to hover only on devices that can hover (a mouse) and, on every device, only while the rail is being dragged.
+
+**Reason:** The rail should look at rest unless a finger is actually on it, and sit evenly in its strip.
+
+## 2026-11-03 - Commissioner tools: pick'em is its own line, no streaks on Performance, the cost averages start at the 5-minute schedule
+
+Owner requests, one batch. (1) On a wide screen the Up next / Participant impact / Notification readiness card moves into the open space to the right, under
+the game inspector, its three lists stacked; on a phone or tablet it still follows the game pipeline. (2) The Teams table (and the splits table) always show
+every row with no scroll bar; only the Season by season list, which grows a row a year, still scrolls. (3) Pick'em games get their own line in the
+Favorites / Underdogs table. A pick'em game's line is stored with the home team as its "favorite" at a spread of 0, so those picks were being counted as
+favorites (home) or underdogs (away); a locked spread of 0 now counts under Pick'em only, and the three shares add up to the whole. (4) The Regular season
+streaks section is removed from the Performance tab (the Trophy Room has the streaks), and the per-player streaks no longer ride in the stats payload.
+(5) The Provider cost chart's averages count only slates from Monday, November 2, 2026 on, the day score checks moved to every 5 minutes, so games from the
+old schedule no longer weigh them down.
+
+**Reason:** The owner wanted pick'em games told apart from favorites and underdogs, a table that needs no scroll bar, a Performance tab without a section
+they do not use, and a cost chart that measures the polling in force now. Not changed: the Trophy Room's all-time "bases" figure still treats the away team of
+a pick'em game as the underdog; that is a separate, player-visible number and was left for the owner to decide.
+
+## 2026-11-03 - The Season Snapshot lines go back to their original shading
+
+The owner found the lines looked worse with the soft gradient shading of the next entry (#719). The original look is back: each line is its color with a thin light strip along the top and a thin dark strip along the bottom. `snapshotRibbonShade` is removed. Rounding the bend at each week stays a separate, unanswered offer.
+
+## 2026-11-03 - The Season Snapshot: even key rows, a bigger rail that is the only way to move the weeks, a plain pointer, smoother lines
+
+Owner requests. (1) On a wide screen the player key filled a whole line and left two or three names on the next. Its box now works out how many names go across so the rows come out even: the most that fit, then the fewest that need the same number of rows (`snapshotKeyColumns`; eleven names go six and five). A phone keeps its fixed four across. (2) The 6 Wk rail is taller, 8 px instead of 5, filling the strip above the top line without moving anything, and its grab area reaches 12 px further down (invisible) so it is easy to catch on a phone. It is now the only way to move the weeks: the graph no longer scrolls under a finger, a wheel, a drag or the keys (the owner dislikes flicking the graph to change weeks). Dragging or pressing the rail lands on the nearest week (`snapshotRailStop`, done in the page, not left to the browser's scroll snapping); the rail is a keyboard slider (arrows step a week, Home, End, Page Up and Page Down jump) and the graph is no longer focusable. (3) The pointer over the rail was a hand that changed to a grabbing hand while dragging, which the owner found ugly: it is the ordinary arrow everywhere, and the thumb swells by a pixel under the pointer and while dragged. (4) The owner found some lines jagged and stair-stepped. Two causes were found. The lines' light top edge and dark underside were strips under one pixel high, which jump between pixel rows along a slope: they are now one soft gradient across the strip (`snapshotRibbonShade`), laid along the strip's own slant. That is a small gain (below the screenshot comparison's tolerance, so no baseline moved for it); the stairs along a slanted line are mostly the screen's own pixel grid, worst on shallow slopes, and cannot be drawn away. The other cause is the sharp bend where a line changes direction at each week, and the small shifts when players tied on a score share a bundle of lanes; those are the chart's design and are unchanged. Rounding the bends was offered to the owner as a separate decision.
+
+## 2026-11-03 - Low-balance score checking: Normal until 440 credits are used, then Lean or Minimal, never a hard stop
+
+Owner decision (2026-11-02; his words on the old rule: "stopping after 2 early 5 minute checks is kind of crazy"). The 50-credit reserve is gone: below it the worker stopped checking a game after its first two checks and the Commissioner's button was blocked too, which on the new 5-minute ladder would have meant giving up after ten minutes. In its place the worker runs one of three schedules (`src/lib/score-polling-tier.js`), each a list of times after kickoff rather than a list of gaps, so a game that is mid-ladder when the schedule changes goes to the next time on the new list with nothing skipped and nothing checked twice: Normal (175, 180, ... 210, 220, 230, 250, 270, 290, 350, 470, 710), Lean (175, 190, ... 265, 325, 445, 685) and Minimal (190, 210, 230, 250, 310, 430, 670). Off-grid kickoffs round each time up to the next 5-minute tick.
+
+The rule (`chooseScoreTier`, `LOW_BALANCE_USED_CREDITS = 440`): Normal no matter what until 440 credits are used in the month, or when no credit reading was taken this month (credits renew on the 1st, UTC, so a reading from last month is no reading). From 440 used, Lean if its forecast for the game days left fits in the balance minus the line need, otherwise Minimal. The line need is the remaining 7 AM refreshes plus one fetch per remaining lock time plus a cushion of 5 (`LINE_NEED_CUSHION_CREDITS`), taken from the same forecast the Commissioner's credit chart draws. Paused only when nothing is left after the line need; the manual "Run score check now" button ignores the schedule and the pause and spends 2 credits a tap. It is decided afresh every run (and every health check), so it can step back up from Minimal to Lean as game days pass; Normal comes back with the next month. The costs come from the existing forecast model (`expectedScoreChecks`: about 7.7, 3.0 and 2.3 checks a slate at a 90% first-hour share, 15.5, 5.9 and 4.5 credits), not from the rounded per-game-day replay averages in the plan; so on a sample Thanksgiving week (Thursday and Sunday games, a line need of 11) the rule picks Lean at 440 used and Minimal from 455.
+
+A game the schedule says to leave alone this run is not checked and spends nothing; its retry timer moves to its next time on the schedule (an hour on when paused), so the database gate stops waking the worker for it (`passOverScoreChecks`). The gate itself is unchanged. A run records its `tier`, a rung is the game's place on its schedule's list, and a Lean or Minimal run carries a different `ladderVersion`, so the "finals by polling rung" chart counts Normal runs only. The watchdog replaces `odds-credits-below-reserve` with `score-polling-paused` (critical, and it silences the stalled-scores alert as the old alert did) and adds a warning `score-polling-reduced` for Lean and Minimal. The Performance tab shows the schedule in force and why (`monthlyCreditSeries` returns `tierPlan`). Owner correction, same day: the month-end forecast is a full-operations forecast and never takes a change of schedule into account; it always prices the remaining slates on Normal, with the measured first-hour share still feeding it. (This replaces the first version of this entry, which priced the remaining days on the schedules the rule would pick.) The old `PROVIDER_CREDIT_RESERVE` (50) and its `decideQuotaHold`/`shouldHoldScorePollingForQuota` are removed; `nextScoreCheckAt` became `nextScoreCheckTime`.
+
+## 2026-11-02 - The Commissioner charts follow the real ladder
+
+The Performance charts no longer carry numbers or words for the old schedule. The cadence note, the 175-minute start and the 5-minute worker interval are built from `FIRST_SCORE_CHECK_DELAY_MINUTES`, `SCORE_GATE_INTERVAL_MINUTES` and `SCORE_RETRY_MINUTES` (the note is generated by `retryLadderSentence`), the game inspector says "check N of 16" from the ladder's length, and the credit forecast reads the ladder as check offsets from the first check (windows that start before +60 minutes, from +60 to +120, then one later check) and names the real gaps in its words; it now expects about 7.7 checks per slate (4.05 on the old schedule). "New game finals by polling rung" counts only score runs of the current ladder version (owner: restart the chart from the change, because rung numbers mean different times under a different ladder; older data stays in the database). It draws the 5- and 10-minute windows (owner: "only display through the 10 minute checks"; nine bars) and gives every later window and the last check as one footnote count.
+
+## 2026-11-02 - Score polling: first check at 175 minutes, then every five minutes
+
+Owner decision. The first score check is 175 minutes after kickoff (was 170), then seven 5-minute gaps (checks at 175, 180, ... 210), two 10-minute gaps (220, 230), three 20-minute gaps (250, 270, 290), then the emergency gaps of 60, 120 and 240 minutes (350, 470, 710). The same ladder runs in the regular season and the playoffs. The database gate now wakes the worker every five minutes (`refresh-final-nfl-scores-every-five-minutes`, `*/5 * * * *`; `SCORE_GATE_INTERVAL_MINUTES = 5`), and `score_work_is_due` uses 175 minutes (migration `20261102120000_score_polling_five_minutes.sql`). It depends on the previous entry: with the old timer stamping, a five-minute gap would have run as ten.
+
+After the last gap (the check at 710 minutes) a game gets no more automatic checks; the old fallback of one check every 120 minutes until 72 hours is gone (owner: "seems excessive"). The overdue alert (6 hours after kickoff) and the Commissioner's score button, which ignores the timer, cover a game that is still unfinished then.
+
+Each score run records `ladderVersion` (`SCORE_LADDER_VERSION`) next to its rungs, because a rung number means a different time after kickoff under a different ladder; the "finals by polling rung" chart counts only runs of the current version (next change). Credit forecast, replayed on this season's real games: November about 410 of 500 credits (1 in 10 chance of more than about 442), December about 390; average time from a real final to the pool picking it up drops from about 13 minutes to about 3.5. Until the low-balance mode ships, the existing 50-credit hold still applies; on this ladder it would stop re-checking a game after five minutes, so that mode must be live before the month's usage passes 350 credits.
+
+## 2026-11-02 - A retry gap is the real gap between two checks
+
+Production data showed the score ladder's 10-minute gaps running as 20: last Sunday's 1 PM games were checked at 3:50, 4:10 and 4:30 PM, and over 28 days there were 23 ten-minute gaps and 33 twenty-minute ones. The worker stamped each game's retry timer from the moment its run started, a few seconds after the gate's clock tick; at the next tick the timer was still running by those few seconds, so the gate skipped the game and every gap became one tick longer. It affected only how soon a final was picked up, never whether it was saved or graded correctly. `nextScoreCheckAt` now stamps from the tick the run was called for (3:50:04 counts as 3:50:00), so a 10-minute gap is due at exactly the next tick. A run that starts a whole tick late costs one tick, once, and a game is never checked twice in one tick. `SCORE_GATE_INTERVAL_MINUTES` (in `score-retry-ladder.js`) must equal the cron schedule. Test `score-gate-replay.test.mjs` replays the gate tick by tick; `integration/score-work-gate.test.mjs` checks the gate's own SQL against the first-check minutes and the retry timer to the second.
+
+## 2026-11-02 - The header does not move when the player's name arrives
+
+On phones the "Joe Barr Memorial / Lead Pipe Locks" brand sat 3 px higher until the signed-in name appeared, then dropped to its place. The bar's height was already reserved, but the row inside it was shorter than the name button while the name was missing, and the brand is centered in that row. The row now keeps the name button's height (`.mobile-account-nav > div > div`). Browser test `header-shift.visual.spec.ts` holds the account answer back and checks the brand and the bar do not move at phone, tablet and desktop widths.
+
+## 2026-11-02 - A page left open for hours must not go dead
+
+The owner opened the Home Screen app after the phone had been locked all night: buttons and tabs on the page worked, but the Standings, Slate, Players and Email center links did nothing. The page was from before several overnight deployments and the site had no way to know that: no deployment id was set, so Next could not tell the old page from the new server, and a tapped link waited for page data that could not be used. Two fixes, one under the other: each production build now carries its own deployment id (the commit), so Next detects the mismatch on the next tap and reloads that page fresh; and a small guard (`stuck-link-guard.tsx`) loads a tapped link's page normally if the page has not moved four seconds after the tap, whatever the cause. A page the player left, or went back from, is left alone. Browser tests: a link whose page data never arrives still loads, a working link is never reloaded, and going back is not undone.
+
 ## 2026-11-01 - The starting points show only when a week rests at the left edge
 
 The 6 Wk starting points were placed at the nearest whole week, so halfway between two weeks they jumped in a week from the edge and left a gap. They now sit at the whole week at or before the window's left edge: they show only when the window rests on a week, and slide out of view as it moves. The position rail's thumb is also clamped to its track, so the bounce past either end no longer carries it outside.
