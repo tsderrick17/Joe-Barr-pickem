@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-04 - The database backup runs every day
+
+The 2026-11-04 project sweep found the encrypted backup ran once a week (Monday), so a failure late in a week could lose up to six days of
+picks; Supabase Free keeps no backups of its own. The owner said yes to a daily backup. It now runs every day at 09:17 UTC, after the night's
+late games are graded, with the same export, encryption and restore check. Monday's export is kept 90 days (GitHub's maximum for a public
+repository) and the other days' 30, so artifact storage stays about the same as a daily export kept 30 days plus twelve weekly ones. The
+backup health monitor's window drops from eight days to two: a failed run is unhealthy at once, and a missed day shows by the next. Each run
+takes under two minutes of free public-repository Actions time.
+
+**Reason:** a day of picks is the most a bad day should cost, and it costs nothing.
+
 ## 2026-11-03 - Season Snapshot playoffs: drawn a game day at a time
 
 Owner request, after asking how many game days each round has (a usual postseason: Wild Card Sat, Sun, Mon; Divisional Sat, Sun; Conference Championships Sun;

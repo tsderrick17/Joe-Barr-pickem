@@ -97,8 +97,8 @@ holding the transition; never force the next period past that gate.
 
 ## Recovery
 
-The weekly encrypted database backup is a last resort. It retains 90 days of
-encrypted exports. Do not restore a backup to diagnose an ordinary late score;
+The daily encrypted database backup is a last resort. It keeps a daily export
+for the newest 30 days and Monday's export for 90 days. Do not restore a backup to diagnose an ordinary late score;
 use the audit controls first. For a genuine recovery, pause edits, preserve the
 current audit record, and restore only into a test project before considering a
 production recovery.
