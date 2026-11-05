@@ -1,5 +1,5 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse, withElevenPlayers } from "./standings-fixtures.mjs";
 
 // The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
@@ -43,7 +43,7 @@ async function settle(page: Page) {
   await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-  await page.waitForLoadState("networkidle");
+  await settleNetwork(page);
   // The Bowl Card's score tiles spin when the card first comes into view. Bring it
   // into view on purpose (a quick scroll can pass it before it has rendered), wait
   // for the tiles to land, then return to the top for the capture.

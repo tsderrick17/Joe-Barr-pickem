@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 import { boardResponse, SCENARIOS } from "./slate-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-900": 900, "desktop-1280": 1280 } as const;
@@ -39,7 +39,7 @@ async function captureSlate(page: Page, scenario: string, width: number, theme: 
   await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-  await page.waitForLoadState("networkidle");
+  await settleNetwork(page);
   // The Next.js development badge is not part of the product.
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await expect(page).toHaveScreenshot(name, { fullPage: true });

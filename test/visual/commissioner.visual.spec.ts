@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 import { BOWL_OPENING_PREVIEW, commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 // The desk is one person's tool, used on a phone and a desktop: those two widths, day and night. (It was also shot at 360 and 700 wide by day, which
@@ -35,7 +35,7 @@ async function settle(page: Page, ready: string) {
   await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
   await page.waitForFunction(() => [...document.images].every((image) => image.complete));
   await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-  await page.waitForLoadState("networkidle");
+  await settleNetwork(page);
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }
 
@@ -73,7 +73,7 @@ for (const panel of PANELS) {
           await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-          await page.waitForLoadState("networkidle");
+          await settleNetwork(page);
           await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }
@@ -99,7 +99,7 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await page.waitForLoadState("networkidle");
+        await settleNetwork(page);
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         await expect(page).toHaveScreenshot(`commissioner-${name}-${theme}-${label}.png`, { fullPage: true });
       });
