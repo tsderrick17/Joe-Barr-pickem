@@ -19,6 +19,22 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Trophy Room banners: each moves its own way, never in step
+
+The owner liked the banners' movement but asked for some randomness, since two banners swaying in exact unison looked awkward. Every banner
+used the same rhythm, only 0.7 s behind its neighbour, so pairs often moved together.
+
+- Each banner now has its own feel (`bannerFeel` in `src/lib/banner-wave.js`): pace 0.86 to 1.14 times the usual, swing 0.8 to 1 times
+  (never wider than before, so the cloth stays within its room), and its own starting points in the swing and the wave. Places in the row
+  are spread by the golden ratio, so neighbours always differ; a random turn drawn once per visit shifts the whole row, so every visit
+  looks a little different.
+- Gusts: the wind swells and fades (0.85 to 1.05 strength, two slow swells that rarely line up) and crosses the row left to right, reaching
+  each banner 0.9 s after the one before.
+- Measured over a minute, the closest neighbours now move together 0.22 (1 is exact unison), down from 0.57; a test holds every pair of the
+  first six banners under 0.8 on any visit. Reduced motion and the screenshot tests still see still banners.
+
+**Reason:** banners that each answer the same breeze in their own way read as real cloth, and they keep the motion the owner liked.
+
 ## 2026-11-05 - Bowl Card flip tabs: one motor, flip only as far as needed, tap to flip again
 
 The owner asked for more realistic and slightly more fun split-flap tiles on the Bowl Card, especially how they move in relation to each
