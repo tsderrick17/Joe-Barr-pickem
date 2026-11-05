@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Playoff race note: "Gary leads", and the leader's magic number once it is 5 or less
+
+The owner then asked for no score on the leader line ("Gary leads."), and for the leader's magic number once it is 5 or less:
+"Gary leads. Magic number: 3". It is how many leader wins plus losses by the closest chaser still alive put the title out of
+everyone else's reach: games left minus the gap to that chaser, plus one (a player stays in while they can still tie). Co-leaders read
+"Gary and Connor are tied for the lead." with no number. This replaces the earlier "no magic numbers" choice for the leader only;
+nobody else gets one. (`20261105030000_playoff_race_note_magic_number.sql`)
+
+**Reason:** the leader's countdown is the one number that adds suspense late in the playoffs; shown only when it is close, it never
+clutters the early rounds.
+
 ## 2026-11-05 - Playoff race note: every playoff game day, leader on top, grouped by games back
 
 The owner saw the first version and refined it the same day:

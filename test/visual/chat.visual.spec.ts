@@ -64,7 +64,7 @@ for (const theme of ["day", "night"]) {
 // games left, the leader, everyone still alive grouped by games back, and who was knocked out or forfeited yesterday.
 const RACE_NOTE = {
   id: "r1",
-  body: ["4 games left.", "Gary leads with 12.", "1 back: Connor", "2 back: Rick and Tyler", "Knocked out yesterday: Al and Dana", "Forfeited yesterday: Bob"].join("\n"),
+  body: ["4 games left.", "Gary leads. Magic number: 3", "2 back: Connor", "3 back: Rick and Tyler", "Knocked out yesterday: Al and Dana", "Forfeited yesterday: Bob"].join("\n"),
   canDelete: true,
   createdAt: "2027-01-17T11:00:00Z",
   isDeleted: false,

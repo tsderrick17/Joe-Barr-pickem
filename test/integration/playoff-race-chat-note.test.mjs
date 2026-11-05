@@ -73,7 +73,7 @@ const notesFor = async (client, periodId) => (await client.query(
   [`playoff-race:${periodId}:%`],
 )).rows;
 
-test("the morning after a Divisional game day the moderator posts the playoff race once: games left, the leader, then everyone alive by games back, no picks and no magic numbers", {
+test("the morning after a Divisional game day the moderator posts the playoff race once: games left, the leader with a magic number of 5 or less, then everyone alive by games back, no picks", {
   skip: !enabled && "Set the isolated PICKEM_TEST_* variables with PICKEM_WEEKLY_REHEARSAL=true.",
 }, async () => {
   const client = new pg.Client({ connectionString: process.env.PICKEM_TEST_DATABASE_URL });
@@ -90,7 +90,8 @@ test("the morning after a Divisional game day the moderator posts the playoff ra
     assert.equal(note.is_moderator, true);
     assert.equal(note.body, [
       "4 games left.",
-      `${names.leader} leads with 12.`,
+      // 4 games left, 2 ahead of the closest chaser: 4 - 2 + 1.
+      `${names.leader} leads. Magic number: 3`,
       `2 back: ${names.chaser} and ${names.twin}`,
       `3 back: ${names.trailer}`,
       `Knocked out yesterday: ${names.faller}`,
