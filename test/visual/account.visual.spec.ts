@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 const NOW = "2026-10-04T18:30:00Z";
@@ -64,7 +64,7 @@ for (const { name, path, ready, auth, profile, commissioner, periods, after } of
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await page.waitForLoadState("networkidle");
+        await settleNetwork(page);
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (after) await after(page);
         await expect(page).toHaveScreenshot(`account-${name}-${theme}-${label}.png`, { fullPage: true });

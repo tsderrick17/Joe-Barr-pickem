@@ -14,3 +14,12 @@ export async function signIn(page: Page, theme = "day", playerId = "p2") {
     window.localStorage.setItem("pickem-theme", mode as string);
   }, [JSON.stringify(session), theme]);
 }
+
+/**
+ * Gives the page's requests a moment to finish before a screenshot. "networkidle" alone can wait out a test's whole minute when a request never quite
+ * goes quiet (once on CI, the Bowl picks page on 2026-11-02), so it is bounded: the page's own content waits come first, and the screenshot assertion
+ * still waits for two identical frames before it compares.
+ */
+export async function settleNetwork(page: Page, timeout = 10_000) {
+  await page.waitForLoadState("networkidle", { timeout }).catch(() => undefined);
+}
