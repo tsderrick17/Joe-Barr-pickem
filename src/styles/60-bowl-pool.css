@@ -498,3 +498,9 @@ section.pickem-ledger.bowl-card-section .bowl-standings-scroll .bowl-standings-p
 /* The empty corners over Games remaining and over Tiebreaker are the page itself, in day and night. */
 section.pickem-ledger.bowl-card-section .bowl-standings-head-gutter { background: var(--themed-bg-30); box-shadow: inset -1px 0 0 var(--bowl-gold); }
 section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: var(--themed-bg-30); }
+
+/* The Bowl Pool's "How it works": the button sits under the short rules, lined up with their text like Opt out; the rest of the rules
+   fold out beneath it and read as one list. */
+.bowl-pool-page .bowl-how { margin: .35rem auto 0; max-width: 34rem; padding-left: 1.1rem; }
+.bowl-pool-page .bowl-how .how-toggle { color: var(--bowl-ink); font-size: .68rem; font-weight: 700; letter-spacing: .12em; min-height: 2.25rem; padding: 0; text-transform: uppercase; }
+.bowl-pool-page #bowl-selections .how-fold .bowl-rules-compact { margin-top: 0; padding-bottom: .1rem; }

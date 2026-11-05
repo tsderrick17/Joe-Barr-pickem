@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { bowlGameNote, bowlPoolLaunchAt, bowlTeamName } from "@/lib/bowl-pool.js";
 
 import { BowlClaimSeat, BowlCrest, BowlMegaphone } from "@/components/bowl-pool-marks";
@@ -11,6 +11,8 @@ import { currentSeasonYear } from "@/lib/season";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import { HapticTap } from "@/components/haptic-tap";
 import { haptic } from "@/lib/haptics-client";
+import HowItWorksToggle from "@/components/how-it-works-toggle";
+import { howItWorksStart } from "@/lib/how-it-works.js";
 
 type Profile = { isCommissioner?: boolean };
 type BowlGame = {
@@ -51,6 +53,10 @@ export default function BowlPoolPage() {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [submissionError, setSubmissionError] = useState("");
   const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; side: "favorite" | "underdog"; token: number } | null>(null);
+  // How the instructions start (src/lib/how-it-works.js): a Commissioner preview for now, folded once Bowl picks have been saved.
+  const [howItWorks, setHowItWorks] = useState<"open" | "folded" | null>(null);
+  const [rulesToggled, setRulesToggled] = useState<boolean | null>(null);
+  const rulesFoldId = useId();
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
@@ -67,11 +73,12 @@ export default function BowlPoolPage() {
   useEffect(() => {
     void fetchWithSession("/api/bowl-pool").then(async (response) => {
       if (!response.ok) { setOptedIn(false); return; }
-      const payload = await response.json() as { games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }>; ownPreviewSelections?: Array<{ game_id: string; side: "favorite" | "underdog" }> };
+      const payload = await response.json() as { isCommissioner?: boolean; games?: BowlGame[]; season?: { championship_game_id?: string | null }; optedIn?: boolean; entry?: { championship_total_guess?: number | null } | null; ownPicks?: Array<{ game_id: string; selected_team_id: string }>; ownPreviewSelections?: Array<{ game_id: string; side: "favorite" | "underdog" }> };
       const nextGames = payload.games ?? [];
       setGames(nextGames);
       setChampionshipGameId(payload.season?.championship_game_id ?? null);
       if (payload.optedIn !== undefined) setOptedIn(payload.optedIn);
+      setHowItWorks(howItWorksStart({ preview: payload.isCommissioner === true, familiar: Boolean(payload.ownPicks?.length || payload.ownPreviewSelections?.length) }));
       const guess = payload.entry?.championship_total_guess == null ? "" : String(payload.entry.championship_total_guess);
       setChampionshipTotalGuess(guess);
       setSavedChampionshipTotalGuess(guess);
@@ -104,6 +111,7 @@ export default function BowlPoolPage() {
   }, []);
 
   const canView = profile?.isCommissioner === true || hasLaunched;
+  const rulesOpen = rulesToggled ?? howItWorks !== "folded";
   const firstKickoffMs = games.reduce<number | null>((earliest, game) => {
     if (!game.kickoff_at) return earliest;
     const kickoff = new Date(game.kickoff_at).getTime();
@@ -209,7 +217,14 @@ export default function BowlPoolPage() {
           {optedIn === true ? <section className="bowl-pool-board mt-3 border border-slate-300 bg-(color:--themed-bg-26) p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
             <BowlCrest seasonYear={currentSeasonYear()} title="BOWL POOL" />
-            <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul>
+            {howItWorks === null ? <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul> : <>
+              {/* The short rules stay in view; How it works opens the rest. */}
+              <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Pick every bowl, including playoffs, against the spread.</li><li>Click a team to pick it, then click SUBMIT to save.</li></ul>
+              <div className="bowl-how"><HowItWorksToggle className="bowl-how-toggle" controls={rulesFoldId} onToggle={() => setRulesToggled(!rulesOpen)} open={rulesToggled ?? howItWorks !== "folded"} /></div>
+              <div className={`how-fold ${rulesOpen ? "is-open" : ""}`} id={rulesFoldId} inert={!rulesOpen}>
+                <div className="how-fold-inner"><ul aria-label="More Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul></div>
+              </div>
+            </>}
             {!poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
           </div>
           <div className="bowl-schedule mt-4 overflow-hidden border border-slate-300 sm:mt-5">

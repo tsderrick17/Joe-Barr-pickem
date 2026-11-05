@@ -4,8 +4,8 @@ import { boardResponse, SCENARIOS } from "./slate-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-900": 900, "desktop-1280": 1280 } as const;
 
-async function serve(page: Page, scenario: string) {
-  const board = boardResponse(scenario);
+async function serve(page: Page, scenario: string, extra: Record<string, unknown> = {}) {
+  const board = { ...boardResponse(scenario), ...extra };
   // Registered first so the specific routes below win (Playwright runs the
   // newest matching route first): nothing else under /api reaches a server.
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
@@ -16,10 +16,10 @@ async function serve(page: Page, scenario: string) {
   await page.clock.install({ time: new Date(board.serverTime) });
 }
 
-async function captureSlate(page: Page, scenario: string, width: number, theme: string, name: string) {
+async function captureSlate(page: Page, scenario: string, width: number, theme: string, name: string, extra: Record<string, unknown> = {}, before?: (page: Page) => Promise<void>) {
   await page.setViewportSize({ width, height: 900 });
   await signIn(page, theme, "visual-player");
-  await serve(page, scenario);
+  await serve(page, scenario, extra);
   // First visit caches fonts and images; the capture is the reload, the way a
   // returning player sees it. (Completed rows measure their picker names
   // once fonts are present, so a cold first paint is not deterministic.)
@@ -42,6 +42,7 @@ async function captureSlate(page: Page, scenario: string, width: number, theme: 
   await settleNetwork(page);
   // The Next.js development badge is not part of the product.
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  if (before) await before(page);
   await expect(page).toHaveScreenshot(name, { fullPage: true });
 }
 
@@ -213,3 +214,58 @@ for (const scenario of ["upcoming-picked", "live-survivor"]) {
     expect(lowest.lowestRatio).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+// "How it works" (a Commissioner preview for now): a familiar player sees the short rules folded, a new one sees everything open, and a
+// tap opens the fold. The early-game note always stays in view. Each tap waits out the fold's motion before the screenshot.
+const openHowItWorks = async (page: Page) => {
+  await page.getByRole("button", { name: "How it works" }).click();
+  await expect(page.getByRole("button", { name: "How it works" })).toHaveAttribute("aria-expanded", "true");
+  await page.waitForTimeout(500);
+};
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Slate how it works folded at ${label}`, async ({ page }) => {
+    await captureSlate(page, "upcoming-unpicked", width, "day", `how-folded-${label}.png`, { howItWorks: "folded" });
+  });
+  test(`Slate how it works opened at ${label}`, async ({ page }) => {
+    await captureSlate(page, "upcoming-unpicked", width, "day", `how-opened-${label}.png`, { howItWorks: "folded" }, openHowItWorks);
+  });
+  test(`Slate how it works for a new player at ${label}`, async ({ page }) => {
+    await captureSlate(page, "upcoming-unpicked", width, "day", `how-new-player-${label}.png`, { howItWorks: "open" });
+  });
+  test(`Slate how it works folded at night, ${label}`, async ({ page }) => {
+    await captureSlate(page, "upcoming-unpicked", width, "night", `night-how-folded-${label}.png`, { howItWorks: "folded" });
+  });
+}
+test("Slate how it works opened in the playoffs", async ({ page }) => {
+  await captureSlate(page, "playoff-upcoming", 390, "day", "how-opened-playoff-phone-390.png", { howItWorks: "folded" }, openHowItWorks);
+});
+
+test("Slate how it works folds and opens, and keeps the early-game note in view", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day", "visual-player");
+  await serve(page, "upcoming-unpicked", { howItWorks: "folded" });
+  await page.goto("/board");
+  await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
+  const toggle = page.getByRole("button", { name: "How it works" });
+  const lockNote = page.getByText("Lines lock at 8 AM on gameday, unless otherwise noted.");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(lockNote).toBeHidden();
+  await expect(page.getByText("EARLY GAME THIS WEEK: spread locks 6pm prior evening")).toBeVisible();
+  await expect(page.getByText("Click a team name to make your 2 against-the-spread picks each week.")).toBeVisible();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(lockNote).toBeVisible();
+  await expect(page.getByText("A push counts as a loss.")).toBeVisible();
+  await toggle.click();
+  await expect(lockNote).toBeHidden();
+});
+
+test("Slate players outside the preview keep the classic instructions", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day", "visual-player");
+  await serve(page, "upcoming-unpicked");
+  await page.goto("/board");
+  await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "How it works" })).toHaveCount(0);
+  await expect(page.getByText("Lines lock at 8 AM on gameday, unless otherwise noted.")).toBeVisible();
+});

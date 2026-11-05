@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, type ChangeEvent } from "react";
+import { memo, useId, useState, type ChangeEvent } from "react";
+import HowItWorksToggle from "@/components/how-it-works-toggle";
 
 export type SlateWeek = { id: string; display_name: string; status: "upcoming" | "active" | "complete"; period_type: "regular" | "playoff" };
 
@@ -12,12 +13,35 @@ type Props = {
   onToggleDisplay: () => void;
   survivorHelp: boolean;
   hasEarlyGame: boolean;
+  /** How the instructions start (src/lib/how-it-works.js); absent for the classic, always-open instructions. */
+  howItWorks?: "open" | "folded" | null;
+  /** The week's Pick'em picks (2 in a regular week). */
+  pickLimit?: number;
   /** The off-season: the how-to-pick instructions are not shown. */
   readOnly?: boolean;
 };
 
 /** The Slate's masthead: title, week picker, the All Games / Pool Action switch, and the how-to panel. */
-function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorHelp, hasEarlyGame, readOnly = false }: Props) {
+function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onToggleDisplay, survivorHelp, hasEarlyGame, howItWorks = null, pickLimit = 2, readOnly = false }: Props) {
+  const foldId = useId();
+  // A tap opens or folds the instructions for this week, this visit; a new week starts the way the server says.
+  const [toggled, setToggled] = useState<{ weekId: string; open: boolean } | null>(null);
+  const folding = !readOnly && howItWorks !== null;
+  const open = toggled?.weekId === week.id ? toggled.open : howItWorks !== "folded";
+  const playoff = week?.period_type === "playoff";
+  const notes = (
+    <div className="slate-how-to-grid mt-2 grid gap-3 border-t pt-3 md:gap-0">
+      <div className="md:pl-4">
+        <p>Lines lock at 8 AM on gameday, unless otherwise noted.</p>
+        <p className="mt-1"><span className="official-line-color font-semibold">Teal lines</span> are official and will not change.</p>
+      </div>
+      <div className="border-t pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
+        <p>Favorites left; home team ALL CAPS.</p>
+        {readOnly ? null : <p className="mt-1">Changes allowed until kickoff time.</p>}
+        {readOnly ? null : <p className="mt-1">Click <span className="font-black">SUBMIT</span> to save your picks.</p>}
+      </div>
+    </div>
+  );
   return (
   <header className="-mx-4 border-y-4 border-(color:--themed-border-10) px-4 py-5 sm:-mx-5 sm:px-5 sm:py-6 md:-mx-10 md:px-10 md:py-3">
     <div className="slate-header-grid grid gap-5 md:gap-0">
@@ -60,23 +84,36 @@ function SlateHeader({ week, availableWeeks, onChooseWeek, actionOnlyActive, onT
 
       <aside className="slate-instructions border-t border-(color:--themed-border-12) pt-4 text-left text-xs leading-5 md:col-span-2 md:self-stretch md:border-l md:border-t-0 md:pt-0">
         {readOnly ? null : <div className={`slate-action-instructions ${survivorHelp ? "has-survivor" : ""} mt-0 grid gap-2 border-y-2 px-3 py-2.5 text-[11px] leading-4 md:text-xs ${survivorHelp ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
-          <p><strong className="block text-[10px] tracking-[0.12em]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{week?.period_type === "playoff" ? " for every playoff game" : "s"}.</p>
-          {survivorHelp ? <p className="slate-action-survivor"><strong className="block text-[10px] tracking-[0.12em]">SURVIVOR</strong>Click a poker chip to choose a team.</p> : null}
+          {folding ? <>
+            {/* The short rules: what each game is and how to pick, always in view. */}
+            <p><strong className="block text-[10px] tracking-[0.12em]">PICK&apos;EM</strong>{playoff ? "Click a team name to make your against-the-spread pick for every playoff game." : `Click a team name to make your ${pickLimit} against-the-spread picks each week.`}</p>
+            {survivorHelp ? <p className="slate-action-survivor"><strong className="block text-[10px] tracking-[0.12em]">SURVIVOR</strong>Click a poker chip to choose one team to win each week. Each team can be used once.</p> : null}
+          </> : <>
+            <p><strong className="block text-[10px] tracking-[0.12em]">PICK&apos;EM</strong>Click a team name to make your against-the-spread pick{playoff ? " for every playoff game" : "s"}.</p>
+            {survivorHelp ? <p className="slate-action-survivor"><strong className="block text-[10px] tracking-[0.12em]">SURVIVOR</strong>Click a poker chip to choose a team.</p> : null}
+          </>}
         </div>
         }
-        <div className="slate-how-to-grid mt-2 grid gap-3 border-t pt-3 md:gap-0">
-          <div className="md:pl-4">
-            <p>Lines lock at 8 AM on gameday, unless otherwise noted.</p>
-            <p className="mt-1"><span className="official-line-color font-semibold">Teal lines</span> are official and will not change.</p>
+        {folding ? <>
+          <HowItWorksToggle className="slate-how-toggle" controls={foldId} onToggle={() => setToggled({ weekId: week.id, open: !open })} open={open} />
+          <div className={`how-fold ${open ? "is-open" : ""}`} id={foldId} inert={!open}>
+            <div className="how-fold-inner">
+              {notes}
+              {/* The rules behind the picks, after the notes as they have always read. */}
+              <div className="slate-how-to-grid slate-rules-grid mt-3 grid gap-3 border-t pt-3 md:gap-0">
+                <div className="md:pl-4">
+                  <p>A push counts as a loss.</p>
+                  {playoff ? <p className="mt-1">You stay in while you can still tie the leader.</p> : null}
+                </div>
+                {survivorHelp ? <div className="border-t pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
+                  <p>Survivor: a loss, a tie or a missed week ends your run.</p>
+                </div> : null}
+              </div>
+            </div>
           </div>
-          <div className="border-t pt-3 md:border-l md:border-t-0 md:pl-7 md:pt-0">
-            <p>Favorites left; home team ALL CAPS.</p>
-            {readOnly ? null : <p className="mt-1">Changes allowed until kickoff time.</p>}
-            {readOnly ? null : <p className="mt-1">Click <span className="font-black">SUBMIT</span> to save your picks.</p>}
-          </div>
-        </div>
+        </> : notes}
         {hasEarlyGame ? (
-          <p className="mt-3 border-t border-(color:--themed-border-12) pt-3 font-semibold md:pl-4">
+          <p className={`${folding && !open ? "" : "mt-3 "}${folding ? "transition-[margin] duration-300 motion-reduce:transition-none " : ""}border-t border-(color:--themed-border-12) pt-3 font-semibold md:pl-4`}>
             EARLY GAME THIS WEEK: spread locks 6pm prior evening
           </p>
         ) : null}

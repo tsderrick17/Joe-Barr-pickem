@@ -105,3 +105,42 @@ test("Bowl Pool loading screen at phone-390", async ({ page }) => {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await expect(page).toHaveScreenshot("bowl-loading-phone-390.png");
 });
+
+// "How it works" (a Commissioner preview for now): with Bowl picks saved the short rules show and the rest is folded; with none saved
+// everything is open; a tap opens the fold.
+const HOW_STATES = [
+  ["folded", "picked", "day", 390, false], ["folded", "picked", "day", 1280, false], ["folded", "picked", "night", 390, false],
+  ["opened", "picked", "day", 390, true], ["opened", "picked", "day", 1280, true], ["new-player", "not-picked", "day", 390, false],
+] as const;
+for (const [state, picks, theme, width, open] of HOW_STATES) {
+  test(`Bowl how it works ${state} ${theme} at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, theme);
+    const bowl = { ...bowlResponse({ optedIn: true, entryOpen: true, picks: picks === "picked" ? { "bowl-1": "a1", "bowl-2": "a2", "bowl-3": "a3" } : {} }), isCommissioner: true };
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: bowl }));
+    await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }));
+    await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.clock.install({ time: new Date(NOW) });
+    await page.goto("/bowl-pool");
+    await expect(page.locator(".bowl-pool-page h2").first()).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+    await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+    await settleNetwork(page);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    const toggle = page.getByRole("button", { name: "How it works" });
+    const tiebreakerRule = page.getByText("Tiebreaker is total points in Championship game.");
+    await expect(toggle).toHaveAttribute("aria-expanded", picks === "picked" ? "false" : "true");
+    if (picks === "picked") await expect(tiebreakerRule).toBeHidden();
+    if (open) {
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+      await page.waitForTimeout(500);
+    }
+    if (state !== "folded") await expect(tiebreakerRule).toBeVisible();
+    await expect(page.getByRole("button", { name: "Opt out" })).toBeVisible();
+    await expect(page).toHaveScreenshot(`bowl-how-${state}-${theme}-${width}.png`, { fullPage: true });
+  });
+}

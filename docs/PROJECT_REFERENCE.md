@@ -88,6 +88,7 @@ modules with no database access, each covered by tests with fictional rows:
   Survivor entry state must receive an explicit viewer rule before it can be
   serialized as a familiar state.
 
+- "How it works" (`src/lib/how-it-works.js`, Commissioner preview for now; every other player sees the classic, always-open instructions): the Slate and the Bowl Pool start the instructions folded for a familiar player (Slate: a saved pick in an earlier week of the same kind this season, so week 1 and the first playoff round open in full; Bowl Pool: any saved Bowl pick) and open for a new one. Folded, the Slate keeps the PICK'EM / SURVIVOR card (with the basic rules) and the early-game note in view, and the Bowl Pool two short rules and Opt out. A tap opens or folds for that visit only.
 - `src/lib/slate-view.ts` holds the Slate page's selection rules and derived views (what a click does, the Survivor used-team rule, day grouping, Pool Action filtering, the receipt's list).
 
 A change to who can see what belongs in one of these modules, with its test.

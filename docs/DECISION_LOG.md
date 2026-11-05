@@ -19,6 +19,24 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-04 - "How it works": shorter Slate and Bowl Pool instructions once a player is familiar (Commissioner preview)
+
+The owner asked for shorter Slate and Bowl intros once players know them, done carefully, with basic rules added (Pick'em is 2 picks
+against the spread each regular-season week and every playoff game; Survivor is picked with the poker chips), and today's wording kept as
+the base. Only the Commissioner sees it for now; every other player keeps the classic instructions unchanged until the owner opens it.
+
+- Familiar comes from the player's own saved picks, so it is the same on every device and needs no setting: on the Slate, a pick in an
+  earlier week of the same kind this season (`/api/board` adds one small read, only for the Commissioner, alongside the existing ones), so
+  week 1 and the first playoff round open in full again; on the Bowl Pool, any saved Bowl pick.
+- Folded, the Slate keeps the PICK'EM and SURVIVOR card in view with the basic rules in it, and the early-game note; "How it works" opens
+  today's notes unchanged, then the rules (a push is a loss; Survivor ends on a loss, tie or missed week; in the playoffs you stay in while
+  you can tie the leader). The Bowl Pool keeps two short rules and Opt out in view and folds the other four rules.
+- A tap opens or folds for that visit only. The fold animates its height smoothly (grid rows 0fr to 1fr), fades in, turns its chevron, and
+  is still for anyone who asked their device for reduced motion; folded text is hidden from taps, the keyboard and screen readers.
+
+**Reason:** returning players reach the games sooner, new players and rule changes still get the full explanation, and nothing about
+picking changes.
+
 ## 2026-11-04 - The database backup runs every day
 
 The 2026-11-04 project sweep found the encrypted backup ran once a week (Monday), so a failure late in a week could lose up to six days of
