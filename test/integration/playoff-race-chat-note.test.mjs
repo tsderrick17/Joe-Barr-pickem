@@ -28,16 +28,22 @@ async function divisionalMorning(client, token, { lastGameFinal = true } = {}) {
   await period("Wild Card", "playoff", 19, "complete", 6);
   const divisional = await period("Divisional", "playoff", 20, "active", 4);
   await period("Conference", "playoff", 21, "upcoming", 2);
-  const teams = [];
-  for (const index of [0, 1]) {
-    teams.push((await one("insert into public.teams(abbreviation, city, mascot, full_name) values ($1, 'Race', $2, $3) returning id",
-      [`R${index}${token.slice(-2)}`.toUpperCase(), `Team ${index} ${token}`, `Race ${index} ${token}`])).id);
-  }
+  // Every game has its own two teams: a player picks each team at most once a round.
+  let teamIndex = 0;
+  const team = async () => (await one("insert into public.teams(abbreviation, city, mascot, full_name) values ($1, 'Race', $2, $3) returning id",
+    [`${token}-${teamIndex}`, `Team ${teamIndex} ${token}`, `Race ${teamIndex++} ${token}`])).id;
+  const teamOf = new Map();
   let gameIndex = 0;
-  const game = async (periodId, kickoff, final) => (await one(`
-    insert into public.games(external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, line_lock_at, gameweek_key, status, away_score, home_score, finalized_at)
-    values ($1, $2, $3, $4, $5, $5, public.nfl_gameweek_key($5), $6, $7, $8, $9) returning id
-  `, [`${token}-${gameIndex++}`, periodId, teams[0], teams[1], kickoff, final ? "final" : "scheduled", final ? 24 : null, final ? 17 : null, final ? kickoff : null])).id;
+  const game = async (periodId, kickoff, final) => {
+    const away = await team();
+    const home = await team();
+    const { id } = await one(`
+      insert into public.games(external_game_id, scoring_period_id, away_team_id, home_team_id, kickoff_at, line_lock_at, gameweek_key, status, away_score, home_score, finalized_at)
+      values ($1, $2, $3, $4, $5, $5, public.nfl_gameweek_key($5), $6, $7, $8, $9) returning id
+    `, [`${token}-${gameIndex++}`, periodId, away, home, kickoff, final ? "final" : "scheduled", final ? 24 : null, final ? 17 : null, final ? kickoff : null]);
+    teamOf.set(id, away);
+    return id;
+  };
   const earlier = [];
   for (let index = 0; index < 10; index += 1) earlier.push(await game(regular.id, hours(-72), true));
   const yesterday = [await game(divisional.id, hours(-24), true), await game(divisional.id, hours(-24), lastGameFinal)];
@@ -52,7 +58,7 @@ async function divisionalMorning(client, token, { lastGameFinal = true } = {}) {
     const id = await player(names[key]);
     const pick = (gameId, periodId, result) => client.query(
       "insert into public.picks(player_id, scoring_period_id, game_id, selected_team_id, result) values ($1, $2, $3, $4, $5)",
-      [id, periodId, gameId, teams[0], result],
+      [id, periodId, gameId, teamOf.get(gameId), result],
     );
     for (const [index, gameId] of earlier.entries()) await pick(gameId, regular.id, index < before ? "win" : "loss");
     for (const [index, gameId] of yesterday.entries()) await pick(gameId, divisional.id, index === 1 && !lastGameFinal ? "pending" : index < onTheDay ? "win" : "loss");
