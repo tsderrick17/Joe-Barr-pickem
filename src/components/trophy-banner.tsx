@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { clothSheen, clothShift } from "@/lib/banner-wave.js";
+import { bannerFeel, clothSheen, clothShift } from "@/lib/banner-wave.js";
 
 /**
  * One champion's banner, hanging from a brass rod on two cords: cut-felt lettering on a stitched, swallowtailed field. The cloth is drawn once onto a hidden
@@ -57,6 +57,8 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
     // reduced motion keeps the cloth still; so do automated browsers (the screenshot tests), so a picture never catches the cloth mid-swing
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.webdriver;
     const phase = 0.12 * index;
+    // this banner's own rhythm, reach and starting point (`bannerFeel`), so no two banners move in step; a little different every visit
+    const feel = bannerFeel(index, Math.random());
     const nameSize = Math.min(35, 146 / (Math.max(3, name.length) * 0.5));
     const body = `M6 ${TOP}H${WIDTH - 6}V${bottom}L${WIDTH / 2} ${bottom - 36}L6 ${bottom}Z`;
     const stitch = `M14 ${TOP + 17}H${WIDTH - 14}V${bottom - 11}L${WIDTH / 2} ${bottom - 44}L14 ${bottom - 11}Z`;
@@ -172,13 +174,13 @@ export default function TrophyBanner({ tag, name, years, index, still = false }:
         const span = (bottom - TOP) * scale;
         for (let row = first; row < end; row += SLICE) {
           const u = Math.max(0, Math.min(1, (row - TOP * scale) / span));
-          w.drawImage(cloth, 0, row, work.width, SLICE, clothShift(u, t) * scale, row, work.width, SLICE);
+          w.drawImage(cloth, 0, row, work.width, SLICE, clothShift(u, t, feel) * scale, row, work.width, SLICE);
         }
         // the light along the folds, only where there is cloth
         w.globalCompositeOperation = "source-atop";
         const band = 8;
         for (let row = first; row < end; row += band) {
-          const sheen = clothSheen(Math.max(0, Math.min(1, (row + band / 2 - TOP * scale) / span)), t, bottom - TOP);
+          const sheen = clothSheen(Math.max(0, Math.min(1, (row + band / 2 - TOP * scale) / span)), t, bottom - TOP, feel);
           w.fillStyle = sheen > 0 ? `rgba(255, 255, 255, ${(sheen * 0.16).toFixed(3)})` : `rgba(0, 0, 0, ${(-sheen * 0.2).toFixed(3)})`;
           w.fillRect(0, row, work.width, band);
         }
