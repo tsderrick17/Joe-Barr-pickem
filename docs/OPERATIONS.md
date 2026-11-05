@@ -243,8 +243,8 @@ are not restored (re-enter them with the player if the pool agrees). Every forfe
 
 ## Playoff race note
 
-From the Divisional round on, pg_cron `post-playoff-race-chat-note` posts the Commissioner's race note in the pool
-chat the morning after each playoff game day (every fifteen minutes from 6:00 to 9:45 AM Eastern; the first run after
+pg_cron `post-playoff-race-chat-note` posts the Commissioner's race note in the pool
+chat the morning after every playoff game day (every fifteen minutes from 6:00 to 9:45 AM Eastern; the first run after
 the day's results are graded posts, later runs answer `already_posted`). If no note appeared by 10 AM, check read-only
 that the day's games are final and graded (`waiting_for_results` is the usual reason). The function only looks at
 yesterday, so a late note is posted through the guarded production workflow with a time on the morning after that day:

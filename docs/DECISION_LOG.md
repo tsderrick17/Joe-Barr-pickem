@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Playoff race note: every playoff game day, leader on top, grouped by games back
+
+The owner saw the first version and refined it the same day:
+
+- It posts the morning after every playoff game day, the Wild Card round included (still nothing after the Super Bowl, where the
+  champion's congratulations takes over).
+- No emoji and no "Divisional Saturday is in the books" line; "4 games left." instead of "4 playoff games left."
+- The leader on top, then everyone still alive grouped by how far back, players the same distance back on one line: "1 back:
+  Connor", "2 back: Rick and Tyler".
+- "Knocked out yesterday: ..." and a new "Forfeited yesterday: ..." line for a forfeit made that day.
+
+**Reason:** the race reads at a glance on a phone, and nobody has to wait for the Divisional round to see where they stand.
+
 ## 2026-11-05 - Playoff race note in the pool chat after each game day, from the Divisional round
 
 The owner asked for a moderator chat message for playoff eliminations, then shaped it: a note after every game day starting in the
