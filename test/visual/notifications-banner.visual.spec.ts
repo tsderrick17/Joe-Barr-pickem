@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 
 // The one-tap "Turn on notifications" banner inside the Home Screen app. The browser's notification features are replaced with a scripted phone
 // (as in phone-notifications.visual.spec.ts) and the page is told it is running as the Home Screen app. No real notification is ever asked for or sent.
@@ -37,7 +37,7 @@ async function open(page: Page, phone: Phone = {}, { path = "/board", theme = "d
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto(path);
   // The banner decides after the page has loaded; give it the moment it needs before asserting it is absent.
-  await page.waitForLoadState("networkidle");
+  await settleNetwork(page);
   return { banner: page.locator("[data-notifications-banner]"), requests };
 }
 
@@ -83,7 +83,7 @@ test("Not now hides the banner and it stays away when the app is opened again", 
   await banner.getByRole("button", { name: "Not now" }).click();
   await expect(banner).toHaveCount(0);
   await page.reload();
-  await page.waitForLoadState("networkidle");
+  await settleNetwork(page);
   await expect(page.locator("[data-notifications-banner]")).toHaveCount(0);
 });
 

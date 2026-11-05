@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 import { boardResponse } from "./slate-fixtures.mjs";
 
 
@@ -135,7 +135,7 @@ for (const [scenario, shown] of [["upcoming-unpicked", false], ["playoff-upcomin
     await page.clock.install({ time: new Date(board.serverTime) });
     await page.goto("/board");
     await expect(page.locator("main")).toBeVisible({ timeout: 30000 });
-    await page.waitForLoadState("networkidle");
+    await settleNetwork(page);
     await expect(page.locator(".forfeit-panel")).toHaveCount(shown ? 1 : 0);
   });
 }

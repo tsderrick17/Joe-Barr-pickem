@@ -19,10 +19,13 @@ not, merge one small commit to `main` to trigger the build.
 
 ## Backup and retention
 
-The weekly GitHub Action **Encrypted database backup** creates an encrypted
-export every Monday morning at 9:17 AM Eastern during daylight time (8:17 AM
-during standard time) and retains it for 90 days (GitHub's maximum for a public
-repository; Supabase Free keeps no backups of its own). One export is a single
+The daily GitHub Action **Encrypted database backup** creates an encrypted
+export every morning at 09:17 UTC (5:17 AM Eastern during daylight time, 4:17 AM
+during standard time), after the night's late games are graded, so a bad day
+loses at most a day of picks. Monday's export is retained for 90 days (GitHub's
+maximum for a public repository) and the other days' for 30, so the newest month
+is daily and the three months before it weekly (Supabase Free keeps no backups
+of its own). Until 2026-11-04 it ran weekly. One export is a single
 encrypted file (`production-backup.tar.enc`) holding four parts: `roles.sql`
 (custom roles), `schema.sql` (tables, functions, triggers, policies),
 `auth-schema.sql` (the structure of Supabase's `auth` schema) and `data.sql`
@@ -106,7 +109,7 @@ dashboard when the secret is made, so look there (the app cannot read it).
 | `GITHUB_USAGE_TOKEN` | Vercel | Set when the token is made in GitHub | Nothing player-facing: the backup health check and usage panel fall back to anonymous reads | The usage panel shows "unavailable" |
 | `SENTRY_USAGE_TOKEN`, `UPTIMEROBOT_READ_ONLY_API_KEY` | Vercel | Set when made | Only the Commissioner's account-capacity panel | The panel shows that service as unavailable |
 | `BACKUP_ENCRYPTION_KEY` | GitHub repository secret **and** a safe place outside GitHub | No | Backups still run but cannot be decrypted if the passphrase is lost | Nothing, until a restore is attempted: keep a second copy outside GitHub |
-| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID` | GitHub repository secrets | Set when the token is made in Supabase | Production migrations and the weekly backup | The backup health monitor turns red within eight days; the Supabase migrations workflow fails |
+| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID` | GitHub repository secrets | Set when the token is made in Supabase | Production migrations and the daily backup | The backup health monitor turns red within two days; the Supabase migrations workflow fails |
 | `PICKEM_TEST_*` (isolated database URL and keys) | GitHub `isolated-test` environment | The isolated project pauses after a week without traffic (the weekly keep-alive prevents that) | The `database-lifecycle` check and the weekly rehearsal | The `database-lifecycle` check fails; Supabase emails about a paused project |
 
 Not secrets, so they are not rotated: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
@@ -274,7 +277,7 @@ days. The prune runs once a week, counted from the last prune the watchdog recor
 missed run is made up on the next one). At this pool's size that is a few megabytes a year, far
 inside the free database and storage limits.
 
-Scheduled GitHub workflows (weekly backup, smoke summary, rehearsals) are kept
+Scheduled GitHub workflows (daily backup, smoke summary, rehearsals) are kept
 enabled by **Keep scheduled workflows enabled**, because GitHub switches off
 scheduled workflows in a public repository after 60 days without a commit. The
 backup health check reads the public run list anonymously if its GitHub token

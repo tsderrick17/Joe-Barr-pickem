@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signIn } from "./session";
+import { settleNetwork, signIn } from "./session";
 import { bowlResponse } from "./standings-fixtures.mjs";
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
@@ -51,7 +51,7 @@ for (const [scenario, { build, now, click }] of Object.entries(SCENARIOS)) {
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await page.waitForLoadState("networkidle");
+        await settleNetwork(page);
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
         if (click) {
           // Choose the first game's favorite, then let the megaphone finish its swing.
