@@ -11,7 +11,7 @@ export const HEALTH_CDN_SECONDS = {
   reminderWorker: 900, // reminders allow 20 minutes
   settlement: 3600, // grace is 6 hours after kickoff
   bowlPool: 3600, // schedule and grading readiness changes slowly
-  backup: 21600, // backup window is 8 days
+  backup: 21600, // backup window is 2 days
   lines: 900, // a missed official line is reported 20 minutes after its lock time
   recap: 3600, // the Tuesday recap is reported 3 hours after it was due
   weekHandoff: 1800, // a week that failed to advance is reported 2 hours after its handoff time
