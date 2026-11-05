@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { HapticTap } from "@/components/haptic-tap";
+import { haptic } from "@/lib/haptics-client";
+import { BOARD_PACE, digitPace, nextFlip } from "@/lib/split-flap.js";
 
-type Feel = { pace: number; start: number; extra: number };
+type Feel = { pace: number; start: number };
 
 /** Graduate draws its zero with a dot in the middle; its capital O is the same shape without one. */
 const tileGlyph = (digit: number) => (digit === 0 ? "O" : String(digit));
@@ -22,14 +25,14 @@ const FALL_EASING = "cubic-bezier(.55, .06, .68, .19)";
  * over the lower half it is about to cover, and the newly uncovered top half
  * starts in that shadow and brightens.
  *
- * The digit steps 0, 1, 2 ... 9 in order at its own pace; once told to land,
- * it flips on until it shows its target, the last few flips slowing as the
- * mechanism catches. The flips run on the browser's animation engine (only
+ * The digit steps 0, 1, 2 ... 9 in order at the board's pace; once told to
+ * land, it flips forward only as far as its target, the last few flips slowing
+ * as the mechanism catches (src/lib/split-flap.js). The flips run on the browser's animation engine (only
  * transforms and opacity, which the graphics chip draws) and write the
  * numbers straight into the page, so React does not re-render on every flip.
  */
-function FlapDigit({ target, landing, onLanded, pace }: { target: number; landing: boolean; onLanded: () => void; pace?: number }) {
-  const [feel] = useState<Feel>(() => ({ pace: pace ?? 120 + Math.random() * 40, start: Math.floor(Math.random() * 10), extra: 2 + Math.floor(Math.random() * 3) }));
+function FlapDigit({ target, landing, onLanded, pace, start, minFlips, delay }: { target: number; landing: boolean; onLanded: () => void; pace: number; start?: number; minFlips: number; delay?: number }) {
+  const [feel] = useState<Feel>(() => ({ pace: digitPace(pace, Math.random()), start: start ?? Math.floor(Math.random() * 10) }));
   const top = useRef<HTMLSpanElement | null>(null);
   const bottom = useRef<HTMLSpanElement | null>(null);
   const fold = useRef<HTMLSpanElement | null>(null);
@@ -53,13 +56,18 @@ function FlapDigit({ target, landing, onLanded, pace }: { target: number; landin
     let pending = 0;
     let running: Animation[] = [];
 
+    const finish = () => {
+      stopped = true;
+      // Leave the faces clean: no shadows or flaps left mid-turn.
+      running.forEach((animation) => animation.cancel());
+      landedRef.current();
+    };
+
     const flip = () => {
       if (stopped) return;
-      const next = (current + 1) % 10;
-      const remaining = (targetRef.current - current + 10) % 10;
-      const catching = landingRef.current && sinceLanding + 1 >= feel.extra && remaining <= 3;
-      // The last few flips slow down progressively, like the drum catching.
-      const duration = feel.pace * (catching ? 1 + (4 - remaining) * 0.35 : 1);
+      const move = nextFlip({ current, target: targetRef.current, landing: landingRef.current, flipsSinceLanding: sinceLanding, minFlips, pace: feel.pace });
+      if (move.stop) { finish(); return; }
+      const { next, duration } = move;
       const fall = duration * 0.5;
       const land = duration * 0.62;
       text(foldEl, current);
@@ -84,24 +92,17 @@ function FlapDigit({ target, landing, onLanded, pace }: { target: number; landin
         text(bottomEl, next);
         current = next;
         if (landingRef.current) sinceLanding += 1;
-        if (landingRef.current && sinceLanding >= feel.extra && current === targetRef.current) {
-          stopped = true;
-          // Leave the faces clean: no shadows or flaps left mid-turn.
-          running.forEach((animation) => animation.cancel());
-          landedRef.current();
-          return;
-        }
         flip();
       };
     };
 
-    pending = window.setTimeout(flip, Math.random() * feel.pace);
+    pending = window.setTimeout(flip, delay ?? Math.random() * feel.pace);
     return () => {
       stopped = true;
       window.clearTimeout(pending);
       running.forEach((animation) => animation.cancel());
     };
-  }, [feel]);
+  }, [feel, minFlips, delay]);
 
   const half = (className: string, ref: typeof top) => <span className={`bowl-flap-half ${className}`} ref={ref}><span>{tileGlyph(feel.start)}</span><i className="bowl-flap-shade" /></span>;
   return (
@@ -121,15 +122,19 @@ function StillDigit({ digit }: { digit: number }) {
 
 /**
  * A player's Bowl Pool win total as a two-digit split-flap tile. The digits
- * run on their own until `settled`; then, `landDelay` milliseconds later, they
- * flip on until they reach the real total, so the rows stop down the line.
+ * run on their own until `settled`; then, `landDelay` milliseconds later, each
+ * flips forward to the real total, so the rows stop down the line. Once landed,
+ * a tap flips the tile once round the drum and back to the same number, just for
+ * fun (a light tick; never with reduced motion).
  */
-export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** ms per flip; random 120-160 when omitted */ pace?: number }) {
+export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace = BOARD_PACE }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** ms per flip for the whole board */ pace?: number }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
   const [landedDigits, setLandedDigits] = useState(0);
-  const [still] = useState(() => !animate || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
+  const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [round, setRound] = useState(0);
+  const still = reduced || (!animate && round === 0);
   const markLanded = useCallback(() => setLandedDigits((count) => count + 1), []);
 
   useEffect(() => {
@@ -139,11 +144,20 @@ export default function BowlScoreTile({ value, settled, landDelay = 0, large = f
   }, [settled, landDelay]);
 
   const landed = still ? settled : landedDigits >= 2;
+  const faces = digits.map((digit, index) => (still
+    ? <StillDigit digit={digit} key={index} />
+    : round > 0
+      // Flip again: both digits start from their number and make one full turn, the second a beat behind.
+      ? <FlapDigit delay={index * pace * 0.3} key={`${round}-${index}`} landing minFlips={1} onLanded={markLanded} pace={pace} start={digit} target={digit} />
+      : <FlapDigit key={index} landing={landing} minFlips={0} onLanded={markLanded} pace={pace} target={digit} />));
+  const flipAgain = () => {
+    haptic("tick");
+    setLandedDigits(0);
+    setRound((count) => count + 1);
+  };
   return (
     <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
-      {digits.map((digit, index) => (still
-        ? <StillDigit digit={digit} key={index} />
-        : <FlapDigit key={index} landing={landing} onLanded={markLanded} pace={pace} target={digit} />))}
+      {reduced ? faces : <button aria-hidden="true" className="bowl-score-flip relative" disabled={!landed || !settled} onClick={flipAgain} tabIndex={-1} type="button">{faces}<HapticTap /></button>}
     </span>
   );
 }

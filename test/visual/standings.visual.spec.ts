@@ -286,3 +286,32 @@ for (const returning of [false, true]) {
     else expect(gap).toBeGreaterThanOrEqual(500);
   });
 }
+
+// A tap on a landed Bowl Card tile flips it once round the drum and lands it back on the same number, built exactly as before
+// (the markup is compared: the picture can differ by a few antialiased pixels once the browser has composited the moving flaps).
+test("a tapped Bowl Card tile flips again and lands on the same number", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "bowl-results");
+  await settle(page);
+  const tile = page.locator(".bowl-standings-player-row .bowl-score-tile").first();
+  await tile.scrollIntoViewIfNeeded();
+  const before = await tile.evaluate((element) => element.outerHTML);
+  await tile.locator(".bowl-score-flip").click();
+  await expect(tile).not.toHaveAttribute("data-settled", "true");
+  // A tile that is still flipping ignores another tap.
+  await expect(tile.locator(".bowl-score-flip")).toBeDisabled();
+  await page.clock.runFor(5000);
+  await expect(tile).toHaveAttribute("data-settled", "true", { timeout: 10_000 });
+  expect(await tile.evaluate((element) => element.outerHTML)).toBe(before);
+});
+
+test("with reduced motion a Bowl Card tile stays still and is not a button", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "bowl-results");
+  await settle(page);
+  await expect(page.locator(".bowl-standings-player-row .bowl-score-tile").first()).toHaveAttribute("data-settled", "true");
+  await expect(page.locator(".bowl-score-flip")).toHaveCount(0);
+});
