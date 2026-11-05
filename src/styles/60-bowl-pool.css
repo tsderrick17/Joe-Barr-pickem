@@ -350,6 +350,9 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--
 
 /* ---- Bowl Card score tiles as split-flap digits, like a stadium board */
 .bowl-score-tile { display: inline-flex; gap: .12rem; perspective: 10rem; --flap-bg: var(--bowl-tile-bg); --flap-ink: var(--bowl-ink); --flap-edge: var(--bowl-tile-edge); --flap-seam: var(--bowl-tile-seam); }
+/* The tap target that flips a landed tile again: it lays the digits out exactly as the tile does. */
+.bowl-score-flip { display: inline-flex; gap: inherit; perspective: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.bowl-score-flip:disabled { cursor: default; }
 .bowl-score-tile.is-large { --flap-bg: #0f1830; --flap-ink: var(--bowl-gold-soft); --flap-edge: var(--bowl-gold); --flap-seam: rgba(255, 255, 255, .18); }
 .bowl-flap {
   border: 1px solid var(--flap-edge);

@@ -54,6 +54,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Season Snapshot key with the whole pool, eleven players, Season half: the rows come out even (six and five across on a wide screen, four, four and three on a phone), never a full line with a couple left over; a behavior test checks the rows at 800, 1000, 1280, 1700 and 390 px | `commissioner-playoff` with three added players (`withElevenPlayers`; `flipped-eleven-players`, the chart and key, day, phone-390 and desktop-1280) |
 | Commissioner: pad flips to Season Snapshot | `commissioner` (+ flipped shots) |
 | Bowl Card with graded results | `bowl-results` |
+| Bowl Card tile tapped: flips once round the drum and lands on the same number, built exactly as before; a tile still flipping ignores taps; with reduced motion the tiles are still and not buttons (behaviour, `standings.visual.spec.ts`) | `bowl-results` |
 | Bowl Card with a champion crowned | `bowl-champion` |
 | Viewer not joined, entry open ("Claim your seat") | `bowl-claim-open` |
 | Not joined, entry closed | `bowl-closed-not-joined` |

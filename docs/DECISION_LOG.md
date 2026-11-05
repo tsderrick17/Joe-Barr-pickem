@@ -19,6 +19,23 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Bowl Card flip tabs: one motor, flip only as far as needed, tap to flip again
+
+The owner asked for more realistic and slightly more fun split-flap tiles on the Bowl Card, especially how they move in relation to each
+other. They already had a real hinge, shading and a rebound; what read as fake was that every digit ran at its own random speed and spun a
+random two to four extra turns before landing.
+
+- One motor: every flap on the board flips at the same speed (140 ms a flip), each digit worn within 3% of it.
+- Flip only as far as needed: once results are in, each digit flips forward to its number and stops, the last three flips slowing, so a
+  digit with farther to go finishes later and the board settles raggedly, as a stadium board does. The rows still start landing top to
+  bottom.
+- Tap to flip again: a landed tile, or the Games remaining counter, flips once round the drum and lands on the same number, with a tick
+  (Android vibrates; an iPhone ticks through its tap layer). A tile still flipping ignores taps. Never with reduced motion. It is a
+  hidden, pointer-only button: screen readers still hear "N wins".
+
+**Reason:** the motion now follows one mechanism, which reads as real, and the tap gives players something small to play with on a page
+they visit often, without touching scores or picks.
+
 ## 2026-11-04 - "How it works": shorter Slate and Bowl Pool instructions once a player is familiar (Commissioner preview)
 
 The owner asked for shorter Slate and Bowl intros once players know them, done carefully, with basic rules added (Pick'em is 2 picks
