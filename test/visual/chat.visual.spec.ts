@@ -59,3 +59,34 @@ for (const theme of ["day", "night"]) {
     });
   }
 }
+
+// The playoff race note the moderator posts at 6 AM Eastern the morning after every playoff game day (post_playoff_race_notes):
+// games left, the leader, everyone still alive grouped by games back, and who was knocked out or forfeited yesterday.
+const RACE_NOTE = {
+  id: "r1",
+  body: ["4 games left.", "Gary leads. Magic number: 3", "2 back: Connor", "3 back: Rick and Tyler", "Knocked out yesterday: Al and Dana", "Forfeited yesterday: Bob"].join("\n"),
+  canDelete: true,
+  createdAt: "2027-01-17T11:00:00Z",
+  isDeleted: false,
+  isModerator: true,
+  playerName: "Commissioner",
+};
+
+for (const theme of ["day", "night"]) {
+  for (const [label, width] of Object.entries(WIDTHS)) {
+    test(`Pool chat playoff race note ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page);
+      await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [RACE_NOTE, ...MESSAGES.slice(0, 1)] } }));
+      await page.goto("/");
+      const chat = page.locator(".pool-chat");
+      await expect(chat.locator("article")).toHaveCount(2, { timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      await chat.scrollIntoViewIfNeeded();
+      await page.mouse.move(0, 0);
+      await expect(chat).toHaveScreenshot(`chat-race-note-${theme}-${label}.png`, { mask: [chat.getByRole("button", { name: "Choose an emoji" })] });
+    });
+  }
+}

@@ -7,13 +7,13 @@ const enabled = process.env.PICKEM_WEEKLY_REHEARSAL === "true"
   && Boolean(process.env.PICKEM_TEST_DATABASE_URL);
 
 const hours = (count) => new Date(Date.now() + count * 60 * 60 * 1000).toISOString();
-const easternWeekday = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(new Date(iso));
 
 /**
- * A season on the morning after a Divisional game day. Before that day: Leader 10 wins, Chaser 9, Trailer 8, Faller 5 and
- * Goner 2, with 6 playoff games left (the day's 2, 2 more Divisional games tomorrow, and the Conference round's 2 picks,
- * not loaded yet), so Goner was already out. On the day Leader won 2, Chaser 1, Trailer 1, Faller and Goner none: 4 games
- * are left, Leader has 12, and Faller (5 + 4 < 12) is knocked out.
+ * A season on the morning after a Divisional game day. Before that day: Leader 10 wins, Chaser and Twin 9, Trailer 8,
+ * Quitter 9, Faller 5 and Goner 2, with 6 playoff games left (the day's 2, 2 more Divisional games tomorrow, and the
+ * Conference round's 2 picks, not loaded yet), so Goner was already out. On the day Leader won 2, Chaser, Twin and Trailer 1,
+ * the rest none, and Quitter forfeited: 4 games are left, Leader has 12, Chaser and Twin are 2 back together, Trailer 3
+ * back, Faller (5 + 4 < 12) is knocked out, and Quitter is listed only as forfeited.
  */
 async function divisionalMorning(client, token, { lastGameFinal = true } = {}) {
   const one = async (sql, values) => (await client.query(sql, values)).rows[0];
@@ -52,8 +52,8 @@ async function divisionalMorning(client, token, { lastGameFinal = true } = {}) {
 
   const player = async (name, commissioner = false) => (await one("insert into public.players(first_name, is_commissioner, active) values ($1, $2, true) returning id", [name, commissioner])).id;
   await player(`Commish ${token}`, true);
-  const names = { leader: `Lead${token.slice(-3)}`, chaser: `Chas${token.slice(-3)}`, trailer: `Trai${token.slice(-3)}`, faller: `Fall${token.slice(-3)}`, goner: `Gone${token.slice(-3)}` };
-  const record = { leader: [10, 2], chaser: [9, 1], trailer: [8, 1], faller: [5, 0], goner: [2, 0] };
+  const names = { leader: `Lead${token.slice(-3)}`, chaser: `Chas${token.slice(-3)}`, trailer: `Trai${token.slice(-3)}`, twin: `Twin${token.slice(-3)}`, quitter: `Quit${token.slice(-3)}`, faller: `Fall${token.slice(-3)}`, goner: `Gone${token.slice(-3)}` };
+  const record = { leader: [10, 2], chaser: [9, 1], trailer: [8, 1], twin: [9, 1], quitter: [9, 0], faller: [5, 0], goner: [2, 0] };
   for (const [key, [before, onTheDay]] of Object.entries(record)) {
     const id = await player(names[key]);
     const pick = (gameId, periodId, result) => client.query(
@@ -61,10 +61,11 @@ async function divisionalMorning(client, token, { lastGameFinal = true } = {}) {
       [id, periodId, gameId, teamOf.get(gameId), result],
     );
     for (const [index, gameId] of earlier.entries()) await pick(gameId, regular.id, index < before ? "win" : "loss");
+    if (key === "quitter") await client.query("insert into public.pickem_forfeits(season_id, player_id, forfeited_at) values ($1, $2, $3)", [season.id, id, hours(-24)]);
     for (const [index, gameId] of yesterday.entries()) await pick(gameId, divisional.id, index === 1 && !lastGameFinal ? "pending" : index < onTheDay ? "win" : "loss");
   }
   await client.query("set local session_replication_role = origin");
-  return { divisionalId: divisional.id, names, weekday: easternWeekday(hours(-24)) };
+  return { divisionalId: divisional.id, names };
 }
 
 const notesFor = async (client, periodId) => (await client.query(
@@ -72,7 +73,7 @@ const notesFor = async (client, periodId) => (await client.query(
   [`playoff-race:${periodId}:%`],
 )).rows;
 
-test("the morning after a Divisional game day the moderator posts the playoff race once, with no picks and no magic numbers", {
+test("the morning after a Divisional game day the moderator posts the playoff race once: games left, the leader with a magic number of 5 or less, then everyone alive by games back, no picks", {
   skip: !enabled && "Set the isolated PICKEM_TEST_* variables with PICKEM_WEEKLY_REHEARSAL=true.",
 }, async () => {
   const client = new pg.Client({ connectionString: process.env.PICKEM_TEST_DATABASE_URL });
@@ -80,7 +81,7 @@ test("the morning after a Divisional game day the moderator posts the playoff ra
   await client.query("begin");
   try {
     const token = `race${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
-    const { divisionalId, names, weekday } = await divisionalMorning(client, token);
+    const { divisionalId, names } = await divisionalMorning(client, token);
 
     const first = await client.query("select * from public.post_playoff_race_notes()");
     assert.deepEqual(first.rows.filter((row) => row.note_period_id === divisionalId).map((row) => row.note_outcome), ["posted"]);
@@ -88,9 +89,13 @@ test("the morning after a Divisional game day the moderator posts the playoff ra
     assert.equal(extra.length, 0);
     assert.equal(note.is_moderator, true);
     assert.equal(note.body, [
-      `🏈 Divisional ${weekday} is in the books. 4 playoff games left.`,
-      `${names.leader} leads with 12. Still alive: ${names.chaser} 10 (2 back), ${names.trailer} 9 (3 back).`,
-      `Knocked out: ${names.faller}.`,
+      "4 games left.",
+      // The wins Leader needs even if Chaser gets all 4 games left right: 10 + 4 - 12 + 1.
+      `${names.leader} leads. Magic number: 3`,
+      `2 back: ${names.chaser} and ${names.twin}`,
+      `3 back: ${names.trailer}`,
+      `Knocked out yesterday: ${names.faller}`,
+      `Forfeited yesterday: ${names.quitter}`,
     ].join("\n"));
 
     // Every later run that morning finds it posted.

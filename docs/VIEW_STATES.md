@@ -77,6 +77,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Open, message field empty | `chat-{day,night}-{phone-390,desktop-1280}` |
 | Emoji picker open (the emoji pictures are masked; their places are checked) | `chat-emoji-…` |
 | Message field focused with a draft typed | `chat-typing-…` |
+| The playoff race note (moderator, the morning after a playoff game day): games left, the leader, everyone alive grouped by games back, knocked out and forfeited yesterday | `chat-race-note-…` |
 
 ## Bowl picks (`/bowl-pool`) — `bowl.visual.spec.ts`
 

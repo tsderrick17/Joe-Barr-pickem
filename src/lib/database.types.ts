@@ -2480,6 +2480,7 @@ export type Database = {
         Args: { evaluated_at?: string }
         Returns: number
       }
+      race_note_names: { Args: { names: string[] }; Returns: string }
       reconcile_full_schedule_atomically: {
         Args: {
           imported_at?: string
