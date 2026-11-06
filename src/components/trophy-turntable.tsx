@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import TrophyBanner from "@/components/trophy-banner";
+import { fitBanners } from "@/lib/banner-fit.js";
 import { championRoll } from "@/lib/trophy-roll.js";
 import { loadOrder } from "@/lib/trophy-turn.js";
 import { HapticTap } from "@/components/haptic-tap";
@@ -35,6 +36,8 @@ const TROPHIES = [
   { pool: "bowl", label: "Bowl Pool", tag: "Bowl Pool champion" },
   { pool: "survivor", label: "Survivor", tag: "Survivor champion" },
 ] as const;
+
+const BANNER_MAX = 8.6, BANNER_MIN = 6, BANNER_GAP = 0.8;   // rem: a banner's full and smallest one-row width, and the gap at full size
 
 const wrap = (angle: number) => ((angle % 360) + 360) % 360;
 const frameSrc = (profile: Profile, slot: number) => `/trophies/turntable/${profile.dir}frame-${String(slot * (360 / profile.frames) / 3).padStart(3, "0")}.webp`;
@@ -166,6 +169,27 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] | null 
 
   const roll = seasons ? championRoll(seasons, TROPHIES[shown].pool) : null;
 
+  // The banners never make the rafters bigger: they shrink together to stay in one row, and only below a small size go onto more lines (`fitBanners`).
+  const rafters = useRef<HTMLElement>(null);
+  const [room, setRoom] = useState<ReturnType<typeof fitBanners> | null>(null);
+  const count = roll?.length ?? 0;
+  useLayoutEffect(() => {
+    const section = rafters.current;
+    if (!section || !count) return;
+    const measure = () => {
+      const style = getComputedStyle(section), rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const width = section.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      setRoom(fitBanners({ count, width, max: BANNER_MAX * rem, min: BANNER_MIN * rem, gapRatio: BANNER_GAP / BANNER_MAX }));
+    };
+    measure();
+    const watcher = new ResizeObserver(measure);
+    watcher.observe(section);
+    return () => watcher.disconnect();
+  }, [count, shown]);   // the rafters are a new element for each trophy
+  const fitted = room && count ? { "--banner-size": `${room.size}px`, gap: `0 ${room.gap}px` } as React.CSSProperties : undefined;
+  // where each line ends (a hidden break after its last banner)
+  const lineEnds = new Set((room?.lines ?? []).slice(0, -1).map((_, line, lines) => lines.slice(0, line + 1).reduce((sum, n) => sum + n, 0) - 1));
+
   return (
     <div className="trophy-display">
       <div
@@ -186,15 +210,18 @@ export default function TrophyTurntable({ seasons }: { seasons: Season[] | null 
         <button aria-label="Bring the next trophy forward" className="trophy-turn-arrow" data-side="right" onClick={() => { haptic("tick"); turnBy(1); }} type="button">›<HapticTap /></button>
         <p aria-live="polite" className="sr-only" role="status">{moving ? "Turning" : `${TROPHIES[front].label} is at the front`}</p>
       </div>
-      <section aria-label={`${TROPHIES[shown].label} champions`} className="trophy-rafters" data-moving={lifting ? "true" : "false"} data-pool={TROPHIES[shown].pool} key={shown}>
+      <section aria-label={`${TROPHIES[shown].label} champions`} className="trophy-rafters" data-moving={lifting ? "true" : "false"} data-pool={TROPHIES[shown].pool} key={shown} ref={rafters}>
         <div aria-hidden="true" className="trophy-beam" />
         {roll === null ? null : roll.length ? (
-          <ul className="trophy-banners">
+          <ul className="trophy-banners" style={fitted}>
             {roll.map((banner, index) => (
-              <li className="trophy-banner" key={banner.playerId} style={{ "--i": index } as React.CSSProperties}>
-                <TrophyBanner index={index} name={banner.name} still={moving} tag={TROPHIES[shown].tag} years={banner.years} />
-                <span className="sr-only">{banner.name}, {TROPHIES[shown].tag}, {banner.years.join(", ")}</span>
-              </li>
+              <Fragment key={banner.playerId}>
+                <li className="trophy-banner" style={{ "--i": index } as React.CSSProperties}>
+                  <TrophyBanner index={index} name={banner.name} still={moving} tag={TROPHIES[shown].tag} years={banner.years} />
+                  <span className="sr-only">{banner.name}, {TROPHIES[shown].tag}, {banner.years.join(", ")}</span>
+                </li>
+                {lineEnds.has(index) ? <li aria-hidden="true" className="trophy-banners-break" /> : null}
+              </Fragment>
             ))}
           </ul>
         ) : <p className="trophy-banners-empty">No {TROPHIES[shown].label} champion yet.</p>}

@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-05 - Trophy Room banners shrink to fit before they wrap
+
+The owner: the banners should never make the dark box bigger than it is now; if more are added, make them smaller to fit, and if they
+need to be smaller still, go to a second line. The banners hang in one row at full size (8.6rem) while they fit, shrink together (gaps
+too) to keep more in that one row, and only below 6rem go onto more lines at that small size, as even as possible with the longer lines
+first (7 on a phone: 3, 2 and 2). A phone with three champions, which used to wrap two and one, now hangs all three in one row.
+
 ## 2026-11-05 - Playoff race note: "Gary leads", and the leader's magic number once it is 5 or less
 
 The owner then asked for no score on the leader line ("Gary leads."), and for the leader's magic number once it is 5 or less:

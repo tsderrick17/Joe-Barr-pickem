@@ -442,7 +442,9 @@ measure database requests or end-to-end route time.
   can hold). Only the arrows at its sides (and the arrow keys) turn it, one trophy at a time; it cannot be dragged or swiped. The champions
   of the trophy at the front hang under it as cloth banners, one per person, carrying every year they won (a person's banner is drawn at the
   screen's full resolution and moves with a smooth swing and wave; each banner has its own pace, reach and starting point
-  (`bannerFeel` in `src/lib/banner-wave.js`), a little different every visit, and gusts of wind cross the row left to right, so no two move in step). Until the champions have loaded the rafters stay bare; "No ... champion
+  (`bannerFeel` in `src/lib/banner-wave.js`), a little different every visit, and gusts of wind cross the row left to right, so no two move in step). The banners never make the rafters bigger: they hang in one row at full size while they fit, shrink together to
+  keep more in that one row, and only once they would be narrower than 6rem go onto more lines at that small size, as even as possible with
+  the longer lines first (`fitBanners` in `src/lib/banner-fit.js`). Until the champions have loaded the rafters stay bare; "No ... champion
   yet" shows only for a trophy nobody has won.
 - The brass plaques are part of the pictures. A new champion needs a new render: see `tools/trophy-render/README.md`.
 - Below it is the All-Time Table, which counts graded **Pick'em picks only** (Survivor and Bowl Pool are not part of it; their champions

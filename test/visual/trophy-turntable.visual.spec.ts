@@ -3,7 +3,7 @@ import { TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 // The Trophy Room's turntable: three trophies on a mahogany table that turns only by its arrows, and the banners of the trophy at the front.
 
-async function openTrophyRoom(page: Page, width = 900, { holdChampions = false } = {}) {
+async function openTrophyRoom(page: Page, width = 900, { holdChampions = false, room = TROPHY_ROOM as object } = {}) {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
   const expiresAt = Math.floor(Date.parse("2099-01-01T00:00:00Z") / 1000);
   const accessToken = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: "p2", exp: expiresAt, role: "authenticated" })}.visual`;
@@ -11,7 +11,7 @@ async function openTrophyRoom(page: Page, width = 900, { holdChampions = false }
   await page.addInitScript((value) => { window.localStorage.setItem("sb-placeholder-auth-token", value); window.localStorage.setItem("pickem-theme", "day"); }, JSON.stringify(session));
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api\//, "");
-    if (path === "trophy-room") return holdChampions ? undefined : route.fulfill({ json: TROPHY_ROOM });   // held: the champions never arrive
+    if (path === "trophy-room") return holdChampions ? undefined : route.fulfill({ json: room });   // held: the champions never arrive
     if (path === "profile") return route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } });
     if (path === "pool-chat") return route.fulfill({ json: { messages: [] } });
     return route.fulfill({ status: 204, body: "" });
@@ -110,6 +110,33 @@ test("the table and banners at rest with the Bowl Pool at the front", async ({ p
   await page.waitForTimeout(1600);
   await expect(page.locator(".trophy-display")).toHaveScreenshot("trophy-turntable-bowl-front.png");
 });
+
+// Many champions: the banners shrink together to stay in one row, and only below a small size go onto a second, even line. The rafters never grow
+// past their height with a few full-size banners.
+const MANY = ["Al", "Bob", "Connor", "Dana", "Gary", "Rick", "Ron", "Tyler", "Zac", "Lou", "Max"];
+const manyChampions = (count: number) => ({
+  ...TROPHY_ROOM,
+  trophies: MANY.slice(0, count).map((name, index) => ({ seasonYear: 2026 - index, pickem: [{ playerId: `m${index}`, name }], survivor: null, bowl: null })),
+});
+const bannerRows = (page: Page) => page.locator(".trophy-banner").evaluateAll((items) => {
+  const tops = items.map((item) => Math.round(item.getBoundingClientRect().top));
+  return [...new Set(tops)].map((top) => tops.filter((t) => t === top).length);
+});
+
+for (const [label, width, count, rows] of [["desktop-1280", 1280, 8, [8]], ["phone-390", 390, 3, [3]], ["phone-390", 390, 7, [3, 2, 2]]] as const) {
+  test(`${count} champions at ${label}: ${rows.join(" and ")} to a line, the rafters no taller than with full-size banners`, async ({ page }) => {
+    await openTrophyRoom(page, width);
+    const fullHeight = (await page.locator(".trophy-rafters").boundingBox())!.height;   // the usual three banners (one has two years)
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+    await openTrophyRoom(page, width, { room: manyChampions(count) });
+    await expect(page.locator(".trophy-banner")).toHaveCount(count);
+    await expect.poll(() => bannerRows(page)).toEqual([...rows]);
+    if (rows.length === 1) expect((await page.locator(".trophy-rafters").boundingBox())!.height).toBeLessThanOrEqual(fullHeight + 1);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.waitForTimeout(3600);   // the banners have finished dropping in
+    await expect(page.locator(".trophy-rafters")).toHaveScreenshot(`trophy-banners-${count}-${label}.png`);
+  });
+}
 
 // The banners are drawn on a canvas at the screen's full device resolution (and never scaled or rotated), so they stay sharp.
 test("the banners are drawn at full device resolution", async ({ browser }) => {
