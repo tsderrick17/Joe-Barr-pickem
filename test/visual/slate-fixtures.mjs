@@ -114,6 +114,8 @@ export const SCENARIOS = {
   "upcoming-no-survivor": { now: "2026-09-30T16:00:00Z", phase: "upcoming", picks: [["g2", "lar"]], survivor: "hidden" },
   "live-survivor": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "picked" },
   "live-no-survivor": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
+  "live-mixed-locks": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g4", "gb"], ["g11", "den"]], survivor: "hidden" },
+  "live-mixed-locks-survivor": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g4", "gb"], ["g11", "den"]], survivor: "picked" },
   "complete-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "picked" },
   "complete-no-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
   "playoff-upcoming": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true },
@@ -125,6 +127,8 @@ export const SCENARIOS = {
   // Forfeited the playoffs: the same closed banner and no Submit, with the score left as it stands.
   "playoff-forfeited": { now: "2027-01-17T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true, forfeited: true },
   "playoff-live": { now: "2027-01-10T19:00:00Z", phase: "live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"]], survivor: "off", playoff: true },
+  // Wild Card Sunday afternoon: two picks sealed (Saturday's final, Sunday's live game), two still open, two still to make.
+  "playoff-mixed-locks": { now: "2027-01-10T19:00:00Z", phase: "live", picks: [["g0", "buf"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"]], survivor: "off", playoff: true },
 };
 
 export function boardResponse(name) {

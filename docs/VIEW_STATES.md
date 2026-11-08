@@ -19,6 +19,11 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Pick'em only (no Survivor) | `upcoming-no-survivor` |
 | Games live, Survivor | `live-survivor` |
 | Games live, no Survivor | `live-no-survivor` |
+| Games live, one pick sealed and one still open (the open chip keeps its ×; the line reads "2/2 · SUBMITTED · 1 SEALED"); behavior test: every chip and the status line stay inside the ticket at 360, 390 and 700 in this and the other long states | `live-mixed-locks`; night `night-live-mixed-locks-*` |
+| The same with Survivor on the ticket (on the smallest phones, under 380 wide, the Pick'em column takes a little of the Survivor column's room) | `live-mixed-locks-survivor` |
+| Playoff round with picks sealed, open and still to make ("4/6 · 2 SEALED · 2 DUE") | `playoff-mixed-locks` |
+| An unsaved change beside a sealed pick ("2/2 · CHANGED", the draft chip next to the locked one) | `receipt-changed-beside-sealed-{phone-390,desktop-1280}` |
+| Receipt sweep (behavior test, no screenshot): eleven mixes (sealed, open, unsaved, due; Survivor or not; regular or playoff; the widest chips "ten +11.5" and "mia +10.5"; mid-save) at 360, 390 and 700: every chip and status line inside the ticket and its section, one line, and no chip text cut short | `SWEEP` in `slate.visual.spec.ts` |
 | Week complete, Survivor | `complete-survivor` |
 | Week complete, no Survivor | `complete-no-survivor` |
 | Playoff round open | `playoff-upcoming` |

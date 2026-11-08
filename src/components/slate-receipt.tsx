@@ -80,9 +80,11 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
   const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
   const openPickCount = selectedTeams.length - sealedPickCount;
   const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
+  // Kept short so the line fits a phone's ticket: the open picks need no count (each still carries its ×, a sealed one its lock), a
+  // ticket with picks still due says "1 DUE" rather than "OPEN · 1 DUE", and while there is a change to save the sealed count gives way
+  // to it ("1/2 · CHANGED · 1 DUE"; the locks still show which are sealed).
   const pickemReceiptStateDetail = [
-    sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
-    openPickCount > 0 && sealedPickCount > 0 ? `${openPickCount} OPEN` : "",
+    sealedPickCount > 0 && pickemReceiptStatus !== "CHANGED" ? `${sealedPickCount} SEALED` : "",
     duePickCount > 0 ? `${duePickCount} DUE` : "",
   ].filter(Boolean).join(" · ");
   const submitHint = receiptIsLoading
@@ -142,7 +144,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
             </span>
           )) : <strong className="is-due">PICK DUE</strong>}
         </div>
-        <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPickCount}/{selectionLimit} · {receiptStatusLabel(pickemReceiptStatus)}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
+        <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPickCount}/{selectionLimit}{pickemReceiptStatus === "OPEN" && duePickCount > 0 ? null : <> · {receiptStatusLabel(pickemReceiptStatus)}</>}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
       </div>
       {survivor.show ? (
         <div className="slate-receipt-pool slate-receipt-survivor">
