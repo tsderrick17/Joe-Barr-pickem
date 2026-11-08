@@ -461,6 +461,8 @@
   .slate-receipt-strip.has-survivor { grid-template-columns: 25% 50% 25%; }
   .slate-receipt-strip.is-pickem-only { grid-template-columns: 25% minmax(0, 75%); }
   .slate-mini-nav.slate-receipt-strip.is-pickem-only { grid-template-columns: 33.3333% minmax(0, 1fr); width: 75%; }
+  /* On a small phone three quarters is too narrow for the widest pick ("2. mia +10.5"), which would be cut short: never narrower than 18rem. */
+  .slate-mini-nav.slate-receipt-strip.is-pickem-only:not(.bowl-receipt-strip) { max-width: 100%; width: max(75%, 18rem); }
   /* The torn ticket is narrower on a phone, so a six-game Wild Card round
      stacks as two columns of three instead of three narrow columns. */
   .slate-receipt-strip.is-pickem-only .slate-receipt-selection-chips--playoff:is(.slate-receipt-selection-chips--slots-5, .slate-receipt-selection-chips--slots-6) {
@@ -672,4 +674,10 @@
 }
 @media (min-width: 768px) {
   .slate-how-toggle { min-height: 2.25rem; padding-left: 1rem; }
+}
+
+/* The smallest phones: the Pick'em picks take a little of the Survivor column's spare room, so the widest pick ("1. ten +11.5") is never
+   cut short beside the Survivor chip. */
+@media (max-width: 379px) {
+  .slate-receipt-strip.has-survivor:not(.bowl-receipt-strip) { grid-template-columns: 25% 54% 21%; }
 }

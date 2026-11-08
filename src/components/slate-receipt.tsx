@@ -80,10 +80,11 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
   const sealedPickCount = selectedTeams.filter((team) => !team.canRemove).length;
   const openPickCount = selectedTeams.length - sealedPickCount;
   const duePickCount = Math.max(selectionLimit - selectedTeams.length, 0);
-  // Kept short so the line fits a phone's ticket: the open picks need no count (each still carries its ×, a sealed one its lock), and
-  // a ticket with picks still due says "1 DUE" rather than "OPEN · 1 DUE".
+  // Kept short so the line fits a phone's ticket: the open picks need no count (each still carries its ×, a sealed one its lock), a
+  // ticket with picks still due says "1 DUE" rather than "OPEN · 1 DUE", and while there is a change to save the sealed count gives way
+  // to it ("1/2 · CHANGED · 1 DUE"; the locks still show which are sealed).
   const pickemReceiptStateDetail = [
-    sealedPickCount > 0 ? `${sealedPickCount} SEALED` : "",
+    sealedPickCount > 0 && pickemReceiptStatus !== "CHANGED" ? `${sealedPickCount} SEALED` : "",
     duePickCount > 0 ? `${duePickCount} DUE` : "",
   ].filter(Boolean).join(" · ");
   const submitHint = receiptIsLoading

@@ -24,8 +24,12 @@ and add a row above.
 On a phone, a week with one pick sealed and one still open read "2/2 · SUBMITTED · 1 SEALED · 1 OPEN", too long for the ticket: the
 line and the second chip ran past its right edge (the owner's screenshot). The line is shorter: the open picks are no longer counted
 (each still shows its ×, a sealed one its lock), and a ticket with picks still due says "1/2 · 1 DUE" rather than "1/2 · OPEN · 1 DUE".
-The Pick'em section can no longer grow wider than its column. A behavior test checks every chip and the line stay inside the ticket at
-phone and tablet widths in the longest states, including the new `live-mixed-locks` screenshot state.
+The Pick'em section can no longer grow wider than its column. While a change is waiting to be saved the sealed count gives way to it
+("1/2 · CHANGED · 1 DUE"; the locks still show). A sweep of every receipt mix the owner agreed to cover (sealed, open, unsaved, due;
+Survivor or not; regular or playoff; the widest chips; mid-save) at 360, 390 and 700 then found the widest picks ("ten +11.5") were
+being cut to "ten +1…" on phones: a Pick'em-only ticket on a phone is now never narrower than 18rem, and under 380 wide a ticket with
+Survivor gives the Pick'em column 54% (the Survivor column 21%). New screenshot states: `live-mixed-locks` (day and night),
+`live-mixed-locks-survivor`, `playoff-mixed-locks`, `receipt-changed-beside-sealed`.
 
 ## 2026-11-05 - Trophy Room banners shrink to fit before they wrap
 

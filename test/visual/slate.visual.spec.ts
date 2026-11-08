@@ -55,7 +55,7 @@ for (const scenario of Object.keys(SCENARIOS)) {
 }
 
 // Night: official (teal) lines on the dark rows must stay readable. One picked week and one live week, phone and desktop.
-for (const scenario of ["upcoming-picked", "live-survivor"]) {
+for (const scenario of ["upcoming-picked", "live-survivor", "live-mixed-locks"]) {
   for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
     test(`Slate ${scenario} at night, ${label}`, async ({ page }) => {
       await captureSlate(page, scenario, width, "night", `night-${scenario}-${label}.png`);
@@ -168,6 +168,84 @@ for (const width of [360, 390, 700]) {
       expect(fit.lines, fit.text ?? "").toBe(1);
       expect(fit.inside, fit.text ?? "").toBe(true);
       expect(fit.chipsInside, fit.text ?? "").toBe(true);
+    });
+  }
+}
+
+// An unsaved change beside a sealed pick: "2/2 · CHANGED", the new team's chip marked as a draft next to the locked one.
+for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
+  test(`Slate receipt with a change beside a sealed pick at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, "day", "visual-player");
+    await serve(page, "live-mixed-locks");
+    await page.goto("/board");
+    const receipt = page.locator(".slate-receipt-strip");
+    await expect(receipt.locator(".slate-receipt-selection-chip")).toHaveCount(2, { timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await receipt.getByRole("button", { name: /^Remove / }).click();
+    await page.locator(".slate-game-row button.slate-team-side:not([disabled])").filter({ hasText: /mia$/ }).first().click();
+    await expect(receipt.locator(".slate-receipt-pickem > em")).toHaveText("2/2 · CHANGED");
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(600);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await expect(receipt).toHaveScreenshot(`receipt-changed-beside-sealed-${label}.png`);
+  });
+}
+
+// The sweep: every mix a real week can put on the ticket (picks sealed, open, unsaved or still to make; Survivor on the ticket or not;
+// a regular week or a playoff round; the widest chips, an away underdog of 10.5 or 11.5; and mid-save). In every one the chips, the
+// Survivor pick and the status line stay inside the ticket, the line stays on one line, and no chip cuts its text short.
+const SWEEP: Array<{ name: string; base: string; picks: string[][]; edit?: "remove" | "save" }> = [
+  { name: "two sealed, widest chip", base: "live-no-survivor", picks: [["g7", "ten"], ["g4", "gb"]] },
+  { name: "sealed and open, widest chips", base: "live-no-survivor", picks: [["g7", "ten"], ["g10", "mia"]] },
+  { name: "sealed and open, widest chips, with Survivor", base: "live-survivor", picks: [["g7", "ten"], ["g10", "mia"]] },
+  { name: "sealed, the open pick taken off", base: "live-no-survivor", picks: [["g7", "ten"], ["g10", "mia"]], edit: "remove" },
+  { name: "sealed, the open pick taken off, with Survivor", base: "live-survivor", picks: [["g7", "ten"], ["g10", "mia"]], edit: "remove" },
+  { name: "sealed and changed, while saving", base: "live-survivor", picks: [["g7", "ten"], ["g10", "mia"]], edit: "save" },
+  { name: "one sealed, one due", base: "live-no-survivor", picks: [["g7", "ten"]] },
+  { name: "two open, widest chip", base: "live-survivor", picks: [["g10", "mia"], ["g11", "den"]] },
+  { name: "playoffs: four of six, two sealed", base: "playoff-live", picks: [["g0", "buf"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"]] },
+  { name: "playoffs: six of six, three sealed", base: "playoff-live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"], ["g5", "sf"]] },
+  { name: "playoffs: six of six, one open pick taken off", base: "playoff-live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"], ["g5", "sf"]], edit: "remove" },
+];
+
+for (const width of [360, 390, 700]) {
+  for (const item of SWEEP) {
+    test(`Slate receipt fits the ticket: ${item.name} (${width})`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, "day", "visual-player");
+      await serve(page, item.base, { myPicks: item.picks.map(([gameId, teamId]) => ({ gameId, teamId })) });
+      if (item.edit === "save") await page.route("**/api/picks", () => undefined);   // the save never answers: the ticket stays mid-save
+      await page.goto("/board");
+      const receipt = page.locator(".slate-receipt-strip");
+      await expect(receipt.locator(".slate-receipt-selection-chip")).toHaveCount(item.picks.length, { timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      if (item.edit) await receipt.getByRole("button", { name: /^Remove / }).last().click();
+      if (item.edit === "save") {
+        await page.locator(".slate-game-row button.slate-team-side:not([disabled])").filter({ hasText: /den$/ }).first().click();
+        await receipt.getByRole("button", { name: "SUBMIT" }).click();
+        await expect(receipt.getByText("PRINTING")).toBeVisible();
+      }
+      const fit = await receipt.evaluate((strip) => {
+        const ticket = strip.getBoundingClientRect();
+        const inside = (element: Element) => { const box = element.getBoundingClientRect(); return box.left >= ticket.left - 1 && box.right <= ticket.right + 1; };
+        const line = strip.querySelector(".slate-receipt-pickem > em")!;
+        const pieces = [...strip.querySelectorAll(".slate-receipt-pool, .slate-receipt-selection-chip, .slate-receipt-survivor-pick, .slate-receipt-pool > em")];
+        return {
+          text: line.textContent,
+          lines: Math.round(line.getBoundingClientRect().height / parseFloat(getComputedStyle(line).lineHeight)),
+          outside: pieces.filter((piece) => !inside(piece)).map((piece) => piece.className),
+          lineClipped: line.scrollWidth > line.clientWidth + 1,
+          // every pool's own line (the Survivor one too) stays inside its pool
+          spills: [...strip.querySelectorAll(".slate-receipt-pool > em")].filter((em) => em.getBoundingClientRect().right > em.parentElement!.getBoundingClientRect().right + 1 || em.scrollWidth > em.clientWidth + 1).map((em) => em.textContent),
+          cutShort: [...strip.querySelectorAll(".slate-receipt-selection-chip > span")].filter((label) => label.scrollWidth > label.clientWidth + 1).map((label) => label.textContent),
+        };
+      });
+      expect(fit.lines, fit.text ?? "").toBe(1);
+      expect(fit.outside, fit.text ?? "").toEqual([]);
+      expect(fit.lineClipped, fit.text ?? "").toBe(false);
+      expect(fit.spills, "status lines spilling out of their section").toEqual([]);
+      expect(fit.cutShort, "chips whose text is cut short").toEqual([]);
     });
   }
 }
