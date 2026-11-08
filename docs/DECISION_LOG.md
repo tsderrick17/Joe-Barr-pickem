@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-08 - The Slate receipt's status line stays inside the ticket
+
+On a phone, a week with one pick sealed and one still open read "2/2 · SUBMITTED · 1 SEALED · 1 OPEN", too long for the ticket: the
+line and the second chip ran past its right edge (the owner's screenshot). The line is shorter: the open picks are no longer counted
+(each still shows its ×, a sealed one its lock), and a ticket with picks still due says "1/2 · 1 DUE" rather than "1/2 · OPEN · 1 DUE".
+The Pick'em section can no longer grow wider than its column. A behavior test checks every chip and the line stay inside the ticket at
+phone and tablet widths in the longest states, including the new `live-mixed-locks` screenshot state.
+
 ## 2026-11-05 - Trophy Room banners shrink to fit before they wrap
 
 The owner: the banners should never make the dark box bigger than it is now; if more are added, make them smaller to fit, and if they

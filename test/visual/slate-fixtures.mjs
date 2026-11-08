@@ -114,6 +114,7 @@ export const SCENARIOS = {
   "upcoming-no-survivor": { now: "2026-09-30T16:00:00Z", phase: "upcoming", picks: [["g2", "lar"]], survivor: "hidden" },
   "live-survivor": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "picked" },
   "live-no-survivor": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
+  "live-mixed-locks": { now: "2026-10-04T18:30:00Z", phase: "live", picks: [["g4", "gb"], ["g11", "den"]], survivor: "hidden" },
   "complete-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "picked" },
   "complete-no-survivor": { now: "2026-10-06T16:00:00Z", phase: "complete", picks: [["g1", "ind"], ["g4", "gb"]], survivor: "hidden" },
   "playoff-upcoming": { now: "2027-01-08T16:00:00Z", phase: "upcoming", picks: [["g0", "buf"], ["g3", "lar"]], survivor: "off", playoff: true },

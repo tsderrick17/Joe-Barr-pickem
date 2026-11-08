@@ -19,6 +19,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Pick'em only (no Survivor) | `upcoming-no-survivor` |
 | Games live, Survivor | `live-survivor` |
 | Games live, no Survivor | `live-no-survivor` |
+| Games live, one pick sealed and one still open (the open chip keeps its ×; the line reads "2/2 · SUBMITTED · 1 SEALED"); behavior test: every chip and the status line stay inside the ticket at 360, 390 and 700 in this and the other long states | `live-mixed-locks` |
 | Week complete, Survivor | `complete-survivor` |
 | Week complete, no Survivor | `complete-no-survivor` |
 | Playoff round open | `playoff-upcoming` |

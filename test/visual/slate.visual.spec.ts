@@ -140,10 +140,11 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
   });
 }
 
-// The Pick'em line at the foot of the ticket ("1/2 · CHANGED · 1 DUE") stays on one line and inside its section at every width, in the
-// longest states: one team picked and unsaved, and a live week with locked picks.
+// The Pick'em line at the foot of the ticket ("1/2 · CHANGED · 1 DUE") stays on one line, and it and every pick chip stay inside the
+// ticket at every width, in the longest states: one team picked and unsaved, a live week with locked picks, and one pick sealed with
+// the other still open (which once pushed the second chip and the line past the ticket's edge on a phone).
 for (const width of [360, 390, 700]) {
-  for (const [scenario, pick] of [["upcoming-unpicked", true], ["upcoming-picked", false], ["live-survivor", false]] as const) {
+  for (const [scenario, pick] of [["upcoming-unpicked", true], ["upcoming-picked", false], ["live-survivor", false], ["live-no-survivor", false], ["live-mixed-locks", false], ["playoff-live", false]] as const) {
     test(`Slate ticket status line is one line (${scenario}${pick ? ", one team picked" : ""}, ${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, "day", "visual-player");
@@ -154,11 +155,19 @@ for (const width of [360, 390, 700]) {
       const line = page.locator(".slate-receipt-pickem > em");
       await expect(line).toBeVisible();
       const fit = await line.evaluate((element) => {
-        const box = element.getBoundingClientRect(), section = element.parentElement!.getBoundingClientRect();
-        return { lines: Math.round(box.height / parseFloat(getComputedStyle(element).lineHeight)), inside: element.scrollWidth <= element.clientWidth + 1 && box.right <= section.right + 1, text: element.textContent };
+        const box = element.getBoundingClientRect(), ticket = element.closest(".slate-receipt-strip")!.getBoundingClientRect();
+        const section = element.parentElement!.getBoundingClientRect();
+        const chips = [...document.querySelectorAll(".slate-receipt-selection-chip")].map((chip) => chip.getBoundingClientRect());
+        return {
+          lines: Math.round(box.height / parseFloat(getComputedStyle(element).lineHeight)),
+          inside: element.scrollWidth <= element.clientWidth + 1 && box.right <= section.right + 1 && section.right <= ticket.right + 1,
+          chipsInside: chips.every((chip) => chip.left >= ticket.left - 1 && chip.right <= ticket.right + 1),
+          text: element.textContent,
+        };
       });
       expect(fit.lines, fit.text ?? "").toBe(1);
       expect(fit.inside, fit.text ?? "").toBe(true);
+      expect(fit.chipsInside, fit.text ?? "").toBe(true);
     });
   }
 }

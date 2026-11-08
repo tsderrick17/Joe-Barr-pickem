@@ -83,6 +83,7 @@
    selection chip. */
 .slate-receipt-pool {
   grid-template-rows: .72rem 3.48rem minmax(.68rem, auto);
+  min-width: 0;   /* never wider than its column: the chips and status line stay inside the ticket */
 }
 .slate-receipt-pool.slate-receipt-survivor {
   grid-template-rows: .72rem 3.9rem minmax(.68rem, auto);
