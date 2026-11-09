@@ -453,9 +453,9 @@ measure database requests or end-to-end route time.
   loss, 6-0 in the Wild Card round when it has six games, 4-0 in the Divisional, 2-0 in the Conference Championships; a round with fewer playable
   games allows fewer picks), places with ties. Other Stats view is **regular season only**: Shutout Free Weeks in a Row and Perfect Weeks in a Row
   (best run, current run beneath; regular weeks only), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
-  picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. Sorted by the half-point hit rate, a player
-  with no game decided by a half point ("—") is last whichever way it is sorted, below a player at .000; level rates go to more wins, then fewer
-  losses (`compareRows` in `src/lib/trophy-rank.js`). The two views are one two-way switch.
+  picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. In both views, in every column, a "—" (nothing to
+  show yet) is last whichever way it is sorted, below a real 0 or .000 and never tied with one; level half-point rates go to more wins, then
+  fewer losses (`compareRows` in `src/lib/trophy-rank.js`). The two views are one two-way switch.
 - Its figures are the same for everyone and change only when a game is graded, so the API builds them once a minute per server instance
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
 - A week counts toward the weekly figures (Perfect Weeks, both streaks) once every game in it is final, not only once the pool has advanced, and
