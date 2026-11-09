@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-09 - Half-point hit rate: no games decided that way sorts last
+
+- The Other Stats sort on the half-point hit rate treated "—" (no game decided by a half point) as .000, so a player 0-1 and a player with no
+  games were ranked level and fell A to Z between each other. The owner expects the players who have actually lost one above those who have not.
+- Now "—" is always last, sorted either way, and is never tied with .000. Level rates go to more wins (2-0 above 1-0), then fewer losses.
+- The table's whole sort moved into `compareRows` (`src/lib/trophy-rank.js`) so it is tested by running it (`test/trophy-rank.test.mjs`).
+
 ## 2026-11-08 - The Slate receipt's status line stays inside the ticket
 
 On a phone, a week with one pick sealed and one still open read "2/2 · SUBMITTED · 1 SEALED · 1 OPEN", too long for the ticket: the
