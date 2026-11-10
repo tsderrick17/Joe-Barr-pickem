@@ -38,6 +38,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
     finally { if (current === generation.current) setBusy(false); }
   }
 
+  const chosen = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
     async function load() {
@@ -47,7 +48,8 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
         if (!response.ok) throw new Error(result.error ?? "Email preferences could not be loaded.");
         const saved = Object.fromEntries((result.templates ?? []).map((item: Draft & { id: string }) => [item.id, { ...item, imageOptions: emailArtworkOptions(item.imageOptions) }]));
         const values = saved.weekly_recap ?? { title: initial.title, body: initial.body, imageOptions: { density: "compact" as const } };
-        if (active) { setOverrides(saved); setDraft(values); void render("weekly_recap", values, reminderId); }
+        // A type chosen while this was loading wins: the first preview never replaces it.
+        if (active) { setOverrides(saved); if (!chosen.current) { setDraft(values); void render("weekly_recap", values, reminderId); } }
       } catch (reason) { if (active) setError(reason instanceof Error ? reason.message : "Email preferences could not be loaded."); }
     }
     void load();
@@ -63,6 +65,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   }, [preview, phone]);
 
   function choose(id: string) {
+    chosen.current = id;
     const template = reminderTemplates.find((item) => item.id === id)!;
     const values = overrides[id] ?? { title: template.title, body: template.body, imageOptions: { density: "compact" as const } };
     setTemplateId(id); setDraft(values); setMessage(""); setDirty(false);
