@@ -42,7 +42,9 @@ and add a row above.
   Halloween and Christmas skins are full scenes, so Thanksgiving became one too, with every named piece kept: the still life now
   sits in a golden-hour farm (sunset sky, low sun, geese, an autumn treeline, a red barn, a furrowed field); the corners are
   full boughs of folded leaves with hanging acorns and berries, printed into the parchment; the hat is larger and dressed with
-  leaves and acorns; the colours are deeper and the frame darker.
+  leaves and acorns; the colours are deeper and the frame darker. The food from the horn is laid out in order rather than
+  heaped: a fan of three wheat stalks, the corn resting on the pumpkin, a tidy bunch of grapes at the lip, then a pear, an apple
+  and a striped gourd in a row.
 
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 

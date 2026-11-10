@@ -193,7 +193,8 @@ const HORN_RIBS = HORN_STEPS.filter((_, index) => index >= 3 && index < 24 && in
 }).join("");
 const HORN_MOUTH = HORN_STEPS[24];
 const HORN_TILT = fixed((Math.atan2(HORN_MOUTH.tangent[1], HORN_MOUTH.tangent[0]) * 180) / Math.PI);
-const GRAPES: Point[] = [[94, 55], [99.5, 54], [105, 56], [96, 60.5], [101.5, 60], [107, 61.5], [98.5, 66], [104, 66.5], [101, 71.5]];
+/** A bunch of grapes: rows of four, three, two and one, packed evenly and tapering to the tip. */
+const GRAPES: Point[] = [4, 3, 2, 1].flatMap((count, row) => Array.from({ length: count }, (_, index) => [90.2 + row * 2.8 + index * 5.6, 65.5 + row * 4.9] as Point));
 
 /** A tom turkey in full strut, drawn around the middle of his fan: banded tail, bronze breast, barred wing. */
 const FEATHER = "M0 0C-2.5 -10 -6.5 -24 -5.2 -30.5Q0 -37.5 5.2 -30.5C6.5 -24 2.5 -10 0 0Z";
@@ -591,27 +592,37 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
             <ellipse cx="88" cy="58" fill="#c79248" rx="8.500" ry="24.600" stroke="#6e4318" strokeWidth="1.100" />
             <ellipse cx="88.600" cy="58" fill="#2c1708" rx="5.800" ry="21" />
           </g>
-          <Wheat angle={28} length={36} x={90} y={52} />
-          <Wheat angle={46} length={32} x={91} y={54} />
-          <Leaf angle={25} fill={`url(#${ids("leaf-red")})`} size={25} x={103} y={38} />
-          <Leaf angle={68} fill={`url(#${ids("leaf-gold")})`} oak size={21} x={121} y={47} />
-          <g transform="translate(113 52) rotate(-24)">
+          <Leaf angle={52} fill={`url(#${ids("leaf-gold")})`} oak size={14} x={109} y={47} />
+          <Wheat angle={10} length={31} x={90} y={50} />
+          <Wheat angle={36} length={33} x={90} y={50} />
+          <Wheat angle={62} length={31} x={90} y={50} />
+          <g transform="translate(117 52) rotate(-20)">
             <path d="M-11 0C-17 -8 -26 -8 -31 -3.500C-24 -2 -17 0 -11 0ZM-11 0C-17 6 -25 7.500 -30 4.500C-24 3 -17 1.500 -11 0Z" fill="#d6c98a" stroke="#9a8a4a" strokeWidth=".5" />
             <ellipse cx="2" cy="0" fill={`url(#${ids("corn")})`} rx="14" ry="5.400" stroke="#a8741c" strokeWidth=".5" />
             <path d="M-8 -4v8M-4.500 -5v10M-1 -5.300v10.600M2.500 -5.400v10.800M6 -5.200v10.400M9.500 -4.500v9M13 -3v6M-11 0h26M-10 -2.700h24M-10 2.700h24" fill="none" stroke="#b07a18" strokeOpacity=".55" strokeWidth=".5" />
           </g>
-          {GRAPES.map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill={`url(#${ids("grape")})`} r="3.200" /><circle cx={x - 1} cy={y - 1.100} fill="#fff" opacity=".2" r=".7" /></g>)}
-          <path d="M127 53.500q.5-3.500 3-4.500" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.200" />
-          <circle cx="127" cy="61.500" fill={`url(#${ids("apple")})`} r="8.200" />
-          <ellipse cx="123.800" cy="58" fill="#fff" opacity=".14" rx="1.600" ry="2.600" transform="rotate(25 123.800 58)" />
-          <Heirloom fill={`url(#${ids("orange")})`} rib="#8f3d10" rx={14.500} ry={10.200} x={116} y={73.300} />
-          <path d="M143 61q-.6-3.500 2.200-5" fill="none" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.600" />
-          <ellipse cx="143" cy="66.500" fill={`url(#${ids("gourd-yellow")})`} rx="4.800" ry="5.800" />
-          <ellipse cx="143" cy="76" fill={`url(#${ids("gourd-green")})`} rx="7.800" ry="7.500" />
-          <path d="M138.300 70.400Q143 73.400 147.700 70.400Q147 67 143 66.500Q139 67 138.300 70.400Z" fill="#e8ae2c" />
-          <path d="M140 70.800q-2.400 5.800 0 12M143 71.600v11.800M146 70.800q2.400 5.800 0 12" fill="none" stroke="#c9dc8a" strokeOpacity=".7" strokeWidth=".8" />
-          <Acorn angle={75} ids={ids} size={10} x={157} y={80.300} />
-          <Leaf angle={100} fill={`url(#${ids("leaf-orange")})`} size={13} x={168} y={79} />
+          <g transform="translate(4 0) rotate(10 130 64)">
+            <path d="M130 55q.4-2.600 2.200-3.400" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.100" />
+            <path d="M130 54.900C132.600 54.900 133.200 57.500 133.600 59.900C135.400 61.500 135.800 63.900 135.400 65.900C134.800 68.900 132.600 70.400 130 70.400C127.400 70.400 125.200 68.900 124.600 65.900C124.200 63.900 124.600 61.500 126.400 59.900C126.800 57.500 127.400 54.900 130 54.900Z" fill={`url(#${ids("gourd-yellow")})`} stroke="#a8741c" strokeWidth=".4" />
+            <ellipse cx="127.600" cy="63.500" fill="#fff" opacity=".18" rx="1.100" ry="2.400" />
+          </g>
+          <Heirloom fill={`url(#${ids("orange")})`} rib="#8f3d10" rx={15.500} ry={11.200} x={117} y={72.300} />
+          <path d="M140 68.400q.5-3.500 3-4.500" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.200" />
+          <circle cx="140" cy="75.600" fill={`url(#${ids("apple")})`} r="8" />
+          <ellipse cx="136.800" cy="72.200" fill="#fff" opacity=".14" rx="1.600" ry="2.600" transform="rotate(25 136.800 72.200)" />
+          <Leaf angle={38} fill={`url(#${ids("leaf-olive")})`} size={11} x={102.500} y={61.500} />
+          <path d="M95.500 59q1.400 2.400 1.300 5" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1" />
+          <g transform="translate(-2 0) rotate(-14 98.600 65.500)">
+            {GRAPES.map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill={`url(#${ids("grape")})`} r="3.100" /><circle cx={x - 1} cy={y - 1.100} fill="#fff" opacity=".2" r=".7" /></g>)}
+          </g>
+          <g transform="translate(13 0)">
+            <path d="M143 61q-.6-3.500 2.200-5" fill="none" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.600" />
+            <ellipse cx="143" cy="66.500" fill={`url(#${ids("gourd-yellow")})`} rx="4.800" ry="5.800" />
+            <ellipse cx="143" cy="76" fill={`url(#${ids("gourd-green")})`} rx="7.800" ry="7.500" />
+            <path d="M138.300 70.400Q143 73.400 147.700 70.400Q147 67 143 66.500Q139 67 138.300 70.400Z" fill="#e8ae2c" />
+            <path d="M140 70.800q-2.400 5.800 0 12M143 71.600v11.800M146 70.800q2.400 5.800 0 12" fill="none" stroke="#c9dc8a" strokeOpacity=".7" strokeWidth=".8" />
+          </g>
+          <Leaf angle={100} fill={`url(#${ids("leaf-orange")})`} size={12} x={173} y={80} />
 
           <g transform="translate(200 58)"><Turkey ids={ids} /></g>
 
