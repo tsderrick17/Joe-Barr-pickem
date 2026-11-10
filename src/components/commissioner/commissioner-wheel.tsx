@@ -87,9 +87,10 @@ export default function CommissionerWheel() {
     <div className={`cw-wheel ${chosen ? "is-choosing" : ""}`}>
       <WheelFace />
       {SPOKES.map((spoke, index) => {
-        const [x, y] = point(angle(index), SPOKE_RADIUS);
-        const status = spokes[spoke.key] as { state: SpokeState; count: number; line?: string };
+        // The bottom spoke sits a little further in, so its name below it stays inside the rim and clear of the group's name there.
         const lowest = Math.sin(angle(index) * Math.PI / 180) > 0.9;
+        const [x, y] = point(angle(index), lowest ? SPOKE_RADIUS - 10 : SPOKE_RADIUS);
+        const status = spokes[spoke.key] as { state: SpokeState; count: number; line?: string };
         return <button
           aria-label={`${spoke.name}: ${status.line ?? spoke.line}. ${STATE_WORDS[status.state]}.`}
           className={`cw-spoke is-${status.state} ${chosen === spoke.key ? "is-chosen" : ""}`}
@@ -100,7 +101,7 @@ export default function CommissionerWheel() {
         >
           <Medallion count={status.count} icon={spoke.icon} state={status.state} />
           {chosen === spoke.key ? <><span aria-hidden="true" className="cw-ripple" /><span aria-hidden="true" className="cw-ripple is-late" /></> : null}
-          <span aria-hidden="true" className={`cw-name ${lowest ? "is-above" : ""}`}>{spoke.name}</span>
+          <span aria-hidden="true" className="cw-name">{spoke.name}</span>
           <HapticTap />
         </button>;
       })}
@@ -118,12 +119,6 @@ export default function CommissionerWheel() {
         <HapticTap />
       </button>
     </div>
-    <ul className="cw-legend" aria-label="What the ring colours mean">
-      <li><i className="is-ok" />All good</li>
-      <li><i className="is-warn" />Look soon</li>
-      <li><i className="is-bad" />Needs you now</li>
-      <li><i className="is-idle" />Nothing to report</li>
-    </ul>
     <Sheet onClose={() => setNeedsOpen(false)} open={needsOpen} title="Needs you">
       {needs.length ? <ul className="cw-needs">
         {needs.map((item) => <li className={`is-${item.state}`} key={item.title}>

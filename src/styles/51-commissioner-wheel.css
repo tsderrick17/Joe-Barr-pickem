@@ -68,7 +68,6 @@
 .cw-ripple.is-late { animation-delay: .12s; }
 @keyframes cw-ripple { from { opacity: .95; transform: scale(1); } to { opacity: 0; transform: scale(2.3); } }
 .cw-name { background: rgba(11, 31, 24, .82); border: 1px solid rgba(201, 164, 95, .35); border-radius: 8px; color: var(--cw-cream); font-size: clamp(10px, 2.7vw, 12.5px); font-weight: 700; left: 50%; line-height: 1.25; padding: 2px 7px; position: absolute; top: 108%; transform: translateX(-50%); white-space: nowrap; }
-.cw-name.is-above { bottom: 108%; top: auto; }
 /* An invisible pad makes every spoke at least 44px to the finger without looking bigger. */
 .cw-spoke::before { border-radius: 50%; content: ""; inset: -14%; position: absolute; }
 .cw-hub {
@@ -93,9 +92,6 @@
 .cw-hub.is-clear b { color: var(--cw-ok); text-shadow: 0 0 18px rgba(63, 178, 122, .45); }
 .cw-hub-word { display: block; font-size: clamp(10px, 2.6vw, 12px); letter-spacing: .14em; text-transform: uppercase; }
 .cw-hub small { display: block; font-size: clamp(10px, 2.4vw, 11px); margin-top: 3px; opacity: .7; }
-.cw-legend { color: var(--club-muted); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px 14px; justify-content: center; list-style: none; margin: 10px 0 0; padding: 0; }
-.cw-legend li { align-items: center; display: flex; gap: 6px; }
-.cw-legend i { background: var(--cw-c); border-radius: 50%; display: inline-block; height: 10px; width: 10px; }
 
 /* Sheets: the browser's own dialog, rising from the bottom on a phone and centred on a computer, with a felt top edge */
 .cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); padding: 0; width: 100%; }
