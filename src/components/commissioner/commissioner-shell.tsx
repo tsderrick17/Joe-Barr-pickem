@@ -37,10 +37,11 @@ function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const index = spokeIndexForPath(pathname);
   const [handbookOpen, setHandbookOpen] = useState(false);
+  const { map, failed } = useCommissionerStatus();
 
   useEffect(() => { if (index < 0) document.title = "Commissioner"; }, [index]);
 
-  return <div className={`cw-shell ${index >= 0 ? "has-dial" : ""}`}>
+  return <div className={`cw-shell ${index >= 0 ? "has-dial" : ""}`} data-status={map || failed ? "ready" : "loading"}>
     <header className="cw-top">
       <div className="cw-top-in">
         <div><small>Commissioner</small><b>Operations</b></div>

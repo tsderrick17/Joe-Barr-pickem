@@ -23,11 +23,14 @@ async function serve(page: Page, state: string) {
   });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(NOW) });
+  // The dial's "drag to turn" hint shows on the first three visits and fades after four seconds; screenshots are taken as on a later visit.
+  await page.addInitScript(() => window.localStorage.setItem("commissioner-dial-hint", "3"));
 }
 
 async function settle(page: Page, ready: string, path = "/admin") {
   await page.goto(path);
   await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });   // the live status is in, so titles and rings are final
   await page.evaluate(() => document.fonts.ready);
   await page.reload();
   await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
@@ -86,7 +89,8 @@ for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["re
         await page.reload();
         await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
         await page.evaluate(() => document.fonts.ready);
-        await page.waitForTimeout(600);
+        if (path.startsWith("/admin")) await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+        await page.waitForTimeout(1600);   // the dial settles
         await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
         await page.waitForFunction(() => [...document.images].every((image) => image.complete));
         await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
