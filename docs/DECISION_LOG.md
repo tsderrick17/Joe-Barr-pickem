@@ -26,6 +26,13 @@ and add a row above.
 - The colour key under the wheel is gone: the owner found it confusing. The hub already says "All clear" or counts what needs you, and a ring
   that needs a look pulses with a count on it.
 
+## 2026-11-10 - Pool stats: plain tables, figures inside the columns
+
+- Weekly records: each share sits inside the foot of its column. Above the column it read as the label of the coin-flip mark,
+  and at the column's top a mark could cross it.
+- What the league picks and the five-teams table keep only numbers; the owner did not like the share and hit-rate bars. Their lines under the
+  titles went too: the column headings already say it.
+
 ## 2026-11-10 - Odds credits: one used figure everywhere
 
 - The owner saw 110 used on the tile and 113 at Today on the chart. The tile used the provider's own count; the chart added up our per-call

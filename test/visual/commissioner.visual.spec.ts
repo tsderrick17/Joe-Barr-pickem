@@ -467,7 +467,6 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▼");
   await section.getByRole("button", { name: /^Picked/ }).click();
   await expect(section.getByRole("heading", { name: "Least picked teams" })).toBeVisible();
-  await expect(section.getByText("The five teams the league took least often")).toBeVisible();
   await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▲");
   await expect(teamBlock.locator("th[aria-sort=ascending]")).toHaveCount(1);
   await expect(teamRows).toHaveText(["Detroit Lions", "San Francisco 49ers", "Philadelphia Eagles", "Buffalo Bills", "Kansas City Chiefs"]);
@@ -478,7 +477,6 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();   // another column starts at the top again
   await section.getByRole("button", { name: /^Hit rate/ }).click();
   await expect(section.getByRole("heading", { name: "Lowest hit rate teams" })).toBeVisible();
-  await expect(section.getByText("The five teams the league hit least often")).toBeVisible();
   await expect(teamRows).toHaveText(["San Francisco 49ers", "Philadelphia Eagles", "Detroit Lions", "Buffalo Bills", "Kansas City Chiefs"]);
   await section.getByRole("button", { name: /^Picked/ }).click();   // back to Picked: highest first
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
