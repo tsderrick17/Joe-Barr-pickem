@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
+import Link from "next/link";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
+import { Big, CardHead, Meter } from "@/components/commissioner/dash-chart";
 
 type AccountCapacity = {
   id: string;
@@ -75,54 +77,31 @@ function megabytes(value: number) {
   return `${(value / (1024 * 1024)).toFixed(value >= 10 * 1024 * 1024 ? 1 : 2)} MB`;
 }
 
-function dialColor(ratio: number) {
-  if (ratio >= 0.9) return "#b91c1c";
-  if (ratio >= 0.7) return "#a16207";
-  return "#007e72";
-}
+/** The meter's colour: green, amber from 70% used, red from 90%. Always with the percentage beside it. */
+const tone = (ratio: number) => (ratio >= 0.9 ? "bad" : ratio >= 0.7 ? "warn" : "s1");
 
-function CapacityDial({ account }: { account: AccountCapacity }) {
-  const ratio = account.used !== null && account.limit !== null && account.limit > 0
-    ? Math.min(1, account.used / account.limit)
-    : null;
-  const liveCountWithoutLimit = account.connection === "live" && account.used !== null && account.limit === null;
-  const dashboardOnly = false;
-  const color = ratio === null ? "#a8a29e" : dialColor(ratio);
-  const dialStyle = liveCountWithoutLimit
-    ? { background: "conic-gradient(#007e72 0deg 4deg, #e7e5e4 4deg 360deg)" }
-    : ratio === null
-    ? { background: "conic-gradient(#d6d3d1 0deg 360deg)" }
-    : { background: `conic-gradient(${color} 0deg ${Math.max(4, ratio * 360)}deg, #e7e5e4 ${Math.max(4, ratio * 360)}deg 360deg)` };
-
-  const dialLabel = ratio !== null
-    ? `${Math.round(ratio * 100)}%`
-    : liveCountWithoutLimit
-      ? label(account.used)
-      : dashboardOnly
-        ? "↗"
-        : "—";
-  const ariaLabel = ratio !== null
-    ? `${label(account.used)} of ${label(account.limit)} ${account.unit} used`
-    : liveCountWithoutLimit
-      ? `${label(account.used)} ${account.unit} reported; plan limit is not available`
-      : dashboardOnly
-        ? "Usage is available in the Vercel dashboard"
-        : "Usage reading is not available yet";
-
-  return <div className="flex items-center gap-4">
-    <div aria-label={ariaLabel} className="relative grid size-20 shrink-0 place-items-center rounded-full" role="img" style={dialStyle}>
-      <div className="grid size-[4.1rem] place-items-center rounded-full bg-(color:--themed-bg-26) text-center">
-        <span className="font-serif text-lg font-bold leading-none">{dialLabel}</span>
-      </div>
-    </div>
-    <div className="min-w-0">
-      <p className="text-[11px] font-black tracking-[.12em] text-(color:--themed-text-28)">{account.metric.toUpperCase()}</p>
-      {account.used !== null ? <p className="mt-1 text-lg font-bold tabular-nums">{label(account.used)} {account.limit !== null ? <span className="text-(color:--themed-text-27)">/ {label(account.limit)}</span> : null} {account.unit}</p> : <p className="mt-1 font-bold text-(color:--themed-text-29)">{account.connection === "awaiting_connection" ? "Setup needed" : dashboardOnly ? "Dashboard only" : "No reading yet"}</p>}
-      <p className="mt-1 text-xs text-(color:--themed-text-28)">{account.period}</p>
-    </div>
+/** One account: its name (opens its own dashboard), how much of the free allowance is used, a meter with the month-end pace, and when it resets. */
+function AccountRow({ account }: { account: AccountCapacity }) {
+  const access = serviceAccess[account.id];
+  const ratio = account.used !== null && account.limit !== null && account.limit > 0 ? Math.min(1, account.used / account.limit) : null;
+  const pace = account.calendarMonth && account.calendarMonth.providerLimit ? account.calendarMonth.forecastTotal / account.calendarMonth.providerLimit : null;
+  const reading = account.used === null
+    ? (account.connection === "awaiting_connection" ? "Setup needed" : "No reading yet")
+    : `${label(account.used)}${account.limit !== null ? ` of ${label(account.limit)}` : ""} ${account.unit}`;
+  return <div className="dash-limit">
+    {access ? <a href={access.href} rel="noreferrer" target="_blank">{account.service} <span aria-hidden="true">↗</span></a> : <b>{account.service}</b>}
+    <span className="dash-pc">{ratio !== null ? `${Math.round(ratio * 100)}%` : account.used !== null ? label(account.used) : "—"}</span>
+    <Meter label={ratio !== null ? `${reading} used${pace !== null ? `; month-end forecast ${Math.round(pace * 100)}%` : ""}` : reading} pace={pace} share={ratio ?? 0} tone={ratio === null ? "s1" : tone(ratio)} />
+    <small>{account.metric} · {reading}</small>
+    <small>{account.period}</small>
+    {account.used === null ? <small className="dash-limit-note">{account.detail}{access ? ` Sign in: ${access.signIn}.` : ""}</small> : null}
   </div>;
 }
 
+/**
+ * Free limits: every account the site runs on, one row each, against its free allowance; then what uses the database space, as one split bar and
+ * the largest tables. Live readings use existing pool records and never make an extra Odds API request.
+ */
 export default function AccountCapacityPanel() {
   const [accounts, setAccounts] = useState<AccountCapacity[] | null>(null);
   const [storageTables, setStorageTables] = useState<StorageTableUsage[]>([]);
@@ -151,38 +130,45 @@ export default function AccountCapacityPanel() {
     queueMicrotask(() => { void load(); });
   }, []);
 
-  return <section className="commissioner-tool">
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div><p className="text-xs font-black tracking-[.16em] text-(color:--themed-text-28)">CONNECTED SYSTEMS</p><h3 className="mt-1 font-serif text-2xl font-bold">Keep every account inside its free lane</h3><p className="mt-1 max-w-2xl text-sm text-(color:--themed-text-29)">Open a service from its card when you need its own dashboard. Live dials use existing pool records and never make an extra Odds API request.</p></div>
-      <button className="desk-button px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void load()} type="button">{loading ? "Checking..." : "Refresh gauges"}</button>
-    </div>
-    {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
-    {accounts ? <><div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{accounts.map((account) => {
-      const access = serviceAccess[account.id];
-      return <article className={`desk-card ${account.connection === "awaiting_connection" ? "is-awaiting" : ""}`} key={account.id}>
-        <a className="font-bold underline decoration-zinc-400 underline-offset-2 hover:decoration-zinc-900" href={access?.href} rel="noreferrer" target="_blank">{account.service} ↗</a>
-        {access ? <><p className="mt-1 text-sm text-(color:--themed-text-29)">{access.purpose}</p><p className="mt-2 text-[11px] font-black tracking-[.1em] text-[#007e72]">{access.signIn.toUpperCase()}</p></> : null}
-        <div className="mt-4"><CapacityDial account={account} /></div>
-        <p className="mt-3 desk-rule-top pt-3 text-xs leading-5 text-(color:--themed-text-28)">{account.detail}</p>
-        {account.calendarMonth ? <div className="mt-3 desk-rule-top pt-3">
-          <p className="text-[10px] font-black tracking-[.12em] text-(color:--themed-text-28)">CALENDAR MONTH · {account.calendarMonth.monthLabel.toUpperCase()}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.calendarMonth.providerUsed ?? "—"} / {account.calendarMonth.providerLimit ?? "—"}</b>provider used</p>
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.calendarMonth.creditsTracked}</b>tracked by this app</p>
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.calendarMonth.forecastTotal}</b>scheduled month-end</p>
-          </div>
-          <p className="mt-2 text-xs text-(color:--themed-text-28)">Same balance snapshot and schedule forecast as the grading dashboard. {account.calendarMonth.providerRemaining ?? "—"} provider credits remain; {account.calendarMonth.forecastCredits} more are forecast this month.</p>
-        </div> : null}
-        {account.efficiency ? <div className="mt-3 desk-rule-top pt-3">
-          <p className="text-[10px] font-black tracking-[.12em] text-(color:--themed-text-28)">30-DAY EFFICIENCY</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.efficiency.totalCredits}</b>credits tracked</p>
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.efficiency.finalizedGames}</b>games finalized</p>
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.efficiency.creditsPerFinal ?? "—"}</b>score credits / final</p>
-            <p><b className="block text-base tabular-nums text-(color:--themed-text-32)">{account.efficiency.productiveRate === null ? "—" : `${account.efficiency.productiveRate}%`}</b>productive checks</p>
-          </div>
-        </div> : null}
-      </article>;
-    })}</div>{storageTables.length ? <details className="desk-card mt-5"><summary className="cursor-pointer font-bold">See what uses database space</summary><p className="mt-1 text-sm text-(color:--themed-text-29)">This is a commissioner-only, read-only table breakdown. Pool history is not removed by the weekly cleanup.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b border-zinc-300 text-xs uppercase tracking-wide text-(color:--themed-text-28)"><tr><th className="pb-2 pr-3">Table</th><th className="pb-2 pr-3">Total</th><th className="pb-2 pr-3">Data</th><th className="pb-2 pr-3">Indexes</th><th className="pb-2">Rows</th></tr></thead><tbody>{storageTables.map((table) => <tr className="border-b border-zinc-100" key={table.relation_name}><td className="py-2 pr-3 font-mono text-xs">{table.relation_name}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.total_bytes)}</td><td className="py-2 pr-3 tabular-nums">{megabytes(table.table_bytes)}</td><td className="py-2 tabular-nums">{megabytes(table.index_bytes)}</td><td className="py-2 tabular-nums">{formatAdminNumber(table.estimated_rows)}</td></tr>)}</tbody></table></div></details> : null}<p className="mt-4 text-xs text-(color:--themed-text-27)">{checkedAt ? `Last checked ${new Date(checkedAt).toLocaleString()}.` : null} Unknown plan limits show a live count instead of a made-up percentage.</p></> : null}
-  </section>;
+  const tables = [...storageTables].sort((a, b) => b.total_bytes - a.total_bytes);
+  const totalBytes = tables.reduce((sum, table) => sum + table.total_bytes, 0);
+  const rest = tables.slice(5).reduce((sum, table) => sum + table.total_bytes, 0);
+  const parts = [
+    ...tables.slice(0, 5).map((table) => ({ name: table.relation_name, bytes: table.total_bytes, rows: table.estimated_rows as number | null })),
+    ...(rest ? [{ name: "Everything else", bytes: rest, rows: null }] : []),
+  ];
+  const shade = (index: number) => Math.max(0.22, 1 - index * 0.17);
+
+  return <div className="dash-page">
+    {error ? <p className="dash-error" role="alert">{error}</p> : null}
+    {!accounts && !error ? <div aria-label="Reading the accounts" className="dash-loading" /> : null}
+    {accounts ? <>
+      <section aria-label="Free allowances" className="dash-card">
+        <CardHead
+          line="How much of each free allowance is used. The tick marks the month-end pace."
+          right={<button className="dash-refresh" disabled={loading} onClick={() => void load()} type="button">{loading ? "Checking…" : "Refresh"}</button>}
+          title="Free allowances"
+        />
+        {accounts.map((account) => <AccountRow account={account} key={account.id} />)}
+        <p className="dash-foot">
+          {checkedAt ? `Checked ${new Date(checkedAt).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ET. ` : null}
+          A plan limit that is not known shows a live count instead of a made-up percentage. <Link href="/admin/odds">Odds credits</Link> has the month in detail.
+        </p>
+      </section>
+      {parts.length ? <section aria-label="What uses database space" className="dash-card">
+        <CardHead right={<Big sub="in the tables below" value={megabytes(totalBytes)} />} title="Database space" />
+        <div aria-hidden="true" className="dash-split">{parts.map((part, index) => <u key={part.name} style={{ opacity: shade(index), width: `${(part.bytes / (totalBytes || 1)) * 100}%` }} />)}</div>
+        <table className="dash-table">
+          <thead><tr><th scope="col">Table</th><th className="is-num" scope="col">Size</th><th className="is-num" scope="col">Share</th><th className="is-num" scope="col">Rows</th></tr></thead>
+          <tbody>{parts.map((part, index) => <tr key={part.name}>
+            <th scope="row"><span aria-hidden="true" className="dash-swatch" style={{ opacity: shade(index) }} />{part.name}</th>
+            <td className="is-num">{megabytes(part.bytes)}</td>
+            <td className="is-num">{Math.round((part.bytes / (totalBytes || 1)) * 100)}%</td>
+            <td className="is-num">{part.rows === null ? "—" : formatAdminNumber(part.rows)}</td>
+          </tr>)}</tbody>
+        </table>
+        <p className="dash-foot">Read-only. Pool history is never removed by the weekly clean-up.</p>
+      </section> : null}
+    </> : null}
+  </div>;
 }
