@@ -59,7 +59,7 @@ export default function OddsCredits() {
 
   const usage = data.creditUsage;
   const limit = usage.providerLimit ?? 500;
-  const used = usage.reportedUsed ?? usage.trackedCredits;
+  const used = usage.usedCredits;
   const todayKey = data.checkedAt.slice(0, 10);
   const days = usage.calendarDays;
   const today = Math.max(0, days.findIndex((entry) => entry.date.slice(0, 10) === todayKey));
@@ -86,7 +86,9 @@ export default function OddsCredits() {
   const within10 = shareWithin(ladder.points.map((point: { end: number }, index: number) => ({ end: point.end, count: data.ladderSummary[index].newFinals })), 10);
   const histogramTop = Math.max(20, Math.ceil(Math.max(0, ...ladder.points.map((point: { values: { finals: number } }) => point.values.finals)) / 10) * 10 + 10);
 
-  const totalTop = roundTop(Math.max(limit, ...days.map((entry) => Math.max(entry.cumulative, entry.forecastCumulative ?? 0))));
+  // The free allowance is the top of the chart; it only grows when the month runs past it.
+  const totalHigh = Math.max(...days.map((entry) => Math.max(entry.usedCumulative, entry.forecastCumulative ?? 0)));
+  const totalTop = totalHigh <= limit ? limit : roundTop(totalHigh);
   const dailyTop = Math.max(10, Math.ceil(Math.max(...days.map((entry) => Math.max(entry.scores + entry.lines, entry.forecastScores + entry.forecastLines))) / 10) * 10);
   const dayTicks = [0, Math.floor((days.length - 1) / 2), days.length - 1].map((index) => ({ index, text: day(days[index].date) }));
   const dayNote = (index: number) => {
@@ -120,8 +122,8 @@ export default function OddsCredits() {
           note={dayNote}
           refs={[{ y: limit, label: `Free limit ${whole(limit)}` }, ...(slower ? [{ y: slower, label: `Slower checking from ${whole(slower)}` }] : [])]}
           series={[
-            { key: "actual", label: "Actual", tone: "s1", area: true, values: days.map((entry, index) => (index <= today ? entry.cumulative : null)) },
-            { key: "forecast", label: "Forecast", tone: "s2", dash: true, values: days.map((entry, index) => (index === today ? entry.cumulative : index > today ? entry.forecastCumulative : null)) },
+            { key: "actual", label: "Actual", tone: "s1", area: true, values: days.map((entry, index) => (index <= today ? entry.usedCumulative : null)) },
+            { key: "forecast", label: "Forecast", tone: "s2", dash: true, values: days.map((entry, index) => (index === today ? entry.usedCumulative : index > today ? entry.forecastCumulative : null)) },
           ]}
           today={today}
           x={days.map((entry, index) => `${day(entry.date)}${index === today ? " · today" : index > today ? " · forecast" : ""}`)}

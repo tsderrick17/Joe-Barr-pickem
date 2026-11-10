@@ -24,7 +24,7 @@ const DAYS = Array.from({ length: 30 }, (_, index) => {
   const date = `2026-10-${String(index + 1).padStart(2, "0")}`;
   const credits = index % 7 === 6 ? 14 : index % 7 === 0 ? 3 : 1;
   return { date, credits, cumulative: 0, scores: Math.floor(credits * 0.6), lines: Math.floor(credits * 0.3), other: credits - Math.floor(credits * 0.6) - Math.floor(credits * 0.3), estimatedCalls: credits };
-}).map((day, index, all) => ({ ...day, cumulative: all.slice(0, index + 1).reduce((sum, item) => sum + item.credits, 0) }));
+}).map((day, index, all) => ({ ...day, cumulative: all.slice(0, index + 1).reduce((sum, item) => sum + item.credits, 0) })).map((day) => ({ ...day, usedCumulative: day.cumulative }));
 
 // The score-checking line on the Performance tab, for each tier: the rule's own sentence for sample numbers (4 game days left, 12 credits of lines).
 const TIER_NEEDS = { lineNeedCredits: 12, leanNeedCredits: 41, minimalNeedCredits: 27, gameDaysLeft: 4 };
@@ -37,7 +37,7 @@ const TIER_PLANS = {
 const tierPlanFor = (state) => TIER_PLANS[state] ?? TIER_PLANS.normal;
 
 const CREDIT_USAGE = {
-  monthLabel: "October 2026", trackedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
+  monthLabel: "October 2026", trackedCredits: 88, usedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
   reportedUsed: 88, providerLimit: 500, sundayAverageCredits: 14, regularSundaysElapsed: 1, remaining: 412, reportedAt: T(1),
   days: DAYS.slice(0, 4),
   calendarDays: DAYS.map((day) => ({ ...day, forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0 })),
