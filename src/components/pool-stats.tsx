@@ -19,16 +19,6 @@ type Stats = View & { players: PlayerView[] };
 const LEAGUE = "league";
 const COIN = 0.5;
 const average = (value: number) => formatAverage(value);
-/** How far a hit rate sits from a coin flip, as a bar either side of a centre line: green over .500, cognac under. Full width is 60 points. */
-function Diverge({ rate }: { rate: number | null }) {
-  if (rate === null) return <span aria-hidden="true" className="dash-diverge" />;
-  const width = Math.min(50, (Math.abs(rate - COIN) / 0.06) * 50);
-  return <span aria-hidden="true" className="dash-diverge"><u className={rate >= COIN ? "is-over" : "is-under"} style={{ width: `${width}%` }} /></span>;
-}
-/** A share as a short grey bar beside its number. */
-function Share({ share, scale }: { share: number | null; scale: number }) {
-  return <span className="dash-share"><u aria-hidden="true" style={{ width: `${Math.round(((share ?? 0) / scale) * 60)}px` }} />{percent(share)}</span>;
-}
 const signed = (value: number) => (value === 0 ? "level with" : `${formatAverage(Math.abs(value))} ${value > 0 ? "over" : "under"}`);
 
 export default function PoolStats() {
@@ -87,12 +77,11 @@ export default function PoolStats() {
 
         <div className="dash-pair">
           <div className="dash-card pool-stats-block">
-            <CardHead line="Share of graded picks, and how each side hit against .500" title={`What ${who} picks`} />
+            <CardHead title={`What ${who} picks`} />
             <SplitsTable splits={view.splits} />
           </div>
           {view.teams.length ? <div className="dash-card pool-stats-block">
             <CardHead
-              line={teamSort.key === "picked" ? `The five teams ${who} took ${teamSort.descending ? "most" : "least"} often` : `The five teams ${who === "the league" ? "the league" : `${who}’s picks`} hit ${teamSort.descending ? "most" : "least"} often`}
               title={teamSort.key === "picked" ? (teamSort.descending ? "Most picked teams" : "Least picked teams") : (teamSort.descending ? "Best hit rate teams" : "Lowest hit rate teams")}
             />
             <TeamsTable descending={teamSort.descending} onSort={chooseTeamSort} sort={teamSort.key} teams={teamSort.key === "picked" ? (teamSort.descending ? view.teams : view.teamsLeastPicked) : (teamSort.descending ? view.teamsByHitRate : view.teamsByLowestHitRate)} />
@@ -170,16 +159,15 @@ function WeeksChart({ weeks, label }: { weeks: Weeks; label: string }) {
 /** Favorites, underdogs and pick'em games (no favorite at all), then home and away, one list; a heavier line sits between the two groups. */
 function SplitsTable({ splits }: { splits: Splits }) {
   const rows: Array<[string, Split]> = [["Favorites", splits.side.favorite], ["Underdogs", splits.side.underdog], ["Pick’em", splits.side.pickem], ["Home", splits.venue.home], ["Away", splits.venue.away]];
-  const scale = Math.max(0.01, ...rows.map(([, split]) => split.share ?? 0));
   return <div className="pool-table-wrap">
     <table className="dash-table">
       <thead><tr><th scope="col">Side</th><th className="is-num" scope="col">Share</th><th className="is-num" scope="col">Record</th><th className="is-num" scope="col">Hit rate</th></tr></thead>
       <tbody>
         {rows.map(([name, split], index) => <tr className={index === 3 ? "dash-break" : undefined} key={name}>
           <th scope="row">{name}</th>
-          <td className="is-num"><Share scale={scale} share={split.share} /></td>
+          <td className="is-num">{percent(split.share)}</td>
           <td className="is-num">{split.wins}–{split.losses}</td>
-          <td className="is-num"><Diverge rate={split.hitRate} />{formatAverage(split.hitRate)}</td>
+          <td className="is-num">{formatAverage(split.hitRate)}</td>
         </tr>)}
       </tbody>
     </table>
@@ -191,7 +179,6 @@ function SplitsTable({ splits }: { splits: Splits }) {
  * hit rate). Pressing the column that is already chosen turns it over, to the least picked or the lowest hit rate (▲); pressing it again turns it back (▼).
  */
 function TeamsTable({ teams, sort, descending, onSort }: { teams: TeamPicked[]; sort: TeamSort; descending: boolean; onSort: (sort: TeamSort) => void }) {
-  const scale = Math.max(0.01, ...teams.map((team) => team.share ?? 0));
   const head = (key: TeamSort, label: string) => <th aria-sort={sort === key ? (descending ? "descending" : "ascending") : "none"} className="is-num" scope="col">
     <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? (descending ? " ▼" : " ▲") : ""}</span></button>
   </th>;
@@ -201,9 +188,9 @@ function TeamsTable({ teams, sort, descending, onSort }: { teams: TeamPicked[]; 
       <tbody>
         {teams.map((team) => <tr key={team.teamId}>
           <th scope="row">{team.name}</th>
-          <td className="is-num"><Share scale={scale} share={team.share} /></td>
+          <td className="is-num">{percent(team.share)}</td>
           <td className="is-num">{team.wins}–{team.losses}</td>
-          <td className="is-num"><Diverge rate={team.hitRate} />{formatAverage(team.hitRate)}</td>
+          <td className="is-num">{formatAverage(team.hitRate)}</td>
         </tr>)}
       </tbody>
     </table>

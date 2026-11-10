@@ -67,6 +67,8 @@
 .is-dim .dash-col { opacity: .45; }
 .dash-mark { stroke: var(--club-ink); stroke-linecap: round; stroke-width: 2; }
 .dash-value { fill: var(--club-ink); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 700; }
+/* A column's figure inside its own top, so it can never be read as the label of a mark drawn just above. */
+.dash-value.is-inside { fill: var(--club-paper); }
 .dash-tip { background: var(--dash-tip-bg); border-radius: 9px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28); color: var(--dash-tip-ink); font-size: 12px; line-height: 1.4; padding: 8px 10px; pointer-events: none; position: absolute; white-space: nowrap; z-index: 3; }
 .dash-tip b { display: block; font-size: 11px; font-weight: 600; margin-bottom: 2px; opacity: .75; }
 .dash-tip span { align-items: center; display: flex; gap: 6px; }
@@ -84,17 +86,8 @@
 .dash-table thead th { border-top: 0; color: var(--club-muted); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .dash-table tbody th { font-weight: 700; }
 .dash-table .is-num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.dash-share { align-items: center; display: inline-flex; gap: 8px; justify-content: flex-end; }
-.dash-share u { background: var(--club-muted); border-radius: 3px; display: block; height: 6px; opacity: .45; }
-.dash-diverge { display: inline-block; height: 14px; margin-right: 8px; position: relative; vertical-align: middle; width: 80px; }
-.dash-diverge::before { background: var(--club-muted); bottom: 0; content: ""; left: 50%; opacity: .6; position: absolute; top: 0; width: 1px; }
-.dash-diverge u { height: 6px; position: absolute; top: 4px; }
-.dash-diverge u.is-over { background: var(--dash-s1); border-radius: 0 3px 3px 0; left: 50%; }
-.dash-diverge u.is-under { background: var(--dash-s2); border-radius: 3px 0 0 3px; right: 50%; }
 @media (max-width: 520px) {
   .dash-table th, .dash-table td { padding: 9px 3px; }
-  .dash-share u { max-width: 26px; }
-  .dash-diverge { margin-right: 6px; width: 44px; }
   .dash-big b { font-size: 22px; }
 }
 
