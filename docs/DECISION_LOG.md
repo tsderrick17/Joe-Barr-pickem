@@ -19,6 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The numbers pages: dashboard charts
+
+- The owner, a finance professional who reads dashboards all day, spends the most time on the old Performance tab's figures and asked for the
+  best and most beautiful graphics, informative without extra text. Each of the three pages now leads with headline tiles (a number, its change
+  against a meaningful mark such as a coin flip or the 30-day average, and a small trend), then one chart per question.
+- One chart engine for all three, following one mark spec, so the pages read as one system in day and night. The palette was checked with the
+  colour-blind validator before use; red is kept for limit lines.
+- The owner asked that the finals histogram's bars be as wide as their windows (a 10-minute window twice a 5-minute one); it is drawn on a real
+  minutes axis.
+- The Pool stats drop-down became a row of names, the first of the drop-downs to go (W3 removes the rest). The old chart components
+  (ProviderChart, the efficiency, cost and ladder panels) were removed; their data helpers stay and are still tested.
+
 ## 2026-11-09 - The Commissioner Wheel replaces the desk's tabs and drawers
 
 - The owner disliked the desk's fold-down drawers and drop-down pickers and asked for a control panel of clickable icons in a layout of its own,

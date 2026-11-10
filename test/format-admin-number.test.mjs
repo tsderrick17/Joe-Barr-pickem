@@ -11,9 +11,8 @@ test("missing admin measurements never crash number formatting", async () => {
   assert.equal(formatAdminNumber(1.25, { maximumFractionDigits: 1 }), "1.3");
 
   const panels = await Promise.all([
-    "efficiency-trend-panel.tsx",
-    "slate-performance-panel.tsx",
-    "grading-dashboard.tsx",
+    "commissioner/odds-credits.tsx",
+    "pool-stats.tsx",
     "account-capacity.tsx",
     "automation-health.tsx",
   ].map((name) => readFile(new URL(`../src/components/${name}`, import.meta.url), "utf8")));

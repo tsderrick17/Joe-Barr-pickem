@@ -7,7 +7,7 @@ import { ladderChartData } from "@/lib/ladder-chart.js";
 import { rollingCreditsPerGame15Days, rollingCreditsPerGame30Days, slatesSince } from "@/lib/provider-chart-data.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window.js";
 import { shareWithin } from "@/lib/dash-chart.js";
-import type { CreditUsage, EfficiencyPoint, EfficiencySummary } from "@/components/efficiency-trend-panel";
+import type { CreditUsage, EfficiencyPoint, EfficiencySummary } from "@/components/commissioner/odds-types";
 import { Big, CardHead, Change, DashChart, Meter, Sparkline, Tile, ViewSwitch } from "@/components/commissioner/dash-chart";
 
 type Ladder = Array<{ rung: number; windowMinutes: number; newFinals: number; pickedUp: number; percentage: number; newFinalsPercentage: number }>;
