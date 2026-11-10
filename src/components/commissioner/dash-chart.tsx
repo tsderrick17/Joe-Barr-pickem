@@ -153,9 +153,9 @@ export function DashChart({
               ? <path className={`dash-col is-${series[part.series].tone}`} d={roundedTop(left, part.top, width, part.height)} key={part.series} />
               : <rect className={`dash-col is-${series[part.series].tone}`} height={part.height} key={part.series} width={width} x={left} y={part.top} />)}
             {capLabels && total > 0 ? (() => {
-              // With marks, a column tall enough carries its figure inside its top, so the figure belongs to the column and not to the mark.
+              // With marks, a column tall enough carries its figure inside, at its foot: it belongs to the column, and no mark ever crosses it.
               const inside = Boolean(marks) && y(yMin) - y(total) >= 26;
-              return <text className={`dash-value${inside ? " is-inside" : ""}`} textAnchor="middle" x={at(index)} y={inside ? y(total) + 17 : y(total) - 7}>{format(total)}</text>;
+              return <text className={`dash-value${inside ? " is-inside" : ""}`} textAnchor="middle" x={at(index)} y={inside ? y(yMin) - 8 : y(total) - 7}>{format(total)}</text>;
             })() : null}
             {marks && marks[index] !== null && marks[index] !== undefined ? <line className="dash-mark" x1={left - 5} x2={left + width + 5} y1={y(marks[index] as number)} y2={y(marks[index] as number)} /> : null}
           </g>;

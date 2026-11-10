@@ -21,7 +21,8 @@ and add a row above.
 
 ## 2026-11-10 - Pool stats: plain tables, figures inside the columns
 
-- Weekly records: each share sits inside the top of its column. Above the column it read as the label of the coin-flip mark.
+- Weekly records: each share sits inside the foot of its column. Above the column it read as the label of the coin-flip mark,
+  and at the column's top a mark could cross it.
 - What the league picks and the five-teams table keep only numbers; the owner did not like the share and hit-rate bars. Their lines under the
   titles went too: the column headings already say it.
 
