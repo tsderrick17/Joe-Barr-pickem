@@ -29,10 +29,13 @@
 .pad-skin-moon { left: 3.6rem; top: .1rem; }
 .pad-skin-spider { right: 1.2rem; top: 0; }
 .pad-skin-garland { left: 0; top: 0; width: 100%; }
+.pad-skin-sprig { left: 2px; top: 2px; }
+.pad-skin-sprig.is-right { left: auto; right: 2px; }
+.pad-skin-crest { left: 50%; top: .15rem; transform: translateX(-50%); }
 .pad-skin-flakes { left: .4rem; top: 1.2rem; }
 .pad-skin-wreath { right: 1rem; top: .25rem; }
 .pad-skin--halloween .pickem-ledger-week-row th { padding-top: 1.75rem; }
-.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 2.4rem; }
+.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 2.3rem; }
 .pad-skin--christmas .pickem-ledger-week-row th { padding-top: 2.3rem; }
 
 /* Under the last row: the same paper, the pieces spread from edge to edge on the holiday's ground. */
