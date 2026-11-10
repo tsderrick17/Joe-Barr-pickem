@@ -67,10 +67,7 @@ function Shell({ children }: { children: ReactNode }) {
 
 /**
  * Every Commissioner page sits inside this: the bar with the Handbook, the page's title, and the dial along the bottom.
- * The Workshop is the exception: it fills the whole screen with its own controls.
  */
 export default function CommissionerShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  if (pathname.startsWith("/admin/workshop")) return <>{children}</>;
   return <CommissionerStatusProvider><Shell>{children}</Shell></CommissionerStatusProvider>;
 }

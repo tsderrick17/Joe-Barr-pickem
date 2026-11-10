@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Workshop becomes a showroom
+
+- The owner found the endless board "way too much" but "on the right track". The showroom keeps every piece and every setting, and drops the
+  endless panning: each piece appears once, on four shelves grouped by where it lives, in an ordinary scrolling page.
+- It is now a spoke page like the others (the bar, its title, the dial), so the Workshop no longer needs its own Desk, Menu, zoom and Home
+  controls; Show names, Play everything and Your settings sit in one row at the top, and a piece's settings open in the Commissioner sheet.
+  The Night switch went with the menu: the site's own day/night switch does the same.
+- Every shelf fills its rows evenly at every width (the owner wants tidy layouts). The chip's team and the megaphone's school are chips now,
+  so the Workshop has no drop-downs either.
+
 ## 2026-11-10 - No drop-downs or folds anywhere in the Commissioner area
 
 - The owner's first complaint about the old desk was its drop-down menus and fold-down drawers. The Wheel removed the drawers and the Pool stats
