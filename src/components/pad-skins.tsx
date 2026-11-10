@@ -73,6 +73,8 @@ const DEW: Point[] = [webAt(WEB_SIZE * 0.52, WEB_ANGLES[2]), webAt(WEB_SIZE * 0.
 
 const MAPLE = "M12 1L13.6 5.6L16.4 4.2L15.8 9L20.6 7.4L19 10.6L23 12L18.6 14.4L19.6 16.8L14.6 15.8L13 21L12.4 21L12.4 17.4L11.6 17.4L11.6 21L11 21L9.4 15.8L4.4 16.8L5.4 14.4L1 12L5 10.6L3.4 7.4L8.2 9L7.6 4.2L10.4 5.6Z";
 const MAPLE_VEINS = "M12 20V6M12 15L5 11M12 15L19 11M12 15L8 7M12 15L16 7";
+const MAPLE_HALF = "M12 1L13.6 5.6L16.4 4.2L15.8 9L20.6 7.4L19 10.6L23 12L18.6 14.4L19.6 16.8L14.6 15.8L13 21L12 21Z";
+const OAK_HALF = "M12 2C14 3 13 5 15 6C17 6 17 8 16 9C18 10 18 12 16 13C18 14 17 16 15 16C15 18 13 18 12.5 21H12Z";
 const OAK = "M12 2C14 3 13 5 15 6C17 6 17 8 16 9C18 10 18 12 16 13C18 14 17 16 15 16C15 18 13 18 12.5 21H11.5C11 18 9 18 9 16C7 16 6 14 8 13C6 12 6 10 8 9C7 8 7 6 9 6C11 5 10 3 12 2Z";
 
 type Ids = (name: string) => string;
@@ -97,10 +99,11 @@ function Glow({ id, stops }: { id: string; stops: Array<[string, number]> }) {
   );
 }
 
-function Leaf({ x, y, size, angle, fill, oak = false, edge }: { x: number; y: number; size: number; angle: number; fill: string; oak?: boolean; edge?: string }) {
+function Leaf({ x, y, size, angle, fill, oak = false, edge, stem = false }: { x: number; y: number; size: number; angle: number; fill: string; oak?: boolean; edge?: string; stem?: boolean }) {
   return (
-    <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${size / 24}) translate(-12 -12)`}>
+    <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${size / 24}) translate(-12 ${stem ? -21 : -12})`}>
       <path d={oak ? OAK : MAPLE} fill={fill} stroke={edge ?? "#6e2a10"} strokeOpacity={edge ? 0.9 : 0.35} strokeWidth={edge ? 0.7 : 0.5} />
+      <path d={oak ? OAK_HALF : MAPLE_HALF} fill="#3a1408" opacity=".2" />
       <path d={oak ? "M12 20V4M12 9L9.5 7.5M12 9L14.5 7.5M12 13L8.5 11M12 13L15.5 11M12 16.5L10 15.5M12 16.5L14 15.5" : MAPLE_VEINS} fill="none" stroke={edge ?? "#6e2a10"} strokeOpacity={edge ? 0.7 : 0.45} strokeWidth=".6" />
     </g>
   );
@@ -115,27 +118,56 @@ function Heirloom({ x, y, rx, ry, fill, rib }: { x: number; y: number; rx: numbe
       <ellipse cx={x + rx * 0.48} cy={y} fill={fill} rx={rx * 0.56} ry={ry * 0.93} />
       <ellipse cx={x} cy={y} fill={fill} rx={rx * 0.6} ry={ry} />
       <path d={ribs} fill="none" stroke={rib} strokeOpacity=".55" strokeWidth=".8" />
-      <ellipse cx={x - rx * 0.55} cy={y - ry * 0.3} fill="#fff" opacity=".16" rx={rx * 0.1} ry={ry * 0.38} />
+      <ellipse cx={x - rx * 0.55} cy={y - ry * 0.3} fill="#fff" opacity=".1" rx={rx * 0.1} ry={ry * 0.38} />
       <path d={`M${fixed(x - 1.6)} ${fixed(y - ry + 1.5)}q-.6-5 2.6-7.4l1.8 1.2q-2.6 2-1.4 6.2z`} fill="#6b5a32" />
       <path d={`M${fixed(x + 1.5)} ${fixed(y - ry - 3)}q5-3.4 7.4.6q.8 3-2 3q-2-.8 0-2.4`} fill="none" stroke="#7a8a3a" strokeLinecap="round" strokeWidth=".8" />
     </g>
   );
 }
 
-/** Leaves blown into a top corner: maple and oak fanned out from the corner, an acorn and bittersweet berries. */
-function LeafCorner({ ids }: { ids: Ids }) {
+/** A bough reaching in from a top corner: two layers of oak and maple leaves on their twig, acorns and bittersweet. */
+function Bough({ ids }: { ids: Ids }) {
+  const fill = (name: string) => `url(#${ids(name)})`;
   return (
     <g>
-      <Leaf angle={172} fill={`url(#${ids("leaf-gold")})`} size={24} x={11} y={39} />
-      <Leaf angle={96} fill={`url(#${ids("leaf-brown")})`} oak size={20} x={59} y={8} />
-      <Leaf angle={104} fill={`url(#${ids("leaf-orange")})`} oak size={27} x={39} y={11} />
-      <Leaf angle={140} fill={`url(#${ids("leaf-orange")})`} size={18} x={35} y={33} />
-      <Leaf angle={135} fill={`url(#${ids("leaf-red")})`} size={31} x={16} y={15} />
-      <Acorn angle={150} ids={ids} size={11} x={27} y={31} />
-      {[[47, 24], [51, 27.5], [46.5, 29.5]].map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill="#d9471f" r="2.1" /><circle cx={x - 0.6} cy={y - 0.7} fill="#fff" opacity=".5" r=".55" /></g>)}
+      <Leaf angle={158} fill={fill("leaf-rust")} oak size={25} stem x={11.600} y={5.500} />
+      <Leaf angle={62} fill={fill("leaf-rust")} size={21} stem x={32.800} y={12.600} />
+      <Leaf angle={118} fill={fill("leaf-olive")} oak size={22} stem x={49} y={6.600} />
+      <Leaf angle={228} fill={fill("leaf-olive")} size={20} stem x={56.600} y={28.200} />
+      <path d="M-2 3C20 6 46 14 66 38M25.700 9.700C40 7 58 4 72 10M30 11l-1.500 8.500M36.500 13l1 8.500M59.800 31.300l10.200-9.300" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.500" />
+      <Leaf angle={176} fill={fill("leaf-gold")} size={25} stem x={20.900} y={8.100} />
+      <Leaf angle={203} fill={fill("leaf-orange")} oak size={23} stem x={44.300} y={18.900} />
+      <Leaf angle={150} fill={fill("leaf-red")} size={18} stem x={61} y={7} />
+      <Leaf angle={100} fill={fill("leaf-gold")} oak size={22} stem x={72} y={10} />
+      <Leaf angle={96} fill={fill("leaf-orange")} size={20} stem x={53.400} y={25.400} />
+      <Leaf angle={140} fill={fill("leaf-red")} size={29} stem x={66} y={38} />
+      <Acorn angle={6} ids={ids} size={12} x={25.600} y={25.600} />
+      <Acorn angle={-14} ids={ids} size={11} x={36.900} y={27.600} />
+      {[[70, 21], [74.200, 24.300], [73.500, 18.600], [77.400, 21.800]].map(([x, y]) => <circle cx={x} cy={y} fill={fill("berry")} key={`${x}-${y}`} r="2.100" />)}
     </g>
   );
 }
+
+/** The farm behind the scene at golden hour: a low sun, geese going over, wooded hills, a barn, the stubble field. */
+const fieldRun = (height: (x: number) => number) => Array.from({ length: 41 }, (_, index) => `${index * 12} ${fixed(height(index * 12))}`).join("L");
+const farRidge = (x: number) => 60 + 4 * Math.sin(x / 38) + 2.5 * Math.sin(x / 17 + 1);
+const midField = (x: number) => 70 + 3 * Math.sin(x / 55 + 2);
+const nearGround = (x: number) => 80 + 1.2 * Math.sin(x / 40);
+const FAR_RIDGE = `M0 102L${fieldRun(farRidge)}L480 102Z`;
+const MID_FIELD = `M0 102L${fieldRun(midField)}L480 102Z`;
+const NEAR_GROUND = `M0 102L${fieldRun(nearGround)}L480 102Z`;
+const NEAR_EDGE = `M${fieldRun(nearGround)}`;
+const FURROWS = [3, 6.5].map((drop) => `M${fieldRun((x) => midField(x) + drop + 0.6 * Math.sin(x / 30 + drop))}`).join("");
+const FAR_TONES = ["#c46a38", "#b4532e", "#d2863e", "#a8482a"];
+const FAR_WOODS = Array.from({ length: 97 }, (_, index) => {
+  const x = index * 5 + ((index * 7) % 4);
+  return { x, y: fixed(farRidge(x) - 1 - ((index * 3) % 3) * 0.7), r: fixed(3 + ((index * 5) % 4) * 0.5), tone: FAR_TONES[(index * 3) % 4] };
+});
+const GROVE_TONES: Array<[string, string]> = [["#a8301c", "#d04e26"], ["#c8691e", "#ee9a30"], ["#c9962a", "#f0c650"], ["#8a2a1a", "#b84024"]];
+const GROVE = [8, 24, 41, 60, 420, 438, 455, 472].map((x, index) => ({ x, y: midField(x) + 1, tones: GROVE_TONES[index % 4], size: 1 + (index % 3) * 0.12 }));
+const GEESE = ([[150, 20], [143, 23.2], [157.5, 23.8], [136, 26.6], [165, 27.6], [129, 30.2]] as Point[])
+  .map(([x, y]) => `M${fixed(x - 2.6)} ${fixed(y - 1.4)}q1.6 .1 2.6 1.4q1-1.3 2.6-1.4`).join("");
+const CLOUDS: Array<[number, number, number, number]> = [[110, 31, 58, 1.9], [196, 38, 34, 1.4], [262, 24, 30, 1.5], [392, 28, 62, 2.1], [428, 37, 30, 1.3]];
 
 /** The horn of plenty: a woven horn drawn along a spine that curls up to its tip and widens to the open mouth. */
 const HORN: Point[] = [[14, 22], [-8, 46], [36, 74], [88, 58]];
@@ -179,7 +211,7 @@ function Turkey({ ids }: { ids: Ids }) {
     <g>
       {FAN.map((angle) => (
         <g key={angle} transform={`rotate(${angle})`}>
-          <path d={FEATHER} fill="#f5e6c0" stroke="#5a3416" strokeWidth=".5" />
+          <path d={FEATHER} fill="#f2e0b6" stroke="#5a3416" strokeOpacity=".7" strokeWidth=".4" />
           <path d={FEATHER} fill="#2a160b" transform="scale(.9)" />
           <path d={FEATHER} fill={`url(#${ids("tail")})`} transform="scale(.8)" />
           <path d="M0 -2V-26M-3.4 -19Q0 -21 3.4 -19M-2.7 -13.5Q0 -15.5 2.7 -13.5" fill="none" stroke="#2a160b" strokeOpacity=".5" strokeWidth=".7" />
@@ -193,13 +225,12 @@ function Turkey({ ids }: { ids: Ids }) {
       <path d="M1.500 5.500l-1.500 9.500M5.500 4.500l-1.500 11.500M9.500 5l-1 11M13 7l-.8 8" stroke="#f0dcae" strokeLinecap="round" strokeOpacity=".85" strokeWidth="1.1" />
       <path d="M-18 7l-3 8.500" stroke="#1f1008" strokeLinecap="round" strokeWidth="1.700" />
       <path d={NECK} fill="none" stroke="#3a1a10" strokeLinecap="round" strokeWidth="6.800" />
-      <path d={NECK} fill="none" stroke="#b5392c" strokeLinecap="round" strokeWidth="5.400" />
-      <circle cx="-21" cy="-15.500" fill="#c8483a" r="4" stroke="#3a1a10" strokeWidth=".6" />
-      <ellipse cx="-20.200" cy="-16.300" fill="#9cc0d4" opacity=".85" rx="2.200" ry="1.700" />
-      <path d="M-24.300 -16.800l-5.700 2.300 5.300 1.500z" fill="#e8b84e" stroke="#8a6a1c" strokeWidth=".4" />
-      <path d="M-24 -18.600q-3.800 .5 -3.400 6.800q1.900 -1.700 1.700 -5.600z" fill="#d62828" />
-      <path d="M-23 -12.800c-1.900 2.300-1.700 6.200 .6 7.900c1.700-2.100 1.500-5.600-.6-7.900z" fill="#d62828" />
-      <circle cx="-21.300" cy="-17" fill="#1a0f08" r=".85" /><circle cx="-21.550" cy="-17.250" fill="#fff" r=".28" />
+      <path d={NECK} fill="none" stroke="#9c342a" strokeLinecap="round" strokeWidth="5.400" />
+      <ellipse cx="-21" cy="-15.600" fill="#8ea6b0" rx="3.500" ry="3.800" stroke="#3a1a10" strokeOpacity=".7" strokeWidth=".5" />
+      <path d="M-24 -16.600l-4.800 2.200 4.600 1.200z" fill="#d6b678" stroke="#8a6a1c" strokeWidth=".35" />
+      <path d="M-23.800 -18.200q-3.200 .6 -2.900 6q1.600 -1.500 1.500 -4.900z" fill="#a82a28" />
+      <path d="M-22.800 -12.600c-1.700 2.100-1.500 5.700 .6 7.300c1.500-1.900 1.300-5.200-.6-7.300z" fill="#a82a28" />
+      <circle cx="-21.200" cy="-16.900" fill="#1a0f08" r=".7" />
     </g>
   );
 }
@@ -237,7 +268,7 @@ function Acorn({ x, y, size, angle, ids }: { x: number; y: number; size: number;
   return (
     <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${size / 16})`}>
       <ellipse cx="0" cy="3" fill={`url(#${ids("nut")})`} rx="5" ry="6.5" />
-      <ellipse cx="-1.6" cy="1.5" fill="#fff" opacity=".25" rx="1.2" ry="2.4" />
+      <ellipse cx="-1.6" cy="1.5" fill="#fff" opacity=".14" rx="1.2" ry="2.4" />
       <path d="M-6.5 -1.5Q0 -7.5 6.5 -1.5Q0 1 -6.5 -1.5Z" fill="#6b4520" />
       <path d="M-5 -2.5l2 1.5M-2.5 -4l2 1.7M0.5 -4.3l1.8 1.8M3 -3.5l1.6 1.5M-4 -1l1.5 -1.6M-1 -2.4l1.5 -1.6M2 -2.3l1.5 -1.5" stroke="#4a2c10" strokeWidth=".6" />
       <path d="M0 -5Q1 -8 3 -8.5" fill="none" stroke="#4a2c10" strokeLinecap="round" strokeWidth="1.1" />
@@ -314,25 +345,38 @@ function Shade({ id, stops }: { id: string; stops: [string, string, string] }) {
 function ThanksgivingDefs({ ids }: { ids: Ids }) {
   return (
     <defs>
-      <Gradient id={ids("leaf-red")} stops={["#e2532f", "#9c1f1c"]} />
-      <Gradient id={ids("leaf-orange")} stops={["#f59a32", "#c4541a"]} />
-      <Gradient id={ids("leaf-gold")} stops={["#f7cf58", "#cf8f1e"]} />
-      <Gradient id={ids("leaf-brown")} stops={["#b97a3c", "#70401a"]} />
-      <Gradient id={ids("nut")} stops={["#c98a45", "#7a4a1c"]} />
-      <Shade id={ids("orange")} stops={["#f5a04a", "#d9661f", "#8f3d10"]} />
-      <Shade id={ids("cream")} stops={["#fffaf0", "#e6d8b6", "#a8946a"]} />
-      <Shade id={ids("bronze")} stops={["#a86a34", "#5e3417", "#2e180a"]} />
-      <Shade id={ids("cherry")} stops={["#cf3a44", "#9a1826", "#6a0e1a"]} />
-      <Shade id={ids("gourd-green")} stops={["#86a444", "#4f7028", "#2c4014"]} />
-      <Shade id={ids("gourd-yellow")} stops={["#fbe07a", "#e8ae2c", "#b9741a"]} />
-      <Shade id={ids("apple")} stops={["#f4705a", "#c1272d", "#7d0f14"]} />
-      <Shade id={ids("grape")} stops={["#a47cc8", "#5b2d82", "#2f1248"]} />
-      <Gradient id={ids("wicker")} stops={["#e8bc78", "#a8742f"]} />
-      <Gradient id={ids("tail")} stops={["#cf7a30", "#8a4b1f", "#4a2710"]} />
+      <Gradient id={ids("leaf-red")} stops={["#c8442a", "#84201a"]} />
+      <Gradient id={ids("leaf-orange")} stops={["#e08a2c", "#a84e16"]} />
+      <Gradient id={ids("leaf-gold")} stops={["#e6b648", "#b07c1e"]} />
+      <Gradient id={ids("leaf-brown")} stops={["#a8703a", "#633818"]} />
+      <Gradient id={ids("leaf-rust")} stops={["#9a3a20", "#5a1a12"]} />
+      <Gradient id={ids("leaf-olive")} stops={["#a08a30", "#5e4c16"]} />
+      <Gradient id={ids("nut")} stops={["#c98a44", "#74461a"]} />
+      <Shade id={ids("berry")} stops={["#ee6c3c", "#bc3a1c", "#74180e"]} />
+      <Shade id={ids("orange")} stops={["#f0a04a", "#d0661c", "#7e3810"]} />
+      <Shade id={ids("cream")} stops={["#fbf2da", "#e2d0a8", "#9c8860"]} />
+      <Shade id={ids("sage")} stops={["#c6d0b2", "#93a48a", "#566858"]} />
+      <Shade id={ids("bronze")} stops={["#b06e34", "#5e3417", "#2a1608"]} />
+      <Shade id={ids("cherry")} stops={["#c63c42", "#8e1a26", "#560e18"]} />
+      <Shade id={ids("gourd-green")} stops={["#8ea64c", "#55702c", "#2a3c14"]} />
+      <Shade id={ids("gourd-yellow")} stops={["#f2d06a", "#d8a02c", "#96621a"]} />
+      <Shade id={ids("apple")} stops={["#dc5c42", "#a82a26", "#641214"]} />
+      <Shade id={ids("grape")} stops={["#9a74ac", "#5a3268", "#2c1636"]} />
+      <Gradient id={ids("wicker")} stops={["#e6bc78", "#a8742e"]} />
+      <Gradient id={ids("tail")} stops={["#dc8a30", "#98481c", "#472510"]} />
       <Gradient id={ids("hat")} stops={["#241c18", "#5a4d44", "#1d1612"]} x2="1" y2="0" />
-      <Gradient id={ids("tin")} stops={["#e3e7ea", "#8d969d"]} />
-      <Gradient id={ids("china")} stops={["#fffaf0", "#e2d2b0"]} />
-      <Gradient id={ids("corn")} stops={["#fbe08a", "#e2a93a"]} />
+      <Gradient id={ids("buckle")} stops={["#f6dc8a", "#c9962e"]} />
+      <Gradient id={ids("tin")} stops={["#dcdfe0", "#8d9498"]} />
+      <Gradient id={ids("china")} stops={["#fff8e6", "#dccba6"]} />
+      <Gradient id={ids("corn")} stops={["#f6d67c", "#d6a23a"]} />
+      <Glow id={ids("shadow")} stops={[["#2a1206", 0.62], ["#2a1206", 0.26], ["#2a1206", 0]]} />
+      <radialGradient id={ids("sun")}><stop offset="0" stopColor="#fff0b8" stopOpacity=".95" /><stop offset=".45" stopColor="#fbc66a" stopOpacity=".45" /><stop offset="1" stopColor="#f6a850" stopOpacity="0" /></radialGradient>
+      <linearGradient id={ids("sky")} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#f9d590" stopOpacity="0" /><stop offset=".4" stopColor="#f9cf86" /><stop offset=".75" stopColor="#f4a85a" /><stop offset="1" stopColor="#ea8646" />
+      </linearGradient>
+      <Gradient id={ids("ridge")} stops={["#b65c36", "#c97a40"]} />
+      <Gradient id={ids("field")} stops={["#d69a42", "#a8692a"]} />
+      <Gradient id={ids("ground")} stops={["#a66e2c", "#623a14"]} />
       <clipPath id={ids("pie-top")}><ellipse cx="276" cy="53" rx="24" ry="9.200" /></clipPath>
     </defs>
   );
@@ -405,21 +449,27 @@ export function PadSkinTop({ skin }: { skin: PadSkin }) {
     return (
       <div aria-hidden="true" className="pad-skin-top">
         <svg className="pad-skin-defs" height="0" width="0"><ThanksgivingDefs ids={ids} /></svg>
-        <svg className="pad-skin-corner" height="56" viewBox="0 0 72 56" width="72"><LeafCorner ids={ids} /></svg>
-        <svg className="pad-skin-corner is-right" height="56" viewBox="0 0 72 56" width="72"><g transform="translate(72 0) scale(-1 1)"><LeafCorner ids={ids} /></g></svg>
-        <svg className="pad-skin-crest" height="36" viewBox="0 0 124 36" width="124">
-          <Leaf angle={-80} fill={`url(#${ids("leaf-red")})`} oak size={15} x={13} y={27} />
-          <Leaf angle={-55} fill={`url(#${ids("leaf-orange")})`} size={19} x={29} y={22} />
-          <Leaf angle={80} fill={`url(#${ids("leaf-brown")})`} oak size={15} x={111} y={27} />
-          <Leaf angle={55} fill={`url(#${ids("leaf-gold")})`} size={19} x={95} y={22} />
-          <ellipse cx="62" cy="33.800" fill="#4a2410" opacity=".2" rx="25" ry="1.800" />
-          <ellipse cx="62" cy="30" fill="#1d1612" rx="23" ry="4.400" />
-          <path d="M39.500 30.600Q62 36.800 84.500 30.600" fill="none" stroke="#6b5d52" strokeWidth=".7" />
-          <path d="M50.500 30L53.500 6.500Q62 4 70.500 6.500L73.500 30Q62 33.200 50.500 30Z" fill={`url(#${ids("hat")})`} />
-          <ellipse cx="62" cy="6.300" fill="#4a3f38" rx="8.500" ry="1.900" />
-          <path d="M51.300 23Q62 26 72.700 23L73.500 30Q62 33.200 50.500 30Z" fill="#8a3f1c" />
-          <rect fill="none" height="8.400" rx="1.200" stroke="#f0c14b" strokeWidth="2" width="9.600" x="57.200" y="23.400" />
-          <path d="M59.200 27.600h4.600" stroke="#f0c14b" strokeLinecap="round" strokeWidth="1.200" />
+        <svg className="pad-skin-corner" height="68" viewBox="0 0 92 68" width="92"><Bough ids={ids} /></svg>
+        <svg className="pad-skin-corner is-right" height="68" viewBox="0 0 92 68" width="92"><g transform="translate(92 0) scale(-1 1)"><Bough ids={ids} /></g></svg>
+        <svg className="pad-skin-crest" height="44" viewBox="0 0 140 44" width="140">
+          <Leaf angle={-82} fill={`url(#${ids("leaf-rust")})`} oak size={17} x={16} y={34} />
+          <Leaf angle={-52} fill={`url(#${ids("leaf-orange")})`} size={23} x={33} y={27} />
+          <Leaf angle={82} fill={`url(#${ids("leaf-brown")})`} oak size={17} x={124} y={34} />
+          <Leaf angle={52} fill={`url(#${ids("leaf-gold")})`} size={23} x={107} y={27} />
+          <Acorn angle={-62} ids={ids} size={10} x={41} y={38.500} />
+          <Acorn angle={62} ids={ids} size={10} x={99} y={38.500} />
+          {[[25, 39], [28.600, 41], [111.400, 41], [115, 39]].map(([x, y]) => <circle cx={x} cy={y} fill={`url(#${ids("berry")})`} key={x} r="1.900" />)}
+          <g transform="translate(-4.400 -2) scale(1.2)">
+            <ellipse cx="62" cy="34" fill="#4a2410" opacity=".28" rx="26" ry="1.800" />
+            <ellipse cx="62" cy="30" fill="#1d1612" rx="23" ry="4.400" />
+            <path d="M39.500 30.600Q62 36.800 84.500 30.600" fill="none" stroke="#7a6a5c" strokeWidth=".7" />
+            <path d="M50.500 30L53.500 6.500Q62 4 70.500 6.500L73.500 30Q62 33.200 50.500 30Z" fill={`url(#${ids("hat")})`} />
+            <ellipse cx="62" cy="6.300" fill="#4a3f38" rx="8.500" ry="1.900" />
+            <path d="M51.300 23Q62 26 72.700 23L73.500 30Q62 33.200 50.500 30Z" fill="#8a3f1c" />
+            <path d="M51.300 23Q62 26 72.700 23" fill="none" stroke="#c9763a" strokeOpacity=".7" strokeWidth=".5" />
+            <rect fill="none" height="8.400" rx="1.200" stroke={`url(#${ids("buckle")})`} strokeWidth="2" width="9.600" x="57.200" y="23.400" />
+            <path d="M59.200 27.600h4.600" stroke="#e2bc5c" strokeLinecap="round" strokeWidth="1.200" />
+          </g>
         </svg>
       </div>
     );
@@ -498,13 +548,41 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
     return (
       <div aria-hidden="true" className="pad-skin-foot">
         <svg className="pad-skin-defs" height="0" width="0"><ThanksgivingDefs ids={ids} /></svg>
-        <svg className="pad-skin-scene" height="86" viewBox="0 0 360 86" width="360">
-          <ellipse cx="84" cy="83" fill="#4a2410" opacity=".2" rx="82" ry="2.400" />
-          <ellipse cx="198" cy="83.200" fill="#4a2410" opacity=".2" rx="24" ry="2.200" />
-          <ellipse cx="276" cy="83.200" fill="#4a2410" opacity=".2" rx="22" ry="2.200" />
-          <ellipse cx="333" cy="83.200" fill="#4a2410" opacity=".2" rx="26" ry="2.200" />
+        <svg className="pad-skin-backdrop" height="102" preserveAspectRatio="xMidYMax slice" viewBox="0 0 480 102">
+          <rect fill={`url(#${ids("sky")})`} height="74" width="480" />
+          <ellipse cx="305" cy="56" fill={`url(#${ids("sun")})`} rx="150" ry="52" />
+          {CLOUDS.map(([x, y, rx, ry]) => <ellipse cx={x} cy={y} fill="#fdebc4" key={x} opacity=".6" rx={rx} ry={ry} />)}
+          <circle cx="305" cy="55" fill="#fff4cc" r="14" />
+          <path d={GEESE} fill="none" stroke="#7a3e1c" strokeLinecap="round" strokeOpacity=".8" strokeWidth=".9" />
+          <path d={FAR_RIDGE} fill={`url(#${ids("ridge")})`} />
+          {FAR_WOODS.map(({ x, y, r, tone }) => <circle cx={x} cy={y} fill={tone} key={x} r={r} />)}
+          <rect fill="#dccdaa" height="13" width="4.500" x="222" y="49" /><rect fill="#8a7a62" height="13" opacity=".5" width="1.600" x="224.900" y="49" />
+          <path d="M221.600 49.400a2.650 2.650 0 0 1 5.300 0z" fill="#6e5e4c" />
+          <path d="M205 62V53L213 47.500L221 53V62Z" fill="#9c3222" /><path d="M213 47.500L221 53V62H213Z" fill="#6e1e16" opacity=".5" />
+          <path d="M203.800 54L208 49.800L213 46.800L218 49.800L222.200 54" fill="none" stroke="#3e2014" strokeLinejoin="round" strokeWidth="1.600" />
+          <rect fill="#f2e2be" height="6" width="5" x="210.500" y="56" /><path d="M210.500 56l5 6m0-6l-5 6" stroke="#9c3222" strokeWidth=".5" />
+          <rect fill="#3e2014" height="2" width="2" x="212" y="50.800" />
+          <path d={MID_FIELD} fill={`url(#${ids("field")})`} />
+          <path d={FURROWS} fill="none" stroke="#ecc070" strokeOpacity=".55" strokeWidth=".6" />
+          {GROVE.map(({ x, y, tones, size }) => (
+            <g key={x} transform={`translate(${x} ${fixed(y)}) scale(${size})`}>
+              <path d="M0 0V-10" stroke="#4a2814" strokeWidth="1.800" />
+              <circle cx="-4.500" cy="-12" fill={tones[0]} r="6" /><circle cx="4.800" cy="-11" fill={tones[0]} r="5.600" /><circle cx="0" cy="-17" fill={tones[0]} r="6.600" />
+              <circle cx="-2.400" cy="-18" fill={tones[1]} opacity=".8" r="4" /><circle cx="-5.500" cy="-12.500" fill={tones[1]} opacity=".6" r="2.800" />
+            </g>
+          ))}
+          <path d={NEAR_GROUND} fill={`url(#${ids("ground")})`} />
+          <path d={NEAR_EDGE} fill="none" stroke="#f0bc68" strokeOpacity=".6" strokeWidth=".9" />
+        </svg>
+        <svg className="pad-skin-scene" height="102" viewBox="0 -16 360 102" width="360">
+          <ellipse cx="88" cy="83" fill={`url(#${ids("shadow")})`} rx="94" ry="4.400" />
+          <ellipse cx="200" cy="83.400" fill={`url(#${ids("shadow")})`} rx="32" ry="3.800" />
+          <ellipse cx="274" cy="83.400" fill={`url(#${ids("shadow")})`} rx="38" ry="3.800" />
+          <ellipse cx="334" cy="83.400" fill={`url(#${ids("shadow")})`} rx="32" ry="3.800" />
+          <Leaf angle={-40} fill={`url(#${ids("leaf-orange")})`} size={12} x={10} y={82} />
+          <Leaf angle={60} fill={`url(#${ids("leaf-brown")})`} oak size={10} x={25} y={84} />
 
-          <path d={HORN_OUTLINE} fill={`url(#${ids("wicker")})`} stroke="#6e4318" strokeLinejoin="round" strokeWidth="1" />
+          <path d={HORN_OUTLINE} fill={`url(#${ids("wicker")})`} stroke="#6e4318" strokeLinejoin="round" strokeWidth=".7" />
           <path d={HORN_SHADE} fill="#4a2410" opacity=".22" />
           <path d={HORN_STRANDS} fill="none" stroke="#7a4c1c" strokeOpacity=".4" strokeWidth=".7" />
           <path d={HORN_RIBS} fill="none" stroke="#6e4318" strokeLinecap="round" strokeWidth="1.300" />
@@ -522,10 +600,10 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
             <ellipse cx="2" cy="0" fill={`url(#${ids("corn")})`} rx="14" ry="5.400" stroke="#a8741c" strokeWidth=".5" />
             <path d="M-8 -4v8M-4.500 -5v10M-1 -5.300v10.600M2.500 -5.400v10.800M6 -5.200v10.400M9.500 -4.500v9M13 -3v6M-11 0h26M-10 -2.700h24M-10 2.700h24" fill="none" stroke="#b07a18" strokeOpacity=".55" strokeWidth=".5" />
           </g>
-          {GRAPES.map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill={`url(#${ids("grape")})`} r="3.200" /><circle cx={x - 1} cy={y - 1.100} fill="#fff" opacity=".45" r=".7" /></g>)}
+          {GRAPES.map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill={`url(#${ids("grape")})`} r="3.200" /><circle cx={x - 1} cy={y - 1.100} fill="#fff" opacity=".2" r=".7" /></g>)}
           <path d="M127 53.500q.5-3.500 3-4.500" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.200" />
           <circle cx="127" cy="61.500" fill={`url(#${ids("apple")})`} r="8.200" />
-          <ellipse cx="123.800" cy="58" fill="#fff" opacity=".35" rx="1.600" ry="2.600" transform="rotate(25 123.800 58)" />
+          <ellipse cx="123.800" cy="58" fill="#fff" opacity=".14" rx="1.600" ry="2.600" transform="rotate(25 123.800 58)" />
           <Heirloom fill={`url(#${ids("orange")})`} rib="#8f3d10" rx={14.500} ry={10.200} x={116} y={73.300} />
           <path d="M143 61q-.6-3.500 2.200-5" fill="none" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.600" />
           <ellipse cx="143" cy="66.500" fill={`url(#${ids("gourd-yellow")})`} rx="4.800" ry="5.800" />
@@ -536,9 +614,11 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
           <Leaf angle={100} fill={`url(#${ids("leaf-orange")})`} size={13} x={168} y={79} />
 
           <g transform="translate(200 58)"><Turkey ids={ids} /></g>
-          <Acorn angle={-70} ids={ids} size={9} x={234} y={80.800} />
 
+          <Acorn angle={-70} ids={ids} size={9} x={224} y={82.300} />
           <LatticePie ids={ids} />
+          <Heirloom fill={`url(#${ids("sage")})`} rib="#5c6e5e" rx={8.500} ry={5.800} x={241} y={77.600} />
+          <Leaf angle={110} fill={`url(#${ids("leaf-red")})`} size={11} x={298} y={83.500} />
 
           <path d="M337 61C336 45 328 35 319 39C315.500 41 316.500 46 320 46.500" fill="none" stroke="#2c4014" strokeLinecap="round" strokeWidth="9" />
           <path d="M337 61C336 45 328 35 319 39C315.500 41 316.500 46 320 46.500" fill="none" stroke="#5f8230" strokeLinecap="round" strokeWidth="7" />

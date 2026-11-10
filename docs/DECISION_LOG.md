@@ -38,6 +38,11 @@ and add a row above.
   and oak leaves with an acorn and berries in the top corners; a pilgrim hat over the week's name; and under the rows one scene:
   a woven cornucopia spilling wheat, corn, grapes, an apple, a pumpkin and a gourd, a fanned turkey, a cherry lattice pie on a
   stand, and a swan gourd, a warty gourd and a white pumpkin. No garland across the top.
+- The owner then found that version "a little clipartish" and "cheap and underdone, but on the right track". The approved
+  Halloween and Christmas skins are full scenes, so Thanksgiving became one too, with every named piece kept: the still life now
+  sits in a golden-hour farm (sunset sky, low sun, geese, an autumn treeline, a red barn, a furrowed field); the corners are
+  full boughs of folded leaves with hanging acorns and berries, printed into the parchment; the hat is larger and dressed with
+  leaves and acorns; the colours are deeper and the frame darker.
 
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 

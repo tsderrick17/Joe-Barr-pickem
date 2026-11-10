@@ -35,7 +35,7 @@
 .pad-skin-flakes { left: .4rem; top: 1.2rem; }
 .pad-skin-wreath { right: 1rem; top: .25rem; }
 .pad-skin--halloween .pickem-ledger-week-row th { padding-top: 1.75rem; }
-.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 2.3rem; }
+.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 2.8rem; }
 .pad-skin--christmas .pickem-ledger-week-row th { padding-top: 2.3rem; }
 
 /* Under the last row: the same paper, the pieces spread from edge to edge on the holiday's ground. */
@@ -57,3 +57,6 @@
 .pad-skin-foot .pad-skin-backdrop { inset: auto 0 0; position: absolute; width: 100%; }
 /* One whole scene, centred, that shrinks to fit a narrow phone. */
 .pad-skin-foot .pad-skin-scene { height: auto; margin-inline: auto; max-width: 100%; }
+/* Thanksgiving's top artwork is printed into its parchment, not laid on top of it. */
+.pad-skin--thanksgiving .pad-skin-top { mix-blend-mode: multiply; }
+.pad-skin--thanksgiving .pad-skin-backdrop { inset: auto 2px 2px; width: calc(100% - 4px); }

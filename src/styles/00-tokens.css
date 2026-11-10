@@ -585,9 +585,9 @@ html[data-theme="night"] {
 .pad-skin--thanksgiving {
   --skin-texture: radial-gradient(circle, rgb(140 90 30 / .09) 0 .7px, transparent 1.2px) 0 0 / 13px 17px,
     radial-gradient(ellipse at 50% 30%, transparent 55%, rgb(150 95 35 / .12));
-  --skin-paper-top: #fdf3dc;
-  --skin-frame: #d8b97f;
-  --skin-paper: #f6e6c4;
+  --skin-paper-top: #fbecc8;
+  --skin-frame: #a8692a;
+  --skin-paper: #f3dfb4;
   --skin-ink: #4a2410;
   --skin-rule: #d8b97f;
   --skin-margin: #8f1d2c;
